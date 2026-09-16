@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1130,
-  "indexedContentSha256": "812cee375bf494c3baee2943578125d9b7bf4e49cb37025dc5bb46a69b30c154",
+  "indexedFileCount": 1156,
+  "indexedContentSha256": "51e36f40ef6561d4a0d49d7295f92960fdab4af957eb00714857eac0113d73c3",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -564,9 +564,17 @@
             "pdfparser",
             "xref"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "header",
+            "structure"
+          ]
         }
       ],
-      "candidateReferenceCount": 55
+      "candidateReferenceCount": 56
     },
     {
       "id": "pdf.17.syntax.objects",
@@ -1419,7 +1427,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 160
+      "candidateReferenceCount": 161
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -1898,6 +1906,22 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "filters"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "filters",
+            "parameters"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -2167,26 +2191,9 @@
             "syntax",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "syntax"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/TextExtractorEncodingTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "syntax",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 94
+      "candidateReferenceCount": 97
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -2584,7 +2591,8 @@
           "kind": "source",
           "matchedTerms": [
             "crypt",
-            "encryption"
+            "encryption",
+            "filters"
           ]
         },
         {
@@ -2592,7 +2600,8 @@
           "kind": "source",
           "matchedTerms": [
             "crypt",
-            "encryption"
+            "encryption",
+            "filters"
           ]
         },
         {
@@ -2626,7 +2635,16 @@
           "matchedTerms": [
             "crypt",
             "encryption",
+            "filters",
             "pdfdocumentwriter"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "crypt",
+            "filters"
           ]
         },
         {
@@ -2635,6 +2653,7 @@
           "matchedTerms": [
             "crypt",
             "encryption",
+            "filters",
             "permissions"
           ]
         },
@@ -3036,17 +3055,9 @@
             "encryption",
             "syntax"
           ]
-        },
-        {
-          "path": "Excise.Cli.Tests/BatchAutomationCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "encryption"
-          ]
         }
       ],
-      "candidateReferenceCount": 96
+      "candidateReferenceCount": 98
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -3479,6 +3490,15 @@
             "tree",
             "metadata",
             "pdfdocument"
+          ]
+        },
+        {
+          "path": "Excise.App/Views/MainWindow.axaml.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "geometry",
+            "tree",
+            "metadata"
           ]
         },
         {
@@ -3972,20 +3992,9 @@
             "catalog",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/TextExtractionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "catalog",
-            "geometry",
-            "catalog",
-            "metadata",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 131
+      "candidateReferenceCount": 134
     },
     {
       "id": "pdf.17.document.navigation",
@@ -4386,6 +4395,31 @@
           "path": "Excise.App/App.axaml.cs",
           "kind": "source",
           "matchedTerms": [
+            "preferences",
+            "viewer"
+          ]
+        },
+        {
+          "path": "Excise.App/Automation/IPerfScenarioTarget.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "preferences",
+            "viewer"
+          ]
+        },
+        {
+          "path": "Excise.App/Automation/PerfScenario.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "named",
+            "viewer"
+          ]
+        },
+        {
+          "path": "Excise.App/Automation/PerfScenarioRunner.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "named",
             "preferences",
             "viewer"
           ]
@@ -4866,38 +4900,9 @@
             "named",
             "preferences"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/InPageLinkClickTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "named",
-            "viewer",
-            "pdfdocument"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/KeyboardShortcutEffectTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "named",
-            "navigation",
-            "outlines",
-            "preferences",
-            "viewer",
-            "pdfdocument"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/KeyboardShortcutTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "navigation",
-            "preferences"
-          ]
         }
       ],
-      "candidateReferenceCount": 111
+      "candidateReferenceCount": 115
     },
     {
       "id": "pdf.17.document.metadata",
@@ -5320,6 +5325,7 @@
           "kind": "source",
           "matchedTerms": [
             "dates",
+            "information",
             "metadata",
             "metadata"
           ]
@@ -5820,7 +5826,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 89
+      "candidateReferenceCount": 90
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -6120,6 +6126,15 @@
           "matchedTerms": [
             "collections",
             "embedded"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "pdfdocument"
           ]
         },
         {
@@ -6598,9 +6613,19 @@
             "metadata",
             "pdfdocument"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "metadata",
+            "pdfdocument"
+          ]
         }
       ],
-      "candidateReferenceCount": 71
+      "candidateReferenceCount": 73
     },
     {
       "id": "pdf.17.graphics.state",
@@ -7756,7 +7781,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 517
+      "candidateReferenceCount": 531
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8483,7 +8508,8 @@
             "output",
             "spaces",
             "values",
-            "colorspace"
+            "colorspace",
+            "skiarenderer"
           ]
         },
         {
@@ -8588,7 +8614,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 256
+      "candidateReferenceCount": 260
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -8668,7 +8694,8 @@
           "matchedTerms": [
             "patterns",
             "shadings",
-            "colorspace"
+            "colorspace",
+            "skiarenderer"
           ]
         },
         {
@@ -9286,8 +9313,10 @@
           "kind": "source",
           "matchedTerms": [
             "image",
+            "images",
             "xobjects",
-            "colorspace"
+            "colorspace",
+            "skiarenderer"
           ]
         },
         {
@@ -9327,6 +9356,14 @@
           "kind": "source",
           "matchedTerms": [
             "decoding",
+            "image",
+            "images"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
             "image",
             "images"
           ]
@@ -9560,18 +9597,9 @@
             "image",
             "inline"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Filters/Jbig2/Jbig2ArithmeticRegionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decoding",
-            "image",
-            "inline"
-          ]
         }
       ],
-      "candidateReferenceCount": 186
+      "candidateReferenceCount": 191
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -10409,7 +10437,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 172
+      "candidateReferenceCount": 173
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -10741,7 +10769,8 @@
             "color",
             "colour",
             "conversion",
-            "renderpage"
+            "renderpage",
+            "skiarenderer"
           ]
         },
         {
@@ -11033,6 +11062,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "colour-conversion",
+            "conversion",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -11082,6 +11123,18 @@
           "matchedTerms": [
             "color",
             "colour",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "conversion",
+            "scan",
             "renderpage",
             "skiarenderer"
           ]
@@ -11156,30 +11209,9 @@
             "renderpage",
             "skiarenderer"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/OverprintDifferentialTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "conversion",
-            "renderpage",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/PdftocairoOutlierClassificationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "scan",
-            "renderpage",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 140
+      "candidateReferenceCount": 143
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -11352,6 +11384,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "version",
+            "versions",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/OverprintDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -11431,9 +11473,17 @@
             "limits",
             "version"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "limits",
+            "version"
+          ]
         }
       ],
-      "candidateReferenceCount": 23
+      "candidateReferenceCount": 25
     },
     {
       "id": "pdf.20.compatibility.deprecated",
@@ -12368,7 +12418,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 138
+      "candidateReferenceCount": 140
     },
     {
       "id": "pdf.20.content.operators",
@@ -13218,7 +13268,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 115
+      "candidateReferenceCount": 116
     },
     {
       "id": "pdf.17.content.text-state",
@@ -14021,6 +14071,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "marked",
+            "property"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -14098,6 +14156,15 @@
           ]
         },
         {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "artifacts",
+            "marked",
+            "property"
+          ]
+        },
+        {
           "path": "docs/architecture/system-design.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -14106,7 +14173,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 38
+      "candidateReferenceCount": 40
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -20905,7 +20972,8 @@
           "matchedTerms": [
             "color",
             "colour",
-            "spaces"
+            "spaces",
+            "skiarenderer"
           ]
         },
         {
@@ -21090,6 +21158,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -21127,6 +21204,15 @@
         },
         {
           "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
           "kind": "test",
           "matchedTerms": [
             "color",
@@ -21296,26 +21382,9 @@
             "color",
             "spaces"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/PageGroupBackdropTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 102
+      "candidateReferenceCount": 105
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -22111,9 +22180,17 @@
             "annotations",
             "pdf20"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotations",
+            "preservation"
+          ]
         }
       ],
-      "candidateReferenceCount": 9
+      "candidateReferenceCount": 10
     },
     {
       "id": "pdf.20.renderer.requirement-018",
@@ -22199,6 +22276,15 @@
           "matchedTerms": [
             "annotations",
             "synthesis"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/README.md",
+          "kind": "source",
+          "matchedTerms": [
+            "annotations",
+            "synthesis",
+            "skiarenderer"
           ]
         },
         {
@@ -22390,7 +22476,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 24
+      "candidateReferenceCount": 25
     },
     {
       "id": "pdf.20.renderer.requirement-019",
@@ -31560,9 +31646,18 @@
             "image-filter",
             "image"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "globals",
+            "image",
+            "image"
+          ]
         }
       ],
-      "candidateReferenceCount": 34
+      "candidateReferenceCount": 35
     },
     {
       "id": "pdf.20.image.requirement-017",
@@ -32005,6 +32100,15 @@
           ]
         },
         {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "crypt",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "docs/architecture/system-design.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -32014,7 +32118,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 40
+      "candidateReferenceCount": 41
     },
     {
       "id": "pdf.20.image.requirement-018",
@@ -32901,6 +33005,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -33073,6 +33186,15 @@
           ]
         },
         {
+          "path": "tests/ghent-conformance-cells.json",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "tests/redaction-visual-gold-set.json",
           "kind": "test",
           "matchedTerms": [
@@ -33091,7 +33213,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 54
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -33463,6 +33585,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -33634,6 +33765,15 @@
           ]
         },
         {
+          "path": "tests/ghent-conformance-cells.json",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "tests/redaction-visual-gold-set.json",
           "kind": "test",
           "matchedTerms": [
@@ -33652,7 +33792,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 54
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -34477,7 +34617,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 140
+      "candidateReferenceCount": 142
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -36447,6 +36587,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/MisleadingImageFallbackTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36515,6 +36664,15 @@
           ]
         },
         {
+          "path": "tests/ghent-conformance-cells.json",
+          "kind": "test",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -36533,7 +36691,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 28
+      "candidateReferenceCount": 30
     },
     {
       "id": "pdf.20.image.requirement-029",
@@ -36725,9 +36883,18 @@
             "image",
             "image"
           ]
+        },
+        {
+          "path": "tests/ghent-conformance-cells.json",
+          "kind": "test",
+          "matchedTerms": [
+            "iccbased",
+            "image",
+            "image"
+          ]
         }
       ],
-      "candidateReferenceCount": 14
+      "candidateReferenceCount": 15
     },
     {
       "id": "pdf.20.image.requirement-030",
@@ -37326,25 +37493,16 @@
           ]
         },
         {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App/Services/RedactedCopyDialogFormatter.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
           "kind": "source",
           "matchedTerms": [
             "image",
@@ -37604,6 +37762,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37850,7 +38017,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 102
+      "candidateReferenceCount": 105
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -40453,7 +40620,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 81
+      "candidateReferenceCount": 82
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -41189,9 +41356,20 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdf.20.annotation.subtype-005",
@@ -41912,9 +42090,20 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "highlight",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 59
+      "candidateReferenceCount": 60
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -42330,9 +42519,20 @@
             "underline",
             "annotation"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "underline",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 28
+      "candidateReferenceCount": 29
     },
     {
       "id": "pdf.20.annotation.subtype-007",
@@ -42729,9 +42929,20 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "strikeout",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 26
+      "candidateReferenceCount": 27
     },
     {
       "id": "pdf.20.annotation.subtype-008",
@@ -43128,9 +43339,20 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "squiggly",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 26
+      "candidateReferenceCount": 27
     },
     {
       "id": "pdf.20.annotation.subtype-009",
@@ -43757,9 +43979,20 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdf.20.annotation.subtype-010",
@@ -44226,9 +44459,20 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "circle",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 34
+      "candidateReferenceCount": 35
     },
     {
       "id": "pdf.20.annotation.subtype-011",
@@ -45160,7 +45404,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 165
+      "candidateReferenceCount": 166
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -45621,9 +45865,20 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "polygon",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 32
+      "candidateReferenceCount": 33
     },
     {
       "id": "pdf.20.annotation.subtype-013",
@@ -46063,9 +46318,20 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "polyline",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 30
+      "candidateReferenceCount": 31
     },
     {
       "id": "pdf.20.annotation.subtype-014",
@@ -46995,7 +47261,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 129
+      "candidateReferenceCount": 130
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -48097,9 +48363,20 @@
             "pdfannotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 46
+      "candidateReferenceCount": 47
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -49254,7 +49531,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 137
+      "candidateReferenceCount": 138
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -50554,9 +50831,20 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "projection",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 6
+      "candidateReferenceCount": 7
     },
     {
       "id": "pdf.17.transparency.model",
@@ -50938,6 +51226,22 @@
         },
         {
           "path": "Excise.App/Assets/third-party-licenses.json",
+          "kind": "source",
+          "matchedTerms": [
+            "model",
+            "soft"
+          ]
+        },
+        {
+          "path": "Excise.App/Automation/AppPerfScenarioTarget.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "model",
+            "modes"
+          ]
+        },
+        {
+          "path": "Excise.App/Automation/PerfScenarioHost.cs",
           "kind": "source",
           "matchedTerms": [
             "model",
@@ -51332,32 +51636,9 @@
             "transparency",
             "transparency"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "alpha",
-            "compositing",
-            "groups",
-            "transparency",
-            "transparency"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "alpha",
-            "blend",
-            "compositing",
-            "groups",
-            "transparency",
-            "transparency"
-          ]
         }
       ],
-      "candidateReferenceCount": 171
+      "candidateReferenceCount": 177
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -51812,6 +52093,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flattening",
+            "preview",
+            "transparency",
+            "transparency"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -51856,6 +52147,17 @@
           "matchedTerms": [
             "flattening",
             "output"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "preview",
+            "transparency",
+            "softmask",
+            "transparency"
           ]
         },
         {
@@ -52071,27 +52373,9 @@
             "transparency",
             "transparency"
           ]
-        },
-        {
-          "path": "tests/corpus-expectations-verapdf.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "transparency",
-            "transparency"
-          ]
-        },
-        {
-          "path": "tests/reference-performance/baseline.json",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "transparency",
-            "transparency"
-          ]
         }
       ],
-      "candidateReferenceCount": 82
+      "candidateReferenceCount": 86
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -52933,6 +53217,7 @@
             "annotation",
             "annotations",
             "appearances",
+            "geometry",
             "acroform",
             "action",
             "annotation",
@@ -53180,7 +53465,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 168
+      "candidateReferenceCount": 169
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -54158,18 +54443,19 @@
           ]
         },
         {
-          "path": "docs/architecture/system-design.md",
+          "path": "docs/architecture/main-window-architecture.md",
           "kind": "architecture",
           "matchedTerms": [
             "annotations",
             "redaction",
+            "acroform",
             "action",
             "annotation",
             "redact"
           ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 81
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -55095,7 +55381,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 93
+      "candidateReferenceCount": 95
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -55918,9 +56204,21 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 65
+      "candidateReferenceCount": 66
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -56534,6 +56832,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/Host/ISettingsStore.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "fields",
+            "policy",
+            "action"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -56923,22 +57230,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "acroform",
-            "policy",
-            "xfa",
-            "acroform",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 139
+      "candidateReferenceCount": 141
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -57507,6 +57801,16 @@
           ]
         },
         {
+          "path": "Excise.App/Automation/IPerfScenarioTarget.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "actions",
+            "including",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App/Controls/PriorityToolbarPanel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -57859,21 +58163,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "including",
-            "uri",
-            "acroform",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 132
+      "candidateReferenceCount": 135
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -58025,9 +58317,31 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "tests/ghent-conformance-cells.json",
+          "kind": "test",
+          "matchedTerms": [
+            "groups",
+            "optional-content",
+            "action"
+          ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "applications",
+            "groups",
+            "usage",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 8
+      "candidateReferenceCount": 10
     },
     {
       "id": "pdf.17.multimedia.media",
@@ -58606,6 +58920,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "media",
+            "screen",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58788,18 +59111,9 @@
             "annotations",
             "screen"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/ModeSwitchDisplayTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "media",
-            "screen",
-            "media"
-          ]
         }
       ],
-      "candidateReferenceCount": 100
+      "candidateReferenceCount": 102
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -59482,6 +59796,16 @@
           ]
         },
         {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "projection",
+            "media"
+          ]
+        },
+        {
           "path": "docs/architecture/system-design.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -59491,7 +59815,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 72
+      "candidateReferenceCount": 73
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -60308,7 +60632,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 346
+      "candidateReferenceCount": 349
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -60732,6 +61056,14 @@
           ]
         },
         {
+          "path": "Excise.App/App.axaml.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "data",
+            "measurement"
+          ]
+        },
+        {
           "path": "Excise.App/Assets/third-party-licenses.json",
           "kind": "source",
           "matchedTerms": [
@@ -61040,18 +61372,9 @@
             "dictionaries",
             "metadata"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "data",
-            "dictionaries",
-            "metadata"
-          ]
         }
       ],
-      "candidateReferenceCount": 165
+      "candidateReferenceCount": 172
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -61805,7 +62128,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 158
+      "candidateReferenceCount": 160
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -62590,7 +62913,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 548
+      "candidateReferenceCount": 554
     },
     {
       "id": "pdf.20.extension.developer",
@@ -62746,6 +63069,15 @@
           ]
         },
         {
+          "path": "Excise.App/Automation/PerfScenarioHost.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions",
+            "version"
+          ]
+        },
+        {
           "path": "Excise.App/Composition/ApplicationComposition.cs",
           "kind": "source",
           "matchedTerms": [
@@ -62808,6 +63140,22 @@
           "matchedTerms": [
             "extension",
             "version"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/AvaloniaFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/ITextClipboard.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
           ]
         },
         {
@@ -63265,34 +63613,9 @@
             "extensions",
             "version"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Integration/ThumbnailCacheMasterLifetimeTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/Integration/ThumbnailCacheTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AnnotateAndDialogCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions",
-            "pdfa"
-          ]
         }
       ],
-      "candidateReferenceCount": 132
+      "candidateReferenceCount": 136
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -63905,6 +64228,15 @@
           ]
         },
         {
+          "path": "tests/ghent-conformance-cells.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "profile",
+            "conformance"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -63924,7 +64256,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 59
+      "candidateReferenceCount": 60
     },
     {
       "id": "pdf.20.profile.pdfua",
@@ -64235,6 +64567,15 @@
           ]
         },
         {
+          "path": "tests/ghent-conformance-cells.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "profile",
+            "conformance"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -64272,7 +64613,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 27
+      "candidateReferenceCount": 28
     },
     {
       "id": "pdf.20.profile.pdfx",
@@ -64402,6 +64743,15 @@
           ]
         },
         {
+          "path": "tests/ghent-conformance-cells.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "profile",
+            "conformance"
+          ]
+        },
+        {
           "path": "docs/architecture/decisions.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -64412,7 +64762,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 12
+      "candidateReferenceCount": 13
     },
     {
       "id": "pdfe.product.safety.limited-editing",
@@ -65241,7 +65591,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 99
+      "candidateReferenceCount": 100
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -66027,7 +66377,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 120
+      "candidateReferenceCount": 122
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -66405,6 +66755,23 @@
           "matchedTerms": [
             "attachment",
             "pdfe"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "copy"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IWindowHost.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "copy",
+            "security"
           ]
         },
         {
@@ -66809,26 +67176,9 @@
             "redaction",
             "security"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "copy",
-            "stripping"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "copy",
-            "stripping",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 114
+      "candidateReferenceCount": 117
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -67028,9 +67378,21 @@
             "redaction",
             "security"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "activation",
+            "pdfe",
+            "safe",
+            "ocr",
+            "redaction",
+            "security"
+          ]
         }
       ],
-      "candidateReferenceCount": 15
+      "candidateReferenceCount": 16
     },
     {
       "id": "pdfe.product.security.attachments",
@@ -67269,6 +67631,24 @@
             "attachments",
             "pdfe",
             "save"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IWindowHost.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "security"
           ]
         },
         {
@@ -67858,32 +68238,9 @@
             "save",
             "redaction"
           ]
-        },
-        {
-          "path": "tests/gui-interaction-registry.json",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "attachments",
-            "save",
-            "ocr",
-            "redaction",
-            "security"
-          ]
-        },
-        {
-          "path": "tests/redaction-bench-design.json",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "attachments",
-            "pdfe",
-            "ocr",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 82
+      "candidateReferenceCount": 85
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -67993,6 +68350,15 @@
             "signature",
             "redaction",
             "security"
+          ]
+        },
+        {
+          "path": "Excise.App/Composition/ApplicationComposition.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "override",
+            "signature",
+            "redaction"
           ]
         },
         {
@@ -68259,6 +68625,19 @@
           ]
         },
         {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "invalidation",
+            "override",
+            "pdfe",
+            "signature",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "docs/architecture/system-design.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -68270,7 +68649,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 34
+      "candidateReferenceCount": 36
     },
     {
       "id": "pdfe.product.ocr.scanned-documents",
@@ -68883,9 +69262,21 @@
             "redaction",
             "security"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "documents",
+            "ocr",
+            "pdfe",
+            "ocr",
+            "redaction",
+            "security"
+          ]
         }
       ],
-      "candidateReferenceCount": 60
+      "candidateReferenceCount": 61
     },
     {
       "id": "pdfe.product.security.audit-log",
@@ -69111,6 +69502,22 @@
           ]
         },
         {
+          "path": "Excise.App/App.axaml.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
+          "path": "Excise.App/Automation/PerfScenarioRunner.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
           "path": "Excise.App/Services/AppPaths.cs",
           "kind": "source",
           "matchedTerms": [
@@ -69120,6 +69527,22 @@
         },
         {
           "path": "Excise.App/Services/DocumentImageExportWorkflowService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/AvaloniaFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
           "kind": "source",
           "matchedTerms": [
             "local",
@@ -69184,23 +69607,6 @@
           ]
         },
         {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log",
-            "redaction"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log"
-          ]
-        },
-        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
           "kind": "source",
           "matchedTerms": [
@@ -69214,7 +69620,6 @@
           "path": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
           "kind": "source",
           "matchedTerms": [
-            "local",
             "log",
             "pdfe",
             "redaction"
@@ -69229,15 +69634,6 @@
           ]
         },
         {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log",
-            "redaction"
-          ]
-        },
-        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.HiddenText.cs",
           "kind": "source",
           "matchedTerms": [
@@ -69248,30 +69644,12 @@
           ]
         },
         {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Redaction.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log",
-            "redaction"
-          ]
-        },
-        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
           "kind": "source",
           "matchedTerms": [
-            "local",
             "log",
             "pdfe",
             "security"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log"
           ]
         },
         {
@@ -69633,6 +70011,15 @@
             "log",
             "redaction"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Fonts/SymbolicTrueTypeSymbolCmapExtractionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "audit",
+            "log",
+            "redaction"
+          ]
         }
       ],
       "candidateReferenceCount": 118
@@ -69791,9 +70178,20 @@
             "redaction",
             "security"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "pdfe",
+            "platform",
+            "ocr",
+            "redaction",
+            "security"
+          ]
         }
       ],
-      "candidateReferenceCount": 15
+      "candidateReferenceCount": 16
     },
     {
       "id": "pdfe.product.forms.restricted-javascript-research",
@@ -70163,9 +70561,20 @@
             "redaction",
             "security"
           ]
+        },
+        {
+          "path": "docs/architecture/main-window-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "forms",
+            "pdfe",
+            "ocr",
+            "redaction",
+            "security"
+          ]
         }
       ],
-      "candidateReferenceCount": 37
+      "candidateReferenceCount": 38
     }
   ],
   "summary": {

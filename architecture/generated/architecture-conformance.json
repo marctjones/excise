@@ -2,30 +2,30 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "30a8fc0d295b67a8b155ba5188edcf52bba9c472",
+  "sourceRevision": "2231cafab8214e2f2b91bcb123be4b081021d44f",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 6495,
-    "observedComponentDependencies": 83,
-    "declaredDependencies": 82,
+    "retainedSymbols": 6616,
+    "observedComponentDependencies": 84,
+    "declaredDependencies": 83,
     "acceptedExceptions": 1,
     "undeclaredDependencies": 0,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
     "unownedShippingSymbols": 0,
-    "unresolvedTypeDependencies": 274,
+    "unresolvedTypeDependencies": 279,
     "registryMismatches": 0
   },
   "componentDependencies": [
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 309,
-      "typeDependencyCount": 21,
+      "references": 325,
+      "typeDependencyCount": 22,
       "classification": "declared",
       "evidence": [
         {
@@ -38,8 +38,8 @@
     {
       "source": "app",
       "target": "avalonia",
-      "references": 107,
-      "typeDependencyCount": 22,
+      "references": 131,
+      "typeDependencyCount": 27,
       "classification": "declared",
       "evidence": [
         {
@@ -66,8 +66,8 @@
     {
       "source": "app",
       "target": "core-document",
-      "references": 317,
-      "typeDependencyCount": 54,
+      "references": 298,
+      "typeDependencyCount": 51,
       "classification": "declared",
       "evidence": [
         {
@@ -164,14 +164,14 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 499,
-      "typeDependencyCount": 59,
+      "references": 662,
+      "typeDependencyCount": 76,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.App.Services.PdfDocumentService",
-          "references": 105
+          "references": 114
         }
       ]
     },
@@ -220,14 +220,14 @@
     {
       "source": "app-main-window",
       "target": "core-document",
-      "references": 309,
-      "typeDependencyCount": 45,
+      "references": 328,
+      "typeDependencyCount": 46,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 63
+          "references": 72
         }
       ]
     },
@@ -262,14 +262,14 @@
     {
       "source": "app-main-window",
       "target": "core-redaction",
-      "references": 83,
+      "references": 84,
       "typeDependencyCount": 22,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Services.RedactedCopyDialogFormatter",
           "target": "Excise.Core.Text.Segmentation.RedactedCopySafetyReport",
-          "references": 22
+          "references": 23
         }
       ]
     },
@@ -542,8 +542,8 @@
     {
       "source": "core",
       "target": "core-document",
-      "references": 122,
-      "typeDependencyCount": 17,
+      "references": 130,
+      "typeDependencyCount": 19,
       "classification": "declared",
       "evidence": [
         {
@@ -570,8 +570,8 @@
     {
       "source": "core",
       "target": "core-primitives",
-      "references": 205,
-      "typeDependencyCount": 36,
+      "references": 211,
+      "typeDependencyCount": 38,
       "classification": "declared",
       "evidence": [
         {
@@ -640,8 +640,8 @@
     {
       "source": "core-document",
       "target": "core",
-      "references": 57,
-      "typeDependencyCount": 15,
+      "references": 62,
+      "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
@@ -682,7 +682,7 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1330,
+      "references": 1332,
       "typeDependencyCount": 197,
       "classification": "declared",
       "evidence": [
@@ -836,14 +836,14 @@
     {
       "source": "core-security",
       "target": "core",
-      "references": 2,
-      "typeDependencyCount": 1,
+      "references": 5,
+      "typeDependencyCount": 2,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Validation.PdfAStructuralValidator",
-          "target": "Excise.Core.Authoring.PdfAConformance",
-          "references": 2
+          "target": "Excise.Core.Authoring.PdfAIdentityXmp",
+          "references": 3
         }
       ]
     },
@@ -956,6 +956,20 @@
           "source": "Excise.Core.Text.TextExtractor",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 15
+        }
+      ]
+    },
+    {
+      "source": "core-writing",
+      "target": "core",
+      "references": 2,
+      "typeDependencyCount": 1,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Writing.PdfDocumentWriter",
+          "target": "Excise.Core.Authoring.PdfAIdentityXmp",
+          "references": 2
         }
       ]
     },
@@ -1232,7 +1246,7 @@
         "path": "tools/Excise.RenderTools/Excise.RenderTools.csproj",
         "classification": "tool",
         "projectComponent": null,
-        "unownedSymbols": 344
+        "unownedSymbols": 350
       }
     ]
   },

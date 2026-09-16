@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "6f8d7bcfc765c50bfb452ba5b74b2b063f502871983c4e6ef6e1a7fab8ec46a9",
+  "sourceFingerprint": "11f4c7615acaed163140f119e85f3c836af04d9edbee2f6176db1ae61d9fda32",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6032,8 +6032,78 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Automation/AppPerfScenarioTarget.cs",
+      "path": "Excise.App/Automation/AppPerfScenarioTarget.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Automation/CommandAccessibility.cs",
       "path": "Excise.App/Automation/CommandAccessibility.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Automation/IPerfScenarioTarget.cs",
+      "path": "Excise.App/Automation/IPerfScenarioTarget.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Automation/PerfSample.cs",
+      "path": "Excise.App/Automation/PerfSample.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Automation/PerfScenario.cs",
+      "path": "Excise.App/Automation/PerfScenario.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Automation/PerfScenarioHost.cs",
+      "path": "Excise.App/Automation/PerfScenarioHost.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Automation/PerfScenarioRunner.cs",
+      "path": "Excise.App/Automation/PerfScenarioRunner.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Automation/PerfStepJournal.cs",
+      "path": "Excise.App/Automation/PerfStepJournal.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -6454,6 +6524,113 @@
     {
       "id": "Excise.App/Services/FilenameSuggestionService.cs",
       "path": "Excise.App/Services/FilenameSuggestionService.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Host/AvaloniaFilePicker.cs",
+      "path": "Excise.App/Services/Host/AvaloniaFilePicker.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Host/AvaloniaWindowHost.cs",
+      "path": "Excise.App/Services/Host/AvaloniaWindowHost.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Host/IFilePicker.cs",
+      "path": "Excise.App/Services/Host/IFilePicker.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Host/IRecentFilesStore.cs",
+      "path": "Excise.App/Services/Host/IRecentFilesStore.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Host/ISettingsStore.cs",
+      "path": "Excise.App/Services/Host/ISettingsStore.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Host/ITextClipboard.cs",
+      "path": "Excise.App/Services/Host/ITextClipboard.cs",
+      "kind": "source-file",
+      "facets": [
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Host/IWindowHost.cs",
+      "path": "Excise.App/Services/Host/IWindowHost.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -9002,25 +9179,25 @@
     }
   ],
   "summary": {
-    "records": 427,
+    "records": 441,
     "facets": {
       "annotations": 11,
-      "content-and-graphics": 18,
+      "content-and-graphics": 19,
       "document-structure": 32,
       "fonts": 30,
       "forms": 8,
       "images": 29,
-      "product-integration-general": 234,
+      "product-integration-general": 247,
       "redaction": 52,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 20,
       "transparency": 2
     },
     "parentCapabilityModes": {
-      "pdf.17.content.streams:mutate": 18,
-      "pdf.17.content.streams:parse": 18,
-      "pdf.17.content.streams:render": 18,
-      "pdf.17.content.streams:write": 18,
+      "pdf.17.content.streams:mutate": 19,
+      "pdf.17.content.streams:parse": 19,
+      "pdf.17.content.streams:render": 19,
+      "pdf.17.content.streams:write": 19,
       "pdf.17.document.catalog-pages:parse": 32,
       "pdf.17.document.catalog-pages:preserve": 32,
       "pdf.17.document.catalog-pages:write": 32,
@@ -9038,16 +9215,16 @@
       "pdf.17.graphics.images:parse": 29,
       "pdf.17.graphics.images:render": 29,
       "pdf.17.graphics.paths-painting:author": 2,
-      "pdf.17.graphics.paths-painting:mutate": 18,
-      "pdf.17.graphics.paths-painting:parse": 18,
+      "pdf.17.graphics.paths-painting:mutate": 19,
+      "pdf.17.graphics.paths-painting:parse": 19,
       "pdf.17.graphics.paths-painting:preserve": 2,
-      "pdf.17.graphics.paths-painting:render": 18,
-      "pdf.17.graphics.paths-painting:write": 18,
-      "pdf.17.graphics.state:mutate": 19,
-      "pdf.17.graphics.state:parse": 19,
+      "pdf.17.graphics.paths-painting:render": 19,
+      "pdf.17.graphics.paths-painting:write": 19,
+      "pdf.17.graphics.state:mutate": 20,
+      "pdf.17.graphics.state:parse": 20,
       "pdf.17.graphics.state:preserve": 1,
-      "pdf.17.graphics.state:render": 19,
-      "pdf.17.graphics.state:write": 19,
+      "pdf.17.graphics.state:render": 20,
+      "pdf.17.graphics.state:write": 20,
       "pdf.17.interactive.annotations:mutate": 11,
       "pdf.17.interactive.annotations:parse": 11,
       "pdf.17.interactive.annotations:preserve": 11,
@@ -9089,7 +9266,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 20,
       "pdfe.product.security.signature-and-permission-warning:write": 20
     },
-    "fallbackRecords": 234,
+    "fallbackRecords": 247,
     "allRecordsMapped": true
   }
 }

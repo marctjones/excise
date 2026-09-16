@@ -37194,6 +37194,20 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.SiteTwo_HalfOpacityShadingPatternInsideExplicitCmykGroup_MatchesItsCalibrationPatch",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.ShOperatorInsideExplicitCmykGroup_DrawsTheShadingAndNotTheBackdrop",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -37715,6 +37729,20 @@
       "mode": "render",
       "currentState": "partial",
       "testCandidates": [
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.SiteTwo_HalfOpacityShadingPatternInsideExplicitCmykGroup_MatchesItsCalibrationPatch",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.ShOperatorInsideExplicitCmykGroup_DrawsTheShadingAndNotTheBackdrop",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
         {
           "test": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
           "mappingSources": [
@@ -38254,6 +38282,20 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.SiteTwo_HalfOpacityShadingPatternInsideExplicitCmykGroup_MatchesItsCalibrationPatch",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.ShOperatorInsideExplicitCmykGroup_DrawsTheShadingAndNotTheBackdrop",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -38775,6 +38817,20 @@
       "mode": "render",
       "currentState": "partial",
       "testCandidates": [
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.SiteTwo_HalfOpacityShadingPatternInsideExplicitCmykGroup_MatchesItsCalibrationPatch",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.ShOperatorInsideExplicitCmykGroup_DrawsTheShadingAndNotTheBackdrop",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
         {
           "test": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
           "mappingSources": [
@@ -81704,6 +81760,55 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.SiteOne_NestedScreenGroupInsideExplicitCmykGroup_MatchesIndependentRenderers",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.SiteOne_NestedScreenGroupInsideExplicitCmykGroup_IsUnaffectedByTheEnclosingGroup",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.SiteOne_NestedScreenGroupInsideExplicitCmykGroup_ChangesNothingOutsideTheObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.SiteTwo_HalfOpacityShadingPatternInsideExplicitCmykGroup_MatchesItsCalibrationPatch",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.SiteThree_NonCmykGroupInsideExplicitCmykGroup_IsNotDoubleLightened",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.ShOperatorInsideExplicitCmykGroup_MatchesIndependentRenderers",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.ShOperatorInsideExplicitCmykGroup_DrawsTheShadingAndNotTheBackdrop",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs::DeviceCmykKnockoutGroupZeroAlphaTests.ZeroAlphaElement_InAKnockoutGroup_ErasesThePrecedingElement",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82106,69 +82211,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::doc.Pdftoppm_CorrectUserPassword_RendersIdenticallyToPlainBaseline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::doc.Pdftoppm_OwnerPassword_RendersIdenticallyToPlainBaseline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::doc.Pdftoppm_WrongPassword_RefusesToRender",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::doc.Pdftoppm_NoPassword_RefusesToRender",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs::EncryptionPreservationInteropTests.Redact_R6Source_OutputSameR6AndPermissions_SecretUnrecoverableByQpdfAndMutool",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs::EncryptionPreservationInteropTests.Redact_R4AesSource_OutputSameR4_SecretUnrecoverableByQpdfAndMutool",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs::EncryptionPreservationInteropTests.Redact_Rc4Fixture_UpgradesToR6_PermissionsSurvive_SecretUnrecoverable",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs::EncryptionPreservationInteropTests.Preserve_EncryptMetadataFalse_SurvivesRoundTrip",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -114343,8 +114385,8 @@
     "gradeImplemented": 199,
     "gradeVerified": 681,
     "gradeUnknown": 18,
-    "testMethods": 6947,
-    "testMethodsWithCapabilityCandidate": 4356,
+    "testMethods": 7014,
+    "testMethodsWithCapabilityCandidate": 4374,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
