@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "7feaac25c9132204c5c1d015e08660bf5ff3d6127ad61b658a8fe3ea766c4945",
+  "sourceFingerprint": "845f0e18ab50981298fc1e4d9a35cba59f8e00049165c8f87e8674e8506492e9",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -4563,11 +4563,11 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs::half.TheCollateralRatchetAndItsCorpus_AreReachableTogether_OrNeitherIs",
+      "id": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs::half.TheCollateralRatchet_IsReadFromTheCheckoutUnderTest",
       "path": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs",
       "class": "half",
-      "method": "TheCollateralRatchetAndItsCorpus_AreReachableTogether_OrNeitherIs",
-      "line": 209,
+      "method": "TheCollateralRatchet_IsReadFromTheCheckoutUnderTest",
+      "line": 220,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4606,7 +4606,7 @@
       "path": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs",
       "class": "half",
       "method": "TheGateRegistry_IsWellFormed",
-      "line": 239,
+      "line": 250,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [

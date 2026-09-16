@@ -194,19 +194,30 @@ public class CorpusRowFloorGateTests
     }
 
     /// <summary>
-    /// The specific blindness #1527 names: <c>RedactionCollateralHarness</c>
-    /// resolved its own ratchet file — <c>tests/redaction-collateral/baseline.json</c>,
-    /// which is TRACKED and so present in every checkout — through the same
-    /// bounded helper as the corpus. The baseline therefore always loaded,
-    /// comparisons always ran and the ratchet always looked intact while the
-    /// corpus it measures against was absent.
+    /// The collateral ratchet must be read from the checkout the code under
+    /// test came from.
     ///
-    /// <para><i>A gate whose self-reporting works in both the healthy and the
-    /// broken configuration cannot report its own breakage.</i> So assert the
-    /// two resolve TOGETHER.</para>
+    /// <para>Context, because this test is easy to overclaim: #1527's
+    /// self-reporting blindness was that <c>RedactionCollateralHarness</c>
+    /// resolved its own ratchet file — <c>tests/redaction-collateral/baseline.json</c>,
+    /// which is TRACKED and so present in every checkout, 4 levels up — through
+    /// the same bounded helper as the corpus, which was 7. The baseline always
+    /// loaded, comparisons always ran and the ratchet always looked intact while
+    /// the corpus it measures against was absent. <i>A gate whose self-reporting
+    /// works in both the healthy and the broken configuration cannot report its
+    /// own breakage.</i></para>
+    ///
+    /// <para>⚠️ <b>This test is not the guard for that asymmetry</b> — in the
+    /// baseline-yes/corpus-no case it skips, truthfully, because a machine
+    /// legitimately may not have downloaded the corpus. What actually catches
+    /// the asymmetry is the row-floor theory above, which fails when the corpus
+    /// IS reachable and the rows are missing. What this test adds is the
+    /// narrower property: with both present, the ratchet comes from the LOCAL
+    /// checkout, so a worktree at one commit can never ratchet against another
+    /// checkout's floors.</para>
     /// </summary>
     [Fact]
-    public void TheCollateralRatchetAndItsCorpus_AreReachableTogether_OrNeitherIs()
+    public void TheCollateralRatchet_IsReadFromTheCheckoutUnderTest()
     {
         var baseline = TestRepoLayout.FindFile("tests/redaction-collateral/baseline.json");
         var corpus = TestRepoLayout.FindDirectory("test-pdfs/smoke")
@@ -215,10 +226,10 @@ public class CorpusRowFloorGateTests
         Assert.SkipWhen(baseline == null,
             TestRepoLayout.AbsenceReason("collateral ratchet baseline", "tests/redaction-collateral/baseline.json"));
 
-        // The reverse asymmetry is legitimate: a machine may have the corpus
-        // without the tracked baseline only if the checkout is broken, which
-        // the skip above already reports. What must never happen again is
-        // "baseline yes, corpus no" passing for a month.
+        // Skipping here is correct, not a loophole: a machine may legitimately
+        // not have downloaded the corpus, and the row-floor theory above is what
+        // fails when the corpus IS reachable and the rows are absent. This test
+        // has an opinion only about WHERE the ratchet is read from.
         if (corpus == null)
             Assert.Skip(TestRepoLayout.AbsenceReason(
                 "redaction corpus (the baseline resolved, so this checkout is intact and the " +
