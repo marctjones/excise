@@ -163,15 +163,13 @@ public class AnnotationDisplayControlTests
                 "the notice must say excise will NOT act on the marks — that is the decision");
     }
 
-    private static string? ResolveFixture(string rel)
-    {
-        var dir = System.AppContext.BaseDirectory;
-        for (var i = 0; i < 8 && dir != null; i++)
-        {
-            var c = System.IO.Path.Combine(dir, rel);
-            if (System.IO.File.Exists(c)) return c;
-            dir = System.IO.Path.GetDirectoryName(dir);
-        }
-        return null;
-    }
+    /// <summary>
+    /// Repository fixture lookup. Delegates to the ONE shared locator
+    /// (<see cref="Excise.TestSupport.TestRepoLayout"/>), which reaches the MAIN
+    /// checkout from a git worktree by reading the worktree's <c>.git</c> file.
+    /// This used to walk upward from <c>AppContext.BaseDirectory</c> bounded at 8
+    /// (#1527/#1525).
+    /// </summary>
+    private static string? ResolveFixture(string rel) =>
+        Excise.TestSupport.TestRepoLayout.FindFile(rel);
 }

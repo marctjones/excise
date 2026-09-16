@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Excise.TestSupport;
-using FluentAssertions;
+using AwesomeAssertions;
 using Xunit;
 
 namespace Excise.Core.Tests.TestSupport;

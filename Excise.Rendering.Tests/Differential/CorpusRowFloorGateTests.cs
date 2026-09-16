@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Excise.TestSupport;
-using FluentAssertions;
+using AwesomeAssertions;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -144,13 +143,13 @@ public class CorpusRowFloorGateTests
 
         var available = reachable
             .SelectMany(c => Directory.EnumerateFiles(c.Full!, "*.pdf"))
-            .Select(Path.GetFileName)
+            .Select(p => Path.GetFileName(p)!)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Count();
 
         Assert.SkipWhen(available == 0,
             $"{gate.Name}: required corpus directories exist but hold no *.pdf " +
-            $"[{TestRepoLayout.SearchedMarker}{TestRepoLayout.SearchedSeparator}" +
+            $"[{TestRepoLayout.SearchedMarker} " +
             $"{string.Join(TestRepoLayout.SearchedSeparator, reachable.Select(c => c.Full))}]");
 
         // A sentinel row is the class saying "I found nothing" — it is not a

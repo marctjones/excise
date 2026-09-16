@@ -514,15 +514,15 @@ public class GroupBAnnotationMeaningTests
         return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
-    private static string? Resolve(string fixture)
-    {
-        var dir = AppContext.BaseDirectory;
-        for (var i = 0; i < 8 && dir != null; i++)
-        {
-            var c = Path.Combine(dir, "test-pdfs", "pdfjs", fixture);
-            if (File.Exists(c)) return c;
-            dir = Path.GetDirectoryName(dir);
-        }
-        return null;
-    }
+    /// <summary>
+    /// Repository fixture lookup. Delegates to the ONE shared locator
+    /// (<see cref="TestRepoLayout"/>), which reaches the MAIN checkout from a git
+    /// worktree by reading the worktree's <c>.git</c> file. This used to walk
+    /// upward from <c>AppContext.BaseDirectory</c> bounded at 8 — from a worktree
+    /// the corpora are 7 levels up and the first iteration is spent stripping a
+    /// trailing separator, so every corpus row in this class skipped with a
+    /// declared reason that was false (#1527/#1525).
+    /// </summary>
+    private static string? Resolve(string fixture) =>
+        TestRepoLayout.FindFile("test-pdfs", "pdfjs", fixture);
 }

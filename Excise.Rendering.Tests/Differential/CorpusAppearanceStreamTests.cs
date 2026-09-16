@@ -7,6 +7,7 @@ using Excise.Core.Document;
 using Excise.Rendering.Differential;
 using SkiaSharp;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Rendering.Tests.Differential;
 
@@ -278,15 +279,13 @@ public class CorpusAppearanceStreamTests
         return bmp!;
     }
 
-    private static string? Resolve(string rel)
-    {
-        var dir = AppContext.BaseDirectory;
-        for (var i = 0; i < 8 && dir != null; i++)
-        {
-            var candidate = Path.Combine(dir, rel);
-            if (File.Exists(candidate)) return candidate;
-            dir = Path.GetDirectoryName(dir);
-        }
-        return null;
-    }
+    /// <summary>
+    /// Repository fixture lookup. Delegates to the ONE shared locator
+    /// (<see cref="TestRepoLayout"/>), which reaches the MAIN checkout from a git
+    /// worktree by reading the worktree's <c>.git</c> file. This used to count
+    /// directories upward from AppContext.BaseDirectory, bounded at 8 — from a worktree the corpora are 7
+    /// levels up, so the rows this class needs were never collected (#1527/#1525).
+    /// </summary>
+    private static string? Resolve(string rel) =>
+        TestRepoLayout.FindFile(rel);
 }
