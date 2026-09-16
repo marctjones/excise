@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using Excise.TestSupport;
 using AwesomeAssertions;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -70,7 +70,7 @@ public class CorpusRowFloorGateTests
         string Name,
         string[] Corpora,
         Func<TheoryData<string>> Rows,
-        Floor Floor,
+        Floor RowFloor,
         string Why);
 
     /// <summary>
@@ -159,11 +159,11 @@ public class CorpusRowFloorGateTests
         var real = rows.Where(r => !r.StartsWith("(", StringComparison.Ordinal)).ToArray();
         var sentinels = rows.Except(real, StringComparer.Ordinal).ToArray();
 
-        var floor = gate.Floor switch
+        var floor = gate.RowFloor switch
         {
             Floor.EveryFixture => available,
             Floor.AtLeastHalfTheFixtures => Math.Max(1, available / 2),
-            _ => throw new InvalidOperationException($"unhandled floor {gate.Floor}"),
+            _ => throw new InvalidOperationException($"unhandled floor {gate.RowFloor}"),
         };
 
         var evidence =
@@ -173,7 +173,7 @@ public class CorpusRowFloorGateTests
             $"\n  fixture files   {available}" +
             $"\n  rows collected  {real.Length}" +
             (sentinels.Length == 0 ? "" : $"\n  sentinel rows   {string.Join(", ", sentinels)}") +
-            $"\n  floor required  {floor} ({gate.Floor})" +
+            $"\n  floor required  {floor} ({gate.RowFloor})" +
             $"\n  search roots    {string.Join(", ", TestRepoLayout.SearchRoots)}" +
             "\n\n  A corpus this gate needs IS reachable from here, and the gate did not " +
             "collect\n  rows for it. That is #1527: the class resolves the corpus differently " +

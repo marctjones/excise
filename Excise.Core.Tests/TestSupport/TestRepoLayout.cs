@@ -122,8 +122,11 @@ internal static class TestRepoLayout
     /// checkout. Use this and nothing else for build output: see the class
     /// remarks.
     /// </summary>
-    public static string? FindFileInLocalCheckout(params string[] segments) =>
-        Find(segments, File.Exists, LocalCheckoutRoot == null ? Array.Empty<string>() : new[] { LocalCheckoutRoot });
+    public static string? FindFileInLocalCheckout(params string[] segments)
+    {
+        var local = LocalCheckoutRoot;
+        return Find(segments, File.Exists, local == null ? Array.Empty<string>() : new[] { local });
+    }
 
     /// <summary>
     /// A skip/failure reason whose absence claim is CHECKABLE: it names what

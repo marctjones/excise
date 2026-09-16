@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using Excise.TestSupport;
 using AwesomeAssertions;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.TestSupport;
