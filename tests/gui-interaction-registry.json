@@ -4,10 +4,10 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "b7bab5e3358ef27372ca384bc634719ffbc718af",
+  "sourceRevision": "cf5a3720683e91a22da2042b9d6edd2661dc7c30",
   "summary": {
-    "interactions": 149,
-    "menuItems": 95,
+    "interactions": 159,
+    "menuItems": 105,
     "buttons": 45,
     "mouseGestures": 9,
     "keyboardShortcuts": 28,
@@ -967,6 +967,15 @@
     },
     {
       "kind": "menu",
+      "path": "Edit > Form Authoring Mode",
+      "label": "Form Authoring Mode",
+      "command": "ToggleFormAuthoringModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "form.toggleAuthoring"
+    },
+    {
+      "kind": "menu",
       "path": "Edit > Go to Next Pending Type-over Edit",
       "label": "Go to Next Pending Type-over Edit",
       "command": "GoToNextPendingTypewriterEditCommand",
@@ -991,6 +1000,78 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "edit.typewriterMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Typewriter Text Color > Black",
+      "label": "Black",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#000000",
+      "shortcut": null,
+      "commandId": "typewriter.setColor"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Typewriter Text Color > Blue",
+      "label": "Blue",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#1565C0",
+      "shortcut": null,
+      "commandId": "typewriter.setColor"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Typewriter Text Color > Gray",
+      "label": "Gray",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#555555",
+      "shortcut": null,
+      "commandId": "typewriter.setColor"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Typewriter Text Color > Green",
+      "label": "Green",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#2E7D32",
+      "shortcut": null,
+      "commandId": "typewriter.setColor"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Typewriter Text Color > Orange",
+      "label": "Orange",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#F5A623",
+      "shortcut": null,
+      "commandId": "typewriter.setColor"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Typewriter Text Color > Purple",
+      "label": "Purple",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#6A1B9A",
+      "shortcut": null,
+      "commandId": "typewriter.setColor"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Typewriter Text Color > Red",
+      "label": "Red",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#D0021B",
+      "shortcut": null,
+      "commandId": "typewriter.setColor"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Typewriter Text Color > White",
+      "label": "White",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#FFFFFF",
+      "shortcut": null,
+      "commandId": "typewriter.setColor"
     },
     {
       "kind": "menu",
@@ -1108,6 +1189,15 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "view.toggleClipboardHistory"
+    },
+    {
+      "kind": "menu",
+      "path": "Tools > Auto-detect Form Fields",
+      "label": "Auto-detect Form Fields",
+      "command": "AutoDetectFieldsCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "form.autoDetectFields"
     },
     {
       "kind": "menu",

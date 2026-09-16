@@ -20,8 +20,10 @@ namespace Excise.Core.Document;
 ///   • Append a new widget annotation to the target page's /Annots (creating
 ///     /Annots if absent).
 ///   • Append the widget's reference to /AcroForm/Fields.
-///   • Set /AcroForm/NeedAppearances = true so readers regenerate the visual
-///     appearance from the field state.
+///   • Give the widget its own /AP /N appearance stream and the /F Print
+///     flag, so every reader draws and prints the field, including readers
+///     that ignore NeedAppearances (#1444). /AcroForm/NeedAppearances is NOT
+///     set: PDF/A forbids it, and it asks viewers to discard the appearance.
 ///   • Return a fully-parsed <see cref="PdfField"/> the caller can
 ///     immediately call <c>SetValue</c> on.
 ///
@@ -76,7 +78,9 @@ public static class AcroFormAuthoring
         // Default appearance: black text in appearanceFont, or 10-point
         // Helvetica when none is given. The font resource is registered in the
         // AcroForm /DR so the /DA name resolves.
-        widget.SetString("DA", DefaultAppearance(document, pageNumber, appearanceFont));
+        var appearanceFontInfo = DefaultAppearance(document, pageNumber, appearanceFont);
+        widget.SetString("DA", appearanceFontInfo.DefaultAppearanceString);
+        WriteTextAppearance(document, widget, rect, defaultValue, appearanceFontInfo, multiline: multiline);
 
         return AttachWidget(document, pageNumber, widget, fieldName);
     }
@@ -111,7 +115,9 @@ public static class AcroFormAuthoring
         int flags = 0;
         if (required) flags |= 0x2;
         if (flags != 0) widget.SetInt("Ff", flags);
-        widget.SetString("DA", DefaultAppearance(document, pageNumber, appearanceFont));
+        var appearanceFontInfo = DefaultAppearance(document, pageNumber, appearanceFont);
+        widget.SetString("DA", appearanceFontInfo.DefaultAppearanceString);
+        WriteTextAppearance(document, widget, rect, defaultValue, appearanceFontInfo, multiline: false);
 
         // /AA additional-actions: format (F) on display, keystroke (K) on input.
         var format1 = new PdfDictionary();
@@ -149,6 +155,7 @@ public static class AcroFormAuthoring
         widget.SetName("AS", defaultChecked ? "Yes" : "Off");
         SetTooltip(widget, tooltip);
         if (readOnly) widget.SetInt("Ff", 0x1);
+        WriteCheckBoxAppearance(document, widget, rect, onState: "Yes");
 
         return AttachWidget(document, pageNumber, widget, fieldName);
     }
@@ -196,7 +203,9 @@ public static class AcroFormAuthoring
         int flags = 1 << 17;
         if (readOnly) flags |= 0x1;
         widget.SetInt("Ff", flags);
-        widget.SetString("DA", DefaultAppearance(document, pageNumber, appearanceFont));
+        var appearanceFontInfo = DefaultAppearance(document, pageNumber, appearanceFont);
+        widget.SetString("DA", appearanceFontInfo.DefaultAppearanceString);
+        WriteTextAppearance(document, widget, rect, defaultValue, appearanceFontInfo, multiline: false);
 
         return AttachWidget(document, pageNumber, widget, fieldName);
     }
@@ -218,6 +227,9 @@ public static class AcroFormAuthoring
         widget.SetName("FT", "Sig");
         widget.SetString("T", fieldName);
         SetTooltip(widget, tooltip);
+        // An unsigned placeholder still needs an appearance: PDF/A requires one
+        // on every widget with a non-empty /Rect (ISO 19005-2 6.3.3).
+        WriteEmptyAppearance(document, widget, rect);
         return AttachWidget(document, pageNumber, widget, fieldName);
     }
 
@@ -251,6 +263,182 @@ public static class AcroFormAuthoring
         page.Dictionary.SetName("Tabs", name);
     }
 
+    // ── appearance streams (#1444) ──────────────────────────────────────────
+
+    /// <summary>A text-like widget's <c>/DA</c> string and the font it names.</summary>
+    private sealed record AppearanceFont(string DefaultAppearanceString, string ResourceName, Graphics.PdfFont Font);
+
+    /// <summary>
+    /// Write a text or choice widget's <c>/AP</c> — only <c>/N</c>, as PDF/A
+    /// requires (ISO 19005-2 6.3.3) — drawing <paramref name="value"/> with the
+    /// <c>/DA</c> font, and remember that font so <see cref="PdfField.SetValue"/>
+    /// can redraw the appearance in this session.
+    /// </summary>
+    private static void WriteTextAppearance(
+        PdfDocument document, PdfDictionary widget, PdfRectangle rect, string? value, AppearanceFont font, bool multiline)
+    {
+        var authored = new AuthoredWidgetAppearance(AuthoredWidgetKind.Text, font.ResourceName, font.Font, multiline);
+        SetNormalAppearance(widget, BuildTextAppearanceStream(document, rect, value, authored));
+        document.RememberAuthoredWidgetAppearance(widget, authored);
+    }
+
+    /// <summary>
+    /// A checkbox's <c>/AP /N</c> is a state dictionary (ISO 19005-2 6.3.3 for
+    /// Btn widgets): the on state draws a vector tick, <c>/Off</c> draws nothing.
+    /// A vector tick rather than a ZapfDingbats glyph, because base-14 fonts are
+    /// not embedded and PDF/A requires every font an appearance uses to be.
+    /// </summary>
+    private static void WriteCheckBoxAppearance(PdfDocument document, PdfDictionary widget, PdfRectangle rect, string onState)
+    {
+        var width = Math.Abs(rect.Width);
+        var height = Math.Abs(rect.Height);
+        var lineWidth = Math.Max(0.5, Math.Min(width, height) * 0.1);
+        var tick = new System.Text.StringBuilder()
+            .Append("q 0 G ").Append(Fmt(lineWidth)).Append(" w 1 J 1 j\n")
+            .Append(Fmt(width * 0.2)).Append(' ').Append(Fmt(height * 0.52)).Append(" m\n")
+            .Append(Fmt(width * 0.42)).Append(' ').Append(Fmt(height * 0.26)).Append(" l\n")
+            .Append(Fmt(width * 0.8)).Append(' ').Append(Fmt(height * 0.76)).Append(" l\nS Q\n")
+            .ToString();
+
+        var states = new PdfDictionary();
+        states[onState] = AddFormXObject(document, width, height, tick, resources: null);
+        states["Off"] = AddFormXObject(document, width, height, string.Empty, resources: null);
+        var ap = new PdfDictionary();
+        ap["N"] = states;
+        widget["AP"] = ap;
+        document.RememberAuthoredWidgetAppearance(
+            widget, new AuthoredWidgetAppearance(AuthoredWidgetKind.CheckBox, ResourceName: null, Font: null, Multiline: false));
+    }
+
+    private static void WriteEmptyAppearance(PdfDocument document, PdfDictionary widget, PdfRectangle rect) =>
+        SetNormalAppearance(widget, AddFormXObject(document, Math.Abs(rect.Width), Math.Abs(rect.Height), string.Empty, resources: null));
+
+    /// <summary>
+    /// Redraw the appearance of a widget authored by this class in this session
+    /// for a new <paramref name="value"/>. Returns false — the caller then falls
+    /// back to NeedAppearances — for a widget excise did not author here (no font
+    /// to encode the value with; this includes an authored document reopened from
+    /// bytes) or a checkbox value that names no appearance state.
+    /// </summary>
+    internal static bool TryRegenerateAppearance(PdfDocument document, PdfDictionary widget, string? value)
+    {
+        if (!document.TryGetAuthoredWidgetAppearance(widget, out var authored))
+            return false;
+
+        if (authored.Kind == AuthoredWidgetKind.CheckBox)
+        {
+            if (value == null || value == "Off")
+                return true;
+            return widget.GetOptional("AP") is { } apObj
+                && document.Resolve(apObj) is PdfDictionary ap
+                && ap.GetOptional("N") is { } normalObj
+                && document.Resolve(normalObj) is PdfDictionary states
+                && states.ContainsKey(value);
+        }
+
+        if (!TryReadRect(document, widget, out var rect))
+            return false;
+
+        SetNormalAppearance(widget, BuildTextAppearanceStream(document, rect, value, authored));
+        return true;
+    }
+
+    private static PdfReference BuildTextAppearanceStream(
+        PdfDocument document, PdfRectangle rect, string? value, AuthoredWidgetAppearance authored)
+    {
+        var width = Math.Abs(rect.Width);
+        var height = Math.Abs(rect.Height);
+        var font = authored.Font!;
+        var resourceName = authored.ResourceName!;
+
+        var content = new System.Text.StringBuilder("/Tx BMC\n");
+        if (!string.IsNullOrEmpty(value))
+        {
+            const double padding = 2.0;
+            var ascent = Math.Abs(font.Ascender);
+            var descent = Math.Abs(font.Descender);
+            var lines = authored.Multiline
+                ? value.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n')
+                : new[] { value.Replace("\r\n", " ").Replace('\r', ' ').Replace('\n', ' ') };
+            var baseline = authored.Multiline
+                ? height - padding - ascent
+                : (height - (ascent + descent)) / 2 + descent;
+
+            content.Append("q\n")
+                .Append(Fmt(padding / 2)).Append(' ').Append(Fmt(padding / 2)).Append(' ')
+                .Append(Fmt(Math.Max(0, width - padding))).Append(' ').Append(Fmt(Math.Max(0, height - padding)))
+                .Append(" re W n\nBT\n/").Append(resourceName).Append(' ').Append(Fmt(font.Size)).Append(" Tf\n0 g\n")
+                .Append(Fmt(padding)).Append(' ').Append(Fmt(baseline)).Append(" Td\n");
+            for (var i = 0; i < lines.Length; i++)
+            {
+                if (i > 0)
+                    content.Append("0 ").Append(Fmt(-font.LineHeight)).Append(" Td\n");
+                // EncodeString, not a Latin-1 literal: an embedded /DA font is
+                // Identity-H, and encoding through it also records the glyphs
+                // for the subset built at save time.
+                content.Append(font.EncodeString(lines[i])).Append(" Tj\n");
+            }
+            content.Append("ET\nQ\n");
+        }
+        content.Append("EMC\n");
+
+        // The appearance names the same font object as /DR, so an embedded font
+        // program is still written once.
+        var fonts = new PdfDictionary();
+        if (EnsureDrFonts(document, EnsureAcroForm(document)).TryGetValue(resourceName, out var fontObject))
+            fonts[resourceName] = fontObject;
+        var resources = new PdfDictionary();
+        resources["Font"] = fonts;
+        return AddFormXObject(document, width, height, content.ToString(), resources);
+    }
+
+    private static void SetNormalAppearance(PdfDictionary widget, PdfReference normal)
+    {
+        var ap = new PdfDictionary();
+        ap["N"] = normal;
+        widget["AP"] = ap;
+    }
+
+    private static PdfReference AddFormXObject(
+        PdfDocument document, double width, double height, string content, PdfDictionary? resources)
+    {
+        var bytes = System.Text.Encoding.Latin1.GetBytes(content);
+        var dict = new PdfDictionary();
+        dict.SetName("Type", "XObject");
+        dict.SetName("Subtype", "Form");
+        var bbox = new PdfArray();
+        bbox.Add((PdfObject)new PdfReal(0));
+        bbox.Add((PdfObject)new PdfReal(0));
+        bbox.Add((PdfObject)new PdfReal(width));
+        bbox.Add((PdfObject)new PdfReal(height));
+        dict["BBox"] = bbox;
+        dict["Resources"] = resources ?? new PdfDictionary();
+        dict.SetInt("Length", bytes.Length);
+        return document.AddIndirectObject(new PdfStream(dict, bytes));
+    }
+
+    private static bool TryReadRect(PdfDocument document, PdfDictionary widget, out PdfRectangle rect)
+    {
+        rect = default!;
+        if (widget.GetOptional("Rect") is not { } rectObj || document.Resolve(rectObj) is not PdfArray array || array.Count < 4)
+            return false;
+
+        var values = new double[4];
+        for (var i = 0; i < 4; i++)
+        {
+            if (document.Resolve(array[i]) is not PdfObject item || !item.TryGetNumber(out var number))
+                return false;
+            values[i] = number;
+        }
+
+        rect = new PdfRectangle(
+            Math.Min(values[0], values[2]), Math.Min(values[1], values[3]),
+            Math.Max(values[0], values[2]), Math.Max(values[1], values[3]));
+        return true;
+    }
+
+    private static string Fmt(double value) => PdfNumberFormatter.Format(value);
+
     // ── plumbing ────────────────────────────────────────────────────────────
 
     /// <summary>Set the field's <c>/TU</c> (tooltip / accessible name) when provided.</summary>
@@ -265,6 +453,9 @@ public static class AcroFormAuthoring
         var widget = new PdfDictionary();
         widget.SetName("Type", "Annot");
         widget.SetName("Subtype", "Widget");
+        // /F 4 = Print (§12.5.3). Without it conforming readers do not print the
+        // field, and PDF/A rejects the widget (ISO 19005-2 6.3.2) (#1444).
+        widget.SetInt("F", 4);
 
         var rectArr = new PdfArray();
         rectArr.Add((PdfObject)new PdfReal(rect.Left));
@@ -330,8 +521,9 @@ public static class AcroFormAuthoring
         }
         fields.Add(widgetRef);
 
-        // 4. Tell readers to regenerate appearance.
-        acroForm.SetBool("NeedAppearances", true);
+        // 4. No /NeedAppearances: the Add* method already wrote this widget's
+        // /AP (#1444). The flag is forbidden by PDF/A (ISO 19005-2 6.4.1) and
+        // asks viewers to throw the typeset appearance away.
 
         // 5. Re-parse so the caller gets a hydrated PdfField with all
         // computed properties (rect, page, type) populated.
@@ -354,7 +546,7 @@ public static class AcroFormAuthoring
     /// <see cref="Authoring.PdfDocumentBuilder.DefaultFont"/> now does — keeps
     /// the /DA on the embedded program instead.</para>
     /// </summary>
-    private static string DefaultAppearance(PdfDocument document, int pageNumber, Graphics.PdfFont? font)
+    private static AppearanceFont DefaultAppearance(PdfDocument document, int pageNumber, Graphics.PdfFont? font)
     {
         if (font == null || font.IsStandard14)
         {
@@ -362,11 +554,11 @@ public static class AcroFormAuthoring
             // document whose fields all use an embedded font carries no
             // non-embedded base-14 font dictionary at all.
             EnsureHelvResource(document);
-            return "/Helv 10 Tf 0 g";
+            return new AppearanceFont("/Helv 10 Tf 0 g", "Helv", Graphics.PdfFont.Helvetica(10));
         }
 
         var name = RegisterAppearanceFont(document, pageNumber, font);
-        return $"/{name} {PdfNumberFormatter.Format(font.Size)} Tf 0 g";
+        return new AppearanceFont($"/{name} {PdfNumberFormatter.Format(font.Size)} Tf 0 g", name, font);
     }
 
     /// <summary>
@@ -562,3 +754,23 @@ public static class AcroFormAuthoring
             throw new ArgumentException("Field name contains invalid control characters.", nameof(fieldName));
     }
 }
+
+/// <summary>Which appearance an authored widget carries (#1444).</summary>
+internal enum AuthoredWidgetKind
+{
+    /// <summary>A text or choice widget: one /N stream drawing the value.</summary>
+    Text,
+
+    /// <summary>A checkbox: an /N state dictionary with an on state and /Off.</summary>
+    CheckBox,
+}
+
+/// <summary>
+/// What <see cref="AcroFormAuthoring"/> needs to redraw a widget it authored:
+/// the /DR font resource name and the font that encodes the value (#1444).
+/// </summary>
+internal sealed record AuthoredWidgetAppearance(
+    AuthoredWidgetKind Kind,
+    string? ResourceName,
+    Graphics.PdfFont? Font,
+    bool Multiline);

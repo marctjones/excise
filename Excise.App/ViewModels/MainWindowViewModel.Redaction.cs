@@ -33,7 +33,7 @@ public partial class MainWindowViewModel
         }
 
         var mark = _redactionWorkflowService.CaptureMark(
-            new RedactionMarkRequest(_currentFilePath, CurrentPageIndex, pageArea));
+            new RedactionMarkRequest(_currentFilePath, pageArea));
         // #1205: extracted page text echoed into a log line.
         _logger.LogInformation("Preview text extracted: '{Text}'",
             Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(mark.PreviewText));

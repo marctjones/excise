@@ -29,10 +29,28 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
             new PdfRectangle(0, 0, 612, 792));
 
         var result = CreateWorkflow().CaptureMark(
-            new RedactionMarkRequest(sourcePath, 0, pageArea));
+            new RedactionMarkRequest(sourcePath, pageArea));
 
         result.PageArea.Should().Be(pageArea);
         Assert.Contains("PREVIEWSECRET1288", result.PreviewText);
+    }
+
+    /// <summary>
+    /// #1490: a mark on page 2 previews page 2's text. The page comes from the
+    /// rectangle, so nothing the viewer is showing can redirect it.
+    /// </summary>
+    [Fact]
+    public void CaptureMark_ReadsThePreviewFromTheRectanglesOwnPage()
+    {
+        var sourcePath = Path.Combine(_tempDir, "two-pages.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 2);
+        var pageTwo = PdfPageRect.FromContentPoints(2, new PdfRectangle(0, 0, 612, 792));
+
+        var result = CreateWorkflow().CaptureMark(new RedactionMarkRequest(sourcePath, pageTwo));
+
+        result.PageArea.Should().Be(pageTwo);
+        result.PreviewText.Should().Contain("Secret on Page 2");
+        result.PreviewText.Should().NotContain("Page 1");
     }
 
     [Fact]

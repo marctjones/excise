@@ -3,6 +3,7 @@
         xmlns:vm="using:Excise.App.ViewModels"
         xmlns:models="using:Excise.App.Models"
         xmlns:access="using:Excise.App.Automation"
+        xmlns:toolbar="using:Excise.App.Controls"
         xmlns:controls="using:Excise.Avalonia.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -25,6 +26,45 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
+
+    <Window.Styles>
+        <!-- #1476: what the main toolbar's degradation stages mean. The panel
+             (ToolbarActionsPanel, PriorityToolbarPanel) only sets :icon-only and
+             :compact; these styles decide what they do. Declared on the window,
+             not in Controls.axaml, so the headless test app (which loads only
+             FluentTheme) lays the toolbar out the same way. Padding and the rotate
+             glyph size live here rather than as local values on the buttons,
+             because a local value would outrank the :compact setters.
+             Within one Styles collection the later style wins, so the :compact
+             styles come last. -->
+        <Style Selector="toolbar|PriorityToolbarPanel Button.toolbar-button">
+            <Setter Property="Padding" Value="10,6"/>
+        </Style>
+        <Style Selector="toolbar|PriorityToolbarPanel Button.toolbar-button.labelled">
+            <Setter Property="Padding" Value="12,6"/>
+        </Style>
+        <Style Selector="toolbar|PriorityToolbarPanel Button.toolbar-glyph">
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+        <!-- Stage 1: labels go. Tooltips and CommandAccessibility's automation
+             names still carry them. -->
+        <Style Selector="toolbar|PriorityToolbarPanel:icon-only TextBlock.toolbar-label">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <!-- Stage 2: icons shrink and padding tightens. The row keeps its height;
+             the panel sizes it from the full stage. -->
+        <Style Selector="toolbar|PriorityToolbarPanel:compact Button.toolbar-button">
+            <Setter Property="Padding" Value="6,6"/>
+        </Style>
+        <Style Selector="toolbar|PriorityToolbarPanel:compact PathIcon.toolbar-icon">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Height" Value="12"/>
+        </Style>
+        <Style Selector="toolbar|PriorityToolbarPanel:compact Button.toolbar-glyph">
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <!-- Stage 3, hiding by priority, is the panel's own IsVisible handling. -->
+    </Window.Styles>
 
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
 
@@ -91,6 +131,37 @@
                           access:CommandAccessibility.CommandId="edit.typewriterMode">
                     <MenuItem.Icon>
                         <TextBlock Text="✓" IsVisible="{Binding IsTypewriterMode}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <!-- #1476: the toolbar's colour swatches can be hidden on a narrow
+                     window, so the same eight presets live here. Setting a colour
+                     with no active box sets the colour of the next box drawn. -->
+                <MenuItem Header="Typewriter Text Co_lor"
+                          IsEnabled="{Binding IsDocumentLoaded}">
+                    <MenuItem Header="Black" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#000000"
+                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                    <MenuItem Header="Gray" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#555555"
+                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                    <MenuItem Header="Red" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#D0021B"
+                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                    <MenuItem Header="Orange" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#F5A623"
+                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                    <MenuItem Header="Green" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#2E7D32"
+                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                    <MenuItem Header="Blue" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#1565C0"
+                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                    <MenuItem Header="Purple" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#6A1B9A"
+                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                    <MenuItem Header="White" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#FFFFFF"
+                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                </MenuItem>
+                <!-- #1476: Form Authoring is a mode like Typewriter; the toolbar
+                     toggle is among the first actions a narrow window hides. -->
+                <MenuItem Header="Form _Authoring Mode" Command="{Binding ToggleFormAuthoringModeCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="form.toggleAuthoring">
+                    <MenuItem.Icon>
+                        <TextBlock Text="✓" IsVisible="{Binding IsFormAuthoringMode}"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <!-- #780: pending type-over edits flatten on save even after leaving
@@ -323,6 +394,12 @@
                           ToolTip.Tip="OCR scanned pages and write the recognized text back as an invisible, searchable layer."
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="tools.makeSearchable"/>
+                <!-- #1476: the toolbar's auto-detect button is the second action a
+                     narrow window hides, so it needs a menu home. -->
+                <MenuItem Header="Auto-detect Form _Fields" Command="{Binding AutoDetectFieldsCommand}"
+                          ToolTip.Tip="Heuristically add form fields where the page has underline placeholders or empty squares."
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="form.autoDetectFields"/>
                 <Separator/>
                 <MenuItem Header="_Preferences..." Command="{Binding ShowPreferencesCommand}" InputGesture="Ctrl+,"
                           access:CommandAccessibility.CommandId="app.preferences">
@@ -444,25 +521,53 @@
                        HorizontalAlignment="Center"/>
         </Grid>
 
-        <!-- Simplified Toolbar with Grouped Actions -->
-        <Border Grid.Row="3"
+        <!-- Main toolbar (#1476). It never scrolls and never wraps: as it narrows,
+             PriorityToolbarPanel drops the text labels, then shrinks the icons
+             (the :icon-only / :compact styles in Window.Styles), then hides
+             whole priority groups, lowest first. Everything it can hide is also
+             in the menu (MainMenuBar here, MacNativeMenuBuilder on macOS), so
+             hiding only decides what stays one click away. ToolbarWidthTests
+             pins all of this.
+
+             Priorities (higher stays longer; equal values hide together):
+               97  typewriter size + alignment  (no command, so no menu entry;
+                                                 shown only while styling a box)
+               95  Redact, Apply
+               90  Open, Save; form field type (no command; form mode only)
+               85  Find
+               80  Select Text, Type
+               70  typewriter colour            (Edit > Typewriter Text Color)
+               60  outline + thumbnails sidebars
+               55  continuous scroll
+               50  highlight, sticky note
+               25  Flatten Form
+               20  Form Authoring
+               15  Auto-detect Fields
+               10  rotate left/right            (Document menu, Ctrl+L / Ctrl+R)
+             Zoom keeps its own Auto column, so #589's guarantee holds by
+             construction and zoom is never hidden.
+
+             Direct children of the panel must not bind IsVisible: the panel
+             owns it. A contextual item binds PriorityToolbarPanel.IsAvailable. -->
+        <Border x:Name="ToolbarBorder"
+                Grid.Row="3"
                 Background="{DynamicResource SecondaryBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="8,6">
             <Grid ColumnDefinitions="*,Auto">
-                <!-- Left: Main Actions -->
-                <ScrollViewer Grid.Column="0"
-                              HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollBarVisibility="Disabled"
-                              Margin="0,0,8,0">
-                <StackPanel Orientation="Horizontal" Spacing="4">
+                <toolbar:PriorityToolbarPanel x:Name="ToolbarActionsPanel"
+                                              Grid.Column="0"
+                                              Spacing="4"
+                                              MinHeight="32"
+                                              ClipToBounds="True"
+                                              Margin="0,0,8,0">
                     <!-- View Group: sidebar toggles (outline + page previews) -->
                     <Button x:Name="ToolbarOutlineButton"
+                            toolbar:PriorityToolbarPanel.Priority="60"
                             Command="{Binding ToggleOutlineCommand}"
-                            Classes="modern-button toggle"
+                            Classes="modern-button toggle toolbar-button"
                             Classes.active="{Binding IsOutlineSidebarVisible}"
-                            Padding="10,6"
                             access:CommandAccessibility.CommandId="view.toggleOutline"
                             ToolTip.Tip="Show/hide Outline (Ctrl+Shift+O)"
                             AutomationProperties.Name="Toggle Outline Sidebar"
@@ -470,10 +575,10 @@
                         <PathIcon Classes="toolbar-icon" Data="{StaticResource IconOutline}"/>
                     </Button>
                     <Button x:Name="ToolbarThumbnailsButton"
+                            toolbar:PriorityToolbarPanel.Priority="60"
                             Command="{Binding ToggleThumbnailsCommand}"
-                            Classes="modern-button toggle"
+                            Classes="modern-button toggle toolbar-button"
                             Classes.active="{Binding IsThumbnailsSidebarVisible}"
-                            Padding="10,6"
                             access:CommandAccessibility.CommandId="view.toggleThumbnails"
                             ToolTip.Tip="Show/hide Page Previews (Ctrl+Shift+T)"
                             AutomationProperties.Name="Toggle Thumbnails Sidebar"
@@ -481,10 +586,10 @@
                         <PathIcon Classes="toolbar-icon" Data="{StaticResource IconThumbnails}"/>
                     </Button>
                     <Button x:Name="ToolbarContinuousButton"
+                            toolbar:PriorityToolbarPanel.Priority="55"
                             Command="{Binding ToggleContinuousViewCommand}"
-                            Classes="modern-button toggle"
+                            Classes="modern-button toggle toolbar-button"
                             Classes.active="{Binding IsContinuousView}"
-                            Padding="10,6"
                             access:CommandAccessibility.CommandId="view.toggleContinuous"
                             ToolTip.Tip="Continuous scroll view (Ctrl+Shift+C)"
                             AutomationProperties.Name="Continuous Scroll View"
@@ -492,23 +597,26 @@
                         <PathIcon Classes="toolbar-icon" Data="{StaticResource IconContinuous}"/>
                     </Button>
 
-                    <Border Width="1" Height="24" Margin="6,0"
+                    <Border toolbar:PriorityToolbarPanel.IsSeparator="True"
+                            Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
                     <!-- File Group -->
-                    <Button Command="{Binding OpenFileCommand}"
-                            Classes="modern-button" Padding="12,6"
+                    <Button toolbar:PriorityToolbarPanel.Priority="90"
+                            Command="{Binding OpenFileCommand}"
+                            Classes="modern-button toolbar-button labelled"
                             access:CommandAccessibility.CommandId="app.open"
                             ToolTip.Tip="Open PDF (Ctrl+O)"
                             AutomationProperties.Name="Open PDF File"
                             AutomationProperties.HelpText="Opens a file dialog to select a PDF document">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconFolderOpen}"/>
-                            <TextBlock Text="Open"/>
+                            <TextBlock Classes="toolbar-label" Text="Open"/>
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding SaveFileCommand}"
-                            Classes="modern-button" Padding="12,6"
+                    <Button toolbar:PriorityToolbarPanel.Priority="90"
+                            Command="{Binding SaveFileCommand}"
+                            Classes="modern-button toolbar-button labelled"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="app.save"
                             ToolTip.Tip="Save (Ctrl+S)"
@@ -516,11 +624,12 @@
                             AutomationProperties.HelpText="Saves the current PDF document">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSave}"/>
-                            <TextBlock Text="{Binding SaveButtonText}"/>
+                            <TextBlock Classes="toolbar-label" Text="{Binding SaveButtonText}"/>
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding SaveFlattenedFormCopyCommand}"
-                            Classes="modern-button" Padding="12,6"
+                    <Button toolbar:PriorityToolbarPanel.Priority="25"
+                            Command="{Binding SaveFlattenedFormCopyCommand}"
+                            Classes="modern-button toolbar-button labelled"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="form.saveFlattenedCopy"
                             ToolTip.Tip="Save a flattened copy of filled form values"
@@ -528,18 +637,19 @@
                             AutomationProperties.HelpText="Creates a copy where interactive form values are baked into page content">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconLayers}"/>
-                            <TextBlock Text="Flatten Form"/>
+                            <TextBlock Classes="toolbar-label" Text="Flatten Form"/>
                         </StackPanel>
                     </Button>
 
-                    <Border Width="1" Height="24" Margin="6,0"
+                    <Border toolbar:PriorityToolbarPanel.IsSeparator="True"
+                            Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
                     <!-- Mode Toggles -->
-                    <Button Command="{Binding ToggleTextSelectionModeCommand}"
-                            Classes="modern-button toggle"
+                    <Button toolbar:PriorityToolbarPanel.Priority="80"
+                            Command="{Binding ToggleTextSelectionModeCommand}"
+                            Classes="modern-button toggle toolbar-button labelled"
                             Classes.active="{Binding IsTextSelectionMode}"
-                            Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="edit.selectTextMode"
                             ToolTip.Tip="Text Selection Mode (T)"
@@ -547,14 +657,14 @@
                             AutomationProperties.HelpText="Toggle text selection mode to select and copy text">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconTextSelect}"/>
-                            <TextBlock Text="Select Text"/>
+                            <TextBlock Classes="toolbar-label" Text="Select Text"/>
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding ToggleTypewriterModeCommand}"
-                            Classes="modern-button toggle"
+                    <Button toolbar:PriorityToolbarPanel.Priority="80"
+                            Command="{Binding ToggleTypewriterModeCommand}"
+                            Classes="modern-button toggle toolbar-button labelled"
                             Classes.active="{Binding IsTypewriterMode}"
-                            Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="edit.typewriterMode"
                             ToolTip.Tip="Typewriter Mode"
@@ -562,18 +672,23 @@
                             AutomationProperties.HelpText="Place editable text that saves as flat PDF page content">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconTypewriter}"/>
-                            <TextBlock Text="Type"/>
+                            <TextBlock Classes="toolbar-label" Text="Type"/>
                         </StackPanel>
                     </Button>
 
                     <!-- #781: style inspector for the ACTIVE type-over box.
-                         Visible only in typewriter mode with a box active.
+                         Available only in typewriter mode with a box active.
                          Every control routes through WithStyle on the active
-                         PdfTypewriterTextOperation (MainWindowViewModel.TypewriterStyle.cs). -->
-                    <StackPanel Orientation="Horizontal" Spacing="6"
-                                VerticalAlignment="Center"
-                                IsVisible="{Binding IsTypewriterStyleInspectorVisible}">
-                        <TextBlock Text="Size" VerticalAlignment="Center" FontSize="11"
+                         PdfTypewriterTextOperation (MainWindowViewModel.TypewriterStyle.cs).
+                         #1476: split into separate panel children so the colour
+                         picker (which has a menu equivalent) can hide before
+                         size and alignment (which have none). -->
+                    <StackPanel x:Name="TypewriterFontSizeGroup"
+                                toolbar:PriorityToolbarPanel.Priority="97"
+                                toolbar:PriorityToolbarPanel.IsAvailable="{Binding IsTypewriterStyleInspectorVisible}"
+                                Orientation="Horizontal" Spacing="6"
+                                VerticalAlignment="Center">
+                        <TextBlock Classes="toolbar-label" Text="Size" VerticalAlignment="Center" FontSize="11"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <NumericUpDown x:Name="TypewriterFontSizeUpDown"
                                        Value="{Binding TypewriterFontSize}"
@@ -583,97 +698,106 @@
                                        AutomationProperties.Name="Typewriter Font Size"
                                        AutomationProperties.HelpText="Font size of the active type-over text box"
                                        ToolTip.Tip="Font size of the active text box"/>
-
-                        <ComboBox x:Name="TypewriterAlignmentComboBox"
-                                  SelectedIndex="{Binding TypewriterAlignmentIndex}"
-                                  MinWidth="92" VerticalAlignment="Center"
-                                  AutomationProperties.Name="Typewriter Text Alignment"
-                                  AutomationProperties.HelpText="Text alignment of the active type-over text box"
-                                  ToolTip.Tip="Text alignment of the active text box">
-                            <ComboBoxItem Content="Left"/>
-                            <ComboBoxItem Content="Center"/>
-                            <ComboBoxItem Content="Right"/>
-                        </ComboBox>
-
-                        <Button x:Name="TypewriterColorFlyoutButton"
-                                Classes="modern-button" Padding="8,6"
-                                VerticalAlignment="Center"
-                                AutomationProperties.Name="Typewriter Text Color"
-                                AutomationProperties.HelpText="Text colour of the active type-over text box"
-                                ToolTip.Tip="Text color of the active text box">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <Border Width="16" Height="16" CornerRadius="2"
-                                        BorderThickness="1"
-                                        BorderBrush="{DynamicResource DividerBrush}"
-                                        Background="{Binding TypewriterColorBrush}"/>
-                                <TextBlock Text="Color" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <Button.Flyout>
-                                <Flyout>
-                                    <StackPanel Spacing="6" Width="152">
-                                        <TextBlock Text="Text color" FontWeight="Medium" FontSize="11"/>
-                                        <WrapPanel>
-                                            <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                    CommandParameter="#000000"
-                                                    ToolTip.Tip="Black">
-                                                <Border Background="#000000" CornerRadius="2"/>
-                                            </Button>
-                                            <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                    CommandParameter="#555555"
-                                                    ToolTip.Tip="Gray">
-                                                <Border Background="#555555" CornerRadius="2"/>
-                                            </Button>
-                                            <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                    CommandParameter="#D0021B"
-                                                    ToolTip.Tip="Red">
-                                                <Border Background="#D0021B" CornerRadius="2"/>
-                                            </Button>
-                                            <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                    CommandParameter="#F5A623"
-                                                    ToolTip.Tip="Orange">
-                                                <Border Background="#F5A623" CornerRadius="2"/>
-                                            </Button>
-                                            <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                    CommandParameter="#2E7D32"
-                                                    ToolTip.Tip="Green">
-                                                <Border Background="#2E7D32" CornerRadius="2"/>
-                                            </Button>
-                                            <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                    CommandParameter="#1565C0"
-                                                    ToolTip.Tip="Blue">
-                                                <Border Background="#1565C0" CornerRadius="2"/>
-                                            </Button>
-                                            <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                    CommandParameter="#6A1B9A"
-                                                    ToolTip.Tip="Purple">
-                                                <Border Background="#6A1B9A" CornerRadius="2"/>
-                                            </Button>
-                                            <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                    CommandParameter="#FFFFFF"
-                                                    ToolTip.Tip="White">
-                                                <Border Background="#FFFFFF" CornerRadius="2"/>
-                                            </Button>
-                                        </WrapPanel>
-                                    </StackPanel>
-                                </Flyout>
-                            </Button.Flyout>
-                        </Button>
-
-                        <Border Width="1" Height="24" Margin="6,0"
-                                Background="{DynamicResource DividerBrush}"/>
                     </StackPanel>
 
-                    <Button Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
-                            Classes="modern-button"
-                            Padding="10,6"
+                    <ComboBox x:Name="TypewriterAlignmentComboBox"
+                              toolbar:PriorityToolbarPanel.Priority="97"
+                              toolbar:PriorityToolbarPanel.IsAvailable="{Binding IsTypewriterStyleInspectorVisible}"
+                              SelectedIndex="{Binding TypewriterAlignmentIndex}"
+                              MinWidth="92" VerticalAlignment="Center"
+                              AutomationProperties.Name="Typewriter Text Alignment"
+                              AutomationProperties.HelpText="Text alignment of the active type-over text box"
+                              ToolTip.Tip="Text alignment of the active text box">
+                        <ComboBoxItem Content="Left"/>
+                        <ComboBoxItem Content="Center"/>
+                        <ComboBoxItem Content="Right"/>
+                    </ComboBox>
+
+                    <Button x:Name="TypewriterColorFlyoutButton"
+                            toolbar:PriorityToolbarPanel.Priority="70"
+                            toolbar:PriorityToolbarPanel.IsAvailable="{Binding IsTypewriterStyleInspectorVisible}"
+                            Classes="modern-button toolbar-button"
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="Typewriter Text Color"
+                            AutomationProperties.HelpText="Text colour of the active type-over text box"
+                            ToolTip.Tip="Text color of the active text box">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Border Width="16" Height="16" CornerRadius="2"
+                                    BorderThickness="1"
+                                    BorderBrush="{DynamicResource DividerBrush}"
+                                    Background="{Binding TypewriterColorBrush}"/>
+                            <TextBlock Classes="toolbar-label" Text="Color" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button.Flyout>
+                            <Flyout>
+                                <!-- #1476: the same eight presets are in Edit > Typewriter
+                                     Text Color and in MacNativeMenuBuilder; a test keeps the
+                                     three lists equal. -->
+                                <StackPanel Spacing="6" Width="152">
+                                    <TextBlock Text="Text color" FontWeight="Medium" FontSize="11"/>
+                                    <WrapPanel>
+                                        <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
+                                                CommandParameter="#000000"
+                                                ToolTip.Tip="Black">
+                                            <Border Background="#000000" CornerRadius="2"/>
+                                        </Button>
+                                        <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
+                                                CommandParameter="#555555"
+                                                ToolTip.Tip="Gray">
+                                            <Border Background="#555555" CornerRadius="2"/>
+                                        </Button>
+                                        <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
+                                                CommandParameter="#D0021B"
+                                                ToolTip.Tip="Red">
+                                            <Border Background="#D0021B" CornerRadius="2"/>
+                                        </Button>
+                                        <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
+                                                CommandParameter="#F5A623"
+                                                ToolTip.Tip="Orange">
+                                            <Border Background="#F5A623" CornerRadius="2"/>
+                                        </Button>
+                                        <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
+                                                CommandParameter="#2E7D32"
+                                                ToolTip.Tip="Green">
+                                            <Border Background="#2E7D32" CornerRadius="2"/>
+                                        </Button>
+                                        <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
+                                                CommandParameter="#1565C0"
+                                                ToolTip.Tip="Blue">
+                                            <Border Background="#1565C0" CornerRadius="2"/>
+                                        </Button>
+                                        <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
+                                                CommandParameter="#6A1B9A"
+                                                ToolTip.Tip="Purple">
+                                            <Border Background="#6A1B9A" CornerRadius="2"/>
+                                        </Button>
+                                        <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
+                                                CommandParameter="#FFFFFF"
+                                                ToolTip.Tip="White">
+                                            <Border Background="#FFFFFF" CornerRadius="2"/>
+                                        </Button>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+
+                    <Border toolbar:PriorityToolbarPanel.IsSeparator="True"
+                            toolbar:PriorityToolbarPanel.IsAvailable="{Binding IsTypewriterStyleInspectorVisible}"
+                            Width="1" Height="24" Margin="6,0"
+                            Background="{DynamicResource DividerBrush}"/>
+
+                    <Button toolbar:PriorityToolbarPanel.Priority="50"
+                            Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                            Classes="modern-button toolbar-button"
                             IsEnabled="{Binding HasTextSelection}"
                             access:CommandAccessibility.CommandId="annotation.addHighlight"
                             ToolTip.Tip="Add highlight from selected text"
@@ -682,9 +806,9 @@
                         <PathIcon Classes="toolbar-icon" Data="{StaticResource IconHighlight}"/>
                     </Button>
 
-                    <Button Command="{Binding AddStickyNoteAnnotationCommand}"
-                            Classes="modern-button"
-                            Padding="10,6"
+                    <Button toolbar:PriorityToolbarPanel.Priority="50"
+                            Command="{Binding AddStickyNoteAnnotationCommand}"
+                            Classes="modern-button toolbar-button"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="annotation.addStickyNote"
                             ToolTip.Tip="Add sticky note"
@@ -693,10 +817,10 @@
                         <PathIcon Classes="toolbar-icon" Data="{StaticResource IconNote}"/>
                     </Button>
 
-                    <Button Command="{Binding ToggleRedactionModeCommand}"
-                            Classes="modern-button toggle"
+                    <Button toolbar:PriorityToolbarPanel.Priority="95"
+                            Command="{Binding ToggleRedactionModeCommand}"
+                            Classes="modern-button toggle toolbar-button labelled"
                             Classes.active="{Binding IsRedactionMode}"
-                            Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="redaction.toggleMode"
                             ToolTip.Tip="Redaction Mode (R)"
@@ -704,33 +828,34 @@
                             AutomationProperties.HelpText="Toggle redaction mode to mark areas for removal">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconRedact}"/>
-                            <TextBlock Text="Redact"/>
+                            <TextBlock Classes="toolbar-label" Text="Redact"/>
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding ApplyRedactionCommand}"
-                            Classes="modern-button primary"
-                            Padding="12,6"
+                    <Button toolbar:PriorityToolbarPanel.Priority="95"
+                            toolbar:PriorityToolbarPanel.IsAvailable="{Binding IsRedactionMode}"
+                            Command="{Binding ApplyRedactionCommand}"
+                            Classes="modern-button primary toolbar-button labelled"
                             IsEnabled="{Binding IsRedactionMode}"
-                            IsVisible="{Binding IsRedactionMode}"
                             access:CommandAccessibility.CommandId="redaction.apply"
                             ToolTip.Tip="Apply Redaction (Enter)"
                             AutomationProperties.Name="Apply Redaction"
                             AutomationProperties.HelpText="Apply the current redaction selection">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconCheck}"/>
-                            <TextBlock Text="Apply"/>
+                            <TextBlock Classes="toolbar-label" Text="Apply"/>
                         </StackPanel>
                     </Button>
 
-                    <Border Width="1" Height="24" Margin="6,0"
+                    <Border toolbar:PriorityToolbarPanel.IsSeparator="True"
+                            Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
                     <!-- Form Authoring -->
-                    <Button Command="{Binding ToggleFormAuthoringModeCommand}"
-                            Classes="modern-button toggle"
+                    <Button toolbar:PriorityToolbarPanel.Priority="20"
+                            Command="{Binding ToggleFormAuthoringModeCommand}"
+                            Classes="modern-button toggle toolbar-button"
                             Classes.active="{Binding IsFormAuthoringMode}"
-                            Padding="10,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="form.toggleAuthoring"
                             ToolTip.Tip="Form Authoring Mode — drag to define a new field"
@@ -739,8 +864,9 @@
                     </Button>
 
                     <ComboBox x:Name="FormFieldTypeComboBox"
+                              toolbar:PriorityToolbarPanel.Priority="90"
+                              toolbar:PriorityToolbarPanel.IsAvailable="{Binding IsFormAuthoringMode}"
                               SelectedIndex="0"
-                              IsVisible="{Binding IsFormAuthoringMode}"
                               IsEnabled="{Binding IsDocumentLoaded}"
                               SelectionChanged="OnFormFieldTypeChanged"
                               ToolTip.Tip="Field type for the next drag"
@@ -751,9 +877,9 @@
                         <ComboBoxItem Content="Signature"/>
                     </ComboBox>
 
-                    <Button Command="{Binding AutoDetectFieldsCommand}"
-                            Classes="modern-button"
-                            Padding="10,6"
+                    <Button toolbar:PriorityToolbarPanel.Priority="15"
+                            Command="{Binding AutoDetectFieldsCommand}"
+                            Classes="modern-button toolbar-button"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="form.autoDetectFields"
                             ToolTip.Tip="Heuristically add form fields where the page has underline placeholders or empty squares"
@@ -761,12 +887,14 @@
                         <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSparkles}"/>
                     </Button>
 
-                    <Border Width="1" Height="24" Margin="6,0"
+                    <Border toolbar:PriorityToolbarPanel.IsSeparator="True"
+                            Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
                     <!-- Tools Group -->
-                    <Button Command="{Binding ToggleSearchCommand}"
-                            Classes="modern-button" Padding="12,6"
+                    <Button toolbar:PriorityToolbarPanel.Priority="85"
+                            Command="{Binding ToggleSearchCommand}"
+                            Classes="modern-button toolbar-button labelled"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="search.open"
                             ToolTip.Tip="Find Text (Ctrl+F)"
@@ -774,29 +902,32 @@
                             AutomationProperties.HelpText="Opens the search bar to find text in the document">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSearch}"/>
-                            <TextBlock Text="Find"/>
+                            <TextBlock Classes="toolbar-label" Text="Find"/>
                         </StackPanel>
                     </Button>
-                    <Border Width="1" Height="24" Margin="6,0"
+
+                    <Border toolbar:PriorityToolbarPanel.IsSeparator="True"
+                            Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
                     <!-- Page Rotation -->
-                    <Button Content="↺" Command="{Binding RotatePageLeftCommand}"
-                            Classes="modern-button" Padding="10,6" FontSize="16"
+                    <Button toolbar:PriorityToolbarPanel.Priority="10"
+                            Content="↺" Command="{Binding RotatePageLeftCommand}"
+                            Classes="modern-button toolbar-button toolbar-glyph"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="document.rotateLeft"
                             ToolTip.Tip="Rotate Left (Ctrl+L)"
                             AutomationProperties.Name="Rotate Page Left"
                             AutomationProperties.HelpText="Rotate the current page 90 degrees counter-clockwise"/>
-                    <Button Content="↻" Command="{Binding RotatePageRightCommand}"
-                            Classes="modern-button" Padding="10,6" FontSize="16"
+                    <Button toolbar:PriorityToolbarPanel.Priority="10"
+                            Content="↻" Command="{Binding RotatePageRightCommand}"
+                            Classes="modern-button toolbar-button toolbar-glyph"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="document.rotateRight"
                             ToolTip.Tip="Rotate Right (Ctrl+R)"
                             AutomationProperties.Name="Rotate Page Right"
                             AutomationProperties.HelpText="Rotate the current page 90 degrees clockwise"/>
-                </StackPanel>
-                </ScrollViewer>
+                </toolbar:PriorityToolbarPanel>
 
                 <!-- Right: Zoom Controls -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">

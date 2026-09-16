@@ -27,6 +27,12 @@ internal sealed class PdfTrueTypeFont : PdfFont
 
     internal override bool PreferIndirectFontDictionary => true;
 
+    // #1445: WithSize instances share this glyph set (and the parsed program), so
+    // they are one embedded font. Two separate FromTrueType parses of the same
+    // bytes each track their own glyphs; sharing one subset between them would
+    // drop the other's glyphs, so they deliberately do not share.
+    internal override object? FontProgramIdentity => _usedGids;
+
     public PdfTrueTypeFont(byte[] fontData, double size)
         : this(TrueTypeFontFile.Parse(fontData), new HashSet<int> { 0 }, size)
     {

@@ -290,13 +290,25 @@ public class DecodedImageReleaseTests
         var errors = new ConcurrentQueue<string>();
         var releases = 0L;
         var reads = 0L;
-        using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-        using var gate = new Barrier(readers + 1);
+
+        // A Stopwatch deadline checked by the loops, NOT a timed
+        // CancellationTokenSource (#1495): the CTS timer fires its callback on
+        // the thread pool, and under pool pressure from other tests in the same
+        // xunit process that callback can starve, so the loops never stop and
+        // the host hangs. Same fix as 0e942dba for CancellingReadsUnderLoad.
+        // The clock starts once every thread has passed the barrier.
+        var budget = TimeSpan.FromSeconds(2);
+        var deadline = new System.Diagnostics.Stopwatch();
+        using var gate = new Barrier(readers + 1, _ => deadline.Start());
 
         var threads = Enumerable.Range(0, readers).Select(index => new Thread(() =>
         {
-            gate.SignalAndWait();
-            while (!stop.IsCancellationRequested)
+            if (!gate.SignalAndWait(TimeSpan.FromSeconds(60)))
+            {
+                errors.Enqueue("fixture: a thread never reached the start barrier");
+                return;
+            }
+            while (deadline.Elapsed < budget)
             {
                 try
                 {
@@ -328,8 +340,12 @@ public class DecodedImageReleaseTests
 
         threads.Add(new Thread(() =>
         {
-            gate.SignalAndWait();
-            while (!stop.IsCancellationRequested && errors.IsEmpty)
+            if (!gate.SignalAndWait(TimeSpan.FromSeconds(60)))
+            {
+                errors.Enqueue("fixture: the releaser never reached the start barrier");
+                return;
+            }
+            while (deadline.Elapsed < budget && errors.IsEmpty)
             {
                 if (stream.TryReleaseDecoded())
                     Interlocked.Increment(ref releases);
@@ -338,8 +354,13 @@ public class DecodedImageReleaseTests
             }
         }));
 
+        threads.ForEach(t => t.IsBackground = true);
         threads.ForEach(t => t.Start());
-        threads.ForEach(t => t.Join());
+        // A reader stuck inside the stream (a deadlocked decode or release)
+        // fails the test with a message instead of hanging the test host.
+        foreach (var thread in threads)
+            thread.Join(TimeSpan.FromSeconds(60)).Should().BeTrue(
+                "every reader and the releaser must stop within their time budget; errors so far: " + errors.FirstOrDefault());
 
         errors.Should().BeEmpty("no reader may observe a release; first: " + errors.FirstOrDefault());
         releases.Should().BeGreaterThan(100, "the race has to actually happen for this test to prove anything");
@@ -458,7 +479,7 @@ public class DecodedImageReleaseTests
     /// same unedited bytes again.
     /// </summary>
     [Fact]
-    public async Task AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples()
+    public void AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples()
     {
         var source = SavedSharedFlateImageDocument();
         for (var round = 0; round < 200; round++)
@@ -468,20 +489,32 @@ public class DecodedImageReleaseTests
             var shared = GetImage(doc);
             shared.DecodedData.Should().Equal(Samples, "precondition: a render decoded the image");
 
-            using var stop = new CancellationTokenSource();
-            var releaser = Task.Run(() =>
+            // #1495: a dedicated thread and a flag, not Task.Run and a
+            // pool-scheduled WaitAsync timer, so pool pressure from other tests
+            // cannot keep the busy loop from starting, stopping or being joined.
+            var stop = 0;
+            var releaser = new Thread(() =>
             {
-                while (!stop.IsCancellationRequested)
+                while (Volatile.Read(ref stop) == 0)
                     shared.TryReleaseDecoded();
-            });
+            }) { IsBackground = true };
+            releaser.Start();
 
-            ImageRegionRedactor.TryRegionRedact(
-                    page1, shared, 40, 0, 0, 40, 10, 10, new PdfRectangle(15, 15, 30, 30), out var newName)
-                .Should().BeTrue($"round {round}");
+            bool redactedOk;
+            string newName;
+            try
+            {
+                redactedOk = ImageRegionRedactor.TryRegionRedact(
+                    page1, shared, 40, 0, 0, 40, 10, 10, new PdfRectangle(15, 15, 30, 30), out newName);
+            }
+            finally
+            {
+                Volatile.Write(ref stop, 1);
+            }
+            releaser.Join(TimeSpan.FromSeconds(30)).Should().BeTrue($"round {round}: the release loop must stop");
+
+            redactedOk.Should().BeTrue($"round {round}");
             var redacted = page1.GetXObject(newName).Should().BeOfType<PdfStream>().Subject;
-
-            stop.Cancel();
-            await releaser.WaitAsync(TimeSpan.FromSeconds(30));
 
             AssertZeroedExactly(redacted.DecodedData, (row, col) => row >= 2 && col <= 1,
                 $"round {round}: the redacted copy");

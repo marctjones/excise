@@ -7,6 +7,7 @@ Excise.App.Tests/Unit/RedactionServiceTests.cs::RedactAreas_WithSingleArea_Redac
 Excise.App.Tests/Unit/RedactionWorkflowManagerTests.cs::MarkArea_SetsCorrectProperties  # no independent oracle yet
 Excise.App.Tests/Unit/RedactionWorkflowManagerTests.cs::GetPendingForPage_ReturnsCorrectItems  # no independent oracle yet
 Excise.App.Tests/Unit/RedactionWorkflowManagerTests.cs::MarkArea_EmptyPreviewText_StillAdded  # no independent oracle yet
+Excise.App.Tests/Unit/RedactionWorkflowServiceTests.cs::CaptureMark_ReadsThePreviewFromTheRectanglesOwnPage  # #1490 preview page identity: asserts which page's text the pending-mark PREVIEW shows (NotContain 'Page 1' is about the other page, not a leak); removal is not claimed
 Excise.Cli.Tests/AuditInspectionHandlerTests.cs::Execute_DeepAudit_UsesInjectedDifferentialScanner  # handler-wiring test: injects a FakeDifferentialScanner and asserts the audit handler CALLS it; asserts nothing about redaction content. The real scanner is an oracle-backed component tested in Excise.Core.Tests (SavedPdfLeakScanner) — this file exercises plumbing, not removal (#1358)
 Excise.Core.Tests/Content/RedactionBoundsTests.cs::Redaction_AreaPartiallyOverlaps_RemovesIntersecting  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_OptionsOverload_ByteEquivalentToParamOverload  # no independent oracle yet

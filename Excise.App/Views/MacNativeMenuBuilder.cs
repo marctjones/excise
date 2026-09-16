@@ -46,7 +46,25 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _thumbnailsItem;
         private readonly NativeMenuItem _revealHiddenTextItem;
         private readonly NativeMenuItem _revealRasterizedHiddenItem;
+        private readonly NativeMenuItem _formAuthoringItem;
         private IReadOnlyList<string>? _recentFilesSnapshot;
+
+        /// <summary>
+        /// #1476: the typewriter colour presets, in the order the toolbar flyout
+        /// and Edit &gt; Typewriter Text Color list them in MainWindow.axaml.
+        /// ToolbarOverflowMenuEntriesTests keeps the three lists equal.
+        /// </summary>
+        private static readonly (string Name, string Hex)[] TypewriterColorPresets =
+        [
+            ("Black", "#000000"),
+            ("Gray", "#555555"),
+            ("Red", "#D0021B"),
+            ("Orange", "#F5A623"),
+            ("Green", "#2E7D32"),
+            ("Blue", "#1565C0"),
+            ("Purple", "#6A1B9A"),
+            ("White", "#FFFFFF"),
+        ];
 
         public MenuState(MainWindowViewModel viewModel)
         {
@@ -70,6 +88,10 @@ internal static class MacNativeMenuBuilder
             _thumbnailsItem = ToggleItem("Show Thumbnails", _viewModel.ToggleThumbnailsCommand, Key.T, KeyModifiers.Meta | KeyModifiers.Shift);
             _revealHiddenTextItem = ToggleItem("Reveal Hidden Text", _viewModel.ToggleRevealHiddenTextCommand);
             _revealRasterizedHiddenItem = ToggleItem("Reveal Rasterized Hidden Text", _viewModel.ToggleRevealRasterizedHiddenCommand);
+            // #1476: the main toolbar hides low-priority actions when narrow, so
+            // each must be reachable from the menu. On macOS this native menu is
+            // the only one (the in-window MainMenuBar is hidden).
+            _formAuthoringItem = CommandItem("Form Authoring Mode", _viewModel.ToggleFormAuthoringModeCommand);
         }
 
         public NativeMenu Create()
@@ -98,6 +120,8 @@ internal static class MacNativeMenuBuilder
                     Separator(),
                     TrackDocumentItem(_selectTextItem),
                     TrackDocumentItem(_typewriterItem),
+                    TrackDocumentItem(TypewriterColorSubmenu()),
+                    TrackDocumentItem(_formAuthoringItem),
                     _typewriterNextEditItem,
                     _typewriterDiscardItem,
                     TrackTextSelectionItem(CommandItem("Copy Selected Text", _viewModel.CopyTextCommand, Key.C))));
@@ -173,7 +197,9 @@ internal static class MacNativeMenuBuilder
                     TrackDocumentItem(CommandItem("Attachments...", _viewModel.AttachmentsCommand)),
                     TrackDocumentItem(CommandItem("Bates Numbering...", _viewModel.BatesNumberingCommand)),
                     TrackDocumentItem(_revealHiddenTextItem),
-                    TrackDocumentItem(_revealRasterizedHiddenItem)));
+                    TrackDocumentItem(_revealRasterizedHiddenItem),
+                    // #1476: hidden early on a narrow toolbar.
+                    TrackDocumentItem(CommandItem("Auto-detect Form Fields", _viewModel.AutoDetectFieldsCommand))));
 
             Add(menu,
                 Submenu("Help",
@@ -215,6 +241,7 @@ internal static class MacNativeMenuBuilder
             or nameof(MainWindowViewModel.CanMoveSelectedPagesLater)
             or nameof(MainWindowViewModel.IsTextSelectionMode)
             or nameof(MainWindowViewModel.IsTypewriterMode)
+            or nameof(MainWindowViewModel.IsFormAuthoringMode)
             or nameof(MainWindowViewModel.HasPendingTypewriterEdits)
             or nameof(MainWindowViewModel.HasTextSelection)
             or nameof(MainWindowViewModel.IsRedactionMode)
@@ -254,6 +281,8 @@ internal static class MacNativeMenuBuilder
             _selectTextItem.IsChecked = _viewModel.IsTextSelectionMode;
             _typewriterItem.ToggleType = MenuItemToggleType.CheckBox;
             _typewriterItem.IsChecked = _viewModel.IsTypewriterMode;
+            _formAuthoringItem.ToggleType = MenuItemToggleType.CheckBox;
+            _formAuthoringItem.IsChecked = _viewModel.IsFormAuthoringMode;
             _typewriterNextEditItem.IsEnabled = isDocumentLoaded && _viewModel.HasPendingTypewriterEdits;
             _typewriterDiscardItem.IsEnabled = isDocumentLoaded && _viewModel.HasPendingTypewriterEdits;
             _redactionModeItem.ToggleType = MenuItemToggleType.CheckBox;
@@ -366,6 +395,26 @@ internal static class MacNativeMenuBuilder
 
             return item;
         }
+
+        /// <summary>
+        /// #1476: Edit &gt; Typewriter Text Color. Each preset is tracked as a
+        /// document item, matching MainWindow.axaml's IsDocumentLoaded gate; with
+        /// no active box the colour applies to the next box drawn.
+        /// </summary>
+        private NativeMenuItem TypewriterColorSubmenu() =>
+            Submenu("Typewriter Text Color",
+                TypewriterColorPresets
+                    .Select(preset => TrackDocumentItem(
+                        ParameterItem(preset.Name, _viewModel.SetTypewriterColorCommand, preset.Hex)))
+                    .ToArray());
+
+        private static NativeMenuItem ParameterItem(string header, ICommand? command, object parameter) =>
+            new(header)
+            {
+                Command = command,
+                CommandParameter = parameter,
+                IsEnabled = command != null,
+            };
 
         private static NativeMenuItem ToggleItem(
             string header,

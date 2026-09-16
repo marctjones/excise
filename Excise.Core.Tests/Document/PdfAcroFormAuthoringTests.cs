@@ -120,13 +120,20 @@ public class PdfAcroFormAuthoringTests
     }
 
     [Fact]
-    public void AddTextField_SetsNeedAppearancesTrue()
+    public void AddTextField_WritesItsOwnAppearance_AndLeavesNeedAppearancesUnset()
     {
         using var doc = PdfDocument.Open(BarePdf());
         doc.AddTextField(1, new PdfRectangle(72, 700, 300, 720), "F");
 
+        // #1444: this used to assert NeedAppearances == true, which pinned the
+        // defect — a widget with no /AP that PDF/A forbids and pdf.js/Chrome
+        // draw as nothing.
         var formDict = (PdfDictionary)doc.Resolve(doc.Catalog.GetOptional("AcroForm")!);
-        formDict.GetBool("NeedAppearances").Should().BeTrue();
+        formDict.GetBool("NeedAppearances").Should().BeFalse(
+            "the widget carries its own /AP; PDF/A forbids NeedAppearances");
+        var widget = doc.GetAcroForm()!.FindField("F")!.RawDictionary;
+        doc.Resolve(widget.GetOptional("AP")!).Should().BeAssignableTo<PdfDictionary>();
+        (widget.GetInt("F", 0) & 4).Should().Be(4, "the widget prints");
     }
 
     [Fact]

@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "9d4aa881bb882ba0306f8804838ebb29f3257296",
+  "sourceRevision": "acef8899418ab0a450f41804c11118982d870d87",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 6394,
+    "retainedSymbols": 6437,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -24,7 +24,7 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 304,
+      "references": 309,
       "typeDependencyCount": 21,
       "classification": "declared",
       "evidence": [
@@ -220,8 +220,8 @@
     {
       "source": "app-main-window",
       "target": "core-document",
-      "references": 308,
-      "typeDependencyCount": 44,
+      "references": 309,
+      "typeDependencyCount": 45,
       "classification": "declared",
       "evidence": [
         {
@@ -640,14 +640,14 @@
     {
       "source": "core-document",
       "target": "core",
-      "references": 47,
-      "typeDependencyCount": 13,
+      "references": 57,
+      "typeDependencyCount": 15,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Document.AcroFormAuthoring",
           "target": "Excise.Core.Graphics.PdfFont",
-          "references": 9
+          "references": 16
         }
       ]
     },
@@ -682,8 +682,8 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1285,
-      "typeDependencyCount": 195,
+      "references": 1329,
+      "typeDependencyCount": 197,
       "classification": "declared",
       "evidence": [
         {

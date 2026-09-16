@@ -421,9 +421,28 @@ public partial class PdfPage
             resources["Font"] = fontDict;
         }
 
+        // #1445: an embedded font this document has already built (on any page)
+        // is shared by reference rather than built again. Reused only while the
+        // reference still resolves to a font dictionary.
+        var fontProgramIdentity = font.PreferIndirectFontDictionary ? font.FontProgramIdentity : null;
+        PdfReference? sharedFont = null;
+        if (fontProgramIdentity != null
+            && _document.TryGetEmbeddedFontObject(fontProgramIdentity, out var cachedFont)
+            && _document.Resolve(cachedFont) is PdfDictionary)
+        {
+            sharedFont = cachedFont;
+        }
+
         // Check if this font is already registered by base font name
         foreach (var kvp in fontDict)
         {
+            if (sharedFont != null && kvp.Value is PdfReference existingRef
+                && existingRef.ObjectNum == sharedFont.ObjectNum
+                && existingRef.Generation == sharedFont.Generation)
+            {
+                return kvp.Key.Value;
+            }
+
             var existingFont = _document.Resolve(kvp.Value) as PdfDictionary;
             if (existingFont != null)
             {
@@ -443,12 +462,26 @@ public partial class PdfPage
             fontName = $"F{counter++}";
         }
 
+        if (sharedFont != null)
+        {
+            fontDict[fontName] = sharedFont;
+            return fontName;
+        }
+
         // Add the font dictionary (embedded fonts register their own indirect
         // stream objects in the document and return a Type0 dictionary).
         var builtFont = font.BuildFontDictionary(_document);
-        fontDict[fontName] = font.PreferIndirectFontDictionary
-            ? _document.AddIndirectObject(builtFont)
-            : builtFont;
+        if (font.PreferIndirectFontDictionary)
+        {
+            var reference = _document.AddIndirectObject(builtFont);
+            fontDict[fontName] = reference;
+            if (fontProgramIdentity != null)
+                _document.RememberEmbeddedFontObject(fontProgramIdentity, reference);
+        }
+        else
+        {
+            fontDict[fontName] = builtFont;
+        }
 
         return fontName;
     }

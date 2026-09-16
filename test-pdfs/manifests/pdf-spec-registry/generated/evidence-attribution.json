@@ -45549,6 +45549,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.BuilderDocument_TwoPagesWithOneEmbeddedFont_WritesTheFontProgramOnce",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.ThreePages_OneTypefaceAtTwoSizes_ShareOneFontObject_AndEveryPageKeepsItsText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.ThreePages_OneTypefaceAtTwoSizes_EveryPageReadsBackInMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.StandardFonts_StayInlineInEachPagesResources",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_EmbedsFarLessThanTheFullFont",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -45559,42 +45587,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_TagsTheFontName",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_TextStillExtractsAndRoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subsetter_RetainsGidsAndProducesValidSfnt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subsetter_FallsBackOnNonGlyfData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.FromFile_ProducesType0EmbeddedFont",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -47038,6 +47030,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.BuilderDocument_TwoPagesWithOneEmbeddedFont_WritesTheFontProgramOnce",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.ThreePages_OneTypefaceAtTwoSizes_ShareOneFontObject_AndEveryPageKeepsItsText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.ThreePages_OneTypefaceAtTwoSizes_EveryPageReadsBackInMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.StandardFonts_StayInlineInEachPagesResources",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_EmbedsFarLessThanTheFullFont",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -47048,42 +47068,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_TagsTheFontName",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_TextStillExtractsAndRoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subsetter_RetainsGidsAndProducesValidSfnt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subsetter_FallsBackOnNonGlyfData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.FromFile_ProducesType0EmbeddedFont",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -48509,6 +48493,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.BuilderDocument_TwoPagesWithOneEmbeddedFont_WritesTheFontProgramOnce",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.ThreePages_OneTypefaceAtTwoSizes_ShareOneFontObject_AndEveryPageKeepsItsText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.ThreePages_OneTypefaceAtTwoSizes_EveryPageReadsBackInMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.StandardFonts_StayInlineInEachPagesResources",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_EmbedsFarLessThanTheFullFont",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -48519,42 +48531,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_TagsTheFontName",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_TextStillExtractsAndRoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subsetter_RetainsGidsAndProducesValidSfnt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subsetter_FallsBackOnNonGlyfData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.FromFile_ProducesType0EmbeddedFont",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95981,6 +95957,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96189,24 +96179,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_EmptiesTheWholeInfoField_RatherThanCuttingTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Policy_HasValueSemantics",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97457,6 +97429,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97665,24 +97651,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_EmptiesTheWholeInfoField_RatherThanCuttingTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Policy_HasValueSemantics",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98947,6 +98915,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -99161,24 +99143,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Policy_HasValueSemantics",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -99240,13 +99204,11 @@
         },
         {
           "kind": "benchmark",
-          "ref": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs::RedactText_CommonTermOnW9_StaysUnderFiveSeconds",
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "ref": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs::RedactText_CommonTermOnW9_StaysOnTheBatchedRewritePath",
+          "recordedOutcomes": []
         }
       ],
-      "explicitContractStatus": "passing",
+      "explicitContractStatus": "partial-or-failing",
       "grade": "verified",
       "benchmarkScenarios": [
         "redact"
@@ -100465,6 +100427,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100679,24 +100655,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Policy_HasValueSemantics",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -100758,13 +100716,11 @@
         },
         {
           "kind": "benchmark",
-          "ref": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs::RedactText_CommonTermOnW9_StaysUnderFiveSeconds",
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "ref": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs::RedactText_CommonTermOnW9_StaysOnTheBatchedRewritePath",
+          "recordedOutcomes": []
         }
       ],
-      "explicitContractStatus": "passing",
+      "explicitContractStatus": "partial-or-failing",
       "grade": "verified",
       "benchmarkScenarios": [
         "redact"
@@ -101093,6 +101049,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.AuthoredValues_AreDrawnByTheirAppearances_PerMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_OnAFieldAuthoredInThisSession_RedrawsTheAppearance_WithoutNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_FallsBackToNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_MergedWidgetNotInAcroFormFields_IsSurfaced",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -101202,13 +101186,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_SetsNeedAppearancesTrue",
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_WritesItsOwnAppearance_AndLeavesNeedAppearancesUnset",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_RespectsFlags",
@@ -102058,6 +102040,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAcroFormField_RemovesValueAndAppearanceBytes",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -102083,6 +102072,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
@@ -102149,69 +102152,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillUnderscores_MatchesMeaningfulPrefix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillDashes_MatchesMeaningfulPrefix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs::ObjectStreamGreppabilityTests.WidgetAndFieldDicts_StayOutOfObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FileOpsCommandTests.cs::FileOpsCommandTests.SaveFlattenedFormCopyCommand_Execute_StubbedDialog_BakesValueAndDropsAcroForm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormAuthoringTests.cs::FormAuthoringTests.OnFormFieldRectDrawn_CreatesTextFieldWithUniqueName",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormAuthoringTests.cs::FormAuthoringTests.OnFormFieldRectDrawn_CheckboxType_CreatesButtonField",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormFieldsOverlayTests.cs::FormFieldsOverlayTests.FormFieldsLayer_PaintsOneInputPerField",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormFieldsOverlayTests.cs::FormFieldsOverlayTests.EditingTextField_MutatesUnderlyingFieldAndMarksDirty",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -102597,6 +102537,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.AuthoredValues_AreDrawnByTheirAppearances_PerMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_OnAFieldAuthoredInThisSession_RedrawsTheAppearance_WithoutNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_FallsBackToNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_MergedWidgetNotInAcroFormFields_IsSurfaced",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -102706,13 +102674,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_SetsNeedAppearancesTrue",
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_WritesItsOwnAppearance_AndLeavesNeedAppearancesUnset",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_RespectsFlags",
@@ -103562,6 +103528,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAcroFormField_RemovesValueAndAppearanceBytes",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103587,6 +103560,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
@@ -103653,69 +103640,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillUnderscores_MatchesMeaningfulPrefix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillDashes_MatchesMeaningfulPrefix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs::ObjectStreamGreppabilityTests.WidgetAndFieldDicts_StayOutOfObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FileOpsCommandTests.cs::FileOpsCommandTests.SaveFlattenedFormCopyCommand_Execute_StubbedDialog_BakesValueAndDropsAcroForm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormAuthoringTests.cs::FormAuthoringTests.OnFormFieldRectDrawn_CreatesTextFieldWithUniqueName",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormAuthoringTests.cs::FormAuthoringTests.OnFormFieldRectDrawn_CheckboxType_CreatesButtonField",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormFieldsOverlayTests.cs::FormFieldsOverlayTests.FormFieldsLayer_PaintsOneInputPerField",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormFieldsOverlayTests.cs::FormFieldsOverlayTests.EditingTextField_MutatesUnderlyingFieldAndMarksDirty",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104122,6 +104046,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.AuthoredValues_AreDrawnByTheirAppearances_PerMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_OnAFieldAuthoredInThisSession_RedrawsTheAppearance_WithoutNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_FallsBackToNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_MergedWidgetNotInAcroFormFields_IsSurfaced",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104231,13 +104183,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_SetsNeedAppearancesTrue",
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_WritesItsOwnAppearance_AndLeavesNeedAppearancesUnset",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_RespectsFlags",
@@ -105087,6 +105037,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAcroFormField_RemovesValueAndAppearanceBytes",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -105112,6 +105069,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
@@ -105178,69 +105149,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillUnderscores_MatchesMeaningfulPrefix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillDashes_MatchesMeaningfulPrefix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs::ObjectStreamGreppabilityTests.WidgetAndFieldDicts_StayOutOfObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FileOpsCommandTests.cs::FileOpsCommandTests.SaveFlattenedFormCopyCommand_Execute_StubbedDialog_BakesValueAndDropsAcroForm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormAuthoringTests.cs::FormAuthoringTests.OnFormFieldRectDrawn_CreatesTextFieldWithUniqueName",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormAuthoringTests.cs::FormAuthoringTests.OnFormFieldRectDrawn_CheckboxType_CreatesButtonField",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormFieldsOverlayTests.cs::FormFieldsOverlayTests.FormFieldsLayer_PaintsOneInputPerField",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormFieldsOverlayTests.cs::FormFieldsOverlayTests.EditingTextField_MutatesUnderlyingFieldAndMarksDirty",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -105587,6 +105495,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.AuthoredValues_AreDrawnByTheirAppearances_PerMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_OnAFieldAuthoredInThisSession_RedrawsTheAppearance_WithoutNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_FallsBackToNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_MergedWidgetNotInAcroFormFields_IsSurfaced",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -105696,13 +105632,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_SetsNeedAppearancesTrue",
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_WritesItsOwnAppearance_AndLeavesNeedAppearancesUnset",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_RespectsFlags",
@@ -106552,6 +106486,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAcroFormField_RemovesValueAndAppearanceBytes",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -106577,6 +106518,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
@@ -106643,69 +106598,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillUnderscores_MatchesMeaningfulPrefix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillDashes_MatchesMeaningfulPrefix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs::ObjectStreamGreppabilityTests.WidgetAndFieldDicts_StayOutOfObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FileOpsCommandTests.cs::FileOpsCommandTests.SaveFlattenedFormCopyCommand_Execute_StubbedDialog_BakesValueAndDropsAcroForm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormAuthoringTests.cs::FormAuthoringTests.OnFormFieldRectDrawn_CreatesTextFieldWithUniqueName",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormAuthoringTests.cs::FormAuthoringTests.OnFormFieldRectDrawn_CheckboxType_CreatesButtonField",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormFieldsOverlayTests.cs::FormFieldsOverlayTests.FormFieldsLayer_PaintsOneInputPerField",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/FormFieldsOverlayTests.cs::FormFieldsOverlayTests.EditingTextField_MutatesUnderlyingFieldAndMarksDirty",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -114930,13 +114822,13 @@
     "targetModes": 898,
     "modesWithTestCandidates": 646,
     "modesWithExplicitContracts": 881,
-    "modesWithPassingExplicitContracts": 879,
+    "modesWithPassingExplicitContracts": 877,
     "modesWithRecordedPassingCandidate": 646,
     "gradeImplemented": 199,
     "gradeVerified": 681,
     "gradeUnknown": 18,
-    "testMethods": 6775,
-    "testMethodsWithCapabilityCandidate": 4225,
+    "testMethods": 6813,
+    "testMethodsWithCapabilityCandidate": 4241,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

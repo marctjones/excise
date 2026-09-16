@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "0bd3123459a283f00c5f3043c82658bb11d246b614a13494021f62bf80480d33",
+  "sourceFingerprint": "5bdb9196e9d3e12c09473f7a92e7808738e7ad4d3b48aa9c5b294eafef088d59",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -5983,6 +5983,26 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Controls/PriorityToolbarLayout.cs",
+      "path": "Excise.App/Controls/PriorityToolbarLayout.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Controls/PriorityToolbarPanel.cs",
+      "path": "Excise.App/Controls/PriorityToolbarPanel.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Models/AttachmentEntry.cs",
       "path": "Excise.App/Models/AttachmentEntry.cs",
       "kind": "source-file",
@@ -8868,7 +8888,7 @@
     }
   ],
   "summary": {
-    "records": 421,
+    "records": 423,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
@@ -8876,7 +8896,7 @@
       "fonts": 28,
       "forms": 8,
       "images": 29,
-      "product-integration-general": 231,
+      "product-integration-general": 233,
       "redaction": 52,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 19,
@@ -8955,7 +8975,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 19,
       "pdfe.product.security.signature-and-permission-warning:write": 19
     },
-    "fallbackRecords": 231,
+    "fallbackRecords": 233,
     "allRecordsMapped": true
   }
 }

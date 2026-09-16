@@ -88,6 +88,48 @@ public class RedactionAndSearchCommandTests
             "redaction must not destroy content outside the marked area");
     }
 
+    // #1490: the preview must read the page the rectangle was DRAWN on, not the
+    // page the viewer happens to show when the mark is captured. Before the fix
+    // CaptureMark extracted from CurrentPageIndex; with the rect on page 2 and
+    // the current page moved back to page 1, the mapper threw on the page
+    // mismatch, the exception was caught, and the pending redaction showed an
+    // EMPTY preview for an area that Apply would still remove text from.
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task MarkingARedaction_PreviewsTheRectanglesOwnPage_NotTheCurrentPage()
+    {
+        var sourcePath = Path.Combine(_tempDir, "preview-page-identity.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 2);
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        try
+        {
+            await vm.LoadDocumentAsync(sourcePath);
+            vm.IsRedactionMode = true;
+
+            // Draw on page 2, then navigate back to page 1 before the mark is captured.
+            vm.CurrentPageIndex = 1;
+            vm.CurrentRedactionPageArea = PdfPageRect.FromContentPoints(2, new PdfRectangle(0, 0, 612, 792));
+            vm.CurrentPageIndex = 0;
+            vm.CurrentRedactionPageArea.Should().NotBeNull(
+                "precondition: changing the current page keeps the drawn rectangle");
+
+            await vm.ApplyRedactionCommand!.Execute();
+
+            var pending = vm.RedactionWorkflow.PendingRedactions.Should().ContainSingle().Subject;
+            pending.PageNumber.Should().Be(2, "the mark belongs to the page it was drawn on");
+            pending.PreviewText.Should().Contain("Secret on Page 2",
+                "the preview must show the text the redaction will remove, from the rectangle's own page");
+            pending.PreviewText.Should().NotContain("Page 1",
+                "the current page's text is not what this redaction removes");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
     private const string Secret = "TARGETSECRETXYZ816";
     private const string Survivor = "SURVIVORTOKEN816";
 

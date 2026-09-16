@@ -199,6 +199,16 @@ public class PdfFont
     internal virtual bool PreferIndirectFontDictionary => false;
 
     /// <summary>
+    /// Identity of the embedded font program this font writes, used to share ONE
+    /// indirect font object across every page of a document (#1445). Two fonts
+    /// with the same identity must produce the same font object: same program and
+    /// the same used-glyph set, so the one subset built at save time covers every
+    /// page that draws with either. <c>null</c> (the default, and every standard
+    /// font) means no document-level sharing.
+    /// </summary>
+    internal virtual object? FontProgramIdentity => null;
+
+    /// <summary>
     /// Declare that <paramref name="text"/>'s glyphs may be drawn from this font
     /// by something OTHER than our own content-stream writer — so a subsetting
     /// font must keep them even though <see cref="EncodeString"/> never sees

@@ -267,7 +267,7 @@ public sealed class PdfField
             // For buttons, also reset /AS on widgets to /Off.
             if (FieldType == PdfFieldType.Button)
                 SetButtonAppearanceState("Off");
-            _document.SetAcroFormNeedAppearances();
+            RefreshAppearances(null);
             return;
         }
 
@@ -294,7 +294,27 @@ public sealed class PdfField
                 break;
         }
 
-        _document.SetAcroFormNeedAppearances();
+        RefreshAppearances(value);
+    }
+
+    /// <summary>
+    /// #1444: redraw the appearance of widgets excise authored in this session;
+    /// for any other widget (every document opened from bytes, including one
+    /// excise authored earlier) set NeedAppearances as before, so the reader
+    /// regenerates it.
+    /// </summary>
+    private void RefreshAppearances(string? value)
+    {
+        IReadOnlyList<PdfDictionary> widgets = WidgetDictionaries.Count > 0
+            ? WidgetDictionaries
+            : new[] { RawDictionary };
+
+        var allRedrawn = true;
+        foreach (var widget in widgets)
+            allRedrawn &= AcroFormAuthoring.TryRegenerateAppearance(_document, widget, value);
+
+        if (!allRedrawn)
+            _document.SetAcroFormNeedAppearances();
     }
 
     /// <summary>
