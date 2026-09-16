@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1117,
-  "indexedContentSha256": "2a712d67b678fcb59e87c4feb860a2af0baacf6f05f7e43815a5b6c39202aaf6",
+  "indexedFileCount": 1119,
+  "indexedContentSha256": "a8cf337e2af0b378fc01f4f64665b7f968210948e844f0b9cf72dda0c17d44a1",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -194,6 +194,7 @@
           "path": "Excise.App/Services/SignatureApplicationService.cs",
           "kind": "source",
           "matchedTerms": [
+            "header",
             "structure",
             "syntax",
             "pdfobject"
@@ -482,8 +483,18 @@
           "path": "Excise.App.Tests/Unit/SignatureApplicationServiceTests.cs",
           "kind": "test",
           "matchedTerms": [
+            "header",
             "structure",
             "syntax"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "header",
+            "structure",
+            "xref"
           ]
         },
         {
@@ -524,7 +535,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 51
+      "candidateReferenceCount": 52
     },
     {
       "id": "pdf.17.syntax.objects",
@@ -12799,6 +12810,14 @@
           ]
         },
         {
+          "path": "Excise.App/Services/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "iso",
+            "operators"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -13131,19 +13150,9 @@
             "operators",
             "contentstream"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Type0SpacingAdvanceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "iso",
-            "operators",
-            "contentstream",
-            "textextractor"
-          ]
         }
       ],
-      "candidateReferenceCount": 113
+      "candidateReferenceCount": 114
     },
     {
       "id": "pdf.17.content.text-state",
@@ -39307,6 +39316,16 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/Unit/SignatureApplicationServiceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "widget",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/annotation-support-matrix.json",
           "kind": "test",
           "matchedTerms": [
@@ -39364,7 +39383,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 69
+      "candidateReferenceCount": 70
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -44961,7 +44980,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 164
+      "candidateReferenceCount": 165
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -46796,7 +46815,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 127
+      "candidateReferenceCount": 128
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -49055,7 +49074,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 132
+      "candidateReferenceCount": 133
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -55660,6 +55679,7 @@
             "redaction",
             "acroform",
             "action",
+            "annotation",
             "redact"
           ]
         }
@@ -57745,6 +57765,7 @@
             "groups",
             "acroform",
             "action",
+            "annotation",
             "redact"
           ]
         }
@@ -58519,7 +58540,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 98
+      "candidateReferenceCount": 99
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -61232,6 +61253,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/SignatureContentsReader.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "ranges",
+            "signatures"
+          ]
+        },
+        {
           "path": "Excise.App/Services/SignatureVerificationService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -61499,19 +61529,9 @@
             "validation",
             "metadata"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "permissions",
-            "validation",
-            "metadata"
-          ]
         }
       ],
-      "candidateReferenceCount": 152
+      "candidateReferenceCount": 153
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -62299,7 +62319,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 534
+      "candidateReferenceCount": 537
     },
     {
       "id": "pdf.20.extension.developer",
@@ -67629,6 +67649,7 @@
           "path": "Excise.App.Tests/Utilities/TestCertificateFactory.cs",
           "kind": "test",
           "matchedTerms": [
+            "override",
             "pdfe",
             "signature",
             "security"
@@ -68164,6 +68185,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "documents",
+            "pdfe",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -68294,7 +68324,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 58
+      "candidateReferenceCount": 59
     },
     {
       "id": "pdfe.product.security.audit-log",

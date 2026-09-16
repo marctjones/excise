@@ -6,7 +6,7 @@ digraph excise_architecture {
   subgraph cluster_delivery {
     label="delivery";
     color="#cbd5e1";
-    "app" [label="Excise.App project\npartial\n889 retained symbols", fillcolor="#fff3bf"];
+    "app" [label="Excise.App project\npartial\n891 retained symbols", fillcolor="#fff3bf"];
     "cli" [label="Excise.Cli project\npartial\n413 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {

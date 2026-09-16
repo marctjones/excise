@@ -102,7 +102,7 @@ public class SignatureVerificationSummaryFormatterTests
         {
             SignatureName = "Sig1",
             IsValid = false,
-            StatusMessage = "Verification failed: BouncyCastle verification failed"
+            StatusMessage = "Verification failed: CMS verification failed: extra data found after object"
         };
 
         var text = _formatter.Format(new[] { result });
@@ -140,6 +140,28 @@ public class SignatureVerificationSummaryFormatterTests
                     $"IsValid={isValid}, TrustStatus={trust} must not overclaim trust");
             }
         }
+    }
+
+    [Fact]
+    public void Format_UnsignedTrailingContentBytes_AreDisclosedOnAnOtherwiseValidSignature()
+    {
+        // #1494: a "valid signature" verdict says nothing about bytes the signature does
+        // not cover, so the display must not let them pass unmentioned.
+        var result = ValidResult();
+        result.UnsignedTrailingContentBytes = 37;
+
+        var text = _formatter.Format(new[] { result });
+
+        text.Should().Contain("37 bytes of non-zero data");
+        text.Should().Contain("not covered by the signature");
+    }
+
+    [Fact]
+    public void Format_ZeroPaddedContents_SaysNothingAboutTrailingBytes()
+    {
+        var text = _formatter.Format(new[] { ValidResult() });
+
+        text.Should().NotContain("not covered by the signature");
     }
 
     [Fact]

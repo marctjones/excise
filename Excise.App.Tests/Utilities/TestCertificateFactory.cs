@@ -24,12 +24,19 @@ internal sealed record TestSigningIdentity(
 
 internal static class TestCertificateFactory
 {
-    public static TestSigningIdentity CreateSelfSigned(string subject = "CN=PDFe Test Signer")
+    /// <param name="notBefore">
+    /// Overrides the default validity start (one day ago). Used to build a certificate that
+    /// was not yet valid at the CMS signingTime attribute, which BouncyCastle rejects before
+    /// it computes any digest (#1494).
+    /// </param>
+    public static TestSigningIdentity CreateSelfSigned(
+        string subject = "CN=PDFe Test Signer", DateTime? notBefore = null)
     {
         var random = new SecureRandom();
         var keyPair = GenerateKeyPair(random);
 
-        var generator = CreateGenerator(new X509Name(subject), new X509Name(subject), keyPair.Public, random);
+        var generator = CreateGenerator(
+            new X509Name(subject), new X509Name(subject), keyPair.Public, random, notBefore);
         generator.AddExtension(X509Extensions.BasicConstraints, true, new BasicConstraints(false));
         generator.AddExtension(X509Extensions.KeyUsage, true, new KeyUsage(KeyUsage.DigitalSignature));
         var certificate = generator.Generate(
@@ -76,14 +83,16 @@ internal static class TestCertificateFactory
         X509Name issuer,
         X509Name subject,
         AsymmetricKeyParameter publicKey,
-        SecureRandom random)
+        SecureRandom random,
+        DateTime? notBefore = null)
     {
+        var start = notBefore ?? DateTime.UtcNow.AddDays(-1);
         var generator = new X509V3CertificateGenerator();
         generator.SetSerialNumber(BigInteger.ProbablePrime(128, random));
         generator.SetIssuerDN(issuer);
         generator.SetSubjectDN(subject);
-        generator.SetNotBefore(DateTime.UtcNow.AddDays(-1));
-        generator.SetNotAfter(DateTime.UtcNow.AddDays(1));
+        generator.SetNotBefore(start);
+        generator.SetNotAfter(start.AddDays(2));
         generator.SetPublicKey(publicKey);
         return generator;
     }

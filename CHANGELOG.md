@@ -10,6 +10,39 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Fixed
+- **excise signed PDFs with a BER-encoded CMS object where ISO 32000 requires
+  DER, and its verifier could not locate that object inside the padded
+  `/Contents` value** (#1494) — two halves of one defect, both in the
+  signature path. ISO 32000-1 and ISO 32000-2 12.8.3.3.1 both say the value of
+  `/Contents` "shall be a DER-encoded" PKCS#7 / CMS binary data object;
+  BouncyCastle's `CmsSignedDataGenerator` defaults to BER, building its
+  certificate and signerInfo SETs as `BerSet`, which makes `SignedData` and the
+  enclosing `ContentInfo` a `BerSequence` — so excise's signatures began
+  `30 80`, indefinite length, terminated by an end-of-contents marker instead
+  of carrying a length. The signer now sets
+  `UseDefiniteLength` and encodes DER. On the verifier side, `/Contents` is a
+  fixed-width placeholder that 12.8.3.3.1 requires to be "padded with zeros",
+  and the CMS object was sized by hand-decoding its outer tag/length bytes —
+  which understands definite length only and silently gave up on indefinite
+  length, handing BouncyCastle the whole padded 8 KiB value. BouncyCastle
+  2.6.2 read the first ASN.1 object and ignored the rest, so this never
+  showed; 2.7.0 routes `CmsSignedData`'s `byte[]` constructors through
+  `Asn1Object.FromByteArray`, which throws `extra data found after object`,
+  and excise's own signatures started verifying as invalid. The extent is now
+  found with an ASN.1 reader (`SignatureContentsReader`), which handles both
+  encodings identically, so documents signed before and after this change both
+  verify. Non-zero bytes after the CMS object — unauthenticated by both the
+  `/ByteRange` digest and the CMS object — are now reported
+  (`UnsignedTrailingContentBytes`, and a line in the verification summary)
+  rather than silently ignored.
+- **A signer certificate that was outside its validity window at the claimed
+  signing time was reported as a digest mismatch** (#1494) — BouncyCastle
+  throws before computing the digest, so the report claimed tampering that was
+  never tested for. Integrity now stays unchecked and the message names the
+  real cause. Likewise, the underlying reason for a failed CMS parse is no
+  longer dropped on the way out: the message said only "BouncyCastle
+  verification failed", which is what made #1494's `extra data found after
+  object` look like a mystery.
 - **A FreeText annotation with Arabic `/Contents` and no `/AP` rendered
   blank** (#1363) — the synthesised appearance refused any string that needs
   complex-script shaping, and drew only the first line of the rest. Such
@@ -185,6 +218,13 @@ Milestone **P1.6 — Writer output validity: what save destroys or invalidates**
   `NeedAppearances` is true (#1444).
 
 ### Changed
+- **BouncyCastle.Cryptography 2.6.2 -> 2.7.0** (#1494). Blocked since the
+  2026-09-14 dependency refresh because six `SignatureVerificationService`
+  tests failed under it; the cause was excise's own CMS handling, not a
+  library regression, and is described under Fixed above. 2.7.0 also emits the
+  RFC 6211 `cmsAlgorithmProtect` signed attribute by default and verifies it
+  when present, so excise's signatures now carry algorithm protection.
+
 - **Redaction no longer rewrites the operators it did not touch** (#1093).
   Editing one operator used to put the WHOLE content stream back through
   `ContentStreamWriter` — its string escaping, its number formatting, its

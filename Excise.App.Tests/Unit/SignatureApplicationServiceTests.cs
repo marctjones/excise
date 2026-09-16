@@ -72,6 +72,60 @@ public class SignatureApplicationServiceTests : IDisposable
         result.StatusMessage.Should().Contain("ByteRange digest matches");
     }
 
+    /// <summary>
+    /// ISO 32000-1 12.8.3.3.1 and ISO 32000-2 12.8.3.3.1: the value of <c>/Contents</c>
+    /// "shall be a DER-encoded" PKCS#7 / CMS binary data object. BouncyCastle's
+    /// <c>CmsSignedDataGenerator</c> defaults to BER, so before #1494 excise emitted an
+    /// indefinite-length object beginning <c>30 80</c> — legal CMS, but a "shall" violation
+    /// of the PDF spec, and with no length header for a reader to find the object's end
+    /// inside the zero-padded placeholder.
+    /// </summary>
+    [Fact]
+    public void SignDocument_CmsObject_IsDerDefiniteLengthAsIso32000Requires()
+    {
+        using var certificate = SigningCertificateFactory.CreateSelfSigned("DER Encoding Check");
+        var signedPath = SignSamplePdf(certificate);
+
+        var contents = ExtractSignatureContentsBytes(File.ReadAllBytes(signedPath));
+
+        contents[0].Should().Be(0x30, "the CMS ContentInfo is a SEQUENCE");
+        contents[1].Should().NotBe(0x80,
+            "0x80 is the BER indefinite-length marker; ISO 32000 requires DER definite length");
+        ((contents[1] & 0x80) != 0).Should().BeTrue(
+            "a CMS object is longer than 127 bytes, so it uses the long-form definite length");
+
+        var read = SignatureContentsReader.Read(contents);
+        read.IsValid.Should().BeTrue("the CMS object must be locatable inside the padded value");
+        read.PaddingIsAllZero.Should().BeTrue(
+            "ISO 32000-2 12.8.3.3.1: /Contents shall be padded with zeros");
+        read.PaddingLength.Should().BeGreaterThan(0, "the placeholder is wider than the CMS object");
+
+        // The strict parser BouncyCastle 2.7.0 now routes CmsSignedData(byte[]) through.
+        var parse = () => Org.BouncyCastle.Asn1.Asn1Object.FromByteArray(read.CmsBytes);
+        parse.Should().NotThrow("the CMS object must be exactly one complete ASN.1 object");
+    }
+
+    /// <summary>
+    /// Returns the raw bytes of the signature dictionary's <c>/Contents</c> hex string,
+    /// padding included — the exact value a verifier is handed.
+    /// </summary>
+    private static byte[] ExtractSignatureContentsBytes(byte[] pdfBytes)
+    {
+        // Located via /ByteRange rather than by searching for "/Contents": the gap
+        // /ByteRange leaves IS the signature's /Contents token, and an annotation can carry
+        // a /Contents key of its own.
+        var match = Regex.Match(Encoding.Latin1.GetString(pdfBytes), @"/ByteRange \[(\d+) (\d+) (\d+) (\d+)\]");
+        match.Success.Should().BeTrue("the signed file must carry a numeric /ByteRange");
+        var gapStart = int.Parse(match.Groups[2].Value);
+        var gapEnd = int.Parse(match.Groups[3].Value);
+
+        pdfBytes[gapStart].Should().Be((byte)'<');
+        pdfBytes[gapEnd - 1].Should().Be((byte)'>');
+
+        var hex = Encoding.Latin1.GetString(pdfBytes, gapStart + 1, gapEnd - gapStart - 2);
+        return Convert.FromHexString(hex);
+    }
+
     [Fact]
     public void SignDocument_ByteRangeOffsets_AreByteExact()
     {
@@ -456,19 +510,93 @@ public class SignatureApplicationServiceTests : IDisposable
         output.Should().Contain("External Oracle Signer");
     }
 
-    private static string? FindPdfsig()
+    /// <summary>
+    /// A SECOND independent engine on our own output (#1494). pdfsig is Poppler; this is
+    /// OpenSSL, which parses the CMS object itself rather than through a PDF reader. It is
+    /// the check that would have caught excise emitting BER where ISO 32000 12.8.3.3.1 says
+    /// DER, and — because OpenSSL 3.x validates the RFC 6211 cmsAlgorithmProtect attribute
+    /// when it is present — it also exercises the attribute BouncyCastle 2.7.0 started
+    /// emitting.
+    /// </summary>
+    [Fact]
+    public async Task SignDocument_ExternalOracle_OpensslVerifiesTheDetachedCms()
+    {
+        var openssl = FindTool("openssl");
+        Assert.SkipWhen(openssl == null, "openssl not installed on this machine");
+
+        using var certificate = SigningCertificateFactory.CreateSelfSigned("OpenSSL Oracle Signer");
+        var signedPath = SignSamplePdf(certificate);
+        var fileBytes = File.ReadAllBytes(signedPath);
+
+        // The detached CMS object, sized exactly, and the bytes /ByteRange says it signs.
+        var cms = SignatureContentsReader.Read(ExtractSignatureContentsBytes(fileBytes));
+        cms.IsValid.Should().BeTrue();
+
+        var match = Regex.Match(Encoding.Latin1.GetString(fileBytes), @"/ByteRange \[(\d+) (\d+) (\d+) (\d+)\]");
+        match.Success.Should().BeTrue();
+        var length1 = int.Parse(match.Groups[2].Value);
+        var start2 = int.Parse(match.Groups[3].Value);
+        var length2 = int.Parse(match.Groups[4].Value);
+
+        var signedContent = new byte[length1 + length2];
+        Buffer.BlockCopy(fileBytes, 0, signedContent, 0, length1);
+        Buffer.BlockCopy(fileBytes, start2, signedContent, length1, length2);
+
+        var cmsPath = Path.GetTempFileName();
+        var contentPath = Path.GetTempFileName();
+        var opensslOutPath = Path.GetTempFileName();
+        _tempFiles.Add(cmsPath);
+        _tempFiles.Add(contentPath);
+        _tempFiles.Add(opensslOutPath);
+        File.WriteAllBytes(cmsPath, cms.CmsBytes);
+        File.WriteAllBytes(contentPath, signedContent);
+
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = openssl,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        foreach (var argument in new[]
+                 {
+                     "cms", "-verify", "-inform", "DER", "-in", cmsPath,
+                     "-content", contentPath, "-binary",
+                     // Self-signed and deliberately not in any trust store: this asserts the
+                     // CMS structure and the message digest, never signer trust (that is
+                     // SignatureTrustEvaluator's job, and pdfsig's "issuer is unknown").
+                     "-noverify", "-out", opensslOutPath
+                 })
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using var process = System.Diagnostics.Process.Start(startInfo)!;
+        // #925: drain both pipes concurrently or a chatty stderr wedges the child.
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        process.WaitForExit(30_000).Should().BeTrue("openssl must terminate");
+        _ = await stdoutTask;
+        var stderr = await stderrTask;
+
+        process.ExitCode.Should().Be(0,
+            "an engine that is not excise and not Poppler must accept the CMS object and its " +
+            "message digest over the /ByteRange bytes. openssl said: {0}", stderr);
+        stderr.Should().Contain("Verification successful");
+    }
+
+    private static string? FindTool(string name)
     {
         var pathDirs = (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
             .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
         var candidates = new List<string>();
         foreach (var dir in pathDirs)
         {
-            candidates.Add(Path.Combine(dir, "pdfsig"));
+            candidates.Add(Path.Combine(dir, name));
         }
-        // Common install locations not always on the test host's PATH.
-        candidates.Add("/opt/homebrew/bin/pdfsig");
-        candidates.Add("/usr/local/bin/pdfsig");
-        candidates.Add("/usr/bin/pdfsig");
+        candidates.Add($"/opt/homebrew/bin/{name}");
+        candidates.Add($"/usr/local/bin/{name}");
+        candidates.Add($"/usr/bin/{name}");
 
         foreach (var candidate in candidates)
         {
@@ -480,6 +608,8 @@ public class SignatureApplicationServiceTests : IDisposable
 
         return null;
     }
+
+    private static string? FindPdfsig() => FindTool("pdfsig");
 
     // ── argument validation ─────────────────────────────────────────────────
 

@@ -455,7 +455,8 @@ Located in `Excise.App/Excise.App.csproj`:
 
 **Supporting:**
 - SkiaSharp 3.119.4 (MIT) - 2D graphics / rasterization
-- BouncyCastle.Cryptography 2.6.2 (MIT) - crypto primitives for encryption
+- SkiaSharp.HarfBuzz 3.119.4 (MIT) - OpenType shaping for synthesised annotation text in Excise.Rendering (#1363); brings native HarfBuzzSharp 8.3.1.5 (MIT)
+- BouncyCastle.Cryptography 2.7.0 (MIT) - crypto primitives for encryption and CMS signatures
 
 The legacy PdfPig / PDFsharp / PDFtoImage dependencies were removed in v2.0.
 All remaining licenses are permissive (MIT/Apache 2.0/BSD-3), no copyleft restrictions.
@@ -1074,7 +1075,7 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
     ├── MutoolReferenceRenderer.cs        # 329 uses in Differential tests
-    ├── GhostscriptReferenceRenderer.cs   # 105
+    ├── GhostscriptReferenceRenderer.cs   #  105
     ├── PdftocairoReferenceRenderer.cs    #  78
     ├── PdftoppmReferenceRenderer.cs      #  18
     ├── MutoolTextExtractor.cs            # independent TEXT oracle (MuPDF)

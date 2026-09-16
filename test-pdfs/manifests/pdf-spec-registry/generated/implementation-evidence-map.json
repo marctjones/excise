@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "7e55b75c048a8193205d163ba41d7ca102b2462b282b06acc2075b79c149fb11",
+  "sourceFingerprint": "4b4050c0c3032ec107093dccac756cff504cde5c4dffa142f446bc9970cb99ba",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6767,6 +6767,41 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Services/SignatureContentsReader.cs",
+      "path": "Excise.App/Services/SignatureContentsReader.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Services/SignatureTrustEvaluator.cs",
       "path": "Excise.App/Services/SignatureTrustEvaluator.cs",
       "kind": "source-file",
@@ -8957,7 +8992,7 @@
     }
   ],
   "summary": {
-    "records": 425,
+    "records": 426,
     "facets": {
       "annotations": 11,
       "content-and-graphics": 18,
@@ -8968,7 +9003,7 @@
       "product-integration-general": 233,
       "redaction": 52,
       "safe-save-and-metadata": 19,
-      "security-and-encryption": 19,
+      "security-and-encryption": 20,
       "transparency": 2
     },
     "parentCapabilityModes": {
@@ -9019,10 +9054,10 @@
       "pdf.17.security.redaction-content-removal:mutate": 52,
       "pdf.17.security.redaction-content-removal:render": 52,
       "pdf.17.security.redaction-content-removal:write": 52,
-      "pdf.17.syntax.encryption:mutate": 19,
-      "pdf.17.syntax.encryption:parse": 19,
-      "pdf.17.syntax.encryption:preserve": 19,
-      "pdf.17.syntax.encryption:write": 19,
+      "pdf.17.syntax.encryption:mutate": 20,
+      "pdf.17.syntax.encryption:parse": 20,
+      "pdf.17.syntax.encryption:preserve": 20,
+      "pdf.17.syntax.encryption:write": 20,
       "pdf.17.syntax.file:parse": 32,
       "pdf.17.syntax.file:preserve": 32,
       "pdf.17.syntax.file:write": 32,
@@ -9039,10 +9074,10 @@
       "pdfe.product.security.privacy-clean-copy:mutate": 19,
       "pdfe.product.security.privacy-clean-copy:preserve": 19,
       "pdfe.product.security.privacy-clean-copy:write": 19,
-      "pdfe.product.security.signature-and-permission-warning:mutate": 19,
-      "pdfe.product.security.signature-and-permission-warning:parse": 19,
-      "pdfe.product.security.signature-and-permission-warning:preserve": 19,
-      "pdfe.product.security.signature-and-permission-warning:write": 19
+      "pdfe.product.security.signature-and-permission-warning:mutate": 20,
+      "pdfe.product.security.signature-and-permission-warning:parse": 20,
+      "pdfe.product.security.signature-and-permission-warning:preserve": 20,
+      "pdfe.product.security.signature-and-permission-warning:write": 20
     },
     "fallbackRecords": 233,
     "allRecordsMapped": true
