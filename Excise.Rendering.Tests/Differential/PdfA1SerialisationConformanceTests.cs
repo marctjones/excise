@@ -170,8 +170,8 @@ public class PdfA1SerialisationConformanceTests
 
         var packet = Encoding.UTF8.GetString(pdf, start, length);
 
-        var part = Match(packet, "part");
-        var conformance = Match(packet, "conformance");
+        var part = ReadElementValue(packet, "part");
+        var conformance = ReadElementValue(packet, "conformance");
         part.Should().Be("1", "the fixture is authored as PDF/A-1");
         conformance.Should().Be("B");
 
@@ -216,7 +216,7 @@ public class PdfA1SerialisationConformanceTests
         return result;
     }
 
-    private static string? Match(string packet, string property)
+    private static string? ReadElementValue(string packet, string property)
     {
         var m = Regex.Match(packet, $"<pdfaid:{property}>([^<]*)</pdfaid:{property}>");
         return m.Success ? m.Groups[1].Value.Trim() : null;

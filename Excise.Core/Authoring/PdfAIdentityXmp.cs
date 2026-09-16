@@ -34,7 +34,7 @@ internal readonly record struct PdfAIdentity(string Part, string? Conformance, s
 /// one rule, drifting, none authoritative.</para>
 ///
 /// <para><b>Three questions, three entry points.</b> The distinction is the
-/// reason this is not simply "everyone calls <see cref="TryRead"/>":
+/// reason this is not simply "everyone calls <see cref="TryRead(PdfDocument)"/>":
 /// <list type="table">
 ///   <item><term><see cref="DeclaresAnyIdentification"/></term><description>
 ///     PRESENCE — "does this file CLAIM PDF/A at all". Used to decide NOT to
@@ -55,7 +55,7 @@ internal readonly record struct PdfAIdentity(string Part, string? Conformance, s
 ///     but unambiguously claiming PDF/A-1) would read as "not part 1" and get
 ///     object streams anyway. A claim is honoured on the strength of the part
 ///     alone.</description></item>
-///   <item><term><see cref="TryRead"/> / <see cref="TryParse"/></term><description>
+///   <item><term><see cref="TryRead(PdfDocument)"/> / <see cref="TryParse"/></term><description>
 ///     The VALIDATED identity — every value checked against a closed token set.
 ///     The only read permitted to feed <see cref="Write"/>, because re-emitting
 ///     a claim is a stronger act than respecting one.</description></item>
@@ -193,8 +193,8 @@ internal static class PdfAIdentityXmp
     internal static PdfAIdentity? TryParse(string? xmp)
     {
         if (string.IsNullOrEmpty(xmp)) return null;
-        string text = xmp;
 
+        var text = xmp;
         var part = Read(text, PartPattern);
         // Part is the identification; without it there is nothing to preserve.
         // 1-4 are the parts of ISO 19005 that exist (veraPDF: part == 1|2|3|4).

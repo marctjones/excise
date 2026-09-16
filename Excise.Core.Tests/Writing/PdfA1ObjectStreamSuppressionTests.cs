@@ -38,7 +38,7 @@ namespace Excise.Core.Tests.Writing;
 /// </summary>
 public class PdfA1ObjectStreamSuppressionTests
 {
-    public enum Serialisation
+    internal enum Serialisation
     {
         /// <summary><c>&lt;pdfaid:part&gt;1&lt;/pdfaid:part&gt;</c> — what excise emits.</summary>
         Element,
