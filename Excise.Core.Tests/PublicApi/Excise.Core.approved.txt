@@ -2074,7 +2074,8 @@ namespace Excise.Core.Text.Segmentation
                     int RemainingRasterOverlapCount,
                     System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyFailureStage> FailedStages,
                     System.Collections.Generic.IReadOnlyList<string> Warnings,
-                    int UnresolvedRedactAnnotationCount = 0) { }
+                    int UnresolvedRedactAnnotationCount = 0,
+                    bool PdfAIdentificationPreserved = false) { }
         public bool AttachmentsScrubbed { get; init; }
         public int CheckedTermCount { get; init; }
         public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus ContentVerificationStatus { get; init; }
@@ -2086,6 +2087,7 @@ namespace Excise.Core.Text.Segmentation
         public int HiddenTextFindingCount { get; init; }
         public int InfoFieldsScrubbed { get; init; }
         public bool MetadataScrubbed { get; init; }
+        public bool PdfAIdentificationPreserved { get; init; }
         public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus RasterRedactionAuditStatus { get; init; }
         public int RedactionAreaCount { get; init; }
         public int RemainingRasterOverlapCount { get; init; }
