@@ -194,15 +194,13 @@ public partial class MainWindowViewModel
         if (_redactedSavePathProviderForTests != null)
             return await _redactedSavePathProviderForTests(suggestedPath);
 
-        var mainWindow = GetMainWindow();
-        if (mainWindow == null)
-        {
-            _logger.LogError("Could not get main window for dialog");
-            return null;
-        }
-
-        var saveFile = await ShowSaveRedactedFileDialog(mainWindow, suggestedPath);
-        return saveFile?.Path.LocalPath;
+        // #1500 step 1: the destination comes from IFilePicker, which resolves
+        // the storage provider through IWindowHost. The pre-step code demanded a
+        // MainWindow and bailed without one; now a StorageProviderOverride is
+        // enough, which is what makes the real ApplyAllRedactionsCommand
+        // reachable in a headless test without the _redactedSavePathProviderForTests
+        // seam. With neither a window nor an override it still returns null.
+        return await _filePicker.SaveFileAsync(BuildRedactedSaveRequest(suggestedPath));
     }
 
     private bool TryGetCurrentRedactionPageArea(out PdfPageRect pageArea)

@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Platform.Storage;
 using Excise.App.Services;
+using Excise.App.Services.Host;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using System;
@@ -43,25 +44,12 @@ public partial class MainWindowViewModel
         if (!await ConfirmDiscardUnsavedChangesAsync("open a different document"))
             return;
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Open dialog");
-            return;
-        }
-
-        var files = await StoragePickers.OpenFilesAsync(storageProvider, new FilePickerOpenOptions
+        var files = await _filePicker.OpenFilesAsync(new OpenFilesRequest
         {
             Title = "Open PDF File",
             AllowMultiple = false,
-            FileTypeFilter =
-            [
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = ["*.pdf"]
-                }
-            ]
-        }, _logger);
+            Filters = [FilePickerFilters.Pdf],
+        });
 
         if (files.Count == 0)
         {
@@ -69,12 +57,7 @@ public partial class MainWindowViewModel
             return;
         }
 
-        var filePath = files[0].Path.LocalPath;
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            _logger.LogWarning("Selected file has no local path");
-            return;
-        }
+        var filePath = files[0];
 
         await LoadDocumentAsync(filePath);
     }

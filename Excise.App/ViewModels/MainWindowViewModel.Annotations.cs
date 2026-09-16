@@ -394,27 +394,14 @@ public partial class MainWindowViewModel
         if (_imageStampPathProviderForTests != null)
             return await _imageStampPathProviderForTests();
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show the image picker");
-            return null;
-        }
-
-        var files = await global::Excise.App.Services.StoragePickers.OpenFilesAsync(storageProvider, new global::Avalonia.Platform.Storage.FilePickerOpenOptions
+        var files = await _filePicker.OpenFilesAsync(new global::Excise.App.Services.Host.OpenFilesRequest
         {
             Title = "Choose a stamp image",
             AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
-                new global::Avalonia.Platform.Storage.FilePickerFileType("Images")
-                {
-                    Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp" }
-                }
-            }
-        }, _logger);
+            Filters = new[] { global::Excise.App.Services.Host.FilePickerFilters.Images },
+        });
 
-        return files.Count == 0 ? null : files[0].Path.LocalPath;
+        return files.Count == 0 ? null : files[0];
     }
 
     /// <summary>

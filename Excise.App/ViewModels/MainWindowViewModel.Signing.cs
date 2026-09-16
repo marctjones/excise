@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using Excise.App.Services;
+using Excise.App.Services.Host;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -55,21 +56,14 @@ public partial class MainWindowViewModel
             return;
         }
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-            return;
-
-        var certFiles = await StoragePickers.OpenFilesAsync(storageProvider, new FilePickerOpenOptions
+        var certFiles = await _filePicker.OpenFilesAsync(new OpenFilesRequest
         {
             Title = "Choose a signing certificate (PKCS#12)",
             AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("PKCS#12 certificate") { Patterns = new[] { "*.p12", "*.pfx" } },
-            },
-        }, _logger);
+            Filters = new[] { FilePickerFilters.Pkcs12Certificate },
+        });
 
-        if (certFiles is not { Count: > 0 } || certFiles[0].Path.LocalPath is not { Length: > 0 } certPath)
+        if (certFiles is not { Count: > 0 } || certFiles[0] is not { Length: > 0 } certPath)
             return;
 
         // Cancel returns null; an empty string is a legitimate empty password.
@@ -79,18 +73,15 @@ public partial class MainWindowViewModel
         if (password == null)
             return;
 
-        var outFile = await StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
+        var outFile = await _filePicker.SaveFileAsync(new SaveFileRequest
         {
             Title = "Save Signed Copy",
             DefaultExtension = "pdf",
             SuggestedFileName = SuggestSignedFilename(_currentFilePath),
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PDF Files") { Patterns = new[] { "*.pdf" } },
-            },
-        }, _logger);
+            Filters = new[] { FilePickerFilters.Pdf },
+        });
 
-        if (outFile?.Path.LocalPath is not { Length: > 0 } outputPath)
+        if (outFile is not { Length: > 0 } outputPath)
             return;
 
         await SignDocumentAsAsync(certPath, password, outputPath);

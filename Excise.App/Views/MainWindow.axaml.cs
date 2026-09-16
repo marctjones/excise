@@ -12,6 +12,7 @@ using Avalonia.VisualTree;
 using Excise.Avalonia.Controls;
 using Excise.Core.Document;
 using Excise.App.Models;
+using Excise.App.Services.Host;
 using Excise.App.ViewModels;
 using System;
 using System.Collections.Specialized;
@@ -22,6 +23,7 @@ namespace Excise.App.Views;
 public partial class MainWindow : Window
 {
     private PdfViewerControl? _pdfViewerControl;
+    private readonly ISettingsStore _settingsStore;
     private readonly WindowSettings _windowSettings;
     private object? _nativeMenuDataContext;
     private NativeMenu? _nativeMenu;
@@ -85,8 +87,22 @@ public partial class MainWindow : Window
         CacheTrimPolicyChanged?.Invoke(CacheTrimPolicyFor(settings));
     }
 
-    public MainWindow()
+    /// <summary>
+    /// Window geometry capture and apply is view state, so it stays here — but
+    /// through <see cref="ISettingsStore"/> since #1500 step 2, so a caller can
+    /// supply an in-memory store and the window stops writing
+    /// <c>window.json</c>. The parameterless constructor keeps the production
+    /// (and current test) behaviour: there are 266 <c>new MainWindow { … }</c>
+    /// sites, so the file-backed store has to remain the default.
+    /// </summary>
+    public MainWindow() : this(new FileSettingsStore())
     {
+    }
+
+    internal MainWindow(ISettingsStore settingsStore)
+    {
+        _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
+
         InitializeComponent();
 
         // Thumbnail drag-to-reorder is driven from the thumbnails ItemsControl,
@@ -119,7 +135,7 @@ public partial class MainWindow : Window
         }
 
         // Load and apply window settings (Issue #23)
-        _windowSettings = WindowSettings.Load();
+        _windowSettings = _settingsStore.Load();
         _windowSettings.ApplyTo(this);
         _performanceSettings = PerformanceSettings.FromWindowSettings(_windowSettings);
 
@@ -213,7 +229,7 @@ public partial class MainWindow : Window
         // from startup, so saving it would revert a Preferences save and every
         // document state written since.
         var viewModel = DataContext as MainWindowViewModel;
-        WindowSettings.Update(settings =>
+        _settingsStore.Update(settings =>
         {
             if (viewModel != null)
             {

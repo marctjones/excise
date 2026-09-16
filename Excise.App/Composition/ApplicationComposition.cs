@@ -1,4 +1,5 @@
 using Excise.App.Services;
+using Excise.App.Services.Host;
 using Excise.App.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -39,6 +40,24 @@ internal static class ApplicationComposition
         // cache-trim coordinator (OS pressure), so their requests coalesce.
         services.AddSingleton(_ => new ReleasedMemoryReclaimer());
 
+        // Host and persistence adapters (#1500 steps 1-2). Explicit factories,
+        // like ReleasedMemoryReclaimer above: these types and their constructors
+        // are internal (design principle "new units are internal in Phase A"),
+        // and Microsoft.Extensions.DependencyInjection only discovers PUBLIC
+        // constructors.
+        //
+        // AvaloniaWindowHost is one instance on purpose: the file picker
+        // resolves its storage provider from the same host the view model's
+        // StorageProviderOverride forwards to, so setting that override steers
+        // the real picker rather than a second, unused host.
+        services.AddSingleton<IWindowHost>(_ => new AvaloniaWindowHost());
+        services.AddSingleton<IFilePicker>(provider => new AvaloniaFilePicker(
+            provider.GetRequiredService<IWindowHost>(),
+            provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<AvaloniaFilePicker>>()));
+        services.AddSingleton<ITextClipboard>(_ => new AvaloniaTextClipboard());
+        services.AddSingleton<ISettingsStore>(_ => new FileSettingsStore());
+        services.AddSingleton<IRecentFilesStore>(_ => new FileRecentFilesStore());
+
         // The desktop lifetime has one main window and therefore one document
         // session. Use an explicit factory so constructor selection cannot fall
         // back to MainWindowViewModel's temporary test/design-time graph when a
@@ -66,5 +85,10 @@ internal static class ApplicationComposition
             services.GetRequiredService<PageOrganizationWorkflowService>(),
             services.GetRequiredService<DocumentImageExportWorkflowService>(),
             services.GetRequiredService<AnnotationWorkflowService>(),
-            services.GetRequiredService<ReleasedMemoryReclaimer>());
+            services.GetRequiredService<ReleasedMemoryReclaimer>(),
+            services.GetRequiredService<IFilePicker>(),
+            services.GetRequiredService<IWindowHost>(),
+            services.GetRequiredService<ITextClipboard>(),
+            services.GetRequiredService<ISettingsStore>(),
+            services.GetRequiredService<IRecentFilesStore>());
 }

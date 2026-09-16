@@ -1,5 +1,6 @@
 using Avalonia.Platform.Storage;
 using Microsoft.Extensions.Logging;
+using Excise.App.Services.Host;
 using Excise.Core.Security;
 using Excise.Core.Writing;
 using ReactiveUI;
@@ -75,34 +76,28 @@ public partial class MainWindowViewModel
     private async Task<string?> ApplySecurityWithPickerAsync(
         string? userPassword, string? ownerPassword, PdfEncryptionAlgorithm algorithm)
     {
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Save Protected PDF dialog");
-            return null;
-        }
-
-        var file = await global::Excise.App.Services.StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
-        {
-            Title = "Save Protected PDF As",
-            DefaultExtension = "pdf",
-            SuggestedFileName = SuggestSecuredFileName(),
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PDF Files") { Patterns = new[] { "*.pdf" } }
-            }
-        }, _logger);
-
-        if (file == null)
-            return null;
-
-        var outputPath = file.Path.LocalPath;
-        if (string.IsNullOrWhiteSpace(outputPath))
+        var outputPath = await PickSecuredSavePathAsync("Save Protected PDF As");
+        if (outputPath == null)
             return null;
 
         ApplySecurity(outputPath, userPassword, ownerPassword, algorithm);
         return outputPath;
     }
+
+    /// <summary>
+    /// The save picker shared by Apply Protection and Remove Protection. These
+    /// were two byte-identical blocks differing only in title before #1500
+    /// step 1; the suggested name comes from
+    /// <see cref="SuggestSecuredFileName"/> either way.
+    /// </summary>
+    private Task<string?> PickSecuredSavePathAsync(string title) =>
+        _filePicker.SaveFileAsync(new SaveFileRequest
+        {
+            Title = title,
+            DefaultExtension = "pdf",
+            SuggestedFileName = SuggestSecuredFileName(),
+            Filters = new[] { FilePickerFilters.Pdf },
+        });
 
     /// <summary>
     /// Confirms the (consequential, irreversible-in-the-output-file) intent
@@ -119,29 +114,8 @@ public partial class MainWindowViewModel
         if (!confirmed)
             return null;
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Save PDF dialog");
-            return null;
-        }
-
-        var file = await global::Excise.App.Services.StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
-        {
-            Title = "Save Unprotected PDF As",
-            DefaultExtension = "pdf",
-            SuggestedFileName = SuggestSecuredFileName(),
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PDF Files") { Patterns = new[] { "*.pdf" } }
-            }
-        }, _logger);
-
-        if (file == null)
-            return null;
-
-        var outputPath = file.Path.LocalPath;
-        if (string.IsNullOrWhiteSpace(outputPath))
+        var outputPath = await PickSecuredSavePathAsync("Save Unprotected PDF As");
+        if (outputPath == null)
             return null;
 
         RemoveProtection(outputPath);

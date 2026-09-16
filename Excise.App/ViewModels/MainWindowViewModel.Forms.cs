@@ -368,25 +368,15 @@ public partial class MainWindowViewModel
             return;
         }
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-            return;
-
-        var file = await global::Excise.App.Services.StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
+        var file = await _filePicker.SaveFileAsync(new global::Excise.App.Services.Host.SaveFileRequest
         {
             Title = "Save Flattened Form Copy",
             DefaultExtension = "pdf",
             SuggestedFileName = SuggestFlattenedFormFilename(_currentFilePath),
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        }, _logger);
+            Filters = new[] { global::Excise.App.Services.Host.FilePickerFilters.Pdf },
+        });
 
-        if (file?.Path.LocalPath is not { Length: > 0 } filePath)
+        if (file is not { Length: > 0 } filePath)
             return;
 
         await SaveFlattenedFormCopyAsAsync(filePath);

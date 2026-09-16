@@ -58,7 +58,7 @@ public partial class MainWindowViewModel
     {
         ArgumentNullException.ThrowIfNull(preferences);
         preferences.SaveToMainViewModel(this);
-        WindowSettings.Update(WritePreferencesTo);
+        _settingsStore.Update(WritePreferencesTo);
         _logger.LogInformation("Preferences saved: performance preset {Preset}", _performanceSettings.DetectPreset());
     }
 
