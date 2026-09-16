@@ -122,26 +122,22 @@ internal partial class RenderContext
                 ? DeviceCmykGroupEntry.SoftMaskedGroup
                 : DeviceCmykGroupEntry.PlainGroup;
 
-            // A NON-isolated group composited with a non-Normal blend mode needs
-            // §11.4.6's backdrop REMOVAL step, which excise does not have
-            // (#1394): its result carries the backdrop, and blending that over
-            // the page counts the backdrop twice. /I defaults to false, so this
-            // is the common case for such groups. The contained Skia layer below
-            // is what produced the checked-in behaviour on pdf.js issue13520 (a
-            // soft-masked non-isolated /BM /Screen group), and routing it through
-            // the child path instead put 439 dark pixels in that test's region
-            // where the gate allows 25. Blend modes used INSIDE the group are
-            // unaffected — this is only about how the finished group is
-            // composited back.
-            var needsBackdropRemoval =
-                group?.GetBool("I") == false && invocationState.BlendMode != SKBlendMode.SrcOver;
+            // A NON-isolated group composited with a non-Normal blend mode used
+            // to be routed AWAY from the child path here, because §11.4.4's
+            // backdrop-REMOVAL step did not exist and blending a result that
+            // still carried the backdrop over that same backdrop counted it
+            // twice. #1504 implements the removal in
+            // CompositeDeviceCmykGroupBitmap, so this is exactly the case that
+            // now MUST take the child path: the contained Skia layer is the one
+            // place where the seeded backdrop is provably wrong under a
+            // non-Normal invocation blend (see RenderFormGroupThroughSkiaLayer).
+            //
             // An unmasked /CS /DeviceCMYK group already had its attempt above;
             // if that failed (no usable /BBox, over the pixel limit) a second
             // attempt would fail the same way, so it goes straight to the
             // contained layer rather than an uncontained one.
             if (inheritsDeviceCmyk &&
                 !attemptedUnmaskedCmykGroup &&
-                !needsBackdropRemoval &&
                 TryRenderDeviceCmykFormGroup(formStream, group, invocationState, entry))
             {
                 return;
@@ -246,25 +242,34 @@ internal partial class RenderContext
         // ⚠️ This layer is ISOLATED, and §11.6.6 says it should not be: /I
         // defaults to FALSE, so a group is non-isolated unless it says
         // otherwise, and a /BM used inside it must act on the group's backdrop.
-        // Skia's SaveLayer starts fully transparent, so it does not. That is
-        // #1394, and it is still OPEN.
+        // Skia's SaveLayer starts fully transparent, so it does not. #1394
+        // filed that and is CLOSED, but it covered only the SEEDING half; the
+        // §11.4.4 backdrop-REMOVAL step is #1504.
         //
-        // Do NOT "fix" it by painting the backdrop into the layer the way the
-        // soft-mask branch above does. That was tried and measured (2026-09-09)
-        // and it overshoots, because seeding without §11.4.6's backdrop-REMOVAL
-        // step leaves the backdrop's own contribution inside the group result.
-        // On pdf.js issue13520 (20 explicit /I false groups), warm-pale pixel
-        // count in the test region:
+        // #1504 implements removal for the DeviceCMYK CHILD-CONTEXT path
+        // (CompositeDeviceCmykGroupBitmap). It deliberately does NOT extend
+        // seeding to this plain layer path, and the reason is no longer "it
+        // overshoots" — it is that removal cannot be EXPRESSED here. Skia's
+        // SaveLayer keeps one alpha channel, so seeding writes the backdrop
+        // alpha a0 into it and the group's own accumulated alpha agn (§11.4.4's
+        // result alpha) becomes unrecoverable the moment a0 = 1. Removal needs
+        // both. The child path can do it because the seed goes into the
+        // RETAINED CMYK backdrop while the group bitmap's alpha stays agn.
         //
-        //     mutool 887 · ghostscript 762   <- the target, two oracles agreeing
-        //     pdftocairo 3048                <- outlier, shares excise's defect
-        //     excise seeded              71  <- overshot BELOW both
-        //     excise isolated (today)  4079  <- overshoots ABOVE both
+        // What IS provable about the soft-mask branch above, which does seed:
+        // for a0 = 1 and a Normal invocation blend, seeding WITHOUT removal is
+        // algebraically identical to the spec, because Restore composites the
+        // layer at the layer's OWN alpha and colour — a consistent pair — where
+        // the CMYK composite pairs Cn (backdrop included) with agn (backdrop
+        // excluded). See SeedNonIsolatedGroupBackdrop for the derivation and
+        // the two residual cases.
         //
-        // A synthetic probe does NOT catch this: with a group that paints an
-        // opaque rect over the sample point, removal is a no-op and seeding
-        // looks exactly right (it matched gs and mutool on four such probes).
-        // The fix needs real backdrop removal, not a seed.
+        // A synthetic probe does NOT catch any of this: with a group that
+        // paints an opaque rect over the sample point, agn = 1 and removal is a
+        // no-op, so seeding looks exactly right (it matched gs and mutool on
+        // four such probes). A discriminating fixture needs PARTIAL alpha
+        // inside the group over a non-empty backdrop — see
+        // DeviceCmykNonIsolatedGroupBackdropRemovalTests.
         _canvas.SaveLayer(bounds, paint);
         try
         {
@@ -399,11 +404,16 @@ internal partial class RenderContext
     /// keeps its region and its dirty-flag-only sync, so the gwg160–162
     /// contracts stay comparable.</para>
     ///
-    /// <para><b>#1394.</b> A non-isolated child is seeded from this context's
-    /// backdrop, and nothing removes that seed before the composite. That is
-    /// the same missing §11.4.6 backdrop-removal step #1394 records for the
-    /// Skia layer path. Removal belongs in <see cref="CompositeDeviceCmykGroupBitmap"/>,
-    /// which already has the parent backdrop the seed came from.</para>
+    /// <para><b>Non-isolated groups (§11.4.4, #1504).</b> A non-isolated child
+    /// is seeded from this context's backdrop, so the child's accumulated
+    /// colour includes that backdrop. <see cref="CompositeDeviceCmykGroupBitmap"/>
+    /// removes it again before compositing — otherwise the backdrop is counted
+    /// twice. The seed source is passed to the composite verbatim
+    /// (<c>SelectBackdropForChild()</c>, which is the enclosing knockout
+    /// group's INITIAL backdrop when there is one — §11.4.6's note that a
+    /// non-isolated group nested in a knockout group takes the OUTER group's
+    /// initial backdrop, not its immediate one), so <c>C0</c> is exactly what
+    /// was seeded and not a re-derivation of it.</para>
     /// </summary>
     private bool TryRenderDeviceCmykFormGroup(
         Excise.Core.Primitives.PdfStream formStream,
@@ -518,11 +528,20 @@ internal partial class RenderContext
             if (!isIsolated && invocationState.BlendMode != SKBlendMode.SrcOver)
                 SyncDeviceCmykBackdropFromRootBitmap(left, top, width, height);
 
+            // The seed source, kept so the composite can remove exactly what
+            // was seeded (§11.4.4, #1504) rather than re-deriving C0 from a
+            // backdrop this composite is itself mutating pixel by pixel.
+            // EnterChildGroup seeds only when the group is non-isolated and
+            // this is non-null, so those are the same two conditions removal
+            // applies under.
+            var parentBackdropForChild = _deviceCmyk.SelectBackdropForChild();
+            var seededInitialBackdrop = isIsolated ? null : parentBackdropForChild;
+
             child._deviceCmyk.EnterChildGroup(new DeviceCmykChildGroupRequest(
                 isIsolated,
                 isKnockout,
                 _deviceCmyk.IsInKnockoutGroup,
-                _deviceCmyk.SelectBackdropForChild(),
+                parentBackdropForChild,
                 left,
                 top,
                 width,
@@ -581,7 +600,8 @@ internal partial class RenderContext
                 invocationState.BlendMode,
                 groupInvocationAlpha,
                 maskPlane,
-                isContainedEntry);
+                isContainedEntry,
+                seededInitialBackdrop);
         }
 
         return true;
@@ -841,6 +861,12 @@ internal partial class RenderContext
     /// zero-alpha skip, so a fully masked-out pixel never triggers the knockout
     /// reset below (#1395).
     ///
+    /// <para><paramref name="seededInitialBackdrop"/>, when present, is the
+    /// backdrop a NON-isolated group was seeded from, in this context's pixel
+    /// coordinates. Its contribution is removed from the group's accumulated
+    /// colour before the group is composited (§11.4.4, #1504) — see
+    /// <see cref="RemoveNonIsolatedGroupInitialBackdrop"/>.</para>
+    ///
     /// <para><c>/AIS</c> (alpha is shape) is not read. Outside a knockout
     /// parent shape and opacity multiply into the same composite alpha, so it
     /// cannot change this result; inside one it would select which of the two
@@ -854,7 +880,8 @@ internal partial class RenderContext
         SKBlendMode invocationBlendMode,
         float invocationAlpha,
         byte[]? maskPlane = null,
-        bool isContainedEntry = false)
+        bool isContainedEntry = false,
+        DeviceCmykBackdrop? seededInitialBackdrop = null)
     {
         if (_rootBitmap == null || _deviceCmyk.Backdrop == null)
             return;
@@ -906,7 +933,17 @@ internal partial class RenderContext
 
             for (var x = 0; x < groupWidth; x++)
             {
-                var alpha = (groupPixels[groupRowStart + (x * 4) + 3] / 255.0) * clampedInvocationAlpha;
+                // The group's OWN accumulated alpha: §11.4.4's agn, the result
+                // alpha of the group compositing function. The group bitmap
+                // starts transparent and only the group's contents paint into
+                // it — a non-isolated group's seed goes into the retained CMYK
+                // backdrop, never here — so this byte excludes the backdrop.
+                // It is what the removal step needs, and it is NOT `alpha`
+                // below, which has the invocation's /ca and /SMask folded in;
+                // those apply to the finished group as an object (§11.6.6),
+                // after the group compositing function has returned.
+                var groupAlpha = groupPixels[groupRowStart + (x * 4) + 3] / 255.0;
+                var alpha = groupAlpha * clampedInvocationAlpha;
                 if (maskPlane != null)
                     alpha *= maskPlane[(y * groupWidth) + x] / 255.0;
                 if (alpha <= 0)
@@ -915,6 +952,25 @@ internal partial class RenderContext
                 var parentX = left + x;
                 if (parentX < 0 || parentX >= rootWidth)
                     continue;
+
+                // §11.4.4 backdrop removal, BEFORE anything below can write to
+                // this pixel of the parent backdrop: in the non-knockout case
+                // seededInitialBackdrop IS _deviceCmyk.Backdrop, which the
+                // composite mutates pixel by pixel, so C0 has to be read while
+                // this pixel still holds what was seeded (#1504).
+                var source = groupBackdrop.Get(x, y);
+                // groupAlpha == 1 is both the common case (an opaque group hides
+                // its backdrop, so removal is a no-op) and the one where the a0
+                // derivation is 0/0 — short-circuited here so the parent
+                // backdrop is not even read for it.
+                if (seededInitialBackdrop != null && groupAlpha < 1)
+                {
+                    source = RemoveNonIsolatedGroupInitialBackdrop(
+                        source,
+                        groupBackdrop.GetAlpha(x, y),
+                        groupAlpha,
+                        seededInitialBackdrop.Get(parentX, parentY));
+                }
 
                 var rootOffset = rootRowStart + (parentX * 4);
                 var dstAlphaByte = rootPixels[rootOffset + 3];
@@ -936,7 +992,6 @@ internal partial class RenderContext
                     wroteRoot = true;
                 }
 
-                var source = groupBackdrop.Get(x, y);
                 var backdrop = _deviceCmyk.Backdrop.Get(parentX, parentY);
                 var blended = isNormalBlend
                     ? source
@@ -983,6 +1038,98 @@ internal partial class RenderContext
 
         if (wroteRoot)
             _rootBitmap.NotifyPixelsChanged();
+    }
+
+    /// <summary>
+    /// Remove a NON-isolated transparency group's initial backdrop from the
+    /// group's accumulated colour, per ISO 32000-1/-2 <b>§11.4.4</b> "Group
+    /// compositing computations" — <b>#1504</b>.
+    ///
+    /// <para>⚠️ #1504's title and body cite this as §11.4.6. That is wrong in
+    /// BOTH editions: §11.4.6 is "Knockout groups" in ISO 32000-1:2008 and in
+    /// ISO 32000-2:2020 alike, and the result formula below is §11.4.4 in
+    /// both. Checked against the clause text rather than restated (#936).</para>
+    ///
+    /// <para>The elements of a non-isolated group are composited onto a
+    /// backdrop that INCLUDES the group's initial backdrop, so the blend modes
+    /// used inside the group have something to act on. The group's result must
+    /// therefore have that backdrop taken back out before the result is itself
+    /// composited onto the same backdrop, or the backdrop is counted twice.
+    /// The clause's result formula is</para>
+    ///
+    /// <code>
+    /// C = Cn + (Cn - C0) * (a0 / agn - a0)     f = fgn     a = agn
+    /// </code>
+    ///
+    /// <para>where <c>Cn</c> is the accumulated colour after the last group
+    /// element (backdrop included), <c>C0</c>/<c>a0</c> are the initial
+    /// backdrop's colour and alpha, and <c>agn</c> is the group alpha — the
+    /// accumulated alpha of the group's elements ONLY. The clause gives the
+    /// same operation more intuitively as an inverse Normal composite,
+    /// <c>C = (Cn - phi*C0) / (1 - phi)</c> with backdrop fraction
+    /// <c>phi = (1 - agn) * a0 / Union(a0, agn)</c>; the form used here is the
+    /// spec's own simplification of it.</para>
+    ///
+    /// <para><b>Why <c>a0</c> is derived and <c>C0</c> is read.</b> The child's
+    /// accumulated alpha is <c>an = Union(a0, agn)</c>, so
+    /// <c>a0 = (an - agn) / (1 - agn)</c>. Deriving it rather than reading the
+    /// parent's alpha is not a shortcut — it is what makes this correct for the
+    /// pixels <see cref="SyncDeviceCmykGroupBackdropFromGroupBitmap"/> rewrote.
+    /// That sync folds Skia-RGB paint inside the child (text, gray/RGB fills,
+    /// fills carrying their own <c>/SMask</c>) into the child backdrop at the
+    /// group bitmap's own alpha, i.e. at <c>agn</c> with a colour that never
+    /// included the seed. For those pixels the derivation yields
+    /// <c>a0 = 0</c> and removal correctly does nothing, where reading the
+    /// parent's <c>a0</c> would subtract a backdrop that is not in there.
+    /// <c>C0</c> still comes from the seed source, which is the only place the
+    /// seeded colour survives.</para>
+    ///
+    /// <para><b>Numerical behaviour at small <c>agn</c>.</b> The factor grows
+    /// like <c>a0/agn</c>, so the 1/255 quantisation of <c>Cn</c> is amplified
+    /// by up to 255x — but this colour is then composited at <c>agn</c>, so the
+    /// error reaching the page is <c>agn * 0.004 * a0/agn = 0.004 * a0</c>, one
+    /// quantisation step, independent of <c>agn</c>. No epsilon floor is
+    /// needed and none is used; a floor would silently reinstate the double
+    /// count. <c>agn</c> cannot be zero here: the caller has already skipped
+    /// the pixel when the composite alpha is zero, and that alpha has
+    /// <c>agn</c> as a factor. The clamps are for the gamut, not the algebra —
+    /// removal legitimately extrapolates, and a component may land outside
+    /// [0,1] when the true source colour sits on the gamut edge.</para>
+    ///
+    /// <para>Pure arithmetic and <c>internal</c> so the spec property can be
+    /// pinned without a renderer: compose per §11.4.4 and remove, and the
+    /// group's own source colour comes back —
+    /// <c>NonIsolatedGroupBackdropRemovalTests</c>.</para>
+    /// </summary>
+    internal static DeviceCmykColor RemoveNonIsolatedGroupInitialBackdrop(
+        DeviceCmykColor accumulated,
+        double accumulatedAlpha,
+        double groupAlpha,
+        DeviceCmykColor initial)
+    {
+        // agn == 1 leaves the factor at a0 - a0 = 0 (an opaque group hides its
+        // backdrop entirely) and makes the a0 derivation 0/0. Nothing to do.
+        // agn <= 0 cannot reach the caller (the composite alpha has agn as a
+        // factor and a zero composite alpha skips the pixel), but a direct
+        // caller could, and 0 group alpha means 0 group contribution.
+        if (groupAlpha >= 1 || groupAlpha <= 0)
+            return accumulated;
+
+        // Byte rounding can put `an` a step below `agn` on a pixel that was
+        // never seeded, so clamp rather than trusting the subtraction's sign.
+        var backdropAlpha = Math.Clamp((accumulatedAlpha - groupAlpha) / (1 - groupAlpha), 0, 1);
+        if (backdropAlpha <= 0)
+            return accumulated;
+
+        var factor = (backdropAlpha / groupAlpha) - backdropAlpha;
+        if (factor <= 0)
+            return accumulated;
+
+        return new DeviceCmykColor(
+            Math.Clamp(accumulated.C + ((accumulated.C - initial.C) * factor), 0, 1),
+            Math.Clamp(accumulated.M + ((accumulated.M - initial.M) * factor), 0, 1),
+            Math.Clamp(accumulated.Y + ((accumulated.Y - initial.Y) * factor), 0, 1),
+            Math.Clamp(accumulated.K + ((accumulated.K - initial.K) * factor), 0, 1));
     }
 
     private void RenderFormXObject(Excise.Core.Primitives.PdfStream formStream)
