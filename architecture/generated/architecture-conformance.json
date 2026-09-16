@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "9d52bdc869b3fba3ae3ea18b8a09f01f03d19946",
+  "sourceRevision": "cf52e7ee55a2f07453d806d086b32d012ce5c1f1",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 6467,
+    "retainedSymbols": 6478,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -542,14 +542,14 @@
     {
       "source": "core",
       "target": "core-document",
-      "references": 108,
-      "typeDependencyCount": 16,
+      "references": 122,
+      "typeDependencyCount": 17,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Authoring.PdfDocumentBuilder",
-          "target": "Excise.Core.Document.PdfRectangle",
-          "references": 20
+          "source": "Excise.Core.Authoring.PdfAWriter",
+          "target": "Excise.Core.Document.PdfDocument",
+          "references": 21
         }
       ]
     },
@@ -570,14 +570,14 @@
     {
       "source": "core",
       "target": "core-primitives",
-      "references": 174,
-      "typeDependencyCount": 33,
+      "references": 205,
+      "typeDependencyCount": 36,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.ColorSpaces.PdfColorSpace",
-          "target": "Excise.Core.Primitives.PdfArray",
-          "references": 20
+          "source": "Excise.Core.Authoring.PdfAWriter",
+          "target": "Excise.Core.Primitives.PdfDictionary",
+          "references": 29
         }
       ]
     },
@@ -682,7 +682,7 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1329,
+      "references": 1330,
       "typeDependencyCount": 197,
       "classification": "declared",
       "evidence": [
@@ -766,8 +766,8 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 545,
-      "typeDependencyCount": 65,
+      "references": 551,
+      "typeDependencyCount": 66,
       "classification": "declared",
       "evidence": [
         {
@@ -808,7 +808,7 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 450,
+      "references": 455,
       "typeDependencyCount": 96,
       "classification": "declared",
       "evidence": [

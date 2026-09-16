@@ -10,6 +10,41 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Fixed
+- **Redacting a form field value cost the file its PDF/A conformance**
+  (#1499) — the interactive scrub ended with `/NeedAppearances true` whenever
+  anything changed, and PDF/A forbids that entry (ISO 19005-2 6.4.1#3,
+  ISO 19005-1 6.9#1), so a redacted PDF/A form stopped being PDF/A while its
+  XMP went on claiming it was. The
+  flag was also self-contradictory: #1098 had just rewritten the widget's
+  appearance to remove the term's glyphs, and the flag tells the viewer to
+  discard that appearance and re-typeset from `/V`. The decision is now made
+  per widget — an appearance that survived the rewrite needs no flag at all
+  (true for every document, not only archival ones); a widget left without one
+  gets an EMPTY appearance when the document targets PDF/A (19005-2 6.3.3#1,
+  19005-1 6.9#2 require one), and the flag as before when it does not. Zero-size widgets stay appearance-less, per #623. PDF/A intent
+  is read from the XMP `pdfaid` identifier, or from `PdfDocumentBuilder.PdfA()`
+  before the save that writes it. Verified by veraPDF — not by excise — on a
+  redacted PDF/A-1b and -2b form, together with a `SavedPdfLeakScanner` scan of
+  the saved bytes and a mutool read of the rewritten appearance.
+- **`PdfA()` plus a date field produced a file veraPDF rejected** (#1498) —
+  `AddDateField` writes Acrobat `AFDate` format and keystroke actions, and
+  PDF/A forbids JavaScript actions outright (19005-1 6.6.1#1, 19005-2 6.5.1#1).
+  The PDF/A save pass now removes the actions PDF/A rejects, with the scope
+  read out of veraPDF's own validation profiles rather than from memory:
+  `/AA` goes wholesale from the catalog and from every field and widget
+  dictionary, and `/A` goes wholesale from every widget — PDF/A bans the KEYS
+  there, not merely JavaScript in them (19005-1 6.6.1#3 and 6.6.2, 19005-2
+  6.4.1#1 and #2) — while elsewhere (a Link's `/A`, a page's `/AA`,
+  `/OpenAction`) only JavaScript is removed and legal navigation survives.
+  The document-level `/Names/JavaScript` tree goes too. ⚠️ **A date field
+  in a PDF/A document is therefore an ordinary text field: the viewer no longer
+  validates or reformats what the user types.** The field, its name, flags,
+  appearance and tooltip are unchanged, and the builder's date-field tooltip
+  already names the expected format, so the hint survives. The loss is not
+  reported: `Excise.Core` has no save-path diagnostic channel to report it
+  through, tracked by #1509. Non-PDF/A output is
+  untouched — the strip runs only inside the PDF/A pass, so call order does not
+  matter.
 - **A FreeText annotation with Arabic `/Contents` and no `/AP` rendered
   blank** (#1363) — the synthesised appearance refused any string that needs
   complex-script shaping, and drew only the first line of the rest. Such

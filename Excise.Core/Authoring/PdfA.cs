@@ -27,7 +27,210 @@ internal static class PdfAWriter
     {
         WriteXmp(document, conformance);
         WriteOutputIntent(document);
-        document.InvalidateDerivedState(PdfDocumentDerivedStateScope.Metadata);
+        RemoveForbiddenActions(document);
+        document.InvalidateDerivedState(
+            PdfDocumentDerivedStateScope.Metadata | PdfDocumentDerivedStateScope.CatalogActionsAndNames);
+    }
+
+    /// <summary>
+    /// #1498 — remove the actions PDF/A forbids. The rules, read from veraPDF's
+    /// own validation profiles (<c>PDFA-1B.xml</c>, <c>PDFA-2B.xml</c>) rather
+    /// than from memory, because an earlier draft of this method got the shape
+    /// of them wrong:
+    ///
+    /// <list type="bullet">
+    ///   <item><b>The action-type rule is an ALLOW-list, not a JavaScript
+    ///     ban.</b> 19005-1 6.6.1#1 permits only
+    ///     <c>GoTo|GoToR|Thread|URI|Named|SubmitForm</c> (19005-2 6.5.1#1 adds
+    ///     <c>GoToE</c>), and a <c>Named</c> action only for the four page
+    ///     navigations (6.6.1#2 / 6.5.1#2). Launch, Sound, Movie, Hide and
+    ///     friends fail it just as JavaScript does.</item>
+    ///   <item><b>A widget annotation may not carry <c>/A</c> or <c>/AA</c> AT
+    ///     ALL</b> — 19005-1 6.6.1#3 ("interactive form fields shall not perform
+    ///     actions of any type", <c>containsA == false</c>) and 19005-2 6.4.1#1
+    ///     (<c>containsA == false &amp;&amp; containsAA == false</c>). Filtering
+    ///     only the JavaScript entries out of a widget's <c>/AA</c> and keeping
+    ///     the rest still fails.</item>
+    ///   <item><b>A field dictionary may not carry <c>/AA</c></b> — 19005-1
+    ///     6.6.2#2, 19005-2 6.4.1#2. Same for the document catalog (19005-1
+    ///     6.6.2#3).</item>
+    /// </list>
+    ///
+    /// <para>So <c>/AA</c> goes wholesale from the catalog and from every field
+    /// and widget dictionary, and <c>/A</c> goes wholesale from every widget —
+    /// there the KEY is what is banned. Elsewhere — a Link annotation's
+    /// <c>/A</c>, a page's <c>/AA</c>, <c>/OpenAction</c> — the key is fine and
+    /// only a forbidden TYPE is removed, so a legal <c>/GoTo</c> or <c>/URI</c>
+    /// survives; no PDF/A rule asks for more, and deleting working navigation
+    /// nobody objected to would be overreach.</para>
+    ///
+    /// <para><b>Why here and not at authoring time.</b>
+    /// <see cref="PdfDocumentBuilder.PdfA"/> may be called before or after the
+    /// fields, so a check inside <c>AddDateField</c> would depend on call order.
+    /// This runs as part of the PDF/A pre-save pass, so the rule is simply
+    /// "PDF/A output carries none of these" regardless of how the document was
+    /// assembled, and it also catches actions a caller wrote by hand.</para>
+    ///
+    /// <para>⚠️ <b>User-visible.</b> <see cref="AcroFormAuthoring.AddDateField"/>
+    /// writes <c>/AA /F</c> and <c>/AA /K</c> format and keystroke actions; under
+    /// <c>PdfA()</c> they are stripped, so the field no longer validates or
+    /// reformats typed input. It stays a working text field with its name, rect,
+    /// tooltip, flags and appearance intact. There is no conforming way to keep
+    /// the enforcement — PDF/A's whole point is a file that renders without a
+    /// scripting engine.</para>
+    ///
+    /// <para>⚠️ That loss is currently SILENT, and not for want of trying:
+    /// <c>Excise.Core</c> has no save-path diagnostic channel to report it
+    /// through — no logger, no warnings collection, and
+    /// <c>RegisterPreSaveAction</c> returns <c>void</c>, so this method cannot
+    /// hand anything back. Tracked by #1509, which also records why
+    /// <c>PdfAStructuralValidator</c> is not the answer (after the strip it
+    /// reports "no JavaScript present" — true, and useless). Do not bolt a
+    /// one-off reporting hook onto this method; #1509 owns the shape.</para>
+    /// </summary>
+    private static void RemoveForbiddenActions(PdfDocument document)
+    {
+        var visited = new HashSet<PdfDictionary>();
+
+        // Catalog: /AA wholesale (19005-1 6.6.2#3), an /OpenAction of a
+        // forbidden type, and the document-level /Names/JavaScript name tree.
+        document.Catalog.Remove("AA");
+        if (IsForbiddenAction(document, document.Catalog.GetOptional("OpenAction")))
+            document.Catalog.Remove("OpenAction");
+        if (document.Resolve(document.Catalog.GetOptional("Names") ?? PdfNull.Instance) is PdfDictionary names)
+            names.Remove("JavaScript");
+
+        // The AcroForm field tree FIRST: a field node that is not itself a widget
+        // still carries /AA, and its widgets hang off /Kids. Walking it before
+        // the page annotations matters because `visited` gates the /Kids descent
+        // — a merged field/widget dictionary reached first as a page annotation
+        // would stop the walk from descending into its children.
+        if (document.Resolve(document.Catalog.GetOptional("AcroForm") ?? PdfNull.Instance) is PdfDictionary acroForm
+            && document.Resolve(acroForm.GetOptional("Fields") ?? PdfNull.Instance) is PdfArray fields)
+        {
+            StripFieldTree(document, fields, visited, depth: 0);
+        }
+
+        // Pages and their annotations.
+        for (var pageNumber = 1; pageNumber <= document.PageCount; pageNumber++)
+        {
+            PdfDictionary pageDict;
+            try { pageDict = document.GetPage(pageNumber).Dictionary; }
+            catch (Exception ex) when (ex is not OutOfMemoryException) { continue; }
+
+            StripForbiddenActionTypes(document, pageDict);
+            if (document.Resolve(pageDict.GetOptional("Annots") ?? PdfNull.Instance) is PdfArray annots)
+            {
+                foreach (var annotObj in annots)
+                {
+                    if (document.Resolve(annotObj) is not PdfDictionary annot) continue;
+                    if (IsWidget(annot))
+                        StripAllActions(annot, visited);
+                    else
+                        StripForbiddenActionTypes(document, annot);
+                }
+            }
+        }
+    }
+
+    private static bool IsWidget(PdfDictionary dict) => dict.GetNameOrNull("Subtype") == "Widget";
+
+    private static void StripFieldTree(PdfDocument document, PdfArray nodes, HashSet<PdfDictionary> visited, int depth)
+    {
+        // A /Kids cycle in a malformed file must not become a stack overflow;
+        // `visited` already stops re-entry, and the bound stops a pathological
+        // but acyclic tree.
+        if (depth > 64) return;
+
+        foreach (var nodeObj in nodes)
+        {
+            if (document.Resolve(nodeObj) is not PdfDictionary node) continue;
+            if (!StripAllActions(node, visited)) continue;   // already walked
+            if (document.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
+                StripFieldTree(document, kids, visited, depth + 1);
+        }
+    }
+
+    /// <summary>
+    /// A field or widget dictionary: <c>/AA</c> and <c>/A</c> both go, whatever
+    /// they hold. Returns false when this dictionary has already been handled.
+    /// </summary>
+    private static bool StripAllActions(PdfDictionary holder, HashSet<PdfDictionary> visited)
+    {
+        if (!visited.Add(holder)) return false;
+        holder.Remove("AA");
+        holder.Remove("A");
+        return true;
+    }
+
+    /// <summary>
+    /// Anything that is neither a field nor a widget — a page, a Link
+    /// annotation: the KEY is allowed, only forbidden action TYPES are not, so
+    /// a legal <c>/GoTo</c> or <c>/URI</c> survives. An <c>/AA</c> emptied of
+    /// its forbidden entries is dropped, since an empty additional-actions
+    /// dictionary carries no meaning.
+    /// </summary>
+    private static void StripForbiddenActionTypes(PdfDocument document, PdfDictionary holder)
+    {
+        if (IsForbiddenAction(document, holder.GetOptional("A")))
+            holder.Remove("A");
+
+        if (document.Resolve(holder.GetOptional("AA") ?? PdfNull.Instance) is not PdfDictionary additional)
+            return;
+
+        foreach (var key in additional.Keys.ToList())
+        {
+            if (IsForbiddenAction(document, additional.GetOptional(key.Value)))
+                additional.Remove(key.Value);
+        }
+        if (additional.Count == 0)
+            holder.Remove("AA");
+    }
+
+    /// <summary>
+    /// The action types both profiles allow — 19005-1 6.6.1#1 and 19005-2
+    /// 6.5.1#1, which are allow-lists, not JavaScript-specific bans. The
+    /// 19005-1 set is used (it omits <c>GoToE</c>) so one pass satisfies both
+    /// levels.
+    /// </summary>
+    private static readonly HashSet<string> AllowedActionTypes = new()
+    {
+        "GoTo", "GoToR", "Thread", "URI", "Named", "SubmitForm",
+    };
+
+    /// <summary>Named actions PDF/A permits (19005-1 6.6.1#2, 19005-2 6.5.1#2).</summary>
+    private static readonly HashSet<string> AllowedNamedActions = new()
+    {
+        "NextPage", "PrevPage", "FirstPage", "LastPage",
+    };
+
+    /// <summary>
+    /// Does <paramref name="action"/> name a type PDF/A does not permit —
+    /// directly, or anywhere down its <c>/Next</c> chain (§12.6.1)? A chain
+    /// counts as forbidden if any link is: keeping it would keep the forbidden
+    /// action.
+    /// </summary>
+    private static bool IsForbiddenAction(PdfDocument document, PdfObject? action, int depth = 0)
+    {
+        if (action == null) return false;
+        // A chain deeper than this is malformed; refusing to vouch for what we
+        // did not walk is the safe answer for a conformance strip.
+        if (depth > 32) return true;
+        if (document.Resolve(action) is not PdfDictionary dict) return false;
+
+        var type = dict.GetNameOrNull("S");
+        if (type == null || !AllowedActionTypes.Contains(type)) return true;
+        if (type == "Named")
+        {
+            var named = dict.GetNameOrNull("N");
+            if (named == null || !AllowedNamedActions.Contains(named)) return true;
+        }
+
+        var next = dict.GetOptional("Next");
+        if (next == null) return false;
+        if (document.Resolve(next) is PdfArray chain)
+            return chain.Any(link => IsForbiddenAction(document, link, depth + 1));
+        return IsForbiddenAction(document, next, depth + 1);
     }
 
     private static void WriteXmp(PdfDocument document, PdfAConformance conformance)

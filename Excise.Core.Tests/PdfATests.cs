@@ -7,6 +7,8 @@ using Excise.Core.Authoring;
 using Excise.Core.Document;
 using Excise.Core.Graphics;
 using Excise.Core.Tests.Fixtures;
+using Excise.Core.Text.Segmentation;   // RedactText (#1499)
+using Excise.TestSupport;              // SavedPdfLeakScanner (#1499)
 using Xunit;
 
 namespace Excise.Core.Tests;
@@ -143,10 +145,12 @@ public class PdfATests
     /// (NeedAppearances true) for a builder document with one text field, while
     /// the XMP still claimed PDF/A. Text (single and multiline), checkbox (on and
     /// off) and dropdown fields are here, with and without a value.
-    /// <para>DateField is deliberately absent: it carries JavaScript /AA format
-    /// and keystroke actions, which PDF/A forbids outright (ISO 19005-2 6.5.1,
-    /// 6.4.1 test 2) independently of appearance streams. That is a separate
-    /// defect from #1444.</para>
+    /// <para>#1498 added the date field. It used to be deliberately absent: it
+    /// carries JavaScript <c>/AA</c> format and keystroke actions, which PDF/A
+    /// forbids outright (ISO 19005-1 §6.6.1; veraPDF reports 6.5.1 / 6.6.2)
+    /// independently of appearance streams. The PDF/A pre-save pass now removes
+    /// them, so the combination conforms — at the cost of the viewer-side
+    /// format enforcement.</para>
     /// </summary>
     private static byte[] BuildPdfAWithFormFields(PdfAConformance conformance)
     {
@@ -160,10 +164,40 @@ public class PdfATests
             .Paragraph("Fields authored by the builder.")
             .TextField("Name", "name", defaultValue: "Ada Lovelace")
             .TextField("Notes", "notes", multiline: true)
+            .DateField("Date of birth", "dob", format: "yyyy-mm-dd")
             .CheckBox("Subscribe", "subscribe", checkedByDefault: true)
             .CheckBox("Opt out", "optout")
             .Dropdown("Colour", new[] { "Red", "Green" }, "colour", defaultValue: "Green")
             .SaveToBytes();
+    }
+
+    /// <summary>
+    /// #1498 — the structural half of the date-field fix, readable without
+    /// veraPDF installed: <c>PdfA()</c> output carries no JavaScript action at
+    /// all, and the date field survives as an ordinary text field whose tooltip
+    /// still names the expected format.
+    /// </summary>
+    [Fact]
+    public void PdfA_StripsTheDateFieldsJavaScriptActions_ButKeepsTheField()
+    {
+        var bytes = BuildPdfAWithFormFields(PdfAConformance.PdfA2B);
+        using var doc = PdfDocument.Open(bytes);
+
+        var dob = doc.GetAcroForm()!.FindField("dob");
+        dob.Should().NotBeNull("stripping the actions must not remove the field");
+        dob!.RawDictionary.GetOptional("AA").Should().BeNull(
+            "a widget/field dictionary may not carry /AA AT ALL — ISO 19005-1 6.6.1#3 and 6.6.2, " +
+            "ISO 19005-2 6.4.1#1 and #2 ban the key, not merely JavaScript inside it");
+        dob.RawDictionary.GetOptional("A").Should().BeNull(
+            "the same rules ban /A on a widget");
+        dob.RawDictionary.GetStringOrNull("TU").Should().Contain("yyyy-mm-dd",
+            "the format hint is what the user is left with once the enforcement is stripped");
+
+        // Scanned rather than string-matched: the writer compresses, so a raw
+        // NotContain over the saved bytes would pass vacuously on a file that
+        // still carried the action inside a /FlateDecode object stream.
+        SavedPdfLeakScanner.FindTerm(bytes, "AFDate_").Should().BeEmpty(
+            "no AFDate action may survive anywhere in a PDF/A file, in any carrier");
     }
 
     [Theory]
@@ -181,6 +215,60 @@ public class PdfATests
             var report = RunVeraPdf(verapdf!, path, flavour);
             report.Should().Contain("isCompliant=\"true\"",
                 $"PdfA({conformance}) with form fields must be PDF/A-{flavour} conformant, not just claim it. Report:\n" +
+                report.Substring(0, Math.Min(report.Length, 6000)));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// #1499 — redacting a form field value must not cost the file its PDF/A
+    /// conformance. The scrub used to end with <c>/NeedAppearances true</c>
+    /// whenever anything changed, which ISO 19005-2 6.4.1 forbids: excise
+    /// happily produced a file whose XMP still claimed PDF/A and which veraPDF
+    /// rejected.
+    ///
+    /// <para>Two oracles, neither of them excise: veraPDF for the conformance
+    /// claim (a writer must not grade its own output), and
+    /// <see cref="SavedPdfLeakScanner"/> over the SAVED BYTES — including
+    /// inside compressed streams — for the redaction claim. The appearance
+    /// stream draws the field value as glyphs, so "still conformant" and "the
+    /// term is gone" have to be asserted together: keeping an appearance that
+    /// still draws the name would satisfy veraPDF perfectly.</para>
+    /// </summary>
+    [Theory]
+    [InlineData(PdfAConformance.PdfA1B, "1b")]
+    [InlineData(PdfAConformance.PdfA2B, "2b")]
+    public void PdfA_WithARedactedFieldValue_StaysConformant_AndLeaksNothing(
+        PdfAConformance conformance, string flavour)
+    {
+        var verapdf = FindVeraPdf();
+        Assert.SkipWhen(verapdf is null, "veraPDF not installed (~/verapdf/verapdf or PATH)");
+
+        byte[] redacted;
+        using (var doc = PdfDocument.Open(BuildPdfAWithFormFields(conformance)))
+        {
+            // Guard: the value is really there to begin with, so a green run
+            // cannot come from having redacted nothing.
+            doc.GetAcroForm()!.FindField("name")!.Value.Should().Contain("Lovelace");
+
+            doc.RedactText("Lovelace");
+            redacted = doc.SaveToBytes();
+        }
+
+        SavedPdfLeakScanner.FindTerm(redacted, "Lovelace").Should().BeEmpty(
+            "the redacted term must be gone from every carrier — /V, the /AP appearance stream, " +
+            "and anything the scrub left behind");
+
+        var path = Path.Combine(Path.GetTempPath(), $"pdfa_redacted_{flavour}_{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, redacted);
+        try
+        {
+            var report = RunVeraPdf(verapdf!, path, flavour);
+            report.Should().Contain("isCompliant=\"true\"",
+                $"a redacted PDF/A-{flavour} form must still BE PDF/A, not just claim it. Report:\n" +
                 report.Substring(0, Math.Min(report.Length, 6000)));
         }
         finally

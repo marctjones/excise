@@ -96,12 +96,27 @@ public sealed class PdfDocumentBuilder
     /// Produce a PDF/A archival file: adds the required XMP metadata (with the
     /// <c>pdfaid</c> identifier) and an sRGB OutputIntent at save time. The caller
     /// must embed all fonts via <see cref="DefaultFont"/> — PDF/A forbids the
-    /// non-embedded base-14 fonts. Best for flat (non-interactive) output.
+    /// non-embedded base-14 fonts.
+    ///
+    /// <para><b>Interactive features PDF/A forbids are dropped, not kept</b>
+    /// (#1498). At save time the PDF/A pass removes every JavaScript action in
+    /// the document — including the format and keystroke actions
+    /// <see cref="DateField"/> writes. ⚠️ <b>A date field in a PDF/A document is
+    /// therefore an ordinary text field: the viewer no longer validates or
+    /// reformats what the user types.</b> Everything else about the field
+    /// (position, name, /TU tooltip, required flag, appearance) is unchanged.
+    /// Call order does not matter — the strip runs at save time, so
+    /// <c>PdfA()</c> may be called before or after the fields.</para>
     /// </summary>
     public PdfDocumentBuilder PdfA(PdfAConformance conformance = PdfAConformance.PdfA2B)
     {
         // PDF/A requires the XMP pdf:Producer to match the Info dictionary.
         _document.SetProducer("excise");
+        // #1498/#1499: record the intent now. The XMP that declares it is only
+        // written by the pre-save action below, so anything that has to avoid a
+        // PDF/A-forbidden construct WHILE authoring (or while redacting before a
+        // save) has nothing to read until then.
+        _document.DeclarePdfATarget();
         _document.RegisterPreSaveAction(() => PdfAWriter.Apply(_document, conformance));
         return this;
     }
@@ -404,6 +419,12 @@ public sealed class PdfDocumentBuilder
     /// Adds a labelled date field — a text field with viewer-side date
     /// formatting (Acrobat <c>AFDate</c> actions). <paramref name="format"/>
     /// is an Acrobat date mask, e.g. <c>"yyyy-mm-dd"</c>.
+    ///
+    /// <para>⚠️ Under <see cref="PdfA"/> the <c>AFDate</c> actions are stripped
+    /// at save time, because PDF/A forbids JavaScript (#1498) — the field stays,
+    /// the enforcement does not. What survives is the tooltip, which already
+    /// defaults to <c>"{label} ({format})"</c>, so the expected shape is still
+    /// announced to the user and to a screen reader.</para>
     /// </summary>
     public PdfDocumentBuilder DateField(
         string label,
