@@ -2,9 +2,15 @@
 
 A **framework-neutral PDF render API** for .NET, built on
 [`Excise.Core`](https://www.nuget.org/packages/Excise.Core) (parser) and
-[SkiaSharp](https://github.com/mono/SkiaSharp) (rasterizer). No native PDFium, no
+[SkiaSharp](https://github.com/mono/SkiaSharp) (rasterizer). No PDFium, no
 platform lock-in — runs anywhere SkiaSharp does (Windows/Linux/macOS), trim/AOT-friendlier,
-permissively licensed (MIT). The default pipeline is managed; an optional
+permissively licensed (MIT).
+
+The rendering code is managed; the native libraries it stands on are SkiaSharp's
+`libSkiaSharp` and, for OpenType shaping of synthesised annotation text,
+[HarfBuzz](https://github.com/harfbuzz/harfbuzz)'s `libHarfBuzzSharp` via
+`SkiaSharp.HarfBuzz`. Both are MIT and both arrive as NuGet runtime assets — there
+is nothing to install separately, and no PDF engine is embedded. An optional
 OpenJPEG command-line fallback can improve selected JPEG2000/JPX images when
 available.
 

@@ -23,7 +23,7 @@
     <PackageId>Excise.Avalonia</PackageId>
     <Version>3.1.0</Version>
     <Authors>Marc Jones</Authors>
-    <Description>A reusable, pure-managed PDF viewer control for Avalonia. Renders with SkiaSharp (no native PDFium), supports zoom/pan, page navigation, text selection, search highlights, annotations, links, and form-field overlays. Built on Excise.Core + Excise.Rendering.</Description>
+    <Description>A reusable PDF viewer control for Avalonia. Renders with SkiaSharp (no PDFium), supports zoom/pan, page navigation, text selection, search highlights, annotations, links, and form-field overlays. Built on Excise.Core + Excise.Rendering: managed code over the SkiaSharp and HarfBuzz native libraries (both MIT) that Avalonia already ships.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/marctjones/excise</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

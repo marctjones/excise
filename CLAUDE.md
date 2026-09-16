@@ -460,7 +460,11 @@ Located in `Excise.App/Excise.App.csproj`:
 
 The legacy PdfPig / PDFsharp / PDFtoImage dependencies were removed in v2.0.
 All remaining licenses are permissive (MIT/Apache 2.0/BSD-3), no copyleft restrictions.
-SkiaSharp ships a native component but is MIT-licensed.
+SkiaSharp and HarfBuzzSharp each ship a native component (`libSkiaSharp`,
+`libHarfBuzzSharp`), both MIT. ⚠️ `Excise.Rendering` is therefore **not**
+"pure managed", and neither is `Excise.Avalonia` — #1503 corrected that
+wording in both `.csproj` descriptions and both READMEs. `Excise.Core` still
+is: its only package reference is CSJ2K, which is managed.
 
 ## Test Infrastructure
 
@@ -731,7 +735,7 @@ against synthetic trx fixtures.
 
 ### PDF Rendering Issues
 
-- Rendering goes through Excise.Rendering (SkiaSharp); SkiaSharp carries its own native component
+- Rendering goes through Excise.Rendering (SkiaSharp, plus SkiaSharp.HarfBuzz for shaped annotation text); both carry native components (`libSkiaSharp`, `libHarfBuzzSharp`)
 - Check `Excise.Rendering/SkiaRenderer.cs` for raster semantics, `Excise.Avalonia/Controls/PdfViewerControl*.cs` for interactive scheduling/cache lifetime, `ThumbnailCacheService.cs` for thumbnails, and `PageImageRenderer.cs` for uncached image export
 - "Where is the render time going?" → `scripts/profile-render.sh <pdf> [page] [dpi]` (dotnet-trace, top self/inclusive frames; #1351). macOS `sample` cannot resolve JIT frames
 

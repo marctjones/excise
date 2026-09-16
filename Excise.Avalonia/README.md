@@ -1,10 +1,13 @@
 # Excise.Avalonia
 
-A reusable, **pure-managed** PDF viewer control for [Avalonia](https://avaloniaui.net/) — no native
-PDFium, no webview. Rendering is done with [SkiaSharp](https://github.com/mono/SkiaSharp) via
+A reusable PDF viewer control for [Avalonia](https://avaloniaui.net/) — **no PDFium, no webview**.
+Rendering is done with [SkiaSharp](https://github.com/mono/SkiaSharp) via
 [`Excise.Rendering`](https://www.nuget.org/packages/Excise.Rendering); parsing is
-[`Excise.Core`](https://www.nuget.org/packages/Excise.Core). Cross-platform (Windows/Linux/macOS),
-permissively licensed (MIT), and trim/AOT-friendlier than native-binary viewers.
+[`Excise.Core`](https://www.nuget.org/packages/Excise.Core). The control is managed code; the
+native libraries underneath it are SkiaSharp's `libSkiaSharp` and HarfBuzz's `libHarfBuzzSharp`
+(both MIT), which NuGet restores — the same ones Avalonia itself already ships, so there is
+nothing extra to install. Cross-platform (Windows/Linux/macOS), permissively licensed (MIT), and
+trim/AOT-friendlier than a viewer wrapping a native PDF engine.
 
 ## Install
 
@@ -12,7 +15,8 @@ permissively licensed (MIT), and trim/AOT-friendlier than native-binary viewers.
 dotnet add package Excise.Avalonia
 ```
 
-Brings in `Excise.Core`, `Excise.Rendering`, `Avalonia`, and `SkiaSharp` transitively.
+Brings in `Excise.Core`, `Excise.Rendering`, `Avalonia`, `SkiaSharp`, and
+`SkiaSharp.HarfBuzz` transitively.
 
 ## Usage
 
