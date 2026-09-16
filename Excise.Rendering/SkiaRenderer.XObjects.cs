@@ -648,9 +648,30 @@ internal partial class RenderContext
             if (!childResult.IsAvailable)
                 return false;
 
-            var groupInvocationAlpha = _deviceCmyk.IsInKnockoutGroup
-                ? 1
-                : invocationState.FillAlpha;
+            // #1514: this used to be `_deviceCmyk.IsInKnockoutGroup ? 1 :
+            // invocationState.FillAlpha`, which DISCARDED the invocation's /ca
+            // for every group invoked inside a knockout parent. Measured on
+            // Ghent GWG161's "Opacity (0%)" cell, whose second element is
+            // invoked at /ca 0: the probe read
+            // `/ca=0.000 -> groupInvocationAlpha=1.000`, so the element painted
+            // at full strength and drew the very X the page exists to forbid
+            // ("If an 'X' appears, rendering of Knockout Transparency Groups is
+            // not performed correctly"). Blue over the cell came out 133 where
+            // mutool reads 191, Ghostscript 196 and pdftocairo 201.
+            //
+            // Nothing in §11.4.6 makes a knockout group ignore its members'
+            // constant alpha; what knockout changes is the BACKDROP each element
+            // composites against, which the reset in
+            // CompositeDeviceCmykGroupBitmap handles.
+            //
+            // ⚠️ The override predates #1395 and was harmless until it: the
+            // child context used to inherit the invocation's FillAlpha, so /ca
+            // was applied INSIDE the group as well as here. That double
+            // application was itself a bug (#1395's own commit: ~0.125 where the
+            // spec says 0.5), but 0 x 1 = 0, so it happened to enforce /ca 0.
+            // #1395 correctly reset the child to alpha 1 per §11.6.6 and left
+            // /ca enforced in neither place.
+            var groupInvocationAlpha = invocationState.FillAlpha;
             CompositeDeviceCmykGroupBitmap(
                 groupBitmap,
                 childResult.Backdrop!,
@@ -1024,10 +1045,26 @@ internal partial class RenderContext
                 // those apply to the finished group as an object (§11.6.6),
                 // after the group compositing function has returned.
                 var groupAlpha = groupPixels[groupRowStart + (x * 4) + 3] / 255.0;
-                var alpha = groupAlpha * clampedInvocationAlpha;
+
+                // §11.4.6 knocks out on SHAPE, not on opacity: inside a knockout
+                // group each element is composited against the group's INITIAL
+                // backdrop wherever the element has shape, so an element at
+                // /ca 0 contributes no colour and still erases its predecessor.
+                // Shape here is the group's own coverage (and the mask, which
+                // #1395 deliberately folds in before the skip so a fully
+                // masked-out pixel triggers no reset); the invocation's /ca is
+                // opacity and belongs only to the colour composite below.
+                //
+                // #1514: with the /ca override above removed but this skip still
+                // keyed on `alpha`, a /ca 0 element was dropped before it could
+                // knock anything out and the PRECEDING element survived — the
+                // same GWG161 cell then failed on red 122.5 against a floor of
+                // 40 instead of on blue. Both halves are needed.
+                var knockoutShape = groupAlpha;
                 if (maskPlane != null)
-                    alpha *= maskPlane[(y * groupWidth) + x] / 255.0;
-                if (alpha <= 0)
+                    knockoutShape *= maskPlane[(y * groupWidth) + x] / 255.0;
+                var alpha = knockoutShape * clampedInvocationAlpha;
+                if (knockoutShape <= 0 || (alpha <= 0 && !_deviceCmyk.IsInKnockoutGroup))
                     continue;
 
                 var parentX = left + x;
@@ -1072,6 +1109,13 @@ internal partial class RenderContext
                     dstAlphaByte = 0;
                     wroteRoot = true;
                 }
+
+                // The knockout reset has run; a zero-opacity element contributes
+                // no colour beyond it (#1514). Deliberately AFTER the reset, and
+                // after `source`/the §11.4.4 removal above, which must read C0
+                // while this pixel still holds what was seeded (#1504).
+                if (alpha <= 0)
+                    continue;
 
                 var backdrop = _deviceCmyk.Backdrop.Get(parentX, parentY);
                 var blended = isNormalBlend
