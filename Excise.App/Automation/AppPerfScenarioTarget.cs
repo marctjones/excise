@@ -66,7 +66,8 @@ internal sealed class AppPerfScenarioTarget : IPerfScenarioTarget
         if (!File.Exists(path))
             throw new FileNotFoundException($"scenario document not found: {path}", path);
 
-        // ⚠️ LoadDocumentAsync, NOT LoadDocumentCommand. The latter is the
+        // ⚠️ LoadDocumentAsync, NOT LoadDocumentCommand — see issue #1540 for the
+        // full account. The latter is the
         // SCRIPTING load, and its own comment says it does "headless document
         // loading (no thumbnails/rendering)" to avoid dispatcher work. It parses
         // the file and never drives the viewer: measured on altona-close, every
