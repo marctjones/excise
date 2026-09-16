@@ -1,4 +1,6 @@
 using Excise.App.Services;
+using Excise.App.Services.Host;
+using Excise.App.Tests.Utilities.Fakes;
 using Excise.App.ViewModels;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -33,7 +35,12 @@ internal static class MainWindowViewModelTestFactory
         DocumentImageExportWorkflowService? imageExportWorkflow = null,
         AnnotationWorkflowService? annotationWorkflow = null,
         bool thumbnailPrewarmEnabled = true,
-        ReleasedMemoryReclaimer? memoryReclaimer = null)
+        ReleasedMemoryReclaimer? memoryReclaimer = null,
+        IFilePicker? filePicker = null,
+        IWindowHost? windowHost = null,
+        ITextClipboard? clipboard = null,
+        ISettingsStore? settingsStore = null,
+        IRecentFilesStore? recentFilesStore = null)
     {
         // #1481: the default collects nothing, so the serial suite's many
         // close/replace calls do not each run a blocking, compacting gen2 GC.
@@ -78,6 +85,29 @@ internal static class MainWindowViewModelTestFactory
             documentService,
             NullLogger<AnnotationWorkflowService>.Instance);
 
+        // #1500 step 1: the PRODUCTION host adapters by default, one host per
+        // view model. That is what keeps every existing test byte-identical —
+        // vm.StorageProviderOverride and vm.MainWindowResolver forward into
+        // this host, and AvaloniaFilePicker resolves from it, so the real
+        // picker path still runs. Per-instance rather than shared so an
+        // override set by one test cannot leak into the next view model.
+        windowHost ??= new AvaloniaWindowHost();
+        filePicker ??= new AvaloniaFilePicker(
+            windowHost,
+            NullLogger<AvaloniaFilePicker>.Instance);
+        clipboard ??= new AvaloniaTextClipboard();
+
+        // #1500 step 2: the FILE-backed stores by default, deliberately.
+        // Defaulting to the in-memory fakes would be the cleaner-looking
+        // choice and would break real tests: PerformancePreferencesTests
+        // (Preferences_Save_WritesWindowSettings…, and the writer-interleaving
+        // test that mixes a direct WindowSettings.Update with the view model's
+        // own save) and PerformancePreferencesLiveApplyTests both drive a
+        // factory-built view model and then assert on WindowSettings.Load()
+        // from disk. Tests that want isolation pass InMemorySettingsStore.
+        settingsStore ??= new FileSettingsStore();
+        recentFilesStore ??= new FileRecentFilesStore();
+
         var viewModel = new MainWindowViewModel(
             logger,
             documentService,
@@ -94,7 +124,12 @@ internal static class MainWindowViewModelTestFactory
             pageOrganizationWorkflow,
             imageExportWorkflow,
             annotationWorkflow,
-            memoryReclaimer);
+            memoryReclaimer,
+            filePicker,
+            windowHost,
+            clipboard,
+            settingsStore,
+            recentFilesStore);
         viewModel.ThumbnailPrewarmEnabled = thumbnailPrewarmEnabled;
         return viewModel;
     }

@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Input.Platform;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -10,6 +9,7 @@ using Excise.Avalonia.Controls;
 using Excise.App.Models;
 using Excise.Core.Document;
 using Excise.App.Services;
+using Excise.App.Services.Host;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
@@ -43,6 +43,17 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IUserDialogService _dialogService;
     private readonly DocumentTextIndexSession _textIndexSession;
     private readonly ReleasedMemoryReclaimer _memoryReclaimer;
+
+    // Host and persistence adapters (#1500 step 1 and 2). Before these, every
+    // picker call built its own Avalonia FilePicker*Options and resolved its
+    // own storage provider, and the view model read
+    // Application.Current.ApplicationLifetime and wrote window.json/zoom.txt
+    // through statics. One owner each, injected, each with an in-memory fake.
+    private readonly IFilePicker _filePicker;
+    private readonly IWindowHost _windowHost;
+    private readonly ITextClipboard _clipboard;
+    private readonly ISettingsStore _settingsStore;
+    private readonly IRecentFilesStore _recentFilesStore;
 
     // State managers
     public DocumentStateManager FileState { get; } = new();
@@ -120,7 +131,12 @@ public partial class MainWindowViewModel : ViewModelBase
         PageOrganizationWorkflowService pageOrganizationWorkflow,
         DocumentImageExportWorkflowService imageExportWorkflow,
         AnnotationWorkflowService annotationWorkflow,
-        ReleasedMemoryReclaimer memoryReclaimer)
+        ReleasedMemoryReclaimer memoryReclaimer,
+        IFilePicker filePicker,
+        IWindowHost windowHost,
+        ITextClipboard clipboard,
+        ISettingsStore settingsStore,
+        IRecentFilesStore recentFilesStore)
     {
         _logger = logger;
         _documentService = documentService;
@@ -139,6 +155,11 @@ public partial class MainWindowViewModel : ViewModelBase
         _annotationWorkflow = annotationWorkflow;
         _thumbnailSession = new ThumbnailSidebarSession(_logger);
         _memoryReclaimer = memoryReclaimer ?? throw new ArgumentNullException(nameof(memoryReclaimer));
+        _filePicker = filePicker ?? throw new ArgumentNullException(nameof(filePicker));
+        _windowHost = windowHost ?? throw new ArgumentNullException(nameof(windowHost));
+        _clipboard = clipboard ?? throw new ArgumentNullException(nameof(clipboard));
+        _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
+        _recentFilesStore = recentFilesStore ?? throw new ArgumentNullException(nameof(recentFilesStore));
         _documentService.DocumentReleased += OnDocumentReleased;
 
         InitializeCommands();
@@ -1827,13 +1848,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var topLevel = global::Avalonia.Application.Current?.ApplicationLifetime is
-                global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                ? desktop.MainWindow
-                : null;
-            if (topLevel?.Clipboard != null)
+            if (await _clipboard.SetTextAsync(text))
             {
-                await topLevel.Clipboard.SetTextAsync(text);
                 _logger.LogInformation("✓ Copied {Length} characters to clipboard", text.Length);
             }
             else
@@ -2343,13 +2359,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!await ConfirmDiscardUnsavedChangesAsync("quit excise"))
             return;
 
-        var lifetime = global::Avalonia.Application.Current?.ApplicationLifetime
-            as global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
-
-        if (lifetime != null)
-        {
-            lifetime.TryShutdown();
-        }
+        _windowHost.RequestShutdown();
     }
 
     private async Task LoadRecentFileAsync(string filePath)
@@ -2393,42 +2403,24 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Save dialog");
-            return;
-        }
-
         var suggestedFileName = System.IO.Path.GetFileNameWithoutExtension(_currentFilePath) +
                                 $"_page{CurrentPageIndex + 1}.png";
 
-        var file = await StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
+        var exportPath = await _filePicker.SaveFileAsync(new SaveFileRequest
         {
             Title = "Export Current Page",
             SuggestedFileName = suggestedFileName,
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PNG Image") { Patterns = new[] { "*.png" } },
-                new FilePickerFileType("JPEG Image") { Patterns = new[] { "*.jpg", "*.jpeg" } }
-            },
-            DefaultExtension = "png"
-        }, _logger);
+            Filters = new[] { FilePickerFilters.Png, FilePickerFilters.Jpeg },
+            DefaultExtension = "png",
+        });
 
-        if (file == null)
+        if (exportPath == null)
         {
             _logger.LogInformation("Export dialog cancelled");
             return;
         }
 
-        var filePath = file.Path.LocalPath;
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            _logger.LogWarning("Export target file has no local path");
-            return;
-        }
-
-        await ExportCurrentPageToImageAsync(filePath);
+        await ExportCurrentPageToImageAsync(exportPath);
     }
 
     public async Task ExportCurrentPageToImageAsync(string outputPath, int dpi = 150)
@@ -2479,29 +2471,10 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Export dialog");
-            return;
-        }
-
-        var folder = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-        {
-            Title = "Select Folder for Exported Images",
-            AllowMultiple = false
-        });
-
-        if (folder.Count == 0)
+        var folderPath = await _filePicker.PickFolderAsync("Select Folder for Exported Images");
+        if (folderPath == null)
         {
             _logger.LogInformation("Export dialog cancelled");
-            return;
-        }
-
-        var folderPath = folder[0].Path.LocalPath;
-        if (string.IsNullOrWhiteSpace(folderPath))
-        {
-            _logger.LogWarning("Export target folder has no local path");
             return;
         }
 
@@ -2791,34 +2764,40 @@ public partial class MainWindowViewModel : ViewModelBase
     /// dialog window observed. Defaults to the real lookup so production
     /// behaviour is unchanged.
     /// </summary>
-    internal Func<global::Avalonia.Controls.Window?> MainWindowResolver { get; set; } = DefaultMainWindowResolver;
-
-    private static global::Avalonia.Controls.Window? DefaultMainWindowResolver()
+    /// <remarks>
+    /// Since #1500 step 1 this forwards to <see cref="IWindowHost"/>, which owns
+    /// the lookup and its default. Every test that assigns it keeps steering the
+    /// real production path, because the production
+    /// <see cref="AvaloniaFilePicker"/> resolves through the same host instance.
+    /// </remarks>
+    internal Func<global::Avalonia.Controls.Window?> MainWindowResolver
     {
-        var lifetime = global::Avalonia.Application.Current?.ApplicationLifetime
-            as IClassicDesktopStyleApplicationLifetime;
-
-        return lifetime?.MainWindow;
+        get => _windowHost.MainWindowResolver;
+        set => _windowHost.MainWindowResolver = value;
     }
 
     /// <summary>
     /// Test seam (#816): the headless test host runs with no classic desktop
     /// lifetime (<c>SetupWithoutStarting</c>), so <see cref="GetMainWindow"/>
     /// always returns null and every file/save/export command that goes
-    /// through <see cref="GetStorageProvider"/> was previously untestable via
-    /// its actual command — only via the underlying method it eventually
-    /// calls with an already-known path. Setting this lets a test execute the
-    /// real ReactiveCommand end to end. Production code never sets it; the
-    /// real <see cref="GetMainWindow"/> path is used unless a test overrides it.
+    /// through a storage provider was previously untestable via its actual
+    /// command — only via the underlying method it eventually calls with an
+    /// already-known path. Setting this lets a test execute the real
+    /// ReactiveCommand end to end. Production code never sets it; the real
+    /// <see cref="GetMainWindow"/> path is used unless a test overrides it.
     /// </summary>
-    public IStorageProvider? StorageProviderOverride { get; set; }
-
-    private global::Avalonia.Controls.Window? GetMainWindow() => MainWindowResolver();
-
-    private IStorageProvider? GetStorageProvider()
+    /// <remarks>
+    /// Since #1500 step 1 this forwards to <see cref="IWindowHost"/>, which is
+    /// what <see cref="AvaloniaFilePicker"/> resolves from, so an override set
+    /// here still steers the real picker.
+    /// </remarks>
+    public IStorageProvider? StorageProviderOverride
     {
-        return StorageProviderOverride ?? GetMainWindow()?.StorageProvider;
+        get => _windowHost.StorageProviderOverride;
+        set => _windowHost.StorageProviderOverride = value;
     }
+
+    private global::Avalonia.Controls.Window? GetMainWindow() => _windowHost.MainWindow;
 
     // ── Test seams for the file/folder-picker page-organization commands (#816).
     //    Headless tests have no desktop ApplicationLifetime (GetMainWindow →
@@ -2842,30 +2821,12 @@ public partial class MainWindowViewModel : ViewModelBase
         if (PickPdfFilesOverride != null)
             return await PickPdfFilesOverride(allowMultiple);
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show open-PDF dialog");
-            return Array.Empty<string>();
-        }
-
-        var files = await StoragePickers.OpenFilesAsync(storageProvider, new FilePickerOpenOptions
+        return await _filePicker.OpenFilesAsync(new OpenFilesRequest
         {
             Title = title,
             AllowMultiple = allowMultiple,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        }, _logger);
-
-        return files
-            .Select(f => f.Path.LocalPath)
-            .Where(p => !string.IsNullOrWhiteSpace(p))
-            .ToList();
+            Filters = new[] { FilePickerFilters.Pdf },
+        });
     }
 
     /// <summary>
@@ -2878,29 +2839,13 @@ public partial class MainWindowViewModel : ViewModelBase
         if (PickSavePdfPathOverride != null)
             return await PickSavePdfPathOverride();
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show save-PDF dialog");
-            return null;
-        }
-
-        var file = await StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
+        return await _filePicker.SaveFileAsync(new SaveFileRequest
         {
             Title = title,
             DefaultExtension = "pdf",
             SuggestedFileName = suggestedName,
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        }, _logger);
-
-        var path = file?.Path.LocalPath;
-        return string.IsNullOrWhiteSpace(path) ? null : path;
+            Filters = new[] { FilePickerFilters.Pdf },
+        });
     }
 
     /// <summary>
@@ -2912,61 +2857,30 @@ public partial class MainWindowViewModel : ViewModelBase
         if (PickFolderOverride != null)
             return await PickFolderOverride();
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show folder dialog");
-            return null;
-        }
-
-        var folder = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-        {
-            Title = title,
-            AllowMultiple = false
-        });
-
-        if (folder.Count == 0)
-            return null;
-
-        var path = folder[0].Path.LocalPath;
-        return string.IsNullOrWhiteSpace(path) ? null : path;
+        return await _filePicker.PickFolderAsync(title);
     }
 
-    private async Task<IStorageFile?> ShowSaveRedactedFileDialog(global::Avalonia.Controls.Window mainWindow, string suggestedPath)
+    /// <summary>
+    /// The redacted-copy save picker. Its title states the pending count, and
+    /// it opens beside the source document; both are preserved verbatim from
+    /// the pre-#1500 dialog, as is its own "PDF Document" + MIME-typed filter,
+    /// which differs from <see cref="FilePickerFilters.Pdf"/>.
+    /// </summary>
+    /// <remarks>
+    /// Internal rather than private so a test can assert the request shape
+    /// without a <c>Window</c>: the title's pending count, the MIME-typed
+    /// filter and the start-beside-the-source behaviour were previously
+    /// unreachable from a headless test. Internal keeps it out of the public
+    /// API baseline.
+    /// </remarks>
+    internal SaveFileRequest BuildRedactedSaveRequest(string suggestedPath) => new()
     {
-        var storageProvider = mainWindow.StorageProvider;
-
-        var options = new FilePickerSaveOptions
-        {
-            Title = $"Save Redacted PDF ({RedactionWorkflow.PendingCount} areas will be redacted)",
-            DefaultExtension = "pdf",
-            SuggestedFileName = System.IO.Path.GetFileName(suggestedPath),
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PDF Document")
-                {
-                    Patterns = new[] { "*.pdf" },
-                    MimeTypes = new[] { "application/pdf" }
-                }
-            }
-        };
-
-        // Try to set the suggested directory
-        try
-        {
-            var dir = System.IO.Path.GetDirectoryName(suggestedPath);
-            if (!string.IsNullOrEmpty(dir) && System.IO.Directory.Exists(dir))
-            {
-                options.SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(dir);
-            }
-        }
-        catch
-        {
-            // Ignore errors, will use default location
-        }
-
-        return await StoragePickers.SaveFileAsync(storageProvider, options, _logger);
-    }
+        Title = $"Save Redacted PDF ({RedactionWorkflow.PendingCount} areas will be redacted)",
+        DefaultExtension = "pdf",
+        SuggestedFileName = System.IO.Path.GetFileName(suggestedPath),
+        Filters = new[] { FilePickerFilters.PdfDocumentWithMimeType },
+        SuggestedStartDirectory = System.IO.Path.GetDirectoryName(suggestedPath),
+    };
 
     // Recent Files Management
 
@@ -2976,12 +2890,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            // Use AppPaths for cross-platform correct paths (Issues #265, #266, #267)
-            var recentFilesPath = AppPaths.RecentFilesPath;
+            var lines = _recentFilesStore.Load();
 
-            if (System.IO.File.Exists(recentFilesPath))
+            if (lines.Count > 0)
             {
-                var lines = System.IO.File.ReadAllLines(recentFilesPath);
                 foreach (var line in lines.Take(10)) // Keep max 10 recent files
                 {
                     if (System.IO.File.Exists(line))
@@ -3038,9 +2950,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            // Use AppPaths for cross-platform correct paths (Issues #265, #266, #267)
-            // AppPaths.DataDir ensures directory exists
-            System.IO.File.WriteAllLines(AppPaths.RecentFilesPath, RecentFiles);
+            _recentFilesStore.Save(RecentFiles);
         }
         catch (Exception ex)
         {
@@ -3075,22 +2985,15 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            // Use AppPaths for cross-platform correct paths (Issues #265, #266, #267)
-            var zoomFilePath = AppPaths.ZoomSettingsPath;
-
-            if (System.IO.File.Exists(zoomFilePath))
+            if (_settingsStore.LoadZoom() is { } savedZoom)
             {
-                var zoomStr = System.IO.File.ReadAllText(zoomFilePath).Trim();
-                if (double.TryParse(zoomStr, System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture, out var savedZoom))
+                // Validate range (25% to 500%). The store hands back whatever
+                // was persisted; the viewport owns what is acceptable.
+                if (savedZoom >= DocumentViewportSession.MinimumZoom &&
+                    savedZoom <= DocumentViewportSession.MaximumZoom)
                 {
-                    // Validate range (25% to 500%)
-                    if (savedZoom >= DocumentViewportSession.MinimumZoom &&
-                        savedZoom <= DocumentViewportSession.MaximumZoom)
-                    {
-                        _viewportSession.LoadZoomPreference(savedZoom);
-                        _logger.LogInformation("Loaded zoom preference: {Zoom:P0}", savedZoom);
-                    }
+                    _viewportSession.LoadZoomPreference(savedZoom);
+                    _logger.LogInformation("Loaded zoom preference: {Zoom:P0}", savedZoom);
                 }
             }
         }
@@ -3104,10 +3007,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            // Use AppPaths for cross-platform correct paths (Issues #265, #266, #267)
-            // AppPaths.ConfigDir ensures directory exists
-            System.IO.File.WriteAllText(AppPaths.ZoomSettingsPath,
-                ZoomLevel.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            _settingsStore.SaveZoom(ZoomLevel);
         }
         catch (Exception ex)
         {
@@ -3164,7 +3064,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            var settings = Models.WindowSettings.Load();
+            var settings = _settingsStore.Load();
             var docState = settings.DocumentStates.FirstOrDefault(d =>
                 System.IO.Path.GetFullPath(d.FilePath) == System.IO.Path.GetFullPath(filePath));
 
@@ -3210,7 +3110,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var filePath = _currentFilePath;
             var zoom = ZoomLevel;
             var pageIndex = CurrentPageIndex;
-            Models.WindowSettings.Update(settings => settings.UpdateDocumentState(filePath, zoom, pageIndex));
+            _settingsStore.Update(settings => settings.UpdateDocumentState(filePath, zoom, pageIndex));
             _logger.LogDebug("Document state saved for {FilePath}: Zoom={Zoom}, Page={Page}",
                 _currentFilePath, ZoomLevel, CurrentPageIndex);
         }

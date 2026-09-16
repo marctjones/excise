@@ -110,7 +110,10 @@ public partial class App : Application
 
             var vm = _serviceProvider.GetRequiredService<MainWindowViewModel>();
             mainViewModel = vm;
-            var mainWindow = new MainWindow
+            // #1500 step 2: the window reads and writes window.json through the
+            // container's store, the same instance the view model uses.
+            var mainWindow = new MainWindow(
+                _serviceProvider.GetRequiredService<Services.Host.ISettingsStore>())
             {
                 DataContext = vm,
             };

@@ -206,24 +206,12 @@ public partial class MainWindowViewModel
     /// </summary>
     private async Task<string?> PickAttachmentSavePathAsync(string suggestedName)
     {
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
+        // No DefaultExtension and no filter, deliberately: see the summary above.
+        return await _filePicker.SaveFileAsync(new global::Excise.App.Services.Host.SaveFileRequest
         {
-            _logger.LogWarning("Storage provider unavailable, cannot show save-attachment dialog");
-            return null;
-        }
-
-        var file = await global::Excise.App.Services.StoragePickers.SaveFileAsync(
-            storageProvider,
-            new global::Avalonia.Platform.Storage.FilePickerSaveOptions
-            {
-                Title = "Save Attachment",
-                SuggestedFileName = suggestedName,
-            },
-            _logger);
-
-        var path = file?.Path.LocalPath;
-        return string.IsNullOrWhiteSpace(path) ? null : path;
+            Title = "Save Attachment",
+            SuggestedFileName = suggestedName,
+        });
     }
 
     /// <summary>
