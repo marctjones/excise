@@ -81922,7 +81922,7 @@
           ]
         },
         {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.SaveRoundTrip_ChangesNothing",
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.SaveRoundTrip_ChangesNothing",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81931,7 +81931,7 @@
           ]
         },
         {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.AnnotationAdd_DestroysNoPageText",
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.AnnotationAdd_DestroysNoPageText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81940,7 +81940,7 @@
           ]
         },
         {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.AnnotationRemove_LeavesTextAndOtherAnnotations",
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.AnnotationRemove_LeavesTextAndOtherAnnotations",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81949,7 +81949,7 @@
           ]
         },
         {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.PageRotate_DestroysNoLetters",
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.PageRotate_DestroysNoLetters",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81958,7 +81958,7 @@
           ]
         },
         {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.PageMove_IsAPurePermutation",
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.PageMove_IsAPurePermutation",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81967,7 +81967,7 @@
           ]
         },
         {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.PageRemove_TakesExactlyThatPage",
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.PageRemove_TakesExactlyThatPage",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81976,17 +81976,7 @@
           ]
         },
         {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.FormFill_DestroysNoExistingText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "NotExecuted",
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.FormFlatten_DestroysNoExistingText",
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.FormFill_DestroysNoExistingText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81996,7 +81986,17 @@
           ]
         },
         {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.EncryptRoundTrip_ChangesNoText",
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.FormFlatten_DestroysNoExistingText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "NotExecuted",
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.EncryptRoundTrip_ChangesNoText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -82005,7 +82005,7 @@
           ]
         },
         {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.Merge_IsExactConcatenation",
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.Merge_IsExactConcatenation",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -82014,7 +82014,7 @@
           ]
         },
         {
-          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::ConservationGateTests.Split_IsExactPartition",
+          "test": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs::needs.Split_IsExactPartition",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -82031,6 +82031,27 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs::defects.ACorpusGatedRedactionGate_CollectsItsRows_WheneverItsCorpusIsReachable",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs::half.TheCollateralRatchetAndItsCorpus_AreReachableTogether_OrNeitherIs",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs::half.TheGateRegistry_IsWellFormed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Rendering.Tests/Differential/DeferredImageDecodeRenderingTests.cs::DeferredImageDecodeRenderingTests.ARefusedImageWhoseDecodeWasDeferred_StillReportsTheRefusal",
@@ -82516,33 +82537,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs::EncryptionPreservationInteropTests.Preserve_EncryptMetadataFalse_SurvivesRoundTrip",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_EmptyPasswords_ReportsR6AesV3AndBothPasswordsValidate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_Decrypt_WithEmptyPassword_ProducesAReadablePlaintextFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_DifferentUserAndOwnerPasswords_BothIndependentlyOpenTheFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -114787,8 +114781,8 @@
     "gradeImplemented": 199,
     "gradeVerified": 681,
     "gradeUnknown": 18,
-    "testMethods": 6893,
-    "testMethodsWithCapabilityCandidate": 4313,
+    "testMethods": 6908,
+    "testMethodsWithCapabilityCandidate": 4318,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

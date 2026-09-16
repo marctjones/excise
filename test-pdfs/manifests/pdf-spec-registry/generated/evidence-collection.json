@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1121,
-  "indexedContentSha256": "4a35055980b817d4b77927d17d72fcd7d2d611a0fc55d2d49884f7ed3ac21580",
+  "indexedFileCount": 1124,
+  "indexedContentSha256": "162c49de9f278343f46b2ca2e717cb4bcef84029b65178bcbd10c65e37a78afc",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -3943,7 +3943,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 127
+      "candidateReferenceCount": 130
     },
     {
       "id": "pdf.17.document.navigation",
@@ -7686,7 +7686,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 508
+      "candidateReferenceCount": 513
     },
     {
       "id": "pdf.17.graphics.color",
@@ -20318,6 +20318,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "tree"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -20327,7 +20335,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 4
+      "candidateReferenceCount": 5
     },
     {
       "id": "pdf.20.renderer.requirement-004",
@@ -32765,6 +32773,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/FlattenOcrRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -32955,7 +32973,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 51
+      "candidateReferenceCount": 52
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -33317,6 +33335,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/FlattenOcrRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -33506,7 +33534,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 51
+      "candidateReferenceCount": 52
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -37453,7 +37481,8 @@
           "matchedTerms": [
             "image",
             "lab",
-            "image"
+            "image",
+            "jpx"
           ]
         },
         {
@@ -62427,7 +62456,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 539
+      "candidateReferenceCount": 544
     },
     {
       "id": "pdf.20.extension.developer",
@@ -66309,6 +66338,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/TestRepoLayoutTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "metadata",
+            "pdfe"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -66404,6 +66441,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "copy",
+            "stripping",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -66430,27 +66476,9 @@
             "pdfe",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AccessibilityRegressionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "copy",
-            "metadata",
-            "redaction"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AttachmentsPanelTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "copy",
-            "stripping"
-          ]
         }
       ],
-      "candidateReferenceCount": 108
+      "candidateReferenceCount": 110
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -69035,6 +69063,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/TestRepoLayoutTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "local",
+            "pdfe"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/RtlTextExtractionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -69244,17 +69280,9 @@
             "log",
             "ocr"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Visual/RenderTailEmptyTransparencyGroupTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "local",
-            "log"
-          ]
         }
       ],
-      "candidateReferenceCount": 115
+      "candidateReferenceCount": 116
     },
     {
       "id": "pdfe.product.platform.printing",
