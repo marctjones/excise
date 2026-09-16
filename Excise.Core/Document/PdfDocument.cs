@@ -782,6 +782,79 @@ public partial class PdfDocument : IDisposable
     }
 
     /// <summary>
+    /// <see cref="ScrubMetadata"/>, but a document that arrived identifying
+    /// itself as PDF/A keeps that identification (#1507).
+    /// </summary>
+    /// <remarks>
+    /// <para><b>The defect this closes.</b> Area redaction strips the
+    /// positionless document carriers wholesale (#897) — it has only a
+    /// rectangle, so there is no term to scrub them BY. That strip removes the
+    /// catalog <c>/Metadata</c> stream, which on a PDF/A input is the XMP packet
+    /// carrying <c>pdfaid:part</c>. Every PDF/A part requires that stream to
+    /// exist and to carry the identification (veraPDF PDFA-1B/2B/4:
+    /// <c>containsMetadata == true</c>, <c>containsPDFAIdentification ==
+    /// true</c>), so area-redacting a PDF/A file always produced a file that was
+    /// no longer PDF/A — silently, in the core feature, and only discoverable by
+    /// validating it later. On a PDF/A-1 input it cost conformance twice over:
+    /// <see cref="Writing.PdfDocumentWriter"/> decides whether to write object
+    /// streams (which PDF/A-1 forbids) by reading <c>pdfaid:part</c> back out of
+    /// that same packet.</para>
+    ///
+    /// <para><b>Why the scrub is not simply skipped.</b> The XMP is a real
+    /// carrier: a redacted name can sit in <c>dc:title</c>, <c>dc:description</c>
+    /// or a schema we have never heard of (#608). So the packet still goes; what
+    /// replaces it is an identification-ONLY packet built from at most three
+    /// pattern-validated tokens (<see cref="Authoring.PdfAIdentityXmp"/>).
+    /// Nothing else is carried over, so this cannot reintroduce redacted text —
+    /// it is the wholesale strip plus a claim, not a selective scrub.</para>
+    ///
+    /// <para>Ordering matters to callers: the identification is back in place
+    /// before this returns, so a later stage reading <see cref="TargetsPdfA"/>
+    /// (#1499's per-widget appearance decision) sees the truth rather than a
+    /// document the strip just made anonymous.</para>
+    /// </remarks>
+    /// <returns>
+    /// True when an identification was preserved — i.e. when the XMP packet was
+    /// NOT simply deleted. Callers that report what they did to a user must say
+    /// so: "XMP metadata removed" is no longer the whole truth for such a
+    /// document, and a scrub report that overstates is the same class of problem
+    /// as a carrier that silently keeps a term (#1188's rule — surface it).
+    /// </returns>
+    internal bool ScrubMetadataPreservingPdfAIdentity(bool scrubAttachments)
+    {
+        // Read BEFORE the strip — afterwards there is no packet to read.
+        var identity = Excise.Core.Authoring.PdfAIdentityXmp.TryRead(this);
+
+        ScrubMetadata(scrubAttachments);
+
+        // No identification, or one we could not validate: leave the document
+        // as the wholesale strip left it. Emitting a claim excise could not read
+        // back would be worse than withdrawing one.
+        if (identity == null) return false;
+
+        Excise.Core.Authoring.PdfAIdentityXmp.Write(this, identity.Value);
+
+        // PDF/A-4 (ISO 19005-4 6.1.3, veraPDF PDFA-4): the Info key "shall not
+        // be present ... unless there exists a PieceInfo entry", and an Info
+        // dictionary that IS present "shall only contain a ModDate entry". The
+        // strip empties the dictionary but keeps it (to preserve xref
+        // structure), which satisfies neither rule. An empty Info dictionary
+        // carries nothing, so drop it rather than ship a file that fails 6.1.3
+        // for the sake of an object with no entries. PDF/A-1/2/3 do not care
+        // either way (their Info rules are all "absent or consistent"), and this
+        // runs only on the PDF/A path, so non-archival documents keep the
+        // emptied dictionary exactly as before.
+        if (Info is { Count: 0 })
+        {
+            Trailer.Remove("Info");
+            Info = null;
+            InvalidateDerivedState(PdfDocumentDerivedStateScope.Metadata);
+        }
+
+        return true;
+    }
+
+    /// <summary>
     /// Selectively scrub Info-dict keys without touching XMP. Useful when
     /// the caller wants finer control (e.g. preserve /CreationDate but
     /// drop /Title).

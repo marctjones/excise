@@ -277,6 +277,149 @@ public class PdfATests
         }
     }
 
+    /// <summary>
+    /// #1507 — a PDF/A document whose <c>/Info /Title</c>, XMP <c>dc:title</c>
+    /// (the builder writes the title into both) and page text all name the same
+    /// string. The area redaction below covers that word on the page; the
+    /// wholesale carrier strip is what deals with the other two.
+    /// </summary>
+    private static byte[] BuildPdfAWithCanary(PdfAConformance conformance)
+    {
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 11);
+        return PdfDocumentBuilder.Create()
+            .Language("en-US")
+            .Title($"Archival {AreaCanary} Test")
+            .DefaultFont(font)
+            .PdfA(conformance)
+            .Heading("Archival Test")
+            .Paragraph($"Body naming {AreaCanary} once.")
+            .SaveToBytes();
+    }
+
+    private const string AreaCanary = "CANARYNAME";
+
+    /// <summary>
+    /// The union of the glyph boxes of <paramref name="term"/> on
+    /// <paramref name="page"/> — what a user's drag over that word yields. excise's
+    /// own extraction picks the GEOMETRY here, which is fine: no assertion in the
+    /// test depends on excise's opinion of what is inside the box.
+    /// </summary>
+    private static PdfRectangle GlyphBoxOf(PdfPage page, string term)
+    {
+        var letters = page.Letters;
+        var text = new StringBuilder();
+        var owner = new List<Excise.Core.Text.Letter>();
+        foreach (var letter in letters)
+        {
+            text.Append(letter.Value);
+            for (var i = 0; i < letter.Value.Length; i++) owner.Add(letter);
+        }
+
+        var at = text.ToString().IndexOf(term, StringComparison.Ordinal);
+        at.Should().BeGreaterThanOrEqualTo(0, $"the fixture must draw '{term}' on the page");
+
+        double left = double.MaxValue, bottom = double.MaxValue;
+        double right = double.MinValue, top = double.MinValue;
+        for (var i = at; i < at + term.Length && i < owner.Count; i++)
+        {
+            var box = owner[i].GlyphRectangle.Normalize();
+            left = Math.Min(left, box.Left);
+            bottom = Math.Min(bottom, box.Bottom);
+            right = Math.Max(right, box.Right);
+            top = Math.Max(top, box.Top);
+        }
+        return new PdfRectangle(left, bottom, right, top);
+    }
+
+    /// <summary>
+    /// #1507 — an AREA redaction must not cost a PDF/A file its conformance.
+    ///
+    /// <para>Until this fix it always did, and nothing said so: <c>RedactArea</c>
+    /// strips the positionless document carriers wholesale (#897, correct — it
+    /// has no term to scrub them by), and that strip removed the catalog
+    /// <c>/Metadata</c> stream, which is where <c>pdfaid:part</c> lives. veraPDF
+    /// then fails the file on <c>containsMetadata</c> and
+    /// <c>containsPDFAIdentification</c> — the two rules every part of ISO 19005
+    /// has. The strip now re-emits an identification-only packet.</para>
+    ///
+    /// <para>Two oracles, neither of them excise, asserted TOGETHER on purpose:
+    /// veraPDF for conformance, and <see cref="SavedPdfLeakScanner"/> over the
+    /// saved bytes for the redaction. Keeping the whole XMP packet would satisfy
+    /// veraPDF perfectly and leave the canary sitting in <c>dc:title</c>, so
+    /// either assertion alone can be passed by a wrong fix.</para>
+    ///
+    /// <para>⚠️ The scanner cannot see the PAGE glyphs here — the builder embeds
+    /// the font as Identity-H, so the word is a run of two-byte GIDs, not text.
+    /// That half is mutool's job, in
+    /// <c>Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests</c>.
+    /// What the scanner covers here is the carriers the strip owns.</para>
+    /// </summary>
+    [Theory]
+    [InlineData(PdfAConformance.PdfA1B, "1b")]
+    [InlineData(PdfAConformance.PdfA2B, "2b")]
+    public void PdfA_WithAnAreaRedaction_StaysConformant_AndLeaksNothing(
+        PdfAConformance conformance, string flavour)
+    {
+        var verapdf = FindVeraPdf();
+        Assert.SkipWhen(verapdf is null, "veraPDF not installed (~/verapdf/verapdf or PATH)");
+
+        var authored = BuildPdfAWithCanary(conformance);
+        // Guard: the canary really is in a carrier the strip has to deal with, so
+        // a green leak scan cannot come from having stripped nothing.
+        SavedPdfLeakScanner.FindTerm(authored, AreaCanary).Should().NotBeEmpty(
+            "/Info /Title and the XMP dc:title both name it before redaction");
+
+        byte[] redacted;
+        using (var doc = PdfDocument.Open(authored))
+        {
+            doc.TargetsPdfA.Should().BeTrue("PdfA() writes the pdfaid XMP");
+            doc.GetPage(1).RedactArea(GlyphBoxOf(doc.GetPage(1), AreaCanary));
+            doc.TargetsPdfA.Should().BeTrue(
+                "the carrier strip must leave the identification in place, not just the file");
+            redacted = doc.SaveToBytes();
+        }
+
+        SavedPdfLeakScanner.FindTerm(redacted, AreaCanary).Should().BeEmpty(
+            "the positionless carriers must be gone — an area redaction cannot name the term, " +
+            "so the strip removes the carrier rather than guessing at its contents (#897)");
+
+        var path = Path.Combine(Path.GetTempPath(), $"pdfa_area_{flavour}_{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, redacted);
+        try
+        {
+            var report = RunVeraPdf(verapdf!, path, flavour);
+            report.Should().Contain("isCompliant=\"true\"",
+                $"an area-redacted PDF/A-{flavour} file must still BE PDF/A. Report:\n" +
+                report.Substring(0, Math.Min(report.Length, 6000)));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// #1507's second, quieter consequence — readable without veraPDF installed.
+    /// PDF/A-1 forbids object streams, and
+    /// <c>PdfDocumentWriter.ShouldUseCompressedObjects</c> decides by reading
+    /// <c>&lt;pdfaid:part&gt;1&lt;/pdfaid:part&gt;</c> back out of the XMP. With
+    /// the packet deleted by the carrier strip, an area-redacted PDF/A-1 file was
+    /// written WITH object streams: conformance lost twice, once for the missing
+    /// identification and once for a construct the writer would never have
+    /// emitted had it known what the file was.
+    /// </summary>
+    [Fact]
+    public void AreaRedaction_OnAPdfA1_StillSuppressesObjectStreams()
+    {
+        using var doc = PdfDocument.Open(BuildPdfAWithCanary(PdfAConformance.PdfA1B));
+        doc.GetPage(1).RedactArea(GlyphBoxOf(doc.GetPage(1), AreaCanary));
+
+        var redacted = doc.SaveToBytes();
+        Encoding.Latin1.GetString(redacted).Should().NotContain("/Type /ObjStm",
+            "PDF/A-1 forbids object streams; the writer only knows to suppress them while the " +
+            "pdfaid identification is still readable in the file it is writing");
+    }
+
     private static string RunVeraPdf(string verapdf, string path, string flavour)
     {
         var psi = new ProcessStartInfo(verapdf)

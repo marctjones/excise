@@ -1074,7 +1074,7 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── MutoolReferenceRenderer.cs        # 330 uses in Differential tests
+    ├── MutoolReferenceRenderer.cs        # 331 uses in Differential tests
     ├── GhostscriptReferenceRenderer.cs   #  105
     ├── PdftocairoReferenceRenderer.cs    #  78
     ├── PdftoppmReferenceRenderer.cs      #  18
@@ -1234,9 +1234,26 @@ This redaction implementation:
   It applies to page content and the carrier scrub together (#896), and the
   rule that ran is recorded in `RedactionReport.WholeWord`.
 - ✅ Scrubs the structure tree (`/ActualText`, `/Alt`, `/E`) (#636 + #1155)
+- ✅ **Keeps a PDF/A file identifiable through the wholesale strip** (#1507).
+  `RedactArea`'s default carrier strip (#897) deletes the catalog `/Metadata`
+  stream, which on a PDF/A input is the XMP packet carrying `pdfaid:part` — so
+  area redaction used to produce a non-conformant file every time, silently.
+  The packet is still removed; an identification-ONLY packet (at most
+  `pdfaid:part`, `:conformance`, `:rev`, each validated against a closed token
+  set) is written back, so no text can ride in with it
+  (`PdfDocument.ScrubMetadataPreservingPdfAIdentity` →
+  `Authoring.PdfAIdentityXmp`). The same call runs in the GUI redacted-copy
+  flow, which REPORTS the exception
+  (`RedactedCopySafetyReport.PdfAIdentificationPreserved`) so the dialog can say
+  "XMP metadata removed except the PDF/A identification" instead of overstating
+  the scrub. ⚠️ A `pdfuaid` (PDF/UA) claim is deliberately NOT preserved: PDF/UA
+  requires a `dc:title` the strip deletes, so keeping the claim would assert
+  something the file no longer satisfies. Verdicts are veraPDF's
+  (`PdfATests`, `PdfAConformanceConservationTests`), never our writer's.
 - ✅ Scrubs embedded files/attachments **by default** in the GUI redaction-copy
   flow — `RedactedCopySafetyService` (`ScrubAttachments = true`) →
-  `PdfDocument.ScrubMetadata(scrubAttachments: true)` /
+  `PdfDocument.ScrubMetadataPreservingPdfAIdentity(true)` (#1507; the same
+  wholesale strip, plus the `pdfaid` exception in the bullet below) /
   `ScrubEmbeddedFiles()` removes `/Catalog/Names/EmbeddedFiles` and the `/AF`
   associated-files arrays (#467). At the lower `RedactionService` level the
   same wholesale strip is under `RemoveAllMetadata`; the default there is the

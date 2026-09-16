@@ -324,6 +324,58 @@ public class RedactedCopySafetyPolicyTests : IDisposable
         reopened.Title.Should().BeNull();
         reopened.GetXmpMetadata().Should().BeNull();
         reopened.GetEmbeddedFiles().Should().BeEmpty();
+        report.PdfAIdentificationPreserved.Should().BeFalse(
+            "#1507: this document made no PDF/A claim, so the packet goes entirely and the " +
+            "report must not say an identification was kept");
+    }
+
+    /// <summary>
+    /// #1507 — the same scrub on a document that identifies itself as PDF/A.
+    /// The packet's TEXT still goes; the <c>pdfaid</c> identification stays,
+    /// because PDF/A conformance requires the catalog to carry it.
+    ///
+    /// <para>The dialog assertion is the point of the test as much as the report
+    /// is: "XMP metadata removed" is no longer true for such a document, and a
+    /// redaction dialog that overstates what was scrubbed is the same class of
+    /// problem as a carrier that silently keeps a term. The user is told what
+    /// survived and why.</para>
+    /// </summary>
+    [Fact]
+    public void PrepareRedactedCopy_OnAPdfADocument_KeepsThePdfAIdentification_AndSaysSo()
+    {
+        using var document = PdfDocument.Open(BuildPdfWithMetadataXmpAndEmbeddedFile(
+            title: "SECRET title",
+            xmpBody:
+                "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF " +
+                "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">" +
+                "<rdf:Description rdf:about=\"\" xmlns:pdfaid=\"http://www.aiim.org/pdfa/ns/id/\">" +
+                "<pdfaid:part>2</pdfaid:part><pdfaid:conformance>B</pdfaid:conformance>" +
+                "</rdf:Description>" +
+                "<rdf:Description rdf:about=\"\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">" +
+                "<dc:description>SECRET in the XMP</dc:description></rdf:Description>" +
+                "</rdf:RDF></x:xmpmeta>",
+            embeddedFileName: "secret.xml",
+            embeddedContent: "<secret>SECRET</secret>"));
+
+        var report = PrepareRedactedCopy(document, Array.Empty<PendingRedaction>());
+        var outputPath = Path.Combine(_tempDir, "scrubbed-pdfa.pdf");
+        document.Save(outputPath);
+
+        report.MetadataScrubbed.Should().BeTrue();
+        report.PdfAIdentificationPreserved.Should().BeTrue();
+
+        var dialog = _formatter.Format(outputPath, report);
+        dialog.Should().Contain("XMP metadata removed except the PDF/A identification",
+            "the dialog must not claim more scrubbing than happened — the flat " +
+            "'XMP metadata removed' is what this replaces for a PDF/A document");
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        reopened.Title.Should().BeNull();
+        var xmp = Encoding.UTF8.GetString(reopened.GetXmpMetadata()!);
+        xmp.Should().Contain("<pdfaid:part>2</pdfaid:part>");
+        xmp.Should().NotContain("SECRET",
+            "the identification is kept; the packet's TEXT is not");
+        xmp.Should().NotContain("dc:description");
     }
 
     [Fact]

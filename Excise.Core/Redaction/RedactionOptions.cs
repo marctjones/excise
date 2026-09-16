@@ -125,7 +125,9 @@ public sealed record RedactionOptions
     /// <summary>Scrub the document-level text carriers (/Info, XMP, outlines,
     /// annotation /Contents, link /URI). Default true. <b>Per-entry-point
     /// semantics</b>: <c>RedactText</c> scrubs BY TERM (#896); <c>RedactArea</c>
-    /// strips positionless carriers WHOLESALE (#897) because it has no term.
+    /// strips positionless carriers WHOLESALE (#897) because it has no term —
+    /// keeping only a PDF/A file's <c>pdfaid</c> identification, which is a
+    /// conformance requirement and not a text carrier (#1507).
     /// Enforced by: Core.</summary>
     public bool ScrubDocumentCarriers { get; init; } = true;
 

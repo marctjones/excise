@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AwesomeAssertions;
+using Excise.Core.Authoring;        // PdfDocumentBuilder / PdfAConformance (#1507)
 using Excise.Core.Document;
+using Excise.Core.Graphics;        // PdfFont (#1507)
 using Excise.Core.Operations;
 using Excise.Core.Security;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;          // SavedPdfLeakScanner (#1507)
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -157,6 +160,141 @@ public class PdfAConformanceConservationTests
             if (term != null) doc.RedactText(term);   // a no-op (no term) must conserve too
             doc.Save(outPath);
         });
+
+    /// <summary>
+    /// #1507 — the AREA path, which <see cref="Redact_DoesNotLoseConformance"/>
+    /// above does not reach. <c>RedactText</c> passes
+    /// <c>scrubDocumentCarriers: false</c> and applies its own term-based carrier
+    /// scrub, so it never ran the wholesale strip that deleted the catalog
+    /// <c>/Metadata</c> — and with it the <c>pdfaid</c> identification every
+    /// PDF/A part requires. A click-to-redact on an archival document therefore
+    /// produced a file conforming to nothing, while the sibling row above stayed
+    /// green.
+    ///
+    /// <para>The corpus fixtures matter here rather than an authored one: these
+    /// are real PDF/A-2b and PDF/A-4 files, and PDF/A-4 is the case a
+    /// "keep pdfaid:part" fix gets wrong (it also needs <c>pdfaid:rev</c>, must
+    /// NOT have <c>pdfaid:conformance</c>, and forbids a present-but-empty Info
+    /// dictionary). The flavour assertion in
+    /// <see cref="RunConservationRow"/> is what catches a lost identification:
+    /// veraPDF falls back to '1b' when it cannot detect one (#1056).</para>
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Fixtures))]
+    public void RedactArea_DoesNotLoseConformance(string relative) =>
+        RunConservationRow(relative, (src, outPath) =>
+        {
+            using var doc = PdfDocument.Open(File.ReadAllBytes(src));
+            var page = doc.GetPage(1);
+            var box = page.MediaBox.Normalize();
+            // A small square inset from the bottom-left corner, deliberately:
+            // the document-carrier strip runs before any geometry is considered
+            // and IS the subject here, while a large rectangle would invite
+            // geometry-driven collateral (a flattened Form XObject, a removed
+            // annotation) whose conformance effects belong to another gate.
+            page.RedactArea(new PdfRectangle(
+                box.Left + 20, box.Bottom + 20, box.Left + 60, box.Bottom + 60));
+            doc.Save(outPath);
+        });
+
+    /// <summary>
+    /// #1507's three-oracle row: conformance AND removal, on a document excise
+    /// authored as PDF/A so the term is reachable by an independent extractor.
+    ///
+    /// <para>Why all three are needed. veraPDF alone is satisfied by keeping the
+    /// whole XMP packet — including the <c>dc:title</c> that still names the
+    /// redacted word. <see cref="SavedPdfLeakScanner"/> alone is blind to the
+    /// PAGE, because the builder embeds the font as Identity-H and the word is a
+    /// run of two-byte GIDs rather than text. mutool alone says nothing about
+    /// conformance. So: veraPDF for the claim, the scanner for the positionless
+    /// carriers, mutool for the glyphs — with a guard that mutool could read the
+    /// term BEFORE, or "mutool does not see it" would prove nothing.</para>
+    /// </summary>
+    [Fact]
+    public void RedactArea_OnAnAuthoredPdfA_KeepsConformance_AndTheTermIsGonePerMutool()
+    {
+        Assert.SkipUnless(VeraPdfReferenceValidator.IsAvailable, "verapdf not installed");
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        var fontPath = Resolve(Path.Combine("Excise.Core.Tests", "Fixtures", "Fonts", "DejaVuSans.ttf"));
+        Assert.SkipWhen(fontPath == null, "DejaVuSans.ttf fixture not present");
+
+        const string term = "CANARYNAME";
+        var font = PdfFont.FromTrueType(File.ReadAllBytes(fontPath!), 11);
+        var authored = PdfDocumentBuilder.Create()
+            .Language("en-US")
+            .Title($"Archival {term} Test")
+            .DefaultFont(font)
+            .PdfA(PdfAConformance.PdfA2B)
+            .Heading("Archival Test")
+            .Paragraph($"Body naming {term} once.")
+            .SaveToBytes();
+
+        byte[] redacted;
+        using (var doc = PdfDocument.Open(authored))
+        {
+            var page = doc.GetPage(1);
+            page.RedactArea(GlyphBox(page, term));   // default: carriers stripped
+            redacted = doc.SaveToBytes();
+        }
+
+        var before = Path.Combine(Path.GetTempPath(), $"excise-pdfa-area-before-{Guid.NewGuid():N}.pdf");
+        var after = Path.Combine(Path.GetTempPath(), $"excise-pdfa-area-after-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            File.WriteAllBytes(before, authored);
+            File.WriteAllBytes(after, redacted);
+
+            (MutoolTextExtractor.ExtractPage(before, 1) ?? "").Should().Contain(term,
+                "the oracle must be able to see what it is later asked to confirm is gone");
+            (MutoolTextExtractor.ExtractPage(after, 1) ?? "").Should().NotContain(term,
+                "the glyphs inside the box must be gone from the page, per a tool that is not excise");
+
+            SavedPdfLeakScanner.FindTerm(redacted, term).Should().BeEmpty(
+                "and gone from /Info /Title and the XMP dc:title, which the carrier strip owns");
+
+            var verdict = VeraPdfReferenceValidator.Validate(after);
+            verdict.Should().NotBeNull();
+            verdict!.Ran.Should().BeTrue($"verapdf must be able to judge what excise wrote: {verdict.Failure}");
+            verdict.Flavour.Should().Be("2b",
+                "the DETECTED flavour comes from the file's own pdfaid — anything else means the " +
+                "area redaction withdrew or altered the document's conformance claim (#1507)");
+            verdict.Passed.Should().BeTrue("an area-redacted PDF/A-2b file must still BE PDF/A-2b");
+        }
+        finally
+        {
+            try { File.Delete(before); } catch { /* best effort */ }
+            try { File.Delete(after); } catch { /* best effort */ }
+        }
+    }
+
+    /// <summary>The union of the glyph boxes of <paramref name="term"/> on the
+    /// page — what a user's drag over that word yields. excise's extraction picks
+    /// the geometry; no assertion depends on excise's opinion of the result.</summary>
+    private static PdfRectangle GlyphBox(PdfPage page, string term)
+    {
+        var text = new System.Text.StringBuilder();
+        var owner = new List<Excise.Core.Text.Letter>();
+        foreach (var letter in page.Letters)
+        {
+            text.Append(letter.Value);
+            for (var i = 0; i < letter.Value.Length; i++) owner.Add(letter);
+        }
+
+        var at = text.ToString().IndexOf(term, StringComparison.Ordinal);
+        at.Should().BeGreaterThanOrEqualTo(0, $"the fixture must draw '{term}' on the page");
+
+        double left = double.MaxValue, bottom = double.MaxValue;
+        double right = double.MinValue, top = double.MinValue;
+        for (var i = at; i < at + term.Length && i < owner.Count; i++)
+        {
+            var box = owner[i].GlyphRectangle.Normalize();
+            left = Math.Min(left, box.Left);
+            bottom = Math.Min(bottom, box.Bottom);
+            right = Math.Max(right, box.Right);
+            top = Math.Max(top, box.Top);
+        }
+        return new PdfRectangle(left, bottom, right, top);
+    }
 
     private static string? FirstWord(PdfDocument doc)
     {

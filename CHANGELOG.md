@@ -10,6 +10,48 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Fixed
+- **Area redaction deleted the `pdfaid` XMP, so it could never produce a
+  PDF/A-conformant file** (#1507). `RedactArea` — the click-to-redact path, and
+  the default for `page.RedactArea(rect)` — strips the positionless document
+  carriers wholesale (#897), correctly, because an area redaction has only a
+  rectangle and no term to scrub them by. That strip removed the catalog
+  `/Metadata` stream outright, which on a PDF/A input is the XMP packet carrying
+  `pdfaid:part`. Every part of ISO 19005 requires that stream and that
+  identification (veraPDF `containsMetadata`, `containsPDFAIdentification`), so
+  every archival document came out of an area redaction no longer conforming —
+  with no error, no warning, and nothing in the file to say so until someone
+  validated it months later. On a PDF/A-1 input it cost conformance twice: the
+  writer decides whether to emit the object streams PDF/A-1 forbids by reading
+  `pdfaid:part` back out of that same packet, and with the packet gone it wrote
+  them.
+
+  The packet is still removed — every schema in it, including ones excise has
+  never heard of, since any of them can restate a redacted term (#608). What is
+  written back is an identification-ONLY packet carrying at most
+  `pdfaid:part`, `pdfaid:conformance` and `pdfaid:rev`, each validated against a
+  closed set of tokens first, so no text from the original can ride back into
+  the document. The asymmetry the fix rests on: with no term, stripping the
+  packet buys real security against a carrier whose contents excise cannot name,
+  while the identification it also deleted is a part number and a letter — it
+  cannot hold a redacted name. PDF/A-4's own rules are honoured as found
+  (`pdfaid:rev` kept, no `pdfaid:conformance` invented, and an Info dictionary
+  the strip emptied is dropped rather than left present and empty, which ISO
+  19005-4 6.1.3 forbids). An unreadable or out-of-range identification is
+  withdrawn rather than repaired. The GUI redacted-copy safety pass, which runs
+  after the engine and scrubs metadata by default, uses the same call, so it no
+  longer undoes the fix — and it now REPORTS the exception
+  (`RedactedCopySafetyReport.PdfAIdentificationPreserved`), because the
+  redacted-copy dialog used to say a flat "XMP metadata removed" and that is no
+  longer the whole truth for an archival document. It reads "XMP metadata
+  removed except the PDF/A identification (pdfaid), which is kept so the file
+  remains PDF/A". Overstating a scrub in a redaction dialog is the same class of
+  problem as a carrier that silently keeps a term. Non-PDF/A documents lose their whole XMP packet exactly
+  as before, and a PDF/UA claim is deliberately not preserved (PDF/UA requires a
+  `dc:title` the strip deletes). Gated by veraPDF on excise-authored PDF/A-1b
+  and -2b output and on the real PDF/A-2b and PDF/A-4 corpus fixtures
+  (flavour conservation); the removal is asserted by the saved-bytes leak
+  scanner on every row and by mutool on the authored fixture, whose embedded
+  Identity-H font puts the page glyphs beyond the scanner's reach.
 - **excise signed PDFs with a BER-encoded CMS object where ISO 32000 requires
   DER, and its verifier could not locate that object inside the padded
   `/Contents` value** (#1494) — two halves of one defect, both in the
