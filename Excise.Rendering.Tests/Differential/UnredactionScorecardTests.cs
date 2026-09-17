@@ -177,12 +177,24 @@ public class UnredactionScorecardTests
         {
             var pdf = Path.Combine(corpus, c.Id + ".pdf");
             var dict = SyntheticCorpusDictionaries.For(c.Dict);
+
+            // `random` is the residue channel's NEGATIVE CONTROL: the answer is
+            // a random string and the dictionary searched is deliberately the
+            // names list it is structurally absent from (see
+            // SyntheticCorpusDictionaries.For). Listing it would mean the width
+            // fit invented a match, so silence is the win and recall is the
+            // wrong metric — it read 0/4 for both tools and looked like a gap
+            // in the width channel (#1616).
+            var polarity = c.Dict == "random"
+                ? UnredactionScorecard.Polarity.NegativeControl
+                : UnredactionScorecard.Polarity.Leak;
+
             bool Recovered(double tol) =>
                 ResidueRecoveryEngine.Recover(pdf, dict,
                     new ResidueRecoveryEngine.Options(ExactTolerancePt: tol, RequireMutoolCorroboration: false))
                 .Any(r => r.CandidatesFit.Contains(c.Answer, System.StringComparer.OrdinalIgnoreCase));
-            rows.Add(new Row("residue", c.Band, "excise", Recovered(0.5)));
-            rows.Add(new Row("residue", c.Band, "pixel-2pt", Recovered(2.0)));
+            rows.Add(new Row("residue", c.Band, "excise", Recovered(0.5), Polarity: polarity));
+            rows.Add(new Row("residue", c.Band, "pixel-2pt", Recovered(2.0), Polarity: polarity));
         }
 
         var grades = UnredactionScorecard.Score(rows);
