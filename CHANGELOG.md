@@ -194,6 +194,51 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   is still scanned.
 
 ### Added
+- **Several documents at once, in separate windows** (#1463, #1551–#1553).
+  Opening a PDF while a window already shows one now opens it in a new
+  window (File → Open, Open Recent, drag and drop, Finder or Explorer, and the
+  command line). File → Open accepts several files, and a drop opens every
+  PDF it carries. A window with no document takes the file itself, and a file
+  that is already open is brought to the front instead of being opened twice.
+  Preferences → Documents → "Open Documents In" chooses Automatic (the
+  default), NewWindow, NewTab, or ReplaceCurrent (the old single-document
+  behaviour, with its unsaved-changes prompt).
+  - **In-app tabs** (#1554, NewTab): a tab strip above the document, shown
+    once a window holds two documents. Each tab has a close button (middle
+    click also closes), drags to reorder, and a context menu (Close Tab,
+    Close Other Tabs, Move Tab to New Window, Copy Path, Reveal in
+    Finder/Explorer); a button at the right lists every tab, so the strip
+    never scrolls or wraps. Ctrl+Tab / Ctrl+Shift+Tab and Ctrl+PgDn /
+    Ctrl+PgUp switch tabs (also ⌘⇧] / ⌘⇧[ on macOS). Window → Merge All
+    Windows gathers every window's documents as tabs, and Move Tab to New
+    Window splits one out, with its undo history and unsaved edits. A window
+    has one viewer, so an inactive tab holds no page tiles; switching
+    re-renders the visible page and restores that tab's scroll position.
+    Under memory pressure an inactive tab's thumbnails are released first.
+    Tabs are announced with their position and unsaved state.
+  - **macOS:** document windows use native window tabbing. With System
+    Settings → Desktop & Dock → "Prefer tabs when opening documents" set to
+    Always, a new document opens as a tab of the current window. The Window
+    menu has Show Previous/Next Tab, Move Tab to New Window, Merge All
+    Windows, Show or Hide Tab Bar, and the list of open documents.
+  - **Windows and Linux:** a Window menu lists the open documents, and
+    opening a PDF from Explorer or a file manager while excise runs hands it to
+    the running process instead of starting a second one
+    (`EXCISE_SINGLE_INSTANCE=0` turns that off).
+  - Each window is one document session with its own undo history, search,
+    selection, redaction marks, unsaved-changes state, toasts and dialogs.
+    Close Document (⌘W / Ctrl+W) closes the window when another document is
+    open; the last window stays open and empty, as before. Quit asks about
+    every document with unsaved changes, in turn, and a Cancel keeps all of
+    them open. The window title names the document and says when it has
+    unsaved edits.
+  - Preferences are app-wide: a Preferences save applies to every open
+    window, so the redaction carrier policies and whole-word rule can never
+    differ between two windows. Recent files are one list for the whole
+    application.
+  - Memory: closing a window releases its document, its caches and its view
+    model. Each window's viewer keeps its own tile-cache budget
+    (Preferences → Performance), so N windows can hold N budgets.
 - **Attachments pane in the sidebar, visible by default** (#1563). Embedded
   files used to be reachable only through a Document ▸ Attachments… dialog.
   They are now listed under Outline and Thumbnails as soon as a document opens:

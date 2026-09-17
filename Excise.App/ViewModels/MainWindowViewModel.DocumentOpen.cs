@@ -37,23 +37,34 @@ public partial class MainWindowViewModel
     {
         _logger.LogInformation("Open file command triggered");
 
+        // #1463: in a multi-document workspace the file may open in another
+        // window or tab, and then nothing here is discarded.
+        var host = SessionHost;
+        var opensElsewhere = host?.OpensDocumentsElsewhere == true;
+
         // #1233: replacing the open document discards its unsaved edits just
         // as surely as closing the window does. Ask BEFORE the picker, so a
         // user who decides to keep the current document isn't made to choose a
         // file first and then be told it was pointless.
-        if (!await ConfirmDiscardUnsavedChangesAsync("open a different document"))
+        if (!opensElsewhere && !await ConfirmDiscardUnsavedChangesAsync("open a different document"))
             return;
 
         var files = await _filePicker.OpenFilesAsync(new OpenFilesRequest
         {
             Title = "Open PDF File",
-            AllowMultiple = false,
+            AllowMultiple = opensElsewhere,
             Filters = [FilePickerFilters.Pdf],
         });
 
         if (files.Count == 0)
         {
             _logger.LogInformation("Open dialog cancelled");
+            return;
+        }
+
+        if (host != null)
+        {
+            await host.OpenDocumentsAsync(files, replaceConfirmed: !opensElsewhere);
             return;
         }
 

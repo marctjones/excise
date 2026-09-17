@@ -15,6 +15,24 @@ internal static class StartupDocumentResolver
             .FirstOrDefault();
     }
 
+    /// <summary>
+    /// Every PDF named on the command line, first occurrence of each full path
+    /// only (#1463: a multi-document launch opens them all). The lifetime and
+    /// the process usually carry the same list, hence the de-duplication.
+    /// </summary>
+    public static IReadOnlyList<string> ResolveAll(IEnumerable<string>? lifetimeArgs, IEnumerable<string>? processArgs)
+    {
+        var result = new List<string>();
+        foreach (var candidate in EnumeratePdfCandidates(lifetimeArgs).Concat(EnumeratePdfCandidates(processArgs)))
+        {
+            var full = Path.GetFullPath(candidate);
+            if (!result.Contains(full, StringComparer.Ordinal))
+                result.Add(full);
+        }
+
+        return result;
+    }
+
     public static string? ResolveResponsivenessReportPath(
         IEnumerable<string>? lifetimeArgs,
         IEnumerable<string>? processArgs)

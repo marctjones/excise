@@ -64,6 +64,13 @@ namespace Excise.App.Models
         public string TypeIndicator { get; }
         public string UnicodeSecurityNotice { get; }
     }
+    public enum DocumentOpenMode
+    {
+        Automatic = 0,
+        NewWindow = 1,
+        NewTab = 2,
+        ReplaceCurrent = 3,
+    }
     public sealed class OutlineNode
     {
         public OutlineNode(string title, int? pageNumber, System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.OutlineNode> children) { }
@@ -160,6 +167,7 @@ namespace Excise.App.Models
         public bool CacheTrimOnMemoryPressure { get; set; }
         public bool CacheTrimSoftTriggers { get; set; }
         public bool ContinuousScrollEnabled { get; set; }
+        public string DocumentOpenMode { get; set; }
         public System.Collections.Generic.List<Excise.App.Models.WindowSettings.DocumentState> DocumentStates { get; set; }
         public double Height { get; set; }
         public bool IsMaximized { get; set; }
@@ -651,6 +659,34 @@ namespace Excise.App.ViewModels
         public void SetDocument(string filePath) { }
         public void UpdateCurrentPath(string newPath) { }
     }
+    public sealed class DocumentTabViewModel : ReactiveUI.ReactiveObject
+    {
+        public string AccessibleName { get; }
+        public string CloseButtonName { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CloseCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CloseOthersCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CopyPathCommand { get; }
+        public string DisplayTitle { get; }
+        public string? FilePath { get; }
+        public bool HasFilePath { get; }
+        public bool HasUnsavedChanges { get; }
+        public bool IsSelected { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveToNewWindowCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RevealCommand { get; }
+        public string RevealHeader { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SelectCommand { get; }
+        public string Title { get; }
+        public string ToolTip { get; }
+    }
+    public sealed class DocumentTabsViewModel : ReactiveUI.ReactiveObject
+    {
+        public bool IsStripVisible { get; }
+        public System.Collections.ObjectModel.ObservableCollection<Avalonia.Controls.MenuItem> OverflowMenuItems { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SelectNextTabCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SelectPreviousTabCommand { get; }
+        public Excise.App.ViewModels.DocumentTabViewModel? SelectedTab { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.ViewModels.DocumentTabViewModel> Tabs { get; }
+    }
     public sealed class LicenseManifest
     {
         public LicenseManifest() { }
@@ -774,6 +810,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveSelectedPagesEarlierCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveSelectedPagesLaterCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> NextPageCommand { get; }
+        public System.Collections.ObjectModel.ObservableCollection<Avalonia.Controls.MenuItem> OpenDocumentMenuItems { get; }
         public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> OpenExternalLinkCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> OpenFileCommand { get; }
         public string OperationStatus { get; set; }
@@ -1004,6 +1041,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CancelCommand { get; }
         public Excise.Core.Operations.CarrierScrubMode[] CarrierScrubModeOptions { get; }
         public bool DialogResult { get; }
+        public Excise.App.Models.DocumentOpenMode[] DocumentOpenModeOptions { get; }
         public int IdleTrimSeconds { get; set; }
         public string ManagedHeapText { get; }
         public int MaxRenderThreads { get; }
@@ -1021,6 +1059,7 @@ namespace Excise.App.ViewModels
         public int RenderThreads { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ResetToDefaultsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveCommand { get; }
+        public Excise.App.Models.DocumentOpenMode SelectedDocumentOpenMode { get; set; }
         public Excise.Core.Operations.CarrierScrubMode SelectedLinkUriCarrierPolicy { get; set; }
         public Excise.Core.Operations.CarrierScrubMode SelectedMetadataCarrierPolicy { get; set; }
         public Excise.App.Models.PerformancePreset SelectedPerformancePreset { get; set; }
@@ -1155,6 +1194,12 @@ namespace Excise.App.Views
     public class BatesNumberingDialog : Avalonia.Controls.Window
     {
         public BatesNumberingDialog() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class DocumentTabStrip : Avalonia.Controls.UserControl
+    {
+        public DocumentTabStrip() { }
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public void InitializeComponent(bool loadXaml = true) { }
     }

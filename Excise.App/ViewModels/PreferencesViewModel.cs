@@ -50,6 +50,25 @@ public class PreferencesViewModel : ViewModelBase
         SetPerformanceFields(PerformanceSettings.Balanced);
     }
 
+    // ── Documents (#1463) ────────────────────────────────────────────────────
+
+    private DocumentOpenMode _documentOpenMode = DocumentOpenMode.Automatic;
+
+    /// <summary>Where a document opens when the window already shows one.</summary>
+    public DocumentOpenMode[] DocumentOpenModeOptions { get; } =
+    [
+        DocumentOpenMode.Automatic,
+        DocumentOpenMode.NewWindow,
+        DocumentOpenMode.NewTab,
+        DocumentOpenMode.ReplaceCurrent,
+    ];
+
+    public DocumentOpenMode SelectedDocumentOpenMode
+    {
+        get => _documentOpenMode;
+        set => this.RaiseAndSetIfChanged(ref _documentOpenMode, value);
+    }
+
     // ── Performance ──────────────────────────────────────────────────────────
 
     /// <summary>AOT-safe preset list; see the note on <see cref="ReadingOrderStrategyOptions"/>.</summary>
@@ -359,6 +378,7 @@ public class PreferencesViewModel : ViewModelBase
         SelectedRedactionWidthPolicy = Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
         SelectedPrintScaling = Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
         SetPerformanceFields(PerformanceSettings.Balanced);
+        SelectedDocumentOpenMode = DocumentOpenMode.Automatic;
     }
 
     private void CloseWindow()
@@ -377,6 +397,7 @@ public class PreferencesViewModel : ViewModelBase
         SelectedPrintScaling = mainViewModel.PrintScaling;
         SetPerformanceFields(mainViewModel.PerformanceSettings);
         TileCacheBytesSource = mainViewModel.ViewerTileCacheResidentBytesProvider;
+        SelectedDocumentOpenMode = mainViewModel.DocumentOpenMode;
     }
 
     public void SaveToMainViewModel(MainWindowViewModel mainViewModel)
@@ -389,5 +410,6 @@ public class PreferencesViewModel : ViewModelBase
         mainViewModel.RedactionWidthPolicy = SelectedRedactionWidthPolicy;
         mainViewModel.PrintScaling = SelectedPrintScaling;
         mainViewModel.ApplyPerformanceSettings(BuildPerformanceSettings());
+        mainViewModel.DocumentOpenMode = SelectedDocumentOpenMode;
     }
 }

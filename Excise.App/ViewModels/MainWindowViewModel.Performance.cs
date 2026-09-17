@@ -58,6 +58,8 @@ public partial class MainWindowViewModel
     {
         ArgumentNullException.ThrowIfNull(preferences);
         preferences.SaveToMainViewModel(this);
+        // #1551: preferences are app-wide; every other open document gets them.
+        SessionHost?.ApplyPreferencesToOtherSessions(preferences);
         _settingsStore.Update(WritePreferencesTo);
         _logger.LogInformation("Preferences saved: performance preset {Preset}", _performanceSettings.DetectPreset());
     }
@@ -79,6 +81,7 @@ public partial class MainWindowViewModel
         settings.LinkUriCarrierPolicy = LinkUriCarrierPolicy.ToString();
         settings.MetadataCarrierPolicy = MetadataCarrierPolicy.ToString();
         settings.PrintScaling = PrintScaling.ToString();
+        settings.DocumentOpenMode = DocumentOpenMode.ToString(); // #1463
         _performanceSettings.WriteTo(settings);
     }
 }

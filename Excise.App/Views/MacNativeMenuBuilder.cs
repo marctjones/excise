@@ -75,7 +75,10 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _revealRasterizedHiddenItem;
         private readonly NativeMenuItem _formAuthoringItem;
         private readonly NativeMenuItem _printItem;
+        private readonly NativeMenuItem _windowItem;
+        private readonly List<NativeMenuItem> _tabActionItems = new();
         private IReadOnlyList<string>? _recentFilesSnapshot;
+        private string? _openDocumentsSnapshot;
 
         public MenuState(MainWindowViewModel viewModel)
         {
@@ -109,6 +112,14 @@ internal static class MacNativeMenuBuilder
             // #1545: enabled only when a document is open AND its /P flags allow
             // printing, so it is not a document item; Refresh sets it.
             _printItem = CommandItem("Print...", _viewModel.PrintCommand, Key.P);
+            // #1552/#1553: macOS's own tab actions plus the open documents.
+            _windowItem = Submenu("Window",
+                TabActionItem("Show Previous Tab", Workspace.MacWindowTabbing.TabAction.SelectPreviousTab),
+                TabActionItem("Show Next Tab", Workspace.MacWindowTabbing.TabAction.SelectNextTab),
+                TabActionItem("Move Tab to New Window", Workspace.MacWindowTabbing.TabAction.MoveTabToNewWindow),
+                TabActionItem("Merge All Windows", Workspace.MacWindowTabbing.TabAction.MergeAllWindows),
+                Separator(),
+                TabActionItem("Show or Hide Tab Bar", Workspace.MacWindowTabbing.TabAction.ToggleTabBar));
         }
 
         public NativeMenu Create()
@@ -219,14 +230,20 @@ internal static class MacNativeMenuBuilder
                     // #1476: hidden early on a narrow toolbar.
                     TrackDocumentItem(CommandItem("Auto-detect Form Fields", _viewModel.AutoDetectFieldsCommand))));
 
+            Add(menu, _windowItem);
+
             Add(menu,
                 Submenu("Help",
                     CommandItem("Keyboard Shortcuts", _viewModel.ShowShortcutsCommand, Key.F1, KeyModifiers.None),
                     CommandItem("Documentation", _viewModel.ShowDocumentationCommand)));
 
             menu.NeedsUpdate += (_, _) => Refresh();
+            // #1551: RecentFiles is one collection shared by every session, so
+            // subscribing to it here would root this menu — and its view model —
+            // for the life of the process. The view model relays collection
+            // changes as RecentFileMenuItems and drops that subscription when
+            // its session ends; the menu listens to the view model alone.
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
-            _viewModel.RecentFiles.CollectionChanged += (_, _) => QueueRefresh();
             Refresh();
             return menu;
         }
@@ -270,7 +287,10 @@ internal static class MacNativeMenuBuilder
             or nameof(MainWindowViewModel.IsAttachmentsSidebarVisible)
             or nameof(MainWindowViewModel.IsClipboardSidebarVisible)
             or nameof(MainWindowViewModel.RevealHiddenText)
-            or nameof(MainWindowViewModel.RevealRasterizedHidden);
+            or nameof(MainWindowViewModel.RevealRasterizedHidden)
+            or nameof(MainWindowViewModel.OpenDocuments)
+            or nameof(MainWindowViewModel.RecentFiles)
+            or nameof(MainWindowViewModel.RecentFileMenuItems);
 
         private void Refresh()
         {
@@ -320,6 +340,72 @@ internal static class MacNativeMenuBuilder
             _revealRasterizedHiddenItem.IsChecked = _viewModel.RevealRasterizedHidden;
 
             RefreshRecentFiles();
+            RefreshWindowMenu();
+        }
+
+        /// <summary>
+        /// #1553: the Window menu's document list, rebuilt only when the list,
+        /// a name or an unsaved marker changed.
+        /// </summary>
+        private void RefreshWindowMenu()
+        {
+            var documents = _viewModel.OpenDocuments;
+            foreach (var item in _tabActionItems)
+                item.IsEnabled = documents.Count > 1;
+
+            var snapshot = string.Join('\n', documents.Select(d =>
+                $"{d.Title}|{d.FilePath}|{d.IsCurrent}|{d.HasUnsavedChanges}"));
+            if (snapshot == _openDocumentsSnapshot)
+                return;
+            _openDocumentsSnapshot = snapshot;
+
+            var windowMenu = _windowItem.Menu ??= new NativeMenu();
+            // The tab actions and their separators stay; the document entries
+            // after them are replaced.
+            var fixedCount = _tabActionItems.Count + 1;
+            while (windowMenu.Items.Count > fixedCount)
+                windowMenu.Items.RemoveAt(windowMenu.Items.Count - 1);
+
+            if (documents.Count == 0)
+                return;
+
+            Add(windowMenu, Separator());
+            foreach (var document in documents)
+            {
+                Add(windowMenu, new NativeMenuItem(MainWindowViewModel.OpenDocumentMenuHeader(document))
+                {
+                    ToolTip = document.FilePath,
+                    Command = _viewModel.ActivateOpenDocumentCommand,
+                    CommandParameter = document,
+                    ToggleType = MenuItemToggleType.CheckBox,
+                    IsChecked = document.IsCurrent,
+                });
+            }
+        }
+
+        private NativeMenuItem TabActionItem(string header, Workspace.MacWindowTabbing.TabAction action)
+        {
+            var item = new NativeMenuItem(header) { Command = new TabActionCommand(action) };
+            _tabActionItems.Add(item);
+            return item;
+        }
+
+        /// <summary>
+        /// An AppKit tab action as a command, so the native menu keeps its
+        /// "every leaf has a command" contract (CommandBindingSweepTests).
+        /// </summary>
+        private sealed class TabActionCommand(Workspace.MacWindowTabbing.TabAction action) : ICommand
+        {
+            public event System.EventHandler? CanExecuteChanged
+            {
+                add { }
+                remove { }
+            }
+
+            public bool CanExecute(object? parameter) => true;
+
+            public void Execute(object? parameter) =>
+                Workspace.MacWindowTabbing.Perform(action, logger: null);
         }
 
         private void RefreshRecentFiles()

@@ -32,6 +32,23 @@ public partial class MainWindowViewModel
     /// </remarks>
     public async Task<bool> OpenDroppedFilesAsync(IReadOnlyList<IStorageItem> files)
     {
+        // #1463: in a workspace a drop may open every PDF it carries, each in
+        // its own window or tab; replacing still takes only the first.
+        if (SessionHost is { } host)
+        {
+            var paths = DroppedPdfResolver.ResolveAllPdfs(files);
+            if (paths.Count == 0)
+            {
+                _logger.LogInformation("Drop ignored: no local, existing .pdf among {Count} dropped item(s)", files.Count);
+                OperationStatus = "Dropped item is not a PDF file.";
+                return false;
+            }
+
+            _logger.LogInformation("Opening {Count} dropped PDF(s)", paths.Count);
+            await host.OpenDocumentsAsync(paths, replaceConfirmed: false);
+            return true;
+        }
+
         var path = DroppedPdfResolver.ResolveFirstPdf(files);
         if (path == null)
         {

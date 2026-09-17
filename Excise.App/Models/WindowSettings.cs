@@ -75,6 +75,13 @@ public class WindowSettings
     public string PrintScaling { get; set; } = "ShrinkOversized";
 
     /// <summary>
+    /// Where a document opens when the window already shows one (#1463).
+    /// Persisted as a string; parsed back to
+    /// <see cref="Excise.App.Models.DocumentOpenMode"/>.
+    /// </summary>
+    public string DocumentOpenMode { get; set; } = "Automatic";
+
+    /// <summary>
     /// Trim the viewer's caches when the OS reports memory pressure (#1478).
     /// Only fires when the OS asks, so it is on by default. No UI: an
     /// internal switch for A/B measurement in a live session.

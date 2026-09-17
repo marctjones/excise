@@ -74,6 +74,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, validates the signer certificate chain against the OS trust store (distinguishing valid-and-trusted from valid-but-untrusted, modified, and unverifiable signatures), and clearly reports remaining OS trust-chain validation limitations (revocation is not checked)
 - **Attachments pane** — a sidebar pane, shown by default, lists files embedded in the PDF (name, size, description, modified date, and the page for files attached to a page annotation); save one or all of them to a location you choose, or strip them (undoable). A warning appears on open when a document carries attachments, because they are invisible on the page and can hold a full copy of the document's data (ZUGFeRD/Factur-X). Hide it with View ▸ Show Attachments. excise never opens or runs an attachment
 - Open a PDF by dragging it onto the window
+- **Several documents at once** — each opens in its own window, with its own undo history and unsaved-changes state; on macOS the windows use native tabs when System Settings asks for them. Preferences ▸ Documents can instead open documents as tabs inside one window (close, reorder by dragging, move a tab to its own window, overflow list) or replace the current document as before
 - Prompts before closing, quitting, or opening another file with unsaved changes — and saves a **copy**, never overwriting your original
 - Bates numbering
 - CLI-first automation with stable JSON, batch workflows, progress NDJSON, and
@@ -369,6 +370,7 @@ Press **F1** to view all in-app.
 | Navigation | Next/Previous/First/Last Page | `Page Down/Up`, `Home`, `End` |
 | Modes | Redaction / Text Selection / Apply | `R` / `T` / `Enter` |
 | Pages | Rotate Left / Right | `Ctrl+L` / `Ctrl+R` |
+| Tabs | Next / Previous document tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` (or `Ctrl+PgDn` / `Ctrl+PgUp`) |
 
 ### CLI examples
 

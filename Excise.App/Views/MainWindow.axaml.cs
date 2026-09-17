@@ -15,6 +15,7 @@ using Excise.App.Models;
 using Excise.App.Services.Host;
 using Excise.App.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 
@@ -25,7 +26,10 @@ public partial class MainWindow : Window
     private PdfViewerControl? _pdfViewerControl;
     private readonly ISettingsStore _settingsStore;
     private readonly WindowSettings _windowSettings;
-    private object? _nativeMenuDataContext;
+    // #1551: one native menu per document session, built on first show and
+    // reused when the same session is shown again. Weak keys, so a closed
+    // session's menu goes with it.
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<MainWindowViewModel, NativeMenu> _nativeMenus = new();
     private NativeMenu? _nativeMenu;
     private bool _isNativeWindowOpened;
     private bool _nativeMenuAttachScheduled;
@@ -154,8 +158,18 @@ public partial class MainWindow : Window
         // Add keyboard handler for Ctrl+C
         this.KeyDown += MainWindow_KeyDown;
 
+        // #1554: the tab strip binds to the window's tabs, never to the
+        // session the window shows; a local null stops it inheriting one.
+        DocumentTabStripHost.DataContext = null;
+        // Tunnel: Ctrl+Tab must reach the tabs before keyboard navigation
+        // treats Tab as a focus move.
+        AddHandler(KeyDownEvent, OnTabSwitchKeyDown, RoutingStrategies.Tunnel);
+
         // Subscribe to search highlights changes
         this.DataContextChanged += OnDataContextChanged;
+        // #1551: a closed window lets go of its session, so the session's
+        // memory can be released with it.
+        this.Closed += (_, _) => UnbindViewModel();
         this.Opened += (_, _) =>
         {
             _isNativeWindowOpened = true;
@@ -186,16 +200,14 @@ public partial class MainWindow : Window
     /// </remarks>
     private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
     {
-        if (!_closeApproved &&
-            DataContext is MainWindowViewModel guardViewModel &&
-            guardViewModel.HasUnsavedDocumentChanges)
+        if (!_closeApproved && HostedViewModels().Any(vm => vm.HasUnsavedDocumentChanges))
         {
             e.Cancel = true;
 
             // Fire-and-forget deliberately: the handler must return
             // synchronously with Cancel set, and the continuation re-enters
             // Close() on the UI thread once the user has answered.
-            _ = PromptThenCloseAsync(guardViewModel);
+            _ = PromptThenCloseAsync();
             return;
         }
 
@@ -205,13 +217,36 @@ public partial class MainWindow : Window
         PersistWindowStateOnClose();
     }
 
-    private async System.Threading.Tasks.Task PromptThenCloseAsync(MainWindowViewModel viewModel)
+    /// <summary>
+    /// Every session this window holds: all of its tabs (#1554), or the one
+    /// session it shows.
+    /// </summary>
+    private IReadOnlyList<MainWindowViewModel> HostedViewModels()
+    {
+        // A window whose tabs were all merged elsewhere holds nothing, even
+        // though it still shows the last of them until it closes.
+        if (_documentTabs is { } tabs)
+            return tabs.Tabs.Select(t => t.Session.ViewModel).ToArray();
+        return DataContext is MainWindowViewModel vm ? new[] { vm } : Array.Empty<MainWindowViewModel>();
+    }
+
+    private async System.Threading.Tasks.Task PromptThenCloseAsync()
     {
         try
         {
-            var proceed = await viewModel.ConfirmDiscardUnsavedChangesAsync("close this window");
-            if (!proceed)
-                return;
+            foreach (var viewModel in HostedViewModels())
+            {
+                if (!viewModel.HasUnsavedDocumentChanges)
+                    continue;
+
+                // Show the tab being asked about.
+                if (_documentTabs?.Tabs.FirstOrDefault(t => ReferenceEquals(t.Session.ViewModel, viewModel)) is { } tab)
+                    _documentTabs.SelectedTab = tab;
+
+                var proceed = await viewModel.ConfirmDiscardUnsavedChangesAsync("close this window");
+                if (!proceed)
+                    return;
+            }
 
             _closeApproved = true;
             Close();
@@ -298,88 +333,331 @@ public partial class MainWindow : Window
         }
     }
 
+    // #1551: the session this window is bound to, and how to let go of it.
+    // Every subscription made in BindViewModel is undone in UnbindViewModel,
+    // so a window can show another session (a tab switch) and a closed
+    // session is not kept alive by its window's handlers.
+    private MainWindowViewModel? _boundViewModel;
+    private readonly List<Action> _viewModelUnsubscribers = new();
+    private bool _hasBoundViewModel;
+
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         // Get reference to PdfViewerControl
         _pdfViewerControl ??= this.FindControl<PdfViewerControl>("PdfViewerControl");
 
-        if (DataContext is MainWindowViewModel viewModel)
+        var next = DataContext as MainWindowViewModel;
+        if (ReferenceEquals(next, _boundViewModel))
+            return;
+
+        UnbindViewModel();
+        if (next != null)
+            BindViewModel(next);
+    }
+
+    private void BindViewModel(MainWindowViewModel viewModel)
+    {
+        var rebinding = _hasBoundViewModel;
+        _hasBoundViewModel = true;
+        _boundViewModel = viewModel;
+
+        if (!viewModel.WindowPreferencesApplied)
         {
-            viewModel.ApplyContinuousScrollPreference(_windowSettings.ContinuousScrollEnabled);
-            viewModel.ApplyAttachmentsPanePreference(_windowSettings.AttachmentsSidebarVisible);
-            viewModel.AttachmentsPaneFocusRequested += OnAttachmentsPaneFocusRequested;
-            if (Enum.TryParse<Excise.Core.Text.ReadingOrderStrategy>(
-                    _windowSettings.ReadingOrderStrategy, out var strategy))
-                viewModel.ApplyReadingOrderStrategyPreference(strategy);
-            if (Enum.TryParse<Excise.Core.Text.WhitespaceMode>(
-                    _windowSettings.WhitespaceMode, out var whitespaceMode))
-                viewModel.ApplyWhitespaceModePreference(whitespaceMode);
-            viewModel.ApplyRedactionPolicyPreferences(
-                _windowSettings.RedactionWholeWord,
-                _windowSettings.RedactionWidthPolicy,
-                _windowSettings.LinkUriCarrierPolicy,
-                _windowSettings.MetadataCarrierPolicy);
-            viewModel.ApplyPrintScalingPreference(_windowSettings.PrintScaling);
-            // Preferences → Performance: subscribe first so the restore below
-            // reaches the viewer through the same path a Save does.
-            viewModel.PerformanceSettingsApplied += OnPerformanceSettingsApplied;
-            viewModel.ViewerTileCacheResidentBytesProvider = () => _pdfViewerControl?.ContinuousTileCacheResidentBytes;
-            viewModel.ApplyPerformanceSettings(
-                PerformanceSettings.FromWindowSettings(_windowSettings), fromPersistedStartup: true);
-            SchedulePlatformMenuConfigure();
+            // The first session shown by this window takes the settings loaded
+            // when the window was built, exactly as before #1551. A session
+            // shown later reads them again, because a Preferences save since
+            // then changed them.
+            ApplyPersistedPreferences(viewModel, rebinding ? _settingsStore.Load() : _windowSettings);
+        }
+        else
+        {
+            Subscribe(viewModel);
+            OnPerformanceSettingsApplied(viewModel, viewModel.PerformanceSettings);
+        }
 
-            // Subscribe to toast notifications
-            viewModel.ToastService.ToastRequested += OnToastRequested;
+        viewModel.ViewerTileCacheResidentBytesProvider = TileCacheResidentBytes;
+        SchedulePlatformMenuConfigure();
 
-            // Subscribe to search highlights collection changes
-            viewModel.CurrentPageSearchHighlights.CollectionChanged += OnSearchHighlightsChanged;
+        // Push the viewer's *visible* viewport (inside-the-scrollbars)
+        // into the VM so Fit Width / Fit Page fit against what the user
+        // actually sees, not the outer control bounds. Using outer
+        // bounds gave a result ~16-20 DIPs too big — exactly the strip
+        // a vertical scrollbar reserves — which made Fit Width pop a
+        // horizontal scrollbar that then stole more space and broke
+        // the fit recursively.
+        if (_pdfViewerControl != null)
+        {
+            var initial = _pdfViewerControl.GetVisibleViewportSize();
+            viewModel.ViewportWidth = initial.Width;
+            viewModel.ViewportHeight = initial.Height;
+        }
 
-            // Subscribe to redaction collection changes
-            viewModel.RedactionWorkflow.PendingRedactions.CollectionChanged += OnRedactionsChanged;
-            viewModel.RedactionWorkflow.AppliedRedactions.CollectionChanged += OnRedactionsChanged;
-            viewModel.AnnotationsChanged += OnAnnotationsChanged;
+        if (rebinding)
+        {
+            // The overlays and the toast belonged to the session shown before.
+            CloseToast();
+            UpdateSearchHighlightsCanvas();
+            UpdateRedactionOverlays();
+        }
+    }
 
-            // #846: before a structural mutation reloads the document, let the
-            // continuous view snapshot the reader's position so the rebuild
-            // restores it instead of jumping to the top of the page.
-            viewModel.PreserveReadingPositionRequested += (_, _) =>
-                _pdfViewerControl?.PreserveContinuousReadingPositionOnNextRebuild();
+    private void ApplyPersistedPreferences(MainWindowViewModel viewModel, WindowSettings settings)
+    {
+        viewModel.ApplyContinuousScrollPreference(settings.ContinuousScrollEnabled);
+        viewModel.ApplyAttachmentsPanePreference(settings.AttachmentsSidebarVisible);
+        if (Enum.TryParse<Excise.Core.Text.ReadingOrderStrategy>(
+                settings.ReadingOrderStrategy, out var strategy))
+            viewModel.ApplyReadingOrderStrategyPreference(strategy);
+        if (Enum.TryParse<Excise.Core.Text.WhitespaceMode>(
+                settings.WhitespaceMode, out var whitespaceMode))
+            viewModel.ApplyWhitespaceModePreference(whitespaceMode);
+        viewModel.ApplyRedactionPolicyPreferences(
+            settings.RedactionWholeWord,
+            settings.RedactionWidthPolicy,
+            settings.LinkUriCarrierPolicy,
+            settings.MetadataCarrierPolicy);
+        viewModel.ApplyPrintScalingPreference(settings.PrintScaling);
+        viewModel.ApplyDocumentOpenModePreference(settings.DocumentOpenMode);
+        // Preferences → Performance: subscribe first so the restore below
+        // reaches the viewer through the same path a Save does.
+        Subscribe(viewModel);
+        viewModel.ApplyPerformanceSettings(
+            PerformanceSettings.FromWindowSettings(settings), fromPersistedStartup: true);
+        viewModel.WindowPreferencesApplied = true;
+    }
 
-            // #917: one document means the viewer's Document reference no
-            // longer changes on a structural mutation, so nothing tells the
-            // continuous view to re-lay-out. This does.
-            viewModel.DocumentStructureChanged += (_, _) =>
-                _pdfViewerControl?.RefreshContinuousLayout();
+    private void Subscribe(MainWindowViewModel viewModel)
+    {
+        viewModel.PerformanceSettingsApplied += OnPerformanceSettingsApplied;
+        _viewModelUnsubscribers.Add(() => viewModel.PerformanceSettingsApplied -= OnPerformanceSettingsApplied);
 
-            // Subscribe to page changes to update redaction overlays
-            viewModel.PropertyChanged += (s, args) =>
+        // Subscribe to toast notifications
+        var toasts = viewModel.ToastService;
+        toasts.ToastRequested += OnToastRequested;
+        _viewModelUnsubscribers.Add(() => toasts.ToastRequested -= OnToastRequested);
+
+        // Subscribe to search highlights collection changes
+        var highlights = viewModel.CurrentPageSearchHighlights;
+        highlights.CollectionChanged += OnSearchHighlightsChanged;
+        _viewModelUnsubscribers.Add(() => highlights.CollectionChanged -= OnSearchHighlightsChanged);
+
+        // Subscribe to redaction collection changes
+        var pending = viewModel.RedactionWorkflow.PendingRedactions;
+        var applied = viewModel.RedactionWorkflow.AppliedRedactions;
+        pending.CollectionChanged += OnRedactionsChanged;
+        applied.CollectionChanged += OnRedactionsChanged;
+        _viewModelUnsubscribers.Add(() =>
+        {
+            pending.CollectionChanged -= OnRedactionsChanged;
+            applied.CollectionChanged -= OnRedactionsChanged;
+        });
+
+        viewModel.AnnotationsChanged += OnAnnotationsChanged;
+        _viewModelUnsubscribers.Add(() => viewModel.AnnotationsChanged -= OnAnnotationsChanged);
+
+        // #1563: Document ▸ Attachments moves keyboard focus into the pane.
+        viewModel.AttachmentsPaneFocusRequested += OnAttachmentsPaneFocusRequested;
+        _viewModelUnsubscribers.Add(() => viewModel.AttachmentsPaneFocusRequested -= OnAttachmentsPaneFocusRequested);
+
+        // #846: before a structural mutation reloads the document, let the
+        // continuous view snapshot the reader's position so the rebuild
+        // restores it instead of jumping to the top of the page.
+        EventHandler preserveReadingPosition = (_, _) =>
+            _pdfViewerControl?.PreserveContinuousReadingPositionOnNextRebuild();
+        viewModel.PreserveReadingPositionRequested += preserveReadingPosition;
+        _viewModelUnsubscribers.Add(() => viewModel.PreserveReadingPositionRequested -= preserveReadingPosition);
+
+        // #917: one document means the viewer's Document reference no
+        // longer changes on a structural mutation, so nothing tells the
+        // continuous view to re-lay-out. This does.
+        EventHandler structureChanged = (_, _) => _pdfViewerControl?.RefreshContinuousLayout();
+        viewModel.DocumentStructureChanged += structureChanged;
+        _viewModelUnsubscribers.Add(() => viewModel.DocumentStructureChanged -= structureChanged);
+
+        // Subscribe to page changes to update redaction overlays
+        System.ComponentModel.PropertyChangedEventHandler pageChanged = (_, args) =>
+        {
+            if (args.PropertyName == nameof(viewModel.CurrentPageIndex))
             {
-                if (args.PropertyName == nameof(viewModel.CurrentPageIndex))
-                {
-                    UpdateRedactionOverlays();
-                }
+                UpdateRedactionOverlays();
+            }
+
+            // #1552/#1553: the title names the document (and says when it has
+            // unsaved edits); dirty-state changes raise SaveButtonText.
+            if (args.PropertyName is null
+                or nameof(viewModel.DocumentName)
+                or nameof(viewModel.IsDocumentLoaded)
+                or nameof(viewModel.SaveButtonText))
+            {
+                UpdateTitle(viewModel);
+            }
+        };
+        UpdateTitle(viewModel);
+        viewModel.PropertyChanged += pageChanged;
+        _viewModelUnsubscribers.Add(() => viewModel.PropertyChanged -= pageChanged);
+
+        if (_pdfViewerControl != null)
+        {
+            var viewer = _pdfViewerControl;
+            EventHandler<Size> viewportChanged = (_, size) =>
+            {
+                viewModel.ViewportWidth = size.Width;
+                viewModel.ViewportHeight = size.Height;
             };
+            viewer.VisibleViewportChanged += viewportChanged;
+            _viewModelUnsubscribers.Add(() => viewer.VisibleViewportChanged -= viewportChanged);
+        }
+    }
 
-            // Push the viewer's *visible* viewport (inside-the-scrollbars)
-            // into the VM so Fit Width / Fit Page fit against what the user
-            // actually sees, not the outer control bounds. Using outer
-            // bounds gave a result ~16-20 DIPs too big — exactly the strip
-            // a vertical scrollbar reserves — which made Fit Width pop a
-            // horizontal scrollbar that then stole more space and broke
-            // the fit recursively.
-            if (_pdfViewerControl != null)
+    private void UnbindViewModel()
+    {
+        var viewModel = _boundViewModel;
+        if (viewModel == null)
+            return;
+
+        _boundViewModel = null;
+        foreach (var unsubscribe in _viewModelUnsubscribers)
+            unsubscribe();
+        _viewModelUnsubscribers.Clear();
+
+        // Only clear the provider if it is still this window's.
+        if (viewModel.ViewerTileCacheResidentBytesProvider == (Func<long?>)TileCacheResidentBytes)
+            viewModel.ViewerTileCacheResidentBytesProvider = null;
+    }
+
+    private void UpdateTitle(MainWindowViewModel viewModel)
+    {
+        Title = Excise.App.Workspace.DocumentWindowTitle.For(
+            viewModel.IsDocumentLoaded ? viewModel.DocumentName : null,
+            viewModel.HasUnsavedDocumentChanges);
+    }
+
+    // ── #1554: in-app document tabs ─────────────────────────────────────────
+
+    private ViewModels.DocumentTabsViewModel? _documentTabs;
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<MainWindowViewModel, System.Runtime.CompilerServices.StrongBox<double>> _scrollFractions = new();
+    private bool _switchingSession;
+    private int _switchGeneration;
+
+    /// <summary>
+    /// The tabs this window holds. The window shows the selected tab's
+    /// session; set by the workspace.
+    /// </summary>
+    internal ViewModels.DocumentTabsViewModel? DocumentTabs
+    {
+        get => _documentTabs;
+        set
+        {
+            if (ReferenceEquals(value, _documentTabs))
+                return;
+            if (_documentTabs != null)
+                _documentTabs.PropertyChanged -= OnDocumentTabsPropertyChanged;
+
+            _documentTabs = value;
+            DocumentTabStripHost.DataContext = value;
+            DocumentTabStripHost.IsVisible = value != null;
+            if (value != null)
             {
-                var initial = _pdfViewerControl.GetVisibleViewportSize();
-                viewModel.ViewportWidth = initial.Width;
-                viewModel.ViewportHeight = initial.Height;
-                _pdfViewerControl.VisibleViewportChanged += (s, size) =>
-                {
-                    viewModel.ViewportWidth = size.Width;
-                    viewModel.ViewportHeight = size.Height;
-                };
+                value.PropertyChanged += OnDocumentTabsPropertyChanged;
+                ShowSelectedTab();
             }
         }
     }
+
+    private void OnDocumentTabsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ViewModels.DocumentTabsViewModel.SelectedTab))
+            ShowSelectedTab();
+    }
+
+    private void ShowSelectedTab()
+    {
+        var next = _documentTabs?.SelectedTab?.Session.ViewModel;
+        // No selection means the last tab is leaving and the window is about
+        // to close: keep what is shown.
+        if (next == null || ReferenceEquals(next, DataContext))
+            return;
+
+        SwitchSession(next);
+    }
+
+    /// <summary>
+    /// Show <paramref name="next"/> in this window. The outgoing session's
+    /// scroll position is remembered and the incoming one's restored once the
+    /// viewer has laid the document out again.
+    /// </summary>
+    private void SwitchSession(MainWindowViewModel next)
+    {
+        if (DataContext is MainWindowViewModel current && _pdfViewerControl != null)
+        {
+            var viewport = _pdfViewerControl.GetViewportDiagnostics();
+            if (viewport.IsAvailable)
+                _scrollFractions.AddOrUpdate(current, new System.Runtime.CompilerServices.StrongBox<double>(VerticalFraction(viewport)));
+        }
+
+        var generation = ++_switchGeneration;
+        _switchingSession = true;
+        DataContext = next;
+
+        double? saved = _scrollFractions.TryGetValue(next, out var box) ? box.Value : null;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (generation != _switchGeneration)
+                return;
+            try
+            {
+                if (saved is double fraction && ReferenceEquals(DataContext, next))
+                    _pdfViewerControl?.TrySetViewportVerticalFraction(fraction);
+            }
+            finally
+            {
+                _switchingSession = false;
+            }
+        }, DispatcherPriority.ContextIdle);
+    }
+
+    internal static double VerticalFraction(PdfViewerViewportDiagnostics viewport)
+    {
+        var range = viewport.Extent.Height - viewport.Viewport.Height;
+        if (!(range > 0))
+            return 0;
+        return Math.Clamp(viewport.Offset.Y / range, 0, 1);
+    }
+
+    /// <summary>
+    /// Ctrl+Tab / Ctrl+Shift+Tab and Ctrl+PageDown / Ctrl+PageUp switch tabs;
+    /// on macOS also Cmd+Shift+] / Cmd+Shift+[. Only with more than one tab,
+    /// so Tab keeps moving focus everywhere else.
+    /// </summary>
+    private void OnTabSwitchKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (_documentTabs is not { Tabs.Count: > 1 } tabs)
+            return;
+
+        var control = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        var meta = e.KeyModifiers.HasFlag(KeyModifiers.Meta);
+        int step = 0;
+
+        if (control && e.Key == Key.Tab)
+            step = shift ? -1 : +1;
+        else if (control && e.Key == Key.PageDown)
+            step = +1;
+        else if (control && e.Key == Key.PageUp)
+            step = -1;
+        else if (OperatingSystem.IsMacOS() && meta && shift && e.Key == Key.OemCloseBrackets)
+            step = +1;
+        else if (OperatingSystem.IsMacOS() && meta && shift && e.Key == Key.OemOpenBrackets)
+            step = -1;
+
+        if (step == 0)
+            return;
+
+        e.Handled = true;
+        (step > 0 ? tabs.SelectNextTabCommand : tabs.SelectPreviousTabCommand).Execute().Subscribe();
+    }
+
+    private long? TileCacheResidentBytes() => _pdfViewerControl?.ContinuousTileCacheResidentBytes;
 
     private void ConfigurePlatformMenu(MainWindowViewModel viewModel)
     {
@@ -400,11 +678,12 @@ public partial class MainWindow : Window
         }
 
         _nativeMenuAttachAttempts = 0;
-        if (!ReferenceEquals(_nativeMenuDataContext, viewModel) || _nativeMenu is null)
+        if (!_nativeMenus.TryGetValue(viewModel, out var menu))
         {
-            _nativeMenu = MacNativeMenuBuilder.Create(viewModel);
-            _nativeMenuDataContext = viewModel;
+            menu = MacNativeMenuBuilder.Create(viewModel);
+            _nativeMenus.Add(viewModel, menu);
         }
+        _nativeMenu = menu;
 
         // The application (app-name) menu is owned by App and set on the
         // Application before the first window exists (#834) — it must precede
@@ -1086,6 +1365,11 @@ public partial class MainWindow : Window
         if (DataContext is not MainWindowViewModel viewModel)
             return;
 
+        // #1554: while the viewer swaps documents it reports pages of its own
+        // rebuild; the incoming tab's page is the view model's, not those.
+        if (_switchingSession)
+            return;
+
         // Update ViewModel page index (convert from 1-based to 0-based)
         viewModel.CurrentPageIndex = e.PageNumber - 1;
     }
@@ -1205,6 +1489,14 @@ public partial class MainWindow : Window
         {
             System.Console.WriteLine($"Error displaying toast: {ex.Message}");
         }
+    }
+
+    /// <summary>Close the toast now (it belonged to the session shown before).</summary>
+    private void CloseToast()
+    {
+        _toastTimer?.Stop();
+        if (this.FindControl<FluentAvalonia.UI.Controls.FAInfoBar>("ToastInfoBar") is { } infoBar)
+            infoBar.IsOpen = false;
     }
 
     /// <summary>
