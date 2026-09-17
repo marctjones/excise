@@ -11094,6 +11094,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11562,15 +11569,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -12566,6 +12564,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -13034,15 +13039,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -14031,6 +14027,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14499,15 +14502,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -15497,6 +15491,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15965,15 +15966,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81479,6 +81471,20 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/AttachmentRemovalOracleTests.cs::AttachmentRemovalOracleTests.EveryRedactionFlow_RemovesPageAndDocumentAttachments_AsPopplerAndQpdfSeeIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AttachmentRemovalOracleTests.cs::AttachmentRemovalOracleTests.Issue1582_NameTreeKey_PageAf_AndNestedPdf_AreClean_AsQpdfAndMutoolSeeIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs::BlankPageRecoveryTests.PageThatRenderedBlank_NowInksWithinBandOfTheOracles",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81504,6 +81510,27 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CarrierTrapExciseRedactionSurveyTests.cs::CarrierTrapExciseRedactionSurveyTests.Survey_ExciseRedactText_OverEveryCarrierTrap",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CarrierTrapIndependentCorroborationTests.cs::CarrierTrapIndependentCorroborationTests.ExciseFinding_IsCorroboratedByQpdfAndMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CarrierTrapIndependentCorroborationTests.cs::CarrierTrapIndependentCorroborationTests.CleanControl_IsValidAndHasTheRevisionTheScanMustIgnore",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Rendering.Tests/Differential/CcittEndOfBlockTests.cs::CcittEndOfBlockTests.TheOnlyCorpusFileSettingEndOfBlock_RendersAtOracleParity",
@@ -82134,51 +82161,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Pdftoppm_UserPasswordOnly_NoPasswordProducesNoRendering",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_PermissionsMask_ReportedSemanticallyExactlyAsSet",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Ghostscript_CorrectUserPassword_RendersIdenticallyToPlainBaseline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Ghostscript_WrongPassword_ProducesNoRendering",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::doc.Ghostscript_NoPassword_ProducesNoRendering",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::doc.Pdftoppm_CorrectUserPassword_RendersIdenticallyToPlainBaseline",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95216,13 +95198,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesFormFromXfaCarrierValues",
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
@@ -95615,6 +95595,104 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Fixture_CarriesEverySecret_BeforeAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.ScrubEmbeddedFiles_RemovesEveryRoute_FromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RemoveAllAttachments_NamesEachFile_WithSizeAndLocation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.ScrubEmbeddedFilesReversibly_RestoresEveryRoute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactText_RemovesEveryAttachment_ByDefault_EvenWithoutATermInThem",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactArea_RemovesEveryAttachment_ByDefault_AndRecordsThemForTheSafetyReport",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.AreaPassRemovals_AreReported_EvenWhenTheCopyItselfKeepsAttachments",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactArea_BoolOverloadWithCarriersOff_KeepsAttachments",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Portfolio_IsRefused_BeforeAnythingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Portfolio_WithKeepAttachments_IsRedactedMemberByMember",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_TextFilesAreRedacted_OthersAreReported_AndTheResultIsNotClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_ChecksumOfARewrittenFileIsDropped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_OnAreaRedaction_ReportsEveryKeptFileAsNotChecked",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95627,132 +95705,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.SavedByteOracle_RejectsAnIntentionalCanarySurvivalMutation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesEmbeddedFile_WhenOnlyDescriptionContainsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.EmbeddedFileScrub_RemovesTheAttachmentWithTheTerm_KeepsUnrelatedOnes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenCatalogLevelAttachmentAlsoPresent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_DecomposedNeedle_RemovesPrecomposedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesOtherCombiningMarks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_DoesNotTouchUnrelatedText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_UnaccentedNeedle_DoesNotMatchAccentedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Strip_IsStillTheDefault_AndLeavesTheRevealingResidue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -96668,13 +96620,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesFormFromXfaCarrierValues",
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
@@ -97067,6 +97017,104 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Fixture_CarriesEverySecret_BeforeAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.ScrubEmbeddedFiles_RemovesEveryRoute_FromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RemoveAllAttachments_NamesEachFile_WithSizeAndLocation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.ScrubEmbeddedFilesReversibly_RestoresEveryRoute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactText_RemovesEveryAttachment_ByDefault_EvenWithoutATermInThem",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactArea_RemovesEveryAttachment_ByDefault_AndRecordsThemForTheSafetyReport",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.AreaPassRemovals_AreReported_EvenWhenTheCopyItselfKeepsAttachments",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactArea_BoolOverloadWithCarriersOff_KeepsAttachments",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Portfolio_IsRefused_BeforeAnythingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Portfolio_WithKeepAttachments_IsRedactedMemberByMember",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_TextFilesAreRedacted_OthersAreReported_AndTheResultIsNotClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_ChecksumOfARewrittenFileIsDropped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_OnAreaRedaction_ReportsEveryKeptFileAsNotChecked",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97079,132 +97127,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.SavedByteOracle_RejectsAnIntentionalCanarySurvivalMutation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesEmbeddedFile_WhenOnlyDescriptionContainsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.EmbeddedFileScrub_RemovesTheAttachmentWithTheTerm_KeepsUnrelatedOnes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenCatalogLevelAttachmentAlsoPresent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_DecomposedNeedle_RemovesPrecomposedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesOtherCombiningMarks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_DoesNotTouchUnrelatedText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_UnaccentedNeedle_DoesNotMatchAccentedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Strip_IsStillTheDefault_AndLeavesTheRevealingResidue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -98134,13 +98056,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesFormFromXfaCarrierValues",
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
@@ -98533,6 +98453,104 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Fixture_CarriesEverySecret_BeforeAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.ScrubEmbeddedFiles_RemovesEveryRoute_FromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RemoveAllAttachments_NamesEachFile_WithSizeAndLocation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.ScrubEmbeddedFilesReversibly_RestoresEveryRoute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactText_RemovesEveryAttachment_ByDefault_EvenWithoutATermInThem",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactArea_RemovesEveryAttachment_ByDefault_AndRecordsThemForTheSafetyReport",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.AreaPassRemovals_AreReported_EvenWhenTheCopyItselfKeepsAttachments",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactArea_BoolOverloadWithCarriersOff_KeepsAttachments",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Portfolio_IsRefused_BeforeAnythingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Portfolio_WithKeepAttachments_IsRedactedMemberByMember",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_TextFilesAreRedacted_OthersAreReported_AndTheResultIsNotClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_ChecksumOfARewrittenFileIsDropped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_OnAreaRedaction_ReportsEveryKeptFileAsNotChecked",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98545,132 +98563,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.SavedByteOracle_RejectsAnIntentionalCanarySurvivalMutation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesEmbeddedFile_WhenOnlyDescriptionContainsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.EmbeddedFileScrub_RemovesTheAttachmentWithTheTerm_KeepsUnrelatedOnes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenCatalogLevelAttachmentAlsoPresent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_DecomposedNeedle_RemovesPrecomposedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesOtherCombiningMarks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_DoesNotTouchUnrelatedText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_UnaccentedNeedle_DoesNotMatchAccentedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Strip_IsStillTheDefault_AndLeavesTheRevealingResidue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -99626,13 +99518,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesFormFromXfaCarrierValues",
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
@@ -100025,6 +99915,104 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Fixture_CarriesEverySecret_BeforeAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.ScrubEmbeddedFiles_RemovesEveryRoute_FromTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RemoveAllAttachments_NamesEachFile_WithSizeAndLocation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.ScrubEmbeddedFilesReversibly_RestoresEveryRoute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactText_RemovesEveryAttachment_ByDefault_EvenWithoutATermInThem",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactArea_RemovesEveryAttachment_ByDefault_AndRecordsThemForTheSafetyReport",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.AreaPassRemovals_AreReported_EvenWhenTheCopyItselfKeepsAttachments",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.RedactArea_BoolOverloadWithCarriersOff_KeepsAttachments",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Portfolio_IsRefused_BeforeAnythingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Portfolio_WithKeepAttachments_IsRedactedMemberByMember",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_TextFilesAreRedacted_OthersAreReported_AndTheResultIsNotClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_ChecksumOfARewrittenFileIsDropped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_OnAreaRedaction_ReportsEveryKeptFileAsNotChecked",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100037,132 +100025,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.SavedByteOracle_RejectsAnIntentionalCanarySurvivalMutation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesEmbeddedFile_WhenOnlyDescriptionContainsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.EmbeddedFileScrub_RemovesTheAttachmentWithTheTerm_KeepsUnrelatedOnes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenCatalogLevelAttachmentAlsoPresent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_DecomposedNeedle_RemovesPrecomposedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesOtherCombiningMarks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_DoesNotTouchUnrelatedText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_UnaccentedNeedle_DoesNotMatchAccentedWord",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Strip_IsStillTheDefault_AndLeavesTheRevealingResidue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -101576,6 +101438,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -101643,15 +101512,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::FormFieldValueRedactionTests.Guard_TheFieldValueIsReachableBeforeRedaction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheTermIsGoneFromEveryCarrierInTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103056,6 +102916,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103123,15 +102990,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::FormFieldValueRedactionTests.Guard_TheFieldValueIsReachableBeforeRedaction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheTermIsGoneFromEveryCarrierInTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104557,6 +104415,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104624,15 +104489,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::FormFieldValueRedactionTests.Guard_TheFieldValueIsReachableBeforeRedaction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheTermIsGoneFromEveryCarrierInTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -105998,6 +105854,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -106065,15 +105928,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::FormFieldValueRedactionTests.Guard_TheFieldValueIsReachableBeforeRedaction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheTermIsGoneFromEveryCarrierInTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -110832,6 +110686,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -111300,15 +111161,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112312,6 +112164,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -112780,15 +112639,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113769,6 +113619,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -114243,15 +114100,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [],
@@ -114318,8 +114166,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7288,
-    "testMethodsWithCapabilityCandidate": 4462,
+    "testMethods": 7357,
+    "testMethodsWithCapabilityCandidate": 4504,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
