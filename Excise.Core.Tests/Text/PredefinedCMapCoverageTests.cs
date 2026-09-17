@@ -8,6 +8,7 @@ using Excise.Core.Document;
 using Excise.Core.Text;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text;
 
@@ -265,9 +266,7 @@ public class PredefinedCMapCoverageTests
             // not appear in ANY uncompressed carrier, in any of the encodings
             // a PDF can restate text in.
             var saved = File.ReadAllBytes(output);
-            var haystack = Encoding.ASCII.GetString(saved)
-                + Encoding.BigEndianUnicode.GetString(saved)
-                + Encoding.UTF8.GetString(saved);
+            var haystack = SavedPdfLeakScanner.AllCarriersText(saved);
             haystack.Should().NotContain("汉字");
         }
         finally

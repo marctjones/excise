@@ -6,6 +6,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text.Segmentation;
 
@@ -40,7 +41,7 @@ public class FormXObjectRedactionTests
         doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716));
         var saved = doc.SaveToBytes();
 
-        Encoding.Latin1.GetString(saved).Should().NotContain("SECRETFORM",
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("SECRETFORM",
             "the form's redacted text must be absent from the saved bytes, not merely covered");
 
         using var re = PdfDocument.Open(saved);
@@ -67,10 +68,12 @@ public class FormXObjectRedactionTests
 
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 300, 716));
-        var saved = Encoding.Latin1.GetString(doc.SaveToBytes());
+        // #1549: the rewritten stream is Flate-encoded, so a raw byte scan is
+        // blind to it — search through the inflating scanner instead.
+        var saved = doc.SaveToBytes();
 
-        saved.Should().NotContain("INSIDEBAND", "the string in the redaction band must be removed");
-        saved.Should().Contain("OUTSIDEBAND", "the string outside the band must survive flattening");
+        SavedPdfLeakScanner.FindTerm(saved, "INSIDEBAND").Should().BeEmpty("the string in the redaction band must be removed");
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().Contain("OUTSIDEBAND", "the string outside the band must survive flattening");
     }
 
     [Fact]
@@ -93,7 +96,7 @@ public class FormXObjectRedactionTests
 
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 280, 716));
-        var saved = Encoding.Latin1.GetString(doc.SaveToBytes());
+        var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
 
         saved.Should().NotContain("NESTEDSECRET",
             "text drawn by a nested form must be removed and both orphaned forms pruned");
@@ -126,7 +129,7 @@ public class FormXObjectRedactionTests
         // pruned — its content legitimately remains for the untouched page.
         // (The text extractor doesn't recurse into forms, so page 2's Letters
         // are empty either way; the durable contract is "object preserved".)
-        Encoding.Latin1.GetString(saved).Should().Contain("SHAREDFORM",
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().Contain("SHAREDFORM",
             "a form still referenced by another page must survive the prune");
 
         using var re = PdfDocument.Open(saved);
@@ -181,7 +184,7 @@ public class FormXObjectRedactionTests
 
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).RedactArea(new PdfRectangle(400, 700, 560, 740)); // far from the form
-        var saved = Encoding.Latin1.GetString(doc.SaveToBytes());
+        var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
 
         saved.Should().Contain("CORNERONLY",
             "a form whose bbox doesn't intersect the area must be left untouched");
@@ -204,7 +207,7 @@ public class FormXObjectRedactionTests
 
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 300, 716));
-        var saved = Encoding.Latin1.GetString(doc.SaveToBytes());
+        var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
 
         saved.Should().NotContain("MATRIXTEXT",
             "the matrix-positioned form text inside the area must be removed");
@@ -228,7 +231,7 @@ public class FormXObjectRedactionTests
 
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 280, 716));
-        var saved = Encoding.Latin1.GetString(doc.SaveToBytes());
+        var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
 
         saved.Should().NotContain("FORMOVERIMAGE", "the form text is flattened and redacted");
         doc.GetPage(1).GetXObject("Im0").Should().NotBeNull("the image XObject is untouched");

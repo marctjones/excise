@@ -11,6 +11,7 @@ using System.IO;
 using System.Text;
 using System.Linq;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.App.Tests.Unit;
 
@@ -109,7 +110,7 @@ public class RedactedCopySafetyPolicyTests : IDisposable
         var report = PrepareRedactedCopy(document, pending);
         var output = Path.Combine(_tempDir, "captured-carriers-out.pdf");
         document.Save(output);
-        var combined = Encoding.Latin1.GetString(File.ReadAllBytes(output)) +
+        var combined = SavedPdfLeakScanner.AllCarriersText(File.ReadAllBytes(output)) +
                        Encoding.BigEndianUnicode.GetString(File.ReadAllBytes(output));
 
         combined.Should().NotContain("CARRIERSECRET",

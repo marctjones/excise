@@ -4,6 +4,7 @@ using Excise.Core.Document;
 using Excise.Core.Text;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text;
 
@@ -73,9 +74,7 @@ public class PredefinedToUnicodeCMapTests
             // appear in ANY uncompressed carrier, in any restatement encoding —
             // including UTF-16BE, which is exactly what these raw code bytes are.
             var saved = File.ReadAllBytes(output);
-            var haystack = Encoding.ASCII.GetString(saved)
-                + Encoding.BigEndianUnicode.GetString(saved)
-                + Encoding.UTF8.GetString(saved);
+            var haystack = SavedPdfLeakScanner.AllCarriersText(saved);
             haystack.Should().NotContain("SECRET");
         }
         finally

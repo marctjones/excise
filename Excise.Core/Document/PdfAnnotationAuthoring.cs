@@ -1366,7 +1366,7 @@ public static class PdfAnnotationAuthoring
     {
         double w = rect.Width, h = rect.Height;
 
-        var image = new PdfStream(rgbPixels);
+        var image = PdfStream.CreateCompressed(rgbPixels); // #1549: lossless
         image.SetName("Type", "XObject");
         image.SetName("Subtype", "Image");
         image.SetInt("Width", pixelWidth);

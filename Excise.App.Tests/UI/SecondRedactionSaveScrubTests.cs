@@ -9,6 +9,7 @@ using Excise.App.ViewModels;
 using Excise.App.Views;
 using Excise.Core.Document;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.App.Tests.UI;
 
@@ -147,7 +148,7 @@ public class SecondRedactionSaveScrubTests : IDisposable
         }
 
         var bytes = File.ReadAllBytes(copy2);
-        var combined = Encoding.Latin1.GetString(bytes) + Encoding.BigEndianUnicode.GetString(bytes);
+        var combined = SavedPdfLeakScanner.AllCarriersText(bytes);
 
         // A REGRESSION CHECK, NOT THE DISCRIMINATING EVIDENCE — labelled so
         // because I mutation-tested it and it has no teeth on its own.

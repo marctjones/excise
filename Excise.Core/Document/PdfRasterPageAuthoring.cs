@@ -24,7 +24,8 @@ public static class PdfRasterPageAuthoring
             throw new ArgumentException("RGB buffer must be tightly-packed RGB24 pixels.", nameof(rgb));
 
         var page = document.Pages.AddBlank(widthPoints, heightPoints);
-        var image = new PdfStream(rgb);
+        // Flate, lossless (#1549): raw RGB made a one-page flatten ~150 MB.
+        var image = PdfStream.CreateCompressed(rgb);
         image.SetName("Type", "XObject"); image.SetName("Subtype", "Image");
         image.SetInt("Width", pixelWidth); image.SetInt("Height", pixelHeight);
         image.SetName("ColorSpace", "DeviceRGB"); image.SetInt("BitsPerComponent", 8);
