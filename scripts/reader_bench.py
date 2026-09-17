@@ -114,10 +114,20 @@ def osa_se(body):
     return r.stdout.strip()
 
 
-def set_window(pid, w):
+def set_window(pid, w, timeout=10.0):
+    """A window can be on screen (CGWindowList) a moment before System Events'
+    accessibility list contains it; retry briefly instead of failing the run."""
     win = largest_window(pid)
-    osa_se(f'set position of {win} to {{{w["x"]}, {w["y"]}}}\n'
-           f'set size of {win} to {{{w["width"]}, {w["height"]}}}')
+    deadline = time.time() + timeout
+    while True:
+        try:
+            osa_se(f'set position of {win} to {{{w["x"]}, {w["y"]}}}\n'
+                   f'set size of {win} to {{{w["width"]}, {w["height"]}}}')
+            return
+        except RuntimeError:
+            if time.time() > deadline:
+                raise
+            time.sleep(0.5)
 
 
 def window_title(pid):
@@ -239,6 +249,28 @@ def ocr_acrobat_page_box(png, win):
     return (int(text) if text.isdigit() else None), text
 
 
+def collect_app_area(run_dir):
+    """Copy the app's log back next to the results, then delete its area."""
+    area = app_area(run_dir)
+    for f in list(area.glob("*.log")) + list(area.glob("*.jsonl")):
+        shutil.copyfile(f, pathlib.Path(run_dir) / f.name)
+    shutil.rmtree(area, ignore_errors=True)
+
+
+def app_area(run_dir):
+    """Where the APP under test reads and writes: its isolated HOME, its log and
+    the document copy. Never under ~/Documents: macOS protects that folder, and
+    every rebuild of the ad-hoc-signed bundle is a new app to it, so the app's
+    first file read there blocks on an "Excise would like to access files in
+    your Documents folder" prompt (2026-09-17: four launches stuck in
+    WindowSettings.Load until killed). Results stay in logs/; only the files
+    the app itself touches live here."""
+    rel = pathlib.Path(run_dir).resolve().relative_to(ROOT / "logs")
+    area = pathlib.Path("/private/tmp/excise-reader-bench") / rel
+    area.mkdir(parents=True, exist_ok=True)
+    return area
+
+
 # ----------------------------------------------------------------- sampler
 
 class Tracker:
@@ -338,13 +370,13 @@ def launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env=None):
     args = ["open", "-n", "-F"]
     if app["launch"] == "exec":
         bundle = str(pathlib.Path(excise_app).resolve())
-        home = run_dir / "home"
+        home = app_area(run_dir) / "home"
         conf = home / "Library/Application Support/Excise.App"
         conf.mkdir(parents=True, exist_ok=True)
         w = cfg["window"]
         (conf / "window.json").write_text(json.dumps(
             {"X": w["x"], "Y": w["y"], "Width": w["width"], "Height": w["height"], "IsMaximized": False}))
-        log = str(run_dir / "app.log")
+        log = str(app_area(run_dir) / "app.log")
         args += ["-a", bundle, "--env", f"HOME={home}", "--stdout", log, "--stderr", log]
         for k, v in (extra_env or {}).items():
             args += ["--env", f"{k}={v}"]
@@ -428,7 +460,7 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
     doc_copy = None
     if doc:
         # A fresh path per run: no app can restore a last page or zoom for it.
-        doc_copy = run_dir / f"{doc['id']}-{app_id}-r{repeat}-{int(time.time())}.pdf"
+        doc_copy = app_area(run_dir) / f"{doc['id']}-{app_id}-r{repeat}-{int(time.time())}.pdf"
         shutil.copyfile(ROOT / doc["path"], doc_copy)
 
     steps, failures = [], []
@@ -542,6 +574,7 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
                 pass
         time.sleep(10)
         alive_after = set(ps_table())
+        collect_app_area(run_dir)
 
     # Attribution was decided per sample by responsibility, so every process
     # ever seen is owned. Helpers that OUTLIVED the app are reported, because
