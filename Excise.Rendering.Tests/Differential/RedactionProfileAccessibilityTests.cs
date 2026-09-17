@@ -33,6 +33,15 @@ namespace Excise.Rendering.Tests.Differential;
 /// <para>⚠️ The fixture is asserted to pass BEFORE the redaction. Without
 /// that, a conformant-input assumption that quietly stopped holding would turn
 /// this into a test that cannot fail (#1527).</para>
+///
+/// <para>⚠️ <b>Boundary of the claim.</b> The fixture is tagged TEXT with no
+/// optional content. Tagged PDF plus a hidden optional-content group is
+/// UNMEASURED here, and it is the combination most likely to break: removing a
+/// hidden <c>/OC</c> span drops the marked-content ids inside it, which leaves
+/// the structure elements that referenced them dangling. "Standard keeps a
+/// tagged document conformant" is therefore asserted for the shape this
+/// fixture has, not for every tagged document. Do not widen the sentence
+/// without widening the fixture.</para>
 /// </remarks>
 public class RedactionProfileAccessibilityTests
 {

@@ -140,6 +140,13 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   **not** stripped under Standard: an image can be blacked out in one corner
   and correctly described everywhere else, and an `/Alt` is all a blind reader
   gets.
+  ⚠️ **The refusal reaches the GUI dialog through the ledger, not the return
+  value.** `Excise.App/Services/RedactionService.RedactArea` calls the `void`
+  `page.RedactArea(rect, options)` overload and discards the `RedactionReport`,
+  so the engine computed the carrier row and threw it away. The count is now
+  recorded on `PdfDocumentRedactionLedger` — the mechanism created for exactly
+  this in #1572 — and `RedactedCopySafetyPolicy` reads it, so the redacted-copy
+  dialog carries the warning. A report nobody receives is not one.
 - **Maximum could take an attachment the caller asked to keep** (#1586).
   `FileAttachment`, `Sound` and `Movie` are markup annotations, so Maximum's
   annotation strip removed the only reference to a file the caller had kept
