@@ -81255,6 +81255,34 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationPrintIntentTests.cs::AnnotationPrintIntentTests.PrintIntent_DrawsExactlyWhatSection1253PutsOnPaper",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationPrintIntentTests.cs::AnnotationPrintIntentTests.WithoutPrintIntent_TheViewerRuleIsUnchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationPrintIntentTests.cs::AnnotationPrintIntentTests.ThePrintAndViewRulesDisagreeOnThisFixture",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationPrintIntentTests.cs::AnnotationPrintIntentTests.Ghostscript_AgreesWithBothRules",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82125,42 +82153,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_CorrectUserPassword_AcceptedAndFileChecksClean",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_OwnerPassword_AcceptedWithOwnerAuthority",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_WrongPassword_Rejected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_UserPasswordOnly_NoPasswordIsStillRejected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Pdftoppm_UserPasswordOnly_NoPasswordProducesNoRendering",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -114166,8 +114158,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7358,
-    "testMethodsWithCapabilityCandidate": 4505,
+    "testMethods": 7368,
+    "testMethodsWithCapabilityCandidate": 4510,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
