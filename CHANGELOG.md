@@ -215,6 +215,73 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   Preferences → Printing setting (shrink oversized, the default; fit to page;
   actual size). Known limitation: pages are rasterised by Apple's renderer.
   Other platforms keep an honest explanation (Windows is #1546).
+- **`unredact` covers every redaction failure mode the matrix names** (#1592,
+  #1606, #1607, #1608, #1609). `tests/unredaction-failure-modes.json` is the
+  list — 20 modes, each with the channel that recovers it, the evidence that
+  the channel works, and, while any remained, the issue tracking the gap. It
+  went from 10 covered / 6 gap to **15 covered / 5 partial / 0 gap**, and the
+  gate that reads it DERIVES the channel list from the code and checks both
+  directions: a row may not name a channel that does not exist, and a channel
+  may not exist without a row.
+
+  Five channels were added. **Prior revision**: an incremental update (§7.5.6)
+  leaves the pre-redaction document whole at the front of the file, and
+  truncating at an earlier `%%EOF` yields it. **Thumbnail and attachment**:
+  `/Thumb` holds a pre-rendered picture of the page from before the redaction,
+  and an embedded file is a whole document a page redaction never touches.
+  **Mark region**: text still inside an annotation-derived mark, read from the
+  page instead of from draw order. **Image layer**: an original image left
+  unreferenced by a replace-rather-than-remove edit, or hidden behind a fully
+  transparent `/SMask`. **XFA**: field values in the `/AcroForm /XFA` datasets
+  packet — the read mirror of a carrier `XfaXmlCarrier` has scrubbed for some
+  time, so the audit could not see what the scrubber removes.
+
+  ⚠️ Two of these were found because a gate caught excise overstating itself.
+  The tier-A bench failed on `redact-annotation-unapplied`, which the registry
+  called covered on the strength of a test that only asserted the MARK was
+  detected. And `Tr` — the §9.3.6 text render mode — was parsed by
+  `ContentStreamWalker` and **discarded** as "write-only state", so no sink
+  could tell a painted glyph from an invisible one. Text drawn with `3 Tr` is
+  fully extractable and never appears on the page; it is how every OCR layer in
+  every searchable-image PDF is written. The walker now carries render mode
+  through the `q`/`Q` snapshot to its sinks and `HiddenTextDetector` gained a
+  fourth pairing for text hidden by render mode rather than by anything drawn
+  over it.
+
+  The dangerous shape closed here: a covering box drawn as an **annotation**,
+  or inside a **Form XObject**, produced a mark the report graded
+  `not-recovered` — reading as *this redaction held* while mutool read the text
+  underneath. Silence would have been better. Text inside a Form XObject was
+  never the problem (`TextExtractor` already recurses, so `page.Letters` has
+  it); finding the MARK was, and `RedactionMarkDetector` now descends into
+  forms composing the `/Matrix` with the CTM at the `Do`.
+- **`unredact` says what could fit each redaction that HELD** (#1589) —
+  character range from the font's narrowest and widest glyphs, pattern classes
+  that fit (SSN, phone, date, amount, each tested by MEASURING a sample, since
+  in a proportional font "ten digits" and "ten letters" are very different
+  widths), dictionary candidates ranked by width error, and bits leaked as
+  log2 of the admissible set, with plain wording — "fits exactly", "narrowed",
+  "wide open".
+
+  It is measurement, never recovery: even at one surviving candidate the output
+  is "one candidate fits, 0 bits", never "the answer is X", and the finding is
+  a candidate rather than a certainty. A mark whose text came back carries no
+  fit analysis at all, so a candidate list never sits beside a recovered value
+  inviting them to be read as competing answers.
+
+  ⚠️ The first cut treated a mark's width as an equality and reported "0 of 5
+  dictionary words fit" on a fixture whose answer was in the list. A redaction
+  box is drawn AROUND the run it covers, so its width is an upper bound on the
+  removed text. The bound is now asymmetric — a candidate may be narrower by a
+  padding allowance but never wider — because the strict reading silently
+  rejects the right answer and reports "nothing fits", which UNDERSTATES the
+  leak.
+- **A tier-A unredaction bench** (#1590), generated at run time with exact
+  ground truth, whose axes are DERIVED from the failure-mode registry so a mode
+  cannot be silently omitted. Modes with no channel get an axis too: that zero
+  distinguishes "measured and recovered nothing" from "never looked", and only
+  an axis that exists can tell them apart. Modes it cannot yet pose are reported
+  as bench holes rather than as zero scores.
 - **`unredact` has ONE recovery model, and it reports coverage rather than a
   finding count** (#1587). Every channel now produces the same record — recovered
   text or candidate set, a confidence class (`certain` / `candidate` /

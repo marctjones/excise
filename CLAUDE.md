@@ -1147,7 +1147,13 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 │       ├── RecoveryScanner.cs      # runs the document-only channels into one report
 │       ├── MarkedContentTextRecovery.cs  # inline BDC /ActualText (#1182/#1185)
 │       ├── CoveredContentRecovery.cs     # image + vector surviving under a mark
-│       └── FormFieldValueRecovery.cs     # /V behind a blanked appearance
+│       ├── FormFieldValueRecovery.cs     # /V behind a blanked appearance
+│       ├── MarkRegionTextRecovery.cs     # text inside an annotation/form mark (#1606)
+│       ├── PriorRevisionRecovery.cs      # the pre-redaction revision, still in the file
+│       ├── ResidualArtefactRecovery.cs   # /Thumb and embedded files
+│       ├── ImageLayerRecovery.cs         # orphaned originals, fully masked images (#1608)
+│       ├── XfaValueRecovery.cs           # /AcroForm /XFA datasets (#1609)
+│       └── RedactionFitAnalyzer.cs       # what could fit a mark that HELD (#1589)
 ├── Content/
 │   ├── ContentStreamWalker.cs      # ← THE content-stream state machine (see below)
 │   ├── ContentStreamParser.cs      # a SINK: operator bounds + decoded text
