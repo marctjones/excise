@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "1920416bb6504c0565cbd1b143bc1fff7a9b77989fd7ea2a9a669c755dcfc7ef",
+  "sourceFingerprint": "858cecb8c8bf7cbbe9d1a7088371d5ec2766369f304abc5eec9626a1f337790a",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -1579,6 +1579,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Document/PdfXfaDetection.cs",
+      "path": "Excise.Core/Document/PdfXfaDetection.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -7756,6 +7766,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/ViewModels/MainWindowViewModel.Xfa.cs",
+      "path": "Excise.App/ViewModels/MainWindowViewModel.Xfa.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "kind": "source-file",
@@ -9094,6 +9114,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.LookAhead.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.LookAhead.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Avalonia/Controls/PdfViewerControl.SinglePagePlaceholder.cs",
       "path": "Excise.Avalonia/Controls/PdfViewerControl.SinglePagePlaceholder.cs",
       "kind": "source-file",
@@ -9219,7 +9249,7 @@
     }
   ],
   "summary": {
-    "records": 445,
+    "records": 448,
     "facets": {
       "annotations": 11,
       "content-and-graphics": 19,
@@ -9227,7 +9257,7 @@
       "fonts": 30,
       "forms": 8,
       "images": 29,
-      "product-integration-general": 251,
+      "product-integration-general": 254,
       "redaction": 52,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 20,
@@ -9306,7 +9336,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 20,
       "pdfe.product.security.signature-and-permission-warning:write": 20
     },
-    "fallbackRecords": 251,
+    "fallbackRecords": 254,
     "allRecordsMapped": true
   }
 }

@@ -101524,6 +101524,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.AcroFormWithoutXfa_IsNone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.XfaWithUsableAcroFormFields_IsStatic",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NeedsRenderingInsideAcroForm_IsNotTheSignal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -101672,42 +101700,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheTermIsGoneFromEveryCarrierInTheSavedFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheRestOfTheFieldValueSurvives",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheCollateralIsExactlyTheTermAndNothingElse",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.ARedactionThatMatchesNothingLeavesTheValueAlone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillUnderscores_MatchesMeaningfulPrefix",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103012,6 +103004,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.AcroFormWithoutXfa_IsNone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.XfaWithUsableAcroFormFields_IsStatic",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NeedsRenderingInsideAcroForm_IsNotTheSignal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103160,42 +103180,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheTermIsGoneFromEveryCarrierInTheSavedFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheRestOfTheFieldValueSurvives",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheCollateralIsExactlyTheTermAndNothingElse",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.ARedactionThatMatchesNothingLeavesTheValueAlone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillUnderscores_MatchesMeaningfulPrefix",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104521,6 +104505,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.AcroFormWithoutXfa_IsNone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.XfaWithUsableAcroFormFields_IsStatic",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NeedsRenderingInsideAcroForm_IsNotTheSignal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104669,42 +104681,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheTermIsGoneFromEveryCarrierInTheSavedFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheRestOfTheFieldValueSurvives",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheCollateralIsExactlyTheTermAndNothingElse",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.ARedactionThatMatchesNothingLeavesTheValueAlone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillUnderscores_MatchesMeaningfulPrefix",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -105970,6 +105946,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.AcroFormWithoutXfa_IsNone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.XfaWithUsableAcroFormFields_IsStatic",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NeedsRenderingInsideAcroForm_IsNotTheSignal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -106118,42 +106122,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheTermIsGoneFromEveryCarrierInTheSavedFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheRestOfTheFieldValueSurvives",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheCollateralIsExactlyTheTermAndNothingElse",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.ARedactionThatMatchesNothingLeavesTheValueAlone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/LetterFinderTests.cs::LetterFinderTests.Find_FormFieldWithFillUnderscores_MatchesMeaningfulPrefix",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -114420,8 +114388,8 @@
     "gradeImplemented": 199,
     "gradeVerified": 681,
     "gradeUnknown": 19,
-    "testMethods": 7043,
-    "testMethodsWithCapabilityCandidate": 4383,
+    "testMethods": 7087,
+    "testMethodsWithCapabilityCandidate": 4395,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
