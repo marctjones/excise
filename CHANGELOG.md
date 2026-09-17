@@ -228,7 +228,12 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   title and bookmark titles. Comparison ignores case and whitespace. So a filled
   form whose widgets show their values, or a titled document, reports nothing.
   A field whose appearance was redacted while `/V` still holds the value is a
-  hidden finding. Hidden findings are ranked by how close they sit to a
+  hidden finding. For a carrier its own widget owns (`/V`, `/DV`, `/RV`,
+  `/Opt` export values, `/MK` captions), "visible" means *that widget's*
+  appearance shows it, not that the text appears somewhere in the document: a
+  redacted field whose value also occurs in a page header is still reported.
+  An annotation's normal appearance is visible exactly when the annotation is
+  not flagged hidden. Hidden findings are ranked by how close they sit to a
   redaction mark (a dark filled box, a `/Redact` annotation, covered text), and
   the output says "overlaps redaction mark" or "page has redaction marks".
   Duplicates do not set exit code 3 and are listed only with `--carriers all`

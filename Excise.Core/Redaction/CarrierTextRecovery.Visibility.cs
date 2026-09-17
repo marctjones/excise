@@ -22,6 +22,9 @@ public static partial class CarrierTextRecovery
     /// covers), the normal appearance of every annotation and widget that is
     /// not flagged hidden, FreeText contents, the /Info and XMP titles, and the
     /// outline titles. Comparison ignores case and all whitespace.
+    /// A carrier a widget owns (<see cref="CarrierText.VisibleScope"/>) is
+    /// compared against that widget's own appearance instead: a redacted field
+    /// whose value is also printed elsewhere is still hidden.
     /// <para>Known gap: text drawn in render mode 3 (invisible) counts as
     /// visible here, because the walker does not tag a letter with its render
     /// mode. A carrier that restates invisible OCR text is therefore classed a
@@ -47,7 +50,8 @@ public static partial class CarrierTextRecovery
         var classified = new List<CarrierText>(found.Count);
         foreach (var f in found)
         {
-            var isVisible = f.Kind == CarrierFindingKind.Text && IsVisible(f.Text, visible);
+            var isVisible = f.Kind == CarrierFindingKind.Text
+                            && IsVisible(f.Text, f.VisibleScope is null ? visible : ScopeNormalized(f.VisibleScope));
             classified.Add(f with
             {
                 VisibleElsewhere = isVisible,
@@ -70,6 +74,9 @@ public static partial class CarrierTextRecovery
         var needle = NormalizeForVisibility(text);
         return needle.Length > 0 && visibleNormalized.Contains(needle, StringComparison.Ordinal);
     }
+
+    private static string ScopeNormalized(string scope) =>
+        string.Join("\u0000", scope.Split('\u0000').Select(NormalizeForVisibility));
 
     internal static string NormalizeForVisibility(string text)
     {

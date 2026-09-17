@@ -92,6 +92,14 @@ public static partial class CarrierTextRecovery
 
         /// <summary>The page-space rectangle of the owning annotation or widget, when there is one.</summary>
         public PdfRectangle? Area { get; init; }
+
+        /// <summary>
+        /// For a carrier owned by a widget, the text that widget itself paints:
+        /// the finding is visible only if it appears THERE, not merely somewhere
+        /// in the document (a redacted field whose value also occurs in a page
+        /// header is still a leak). Null = compare against the whole document.
+        /// </summary>
+        internal string? VisibleScope { get; init; }
     }
 
     /// <summary>
@@ -225,16 +233,18 @@ public static partial class CarrierTextRecovery
         public Collector Nested(string label, int hostPage, bool deeper) =>
             new(_found, _seen, _budget, Token, Prefix + label + " > ", deeper ? Depth + 1 : Depth, hostPage);
 
-        public void Text(string carrier, string? text, int page, int obj = 0, string? location = null, PdfRectangle? area = null)
+        public void Text(string carrier, string? text, int page, int obj = 0, string? location = null, PdfRectangle? area = null,
+            string? visibleScope = null)
         {
             if (string.IsNullOrWhiteSpace(text)) return;
-            Add(carrier, Clip(text.Trim()), page, obj, location, CarrierFindingKind.Text, area);
+            Add(carrier, Clip(text.Trim()), page, obj, location, CarrierFindingKind.Text, area, visibleScope);
         }
 
         public void Presence(string carrier, string description, int page, int obj = 0, string? location = null, PdfRectangle? area = null) =>
-            Add(carrier, description, page, obj, location, CarrierFindingKind.Presence, area);
+            Add(carrier, description, page, obj, location, CarrierFindingKind.Presence, area, null);
 
-        private void Add(string carrier, string text, int page, int obj, string? location, CarrierFindingKind kind, PdfRectangle? area)
+        private void Add(string carrier, string text, int page, int obj, string? location, CarrierFindingKind kind, PdfRectangle? area,
+            string? visibleScope)
         {
             Token.ThrowIfCancellationRequested();
             if (_budget.Exhausted) return;
@@ -266,6 +276,8 @@ public static partial class CarrierTextRecovery
                 Kind = kind,
                 Location = effectiveLocation,
                 Area = Prefix.Length > 0 ? null : area,
+                // A nested document's widgets are not visible in THIS one.
+                VisibleScope = Prefix.Length > 0 ? null : visibleScope,
             });
         }
 
@@ -468,7 +480,8 @@ public static partial class CarrierTextRecovery
             if (entry is PdfStream single)
             {
                 ReportAppearanceStream(doc, page, single, defaultResources, c, pageNumber, streamObj != 0 ? streamObj : annotObj,
-                    $"{owner} /AP /{mode}", subtype is null ? null : $"/{subtype}", area);
+                    $"{owner} /AP /{mode}", subtype is null ? null : $"/{subtype}", area,
+                    mode == "N" ? AppearanceScope(doc, annot) : null);
             }
             else if (entry is PdfDictionary states)
             {
@@ -477,7 +490,8 @@ public static partial class CarrierTextRecovery
                 {
                     if (Deref(doc, stateValue, out var stateObj) is PdfStream stateStream)
                         ReportAppearanceStream(doc, page, stateStream, defaultResources, c, pageNumber,
-                            stateObj != 0 ? stateObj : annotObj, $"{owner} /AP /{mode}", $"state /{stateName.Value}", area);
+                            stateObj != 0 ? stateObj : annotObj, $"{owner} /AP /{mode}", $"state /{stateName.Value}", area,
+                            mode == "N" && annot.GetNameOrNull("AS") == stateName.Value ? AppearanceScope(doc, annot) : null);
                 }
             }
         }
@@ -485,11 +499,17 @@ public static partial class CarrierTextRecovery
 
     private static void ReportAppearanceStream(
         PdfDocument doc, PdfPage page, PdfStream stream, PdfDictionary? defaultResources,
-        Collector c, int pageNumber, int objNum, string carrier, string? location, PdfRectangle? area)
+        Collector c, int pageNumber, int objNum, string carrier, string? location, PdfRectangle? area, string? scope)
     {
         var text = StreamPaintedText(doc, page, stream, defaultResources, c.Token);
-        c.Text(carrier, text, pageNumber, objNum, location, area);
+        // A painted normal appearance is visible exactly when its annotation is.
+        c.Text(carrier, text, pageNumber, objNum, location, area,
+            scope is null ? null : scope.Length > 0 ? text : "");
     }
+
+    /// <summary>"" when the annotation is not shown (hidden/NoView); a non-empty marker when it is.</summary>
+    private static string AppearanceScope(PdfDocument doc, PdfDictionary annot) =>
+        IsViewable(doc, annot) ? "shown" : "";
 
     private static string? StreamPaintedText(
         PdfDocument doc, PdfPage page, PdfStream stream, PdfDictionary? fallbackResources, CancellationToken ct)

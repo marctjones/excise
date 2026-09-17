@@ -123,6 +123,19 @@ public class CarrierTextRecoveryTrapTests
     }
 
     [Fact]
+    public void RedactedFieldValue_AlsoPrintedElsewhereOnThePage_IsStillHidden()
+    {
+        // The page draws "Case file, public summary". The field's own widget
+        // was redacted, so its /V "Case" is a leak even though the same word
+        // appears in the page text: visibility of a widget-owned carrier is
+        // judged against that widget's appearance, not the whole document.
+        var hit = Scan(CarrierTrapFixtures.FilledForm("Case", "XXXX", blackBoxOverField: true))
+            .Single(f => f.Carrier == "acroform /V");
+        hit.VisibleElsewhere.Should().BeFalse();
+        hit.NearRedaction.Should().Be(CarrierTextRecovery.CarrierRedactionProximity.Overlapping);
+    }
+
+    [Fact]
     public void TitledDocument_TitleAndBookmark_AreVisibleDuplicatesOnly()
     {
         var findings = Scan(CarrierTrapFixtures.Get("outline-title").Build(false))

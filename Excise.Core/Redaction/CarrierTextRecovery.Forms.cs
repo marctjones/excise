@@ -47,14 +47,21 @@ public static partial class CarrierTextRecovery
             var area = RectOf(doc, node) ?? KidsArea(doc, node);
             index.Fields.Add((node, objNum, page, name));
 
+            // What this field's own widgets paint. A value is visible only if
+            // its widget shows it — a redacted appearance over an unredacted
+            // value is the leak, even when the same word is printed elsewhere.
+            var ownAppearance = OwnWidgetAppearanceText(doc, node, dr, pageOf, c.Token);
+
             foreach (var key in FieldValueKeys)
-                ReportFieldValue(doc, c, node.GetOptional(key), $"acroform /{key}", page, objNum, location, area);
+                ReportFieldValue(doc, c, node.GetOptional(key), $"acroform /{key}", page, objNum, location, area, ownAppearance);
+            // A tooltip usually restates the label printed beside the field:
+            // compared against the whole document.
             c.Text("acroform /TU", ReadText(doc, node, "TU"), page, objNum, location, area);
-            ReportOptions(doc, c, node, page, objNum, location, area);
+            ReportOptions(doc, c, node, page, objNum, location, area, ownAppearance);
 
             if (doc.Resolve(node.GetOptional("MK") ?? PdfNull.Instance) is PdfDictionary mk)
                 foreach (var key in MkCaptionKeys)
-                    c.Text($"widget /MK /{key}", ReadText(doc, mk, key), page, objNum, location, area);
+                    c.Text($"widget /MK /{key}", ReadText(doc, mk, key), page, objNum, location, area, ownAppearance);
 
             // A widget that no page lists in /Annots still carries an appearance.
             if (node.GetNameOrNull("Subtype") == "Widget" && index.AnnotationsWithAppearanceScanned.Add(node)
@@ -71,24 +78,52 @@ public static partial class CarrierTextRecovery
 
     private static void ReportFieldValue(
         PdfDocument doc, Collector c, PdfObject? value, string carrier, int page, int objNum, string? location,
-        PdfRectangle? area)
+        PdfRectangle? area, string scope)
     {
         switch (Deref(doc, value, out _))
         {
             case PdfString s:
-                c.Text(carrier, s.Value, page, objNum, location, area);
+                c.Text(carrier, s.Value, page, objNum, location, area, scope);
                 break;
             case PdfStream st:
-                c.Text(carrier, DecodeTextBytes(SafeDecoded(st)), page, objNum, location, area);
+                c.Text(carrier, DecodeTextBytes(SafeDecoded(st)), page, objNum, location, area, scope);
                 break;
             case PdfName n when !TrivialStateNames.Contains(n.Value):
+                // A checkbox/radio export name is a state, not painted text:
+                // the whole document decides.
                 c.Text(carrier + " (state name)", n.Value, page, objNum, location, area);
                 break;
             case PdfArray arr:
                 foreach (var item in arr)
-                    ReportFieldValue(doc, c, item, carrier, page, objNum, location, area);
+                    ReportFieldValue(doc, c, item, carrier, page, objNum, location, area, scope);
                 break;
         }
+    }
+
+    /// <summary>
+    /// The text painted by a field's own widgets: the node itself when it is a
+    /// merged field/widget, and its widget kids. Only viewable widgets count.
+    /// </summary>
+    private static string OwnWidgetAppearanceText(
+        PdfDocument doc, PdfDictionary node, PdfDictionary? dr, Dictionary<PdfDictionary, int> pageOf, CancellationToken ct)
+    {
+        if (doc.PageCount == 0) return "";
+        var widgets = new List<PdfDictionary>();
+        if (node.ContainsKey("AP") || node.GetNameOrNull("Subtype") == "Widget") widgets.Add(node);
+        if (doc.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
+            foreach (var k in kids)
+                if (doc.Resolve(k) is PdfDictionary kid && (kid.ContainsKey("AP") || kid.GetNameOrNull("Subtype") == "Widget"))
+                    widgets.Add(kid);
+
+        var parts = new List<string>();
+        foreach (var w in widgets)
+        {
+            if (!IsViewable(doc, w)) continue;
+            var p = PageOf(doc, w, pageOf);
+            var text = NormalAppearanceText(doc, doc.GetPage(p > 0 ? p : 1), w, dr, ct);
+            if (!string.IsNullOrEmpty(text)) parts.Add(text);
+        }
+        return string.Join("\u0000", parts);
     }
 
     /// <summary>
@@ -115,7 +150,8 @@ public static partial class CarrierTextRecovery
     /// never appears on the page.
     /// </summary>
     private static void ReportOptions(
-        PdfDocument doc, Collector c, PdfDictionary node, int page, int objNum, string? location, PdfRectangle? area)
+        PdfDocument doc, Collector c, PdfDictionary node, int page, int objNum, string? location, PdfRectangle? area,
+        string ownAppearance)
     {
         if (Deref(doc, node.GetOptional("Opt"), out _) is not PdfArray opts) return;
         foreach (var entry in opts)
@@ -127,7 +163,7 @@ public static partial class CarrierTextRecovery
                     break;
                 case PdfArray pair:
                     if (pair.Count > 0)
-                        c.Text("acroform /Opt export value", ObjectText(doc, pair[0]), page, objNum, location, area);
+                        c.Text("acroform /Opt export value", ObjectText(doc, pair[0]), page, objNum, location, area, ownAppearance);
                     if (pair.Count > 1)
                         c.Text("acroform /Opt display value", ObjectText(doc, pair[1]), page, objNum, location, area);
                     break;
