@@ -174,6 +174,16 @@ def steps_from_samples(samples):
     return rows
 
 
+def first_exception(path):
+    try:
+        for line in path.read_text(errors="replace").splitlines():
+            if "Unhandled exception" in line:
+                return line.strip()
+    except OSError:
+        pass
+    return None
+
+
 def collect_run(directory):
     """One (scenario, repeat) launch directory -> one manifest entry."""
     steps = read_steps(directory / "steps.jsonl")
@@ -243,12 +253,17 @@ def collect_run(directory):
         })
 
     scenario = result.get("scenario") or steps[0].get("scenario")
+    # A runner launch with a journal but no result file did not finish: the
+    # app died mid-scenario. Its partial rows are real, but "0 failures" is not.
+    crashed = runner_present and not result_path.exists()
     return {
         "scenario": scenario,
         "runnerPresent": runner_present,
         "repeat": result.get("repeat", steps[0].get("repeat", 1)),
         "directory": str(directory),
-        "failures": result.get("failures", sum(1 for s in merged if not s["ok"])),
+        "failures": result.get("failures", sum(1 for s in merged if not s["ok"]) + (1 if crashed else 0)),
+        "exitedWithoutResult": crashed,
+        "appException": first_exception(directory / "app.log") if crashed else None,
         "boundariesSampled": sum(1 for s in merged if s["outerSampled"]),
         "boundaries": len(merged),
         "runtimeMode": (result.get("configuration") or {}).get("runtimeMode"),
@@ -806,6 +821,11 @@ def main():
             lines += [f"_{why}_", ""]
 
         failures = sum(r["failures"] for r in group)
+        for r in group:
+            if r.get("exitedWithoutResult"):
+                lines += [f"> 🚨 **{Path(r['directory']).name}: the app exited before the scenario finished** "
+                          f"(no scenario-result.json). {r.get('appException') or 'No unhandled exception in app.log.'} "
+                          "Rows after the last one below were never measured.", ""]
         unsampled = sum(r["boundaries"] - r["boundariesSampled"] for r in group)
         lines.append(
             f"{len(group)} run(s), {failures} step failure(s), "
@@ -915,6 +935,8 @@ def main():
               f"{'UNKNOWN' if value is None else fmt(value) + ' ' + unit} "
               f"({entry.get('from', 'UNKNOWN')})")
     for run in measured_runs:
+        if run.get("exitedWithoutResult"):
+            print(f"!! {run['scenario']}: app exited without a result: {run.get('appException')}")
         warning = never_rendered(run)
         if warning:
             print(f"!! {run['scenario']}: {warning}")

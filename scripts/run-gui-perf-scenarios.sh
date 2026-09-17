@@ -473,6 +473,17 @@ PYEOF
     echo "   scenario error:"; sed 's/^/     /' "$dir/SCENARIO_ERROR.txt"
     return 1
   fi
+  # The runner writes scenario-result.json as its last act. An app that DIED
+  # mid-scenario (an unhandled exception ends the process; nothing is left to
+  # kill) writes neither that nor SCENARIO_ERROR.txt, and until 2026-09-17 such
+  # a launch counted as clean: both multi-tabs scenarios crashed on their
+  # second open and the run still exited 0.
+  if [ "$mode" = "runner" ] && [ ! -f "$dir/scenario-result.json" ]; then
+    echo "   APP EXITED WITHOUT A RESULT (crash?) — last lines of app.log:" >&2
+    grep -m1 -A3 "Unhandled exception" "$dir/app.log" 2>/dev/null | sed 's/^/     /' >&2
+    echo "exited-without-result" >> "$dir/notes.txt"
+    return 1
+  fi
   return 0
 }
 
