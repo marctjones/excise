@@ -1947,12 +1947,30 @@ namespace Excise.Core.Text.Segmentation
     public static class CarrierTextRecovery
     {
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierText> Scan(Excise.Core.Document.PdfDocument doc) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierText> Scan(Excise.Core.Document.PdfDocument doc, System.Threading.CancellationToken cancellationToken) { }
+        public enum CarrierFindingKind
+        {
+            Text = 0,
+            Presence = 1,
+        }
+        public enum CarrierRedactionProximity
+        {
+            None = 0,
+            SamePage = 1,
+            Overlapping = 2,
+        }
         public readonly struct CarrierText : System.IEquatable<Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierText>
         {
-            public CarrierText(string Carrier, string Text, int PageNumber) { }
+            public CarrierText(string Carrier, string Text, int PageNumber, int ObjectNumber = 0) { }
+            public Excise.Core.Document.PdfRectangle? Area { get; init; }
             public string Carrier { get; init; }
+            public Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierFindingKind Kind { get; init; }
+            public string? Location { get; init; }
+            public Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierRedactionProximity NearRedaction { get; init; }
+            public int ObjectNumber { get; init; }
             public int PageNumber { get; init; }
             public string Text { get; init; }
+            public bool VisibleElsewhere { get; init; }
         }
     }
     public enum GlyphOverlapType

@@ -119,6 +119,15 @@ public partial class PdfDocument : IDisposable
     internal HashSet<int> ComputeReachableObjects()
         => _objectStore.ComputeReachableObjects(Trailer.Values);
 
+    /// <summary>Object numbers the cross-reference table marks in use (snapshot).</summary>
+    internal int[] SnapshotInUseObjectNumbers() => _objectStore.SnapshotInUseObjectNumbers();
+
+    /// <summary>
+    /// The bytes this document was opened from, or null (not seekable, created
+    /// in memory, or larger than <paramref name="maxBytes"/>).
+    /// </summary>
+    internal byte[]? TryReadSourceBytes(long maxBytes) => _objectStore.TryReadSourceBytes(maxBytes);
+
     /// <summary>
     /// Every XMP <c>/Metadata</c> stream reachable in the document, not just
     /// the catalog's. §14.3.2 permits a <c>/Metadata</c> stream on ANY object

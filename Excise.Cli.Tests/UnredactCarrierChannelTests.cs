@@ -167,4 +167,161 @@ public class UnredactCarrierChannelTests
         }
         finally { File.Delete(pdf); File.Delete(dict); }
     }
+
+    private static UnredactCommandOutcome RunHandlerOn(byte[] pdfBytes, out string path, bool all = false)
+    {
+        path = Path.Combine(Path.GetTempPath(), $"unredact-trap-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, pdfBytes);
+        return UnredactCommandHandler.Execute(
+            new UnredactCommandInput(path, "certain", null, 0.5, 200, UseOcr: false, NoCorroboration: false,
+                IncludeVisibleCarriers: all),
+            TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public void Handler_TitledDocument_ReportsNothingByDefault_AndTheTitleUnderCarriersAll()
+    {
+        var bytes = Excise.TestSupport.CarrierTrapFixtures.WithInfo("<< /Title (Quarterly Report) >>");
+        var byDefault = RunHandlerOn(bytes, out var pdf);
+        try
+        {
+            byDefault.ExitCode.Should().Be(0, "a document title is visible, not a leak");
+            byDefault.Report!.Certain.Should().BeEmpty();
+            byDefault.Report.VisibleDuplicates.Should().BeNull("the duplicates list exists only with --carriers all");
+
+            var all = RunHandlerOn(bytes, out var pdf2, all: true);
+            File.Delete(pdf2);
+            all.ExitCode.Should().Be(0, "duplicates never set the certain exit code");
+            all.Report!.VisibleDuplicates!.Should().ContainSingle()
+                .Which.HiddenBy.Should().Be("/Info /Title");
+
+            using var json = new StringWriter();
+            UnredactCommandOutput.Write(all, json: true, json, new StringWriter());
+            using var parsed = System.Text.Json.JsonDocument.Parse(json.ToString());
+            parsed.RootElement.GetProperty("visibleDuplicates")[0].GetProperty("text").GetString()
+                .Should().Be("Quarterly Report");
+
+            using var human = new StringWriter();
+            UnredactCommandOutput.Write(all, json: false, human, new StringWriter());
+            human.ToString().Should().Contain("VISIBLE DUPLICATES").And.Contain("Quarterly Report");
+        }
+        finally { File.Delete(pdf); }
+    }
+
+    [Fact]
+    public void Handler_FilledFormMatchingItsAppearance_ReportsNothingByDefault()
+    {
+        var outcome = RunHandlerOn(
+            Excise.TestSupport.CarrierTrapFixtures.FilledForm("Jane Q Public", "Jane Q Public", blackBoxOverField: false),
+            out var pdf);
+        try
+        {
+            outcome.ExitCode.Should().Be(0);
+            outcome.Report!.Certain.Should().BeEmpty();
+        }
+        finally { File.Delete(pdf); }
+    }
+
+    [Fact]
+    public void Handler_RedactedAppearanceOverUnredactedValue_IsAHiddenFindingNextToTheMark()
+    {
+        var outcome = RunHandlerOn(
+            Excise.TestSupport.CarrierTrapFixtures.FilledForm("Jane Q Public", "XXXXXXXXXX", blackBoxOverField: true),
+            out var pdf);
+        try
+        {
+            outcome.ExitCode.Should().Be(3);
+            var first = outcome.Report!.Certain.Should().ContainSingle().Subject;
+            first.Text.Should().Be("Jane Q Public");
+            first.Proximity.Should().Be("overlaps redaction mark");
+
+            using var human = new StringWriter();
+            UnredactCommandOutput.Write(outcome, json: false, human, new StringWriter());
+            human.ToString().Should().Contain("[acroform /V] [overlaps redaction mark]: \"Jane Q Public\"");
+        }
+        finally { File.Delete(pdf); }
+    }
+
+    [Fact]
+    public void Handler_FormFieldCarrier_NamesObjectAndField_InJsonAndHuman()
+    {
+        var trap = Excise.TestSupport.CarrierTrapFixtures.Get("acroform-v");
+        var outcome = RunHandlerOn(trap.Build(false), out var pdf);
+        try
+        {
+            outcome.ExitCode.Should().Be(3);
+            var finding = outcome.Report!.Certain.Single(f => f.Text == trap.Token);
+            finding.HiddenBy.Should().Be("acroform /V");
+            finding.Object.Should().Be(6);
+            finding.Location.Should().Be("field 'name'");
+            finding.Page.Should().Be(1);
+
+            using var json = new StringWriter();
+            UnredactCommandOutput.Write(outcome, json: true, json, new StringWriter());
+            using (var parsed = System.Text.Json.JsonDocument.Parse(json.ToString()))
+            {
+                var certain = parsed.RootElement.GetProperty("certain")[0];
+                certain.GetProperty("object").GetInt32().Should().Be(6);
+                certain.GetProperty("location").GetString().Should().Be("field 'name'");
+            }
+
+            using var human = new StringWriter();
+            UnredactCommandOutput.Write(outcome, json: false, human, new StringWriter());
+            human.ToString().Should().Contain($"page 1 obj 6 (field 'name') [acroform /V]: \"{trap.Token}\"");
+            human.ToString().Should().NotContain("(0,0)", "a carrier has no page position to print");
+        }
+        finally { File.Delete(pdf); }
+    }
+
+    [Fact]
+    public void Handler_OpaqueAttachment_IsListedAsPresent_NotAsRecoveredText()
+    {
+        var trap = Excise.TestSupport.CarrierTrapFixtures.Get("attachment-opaque");
+        var outcome = RunHandlerOn(trap.Build(false), out var pdf);
+        try
+        {
+            // The attachment's NAME is text and is reported; its bytes are not decoded.
+            outcome.Report!.Certain.Should().NotContain(f => f.Text.Contains(trap.Token));
+            outcome.Report.Certain.Should().Contain(f => f.Text == "blob.bin");
+            outcome.Report.Present!.Should().ContainSingle()
+                .Which.Carrier.Should().Be("attachment payload (opaque)");
+
+            using var human = new StringWriter();
+            UnredactCommandOutput.Write(outcome, json: false, human, new StringWriter());
+            human.ToString().Should().Contain("PRESENT").And.Contain("blob.bin");
+
+            using var json = new StringWriter();
+            UnredactCommandOutput.Write(outcome, json: true, json, new StringWriter());
+            using var parsed = System.Text.Json.JsonDocument.Parse(json.ToString());
+            parsed.RootElement.GetProperty("present")[0].GetProperty("carrier").GetString()
+                .Should().Be("attachment payload (opaque)");
+        }
+        finally { File.Delete(pdf); }
+    }
+
+    [Fact]
+    public void Handler_PresenceOnly_DoesNotSetTheCertainExitCode()
+    {
+        var outcome = RunHandlerOn(Excise.TestSupport.CarrierTrapFixtures.Get("page-thumbnail").Build(false), out var pdf);
+        try
+        {
+            outcome.Report!.Certain.Should().BeEmpty();
+            outcome.Report.Present!.Should().ContainSingle().Which.Carrier.Should().Be("page /Thumb");
+            outcome.ExitCode.Should().Be(0, "present-but-undecoded content is not recovered text");
+        }
+        finally { File.Delete(pdf); }
+    }
+
+    [Fact]
+    public void Handler_CleanControl_ReportsNothingAndOmitsThePresentList()
+    {
+        var outcome = RunHandlerOn(Excise.TestSupport.CarrierTrapFixtures.Clean(), out var pdf);
+        try
+        {
+            outcome.ExitCode.Should().Be(0);
+            outcome.Report!.Certain.Should().BeEmpty();
+            outcome.Report.Present.Should().BeNull("an empty list is omitted, keeping the pre-existing JSON shape");
+        }
+        finally { File.Delete(pdf); }
+    }
 }

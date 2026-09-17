@@ -25,12 +25,28 @@ internal static class UnredactCommandOutput
             WriteHuman(report, output);
     }
 
+    private static string CarrierLine(UnredactCertainFinding finding) =>
+        $"  {Where(finding.Page, finding.Object, finding.Location)} " +
+        $"[{finding.HiddenBy}]" +
+        (finding.Proximity is null ? "" : $" [{finding.Proximity}]") +
+        $": \"{finding.Text}\"";
+
+    private static string Where(int page, int? obj, string? location)
+    {
+        var where = page > 0 ? $"page {page}" : "document";
+        if (obj is { } n) where += $" obj {n}";
+        if (!string.IsNullOrEmpty(location)) where += $" ({location})";
+        return where;
+    }
+
     private static void WriteHuman(UnredactReport report, TextWriter output)
     {
         var quantification = report.Quantification;
         if (report.Certain.Count == 0 && report.Residue.Count == 0)
         {
-            output.WriteLine("✓ No recoverable text or measurable residue found.");
+            output.WriteLine(report.Present is { Count: > 0 }
+                ? "✓ No recoverable text or measurable residue found (content listed below is present but was not decoded)."
+                : "✓ No recoverable text or measurable residue found.");
         }
         else
         {
@@ -47,9 +63,32 @@ internal static class UnredactCommandOutput
             output.WriteLine($"✗ CERTAIN — text is actually present ({report.Certain.Count}):");
             foreach (var finding in report.Certain)
             {
+                if (finding.FromCarrier)
+                {
+                    output.WriteLine(CarrierLine(finding));
+                    continue;
+                }
                 output.WriteLine(
                     $"  page {finding.Page} ({finding.X},{finding.Y}) " +
                     $"[{finding.HiddenBy}]: \"{finding.Text}\"");
+            }
+        }
+
+        if (report.VisibleDuplicates is { Count: > 0 } duplicates)
+        {
+            output.WriteLine($"= VISIBLE DUPLICATES — carriers restating text the reader already sees ({duplicates.Count}):");
+            foreach (var finding in duplicates)
+                output.WriteLine(CarrierLine(finding));
+        }
+
+        if (report.Present is { Count: > 0 } present)
+        {
+            output.WriteLine($"! PRESENT — content not decoded, inspect it yourself ({present.Count}):");
+            foreach (var finding in present)
+            {
+                output.WriteLine(
+                    $"  {Where(finding.Page, finding.Object, finding.Location)} " +
+                    $"[{finding.Carrier}]: {finding.Description}");
             }
         }
 

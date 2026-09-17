@@ -84,11 +84,28 @@ public static class HiddenTextDetector
     /// </summary>
     public static IReadOnlyList<HiddenTextRecord> ScanPage(PdfPage page, int pageNumber = 1,
         bool includeVisibleFailedRedactions = false)
+        => ScanPageCore(page, pageNumber, includeVisibleFailedRedactions, darkBoxes: null);
+
+    /// <summary>
+    /// The page's dark opaque filled rectangles, in page space — the marks a
+    /// redaction (real or fake) leaves. Same walk and same colour rule as the
+    /// hidden-text scan, so the unredact carrier channel can say which
+    /// findings sit under a redaction mark without a second operator walk.
+    /// </summary>
+    internal static IReadOnlyList<PdfRectangle> DarkFilledBoxes(PdfPage page)
+    {
+        var boxes = new List<PdfRectangle>();
+        ScanPageCore(page, page.PageNumber, includeVisibleFailedRedactions: false, darkBoxes: boxes);
+        return boxes;
+    }
+
+    private static IReadOnlyList<HiddenTextRecord> ScanPageCore(PdfPage page, int pageNumber,
+        bool includeVisibleFailedRedactions, List<PdfRectangle>? darkBoxes)
     {
         var records = new List<HiddenTextRecord>();
         var ops = page.GetContentStream().Operators;
         var letters = page.Letters;
-        if (ops.Count == 0 || letters.Count == 0) return records;
+        if (ops.Count == 0 || (letters.Count == 0 && darkBoxes == null)) return records;
 
         var textEntries = new List<TextEntry>();
         var obstructions = new List<Obstruction>();
@@ -241,6 +258,14 @@ public static class HiddenTextDetector
                     obstructions.Add(new Obstruction(i, "inline image", TransformedUnitSquare(ctm), new Rgb(0.5,0.5,0.5)));
                     break;
             }
+        }
+
+        if (darkBoxes != null)
+        {
+            foreach (var o in obstructions)
+                if (o.Fill.R <= 0.25 && o.Fill.G <= 0.25 && o.Fill.B <= 0.25)
+                    darkBoxes.Add(o.Bbox);
+            if (letters.Count == 0) return records;
         }
 
         // Pairing A: text UNDER a later obstruction (the classic black-box case).
