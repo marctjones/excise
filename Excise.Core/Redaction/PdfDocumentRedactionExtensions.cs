@@ -445,7 +445,18 @@ public static class PdfDocumentRedactionExtensions
             // count while /Info, XMP, outlines and annotation /Contents kept the
             // term. Reported now, per the decided policy: surface, don't guess.
             const int minTermLength = 3;
-            if (text.Length < minTermLength)
+            // #1586: a sub-floor term is no longer a blanket skip. The floor is
+            // a STRIP rule — excising "of" from every /Alt corrupts unrelated
+            // values — and it does not apply to a carrier the caller set to
+            // RemoveWhole, which drops the value instead of cutting a fragment
+            // out of it. Skipping the whole pass meant Maximum, whose promise is
+            // that no carrier keeps the term, silently kept a 2-character one.
+            // ScrubTerms itself reports the floor per carrier now.
+            var anyRemoveWhole = Excise.Core.Operations.CarrierScrubPolicy.AllCarriers.Any(
+                c => (carriers & c) != 0
+                     && (carrierPolicy ?? Excise.Core.Operations.CarrierScrubPolicy.Default)
+                         .ModeFor(c) == Excise.Core.Operations.CarrierScrubMode.RemoveWhole);
+            if (text.Length < minTermLength && !anyRemoveWhole)
             {
                 foreach (var (carrier, _) in DocumentCarriers)
                     carrierResults.Add(new CarrierResult(carrier, false,
@@ -725,12 +736,29 @@ public static class PdfDocumentRedactionExtensions
         // whole page to do it is exactly the round-trip risk #1093 removes.
         var content = page.GetContentStream(trackSourceSpans: true);
         var ops = content.Operators.ToList();
+        // #1586: marked as an ARTIFACT (§14.8.2.2). In a TAGGED document every
+        // piece of content must be either tagged as real content or marked as
+        // an artifact, and an untagged filled rectangle fails PDF/UA-1 clause
+        // 7.1 — measured with veraPDF, which rejected an otherwise conformant
+        // document purely because of this box ("Content shall be marked as
+        // Artifact or tagged as real content"). A covering box is the textbook
+        // artifact: it carries no meaning, and a screen reader that announced
+        // it would be reading the redaction rather than the document.
+        //
+        // Emitted unconditionally, not only for tagged documents: marked
+        // content in an untagged page is inert, and a conditional would mean
+        // the box is accessible only where somebody remembered to check.
+        ops.Add(new ContentOperator("BMC", new Excise.Core.Primitives.PdfObject[]
+        {
+            new Excise.Core.Primitives.PdfName("Artifact"),
+        }));
         ops.Add(ContentOperator.SaveState());
         ops.Add(ContentOperator.SetFillRgb(r, g, b));
         ops.Add(ContentOperator.Rectangle(
             rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom));
         ops.Add(ContentOperator.Fill());
         ops.Add(ContentOperator.RestoreState());
+        ops.Add(new ContentOperator("EMC"));
         page.SetContentStream(new ContentStream(ops) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
     }
 

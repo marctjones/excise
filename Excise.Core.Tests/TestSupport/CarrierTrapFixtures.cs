@@ -243,6 +243,37 @@ internal static class CarrierTrapFixtures
                 "<< /Type /StructTreeRoot /K 7 0 R >>",
                 $"<< /Type /StructElem /S /Sect /P 6 0 R /T (Section {t}) >>",
             }));
+        // #1586: a Figure whose /Alt DESCRIBES a redacted image, with no MCID
+        // link between the two. Both of StructureTreeRedactionScrubber's passes
+        // are blind to it by construction: pass 1 needs a structural (/MCID or
+        // /OBJR) link to the redaction area, and pass 2 content-matches the
+        // carrier against text the glyph pass REMOVED — and an image redaction
+        // removes no text, so there is nothing to compare against.
+        Add("figure-alt-image-no-mcid", "FIGUREALTIMAGETRAP", "structure-tree /Alt", Oracle.QpdfDump,
+            (t, v) => Doc(V(t, v), catalog: "/StructTreeRoot 6 0 R",
+                resources: "/XObject << /Im0 8 0 R >>",
+                extraContent: "q 200 0 0 50 72 500 cm /Im0 Do Q",
+                extra: new[]
+                {
+                    "<< /Type /StructTreeRoot /K 7 0 R >>",
+                    $"<< /Type /StructElem /S /Figure /P 6 0 R /Alt (Scan of the letter naming {t}) >>",
+                    Stream("/Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceGray /BitsPerComponent 8",
+                        "ÿ  ÿ", compress: false),
+                }));
+        // #1586: a redaction of ONE OR TWO characters in a structure element
+        // with no structural link. Below StructureTreeRedactionScrubber's
+        // MinMatchLength (3) and below PdfDocumentSanitizer's MinTermLength (3),
+        // so neither the content-match pass nor the document-level scrub will
+        // act on it. The floor is deliberate — excising "of" from every /Alt in
+        // a document would delete the structure tree — so the right outcome is
+        // a REPORT, not a lower floor.
+        Add("structure-alt-short-term", "QX", "structure-tree /Alt", Oracle.QpdfDump,
+            (t, v) => Doc(V(t, v), catalog: "/StructTreeRoot 6 0 R", extra: new[]
+            {
+                "<< /Type /StructTreeRoot /K 7 0 R >>",
+                $"<< /Type /StructElem /S /P /P 6 0 R /Alt (Exhibit {t} summary) >>",
+            }),
+            inBench: false);
         Add("pieceinfo", "PIECEINFOTRAP", "/PieceInfo /ExciseTrap /Private", Oracle.QpdfDump,
             (t, v) => Doc(V(t, v), page: $"/PieceInfo << /ExciseTrap << /LastModified (D:20260917000000Z) /Private << /Draft ({t}) >> >> >>"));
         Add("page-thumbnail", "THUMBNAILTRAP", "page /Thumb", Oracle.PresenceOnly,
