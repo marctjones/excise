@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Excise.App.Services.Host;
@@ -83,6 +84,18 @@ internal sealed class DocumentSession : IDocumentSessionHost, IDisposable
 
     bool IDocumentSessionHost.CanMoveToNewWindow =>
         Window is Views.MainWindow { DocumentTabs.Tabs.Count: > 1 };
+
+    bool IDocumentSessionHost.CanSwitchTabs =>
+        Window is Views.MainWindow { DocumentTabs.Tabs.Count: > 1 };
+
+    void IDocumentSessionHost.SwitchTab(int step)
+    {
+        if (Window is not Views.MainWindow { DocumentTabs: { Tabs.Count: > 1 } tabs })
+            return;
+
+        var command = step > 0 ? tabs.SelectNextTabCommand : tabs.SelectPreviousTabCommand;
+        command.Execute().Subscribe();
+    }
 
     void IDocumentSessionHost.MoveToNewWindow() => _workspace.MoveToNewWindow(this);
 

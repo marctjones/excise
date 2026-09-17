@@ -71,6 +71,26 @@ public partial class MainWindowViewModel
         _activateOpenDocumentCommand ??= ReactiveCommand.Create<OpenDocumentEntry>(
             entry => SessionHost?.ActivateDocument(entry));
 
+    /// <summary>
+    /// True when this window has more than one tab, so Window ▸ Show Next/
+    /// Previous Tab does something (#1598). False for a view model with no
+    /// session host, which is every plain unit test.
+    /// </summary>
+    internal bool CanSwitchTabs => SessionHost?.CanSwitchTabs == true;
+
+    /// <summary>
+    /// Window ▸ Show Next Tab (+1) / Show Previous Tab (-1) (#1598): the
+    /// in-app document tabs of THIS window, not macOS's window tabs.
+    /// </summary>
+    /// <remarks>
+    /// This exists on the view model because on macOS the only thing that can
+    /// receive Control-Tab is the native menu, which is built from a view model
+    /// (<c>MacNativeMenuBuilder</c>). AppKit consumes Control-Tab as a
+    /// key-view/key-equivalent keystroke before Avalonia's tunnelling KeyDown
+    /// handler ever sees it.
+    /// </remarks>
+    internal void SwitchTab(int step) => SessionHost?.SwitchTab(step);
+
     /// <summary>Window ▸ Move Tab to New Window (#1554).</summary>
     internal ReactiveCommand<Unit, Unit> MoveToNewWindowCommand =>
         _moveToNewWindowCommand ??= ReactiveCommand.Create(() => SessionHost?.MoveToNewWindow());

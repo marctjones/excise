@@ -45,6 +45,21 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   and keep the AcroForm fields, which every non-XFA viewer already uses.
 
 ### Fixed
+- **Ctrl+Tab switches document tabs on macOS** (#1598). It never did: the
+  gesture was handled by a tunnelling `KeyDown` handler in `MainWindow`, and
+  AppKit takes Control-Tab as a key-view / key-equivalent keystroke, so Avalonia
+  was never told. Found by `reader_speed_bench.py --multi --configs excise-tabs`
+  with a real CGEvent (2 of 2 runs, the front document never changed); every
+  in-app test passed throughout, because a synthetic key event reaches the
+  handler on every platform. The native Window menu now carries **Show Previous
+  Tab** (Ctrl+Shift+Tab) and **Show Next Tab** (Ctrl+Tab) — Safari's own key
+  equivalents — acting on the document tabs of the window whose menu it is,
+  enabled only while that window has more than one tab. The `KeyDown` path is
+  unchanged for Windows and Linux (and still serves Ctrl+PgDn/PgUp and
+  Cmd+Shift+] / [ on macOS). macOS's own window-tab actions, which move through
+  a merged NSWindow tab group rather than one window's document tabs, are
+  retitled **Show Previous/Next Window Tab** so the two pairs are
+  distinguishable in one menu.
 - **Windows printing now honours each annotation's `/Print` flag** (#1573).
   The renderer had no print mode, so sheets were rastered with the VIEWER's
   §12.5.3 rule — Hidden and NoView suppressed, everything else drawn — and that

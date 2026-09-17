@@ -199,8 +199,14 @@ public sealed class MultiDocumentWindowTests : IDisposable
             .Where(i => i is not NativeMenuItemSeparator)
             .Select(i => i.Header)
             .Should().Equal(
+                // #1598: this window's own document tabs come first, with
+                // Safari's key equivalents. The macOS window-tab actions keep
+                // AppKit's names with "Window" added, because they act on a
+                // merged NSWindow tab group, not on these tabs.
                 "Show Previous Tab",
                 "Show Next Tab",
+                "Show Previous Window Tab",
+                "Show Next Window Tab",
                 "Move Tab to New Window",
                 "Merge All Windows",
                 "Show or Hide Tab Bar");

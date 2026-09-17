@@ -377,7 +377,7 @@ Press **F1** to view all in-app.
 | Navigation | Next/Previous/First/Last Page | `Page Down/Up`, `Home`, `End` |
 | Modes | Redaction / Text Selection / Apply | `R` / `T` / `Enter` |
 | Pages | Rotate Left / Right | `Ctrl+L` / `Ctrl+R` |
-| Tabs | Next / Previous document tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` (or `Ctrl+PgDn` / `Ctrl+PgUp`) |
+| Tabs | Next / Previous document tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` (or `Ctrl+PgDn` / `Ctrl+PgUp`; on macOS also Window ▸ Show Next/Previous Tab) |
 
 ### CLI examples
 
