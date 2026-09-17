@@ -254,7 +254,8 @@ public static class RecoveryScanner
         {
             builder.ChannelSkipped(
                 Channels.Xfa + " (partial)",
-                $"{summary.PacketsUnexamined} XFA packet(s) would not parse as XML");
+                $"{summary.PacketsUnexamined} of {summary.PacketsExamined + summary.PacketsUnexamined} " +
+                "XFA packet(s) would not parse as XML");
         }
 
         foreach (var value in values)

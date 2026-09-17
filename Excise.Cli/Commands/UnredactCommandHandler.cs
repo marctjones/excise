@@ -222,7 +222,8 @@ internal static class UnredactCommandHandler
         {
             builder.ChannelSkipped(
                 RecoveryScanner.Channels.PriorRevision + " (partial)",
-                $"{summary.RevisionsUnreadable} of {summary.RevisionCount} revision(s) would not parse");
+                $"{summary.RevisionsUnreadable} of {summary.RevisionCount} revision(s) would not parse; " +
+                $"{summary.RevisionsParsed} read, {summary.PagesRemoved} page(s) gone since the earliest");
         }
 
         foreach (var finding in findings)

@@ -1837,7 +1837,6 @@ namespace Excise.Core.Redaction.Recovery
         public MarkSummary(Excise.Core.Redaction.Recovery.RedactionMark Mark, Excise.Core.Redaction.Recovery.MarkRecoveryOutcome Outcome, System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RecoveredFinding> Findings, Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport? Fit = null) { }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RecoveredFinding> Findings { get; init; }
         public Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport? Fit { get; init; }
-        public bool HasCertain { get; }
         public Excise.Core.Redaction.Recovery.RedactionMark Mark { get; init; }
         public Excise.Core.Redaction.Recovery.MarkRecoveryOutcome Outcome { get; init; }
     }

@@ -179,7 +179,6 @@ public sealed record MarkSummary(
     IReadOnlyList<RecoveredFinding> Findings,
     RedactionFitAnalyzer.FitReport? Fit = null)
 {
-    public bool HasCertain => Findings.Any(f => f.Confidence == RecoveryConfidence.Certain);
 }
 
 /// <summary>
