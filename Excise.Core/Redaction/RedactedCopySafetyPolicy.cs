@@ -218,6 +218,22 @@ public static class RedactedCopySafetyPolicy
                 warnings.Add($"Kept attachment {file}.");
         }
 
+        // #1586: an /Alt or /ActualText describing an image an AREA redaction
+        // blacked out, with no /MCID link and no removed text to match on, so
+        // NEITHER structure-tree pass could check it. Read off the ledger
+        // because the GUI calls the void RedactArea overload and drops the
+        // engine's report — see PdfDocumentRedactionLedger. Standard keeps the
+        // carrier and REPORTS it; a report nobody receives is not one.
+        var uncheckableAlt = document.RedactionLedger.UncheckableAlternateText;
+        if (uncheckableAlt > 0)
+        {
+            warnings.Add(
+                $"Carrier structure-tree /Alt: {uncheckableAlt} alternate-text element(s) " +
+                "describe redacted image content but have no link to it, so they could NOT be " +
+                "checked — read them before sharing this copy, or use the maximum output " +
+                "profile to drop them.");
+        }
+
         if (options.RunCarrierAudit)
         {
             // Runs after any surgical scrub so it reports what survived, not

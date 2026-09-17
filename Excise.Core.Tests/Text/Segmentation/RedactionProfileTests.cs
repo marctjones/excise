@@ -495,6 +495,42 @@ public class RedactionProfileTests
     }
 
     /// <summary>
+    /// The same refusal, on the GUI's shape of the call (#1586).
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Why this is a separate test.</b>
+    /// <c>Excise.App/Services/RedactionService.RedactArea</c> calls the
+    /// <c>void</c> <c>page.RedactArea(rect, options)</c> overload and then
+    /// builds the user-facing dialog from
+    /// <c>RedactedCopySafetyPolicy.Evaluate</c>. The engine computed the
+    /// carrier refusal and the return value went on the floor, so the dialog
+    /// said clean over a carrier we KNOW we could not check. A report nobody
+    /// receives is not one — the same defect
+    /// <c>PdfDocumentRedactionLedger</c> was created for (#1572), and the
+    /// reason the count is recorded there rather than only returned.</para>
+    /// </remarks>
+    [Fact]
+    public void TheUncheckableAltRefusal_ReachesTheSafetyReport_OnTheGuiShapedPath()
+    {
+        var trap = CarrierTrapFixtures.Get("figure-alt-image-no-mcid");
+        var area = new PdfRectangle(70, 495, 275, 555);
+        using var doc = PdfDocument.Open(trap.Build(false));
+
+        // Exactly what the GUI does: the void overload, report discarded.
+        doc.GetPage(1).RedactArea(area, RedactionOptions.Default);
+        var report = RedactedCopySafetyPolicy.Evaluate(doc,
+            RedactedCopySafetyRequest.ForAreas(
+                new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, area)) },
+                options: new RedactedCopySafetyOptions { ScrubAttachments = false }));
+
+        report.Warnings.Should().Contain(
+            w => w.Contains("structure-tree /Alt") && w.Contains("could NOT be checked"),
+            "the dialog the user actually reads must carry the refusal, not just the " +
+            "RedactionReport the GUI throws away");
+        report.HasWarnings.Should().BeTrue();
+    }
+
+    /// <summary>
     /// A hidden <c>/OC</c> span inside a VISIBLE form XObject (#1586).
     /// </summary>
     /// <remarks>

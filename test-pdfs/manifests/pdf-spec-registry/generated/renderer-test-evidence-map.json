@@ -3804,7 +3804,7 @@
       "path": "Excise.Rendering.Tests/Differential/CarrierTrapExciseRedactionSurveyTests.cs",
       "class": "CarrierTrapExciseRedactionSurveyTests",
       "method": "Survey_ExciseRedactText_OverEveryCarrierTrap",
-      "line": 43,
+      "line": 52,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [

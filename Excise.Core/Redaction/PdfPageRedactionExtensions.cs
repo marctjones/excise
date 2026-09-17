@@ -371,6 +371,10 @@ public static class PdfPageRedactionExtensions
             if (removed > 0)
                 all.Add(new RedactedFeatureRemoval("unlinked alternate-text value(s)", removed,
                     "described content with no structural link, so it could not be checked"));
+            // Recorded, not just returned: the GUI calls the void RedactArea
+            // overload and drops this report, and RedactedCopySafetyPolicy
+            // reads the ledger to build the dialog's carrier rows.
+            if (refused > 0) document.RedactionLedger.RecordUncheckableAlternateText(refused);
             if (refused > 0)
                 carriers.Add(new CarrierResult("structure-tree /Alt", false,
                     $"{refused} alternate-text element(s) have no content link, so they could "

@@ -25,6 +25,27 @@ internal sealed class PdfDocumentRedactionLedger
         => _removedAttachments.AddRange(removed);
 
     internal void RecordXfaRemoval(string description) => _xfaRemovals.Add(description);
+
+    /// <summary>
+    /// Structure elements carrying <c>/Alt</c> or <c>/ActualText</c> that an
+    /// AREA redaction could NOT check against the image(s) it blacked out
+    /// (#1586) — no <c>/MCID</c> link, and no removed text to content-match
+    /// against.
+    /// </summary>
+    /// <remarks>
+    /// Recorded for the same reason the attachment rows are: the GUI calls the
+    /// <c>void</c> <c>RedactArea</c> overload and DROPS the report, so without
+    /// this the refusal is computed and thrown away and the redacted-copy
+    /// dialog says clean over a carrier we know we could not check. Standard's
+    /// contract for this carrier is "kept but REPORTED", and a report nobody
+    /// receives is not one.
+    /// </remarks>
+    internal int UncheckableAlternateText { get; private set; }
+
+    internal void RecordUncheckableAlternateText(int count)
+    {
+        if (count > UncheckableAlternateText) UncheckableAlternateText = count;
+    }
 }
 
 public partial class PdfDocument

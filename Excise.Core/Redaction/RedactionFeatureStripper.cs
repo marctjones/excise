@@ -578,10 +578,10 @@ internal static class RedactionFeatureStripper
     /// it may be drawn from elsewhere too.
     /// </summary>
     /// <remarks>
-    /// ⚠️ Rewrites the form's stream, so it cannot preserve per-operator source
-    /// bytes the way <c>SetContentStream</c> does on a page. That is acceptable
-    /// only because the form is REACHED at all — a form with no hidden span is
-    /// never rewritten (<c>count == 0</c> returns early).
+    /// ⚠️ Rewrites the form's stream, but through the #1093 source-preserving
+    /// writer: kept operators are copied verbatim, so this cannot reformat a
+    /// string or an inline image it merely walked past. A form with no hidden
+    /// span is not rewritten at all (<c>count == 0</c> returns early).
     /// </remarks>
     private static int RemoveHiddenSpansInForms(
         PdfDocument document,
@@ -609,22 +609,37 @@ internal static class RedactionFeatureStripper
 
             removed += RemoveHiddenSpansInForms(document, nested, hiddenGroups, depth + 1);
 
-            IReadOnlyList<ContentOperator> operators;
+            ContentStream parsed;
+            byte[] formBytes;
             try
             {
-                operators = new Excise.Core.Content.ContentStreamParser(form.DecodedData, null)
-                    .Parse().Operators;
+                formBytes = form.DecodedData;
+                // #1093: source spans, so the operators we KEEP are copied
+                // verbatim instead of round-tripping through this class's
+                // escaping and number formatting. The page path already does
+                // this (GetContentStream(trackSourceSpans: true)); a form is
+                // no less able to hold an inline image or a string this
+                // writer would reformat.
+                var parser = new Excise.Core.Content.ContentStreamParser(formBytes, null)
+                {
+                    TrackSourceSpans = true,
+                };
+                parsed = parser.Parse();
             }
             catch (Exception ex) when (ex is not OutOfMemoryException) { continue; }
 
             var (kept, count) =
-                FilterHiddenSpans(document, operators, properties, nested, hiddenGroups);
+                FilterHiddenSpans(document, parsed.Operators, properties, nested, hiddenGroups);
             if (count == 0) continue;
 
             try
             {
                 form.DecodedData = new Excise.Core.Content.ContentStreamWriter()
-                    .Write(new ContentStream(kept));
+                    .Write(new ContentStream(kept)
+                    {
+                        SourceBytes = parsed.SourceBytes,
+                        SourceArrayBoundaries = parsed.SourceArrayBoundaries,
+                    }, formBytes);
                 removed += count;
             }
             catch (Exception ex) when (ex is not OutOfMemoryException) { /* leave as-is */ }
