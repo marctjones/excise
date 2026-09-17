@@ -31,6 +31,27 @@ HOW IT STAYS FAIR
     scripts/reader_bench.py --apps excise,preview --docs w9 --repeats 1
     scripts/reader_bench.py                       # everything, bench.json repeats
     scripts/reader_bench.py --summarize logs/reader-bench_<stamp>
+
+MULTI-DOCUMENT SET (#1551-#1554), OPTIONAL: `--multi` runs it INSTEAD of the
+single-document rows, which stay the primary comparison and are unchanged.
+Each config (bench.json `multiDocument.configs`: excise as windows, excise as
+tabs, Preview, Acrobat) opens w9, then irs, then scan into ONE running
+instance, one at a time (`open -a` without `-n`, so Launch Services hands the
+file to the instance under test), and records the footprint after each open
+(the marginal cost of the 2nd and 3rd document), idle CPU with three open,
+and the footprint 20 s and 45 s after Cmd+W closes the third. excise's open
+mode is seeded into the isolated HOME's window.json, never the real one; the
+system tabbing preference is read, never changed. The observed window count
+must match the expected layout, so "windows" and "tabs" cannot silently
+measure the same thing.
+
+    scripts/reader_bench.py --multi --list
+    scripts/reader_bench.py --multi --repeats 1                   # 4 runs, ~12 min (estimate)
+    scripts/reader_bench.py --multi --configs excise-windows,excise-tabs
+    scripts/reader_bench.py --multi                                # bench.json repeats: 20 runs, ~60 min (estimate)
+
+The estimate is ~3 min per run: launch and three settles (up to 60 s each,
+usually 5-15 s), 30 s idle, 45 s after the close, quit.
 """
 import argparse, json, os, pathlib, re, shutil, signal, statistics, subprocess, sys, threading, time
 
@@ -105,9 +126,22 @@ end biggest
 """
 
 
+_FRONTDOC = """
+on frontdoc(ws)
+    -- The frontmost DOCUMENT-sized window: System Events lists windows front
+    -- to back, and a tooltip or popover is a window too.
+    repeat with i from 1 to count of ws
+        set s to size of item i of ws
+        if (item 1 of s) >= 400 and (item 2 of s) >= 300 then return i
+    end repeat
+    return 1
+end frontdoc
+"""
+
+
 def osa_se(body):
-    """Run `body` inside `tell application "System Events"` with biggest() defined."""
-    script = _BIGGEST + 'tell application "System Events"\n' + body + '\nend tell'
+    """Run `body` inside `tell application "System Events"` with biggest() and frontdoc() defined."""
+    script = _BIGGEST + _FRONTDOC + 'tell application "System Events"\n' + body + '\nend tell'
     r = sh(["osascript", "-e", script], timeout=30)
     if r.returncode != 0:
         raise RuntimeError(f"osascript failed: {r.stderr.strip()}")
@@ -158,6 +192,87 @@ def main_window_id(pid):
         if best is None or area > best[0]:
             best = (area, w["kCGWindowNumber"])
     return best[1] if best else None
+
+
+# ------------------------------------------------------- multi-document helpers
+
+def front_document_window(pid):
+    return (f'(item (my frontdoc(every window of (first process whose unix id is {pid}))) '
+            f'of (every window of (first process whose unix id is {pid})))')
+
+
+def front_title(pid):
+    try:
+        return osa_se(f'get name of {front_document_window(pid)}')
+    except RuntimeError:
+        return ""
+
+
+def set_front_window(pid, w, timeout=10.0):
+    """Give the FRONT document window the bench frame. With several windows of
+    one size, `largest_window` cannot tell them apart, and excise cascades a new
+    window 28 pt from its origin; every window of a multi-document run is put
+    on the same frame so page areas (and the speed bench's capture region)
+    stay comparable."""
+    win = front_document_window(pid)
+    deadline = time.time() + timeout
+    while True:
+        try:
+            osa_se(f'set position of {win} to {{{w["x"]}, {w["y"]}}}\n'
+                   f'set size of {win} to {{{w["width"]}, {w["height"]}}}')
+            return
+        except RuntimeError:
+            if time.time() > deadline:
+                raise
+            time.sleep(0.5)
+
+
+def document_windows(pid):
+    """On-screen, document-sized, layer-0 windows of `pid`. A native tab that is
+    not selected is ordered out, so N tabs count as one window."""
+    import Quartz
+    n = 0
+    for w in Quartz.CGWindowListCopyWindowInfo(Quartz.kCGWindowListOptionOnScreenOnly, Quartz.kCGNullWindowID):
+        if w.get("kCGWindowOwnerPID") != pid or w.get("kCGWindowLayer", 0) != 0:
+            continue
+        b = w["kCGWindowBounds"]
+        if b["Width"] >= 400 and b["Height"] >= 300:
+            n += 1
+    return n
+
+
+def system_tabbing():
+    """The user's 'Prefer tabs when opening documents' setting. Read only."""
+    r = sh(["defaults", "read", "-g", "AppleWindowTabbingMode"])
+    return r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else "fullscreen"
+
+
+def expected_layout(config, tabbing):
+    """'tabs' or 'windows'. A window-mode app turns new windows into native
+    tabs when the system setting says always (excise too: #1552 honours it)."""
+    if config["layout"] == "windows" and tabbing == "always":
+        return "tabs"
+    return config["layout"]
+
+
+def open_more(app, doc_copy, excise_app):
+    """Hand a document to the RUNNING instance: `open -a` without `-n`.
+    preflight(multi=True) refuses when any other instance of the app is up,
+    so the only candidate is the one under test."""
+    bundle = str(pathlib.Path(excise_app).resolve()) if app["launch"] == "exec" else app["bundlePath"]
+    sh(["open", "-a", bundle, str(doc_copy)], check=True)
+
+
+def title_shows(app_id, title, stem, previous):
+    """Does the front window's title name this document? Acrobat titles a
+    window with the PDF's /Title, not the file name, so for Acrobat the test is
+    only that the title is a document's and changed."""
+    if not title:
+        return False
+    if app_id == "acrobat":
+        return (title not in ("Acrobat", "Adobe Acrobat") and not title.startswith("Welcome")
+                and title != previous)
+    return stem in title
 
 
 _LIBC = None
@@ -357,13 +472,15 @@ class RunFailed(Exception):
     pass
 
 
-def launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env=None):
+def launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env=None, settings=None):
     """Launch every app the same way: `open -n -F -a <bundle>`.
 
     Launching excise directly (Popen) made this script's own process tree
     responsible for excise's helper services, so they would have been charged
     to nobody. Through `open`, launchd is the parent and each app is
     responsible for itself. excise's state goes to an isolated HOME (`--env`).
+    `settings` adds keys to excise's seeded window.json (the multi-document
+    set's DocumentOpenMode); it is written into that isolated HOME only.
     """
     before = set(ps_table())
     t0 = time.time()
@@ -375,7 +492,8 @@ def launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env=None):
         conf.mkdir(parents=True, exist_ok=True)
         w = cfg["window"]
         (conf / "window.json").write_text(json.dumps(
-            {"X": w["x"], "Y": w["y"], "Width": w["width"], "Height": w["height"], "IsMaximized": False}))
+            {"X": w["x"], "Y": w["y"], "Width": w["width"], "Height": w["height"], "IsMaximized": False,
+             **(settings or {})}))
         log = str(app_area(run_dir) / "app.log")
         args += ["-a", bundle, "--env", f"HOME={home}", "--stdout", log, "--stderr", log]
         for k, v in (extra_env or {}).items():
@@ -600,6 +718,206 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
     return result
 
 
+# ------------------------------------------------------- one multi-document run
+
+MULTI_DOC_KEY = "multi3"
+MULTI_LABELS = ["opened-1", "opened-2", "opened-3", "idle-30s-3open", "closed-one-20s", "closed-one-45s"]
+
+
+def multi_config(cfg, config_id):
+    return next(c for c in cfg["multiDocument"]["configs"] if c["id"] == config_id)
+
+
+def multi_settings(config):
+    """excise's Preferences > Documents > Open Documents In, as window.json spells it."""
+    return {"DocumentOpenMode": config["openMode"]} if config.get("openMode") else None
+
+
+def open_and_verify(app_id, app, pid, doc_copy, k, layout, previous_title, excise_app, cfg, first=False, timeout=60):
+    """Open the k-th document (the first came with the launch) and wait until
+    the front window names it AND the window count matches the layout.
+    Returns (ok, title, windows, note)."""
+    if not first:
+        open_more(app, doc_copy, excise_app)
+    want_windows = k if layout == "windows" else 1
+    deadline = time.time() + timeout
+    title, windows = "", 0
+    while time.time() < deadline:
+        park_pointer()
+        title, windows = front_title(pid), document_windows(pid)
+        if title_shows(app_id, title, doc_copy.stem, previous_title) and windows == want_windows:
+            break
+        time.sleep(0.5)
+    else:
+        return False, title, windows, (f"document {k} not shown as expected within {timeout} s: "
+                                       f"front title {title[:60]!r}, {windows} window(s), wanted {want_windows} ({layout})")
+    try:
+        set_front_window(pid, cfg["window"])
+    except RuntimeError as e:
+        return False, title, windows, f"could not size window {k}: {e}"
+    return True, title, windows, None
+
+
+def multi_run(config, app, docs, repeat, out, cfg, excise_app, tabbing):
+    app_id = config["app"]
+    layout = expected_layout(config, tabbing)
+    run_dir = out / config["id"] / MULTI_DOC_KEY / f"r{repeat}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    stamp = int(time.time())
+    copies = []
+    for d in docs:
+        c = app_area(run_dir) / f"{d['id']}-{config['id']}-r{repeat}-{stamp}.pdf"
+        shutil.copyfile(ROOT / d["path"], c)
+        copies.append(c)
+
+    steps, failures, layout_seen = [], [], []
+    park_pointer()
+    pid, before, t0 = launch(app_id, app, copies[0], run_dir, cfg, excise_app,
+                             settings=multi_settings(config))
+    tracker = Tracker(app, pid, before, t0)
+    sampler = threading.Thread(target=tracker.loop, args=(1.0,), daemon=True)
+    sampler.start()
+
+    def boundary(label, ok=True, note=None, **extra):
+        rec = tracker.sample(label)
+        steps.append({"step": label, "t": rec["t"], "ok": ok, "note": note, **extra})
+        if not ok:
+            failures.append(f"{label}: {note}")
+            raise RunFailed(f"{label}: {note}")
+
+    try:
+        if not wait_window(pid):
+            raise RunFailed("no window within 60 s")
+        try:
+            set_window(pid, cfg["window"])
+        except RuntimeError as e:
+            raise RunFailed(f"could not size the window: {e}")
+        title = ""
+        for k, copy in enumerate(copies, start=1):
+            ok, title, windows, note = open_and_verify(
+                app_id, app, pid, copy, k, layout, title, excise_app, cfg, first=(k == 1))
+            layout_seen.append(windows)
+            if ok and not wait_settled(tracker, cfg["settle"]):
+                ok, note = False, "never settled"
+            boundary(f"opened-{k}", ok=ok, note=note, title=title, windows=windows)
+
+        time.sleep(30); boundary("idle-30s-3open")
+
+        keystroke(pid, "w")                             # close the front (third) document
+        want = (len(copies) - 1) if layout == "windows" else 1
+        deadline = time.time() + 30
+        while time.time() < deadline:
+            park_pointer()
+            title, windows = front_title(pid), document_windows(pid)
+            if title and copies[-1].stem not in title and windows == want:
+                break
+            time.sleep(0.5)
+        else:
+            boundary("closed-one", ok=False,
+                     note=f"third document still shown or wrong layout: {title[:60]!r}, {windows} window(s), wanted {want}")
+        wait_settled(tracker, cfg["settle"])
+        time.sleep(20); boundary("closed-one-20s", title=title, windows=windows)
+        time.sleep(25); boundary("closed-one-45s")
+    except (RunFailed, RuntimeError, subprocess.TimeoutExpired) as e:
+        if not any(str(e) in f for f in failures):
+            failures.append(f"aborted: {e}")
+    finally:
+        tracker.sample("pre-quit")
+        quit_t = time.time() - t0
+        clean = quit_app(app, pid)
+        tracker.stop.set()
+        sampler.join(timeout=5)
+        if not clean:
+            failures.append("did not quit within 20 s; killed")
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        time.sleep(10)
+        alive_after = set(ps_table())
+        collect_app_area(run_dir)
+
+    result = {
+        "kind": "multi", "config": config["id"], "app": config["id"], "appId": app_id,
+        "doc": MULTI_DOC_KEY, "docs": [d["id"] for d in docs], "repeat": repeat,
+        "systemTabbing": tabbing, "layoutExpected": layout, "windowsAfterOpen": layout_seen,
+        "mainPid": pid, "failures": failures, "steps": steps,
+        "owned": {str(p): k for p, k in tracker.known.items()},
+        "ownedButOutlivedApp": [{"pid": p, "comm": k["comm"]} for p, k in tracker.known.items()
+                                if p != pid and p in alive_after],
+        "samples": tracker.samples, "quitAt": quit_t, "load1": os.getloadavg()[0],
+    }
+    (run_dir / "result.json").write_text(json.dumps(result, indent=1))
+    print(f"  {config['id']:15} {MULTI_DOC_KEY} r{repeat}  "
+          f"{'OK' if not failures else 'FAIL ' + '; '.join(failures)}", flush=True)
+    return result
+
+
+def summarize_multi(out, results):
+    """Markdown lines and JSON rows for the multi-document set."""
+    rows = {}
+    for r in results:
+        owned = set(r["owned"])
+        row = rows.setdefault(r["config"], {"runs": 0, "failed": 0, "at": {}, "idleCpu": [], "peakFp": [],
+                                            "procCount": [], "layout": set(), "tabbing": set()})
+        row["runs"] += 1
+        row["layout"].add(f"{r['layoutExpected']} {r['windowsAfterOpen']}")
+        row["tabbing"].add(r["systemTabbing"])
+        if r["failures"]:
+            row["failed"] += 1
+            continue
+        labelled = {s["label"]: s for s in r["samples"] if s.get("label")}
+        for lb in MULTI_LABELS:
+            if lb in labelled:
+                row["at"].setdefault(lb, []).append(totals(labelled[lb], owned)[0] / MB)
+        a, b = labelled.get("opened-3"), labelled.get("idle-30s-3open")
+        if a and b:
+            ca = sum(v["cpu"] for p, v in a["procs"].items() if p in owned)
+            cb = sum(v["cpu"] for p, v in b["procs"].items() if p in owned)
+            row["idleCpu"].append((cb - ca) / max(1e-6, b["t"] - a["t"]) * 100)
+        row["peakFp"].append(max((totals(s, owned)[0] for s in r["samples"] if "procs" in s), default=0) / MB)
+        row["procCount"].append(len(owned))
+
+    def med(xs):
+        return statistics.median(xs) if xs else None
+
+    def cell(v, sign=False):
+        return "—" if v is None else (f"{v:+.0f}" if sign else f"{v:.0f}")
+
+    def diff(row, a, b):
+        pairs = list(zip(row["at"].get(a, []), row["at"].get(b, [])))
+        return med([y - x for x, y in pairs]) if pairs else None
+
+    order = next((r.get("docs") for r in results if r.get("docs")), [])
+    lines = [f"## Multi-document set ({', then '.join(order)}; Cmd+W closes the last)", "",
+             "Footprint in MB, summed over every owned process, median over successful repeats. "
+             "`+2nd`/`+3rd` = marginal cost of that document (opened-k minus opened-(k-1)). "
+             "`released` = opened-3 minus closed-one-45s: what closing the third gave back. "
+             "Idle CPU is measured over the 30 s after the third document settled.", "",
+             "| config | layout expected [windows seen] | system tabbing | runs ok | procs | "
+             "opened-1 | +2nd | +3rd | 3 open, idle 30 s | closed-one 20 s | closed-one 45 s | released | peak | idle CPU % (3 open) |",
+             "|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    json_rows = []
+    for cid, row in rows.items():
+        m = {lb: med(row["at"].get(lb, [])) for lb in MULTI_LABELS}
+        lines.append(
+            f"| {cid} | {'; '.join(sorted(row['layout']))} | {', '.join(sorted(row['tabbing']))} | "
+            f"{row['runs'] - row['failed']}/{row['runs']} | {med(row['procCount']) or '—'} | "
+            f"{cell(m['opened-1'])} | {cell(diff(row, 'opened-1', 'opened-2'), True)} | "
+            f"{cell(diff(row, 'opened-2', 'opened-3'), True)} | {cell(m['idle-30s-3open'])} | "
+            f"{cell(m['closed-one-20s'])} | {cell(m['closed-one-45s'])} | "
+            f"{cell(diff(row, 'closed-one-45s', 'opened-3'))} | {cell(med(row['peakFp']))} | "
+            + (f"{med(row['idleCpu']):.2f}" if row["idleCpu"] else "—") + " |")
+        json_rows.append({"config": cid, **{k: (sorted(v) if isinstance(v, set) else v) for k, v in row.items()}})
+    lines.append("")
+    fails = [(r["config"], r["repeat"], r["failures"]) for r in results if r["failures"]]
+    if fails:
+        lines += ["### Failed multi-document runs (excluded from the medians)", ""]
+        lines += [f"- {c} r{k}: {'; '.join(f)}" for c, k, f in fails]
+        lines.append("")
+    return lines, json_rows
+
+
 # ----------------------------------------------------------------- summary
 
 def totals(sample, owned):
@@ -612,7 +930,9 @@ def totals(sample, owned):
 
 
 def summarize(out):
-    results = [json.loads(p.read_text()) for p in sorted(out.glob("*/*/r*/result.json"))]
+    everything = [json.loads(p.read_text()) for p in sorted(out.glob("*/*/r*/result.json"))]
+    multi = [r for r in everything if r.get("kind") == "multi"]
+    results = [r for r in everything if r.get("kind") != "multi"]
     rows = {}
     for r in results:
         owned = set(r["owned"])
@@ -692,6 +1012,11 @@ def summarize(out):
     if fails:
         lines += ["## Failed runs (excluded from the medians)", ""]
         lines += [f"- {a} {d} r{k}: {'; '.join(f)}" for a, d, k, f in fails]
+        lines.append("")
+    if multi:
+        multi_lines, multi_rows = summarize_multi(out, multi)
+        lines += multi_lines
+        summary["multiDocument"] = multi_rows
     (out / "summary.md").write_text("\n".join(lines) + "\n")
     (out / "summary.json").write_text(json.dumps(summary, indent=1))
     print("\n".join(lines))
@@ -699,7 +1024,7 @@ def summarize(out):
 
 # ----------------------------------------------------------------- main
 
-def preflight(apps):
+def preflight(apps, multi=False):
     busy = sh(["pgrep", "-fl", r"dotnet (test|build)|run-full-suite|testhost"]).stdout.strip()
     if busy:
         sys.exit(f"refusing to run beside test/build processes:\n{busy}")
@@ -709,6 +1034,14 @@ def preflight(apps):
             running = [p for p, r in table.items() if r["comm"].endswith(app["processPath"])]
             if running:
                 sys.exit(f"{app['name']} is already running (pid {running}); quit it first")
+    if multi and "excise" in apps:
+        # The multi-document set hands documents 2 and 3 to the running
+        # instance with `open -a`. Another excise (a developer's own session,
+        # a leftover bench launch) could receive them instead.
+        others = [p for p, r in table.items() if r["comm"].endswith("/Contents/MacOS/Excise.App")
+                  or re.search(r"bin/(Debug|Release)/net10\.0/Excise\.App$", r["comm"])]
+        if others:
+            sys.exit(f"an Excise.App process is already running (pid {others}); quit it first")
     if not any(r["comm"].rsplit("/", 1)[-1] == "caffeinate" for r in table.values()):
         print("WARNING: no caffeinate running; the screen may lock and block keystrokes", flush=True)
 
@@ -722,6 +1055,9 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--summarize")
+    ap.add_argument("--multi", action="store_true",
+                    help="run the multi-document set (bench.json multiDocument) instead of the single-document rows")
+    ap.add_argument("--configs", help="multi-document configs to run (default: all in bench.json)")
     a = ap.parse_args()
 
     if a.summarize:
@@ -729,6 +1065,9 @@ def main():
 
     cfg = json.loads(CONFIG.read_text())
     apps = {k: v for k, v in cfg["apps"].items() if k in a.apps.split(",")}
+    repeats = a.repeats or cfg["repeats"]
+    if a.multi:
+        return main_multi(a, cfg, apps, repeats)
     want = a.docs.split(",")
     docs = [d for d in cfg["documents"] if d["id"] in want]
     for d in docs:
@@ -737,7 +1076,6 @@ def main():
             sys.exit(f"missing fixture {p}" + (f" (run {d['make']})" if d.get("make") else ""))
         d["pages"] = int(sh(["qpdf", "--show-npages", str(p)], check=True).stdout)
     plan_docs = ([None] if "empty" in want else []) + docs
-    repeats = a.repeats or cfg["repeats"]
     runs = [(r, d, app) for r in range(1, repeats + 1) for d in plan_docs for app in apps]
     if a.list:
         for r, d, app in runs:
@@ -752,17 +1090,70 @@ def main():
     # document at all and still read "Page 1" from the empty window).
     out = pathlib.Path(a.out or ROOT / f"logs/reader-bench_{time.strftime('%Y%m%d_%H%M%S')}").resolve()
     out.mkdir(parents=True, exist_ok=True)
-    meta = {"sha": sh(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"]).stdout.strip(),
+    (out / "run-meta.json").write_text(json.dumps(run_meta(cfg), indent=1))
+    print(f"==> {len(runs)} runs -> {out}", flush=True)
+    for r, d, app in runs:
+        one_run(app, apps[app], d, r, out, cfg, a.excise_app)
+    summarize(out)
+
+
+def run_meta(cfg, **extra):
+    return {"sha": sh(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"]).stdout.strip(),
             "machine": sh(["sysctl", "-n", "machdep.cpu.brand_string"]).stdout.strip(),
             "memGB": int(sh(["sysctl", "-n", "hw.memsize"]).stdout) // 2**30,
             "macOS": sh(["sw_vers", "-productVersion"]).stdout.strip(),
             "preview": sh(["defaults", "read", "/System/Applications/Preview.app/Contents/Info", "CFBundleShortVersionString"]).stdout.strip(),
             "acrobat": sh(["defaults", "read", "/Applications/Adobe Acrobat DC/Adobe Acrobat.app/Contents/Info", "CFBundleShortVersionString"]).stdout.strip(),
-            "config": cfg, "started": time.strftime("%Y-%m-%dT%H:%M:%S")}
-    (out / "run-meta.json").write_text(json.dumps(meta, indent=1))
-    print(f"==> {len(runs)} runs -> {out}", flush=True)
-    for r, d, app in runs:
-        one_run(app, apps[app], d, r, out, cfg, a.excise_app)
+            "config": cfg, "started": time.strftime("%Y-%m-%dT%H:%M:%S"), **extra}
+
+
+def resolve_multi_docs(cfg, ids):
+    by_id = {d["id"]: d for d in cfg["documents"]}
+    docs = []
+    for i in ids:
+        d = dict(by_id[i])
+        p = ROOT / d["path"]
+        if not p.exists():
+            sys.exit(f"missing fixture {p}" + (f" (run {d['make']})" if d.get("make") else ""))
+        d["pages"] = int(sh(["qpdf", "--show-npages", str(p)], check=True).stdout)
+        docs.append(d)
+    return docs
+
+
+def select_multi_configs(cfg, apps, wanted):
+    configs = [c for c in cfg["multiDocument"]["configs"] if c["app"] in apps]
+    if wanted:
+        names = wanted.split(",")
+        known = {c["id"] for c in cfg["multiDocument"]["configs"]}
+        unknown = [n for n in names if n not in known]
+        if unknown:
+            sys.exit(f"unknown multi-document config(s) {unknown}; known: {sorted(known)}")
+        configs = [c for c in configs if c["id"] in names]
+    if not configs:
+        sys.exit("no multi-document config selected")
+    return configs
+
+
+def main_multi(a, cfg, apps, repeats):
+    configs = select_multi_configs(cfg, apps, a.configs)
+    tabbing = system_tabbing()
+    runs = [(r, c) for r in range(1, repeats + 1) for c in configs]
+    if a.list:
+        for r, c in runs:
+            print(f"r{r} {c['id']:15} {'+'.join(cfg['multiDocument']['documents'])}  "
+                  f"layout {expected_layout(c, tabbing)} (system tabbing: {tabbing})")
+        print(f"{len(runs)} runs (~{len(runs) * 3:.0f} min, estimated at ~3 min per run)")
+        return
+    docs = resolve_multi_docs(cfg, cfg["multiDocument"]["documents"])
+    if any(c["app"] == "excise" for c in configs) and not (pathlib.Path(a.excise_app) / "Contents/MacOS/Excise.App").exists():
+        sys.exit(f"no excise bundle at {a.excise_app}; build it with scripts/build-macos-app.sh --output logs/reader-bench-bundle")
+    preflight({c["app"]: apps[c["app"]] for c in configs}, multi=True)
+    out = pathlib.Path(a.out or ROOT / f"logs/reader-bench-multi_{time.strftime('%Y%m%d_%H%M%S')}").resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "run-meta.json").write_text(json.dumps(run_meta(cfg, multi=True, systemTabbing=tabbing), indent=1))
+    print(f"==> {len(runs)} multi-document runs -> {out} (system tabbing: {tabbing})", flush=True)
+    for r, c in runs:
+        multi_run(c, apps[c["app"]], docs, r, out, cfg, a.excise_app, tabbing)
     summarize(out)
 
 

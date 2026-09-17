@@ -41,5 +41,30 @@
       "nextPage": { "keyCode": 124, "modifiers": [] },
       "why": "Acrobat 26 in Reader mode. Its UI is an embedded browser (AcroCEF) plus system WebKit processes, so the per-app process sum matters more here than anywhere."
     }
+  },
+  "multiDocument": {
+    "issues": [1551, 1552, 1553, 1554],
+    "why": "OPTIONAL set, run only with --multi (reader_bench.py and reader_speed_bench.py). What a second and a third open document cost, how much comes back when one closes, what three open documents burn at idle, and how fast switching between two draws. The single-document rows above stay the primary comparison.",
+    "documents": ["w9", "irs", "scan"],
+    "speedDocuments": ["scan", "irs"],
+    "switches": 10,
+    "switchGapSeconds": 2.0,
+    "systemTabbing": "macOS 'Prefer tabs when opening documents' (defaults -g AppleWindowTabbingMode; absent means fullscreen). The bench READS it and never changes it. Under 'always' a window-mode app turns its new windows into native tabs, so the expected layout becomes tabs. The observed window count decides, and a mismatch fails the run.",
+    "switchKeys": {
+      "windows": { "keyCode": 50, "modifiers": ["command"],
+                   "why": "Cmd+` cycles an app's windows (system shortcut)" },
+      "tabs":    { "keyCode": 48, "modifiers": ["control"],
+                   "why": "Ctrl+Tab selects the next tab in excise's own tabs, AppKit native tabs and Acrobat" }
+    },
+    "configs": [
+      { "id": "excise-windows", "app": "excise", "openMode": "NewWindow", "layout": "windows",
+        "why": "Preferences > Documents > Open Documents In = NewWindow, seeded into the isolated HOME's window.json" },
+      { "id": "excise-tabs",    "app": "excise", "openMode": "NewTab",    "layout": "tabs",
+        "why": "Open Documents In = NewTab: one window, excise's own tab strip (#1554)" },
+      { "id": "preview",        "app": "preview", "layout": "windows",
+        "why": "Preview opens a window per document; they become native tabs only under the system setting, which is recorded, not changed" },
+      { "id": "acrobat",        "app": "acrobat", "layout": "tabs",
+        "why": "Acrobat opens documents as tabs of one window by default" }
+    ]
   }
 }
