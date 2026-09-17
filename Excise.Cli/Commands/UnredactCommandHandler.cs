@@ -1,4 +1,5 @@
 using Excise.Core.Document;
+using Excise.Core.Redaction.Recovery;
 using Excise.Core.Text.Segmentation;
 using Excise.Ocr;
 using Excise.Rendering.Differential;
@@ -29,15 +30,26 @@ internal static class UnredactCommandHandler
 
         try
         {
+            // #1587: ONE recovery model, filled by every channel. The builder is
+            // threaded through the collectors rather than reconstructed from
+            // their output, because a finding's mark link and its location are
+            // known at the point the channel produces it and are guesswork
+            // afterwards.
+            var builder = new RecoveryReportBuilder();
+
             cancellationToken.ThrowIfCancellationRequested();
-            var certain = CollectCertain(input, mode, cancellationToken, out var certainError);
+            var certain = CollectCertain(input, mode, builder, cancellationToken, out var certainError);
             if (certainError != null)
                 return certainError;
 
             cancellationToken.ThrowIfCancellationRequested();
-            var residue = CollectResidue(input, mode, cancellationToken);
+            var residue = CollectResidue(input, mode, builder, cancellationToken);
+            DeclareUnrunChannels(input, mode, builder);
+
             var quantification = Quantify(mode, input.NoCorroboration, certain, residue);
-            var report = new UnredactReport(quantification, certain, residue);
+            var report = new UnredactReport(
+                quantification, certain, residue,
+                UnredactRecoveryMapper.Map(builder.Build()));
             var exitCode = certain.Count > 0 ? 3 : residue.Count > 0 ? 4 : 0;
             return new UnredactCommandOutcome(exitCode, report, null);
         }
@@ -54,6 +66,7 @@ internal static class UnredactCommandHandler
     private static List<UnredactCertainFinding> CollectCertain(
         UnredactCommandInput input,
         UnredactMode mode,
+        RecoveryReportBuilder builder,
         CancellationToken cancellationToken,
         out UnredactCommandOutcome? error)
     {
@@ -63,6 +76,13 @@ internal static class UnredactCommandHandler
             return findings;
 
         using var document = PdfDocument.Open(input.FilePath);
+
+        // #1587: the document-only channels -- hidden text, carriers,
+        // marked-content, covered image/vector, form fields -- plus the marks
+        // they were found under. The legacy flat list below is rebuilt from the
+        // same report so the two can never disagree.
+        RecoveryScanner.ScanInto(document, builder, cancellationToken);
+
         foreach (var hit in HiddenTextDetector.Scan(document, includeVisibleFailedRedactions: true))
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -82,7 +102,12 @@ internal static class UnredactCommandHandler
         }
 
         if (!input.UseOcr)
+        {
+            builder.ChannelSkipped(
+                RecoveryScanner.Channels.OcrDifferential,
+                "not requested (--ocr)");
             return findings;
+        }
 
         var ocr = new PdfOcrService(useNativeFastPath: true);
         if (!ocr.IsAvailable())
@@ -93,6 +118,7 @@ internal static class UnredactCommandHandler
             return findings;
         }
 
+        builder.ChannelRan(RecoveryScanner.Channels.OcrDifferential);
         var bytes = File.ReadAllBytes(input.FilePath);
         foreach (var hit in new DifferentialOcrAuditor(ocr).Scan(bytes))
         {
@@ -104,19 +130,66 @@ internal static class UnredactCommandHandler
                 Math.Round(hit.BoundingBox.Left, 1),
                 Math.Round(hit.BoundingBox.Bottom, 1),
                 Math.Round(hit.Confidence, 1)));
+
+            // OCR read pixels, not bytes, so the text is a RECOGNITION: right
+            // often enough to act on, wrong often enough that asserting it as
+            // certain would be a lie with a confidence score attached. It is a
+            // candidate of one, and the report says so.
+            builder.AddFinding(RecoveredFinding.Candidate(
+                RecoveryScanner.Channels.OcrDifferential,
+                "OCR differential (obstruction stripped)",
+                new[] { hit.Text },
+                0,
+                new RecoveryLocation(hit.PageNumber, hit.BoundingBox, "OCR word box")));
         }
 
         return findings;
     }
 
+    /// <summary>
+    /// #1587 — name the channels that did NOT run, and why. Without this a
+    /// report over four channels reads exactly like one over nine, which is the
+    /// overstatement the Coverage rule (#1181) exists to prevent.
+    /// </summary>
+    private static void DeclareUnrunChannels(
+        UnredactCommandInput input, UnredactMode mode, RecoveryReportBuilder builder)
+    {
+        if (mode is not (UnredactMode.Certain or UnredactMode.Both))
+        {
+            foreach (var channel in new[]
+                     {
+                         RecoveryScanner.Channels.HiddenText, RecoveryScanner.Channels.Carrier,
+                         RecoveryScanner.Channels.MarkedContent, RecoveryScanner.Channels.CoveredImage,
+                         RecoveryScanner.Channels.CoveredVector, RecoveryScanner.Channels.FormField,
+                     })
+            {
+                builder.ChannelSkipped(channel, "--mode residue");
+            }
+        }
+
+        if (mode is not (UnredactMode.Residue or UnredactMode.Both))
+            builder.ChannelSkipped(RecoveryScanner.Channels.Residue, "--mode certain");
+
+        // Not implemented yet, and saying so is the honest report. Silence here
+        // would read as "this document has no prior revision and no XFA", which
+        // is a claim nothing in this run checked.
+        builder.ChannelSkipped(
+            RecoveryScanner.Channels.PriorRevision, "not implemented (#1592)");
+        builder.ChannelSkipped(
+            RecoveryScanner.Channels.Xfa, "not implemented (#1592)");
+    }
+
     private static List<UnredactResidueFinding> CollectResidue(
         UnredactCommandInput input,
         UnredactMode mode,
+        RecoveryReportBuilder builder,
         CancellationToken cancellationToken)
     {
         var findings = new List<UnredactResidueFinding>();
         if (mode is not (UnredactMode.Residue or UnredactMode.Both))
             return findings;
+
+        builder.ChannelRan(RecoveryScanner.Channels.Residue);
 
         var dictionary = File.ReadAllLines(input.DictionaryPath!)
             .Select(word => word.Trim())
@@ -162,6 +235,22 @@ internal static class UnredactCommandHandler
                 Math.Round(recovery.ContextAdjustedBits, 2),
                 recovery.CandidatesFit.Take(20).ToArray(),
                 recovery.Status));
+
+            // #1587: the gap into the shared model. The engine reports a span
+            // on one baseline, not a rectangle, so the box is that span at the
+            // anchoring glyph's line -- enough to link it to a mark and to
+            // place a note in a restored copy, and no more than the channel
+            // actually knows.
+            var gapRect = new Core.Document.PdfRectangle(
+                recovery.Gap.X0, 0, recovery.Gap.X1, recovery.Gap.SizePt);
+            builder.AddFinding(
+                RecoveredFinding.Candidate(
+                    RecoveryScanner.Channels.Residue,
+                    $"width residue ({recovery.Gap.Kind})",
+                    recovery.CandidatesFit.Take(20).ToArray(),
+                    recovery.ResidualEntropyBits,
+                    new RecoveryLocation(recovery.Gap.Page, gapRect, "residue gap")),
+                gapRect);
         }
 
         return findings;

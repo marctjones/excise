@@ -24,7 +24,14 @@ public sealed record HiddenTextRecord(
     int PageNumber,             // 1-based
     string Text,
     PdfRectangle BoundingBox,   // page-space (bottom-left origin)
-    string HiddenBy);           // e.g. "black filled rectangle", "image /Im0"
+    string HiddenBy,            // e.g. "black filled rectangle", "image /Im0"
+    // #1587: the OBSTRUCTION's own rectangle -- the redaction mark this text
+    // was hiding under. The recovery model links findings to marks, and this
+    // detector already knows exactly which fill covered which run; re-deriving
+    // that link geometrically downstream would be a guess where an exact
+    // answer was available. Null for the #796 symbol-cmap class, which has no
+    // obstruction: nothing is drawn over that text, its ENCODING hides it.
+    PdfRectangle? ObstructionBox = null);
 
 /// <summary>
 /// Scans a PDF for text that is structurally present but visually
@@ -260,7 +267,8 @@ public static class HiddenTextDetector
                 var run = CoveredRun(t, o.Bbox);
                 if (run != null)
                 {
-                    records.Add(new HiddenTextRecord(pageNumber, run.Value.Text, run.Value.Box, o.Description));
+                    records.Add(new HiddenTextRecord(pageNumber, run.Value.Text, run.Value.Box,
+                        o.Description, o.Bbox));
                     reported = true;
                     break;
                 }
@@ -276,7 +284,8 @@ public static class HiddenTextDetector
                 if (run != null)
                 {
                     records.Add(new HiddenTextRecord(pageNumber, run.Value.Text, run.Value.Box,
-                        $"low-contrast text ({DescribeColor(t.Fill)}) on {DescribeColor(o.Fill)} background"));
+                        $"low-contrast text ({DescribeColor(t.Fill)}) on {DescribeColor(o.Fill)} background",
+                        o.Bbox));
                     reportedB = true;
                     break;
                 }
@@ -301,7 +310,8 @@ public static class HiddenTextDetector
                     if (run == null) continue;
                     if (Area(o.Bbox) > RedactionBoxAreaRatio * Area(run.Value.Box)) continue;  // box-sized, not a banner
                     records.Add(new HiddenTextRecord(pageNumber, run.Value.Text, run.Value.Box,
-                        $"readable text ({DescribeColor(t.Fill)}) on a redaction-shaped {DescribeColor(o.Fill)} fill"));
+                        $"readable text ({DescribeColor(t.Fill)}) on a redaction-shaped {DescribeColor(o.Fill)} fill",
+                        o.Bbox));
                     break;
                 }
         }

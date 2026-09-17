@@ -1137,7 +1137,15 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 │   ├── HiddenTextDetector.cs       # audit: visible-but-unextractable text
 │   ├── PdfDocumentSanitizer.cs     # /Info, XMP, outlines, annots (#608)
 │   ├── RedactionCarriers.cs        # typed document-carrier scope
-│   └── XfaXmlCarrier.cs            # safe XML/XFA carrier rewrite
+│   ├── XfaXmlCarrier.cs            # safe XML/XFA carrier rewrite
+│   └── Recovery/                   # ← DE-REDACTION (#1587): the READ mirror
+│       ├── RecoveryModel.cs        # one record per finding: confidence, channel, LOCATION
+│       ├── RedactionMarkDetector.cs# the marks a document admits to — the DENOMINATOR
+│       ├── RecoveryReportBuilder.cs# links findings to marks; grades each mark
+│       ├── RecoveryScanner.cs      # runs the document-only channels into one report
+│       ├── MarkedContentTextRecovery.cs  # inline BDC /ActualText (#1182/#1185)
+│       ├── CoveredContentRecovery.cs     # image + vector surviving under a mark
+│       └── FormFieldValueRecovery.cs     # /V behind a blanked appearance
 ├── Content/
 │   ├── ContentStreamWalker.cs      # ← THE content-stream state machine (see below)
 │   ├── ContentStreamParser.cs      # a SINK: operator bounds + decoded text

@@ -28,6 +28,7 @@ internal static class UnredactCommandOutput
     private static void WriteHuman(UnredactReport report, TextWriter output)
     {
         var quantification = report.Quantification;
+        WriteRecoveryModel(report.Recovery, output);
         if (report.Certain.Count == 0 && report.Residue.Count == 0)
         {
             output.WriteLine("✓ No recoverable text or measurable residue found.");
@@ -74,5 +75,73 @@ internal static class UnredactCommandOutput
                     $"[{string.Join(", ", finding.Candidates)}]");
             }
         }
+    }
+
+    /// <summary>
+    /// #1587 — the per-mark summary, printed FIRST and deliberately so. The
+    /// finding lists below answer "what did we get"; this answers "out of how
+    /// much", and a reader who sees only the former will overestimate the
+    /// recovery every time.
+    /// </summary>
+    private static void WriteRecoveryModel(UnredactRecoveryModel? recovery, TextWriter output)
+    {
+        if (recovery == null) return;
+
+        if (recovery.Marks == 0)
+        {
+            output.WriteLine("MARKS — no redaction mark found (no box, /Redact annotation or emptied region).");
+        }
+        else
+        {
+            output.WriteLine(
+                $"MARKS — {recovery.Marks} redaction mark(s): " +
+                $"{recovery.MarksRecovered} recovered, " +
+                $"{recovery.MarksPartiallyRecovered} partially recovered, " +
+                $"{recovery.MarksCandidatesOnly} candidates only, " +
+                $"{recovery.MarksNotRecovered} nothing recovered.");
+
+            foreach (var mark in recovery.MarkSummaries)
+            {
+                var symbol = mark.Outcome switch
+                {
+                    "recovered" => "✗",              // the redaction failed completely
+                    "partially-recovered" => "✗",
+                    "candidates-only" => "~",
+                    _ => "✓",                        // nothing came back: the redaction held
+                };
+                output.WriteLine(
+                    $"  {symbol} {mark.Id} page {mark.Page} [{mark.Kind}] " +
+                    $"({mark.Rect[0]},{mark.Rect[1]})-({mark.Rect[2]},{mark.Rect[3]}): " +
+                    $"{mark.Outcome}" +
+                    (mark.Findings > 0
+                        ? $" — {mark.Findings} finding(s), {mark.CertainFindings} certain"
+                        : ""));
+            }
+        }
+
+        if (recovery.Unlinked.Count > 0)
+        {
+            // Not an error and not noise: a carrier the redactor never scrubbed,
+            // on a page where no box was drawn, is the commonest real leak.
+            output.WriteLine(
+                $"  … plus {recovery.Unlinked.Count} located finding(s) under NO mark " +
+                "(a leak where nothing was redacted on the page).");
+        }
+
+        if (recovery.DocumentLevel.Count > 0)
+        {
+            output.WriteLine(
+                $"  … plus {recovery.DocumentLevel.Count} document-level finding(s) with no page location.");
+        }
+
+        output.WriteLine($"  channels run: {string.Join(", ", recovery.ChannelsRun)}");
+        if (recovery.ChannelsSkipped.Count > 0)
+        {
+            output.WriteLine(
+                "  ⚠ channels NOT run (this report does not cover them): " +
+                string.Join(", ", recovery.ChannelsSkipped.Select(c => $"{c.Key} ({c.Value})")));
+        }
+
+        output.WriteLine();
     }
 }

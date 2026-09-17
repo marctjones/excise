@@ -186,6 +186,51 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   is still scanned.
 
 ### Added
+- **`unredact` has ONE recovery model, and it reports coverage rather than a
+  finding count** (#1587). Every channel now produces the same record — recovered
+  text or candidate set, a confidence class (`certain` / `candidate` /
+  `present-only`), the source channel and carrier, and a LOCATION — and the
+  redaction marks a document admits to (opaque dark fills, `/Redact`
+  annotations, dark shape annotations, and emptied regions inferred from the
+  residue channel) are enumerated INDEPENDENTLY of what any channel found.
+  That separation is the change. A report assembled from channel output can say
+  "8 findings" over a document with 40 redactions and read as success; marks are
+  the denominator, and a mark nothing recovered — the part of the redaction that
+  held — is a row in the report only because it is counted on its own. Each mark
+  is graded recovered / partially recovered / candidates only / nothing, and the
+  grade is geometric and deliberately under-claims: a carrier recovers a whole
+  string but its location is only the stub glyphs its span enclosed, and nothing
+  establishes the carrier restates everything the mark removed.
+
+  Five channels were missing and are added, all in `Excise.Core.Redaction.Recovery`:
+  inline marked-content `/ActualText`, `/Alt` and `/E` (§14.9.4 — the carrier a
+  structure-tree walk never reaches, #1182/#1185), located from the glyphs its
+  span painted; image pixels and vector content surviving under a mark, reported
+  `present-only` because the channel establishes that content is there and where
+  without decoding it into a value; AcroForm field `/V` behind a blanked
+  appearance, located at its widget `/Rect`; and the OCR differential routed
+  through the model as a candidate rather than a certainty, because OCR reads
+  pixels and a recognition asserted as certain is a lie with a confidence score
+  attached. `CarrierTextRecovery` gained locations (annotation `/Rect`;
+  structure-tree text through the `/MCID` bridge), and `HiddenTextRecord` now
+  carries the obstruction rectangle it was found under, so mark linkage is exact
+  rather than re-derived geometrically. Findings matching no mark are kept as
+  `unlinked` rather than dropped or bound to the nearest box — a carrier the
+  redactor never scrubbed, on a page with no box near it, is the commonest real
+  leak. Channels that did NOT run are named with a reason, so a report over four
+  channels cannot be read as one over nine.
+
+  Two things were MEASURED against independent engines and are not what the
+  design assumed. Poppler honours inline `/ActualText` and prints a name MuPDF
+  does not, so whether a page reads as clean depends on which extractor an
+  auditor happened to pick — the #1372 lesson on the recovery side. And MuPDF
+  regenerates a widget appearance from `/V`, so a form-field leak is not latent
+  bytes but a value re-painted onto the page by a mainstream reader. Both are
+  pinned in `RecoveryOracleTests`, where qpdf checks the fixtures are real PDFs
+  and mutool's `stext` glyph positions check the LOCATION excise reports —
+  planting a bottom-left/top-left flip in the location reddens that oracle test
+  and no excise-versus-excise test, which is the no-self-oracle rule doing its
+  job.
 - **Safe-redacted-copy refusal for unresolved `/Redact` annotations** (#1430)
   — the `redactionReviewDrafts.safeRedactedCopy` product-policy rule was
   unimplemented, so excise would produce output treated as safely redacted
