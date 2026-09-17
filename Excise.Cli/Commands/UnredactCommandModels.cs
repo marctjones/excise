@@ -13,7 +13,10 @@ internal sealed record UnredactCommandInput(
     double Tolerance,
     int MaxCandidates,
     bool UseOcr,
-    bool NoCorroboration);
+    bool NoCorroboration,
+    // Last, with a default: this is a positional record and every existing
+    // caller constructs it positionally.
+    string? RestorePath = null);
 
 internal enum UnredactMode { Certain, Residue, Both }
 
@@ -128,12 +131,21 @@ internal sealed record UnredactRecoveryModel(
     IReadOnlyList<string> ChannelsRun,
     IReadOnlyDictionary<string, string> ChannelsSkipped);
 
+/// <summary>#1588 — what `--restore` wrote.</summary>
+internal sealed record UnredactRestoreResult(
+    string Path,
+    int ItemsDrawn,
+    int DocumentLevelItems,
+    bool SummaryIncluded);
+
 internal sealed record UnredactReport(
     UnredactQuantification Quantification,
     IReadOnlyList<UnredactCertainFinding> Certain,
     IReadOnlyList<UnredactResidueFinding> Residue,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    UnredactRecoveryModel? Recovery = null);
+    UnredactRecoveryModel? Recovery = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    UnredactRestoreResult? Restore = null);
 
 internal sealed record UnredactCommandOutcome(
     int ExitCode,

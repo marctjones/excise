@@ -36,6 +36,20 @@ internal static class UnredactCommandOutput
         // over a document whose redacted name the prior-revision channel had
         // just recovered. An all-clear that cannot see a channel is the exact
         // false reassurance this tool exists to remove.
+        if (report.Restore is { } restore)
+        {
+            output.WriteLine(
+                $"RESTORED → {restore.Path} — {restore.ItemsDrawn} item(s) drawn in place" +
+                (restore.DocumentLevelItems > 0
+                    ? $", {restore.DocumentLevelItems} document-level item(s) " +
+                      (restore.SummaryIncluded ? "in a summary note" : "NOT included")
+                    : ""));
+            output.WriteLine(
+                "  ⚠️ this file CONTAINS the recovered text by design, and is watermarked " +
+                "as a reconstruction. Handle it as you would the unredacted original.");
+            output.WriteLine();
+        }
+
         var recovered = report.Recovery is { } model
             ? model.Linked.Count + model.Unlinked.Count + model.DocumentLevel.Count
             : 0;

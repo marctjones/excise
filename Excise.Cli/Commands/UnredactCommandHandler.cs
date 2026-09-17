@@ -46,9 +46,18 @@ internal static class UnredactCommandHandler
             var residue = CollectResidue(input, mode, builder, cancellationToken);
             DeclareUnrunChannels(input, mode, builder);
 
-            var recovery = UnredactRecoveryMapper.Map(builder.Build());
+            var recoveryReport = builder.Build();
+            var recovery = UnredactRecoveryMapper.Map(recoveryReport);
+
+            UnredactRestoreResult? restore = null;
+            if (input.RestorePath != null)
+            {
+                var restored = WriteRestoredCopy(input, recoveryReport, out var restoreError);
+                if (restoreError != null) return restoreError;
+                restore = restored;
+            }
             var quantification = Quantify(mode, input.NoCorroboration, certain, residue, recovery);
-            var report = new UnredactReport(quantification, certain, residue, recovery);
+            var report = new UnredactReport(quantification, certain, residue, recovery, restore);
             return new UnredactCommandOutcome(ExitCodeFor(certain, residue, recovery), report, null);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -216,6 +225,46 @@ internal static class UnredactCommandHandler
             builder.ChannelSkipped(RecoveryScanner.Channels.Residue, "--mode certain");
 
 
+    }
+
+    /// <summary>
+    /// #1588 — write the rebuilt PDF. Refuses to overwrite the input: the whole
+    /// value of a restored copy is that the original is still there to compare
+    /// it against, and a tool that can destroy its own evidence is not one you
+    /// hand a records officer.
+    /// </summary>
+    private static UnredactRestoreResult? WriteRestoredCopy(
+        UnredactCommandInput input,
+        Core.Redaction.Recovery.RecoveryReport report,
+        out UnredactCommandOutcome? error)
+    {
+        error = null;
+        var destination = Path.GetFullPath(input.RestorePath!);
+        var source = Path.GetFullPath(input.FilePath);
+        if (string.Equals(destination, source, StringComparison.OrdinalIgnoreCase))
+        {
+            error = UnredactCommandOutcome.Failure(
+                2, "--restore must not overwrite the input; choose a different path.");
+            return null;
+        }
+
+        try
+        {
+            // A SECOND open: Apply draws onto the document it is given, and the
+            // scan's document has already been disposed. Re-opening also keeps
+            // the analysed document pristine, so nothing the restore does can
+            // feed back into what was reported.
+            using var document = PdfDocument.Open(input.FilePath);
+            var result = Core.Redaction.Recovery.RestoredCopyBuilder.Apply(document, report);
+            document.Save(destination);
+            return new UnredactRestoreResult(
+                destination, result.ItemsDrawn, result.DocumentLevelItems, result.SummaryPageAdded);
+        }
+        catch (Exception ex)
+        {
+            error = UnredactCommandOutcome.Failure(1, $"--restore failed: {ex.Message}");
+            return null;
+        }
     }
 
     /// <summary>Word list for #1589 candidate ranking, or null when none was given.</summary>

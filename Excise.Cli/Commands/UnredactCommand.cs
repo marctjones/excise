@@ -30,6 +30,13 @@ internal static class UnredactCommand
             Description = "Cap candidates per gap (residue mode)",
             DefaultValueFactory = _ => 200,
         };
+        var restoreOption = new Option<FileInfo?>("--restore")
+        {
+            Description =
+                "Write a rebuilt PDF with recovered material drawn back in place " +
+                "(green = certain, amber = candidate). ⚠️ The output CONTAINS the " +
+                "recovered text by design. Refuses to overwrite the input.",
+        };
         var jsonOption = new Option<bool>("--json") { Description = "Machine-readable JSON output" };
         var ocrOption = new Option<bool>("--ocr")
         {
@@ -45,7 +52,7 @@ internal static class UnredactCommand
             "Recover or estimate text a redaction leaked (audit; reports constraints, not asserted secrets)")
         {
             fileArg, modeOption, dictOption, toleranceOption, maxOption,
-            jsonOption, ocrOption, noCorroborationOption,
+            jsonOption, ocrOption, noCorroborationOption, restoreOption,
         };
 
         command.SetAction((parseResult, cancellationToken) =>
@@ -59,7 +66,8 @@ internal static class UnredactCommand
                 parseResult.GetValue(toleranceOption),
                 parseResult.GetValue(maxOption),
                 parseResult.GetValue(ocrOption),
-                parseResult.GetValue(noCorroborationOption));
+                parseResult.GetValue(noCorroborationOption),
+                parseResult.GetValue(restoreOption)?.FullName);
 
             var outcome = UnredactCommandHandler.Execute(input, cancellationToken);
             UnredactCommandOutput.Write(
