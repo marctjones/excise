@@ -50,7 +50,7 @@ Two concurrent facts a reader must know:
 | `Excise.App/ViewModels/MainWindowViewModel.cs` | 3,223 | services, all cross-cutting state, document lifecycle, page organisation, zoom/fit, clipboard, pickers, recent files, links, help, preferences |
 | `MainWindowViewModel.Commands.cs` | 298 | declares 95 `ReactiveCommand` properties and wires them; `CurrentModeText` |
 | `MainWindowViewModel.Annotations.cs` | 603 | annotation authoring from selection/drag; `ClearCurrentTextSelection` |
-| `MainWindowViewModel.Attachments.cs` | 262 | embedded-file list, save, strip; owns the `AttachmentsDialog` DataContext |
+| `MainWindowViewModel.Attachments.cs` | 460 | Attachments pane (#1563): embedded-file list, pane visibility, save / save-all, undoable strip; the pane binds to the main VM |
 | `MainWindowViewModel.Bates.cs` | 128 | Bates stamping via a dialog |
 | `MainWindowViewModel.DocumentOpen.cs` | 372 | the staged open pipeline and its failure path |
 | `MainWindowViewModel.DragDrop.cs` | 58 | drop-to-open |
@@ -307,12 +307,13 @@ reads mode flags from cs, `Forms.cs` and `Typewriter.cs`.
 
 | Member (line) | Kind | Does | State | Services | Callers |
 |---|---|---|---|---|---|
-| `Attachments` (36), `HasAttachments` (39), `AttachmentsSummary` (42–47), `SelectedAttachment` (52–56) | props | embedded-file list for the dialog; **the dialog's DataContext is the main VM** (`AttachmentsDialog.axaml:6`) | own | — | `AttachmentsDialog` XAML |
-| `PickAttachmentSavePathOverride` (63), `ShowAttachmentsDialogOverride` (166) | seams | — | — | — | T |
-| `RefreshAttachments` (68–98) | internal | re-read `GetEmbeddedFiles()`; not reset on open/failed open | `Attachments` | doc service | `DocumentOpen.cs:269` |
-| `SaveAttachmentAsync` (112–141), `SaveSelectedAttachmentAsync` (146–160), `PickAttachmentSavePathAsync` (207–227) | async | write bytes to a picked path | — | doc service, toast, `GetStorageProvider()` | `AttachmentsDialog.axaml.cs:35` |
-| `ShowAttachmentsDialogAsync` (171–198) | private | `new Views.AttachmentsDialog { DataContext = this }.ShowDialog(owner)` | — | `GetMainWindow()`, dialog service | `AttachmentsCommand` |
-| `StripAllAttachments` (239–261) | public | `ScrubEmbeddedFiles()` counted as a page edit | `FileState.PageEditsCount` | doc service, toast | `AttachmentsDialog.axaml.cs:47` |
+| `Attachments`, `HasAttachments`, `AttachmentsSummary`, `AttachmentsEmptyText`, `AttachmentsCountText`, `SelectedAttachment` (selecting a page attachment sets `CurrentPageIndex`) | props | the pane's list and empty state; **the pane's DataContext is the main VM** (`MainWindow.axaml` `AttachmentsPanel`) | own | — | `MainWindow.axaml` |
+| `IsAttachmentsSidebarVisible`, `ToggleAttachmentsSidebar`, `ApplyAttachmentsPanePreference`, `AttachmentsPaneFocusRequested` | props/event | pane visibility (part of `IsLeftSidebarVisible`), restored from and written to `window.json` by `MainWindow.axaml.cs` | own | — | XAML, `MacNativeMenuBuilder`, code-behind |
+| `PickAttachmentSavePathOverride`, `ShowAttachmentsPaneOverride` | seams | — | — | — | T |
+| `RefreshAttachments`, `ClearAttachments` | internal/private | re-read `GetEmbeddedFiles()` / empty the list; refreshed on open, close and failed open, cleared at the start of an open | `Attachments` | doc service | `DocumentOpen.cs`, cs close path |
+| `SaveAttachmentAsync`, `SaveSelectedAttachmentAsync`, `SaveAllAttachmentsAsync`, `PickAttachmentSavePathAsync` | async | /P bit 5 gate, then write decoded bytes to a picked path or folder (`AttachmentFileNames`) | — | doc service, toast, picker | `SaveSelectedAttachmentCommand`, `SaveAllAttachmentsCommand` |
+| `ShowAttachmentsPaneAsync` | private | refresh, show the pane, request focus | — | dialog service | `AttachmentsCommand` |
+| `StripAllAttachments` | public | `ScrubEmbeddedFilesReversibly()` counted as a page edit and pushed to `_history` | `FileState.PageEditsCount` | doc service, toast | `RemoveAllAttachmentsCommand` |
 
 **`Bates.cs`**
 
@@ -558,7 +559,7 @@ These are the constraints on any rename or move (from
 | Named controls | `FindControl("PdfViewerControl")` in code-behind and **63 test lookups**; `SearchTextBox` 6; `OutlineTree`, `ThumbnailsItemsControl`, `ToastInfoBar` and the toggle menu items in tests | a control moved into a `UserControl` is in another name scope |
 | `VisualPolishAuditTests.cs:28-72` | reads the **source text** of `MainWindow.axaml` for icon resource usage | moving the toolbar or menu into another file breaks its `Contains` checks |
 | `ResetPersistedSettingsBeforeEachTest` | deletes `window.json`, zoom and preferences files before every test | any new persisted file must go through `AppPaths` and be added to the delete list |
-| `AttachmentsDialog.axaml:6` | `x:DataType` = the main VM | the attachments feature cannot leave the shell until the dialog gets its own DataContext |
+| `MainWindow.axaml` `AttachmentsPanel` | binds straight to the main VM (#1563) | the attachments feature cannot leave the shell until the pane gets its own DataContext |
 
 ### 1.7 Hidden couplings between groups
 
@@ -667,7 +668,7 @@ why the UI test suite constructs one 260 times.
 `Avalonia.Controls.MenuItem`s (cs:988–1020). `ShowErrorDialogAsync` builds a
 `Window` from controls (cs:1119–1175). `TypewriterColor` is
 `Avalonia.Media.Color` and `TypewriterColorBrush` allocates a brush per read
-(`TypewriterStyle.cs:47-61`). `Views.AttachmentsDialog`, `BatesNumberingDialog`,
+(`TypewriterStyle.cs:47-61`). `BatesNumberingDialog`,
 `SecurityDialog`, `MakeSearchableDialog`, `PreferencesWindow`, `AboutWindow`
 are `new`ed inside the VM and shown against a `Window` obtained from
 `Application.Current.ApplicationLifetime`. `OpenDroppedFilesAsync` takes
@@ -695,9 +696,9 @@ defaults, which is why it has 353 call sites.
 **Dialog handling uses four mechanisms.** `IUserDialogService` (fail-closed,
 fakeable), direct `Window` construction with `ShowDialog(owner)`, storage
 pickers via `GetStorageProvider()` with five per-feature `*Override` seams,
-and toasts. Two dialogs (`AttachmentsDialog`, `PreferencesWindow`) are handed
-the main VM or read from it. The test seams (`MainWindowResolver`,
-`StorageProviderOverride`, `Pick*Override`, `ShowAttachmentsDialogOverride`,
+and toasts. `PreferencesWindow` is handed the main VM or reads from it, as
+does the Attachments pane (#1563, which replaced `AttachmentsDialog`). The test seams (`MainWindowResolver`,
+`StorageProviderOverride`, `Pick*Override`, `ShowAttachmentsPaneOverride`,
 `BatesOptionsOverride`, `_imageStampPathProviderForTests`,
 `_redactedSavePathProviderForTests`, `KeyboardShortcutsDialogRequested`,
 `DocumentationOpener`) are nine ways of saying "the VM should not own the
@@ -1177,7 +1178,7 @@ void Push(string description, Func<Task> undo, Func<Task> redo);   void Clear();
 
 #### `DocumentToolsViewModel` (or one small VM per tool)
 
-Attachments (with its own `AttachmentsViewModel` as the dialog's DataContext),
+Attachments (with its own `AttachmentsViewModel` as the pane's DataContext),
 Bates, Security, Signing, MakeSearchable, page-image export, print (#1545),
 external/dangerous links, help (About, shortcuts, documentation), verify
 signatures. Each tool: guard → prompt → service → toast, ≤ 40 lines, with its
@@ -1185,7 +1186,7 @@ service injected (`BatesNumberingService`, `SignatureApplicationService`,
 `IOcrServiceFactory` *new*) and dialogs opened through `IWindowHost`.
 
 ```csharp
-// AttachmentsViewModel — becomes AttachmentsDialog's DataContext
+// AttachmentsViewModel — becomes the Attachments pane's DataContext
 ObservableCollection<AttachmentEntry> Attachments { get; }   bool HasAttachments { get; }
 string AttachmentsSummary { get; }   AttachmentEntry? SelectedAttachment { get; set; }
 RC<Unit> SaveSelectedAttachmentCommand, StripAllAttachmentsCommand;
@@ -1437,7 +1438,7 @@ Sizes: S ≤ half a day, M ≤ two days, L ≤ a week.
 | 9 | `TextSelectionViewModel` + `IClipboard` (from step 1); `SetSelection` absorbs `OnTextSelected`'s `ViewerDips` construction; `ClearCurrentTextSelection` moves out of `Annotations.cs` | cs:86–88, 207, 921–972, 1748–1848; `Annotations.cs:597–602`; `MainWindow.axaml.cs:1010–1039` (calls the new method) | selection + clipboard have one owner | `TextSelectionDragTests`, `TextSelectionAlignmentTests`, `CharacterLevelSelectionTests`, `CopyReadingOrderTests`, `CopyWhitespaceModeTests`, `ClipboardEntryUnicodeSafetyTests`, `KeyboardShortcutTests` (Ctrl+C) | none | S |
 | 10 | `RedactionViewModel`: `Redaction.cs`, the drag rectangle, the four policies, `BuildRedactedCopySafetyOptions`, `RedactAnnotationNotice`; `OnAreaDrawn` absorbs the 5×5 rule; annotations receive the rect through the coordinator instead of reading `CurrentRedactionPageArea` | `Redaction.cs`, cs:64–76, 290–381, 481–525, 815–895, `Annotations.cs:127–390` (rect source), `MainWindow.axaml.cs:949–963` | redaction workflow has one owner; the shared drag rectangle coupling is gone | `RedactionInteractionTests`, `RedactionWorkflowManagerTests`, `RedactionWorkflowServiceTests`, `RedactionMouseWorkflowTests`, `RedactionMouseDragBroadeningTests`, `RedactionCopyRecoveryTests`, `SecondRedactionSaveScrubTests`, `RedactionCarrierPolicyPreferenceTests`, `UserFlowAutomationTests`, `redaction-suites`, `redaction-architecture`, `redaction-oracles` | security-critical path: the `RedactedCopyRequest` construction (`Redaction.cs:89–142`) moves verbatim; verify with the independent oracles in `Excise.Rendering.Tests/Differential`, not with excise's own extraction | M |
 | 11 | `AnnotationsViewModel` (+ `IImageDecoder`), `FormsViewModel`, `TypewriterViewModel` (+ colour converter), `HiddenTextViewModel` (+ `IHiddenTextScanner`) — one step each, any order | the four partial pairs, `Commands.cs` groups, composition, factory, `MainWindow.axaml` converter for `TypewriterColorBrush` | each feature has one owner; inline OCR/Skia construction leaves the VM | `AnnotationAuthoringWorkflowTests`, `TextMarkupAnnotationCommandTests`, `AnnotationDisplayControlTests`, `AnnotationHoverReadingTests`, `FormAuthoringTests`, `FormFieldsOverlayTests`, `FormWorkflowTests`, `TypewriterWorkflowTests`, `RevealHiddenTextTests`, `redaction-suites` for annotations (structure-tree carriers) | `TypewriterColor`'s public type changes only in Phase B; Phase A keeps the Avalonia `Color` forward on the shell | 4 × M |
-| 12 | Tools: `AttachmentsViewModel` becomes `AttachmentsDialog`'s DataContext (`x:DataType` change in that dialog only), Bates/Security/Signing/MakeSearchable/export/links/help through `IWindowHost` with their services injected | `Attachments.cs`, `Bates.cs`, `Security.cs`, `Signing.cs`, `Searchable.cs`, cs:2380–2777, 3122–3157, `Views/AttachmentsDialog.axaml(.cs)`, composition, factory | dialog opening has one mechanism; inline services leave the VM | `AttachmentsPanelTests`, `BatesNumberingWorkflowTests`, `SecurityDialogUiTests`, `MakeSearchableDialogUiTests`, `MakeSearchableWiringTests`, `SignatureApplicationServiceTests`, `HiddenDialogCoverageTests`, `AboutDialogTests`, `DialogInputInteractionTests` | `ShowAttachmentsDialogOverride`/`BatesOptionsOverride` seams become `IWindowHost` fakes; tests that inspect owned windows keep working because the production adapter still calls `ShowDialog(owner)` | M |
+| 12 | Tools: `AttachmentsViewModel` becomes the Attachments pane's DataContext (`x:DataType` change on `AttachmentsPanel` only), Bates/Security/Signing/MakeSearchable/export/links/help through `IWindowHost` with their services injected | `Attachments.cs`, `Bates.cs`, `Security.cs`, `Signing.cs`, `Searchable.cs`, cs:2380–2777, 3122–3157, `MainWindow.axaml` (`AttachmentsPanel`), composition, factory | dialog opening has one mechanism; inline services leave the VM | `AttachmentsPanelTests`, `BatesNumberingWorkflowTests`, `SecurityDialogUiTests`, `MakeSearchableDialogUiTests`, `MakeSearchableWiringTests`, `SignatureApplicationServiceTests`, `HiddenDialogCoverageTests`, `AboutDialogTests`, `DialogInputInteractionTests` | `ShowAttachmentsPaneOverride`/`BatesOptionsOverride` seams become `IWindowHost` fakes; tests that inspect owned windows keep working because the production adapter still calls `ShowDialog(owner)` | M |
 | 13 | View-side binders: `ViewerOverlayBinder`, `ViewerLayoutSignals`, `ViewerPerformanceBinder`, `ViewerEventsBinder`, `ToastHost`, `DropToOpenBehavior`, thumbnail/outline behaviours; delete the corresponding code-behind; `PerformanceSettingsApplied` and `ViewerTileCacheResidentBytesProvider` retire | `MainWindow.axaml.cs`, `MainWindow.axaml` (attached properties on existing controls — no control moves, no `x:Name` changes), `Behaviors/*`, `Performance.cs` | code-behind holds only settings/closing/native menu/cache-trim | `SearchHighlightOverlayTests`, `PointerInteractionTests`, `MouseInputTests`, `InPageLinkClickTests`, `DragDropOpenTests`, `PerformancePreferencesLiveApplyTests`, `ToastServiceTests`, `StatusMessageAuditTests`, `IdleAnimationQuiescenceTests`, `GuiClickSafetySweepTests`, `CommandBindingSweepTests`, `gui-interaction-registry` (attached properties are not parsed, so the JSON is unchanged) | headless tests that wait on the old `DispatcherTimer` toast (`KeyboardShortcutTests` history, comment at `MainWindow.axaml.cs:35–42`) must see the same dismiss timing through the scheduler | L |
 | 14 | `MainWindowShortcuts` + `ShortcutRouter`; `MainWindow_KeyDown` → one call; `ShowKeyboardShortcuts` text and menu `InputGesture`s generated from the table; `build-gui-interaction-registry.py` reads the table for shortcuts (a deliberate, reviewed registry change) | `Behaviors/Shortcuts/*`, `MainWindow.axaml.cs:611–943`, cs:2716–2748, `MainWindow.axaml` gestures, the generator, `tests/gui-interaction-registry.json` (`--update`) | one keyboard map; the "advertised but unwired" class (#827, #1170) cannot recur | `KeyboardShortcutTests` (31 windows), `KeyboardShortcutEffectTests`, `AccessibilityRegressionTests`, `gui-interaction-registry` | the registry diff is intended and must be reviewed line by line; `duplicateShortcuts` output must stay empty | M |
 | 15 | Phase B, view split: one `UserControl` per region (toolbar last, after `fix/quick-wins-and-bugs` lands); extend the registry generator to glob `Views/MainWindow/*.axaml`; move `VisualPolishAuditTests`' source read to the new files; keep `x:Name`s and give each region's tests the right name scope (`FindControl` on the region, or `x:Name` re-exported by the window) | `Views/MainWindow/*`, `MainWindow.axaml`, generator, `VisualPolishAuditTests`, the 63 `PdfViewerControl` lookups (one helper) | discoverability: a region is a file | `gui-interaction-registry`, `gui-interaction-coverage`, `VisualPolishAuditTests`, `AccessibilityRegressionTests`, full `app-tests-unchunked-evidence` | coverage ids use the root `TopLevel` name (`GuiInteractiveElement.cs:51`), so `MainWindow/...` ids survive; ordinal ids of unnamed controls shift if regions reorder — name them first | L |

@@ -234,6 +234,7 @@ public partial class MainWindow : Window
             if (viewModel != null)
             {
                 settings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
+                settings.AttachmentsSidebarVisible = viewModel.IsAttachmentsSidebarVisible;
                 viewModel.WritePreferencesTo(settings);
             }
             settings.CaptureFrom(this);
@@ -302,6 +303,8 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel viewModel)
         {
             viewModel.ApplyContinuousScrollPreference(_windowSettings.ContinuousScrollEnabled);
+            viewModel.ApplyAttachmentsPanePreference(_windowSettings.AttachmentsSidebarVisible);
+            viewModel.AttachmentsPaneFocusRequested += OnAttachmentsPaneFocusRequested;
             if (Enum.TryParse<Excise.Core.Text.ReadingOrderStrategy>(
                     _windowSettings.ReadingOrderStrategy, out var strategy))
                 viewModel.ApplyReadingOrderStrategyPreference(strategy);
@@ -431,6 +434,26 @@ public partial class MainWindow : Window
     private void OnSearchHighlightsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         UpdateSearchHighlightsCanvas();
+    }
+
+    /// <summary>
+    /// Document ▸ Attachments (#1563): the ViewModel has already shown the
+    /// pane; move keyboard focus into it once layout has made it visible.
+    /// </summary>
+    private void OnAttachmentsPaneFocusRequested(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            // The ListBox itself is not focusable; its rows are. Focus the
+            // selected row, else the first, so arrow keys work straight away.
+            // An empty pane has nothing to focus and is left alone.
+            if (!AttachmentsList.IsEffectivelyVisible || AttachmentsList.ItemCount == 0)
+                return;
+            var index = AttachmentsList.SelectedIndex >= 0 ? AttachmentsList.SelectedIndex : 0;
+            AttachmentsList.ScrollIntoView(index);
+            AttachmentsList.UpdateLayout();
+            AttachmentsList.ContainerFromIndex(index)?.Focus(NavigationMethod.Tab);
+        }, DispatcherPriority.Background);
     }
 
     /// <summary>

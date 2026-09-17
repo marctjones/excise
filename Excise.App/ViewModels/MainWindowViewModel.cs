@@ -633,11 +633,13 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// The left sidebar host is shown when *either* the outline or the
-    /// thumbnails panel is enabled — so the two can be toggled independently
-    /// (previously the whole sidebar was gated on thumbnails alone). (#369)
+    /// The left sidebar host is shown when *any* of its panes — outline,
+    /// thumbnails, attachments (#1563) — is enabled, so each can be toggled
+    /// independently (previously the whole sidebar was gated on thumbnails
+    /// alone). (#369)
     /// </summary>
-    public bool IsLeftSidebarVisible => IsOutlineSidebarVisible || IsThumbnailsSidebarVisible;
+    public bool IsLeftSidebarVisible =>
+        IsOutlineSidebarVisible || IsThumbnailsSidebarVisible || IsAttachmentsSidebarVisible;
 
     /// <summary>The outline/thumbnails splitter only makes sense when both panels show. (#369)</summary>
     public bool IsSidebarSplitterVisible => IsOutlineSidebarVisible && IsThumbnailsSidebarVisible;

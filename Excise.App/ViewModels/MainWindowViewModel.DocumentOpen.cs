@@ -109,6 +109,10 @@ public partial class MainWindowViewModel
         ResetThumbnailSession();
         OutlineNodes.Clear();
         this.RaisePropertyChanged(nameof(HasOutline));
+        // #1563: the previous document's attachments must not stay listed
+        // while (or if) this one loads. Not RefreshAttachments(): the previous
+        // document is still current here and would be re-listed.
+        ClearAttachments();
         ClearXfaNotice();
 
         PdfCoreDocument = null;
@@ -251,14 +255,7 @@ public partial class MainWindowViewModel
         // screen to say so. List them on open and WARN, per the capability's
         // "warn when their presence is not otherwise obvious".
         RefreshAttachments();
-        if (HasAttachments)
-        {
-            _toastService.ShowWarning(
-                "Document has attachments",
-                Attachments.Count == 1
-                    ? "1 embedded file travels with this PDF. Open Tools ▸ Attachments to review it."
-                    : $"{Attachments.Count} embedded files travel with this PDF. Open Tools ▸ Attachments to review them.");
-        }
+        WarnAboutAttachmentsOnOpen();
 
         // #1547: a dynamic XFA form shows only a placeholder page here; say why.
         RefreshXfaNotice();
@@ -307,6 +304,9 @@ public partial class MainWindowViewModel
         PdfCoreDocument = null;
         ResetThumbnailSession();
         OutlineNodes.Clear();
+        // #1563: a failed open used to leave the previous list on screen. The
+        // document service is closed above, so this empties it.
+        RefreshAttachments();
         ClearXfaNotice();
         OperationStatus = string.Empty;
 

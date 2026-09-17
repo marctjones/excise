@@ -10,6 +10,14 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Fixed
+- **A failed open left the previous document's attachments listed** (#1563),
+  and opening another document kept the old list on screen until the new one
+  finished loading. Both now clear.
+- **Remove All Attachments claimed removals it had not made** (#1563). It
+  strips the document-level tree, which does not include files carried by page
+  annotations, yet reported every listed attachment as removed. The count and
+  the toast now come from the list as re-read after the strip, and say how many
+  page attachments remain. Removing those is #1572.
 - **Area redaction deleted the `pdfaid` XMP, so it could never produce a
   PDF/A-conformant file** (#1507). `RedactArea` — the click-to-redact path, and
   the default for `page.RedactArea(rect)` — strips the positionless document
@@ -186,6 +194,24 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   is still scanned.
 
 ### Added
+- **Attachments pane in the sidebar, visible by default** (#1563). Embedded
+  files used to be reachable only through a Document ▸ Attachments… dialog.
+  They are now listed under Outline and Thumbnails as soon as a document opens:
+  file name, decoded size, description, modified date, and — for a file carried
+  by a page's `/FileAttachment` annotation — the page, which selecting the row
+  jumps to. Both carriers are listed (`/Names/EmbeddedFiles` and page
+  annotations; catalog `/AF` too). The pane has Save…, Save All… (into a chosen
+  folder, never overwriting; names are cut to one portable file name, so a
+  declared `../../x` or `C:\x` cannot write outside the folder) and Remove All,
+  which is now undoable. Rows are announced as "name, size", and file names
+  show invisible format controls as `[U+XXXX]` so a right-to-left override
+  cannot disguise an executable. When a document has none the pane says "No
+  attachments" and stays visible. View ▸ Show Attachments (also in the macOS
+  menu) hides it, and the choice is remembered in `window.json`. Document ▸
+  Attachments now reveals and focuses the pane; the dialog is gone. Saving is
+  refused with a toast when the document's `/P` flags forbid extraction
+  (bit 5). excise still never opens or runs an attachment.
+  `PdfEmbeddedFile.PageNumber` is new public API.
 - **XFA forms are detected and explained on open** (#1547, phase 1). A
   dynamic XFA form (catalog `/NeedsRendering true`, or no AcroForm field with a
   widget) now opens with a warning banner saying excise cannot display it yet

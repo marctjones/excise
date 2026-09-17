@@ -76,6 +76,8 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> AddStickyNoteAnnotationCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleOutlineCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleThumbnailsCommand { get; private set; } = null!;
+    /// <summary>#1563 — View ▸ Show Attachments.</summary>
+    public ReactiveCommand<Unit, Unit> ToggleAttachmentsCommand { get; private set; } = null!;
 
     /// <summary>Show or hide the page's annotations (#1022).</summary>
     public ReactiveCommand<Unit, Unit> ToggleAnnotationsCommand { get; private set; } = null!;
@@ -91,6 +93,12 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> SecurityCommand { get; private set; } = null!;
     /// <summary>#1414 — view, save, or strip embedded files.</summary>
     public ReactiveCommand<Unit, Unit> AttachmentsCommand { get; private set; } = null!;
+    /// <summary>#1563 — Attachments pane: save the selected attachment.</summary>
+    public ReactiveCommand<Unit, Unit> SaveSelectedAttachmentCommand { get; private set; } = null!;
+    /// <summary>#1563 — Attachments pane: save every attachment into a folder.</summary>
+    public ReactiveCommand<Unit, int> SaveAllAttachmentsCommand { get; private set; } = null!;
+    /// <summary>#1563 — Attachments pane: strip the embedded files (undoable pending edit).</summary>
+    public ReactiveCommand<Unit, Unit> RemoveAllAttachmentsCommand { get; private set; } = null!;
     /// <summary>#1306 — stamp sequential Bates numbers on every page.</summary>
     public ReactiveCommand<Unit, Unit> BatesNumberingCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, int> AutoDetectFieldsCommand { get; private set; } = null!;
@@ -234,6 +242,7 @@ public partial class MainWindowViewModel
     {
         ToggleOutlineCommand = ReactiveCommand.Create(ToggleOutlineSidebar);
         ToggleThumbnailsCommand = ReactiveCommand.Create(ToggleThumbnailsSidebar);
+        ToggleAttachmentsCommand = ReactiveCommand.Create(ToggleAttachmentsSidebar);
         ToggleAnnotationsCommand = ReactiveCommand.Create(ToggleAnnotationsVisible);
         ToggleCommentAnnotationsCommand = ReactiveCommand.Create(ToggleCommentAnnotationsVisible);
         ToggleFieldAndLinkAnnotationsCommand = ReactiveCommand.Create(ToggleFieldAndLinkAnnotationsVisible);
@@ -265,7 +274,29 @@ public partial class MainWindowViewModel
         MakeSearchableCommand.ThrownExceptions.Subscribe(ex =>
             _logger.LogError(ex, "MakeSearchableCommand threw exception"));
         SecurityCommand = ReactiveCommand.CreateFromTask(ShowSecurityDialogAsync);
-        AttachmentsCommand = ReactiveCommand.CreateFromTask(ShowAttachmentsDialogAsync);
+        AttachmentsCommand = ReactiveCommand.CreateFromTask(ShowAttachmentsPaneAsync);
+        // Always invocable, like Undo/Redo: each no-ops when there is nothing
+        // to act on, and the pane binds IsEnabled to the same state. A
+        // WhenAnyValue gate would force ReactiveUI's global initialization,
+        // which this VM deliberately does not depend on (see History.cs).
+        SaveSelectedAttachmentCommand = ReactiveCommand.CreateFromTask(SaveSelectedAttachmentAsync);
+        SaveAllAttachmentsCommand = ReactiveCommand.CreateFromTask(SaveAllAttachmentsAsync);
+        RemoveAllAttachmentsCommand = ReactiveCommand.Create(StripAllAttachments);
+        SaveSelectedAttachmentCommand.ThrownExceptions.Subscribe(ex =>
+        {
+            _logger.LogError(ex, "SaveSelectedAttachmentCommand threw exception");
+            _toastService.ShowError("Could not save attachment", ex.Message);
+        });
+        SaveAllAttachmentsCommand.ThrownExceptions.Subscribe(ex =>
+        {
+            _logger.LogError(ex, "SaveAllAttachmentsCommand threw exception");
+            _toastService.ShowError("Could not save attachments", ex.Message);
+        });
+        RemoveAllAttachmentsCommand.ThrownExceptions.Subscribe(ex =>
+        {
+            _logger.LogError(ex, "RemoveAllAttachmentsCommand threw exception");
+            _toastService.ShowError("Could not remove attachments", ex.Message);
+        });
         BatesNumberingCommand = ReactiveCommand.CreateFromTask(ApplyBatesNumberingAsync);
         SecurityCommand.ThrownExceptions.Subscribe(ex =>
             _logger.LogError(ex, "SecurityCommand threw exception"));

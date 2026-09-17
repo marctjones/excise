@@ -735,6 +735,35 @@ public partial class PdfDocument : IDisposable
     }
 
     /// <summary>
+    /// <see cref="ScrubEmbeddedFiles"/>, returning an action that puts back
+    /// exactly the entries it removed — the GUI's undo for "Remove All
+    /// Attachments" (#1563).
+    /// </summary>
+    /// <remarks>
+    /// The restore re-attaches the same in-memory objects the scrub detached,
+    /// so it is only valid on this document instance and before anything else
+    /// rewrites <c>/Names</c> or <c>/AF</c>; the GUI clears its undo history on
+    /// every save, open and close, which keeps it inside that window.
+    /// </remarks>
+    internal Action ScrubEmbeddedFilesReversibly()
+    {
+        var names = Resolve(Catalog.GetOptional("Names") ?? PdfNull.Instance) as PdfDictionary;
+        var embeddedFiles = names?.GetOptional("EmbeddedFiles");
+        var associatedFiles = Catalog.GetOptional("AF");
+
+        ScrubEmbeddedFiles();
+
+        return () =>
+        {
+            if (names != null && embeddedFiles != null)
+                names.Set("EmbeddedFiles", embeddedFiles);
+            if (associatedFiles != null)
+                Catalog.Set("AF", associatedFiles);
+            InvalidateDerivedState(PdfDocumentDerivedStateScope.Attachments);
+        };
+    }
+
+    /// <summary>
     /// Get the raw XMP metadata stream bytes, or null if the document has no
     /// /Metadata entry on the catalog. The bytes are the decoded XMP RDF/XML
     /// body. PDF spec §14.3.2 / XMP spec part 1 §7.6.

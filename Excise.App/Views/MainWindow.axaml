@@ -374,8 +374,8 @@
                           access:CommandAccessibility.CommandId="document.security">
                     <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconLock}"/></MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="_Attachments..." Command="{Binding AttachmentsCommand}"
-                          ToolTip.Tip="View, save, or remove files embedded in this document."
+                <MenuItem Header="_Attachments" Command="{Binding AttachmentsCommand}"
+                          ToolTip.Tip="Show the Attachments pane: files embedded in this document."
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="document.attachments"/>
                 <MenuItem Header="_Bates Numbering..." Command="{Binding BatesNumberingCommand}"
@@ -489,6 +489,12 @@
                           Command="{Binding ToggleThumbnailsCommand}"
                           InputGesture="Ctrl+Shift+T"
                           access:CommandAccessibility.CommandId="view.toggleThumbnails"/>
+                <MenuItem x:Name="ViewAttachmentsMenuItem"
+                          Header="Show Atta_chments"
+                          ToggleType="CheckBox"
+                          IsChecked="{Binding IsAttachmentsSidebarVisible, Mode=OneWay}"
+                          Command="{Binding ToggleAttachmentsCommand}"
+                          access:CommandAccessibility.CommandId="view.toggleAttachments"/>
                 <MenuItem x:Name="ViewAnnotationsMenuItem"
                           Header="Show _Annotations"
                           ToggleType="CheckBox"
@@ -1206,10 +1212,9 @@
              column. -->
         <Grid Grid.Row="6" ColumnDefinitions="Auto,*,Auto">
 
-            <!-- Thumbnail Sidebar — split into Outline (top) + Thumbnails (bottom).
-                 The outline pane only takes screen space when the document
-                 actually has a table of contents (HasOutline) AND the user
-                 hasn't toggled it off via View → Show Outline. -->
+            <!-- Left sidebar — Outline (top), Thumbnails (middle), Attachments
+                 (bottom, #1563). Each pane has its own View menu toggle; the
+                 host shows while any of them is on. -->
             <Border x:Name="LeftSidebarHost"
                     Grid.Column="0"
                     Width="220"
@@ -1217,7 +1222,7 @@
                     Background="{DynamicResource SidebarBackgroundBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="0,0,1,0">
-              <Grid RowDefinitions="*,Auto,*">
+              <Grid RowDefinitions="*,Auto,*,Auto">
 
                 <!-- Outline / Table of Contents -->
                 <Grid x:Name="OutlinePanel"
@@ -1398,6 +1403,111 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+                </Grid>
+
+                <!-- #1563: Attachments pane. Visible by default and when empty,
+                     so a document's embedded files are never out of sight.
+                     Auto height with a capped list: it takes little room when
+                     empty and never pushes the thumbnails off screen.
+                     excise never opens or runs an attachment; Save writes the
+                     bytes to a place the user picks. -->
+                <Grid x:Name="AttachmentsPanel"
+                      Grid.Row="3" RowDefinitions="Auto,Auto,Auto"
+                      IsVisible="{Binding IsAttachmentsSidebarVisible}">
+                    <Border Grid.Row="0"
+                            Background="{DynamicResource SecondaryBackgroundBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="0,1,0,1"
+                            Padding="10,6"
+                            ToolTip.Tip="{Binding AttachmentsSummary}">
+                        <DockPanel>
+                            <TextBlock Text="Attachments"
+                                       FontWeight="SemiBold" FontSize="12"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding AttachmentsCountText}"
+                                       HorizontalAlignment="Right"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </DockPanel>
+                    </Border>
+
+                    <TextBlock x:Name="AttachmentsEmptyText"
+                               Grid.Row="1"
+                               Margin="10,8"
+                               FontSize="11"
+                               Text="{Binding AttachmentsEmptyText}"
+                               IsVisible="{Binding !HasAttachments}"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                    <ListBox x:Name="AttachmentsList"
+                             Grid.Row="1"
+                             MaxHeight="180"
+                             ItemsSource="{Binding Attachments}"
+                             SelectedItem="{Binding SelectedAttachment, Mode=TwoWay}"
+                             IsVisible="{Binding HasAttachments}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             AutomationProperties.Name="Attachments">
+                        <!-- The row container is what a screen reader lands
+                             on, so it carries "name, size" (#1563). -->
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem" x:DataType="models:AttachmentEntry">
+                                <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}"/>
+                                <Setter Property="Padding" Value="8,4"/>
+                            </Style>
+                        </ListBox.Styles>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:AttachmentEntry">
+                                <StackPanel Spacing="1" ToolTip.Tip="{Binding ToolTipText}">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right"
+                                                   Margin="6,0,0,0"
+                                                   Text="{Binding SizeDisplay}"
+                                                   FontSize="10"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding DetailText}"
+                                               IsVisible="{Binding HasDetail}"
+                                               FontSize="10"
+                                               TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <WrapPanel Grid.Row="2" Orientation="Horizontal" Margin="6,2,6,6"
+                               IsVisible="{Binding HasAttachments}">
+                        <Button x:Name="SaveAttachmentButton"
+                                Content="Save…"
+                                Command="{Binding SaveSelectedAttachmentCommand}"
+                                IsEnabled="{Binding SelectedAttachment, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Classes="modern-button"
+                                Margin="0,0,4,4"
+                                access:CommandAccessibility.CommandId="document.saveAttachment"
+                                ToolTip.Tip="Save the selected attachment to a location you choose. excise never opens or runs attachments."
+                                AutomationProperties.Name="Save Attachment"/>
+                        <Button x:Name="SaveAllAttachmentsButton"
+                                Content="Save All…"
+                                Command="{Binding SaveAllAttachmentsCommand}"
+                                Classes="modern-button"
+                                Margin="0,0,4,4"
+                                access:CommandAccessibility.CommandId="document.saveAllAttachments"
+                                ToolTip.Tip="Save every attachment into a folder you choose. Existing files are never overwritten."
+                                AutomationProperties.Name="Save All Attachments"/>
+                        <Button x:Name="RemoveAllAttachmentsButton"
+                                Content="Remove All"
+                                Command="{Binding RemoveAllAttachmentsCommand}"
+                                Classes="modern-button"
+                                Margin="0,0,4,4"
+                                access:CommandAccessibility.CommandId="document.removeAllAttachments"
+                                ToolTip.Tip="Strip the document's embedded files. Undoable; save afterwards to keep the change."
+                                AutomationProperties.Name="Remove All Attachments"/>
+                    </WrapPanel>
                 </Grid>
               </Grid>
             </Border>

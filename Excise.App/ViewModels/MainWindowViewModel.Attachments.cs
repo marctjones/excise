@@ -7,27 +7,28 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using Excise.App.Models;
+using Excise.App.Services;
 using Excise.Core.Document;
 
 namespace Excise.App.ViewModels;
 
 /// <summary>
-/// #1414 — attachment disclosure, save, and stripping.
+/// #1414 / #1563 — the Attachments pane: disclosure, save, and stripping of
+/// embedded files.
 /// </summary>
 /// <remarks>
 /// <para>
-/// <c>Excise.Core</c> could already read embedded files
-/// (<c>GetEmbeddedFiles()</c>, including raw <c>.Bytes</c>) and remove them
-/// (<c>ScrubEmbeddedFiles()</c>), both tested. The GUI had no surface for any
-/// of it: a repo-wide grep for <c>EmbeddedFile</c>/<c>Attachment</c> across
-/// <c>Excise.App/ViewModels</c> and <c>Excise.App/Views</c> found nothing but
-/// an unrelated comment. A user could not see, save, or strip an attachment.
+/// An attachment can carry the very data the visible page was redacted of
+/// (ZUGFeRD/Factur-X invoices embed a full XML copy of the document), and it is
+/// invisible in the page view. #1414 made attachments reachable through a
+/// dialog; #1563 puts them in a sidebar pane that is visible by default, so a
+/// user sees them without looking for them.
 /// </para>
 /// <para>
-/// Why this matters beyond convenience: an attachment can carry the very data
-/// the visible page was redacted of (ZUGFeRD/Factur-X invoices embed a full XML
-/// copy of the document). Attachments are invisible in the page view, so a user
-/// who cannot list them cannot know they are shipping them.
+/// excise never opens or runs an attachment. An embedded file is arbitrary
+/// content chosen by whoever made the PDF; handing it to the operating system
+/// to "open with" is the attack that made PDF attachments notorious. Saving to
+/// a location the user picks is the only way an attachment leaves excise.
 /// </para>
 /// </remarks>
 public partial class MainWindowViewModel
@@ -38,7 +39,7 @@ public partial class MainWindowViewModel
     /// <summary>True when the open document carries at least one embedded file.</summary>
     public bool HasAttachments => Attachments.Count > 0;
 
-    /// <summary>Status line for the attachments dialog.</summary>
+    /// <summary>One-line summary of what the document carries.</summary>
     public string AttachmentsSummary => Attachments.Count switch
     {
         0 => "This document has no attachments.",
@@ -46,13 +47,61 @@ public partial class MainWindowViewModel
         _ => $"This document carries {Attachments.Count} attachments.",
     };
 
+    /// <summary>
+    /// The pane's empty state. The pane stays visible when there is nothing to
+    /// list (#1563), so it says why it is empty rather than going blank.
+    /// </summary>
+    public string AttachmentsEmptyText => IsDocumentLoaded ? "No attachments" : "No document open";
+
+    /// <summary>Count shown beside the pane title; empty when there are none.</summary>
+    public string AttachmentsCountText => Attachments.Count == 0 ? string.Empty : Attachments.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    private bool _isAttachmentsSidebarVisible = true;
+
+    /// <summary>
+    /// Whether the Attachments pane is shown. On by default (#1563); the user's
+    /// choice is persisted in <c>window.json</c> by the main window.
+    /// </summary>
+    public bool IsAttachmentsSidebarVisible
+    {
+        get => _isAttachmentsSidebarVisible;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isAttachmentsSidebarVisible, value);
+            this.RaisePropertyChanged(nameof(IsLeftSidebarVisible));
+        }
+    }
+
+    /// <summary>View ▸ Show Attachments.</summary>
+    public void ToggleAttachmentsSidebar() =>
+        IsAttachmentsSidebarVisible = !IsAttachmentsSidebarVisible;
+
+    /// <summary>Restore the persisted pane visibility (called by the main window at startup).</summary>
+    internal void ApplyAttachmentsPanePreference(bool visible) =>
+        IsAttachmentsSidebarVisible = visible;
+
+    /// <summary>
+    /// Raised when Document ▸ Attachments asks for the pane to take keyboard
+    /// focus. Focus is view mechanics, so the view subscribes and moves it.
+    /// </summary>
+    public event EventHandler? AttachmentsPaneFocusRequested;
+
     private AttachmentEntry? _selectedAttachment;
 
-    /// <summary>The row the user has selected in the attachments list.</summary>
+    /// <summary>
+    /// The row the user has selected. Selecting an attachment that belongs to a
+    /// page annotation navigates to that page, the same way selecting an outline
+    /// entry does.
+    /// </summary>
     public AttachmentEntry? SelectedAttachment
     {
         get => _selectedAttachment;
-        set => this.RaiseAndSetIfChanged(ref _selectedAttachment, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedAttachment, value);
+            if (value?.PageNumber is int page && page >= 1 && page <= TotalPages)
+                CurrentPageIndex = page - 1;
+        }
     }
 
     /// <summary>
@@ -64,10 +113,12 @@ public partial class MainWindowViewModel
 
     /// <summary>
     /// Re-read the document's embedded files into <see cref="Attachments"/>.
+    /// With no document loaded this empties the list.
     /// </summary>
     internal void RefreshAttachments()
     {
         Attachments.Clear();
+        SelectedAttachment = null;
 
         var document = _documentService.GetCurrentDocument();
         if (document != null)
@@ -75,16 +126,7 @@ public partial class MainWindowViewModel
             try
             {
                 foreach (var file in document.GetEmbeddedFiles())
-                {
-                    Attachments.Add(new AttachmentEntry(
-                        Name: file.Name,
-                        FileName: string.IsNullOrWhiteSpace(file.FileName) ? file.Name : file.FileName!,
-                        Description: file.Description,
-                        MimeType: file.MimeType,
-                        // Derived from the DECODED bytes, not from /Params /Size:
-                        // a producer's declared size is a claim, not evidence.
-                        SizeInBytes: file.Bytes?.Length));
-                }
+                    Attachments.Add(ToEntry(file));
             }
             catch (Exception ex)
             {
@@ -93,35 +135,75 @@ public partial class MainWindowViewModel
             }
         }
 
-        this.RaisePropertyChanged(nameof(HasAttachments));
-        this.RaisePropertyChanged(nameof(AttachmentsSummary));
+        RaiseAttachmentsChanged();
     }
 
     /// <summary>
-    /// Save one attachment to disk. This is the ONLY way excise writes an
-    /// attachment out, and it always requires an explicit user action and an
-    /// explicit destination — the capability's own policy is "permit explicit
-    /// save to disk only".
+    /// Empty the list without reading the document. The open path uses this
+    /// before the new document is current: <see cref="RefreshAttachments"/>
+    /// there would re-list the document being replaced.
     /// </summary>
-    /// <remarks>
-    /// excise never opens or executes an attachment. An embedded file is
-    /// arbitrary attacker-controlled content; handing it to the OS to "open
-    /// with" on the user's behalf is the entire attack that made PDF
-    /// attachments notorious.
-    /// </remarks>
+    private void ClearAttachments()
+    {
+        Attachments.Clear();
+        SelectedAttachment = null;
+        RaiseAttachmentsChanged();
+    }
+
+    private void RaiseAttachmentsChanged()
+    {
+        this.RaisePropertyChanged(nameof(HasAttachments));
+        this.RaisePropertyChanged(nameof(AttachmentsSummary));
+        this.RaisePropertyChanged(nameof(AttachmentsEmptyText));
+        this.RaisePropertyChanged(nameof(AttachmentsCountText));
+    }
+
+    private static AttachmentEntry ToEntry(PdfEmbeddedFile file) => new(
+        Name: file.Name,
+        FileName: string.IsNullOrWhiteSpace(file.FileName) ? file.Name : file.FileName!,
+        Description: file.Description,
+        MimeType: file.MimeType,
+        // Derived from the DECODED bytes, not from /Params /Size:
+        // a producer's declared size is a claim, not evidence.
+        SizeInBytes: file.Bytes?.Length,
+        ModifiedDate: file.ModDate,
+        PageNumber: file.PageNumber);
+
+    /// <summary>
+    /// The embedded file a row stands for. Matched by position first, because
+    /// a name tree may repeat a key, then by name.
+    /// </summary>
+    private PdfEmbeddedFile? ResolveAttachment(PdfDocument document, AttachmentEntry entry)
+    {
+        var files = document.GetEmbeddedFiles();
+        var index = Attachments.IndexOf(entry);
+        if (index >= 0 && index < files.Count && string.Equals(files[index].Name, entry.Name, StringComparison.Ordinal))
+            return files[index];
+        return files.FirstOrDefault(f => string.Equals(f.Name, entry.Name, StringComparison.Ordinal));
+    }
+
+    /// <summary>/P bit 5: an attachment's bytes are document content leaving excise.</summary>
+    private bool EnsureAttachmentExtractionPermitted(string actionDescription) =>
+        EnsureDocumentPermission(p => p.CanCopy, actionDescription, "copying or extracting content (/P bit 5)");
+
+    /// <summary>
+    /// Save one attachment to <paramref name="outputPath"/>. Writes the decoded
+    /// bytes exactly; never opens or runs them.
+    /// </summary>
     public async Task<bool> SaveAttachmentAsync(AttachmentEntry entry, string outputPath)
     {
         var document = _documentService.GetCurrentDocument();
         if (document == null)
             return false;
 
-        var file = document.GetEmbeddedFiles()
-            .FirstOrDefault(f => string.Equals(f.Name, entry.Name, StringComparison.Ordinal));
+        if (!EnsureAttachmentExtractionPermitted("Saving an attachment"))
+            return false;
 
+        var file = ResolveAttachment(document, entry);
         if (file?.Bytes == null)
         {
             _logger.LogWarning("Attachment {Name} has no decodable bytes; nothing saved", entry.Name);
-            _toastService.ShowError("Could not save attachment", $"{entry.FileName} could not be decoded.");
+            _toastService.ShowError("Could not save attachment", $"{entry.DisplayName} could not be decoded.");
             return false;
         }
 
@@ -141,17 +223,23 @@ public partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Prompt for a destination and save the selected attachment there.
+    /// Save Attachment…: prompt for a destination and save the selected row.
+    /// The permission check runs before the picker, so a refused save does not
+    /// first ask where to put the file.
     /// </summary>
     public async Task SaveSelectedAttachmentAsync()
     {
         var entry = SelectedAttachment;
-        if (entry == null)
+        if (entry == null || _documentService.GetCurrentDocument() == null)
             return;
 
+        if (!EnsureAttachmentExtractionPermitted("Saving an attachment"))
+            return;
+
+        var suggested = AttachmentFileNames.ToSafeFileName(entry.FileName, Attachments.IndexOf(entry) + 1);
         var path = PickAttachmentSavePathOverride != null
-            ? await PickAttachmentSavePathOverride(entry.FileName)
-            : await PickAttachmentSavePathAsync(entry.FileName);
+            ? await PickAttachmentSavePathOverride(suggested)
+            : await PickAttachmentSavePathAsync(suggested);
 
         if (string.IsNullOrWhiteSpace(path))
             return;
@@ -160,15 +248,76 @@ public partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Test seam: set to open no window, so the command itself stays drivable
-    /// from a headless test (dialogs need a real owner window).
+    /// Save All Attachments…: write every attachment into a folder the user
+    /// picks. Names come from <see cref="AttachmentFileNames"/> (no path
+    /// traversal, no hidden or reserved names) and never overwrite: a clash
+    /// becomes <c>name (2).ext</c>.
     /// </summary>
-    internal Func<Task>? ShowAttachmentsDialogOverride { get; set; }
+    /// <returns>How many files were written.</returns>
+    public async Task<int> SaveAllAttachmentsAsync()
+    {
+        var document = _documentService.GetCurrentDocument();
+        if (document == null || Attachments.Count == 0)
+            return 0;
+
+        if (!EnsureAttachmentExtractionPermitted("Saving attachments"))
+            return 0;
+
+        var folder = await PickFolderAsync("Save All Attachments");
+        if (string.IsNullOrWhiteSpace(folder))
+            return 0;
+
+        var files = document.GetEmbeddedFiles();
+        var saved = 0;
+        var failed = new List<string>();
+        for (var i = 0; i < files.Count; i++)
+        {
+            var file = files[i];
+            var displayName = Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(file.FileName ?? file.Name);
+            if (file.Bytes == null)
+            {
+                failed.Add(displayName);
+                continue;
+            }
+
+            try
+            {
+                var target = AttachmentFileNames.UniquePathIn(
+                    folder, AttachmentFileNames.ToSafeFileName(file.FileName ?? file.Name, i + 1));
+                // CreateNew: if something appeared at this path since the
+                // uniqueness check, fail rather than overwrite it.
+                await using (var stream = new FileStream(target, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    await stream.WriteAsync(file.Bytes);
+                saved++;
+                _logger.LogInformation("Saved attachment {Name} to {Path}", file.Name, target);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save attachment {Name} into {Folder}", file.Name, folder);
+                failed.Add(displayName);
+            }
+        }
+
+        if (failed.Count == 0)
+            _toastService.ShowSuccess(saved == 1 ? "Saved 1 attachment" : $"Saved {saved} attachments");
+        else
+            _toastService.ShowError(
+                "Some attachments were not saved",
+                $"Saved {saved} of {files.Count}. Not saved: {string.Join(", ", failed)}.");
+        return saved;
+    }
 
     /// <summary>
-    /// Document ▸ Attachments…
+    /// Test seam kept from the dialog era: when set, Document ▸ Attachments calls
+    /// it after revealing the pane, so a headless test can observe the command.
     /// </summary>
-    private async Task ShowAttachmentsDialogAsync()
+    internal Func<Task>? ShowAttachmentsPaneOverride { get; set; }
+
+    /// <summary>
+    /// Document ▸ Attachments: re-read the list, show the pane, and ask the view
+    /// to focus it.
+    /// </summary>
+    private async Task ShowAttachmentsPaneAsync()
     {
         if (!_documentService.IsDocumentLoaded)
         {
@@ -179,22 +328,11 @@ public partial class MainWindowViewModel
         // Re-read rather than trusting the list captured at open: a strip, a
         // save-as or a reload may have changed it since.
         RefreshAttachments();
+        IsAttachmentsSidebarVisible = true;
+        AttachmentsPaneFocusRequested?.Invoke(this, EventArgs.Empty);
 
-        if (ShowAttachmentsDialogOverride != null)
-        {
-            await ShowAttachmentsDialogOverride();
-            return;
-        }
-
-        var owner = GetMainWindow();
-        if (owner == null)
-        {
-            _logger.LogWarning("Could not get main window for the Attachments dialog");
-            return;
-        }
-
-        var window = new Views.AttachmentsDialog { DataContext = this };
-        await window.ShowDialog(owner);
+        if (ShowAttachmentsPaneOverride != null)
+            await ShowAttachmentsPaneOverride();
     }
 
     /// <summary>
@@ -215,14 +353,24 @@ public partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Remove every embedded file from the in-memory document.
+    /// Remove All Attachments: strip the document-level embedded files from
+    /// the in-memory document, as an undoable pending edit.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Deliberately does NOT write the file. The removal becomes a pending edit
     /// like any other, so it goes out through the ordinary save routing — which
     /// means an ORIGINAL source is preserved and the stripped document is
     /// written as a copy (#1233). Stripping attachments in place on someone's
     /// only copy would be destroying data to protect it.
+    /// </para>
+    /// <para>
+    /// The strip covers <c>/Names/EmbeddedFiles</c> and the catalog's
+    /// <c>/AF</c>. An attachment carried by a page's <c>/FileAttachment</c>
+    /// annotation is not removed by it (#1572), so the count and the toast are taken
+    /// from the list as re-read AFTER the strip — the pane never claims a
+    /// removal the document does not show.
+    /// </para>
     /// </remarks>
     public void StripAllAttachments()
     {
@@ -230,21 +378,83 @@ public partial class MainWindowViewModel
         if (document == null || Attachments.Count == 0)
             return;
 
-        var removed = Attachments.Count;
-        document.ScrubEmbeddedFiles();
+        var before = Attachments.Count;
+        var restore = document.ScrubEmbeddedFilesReversibly();
+        RefreshAttachments();
+        var removed = before - Attachments.Count;
+
+        if (removed <= 0)
+        {
+            // Nothing the strip covers: leave the document clean and say why.
+            _toastService.ShowWarning(
+                "No attachments removed",
+                "These attachments belong to page annotations, which Remove All does not change.");
+            return;
+        }
 
         // Count it as a page edit so HasUnsavedChanges is true and the save
         // routing treats the document as modified.
         FileState.PageEditsCount++;
+        RaiseStripBookkeeping();
 
-        RefreshAttachments();
-        this.RaisePropertyChanged(nameof(SaveButtonText));
-        this.RaisePropertyChanged(nameof(StatusBarText));
+        var description = removed == 1 ? "Remove attachment" : "Remove attachments";
+        _history.Push(
+            description,
+            undo: () =>
+            {
+                restore();
+                FileState.PageEditsCount = Math.Max(0, FileState.PageEditsCount - 1);
+                RefreshAttachments();
+                RaiseStripBookkeeping();
+            },
+            redo: () =>
+            {
+                restore = document.ScrubEmbeddedFilesReversibly();
+                FileState.PageEditsCount++;
+                RefreshAttachments();
+                RaiseStripBookkeeping();
+            });
 
         _logger.LogInformation("Stripped {Count} embedded file(s); save to persist", removed);
-        _toastService.ShowSuccess(
-            removed == 1
-                ? "1 attachment removed — save to persist"
-                : $"{removed} attachments removed — save to persist");
+        var message = removed == 1
+            ? "1 attachment removed — save to persist"
+            : $"{removed} attachments removed — save to persist";
+        if (Attachments.Count > 0)
+        {
+            _toastService.ShowWarning(
+                message,
+                Attachments.Count == 1
+                    ? "1 attachment on a page annotation remains."
+                    : $"{Attachments.Count} attachments on page annotations remain.");
+        }
+        else
+        {
+            _toastService.ShowSuccess(message);
+        }
+    }
+
+    private void RaiseStripBookkeeping()
+    {
+        this.RaisePropertyChanged(nameof(SaveButtonText));
+        this.RaisePropertyChanged(nameof(StatusBarText));
+    }
+
+    /// <summary>
+    /// The toast shown when an opened document carries attachments (#1414's
+    /// "warn when their presence is not otherwise obvious").
+    /// </summary>
+    private void WarnAboutAttachmentsOnOpen()
+    {
+        if (!HasAttachments)
+            return;
+
+        var what = Attachments.Count == 1
+            ? "1 embedded file travels with this PDF."
+            : $"{Attachments.Count} embedded files travel with this PDF.";
+        var where = IsAttachmentsSidebarVisible
+            ? " See the Attachments pane."
+            : " Show them with View ▸ Show Attachments.";
+
+        _toastService.ShowWarning("Document has attachments", what + where);
     }
 }
