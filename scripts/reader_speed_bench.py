@@ -167,7 +167,7 @@ def read_frames(path):
 def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra_env=None):
     run_dir = out / app_id / doc["id"] / (f"r{repeat}" if probe_on else f"r{repeat}-noprobe")
     run_dir.mkdir(parents=True, exist_ok=True)
-    doc_copy = run_dir / f"{doc['id']}-{app_id}-r{repeat}-{int(time.time())}.pdf"
+    doc_copy = rb.app_area(run_dir) / f"{doc['id']}-{app_id}-r{repeat}-{int(time.time())}.pdf"
     doc_copy.write_bytes((ROOT / doc["path"]).read_bytes())
 
     log = {"app": app_id, "doc": doc["id"], "repeat": repeat, "probe": probe_on,
@@ -253,6 +253,7 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
             except ProcessLookupError:
                 pass
         time.sleep(3)
+        rb.collect_app_area(run_dir)
     (run_dir / "run.json").write_text(json.dumps(log, indent=1))
     print(f"  {app_id:8} {doc['id']:7} r{repeat}{'' if probe_on else ' (no probe)'}  "
           f"{'OK' if not log['failures'] else 'FAIL ' + '; '.join(log['failures'])}", flush=True)
@@ -485,11 +486,13 @@ def calibrate(out, cfg, docs, excise_app, repeats):
     rows = {True: [], False: []}
     for r in range(1, repeats + 1):
         for on in (True, False):
-            metrics = out / "excise" / "irs" / (f"r{r}" if on else f"r{r}-noprobe") / "metrics.jsonl"
-            metrics.parent.mkdir(parents=True, exist_ok=True)
+            run_dir = out / "excise" / "irs" / (f"r{r}" if on else f"r{r}-noprobe")
+            run_dir.mkdir(parents=True, exist_ok=True)
+            # The app writes its metrics in its own area (outside ~/Documents);
+            # one_run copies *.jsonl back into run_dir when the app has quit.
             one_run("excise", app, doc, r, out, cfg, excise_app, probe_on=on,
-                    extra_env={"EXCISE_TRACE_VIEWER": str(metrics)})
-            rows[on].append(excise_render_stats(metrics))
+                    extra_env={"EXCISE_TRACE_VIEWER": str(rb.app_area(run_dir) / "metrics.jsonl")})
+            rows[on].append(excise_render_stats(run_dir / "metrics.jsonl"))
     res = {"probeOn": rows[True], "probeOff": rows[False]}
     on50 = median([x.get("bandP50") for x in rows[True]])
     off50 = median([x.get("bandP50") for x in rows[False]])
