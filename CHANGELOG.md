@@ -45,6 +45,24 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   and keep the AcroForm fields, which every non-XFA viewer already uses.
 
 ### Fixed
+- **Windows printing now honours each annotation's `/Print` flag** (#1573).
+  The renderer had no print mode, so sheets were rastered with the VIEWER's
+  §12.5.3 rule — Hidden and NoView suppressed, everything else drawn — and that
+  is wrong on paper in both directions: review markup with no `/F` at all (the
+  common producer shape; excise's own authoring stamps `/F Print`, most others
+  do not) was printed although Acrobat and PDFKit leave it off, and a print-only
+  watermark (`NoView` + `Print`) was dropped although it is the one thing the
+  author meant for paper. `RenderOptions.PrintIntent` (new, public — the
+  Excise.Rendering API baseline changed) selects the print rule instead: Hidden
+  suppresses paper too, NoView says nothing about paper, and nothing prints
+  without the Print flag. `PrintSheetSource` sets it. Audit mode
+  (`RevealHiddenAnnotations`) is deliberately ignored under print intent — it
+  must never reach an export path, and a print raster is one. macOS is
+  unaffected: PDFKit prints the saved file and applies §12.5.3 itself.
+  The rule is pinned per annotation against Ghostscript, whose
+  `-dPrinted` switch makes it a print oracle and a view oracle on the same
+  fixture (`AnnotationPrintIntentTests`, plus `GhostscriptReferenceRenderer`
+  gains `TryRenderPageForViewIntent`).
 - **The pre-push gate checked the wrong commit range on a stepped push**
   (#1600). git hands a `pre-push` hook `<local ref> <local sha> <remote ref>
   <remote sha>` per pushed ref; the hook exported the remote sha as

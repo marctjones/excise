@@ -88,6 +88,33 @@ public record RenderOptions
     public bool RevealHiddenAnnotations { get; init; }
 
     /// <summary>
+    /// PRINT INTENT: decide each annotation's `/F` flags by §12.5.3's PRINT
+    /// rule instead of the viewer's, for a raster that goes to paper (#1573).
+    /// </summary>
+    /// <remarks>
+    /// <para>§12.5.3 gives printing its own rule, and it is not "what the
+    /// viewer shows": an annotation prints only when its <b>Print</b> flag
+    /// (bit 3) is set, <b>NoView</b> (bit 6) says nothing about paper, and
+    /// <b>Hidden</b> (bit 2) suppresses both. So the view rule gets printing
+    /// wrong in both directions — a sticky note with no <c>/F</c> at all (the
+    /// common case; excise's own authoring stamps <c>/F Print</c>, most
+    /// producers' review markup does not) would be printed although Acrobat
+    /// and PDFKit leave it off paper, and a print-only watermark
+    /// (<c>NoView | Print</c>) would be dropped although it is the one thing
+    /// the author meant to print.</para>
+    ///
+    /// <para><see cref="RevealHiddenAnnotations"/> is deliberately IGNORED
+    /// under print intent: it is an audit mode whose remarks say it must never
+    /// reach an export path, and a print raster is one. Under print intent the
+    /// flags are the print rule, full stop.</para>
+    ///
+    /// <para>Set by the Windows printer (<c>PrintSheetSource</c>), which
+    /// rasterises each sheet itself. macOS prints through PDFKit from the saved
+    /// file and applies §12.5.3 on its own, so nothing sets this there.</para>
+    /// </remarks>
+    public bool PrintIntent { get; init; }
+
+    /// <summary>
     /// Tint form fields so a user can see what is fillable — Acrobat's
     /// "Highlight Existing Fields". Viewer chrome, not page content (#1021).
     /// </summary>

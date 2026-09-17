@@ -319,11 +319,17 @@ internal sealed class PrintSheetSource
             new RenderOptions
             {
                 Dpi = placement.RenderDpi,
-                // What a reader sees: annotations and field values print; the
-                // audit and highlight modes never do (RenderOptions remarks).
+                // Annotations and field values print; the audit and highlight
+                // modes never do (RenderOptions remarks).
                 RenderAnnotations = true,
                 RevealHiddenAnnotations = false,
                 HighlightFormFields = false,
+                // #1573: paper is not the screen. §12.5.3 prints an annotation
+                // only when its Print flag is set, and a NoView annotation with
+                // Print set DOES print — so without this the view rule both
+                // printed review markup Acrobat and PDFKit leave off paper and
+                // dropped print-only watermarks.
+                PrintIntent = true,
                 // Each sheet's page is rendered once, then dropped.
                 ReleaseDecodedImageSamples = true,
             },

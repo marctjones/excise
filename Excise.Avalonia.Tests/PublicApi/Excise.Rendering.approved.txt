@@ -22,6 +22,7 @@ namespace Excise.Rendering
         public int Dpi { get; init; }
         public bool HighlightFormFields { get; init; }
         public long MaxPixelCount { get; init; }
+        public bool PrintIntent { get; init; }
         public bool ReleaseDecodedImageSamples { get; init; }
         public bool RenderAnnotations { get; init; }
         public bool RevealHiddenAnnotations { get; init; }
@@ -66,11 +67,12 @@ namespace Excise.Rendering.Differential
     public static class GhostscriptReferenceRenderer
     {
         public static bool IsAvailable { get; }
-        public static string InvocationSignature(bool overprintSimulate) { }
+        public static string InvocationSignature(bool overprintSimulate, bool viewIntent = false) { }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+        public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPageForViewIntent(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPageWithOverprintSimulation(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
     }
     public static class MutoolGlyphPositions
