@@ -370,6 +370,70 @@ public class WindowsDocumentPrinterTests : IDisposable
                 "System.Drawing.Common is Windows-only at run time; nothing outside Windows may load it");
     }
 
+    // ── the real spooler (Windows only) ────────────────────────────────
+
+    private const string PrintToPdfPrinter = "Microsoft Print to PDF";
+
+    /// <summary>
+    /// The GDI spooler against the printer every Windows 10/11 install has,
+    /// printing to a file so no dialog or paper is involved. Skipped here;
+    /// this is what a Windows run must execute. The dialog itself is modal and
+    /// stays a manual check.
+    /// </summary>
+    [Fact]
+    public void GdiSpooler_PrintsEveryPage_ToMicrosoftPrintToPdf()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "the GDI print path exists only on Windows");
+        SpoolToPrintToPdf(cancelled: false);
+    }
+
+    [Fact]
+    public void GdiSpooler_AbortsACancelledJob()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "the GDI print path exists only on Windows");
+        SpoolToPrintToPdf(cancelled: true);
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private void SpoolToPrintToPdf(bool cancelled)
+    {
+        Assert.SkipUnless(
+            System.Drawing.Printing.PrinterSettings.InstalledPrinters.Cast<string>().Contains(PrintToPdfPrinter),
+            $"the \"{PrintToPdfPrinter}\" printer is not installed");
+
+        var output = Path.Combine(_dir, cancelled ? "aborted.pdf" : "spooled.pdf");
+        var settings = new System.Drawing.Printing.PrinterSettings
+        {
+            PrinterName = PrintToPdfPrinter,
+            PrintToFile = true,
+            PrintFileName = output,
+        };
+        var ticket = new WindowsPrintTicket(
+            WindowsPrintDialogOutcome.Print, PrintToPdfPrinter, Array.Empty<PrintPageRange>(), 1, true, settings);
+        using var document = PdfDocument.Open(File.ReadAllBytes(ThreePagePdf("spool-source.pdf")));
+        var sheets = new PrintSheetSource(
+            document, PrintPageSequence.Build(document.PageCount, [], 1, true), PrintScalingMode.ShrinkOversized);
+        using var cancellation = new CancellationTokenSource();
+        if (cancelled)
+            cancellation.Cancel();
+
+        var result = new GdiPrintSpooler(NullLogger.Instance).Spool(ticket, sheets, "spool 1546", cancellation.Token);
+
+        if (cancelled)
+        {
+            result.Should().Be(DocumentPrintResult.Cancelled);
+            return;
+        }
+
+        result.Should().Be(DocumentPrintResult.Printed);
+        File.Exists(output).Should().BeTrue();
+        using var printed = PdfDocument.Open(File.ReadAllBytes(output));
+        printed.PageCount.Should().Be(3);
+        printed.GetPage(1).VisualWidth.Should().BeLessThan(printed.GetPage(1).VisualHeight, "a portrait page prints portrait");
+        printed.GetPage(2).VisualWidth.Should().BeGreaterThan(printed.GetPage(2).VisualHeight,
+            "auto-rotate turns the paper for the landscape page");
+    }
+
     // ── end to end through the view model ──────────────────────────────
 
     /// <summary>

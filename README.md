@@ -191,8 +191,8 @@ release notes:
     sent through the Windows print spooler, so the printout matches the viewer
     and no Acrobat or other PDF handler is needed. "Print to file" is hidden;
     choose *Microsoft Print to PDF* instead, or use Save As. The PDF's
-    per-annotation *print* flag is not consulted yet: what the viewer shows is
-    what prints. ⚠️ The Windows path was built and unit-tested on macOS and
+    per-annotation *print* flag is not consulted yet (#1573): what the viewer
+    shows is what prints. ⚠️ The Windows path was built and unit-tested on macOS and
     has not yet been checked on a Windows machine.
   - **Linux** printing is not planned — Print… explains this, and you can
     Save As and print from another viewer.

@@ -87,7 +87,7 @@ internal interface IWindowsPrintSpooler
 /// Unlike the macOS path, the pages printed are excise's rendering: what the
 /// viewer shows (annotations and filled form fields included, never the
 /// form-field highlight tint) is what prints. The PDF's per-annotation
-/// <c>/Print</c> flag is not consulted yet: the renderer has no print intent.
+/// <c>/Print</c> flag is not consulted yet: the renderer has no print intent (#1573).
 /// </para>
 /// <para>
 /// Threading: the copy is parsed on the pool, the dialog runs on the UI

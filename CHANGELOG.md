@@ -213,7 +213,7 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   framework. New dependency: System.Drawing.Common 10.0.12 (MIT, managed),
   referenced for every RID but only ever loaded on Windows. What prints is
   what the viewer shows: the per-annotation `/Print` flag is not consulted
-  yet. ⚠️ Built and tested on macOS only — the page geometry, sheet order,
+  yet (#1573). ⚠️ Built and tested on macOS only — the page geometry, sheet order,
   scaling, rasterising and the view-model path run against a fake dialog and
   spooler; the Win32 dialog, `PrintDocument` and real drivers still need a
   check on Windows. Linux printing remains out of scope.
