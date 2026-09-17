@@ -70,6 +70,9 @@
          redaction gates at 2 of 195 assertions in every worktree session for
          a month; the bound differed per copy, so no single review caught it. -->
     <Compile Include="../Excise.Core.Tests/TestSupport/TestRepoLayout.cs" Link="TestSupport/TestRepoLayout.cs" />
+    <!-- #1592: the tier-A bench builds its own fixtures; same linking pattern as
+         SavedPdfLeakScanner so there is one fixture builder, not two. -->
+    <Compile Include="../Excise.Core.Tests/Redaction/Recovery/RecoveryFixtureBuilder.cs" Link="Recovery/RecoveryFixtureBuilder.cs" />
   </ItemGroup>
 
 </Project>
