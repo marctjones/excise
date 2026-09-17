@@ -123,6 +123,11 @@ public class UnredactionScorecardTests
             "black-on-white" or "low-contrast" => ("occluded", UnredactionScorecard.Polarity.Leak),
             "white-on-black" => ("inverted-box", UnredactionScorecard.Polarity.Leak),
             "highlight-readable" => ("highlight-readable", UnredactionScorecard.Polarity.NegativeControl),
+            // #1617: the bar drawn with no colour operator, relying on §8.6.8's
+            // initial black. Its own stratum because it is the one band here
+            // that was NOT written the way a fixture author writes one, and it
+            // is the shape that found total blindness on a real filing.
+            "default-colour" => ("default-colour-box", UnredactionScorecard.Polarity.Leak),
             _ => ("highlight", UnredactionScorecard.Polarity.Leak),
         };
 

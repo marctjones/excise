@@ -94,7 +94,18 @@ def build_case(answer, font, size, method, context, colour="black-on-white", pos
         "white-on-black":   ("0 0 0", "1 1 1", False),   # white text on black fill, no cover needed
         "low-contrast":     ("0.15 0.15 0.15", "0.2 0.2 0.2", False),
         "highlight-readable": ("1 1 0", "0 0 0", False), # yellow highlight, readable -> NOT a leak
+        # #1617: the box drawn with NO colour operator at all, relying on the
+        # PDF 32000-1 8.6.8 initial fill colour, which is black. This band
+        # exists because every other band here writes "0 0 0 rg" first -- what a
+        # person writing a fixture does -- and that shared habit hid total
+        # blindness to the Manafort filing (D.D.C. 1:17-cr-00201 #471), whose
+        # every bar omits the operator. The bench scored 100% while excise found
+        # zero marks on it. Empty box_rgb emits no operator; see the "rg" guard
+        # at each draw site below.
+        "default-colour":   ("", "0 0 0", True),
     }[colour]
+    # An empty colour spec means EMIT NOTHING, not "emit an empty operator".
+    box_fill = f"{box_rgb} rg\n" if box_rgb else ""
 
     def line(s, ink="0 0 0"):
         return f"BT {ink} rg /F1 {size} Tf {x0} 700 Td ({s}) Tj ET\n".encode()
@@ -115,9 +126,9 @@ def build_case(answer, font, size, method, context, colour="black-on-white", pos
         # exactly what separates a caught bad redaction from a missed one.
         if cover:  # box painted OVER the text
             content = (line(prefix + answer + suffix, ink_rgb)
-                       + f"{box_rgb} rg\n{ax0} 696 {aw} {size} re f\n".encode())
+                       + f"{box_fill}{ax0} 696 {aw} {size} re f\n".encode())
         else:      # fill first, text on top in a near/exact-matching ink
-            content = (f"{box_rgb} rg\n{ax0} 696 {aw} {size} re f\n".encode()
+            content = (f"{box_fill}{ax0} 696 {aw} {size} re f\n".encode()
                        + line(prefix + answer + suffix, ink_rgb))
         content += ctx.encode()
 
@@ -126,7 +137,7 @@ def build_case(answer, font, size, method, context, colour="black-on-white", pos
         # box drawn. Prefix and suffix keep their positions.
         content = (line(prefix)                                      # prefix at x0
                    + f"BT /F1 {size} Tf {ax1} 700 Td ({suffix}) Tj ET\n".encode()  # suffix at its ORIGINAL x
-                   + f"{box_rgb} rg\n{ax0} 696 {aw} {size} re f\n".encode()
+                   + f"{box_fill}{ax0} 696 {aw} {size} re f\n".encode()
                    + ctx.encode())
 
     elif method == "width-closing":
@@ -176,6 +187,7 @@ PLAN = [
     ("B0", "Helvetica",   12, "under-box", "none", "dict", "white-on-black",    D_MID),
     ("B0", "Helvetica",   12, "under-box", "none", "dict", "low-contrast",      D_MID),
     ("B0", "Helvetica",   12, "under-box", "none", "dict", "highlight-readable", D_MID),
+    ("B0", "Helvetica",   12, "under-box", "none", "dict", "default-colour",    D_MID),  # #1617
     # --- residue: font families ---
     ("B1", "Helvetica",     12, "width-preserving", "none", "dict", D_BW, D_MID),
     ("B1", "Times-Roman",   12, "width-preserving", "none", "dict", D_BW, D_MID),

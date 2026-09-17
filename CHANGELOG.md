@@ -10,6 +10,36 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Fixed
+- **`unredact` saw NOTHING on the Manafort filing: both detectors treated an
+  unset fill colour as white rather than §8.6.8 black** (#1617). The first
+  real-world document put in front of the tool defeated it completely. *USA v.
+  Manafort*, D.D.C. 1:17-cr-00201, docket entry 471 (2019-01-08) — the most
+  cited failed PDF redaction there is, black bars over whole lines with the text
+  still underneath — produced **0 marks and 0 findings**. Not a wrong answer: no
+  mark at all, on a page whose bars are plainly visible and whose covered text
+  `pdftotext` reads straight out.
+
+  `RedactionMarkDetector` and `HiddenTextDetector` both started their fill
+  colour at white, the first skipping any fill drawn before a colour operator.
+  The comment saying so named the spec and then set it aside: *"§8.6.8: the
+  initial colour is black, but a producer that never sets one is not drawing a
+  redaction"*. Every bar in that filing is `72 499.19 468 -13.8 re f` with no
+  colour operator in scope, relying on exactly the initial black that was set
+  aside — so the mark detector skipped all of them and the hidden-text detector,
+  the half that decides whether a leak is SEEN, scored each as non-obstructive.
+  After the fix: 25 marks, 24 recovered, 31 certain findings.
+
+  It is not an eager detector. The CORRECTED filing (entry 472) — same case,
+  same producer, same day, redaction properly applied — yields 24 marks and
+  nothing recovered, before and after. What keeps page furniture out is SIZE,
+  which was already there and is the right gate: the same file's underlines are
+  0.48–1.2pt and `MinSidePt` is 2.0, while the bars are 13.8pt.
+
+  ⚠️ **Why nothing caught it.** The synthetic generator writes `0 0 0 rg` before
+  every box, because that is what a person writing a fixture does. Every band of
+  the bench scored 100% on the same day this document scored zero. A gate built
+  from fixtures its authors wrote cannot see an assumption those authors share —
+  it took one real document, which is the entire argument for tier B.
 - **Area redaction deleted the `pdfaid` XMP, so it could never produce a
   PDF/A-conformant file** (#1507). `RedactArea` — the click-to-redact path, and
   the default for `page.RedactArea(rect)` — strips the positionless document
@@ -276,6 +306,44 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   padding allowance but never wider — because the strict reading silently
   rejects the right answer and reports "nothing fits", which UNDERSTATES the
   leak.
+
+  The budget is now an INTERVAL with a provenance, and #1589's neighbour-shift
+  half (Bland et al., PETS 2023) supplies a second, independent bound on the
+  same span: the gap between the surviving glyphs either side of the mark. A
+  pixel attacker can measure the box; only a tool reading the content stream can
+  say where the next glyph starts and whether the SPACE beside the removed word
+  survived — and where it did, the gap is an equality rather than a bound.
+  Intersecting the two narrowed the leak on the constructed corpus with no
+  engine change: 11 candidates and 3.46 bits down to 2 and 1.00, 17 and 4.09
+  down to 3 and 1.58, and a false "exactly 6 digit(s)" pattern claim withdrawn.
+  Two details are load-bearing: charging a space allowance for a space that is
+  visibly still there threw the exact measurement away, and the intersection
+  needs an epsilon because the box (a content-stream `re`) and the gap
+  (accumulated advances) describe the same edge by different arithmetic and land
+  0.04pt apart — without it the commonest case in the corpus read as a
+  CONTRADICTION and fell back to the loose bound exactly when the tight one was
+  right. A real contradiction still falls back and says so, because narrowing to
+  an interval derived from a disagreement would drop the true answer. The gap is
+  corroborated against mutool's own glyph positions, not a second excise
+  opinion.
+- **The unredaction bench's real-world documents: a committed vetting record,
+  a manifest-driven fetcher, and a gate** (#1591). `tests/unredaction-bench/
+  manifest.tsv` carries id, tier, status, url, sha256, source, public basis,
+  ground-truth pointer and — the column that matters — the ASSESSMENT. Four
+  statuses, and the distinctions are load-bearing: `vetted`, `excluded`
+  (checked, and the answer is no), `blocked` (checked, wanted, something is in
+  the way) and `unvetted` (nobody has looked). Collapsing any of them loses
+  exactly what a later reader needs.
+
+  The schema is CLOSED: there is no column a recovered value could live in, and
+  the gate fails if one is added. Ground truth for tier B is a gitignored local
+  file the script explains but never writes — transcribing a value by hand is
+  the moment to re-read the vetting line and decide again.
+  `scripts/download-unredaction-bench.sh` fetches only `vetted` rows (no
+  `--all`, no `--force`), verifies sha256 and DELETES a mismatch, uses no
+  credentials and no paid PACER, and never runs in t0/t1. Registered in
+  `tests/corpora.tsv` rather than as a parallel mechanism, so `corpus.sh verify`
+  already checks the destination is gitignored.
 - **A tier-A unredaction bench** (#1590), generated at run time with exact
   ground truth, whose axes are DERIVED from the failure-mode registry so a mode
   cannot be silently omitted. Modes with no channel get an axis too: that zero

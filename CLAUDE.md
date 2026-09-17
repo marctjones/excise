@@ -1272,6 +1272,67 @@ and whether the PDFium/PDFBox oracle tests actually run or skip on this
 machine (their in-code skip reason — `Assert.SkipWhen`/`SkipUnless`, #1172 —
 names exactly what is missing).
 
+### A default you assumed is a defect you cannot see (#1617)
+
+**The spec's default value is the default value. If you override one because
+"no real producer relies on it", you have written a bug and documented it as a
+decision.**
+
+`RedactionMarkDetector` and `HiddenTextDetector` both started the fill colour at
+WHITE, with this comment:
+
+```csharp
+var fill = new Rgb(1, 1, 1);   // §8.6.8: the initial colour is black, but a
+                               // producer that never sets one is not drawing
+                               // a redaction; white keeps the default inert.
+```
+
+It names the spec, then overrides it on a guess about producers. The guess is
+false on the most cited failed redaction in existence. Every black bar in the
+Manafort breach-response filing (D.D.C. 1:17-cr-00201 #471, 2019-01-08) is
+
+```
+72 499.19 468 -13.8 re
+f
+```
+
+with no colour operator in scope. `excise unredact` reported **0 marks and 0
+findings** on it — while the bars are plainly visible in any renderer and
+`pdftotext` reads 91 covered words off page 5 alone.
+
+| | marks | recovered | certain findings |
+|---|---:|---:|---:|
+| #471 before | 0 | 0 | 0 |
+| #471 after | 25 | 24 | 31 |
+| #472 (the CORRECTED filing), before and after | 24 | 0 | 0 |
+
+Three things to take from it, none of them about colour:
+
+1. **The gating that keeps furniture out is SIZE, not a colour operator.** It
+   was already there (`MinSidePt = 2.0`): the same file's underlines are
+   0.48–1.2pt, the bars 13.8pt. The wrong default was doing a job a correct
+   filter already did.
+2. **A pair beats a fixture.** #471 and #472 are the same brief, same producer,
+   same day, differing only in whether the redaction worked. That pair proves
+   the fix is a detector and not an eagerness — no synthetic fixture can make
+   that argument about itself.
+3. ⚠️ **The synthetic corpus could not find this, and said so in the loudest
+   possible way.** Its generator writes `0 0 0 rg` before every box, because
+   that is what a person writing a fixture does. Every band of the unredaction
+   bench scored **100%** on the same day this document scored **zero**.
+
+The rule this repo already states — *a gate that compares excise to excise
+cannot see a defect excise holds consistently* — has a sibling:
+
+> **A gate built from fixtures written by the people who wrote the code cannot
+> see an assumption they share.** One real document is worth a corpus of
+> fixtures you authored.
+
+So when you consume a content stream, audit the INITIAL VALUE of every piece of
+graphics state you track, against §8.4/§8.6/§9.3, and pin each with a fixture
+that omits the operator. Every such default is a silent failure mode: nothing
+throws, nothing warns, the answer is simply empty.
+
 ### Skia-origin differences are registered, not re-triaged (#1011)
 
 excise rasterises through SkiaSharp **by choice**. A difference that originates
