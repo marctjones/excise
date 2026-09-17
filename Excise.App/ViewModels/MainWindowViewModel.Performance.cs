@@ -78,6 +78,7 @@ public partial class MainWindowViewModel
         settings.RedactionWidthPolicy = RedactionWidthPolicy.ToString();
         settings.LinkUriCarrierPolicy = LinkUriCarrierPolicy.ToString();
         settings.MetadataCarrierPolicy = MetadataCarrierPolicy.ToString();
+        settings.PrintScaling = PrintScaling.ToString();
         _performanceSettings.WriteTo(settings);
     }
 }

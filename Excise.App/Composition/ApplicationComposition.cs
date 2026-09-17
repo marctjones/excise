@@ -40,6 +40,18 @@ internal static class ApplicationComposition
         // cache-trim coordinator (OS pressure), so their requests coalesce.
         services.AddSingleton(_ => new ReleasedMemoryReclaimer());
 
+        // #1545: printing. The platform half is chosen here (PDFKit on macOS,
+        // an honest refusal elsewhere until #1546); the workflow that writes
+        // and deletes the print copy is platform-neutral. Explicit factories
+        // for the same reason as the host adapters below: internal types.
+        services.AddSingleton<Excise.App.Services.Printing.IDocumentPrinter>(provider =>
+            Excise.App.Services.Printing.DocumentPrinterFactory.CreateForCurrentPlatform(
+                provider.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>()));
+        services.AddSingleton(provider => new Excise.App.Services.Printing.DocumentPrintWorkflowService(
+            provider.GetRequiredService<RedactionWorkflowService>(),
+            provider.GetRequiredService<Excise.App.Services.Printing.IDocumentPrinter>(),
+            provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Excise.App.Services.Printing.DocumentPrintWorkflowService>>()));
+
         // Host and persistence adapters (#1500 steps 1-2). Explicit factories,
         // like ReleasedMemoryReclaimer above: these types and their constructors
         // are internal (design principle "new units are internal in Phase A"),
@@ -86,6 +98,7 @@ internal static class ApplicationComposition
             services.GetRequiredService<DocumentImageExportWorkflowService>(),
             services.GetRequiredService<AnnotationWorkflowService>(),
             services.GetRequiredService<ReleasedMemoryReclaimer>(),
+            services.GetRequiredService<Excise.App.Services.Printing.DocumentPrintWorkflowService>(),
             services.GetRequiredService<IFilePicker>(),
             services.GetRequiredService<IWindowHost>(),
             services.GetRequiredService<ITextClipboard>(),

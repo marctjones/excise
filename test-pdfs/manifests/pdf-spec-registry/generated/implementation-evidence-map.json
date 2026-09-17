@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "11f4c7615acaed163140f119e85f3c836af04d9edbee2f6176db1ae61d9fda32",
+  "sourceFingerprint": "1920416bb6504c0565cbd1b143bc1fff7a9b77989fd7ea2a9a669c755dcfc7ef",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6785,6 +6785,36 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Services/Printing/DocumentPrintWorkflowService.cs",
+      "path": "Excise.App/Services/Printing/DocumentPrintWorkflowService.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Printing/IDocumentPrinter.cs",
+      "path": "Excise.App/Services/Printing/IDocumentPrinter.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Printing/MacPdfKitDocumentPrinter.cs",
+      "path": "Excise.App/Services/Printing/MacPdfKitDocumentPrinter.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Services/RedactedCopyDialogFormatter.cs",
       "path": "Excise.App/Services/RedactedCopyDialogFormatter.cs",
       "kind": "source-file",
@@ -7473,6 +7503,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/ViewModels/MainWindowViewModel.Printing.cs",
+      "path": "Excise.App/ViewModels/MainWindowViewModel.Printing.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -9179,7 +9219,7 @@
     }
   ],
   "summary": {
-    "records": 441,
+    "records": 445,
     "facets": {
       "annotations": 11,
       "content-and-graphics": 19,
@@ -9187,7 +9227,7 @@
       "fonts": 30,
       "forms": 8,
       "images": 29,
-      "product-integration-general": 247,
+      "product-integration-general": 251,
       "redaction": 52,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 20,
@@ -9266,7 +9306,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 20,
       "pdfe.product.security.signature-and-permission-warning:write": 20
     },
-    "fallbackRecords": 247,
+    "fallbackRecords": 251,
     "allRecordsMapped": true
   }
 }

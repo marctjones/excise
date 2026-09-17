@@ -158,6 +158,7 @@ namespace Excise.App.Models
         public string LinkUriCarrierPolicy { get; set; }
         public string MetadataCarrierPolicy { get; set; }
         public string? PerformancePreset { get; set; }
+        public string PrintScaling { get; set; }
         public string ReadingOrderStrategy { get; set; }
         public bool RedactionWholeWord { get; set; }
         public string RedactionWidthPolicy { get; set; }
@@ -556,6 +557,15 @@ namespace Excise.App.Services
         Discard = 2,
     }
 }
+namespace Excise.App.Services.Printing
+{
+    public enum PrintScalingMode
+    {
+        ActualSize = 0,
+        FitToPage = 1,
+        ShrinkOversized = 2,
+    }
+}
 namespace Excise.App.Threading
 {
     public sealed class AvaloniaDispatcherScheduler : System.Reactive.Concurrency.LocalScheduler
@@ -667,6 +677,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> BatesNumberingCommand { get; }
         public bool CanMoveSelectedPagesEarlier { get; }
         public bool CanMoveSelectedPagesLater { get; }
+        public bool CanPrint { get; }
         public bool CanRedo { get; }
         public bool CanRemoveSelectedPages { get; }
         public bool CanUndo { get; }
@@ -762,6 +773,8 @@ namespace Excise.App.ViewModels
         public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.PendingRedaction> PendingRedactions { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> PreviousPageCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> PrintCommand { get; }
+        public string? PrintDisabledReason { get; }
+        public Excise.App.Services.Printing.PrintScalingMode PrintScaling { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
         public System.Collections.ObjectModel.ObservableCollection<Avalonia.Controls.MenuItem> RecentFileMenuItems { get; }
         public System.Collections.ObjectModel.ObservableCollection<string> RecentFiles { get; set; }
@@ -870,6 +883,7 @@ namespace Excise.App.ViewModels
         public System.Threading.Tasks.Task AddStrikeOutAnnotationFromSelectionAsync() { }
         public System.Threading.Tasks.Task AddUnderlineAnnotationFromSelectionAsync() { }
         public void ApplyContinuousScrollPreference(bool enabled) { }
+        public void ApplyPrintScalingPreference(string? printScaling) { }
         public void ApplyReadingOrderStrategyPreference(Excise.Core.Text.ReadingOrderStrategy strategy) { }
         public void ApplyRedactionPolicyPreferences(bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy) { }
         public System.Threading.Tasks.Task ApplyRedactionsCommand() { }
@@ -981,6 +995,7 @@ namespace Excise.App.ViewModels
         public double OcrLowConfidence { get; set; }
         public bool OcrPreprocess { get; set; }
         public Excise.App.Models.PerformancePreset[] PerformancePresetOptions { get; }
+        public Excise.App.Services.Printing.PrintScalingMode[] PrintScalingOptions { get; }
         public Excise.Core.Text.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; }
         public bool RedactionWholeWord { get; set; }
         public int RenderThreads { get; set; }
@@ -989,6 +1004,7 @@ namespace Excise.App.ViewModels
         public Excise.Core.Operations.CarrierScrubMode SelectedLinkUriCarrierPolicy { get; set; }
         public Excise.Core.Operations.CarrierScrubMode SelectedMetadataCarrierPolicy { get; set; }
         public Excise.App.Models.PerformancePreset SelectedPerformancePreset { get; set; }
+        public Excise.App.Services.Printing.PrintScalingMode SelectedPrintScaling { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy SelectedReadingOrderStrategy { get; set; }
         public Excise.Core.Text.Segmentation.WidthPolicy SelectedRedactionWidthPolicy { get; set; }
         public Excise.Core.Text.WhitespaceMode SelectedWhitespaceMode { get; set; }

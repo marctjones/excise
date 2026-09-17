@@ -23,6 +23,8 @@ public class PreferencesViewModel : ViewModelBase
     private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
         Excise.Core.Operations.CarrierScrubMode.Strip;
     private bool _redactionWholeWord;
+    private Excise.App.Services.Printing.PrintScalingMode _printScaling =
+        Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
     private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
         Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
 
@@ -304,6 +306,16 @@ public class PreferencesViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _redactionWidthPolicy, value);
     }
 
+    // Print page scaling (#1545). AOT-safe Enum.GetValues<T>().
+    public Excise.App.Services.Printing.PrintScalingMode[] PrintScalingOptions { get; } =
+        System.Enum.GetValues<Excise.App.Services.Printing.PrintScalingMode>();
+
+    public Excise.App.Services.Printing.PrintScalingMode SelectedPrintScaling
+    {
+        get => _printScaling;
+        set => this.RaiseAndSetIfChanged(ref _printScaling, value);
+    }
+
     // Commands
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
@@ -345,6 +357,7 @@ public class PreferencesViewModel : ViewModelBase
         SelectedMetadataCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
         RedactionWholeWord = false;
         SelectedRedactionWidthPolicy = Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
+        SelectedPrintScaling = Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
         SetPerformanceFields(PerformanceSettings.Balanced);
     }
 
@@ -361,6 +374,7 @@ public class PreferencesViewModel : ViewModelBase
         SelectedMetadataCarrierPolicy = mainViewModel.MetadataCarrierPolicy;
         RedactionWholeWord = mainViewModel.RedactionWholeWord;
         SelectedRedactionWidthPolicy = mainViewModel.RedactionWidthPolicy;
+        SelectedPrintScaling = mainViewModel.PrintScaling;
         SetPerformanceFields(mainViewModel.PerformanceSettings);
         TileCacheBytesSource = mainViewModel.ViewerTileCacheResidentBytesProvider;
     }
@@ -373,6 +387,7 @@ public class PreferencesViewModel : ViewModelBase
         mainViewModel.MetadataCarrierPolicy = SelectedMetadataCarrierPolicy;
         mainViewModel.RedactionWholeWord = RedactionWholeWord;
         mainViewModel.RedactionWidthPolicy = SelectedRedactionWidthPolicy;
+        mainViewModel.PrintScaling = SelectedPrintScaling;
         mainViewModel.ApplyPerformanceSettings(BuildPerformanceSettings());
     }
 }

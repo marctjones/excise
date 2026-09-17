@@ -313,6 +313,7 @@ public partial class MainWindow : Window
                 _windowSettings.RedactionWidthPolicy,
                 _windowSettings.LinkUriCarrierPolicy,
                 _windowSettings.MetadataCarrierPolicy);
+            viewModel.ApplyPrintScalingPreference(_windowSettings.PrintScaling);
             // Preferences → Performance: subscribe first so the restore below
             // reaches the viewer through the same path a Save does.
             viewModel.PerformanceSettingsApplied += OnPerformanceSettingsApplied;

@@ -364,6 +364,8 @@
                 <MenuItem Header="Export _All Pages as Images..." Command="{Binding ExportPagesCommand}"
                           access:CommandAccessibility.CommandId="document.exportAllPages"/>
                 <MenuItem Header="_Print..." Command="{Binding PrintCommand}" InputGesture="Ctrl+P"
+                          IsEnabled="{Binding CanPrint}"
+                          ToolTip.Tip="{Binding PrintDisabledReason}"
                           access:CommandAccessibility.CommandId="document.print"/>
                 <Separator/>
                 <MenuItem Header="_Security..." Command="{Binding SecurityCommand}"

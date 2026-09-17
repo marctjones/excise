@@ -1360,6 +1360,22 @@
     },
     {
       "section": "product-capabilities",
+      "cluster": "Platform-specific printing",
+      "capabilityIds": [
+        "pdfe.product.platform.printing"
+      ],
+      "targetModes": 1,
+      "modeStates": {
+        "partial": 1
+      },
+      "unknownModeCount": 0,
+      "explicitContractModes": 1,
+      "passingContractModes": 0,
+      "testCandidateModes": 1,
+      "reviewBatchIssues": []
+    },
+    {
+      "section": "product-capabilities",
       "cluster": "Privacy-clean copy and metadata/attachment stripping",
       "capabilityIds": [
         "pdfe.product.security.privacy-clean-copy"
@@ -3043,8 +3059,8 @@
     }
   ],
   "summary": {
-    "clusters": 178,
-    "targetModes": 898,
+    "clusters": 179,
+    "targetModes": 899,
     "unknownModeCount": 149
   }
 }

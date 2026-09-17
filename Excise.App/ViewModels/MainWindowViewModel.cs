@@ -37,6 +37,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly SignatureVerificationWorkflowService _signatureWorkflowService;
     private readonly PageOrganizationWorkflowService _pageOrganizationWorkflow;
     private readonly DocumentImageExportWorkflowService _imageExportWorkflow;
+    private readonly Services.Printing.DocumentPrintWorkflowService _printWorkflow;
     private readonly AnnotationWorkflowService _annotationWorkflow;
     private readonly FilenameSuggestionService _filenameSuggestionService;
     private readonly ToastService _toastService;
@@ -132,6 +133,7 @@ public partial class MainWindowViewModel : ViewModelBase
         DocumentImageExportWorkflowService imageExportWorkflow,
         AnnotationWorkflowService annotationWorkflow,
         ReleasedMemoryReclaimer memoryReclaimer,
+        Services.Printing.DocumentPrintWorkflowService printWorkflow,
         IFilePicker filePicker,
         IWindowHost windowHost,
         ITextClipboard clipboard,
@@ -155,12 +157,14 @@ public partial class MainWindowViewModel : ViewModelBase
         _annotationWorkflow = annotationWorkflow;
         _thumbnailSession = new ThumbnailSidebarSession(_logger);
         _memoryReclaimer = memoryReclaimer ?? throw new ArgumentNullException(nameof(memoryReclaimer));
+        _printWorkflow = printWorkflow ?? throw new ArgumentNullException(nameof(printWorkflow));
         _filePicker = filePicker ?? throw new ArgumentNullException(nameof(filePicker));
         _windowHost = windowHost ?? throw new ArgumentNullException(nameof(windowHost));
         _clipboard = clipboard ?? throw new ArgumentNullException(nameof(clipboard));
         _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
         _recentFilesStore = recentFilesStore ?? throw new ArgumentNullException(nameof(recentFilesStore));
         _documentService.DocumentReleased += OnDocumentReleased;
+        PropertyChanged += RaiseCanPrintWithDocumentState;
 
         InitializeCommands();
         _logger.LogInformation("MainWindowViewModel initialized");
@@ -2531,29 +2535,6 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _logger.LogError(ex, "Error exporting pages");
         }
-    }
-
-    private async Task PrintAsync()
-    {
-        _logger.LogInformation("Print command triggered");
-
-        if (!_documentService.IsDocumentLoaded)
-        {
-            _logger.LogWarning("Cannot print: No document loaded");
-            await _dialogService.ShowMessageAsync("Print", "Open a PDF before printing.");
-            return;
-        }
-
-        // Intentionally not implemented — see #621. Avalonia ships no print API,
-        // and a real cross-platform pipeline (CUPS on macOS/Linux,
-        // System.Drawing.Printing on Windows, plus a print-options dialog) is a
-        // lot of platform-specific surface to build and maintain for a workflow
-        // most users reach a dedicated PDF viewer for, not an editor. This is a
-        // permanent decision, not a "coming soon" placeholder — say so plainly.
-        const string message = "excise doesn't print directly — this is a deliberate choice, not a missing feature (see #621). " +
-            "Use Export Current Page or Export All Pages as Images from the Document menu, then print the image from your OS's own viewer.";
-        _logger.LogInformation("Print command: {Message}", message);
-        await _dialogService.ShowMessageAsync("Print", message);
     }
 
     /// <summary>
