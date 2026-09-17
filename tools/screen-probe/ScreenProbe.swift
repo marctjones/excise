@@ -18,6 +18,7 @@
 // Stdout: one JSON line per event ("ready" after the first frame, "stopped").
 // It stops on SIGTERM or SIGINT, or when stdin reaches EOF.
 
+import AppKit
 import Foundation
 import ScreenCaptureKit
 import CoreMedia
@@ -62,7 +63,9 @@ func emit(_ dict: [String: Any]) {
 final class Recorder: NSObject, SCStreamOutput, SCStreamDelegate {
     let handle: FileHandle
     var frames = 0
+    var skipped = 0
     var announced = false
+    var previous = Data()
     let lock = NSLock()
 
     init(path: String) {
@@ -87,16 +90,28 @@ final class Recorder: NSObject, SCStreamOutput, SCStreamDelegate {
         let stride = CVPixelBufferGetBytesPerRowOfPlane(pixels, 0)
         guard let base = CVPixelBufferGetBaseAddressOfPlane(pixels, 0) else { return }
 
+        var luma = Data(capacity: w * h)
+        let src = base.assumingMemoryBound(to: UInt8.self)
+        for row in 0..<h {
+            luma.append(src + row * stride, count: w)
+        }
+
+        lock.lock()
+        // ScreenCaptureKit delivers "complete" frames at the requested rate even
+        // when nothing changed (199 frames in 4 s of an idle Preview window).
+        // A frame identical to the last one carries no information, and
+        // dropping it makes "a record exists" mean "the window changed".
+        if announced && luma == previous {
+            skipped += 1
+            lock.unlock()
+            return
+        }
+        previous = luma
         var record = Data(capacity: 16 + w * h)
         withUnsafeBytes(of: displayTime.littleEndian) { record.append(contentsOf: $0) }
         withUnsafeBytes(of: UInt32(w).littleEndian) { record.append(contentsOf: $0) }
         withUnsafeBytes(of: UInt32(h).littleEndian) { record.append(contentsOf: $0) }
-        let src = base.assumingMemoryBound(to: UInt8.self)
-        for row in 0..<h {
-            record.append(src + row * stride, count: w)
-        }
-
-        lock.lock()
+        record.append(luma)
         handle.write(record)
         frames += 1
         let first = !announced
@@ -112,6 +127,11 @@ final class Recorder: NSObject, SCStreamOutput, SCStreamDelegate {
 }
 
 let opts = parse()
+// ScreenCaptureKit asserts (CGS_REQUIRE_INIT) in a process with no window-server
+// connection. NSApplication makes one; .prohibited keeps the probe out of the
+// Dock and unable to take focus from the app being measured.
+_ = NSApplication.shared
+NSApp.setActivationPolicy(.prohibited)
 let recorder = Recorder(path: opts.out)
 var activeStream: SCStream?
 
@@ -122,8 +142,9 @@ func stop(_ reason: String) {
         try? recorder.handle.synchronize()
         try? recorder.handle.close()
         let n = recorder.frames
+        let k = recorder.skipped
         recorder.lock.unlock()
-        emit(["event": "stopped", "reason": reason, "frames": n])
+        emit(["event": "stopped", "reason": reason, "frames": n, "skippedUnchanged": k])
         exit(0)
     }
     if let s = s {

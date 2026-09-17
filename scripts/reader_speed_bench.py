@@ -75,7 +75,14 @@ def ticks_to_ms(t):
 
 def post_key(code, mods=()):
     import Quartz
+    # Real Home/End/PageUp/PageDown events carry the Fn flag, and real arrow
+    # keys carry Fn + NumericPad. Without them End did nothing in Preview
+    # (2026-09-17: page stayed 5 of 126) while AppleScript's End worked.
     flags = 0
+    if code in (115, 116, 119, 121):
+        flags |= Quartz.kCGEventFlagMaskSecondaryFn
+    if code in (123, 124, 125, 126):
+        flags |= Quartz.kCGEventFlagMaskSecondaryFn | Quartz.kCGEventFlagMaskNumericPad
     if "option" in mods:
         flags |= Quartz.kCGEventFlagMaskAlternate
     if "command" in mods:
@@ -294,22 +301,27 @@ def analyze_event(frames, region, t_start, t_end, threshold=0.002):
         return {"responded": False}
     final_px = region.pixels(window[-1][3])
     total = diff_fraction(pre_px, final_px)
-    first = drawn = None
+    first = None
+    drawn_idx = 0          # index of the first frame from which the page stays final
     si = 0.0
     last_t, last_incomplete = t_start, 1.0
-    for f in window:
+    for i, f in enumerate(window):
         px = region.pixels(f[3])
         if first is None and diff_fraction(px, pre_px) > threshold:
             first = f[0]
         remaining = diff_fraction(px, final_px)
         if remaining > threshold:
-            drawn = f[0]
+            # Still not final: the page becomes complete no earlier than the NEXT
+            # frame. (Reporting this frame's time undercounted a two-step draw.)
+            drawn_idx = i + 1
         si += last_incomplete * ticks_to_ms(f[0] - last_t)
         last_t = f[0]
         last_incomplete = min(1.0, remaining / total) if total > threshold else 0.0
     if first is None:
         return {"responded": False, "frames": len(window)}
-    drawn = drawn or first
+    drawn = window[min(drawn_idx, len(window) - 1)][0]
+    if drawn < first:
+        drawn = first
     return {"responded": True, "frames": len(window), "changedFraction": round(total, 4),
             "firstChangeMs": round(ticks_to_ms(first - t_start), 1),
             "drawnMs": round(ticks_to_ms(drawn - t_start), 1),
@@ -395,8 +407,10 @@ def summarize(out):
     lines = ["# Reader speed benchmark: excise vs Preview vs Adobe Acrobat (#1544)", "",
              f"Run: `{out}`", "",
              "Times in ms from the input event, over the app's page area. Median across repeats "
-             "(page turns: median and p95 across all turns). `drawn` = the last frame that still "
-             "differs from the settled frame; speed index = area under (1 - visual completeness). "
+             "(page turns: median and p95 across all turns). `drawn` = the first frame from which the "
+             "page area stays final; speed index = area under (1 - visual completeness). "
+             "Launch `drawn` covers the WHOLE window (sidebars and thumbnails filling in), "
+             "because it is taken before the window is resized. "
              "Timing floor: one 60 Hz frame (~17 ms).", ""]
     keyed = {}
     for r in runs:
