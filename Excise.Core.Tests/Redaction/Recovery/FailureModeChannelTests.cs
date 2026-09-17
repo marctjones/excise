@@ -99,6 +99,58 @@ public class FailureModeChannelTests
         findings.Should().NotContain(f => f.Channel == RecoveryScanner.Channels.Attachment);
     }
 
+    [Fact]
+    public void XfaFieldValue_IsRecoveredFromTheDatasetsPacket()
+    {
+        // #1609. The page shows a black box; the XFA datasets packet still
+        // holds the value, and a reader that renders the XFA form paints it
+        // straight back.
+        var bytes = RecoveryFixtureBuilder.XfaFormWithValue("ssn", "123-45-6789");
+        using var doc = PdfDocument.Open(bytes);
+
+        var finding = RecoveryScanner.Scan(doc).AllFindings
+            .Single(f => f.Channel == RecoveryScanner.Channels.Xfa);
+
+        finding.Confidence.Should().Be(RecoveryConfidence.Certain);
+        finding.Text.Should().Be("123-45-6789");
+        finding.Carrier.Should().Contain("ssn");
+        finding.Location.Should().BeNull(
+            "an XFA value has no laid-out box yet (#1547); inventing one would be worse");
+
+        // Corroboration that this is a real leak and not an excise artefact:
+        // the value is in the saved bytes.
+        SavedPdfLeakScanner.FindTerm(bytes, "123-45-6789").Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void ADocumentWithNoXfa_SaysSoRatherThanReportingNothing()
+    {
+        // "No XFA findings" and "this document has no XFA" are different
+        // claims, and the report must not let the first be read as the second.
+        using var doc = PdfDocument.Open(RecoveryFixtureBuilder.TextUnderBox("X"));
+        var report = RecoveryScanner.Scan(doc);
+
+        report.ChannelsRun.Should().NotContain(RecoveryScanner.Channels.Xfa);
+        report.ChannelsSkipped.Should().ContainKey(RecoveryScanner.Channels.Xfa)
+            .WhoseValue.Should().Contain("no /AcroForm /XFA");
+    }
+
+    [Fact]
+    public void XfaStructuralElements_AreNotReportedAsFieldValues()
+    {
+        // Negative control: a collector that reported every element's text
+        // would fill the report with form design and bury a real value.
+        var bytes = RecoveryFixtureBuilder.XfaFormWithValue("ssn", "123-45-6789");
+        using var doc = PdfDocument.Open(bytes);
+
+        var xfa = RecoveryScanner.Scan(doc).AllFindings
+            .Where(f => f.Channel == RecoveryScanner.Channels.Xfa).ToList();
+
+        xfa.Should().ContainSingle("only the leaf value is a finding");
+        xfa[0].Carrier.Should().NotContain("datasets");
+        xfa[0].Carrier.Should().NotContain("xdp");
+    }
+
     // ── newly closed, and the controls that keep them honest ────────────────
 
     [Fact]

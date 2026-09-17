@@ -170,6 +170,30 @@ internal static class RecoveryFixtureBuilder
         return Build(content, extraObjects: extraObjects, pageExtra: "/Thumb 7 0 R");
     }
 
+    /// <summary>
+    /// #1609 — an XFA form whose datasets packet still holds a field value the
+    /// page no longer shows.
+    /// </summary>
+    internal static byte[] XfaFormWithValue(string field = "ssn", string value = "123-45-6789")
+    {
+        var xml = Encoding.UTF8.GetBytes(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+            "<xdp:xdp xmlns:xdp=\"http://ns.adobe.com/xdp/\">" +
+            "<xfa:datasets xmlns:xfa=\"http://www.xfa.org/schema/xfa-data/1.0/\">" +
+            "<xfa:data><form1><personal>" +
+            $"<{field}>{value}</{field}>" +
+            "</personal></form1></xfa:data></xfa:datasets></xdp:xdp>");
+
+        var content = "q 0 0 0 rg 72 700 160 18 re f Q\n";
+        var extraObjects = new List<Obj>
+        {
+            new($"<< /Length {xml.Length} >>", xml),
+        };
+        return Build(content,
+            extraObjects: extraObjects,
+            catalogExtra: "/AcroForm << /Fields [] /XFA 7 0 R >>");
+    }
+
     /// <summary>#1592 — a document carrying an embedded file.</summary>
     internal static byte[] PageWithAttachment(string fileName = "notes.txt")
     {

@@ -97,7 +97,14 @@ public class UnredactRecoveryModelTests
             recovery.ChannelsSkipped.Should().ContainKey("residue")
                 .WhoseValue.Should().Contain("--mode certain");
             recovery.ChannelsSkipped.Should().ContainKey("ocr-differential");
-            recovery.ChannelsSkipped.Should().ContainKey("prior-revision");
+
+            // prior-revision USED to be skipped as "not implemented"; it runs
+            // now (#1592), which is why this asserts on xfa instead — and xfa
+            // is skipped with a DOCUMENT-SPECIFIC reason rather than a blanket
+            // one, so "no XFA findings" cannot be read as "no XFA here".
+            recovery.ChannelsRun.Should().Contain("prior-revision");
+            recovery.ChannelsSkipped.Should().ContainKey("xfa")
+                .WhoseValue.Should().Contain("no /AcroForm /XFA");
         }
         finally { File.Delete(path); }
     }

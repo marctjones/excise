@@ -64,6 +64,7 @@ public static class RecoveryScanner
         AddCoveredContent(document, builder, cancellationToken);
         AddFormFields(document, builder, cancellationToken);
         AddResidualArtefacts(document, builder, cancellationToken);
+        AddXfaValues(document, builder, cancellationToken);
 
         return builder;
     }
@@ -193,6 +194,42 @@ public static class RecoveryScanner
                     ? new RecoveryLocation(artefact.PageNumber, document.GetPage(artefact.PageNumber).CropBox,
                         "whole page")
                     : null));
+        }
+    }
+
+    /// <summary>
+    /// #1609 — XFA field values. The read mirror of XfaXmlCarrier's scrub:
+    /// every carrier the scrub side knows about needs one, or the audit
+    /// under-reports by construction.
+    /// </summary>
+    private static void AddXfaValues(
+        PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken)
+    {
+        var (values, summary) = XfaValueRecovery.Scan(document);
+        if (!summary.HasXfa)
+        {
+            builder.ChannelSkipped(Channels.Xfa, "document has no /AcroForm /XFA");
+            return;
+        }
+
+        builder.ChannelRan(Channels.Xfa);
+        // A packet excise cannot parse may still be readable by another tool,
+        // so the shortfall is reported rather than treated as clean.
+        if (summary.PacketsUnexamined > 0)
+        {
+            builder.ChannelSkipped(
+                Channels.Xfa + " (partial)",
+                $"{summary.PacketsUnexamined} XFA packet(s) would not parse as XML");
+        }
+
+        foreach (var value in values)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            // Document-level: an XFA value has no laid-out box until #1547's
+            // layout can supply one, and inventing a position would be worse
+            // than admitting there is none.
+            builder.AddFinding(RecoveredFinding.Certain(
+                Channels.Xfa, $"XFA field {value.FieldPath}", value.Value, location: null));
         }
     }
 

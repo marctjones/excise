@@ -212,10 +212,7 @@ internal static class UnredactCommandHandler
         if (mode is not (UnredactMode.Residue or UnredactMode.Both))
             builder.ChannelSkipped(RecoveryScanner.Channels.Residue, "--mode certain");
 
-        // Not implemented yet, and saying so is the honest report. Silence here
-        // would read as "this document has no XFA data", which is a claim
-        // nothing in this run checked.
-        builder.ChannelSkipped(RecoveryScanner.Channels.Xfa, "not implemented (#1609)");
+
     }
 
     private static List<UnredactResidueFinding> CollectResidue(

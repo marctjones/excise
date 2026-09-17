@@ -135,7 +135,7 @@ internal static class XfaXmlCarrier
         return count;
     }
 
-    private static bool TryGetXfa(
+    internal static bool TryGetXfa(
         PdfDocument document,
         out PdfDictionary acroForm,
         out PdfObject xfa)
@@ -157,7 +157,7 @@ internal static class XfaXmlCarrier
         return true;
     }
 
-    private static List<PdfStream> ResolvePacketStreams(PdfDocument document, PdfArray packets)
+    internal static List<PdfStream> ResolvePacketStreams(PdfDocument document, PdfArray packets)
     {
         var streams = new List<PdfStream>();
         foreach (var item in packets)
@@ -168,7 +168,7 @@ internal static class XfaXmlCarrier
         return streams;
     }
 
-    private static byte[] Concatenate(IReadOnlyList<PdfStream> streams)
+    internal static byte[] Concatenate(IReadOnlyList<PdfStream> streams)
     {
         var length = streams.Sum(s => (long)s.DecodedData.Length);
         if (length > int.MaxValue)
@@ -242,7 +242,7 @@ internal static class XfaXmlCarrier
         return true;
     }
 
-    private static bool TryLoadXml(byte[] bytes, out XDocument document, out Encoding encoding)
+    internal static bool TryLoadXml(byte[] bytes, out XDocument document, out Encoding encoding)
     {
         document = null!;
         encoding = DetectEncoding(bytes);

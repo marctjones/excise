@@ -163,9 +163,9 @@
       "description": "An XFA form's XML data packet still holds the field values a page redaction removed.",
       "producers": ["XFA form producers"],
       "channel": "xfa",
-      "status": "gap",
-      "issue": 1609,
-      "note": "XfaXmlCarrier exists on the SCRUB side; the read mirror does not."
+      "status": "covered",
+      "evidence": "FailureModeChannelTests.XfaFieldValue_IsRecoveredFromTheDatasetsPacket",
+      "note": "Closed by #1609. XfaXmlCarrier's locator and XML loader are shared with the read mirror, so there is one source of truth for where XFA lives. A packet that will not parse is REPORTED as unexamined, never treated as clean."
     },
     {
       "id": "structure-tree-carrier",
