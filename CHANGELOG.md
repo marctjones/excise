@@ -45,6 +45,27 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   and keep the AcroForm fields, which every non-XFA viewer already uses.
 
 ### Fixed
+- **The pre-push gate checked the wrong commit range on a stepped push**
+  (#1600). git hands a `pre-push` hook `<local ref> <local sha> <remote ref>
+  <remote sha>` per pushed ref; the hook exported the remote sha as
+  `GATE_ASYMMETRY_BASE` and discarded the local one, while
+  `scripts/check-gate-asymmetry.sh` always evaluated `base...HEAD`. So
+  `git push origin <sha>:develop` from a checkout that had moved on judged
+  commits nobody was pushing — and reported green, with only `base=` in its
+  output to go on, which made the gate's own advice ("two pushes, not two
+  commits") impossible to follow from one checkout. The checker now takes a
+  head (`GATE_ASYMMETRY_HEAD`, or a second argument; default `HEAD`), prints it
+  resolved next to the base, and fails hard rather than silently falling back
+  when it does not resolve. The hook passes the pushed sha, and — because every
+  test row still builds the WORKING TREE — prints the pushed and tested commits
+  side by side on a stepped push and refuses a pushed commit that is not an
+  ancestor of HEAD, naming the temporary-worktree route instead. The hook body
+  moved to the tracked `scripts/pre-push-hook.sh` (`--install-hook` now writes a
+  two-line stub, and resolves the hook path through `git rev-parse --git-path`,
+  which a linked worktree needs), so it is testable:
+  `scripts/test-check-gate-asymmetry.sh` is a new t0 selftest row. ⚠️ **A hook
+  installed before this must be re-installed once**: `scripts/test-tier.sh
+  --install-hook`.
 - **Closing a document after an idle trim kept the whole document in memory**
   (#1564, #1543). A cache trim — the idle trim, a window switch or OS
   pressure — recorded the open document in render-ahead's single-page plan,

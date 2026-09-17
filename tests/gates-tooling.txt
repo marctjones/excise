@@ -93,6 +93,7 @@ scripts/lib-runner.sh   # library sourced by every runner
 scripts/make-reader-bench-scan.py   # #1543 builds the reader benchmark's scanned-document fixture (no local corpus holds a real multi-page scan); a generator, not a check
 scripts/mine-hard-redaction-cases.py   # bench corpus mining
 scripts/monitor-exploratory-corpus.sh   # progress monitor for a running corpus scan
+scripts/pre-push-hook.sh   # the pre-push hook BODY (#1600); installed as a stub by test-tier.sh --install-hook, pinned by the gate-asymmetry-selftest row
 scripts/profile-render.sh   # dotnet-trace hotspot workflow for one CLI render (#1351); a diagnostic, not a gate
 scripts/profile_render_analyze.py   # body of profile-render.sh: self/inclusive time from an evented speedscope profile
 scripts/profile-test-rss-by-filter.sh   # measurement helper (#861)
