@@ -35,6 +35,16 @@ internal static class UnredactCommand
         {
             Description = "certain mode: also run the OCR differential (scanned redactions). Needs tesseract.",
         };
+        var carriersOption = new Option<string>("--carriers")
+        {
+            Description = "certain mode: hidden (default: only carrier text a reader cannot already see) | " +
+                          "all (also list carriers that restate visible text, e.g. a filled field's value or the title)",
+            DefaultValueFactory = _ => "hidden",
+        };
+        var verboseOption = new Option<bool>("--verbose")
+        {
+            Description = "Same as --carriers all",
+        };
         var noCorroborationOption = new Option<bool>("--no-corroboration")
         {
             Description = "residue mode: report width candidates WITHOUT independent (mutool) corroboration",
@@ -45,12 +55,18 @@ internal static class UnredactCommand
             "Recover or estimate text a redaction leaked (audit; reports constraints, not asserted secrets)")
         {
             fileArg, modeOption, dictOption, toleranceOption, maxOption,
-            jsonOption, ocrOption, noCorroborationOption,
+            jsonOption, ocrOption, noCorroborationOption, carriersOption, verboseOption,
         };
 
         command.SetAction((parseResult, cancellationToken) =>
         {
             var file = parseResult.GetValue(fileArg)!;
+            var carriers = (parseResult.GetValue(carriersOption) ?? "hidden").ToLowerInvariant();
+            if (carriers is not ("hidden" or "all"))
+            {
+                Console.Error.WriteLine("--carriers must be hidden or all");
+                return Task.FromResult(2);
+            }
             var dictionary = parseResult.GetValue(dictOption);
             var input = new UnredactCommandInput(
                 file.FullName,
@@ -59,7 +75,8 @@ internal static class UnredactCommand
                 parseResult.GetValue(toleranceOption),
                 parseResult.GetValue(maxOption),
                 parseResult.GetValue(ocrOption),
-                parseResult.GetValue(noCorroborationOption));
+                parseResult.GetValue(noCorroborationOption),
+                IncludeVisibleCarriers: carriers == "all" || parseResult.GetValue(verboseOption));
 
             var outcome = UnredactCommandHandler.Execute(input, cancellationToken);
             UnredactCommandOutput.Write(

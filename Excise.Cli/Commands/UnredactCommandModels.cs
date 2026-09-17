@@ -13,7 +13,8 @@ internal sealed record UnredactCommandInput(
     double Tolerance,
     int MaxCandidates,
     bool UseOcr,
-    bool NoCorroboration);
+    bool NoCorroboration,
+    bool IncludeVisibleCarriers = false);
 
 internal enum UnredactMode { Certain, Residue, Both }
 
@@ -28,7 +29,9 @@ internal sealed record UnredactCertainFinding(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     int? Object = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? Location = null)
+    string? Location = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? Proximity = null)
 {
     /// <summary>
     /// A document carrier finding: it has no page position, so the human
@@ -77,7 +80,9 @@ internal sealed record UnredactReport(
     IReadOnlyList<UnredactCertainFinding> Certain,
     IReadOnlyList<UnredactResidueFinding> Residue,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    IReadOnlyList<UnredactPresenceFinding>? Present = null);
+    IReadOnlyList<UnredactPresenceFinding>? Present = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<UnredactCertainFinding>? VisibleDuplicates = null);
 
 internal sealed record UnredactCommandOutcome(
     int ExitCode,

@@ -44,16 +44,17 @@ public static partial class CarrierTextRecovery
                 : parentName.Length == 0 ? partial! : parentName + "." + partial;
             var page = PageOf(doc, node, pageOf);
             var location = name.Length == 0 ? null : $"field '{name}'";
+            var area = RectOf(doc, node) ?? KidsArea(doc, node);
             index.Fields.Add((node, objNum, page, name));
 
             foreach (var key in FieldValueKeys)
-                ReportFieldValue(doc, c, node.GetOptional(key), $"acroform /{key}", page, objNum, location);
-            c.Text("acroform /TU", ReadText(doc, node, "TU"), page, objNum, location);
-            ReportOptions(doc, c, node, page, objNum, location);
+                ReportFieldValue(doc, c, node.GetOptional(key), $"acroform /{key}", page, objNum, location, area);
+            c.Text("acroform /TU", ReadText(doc, node, "TU"), page, objNum, location, area);
+            ReportOptions(doc, c, node, page, objNum, location, area);
 
             if (doc.Resolve(node.GetOptional("MK") ?? PdfNull.Instance) is PdfDictionary mk)
                 foreach (var key in MkCaptionKeys)
-                    c.Text($"widget /MK /{key}", ReadText(doc, mk, key), page, objNum, location);
+                    c.Text($"widget /MK /{key}", ReadText(doc, mk, key), page, objNum, location, area);
 
             // A widget that no page lists in /Annots still carries an appearance.
             if (node.GetNameOrNull("Subtype") == "Widget" && index.AnnotationsWithAppearanceScanned.Add(node)
@@ -69,24 +70,43 @@ public static partial class CarrierTextRecovery
     }
 
     private static void ReportFieldValue(
-        PdfDocument doc, Collector c, PdfObject? value, string carrier, int page, int objNum, string? location)
+        PdfDocument doc, Collector c, PdfObject? value, string carrier, int page, int objNum, string? location,
+        PdfRectangle? area)
     {
         switch (Deref(doc, value, out _))
         {
             case PdfString s:
-                c.Text(carrier, s.Value, page, objNum, location);
+                c.Text(carrier, s.Value, page, objNum, location, area);
                 break;
             case PdfStream st:
-                c.Text(carrier, DecodeTextBytes(SafeDecoded(st)), page, objNum, location);
+                c.Text(carrier, DecodeTextBytes(SafeDecoded(st)), page, objNum, location, area);
                 break;
             case PdfName n when !TrivialStateNames.Contains(n.Value):
-                c.Text(carrier + " (state name)", n.Value, page, objNum, location);
+                c.Text(carrier + " (state name)", n.Value, page, objNum, location, area);
                 break;
             case PdfArray arr:
                 foreach (var item in arr)
-                    ReportFieldValue(doc, c, item, carrier, page, objNum, location);
+                    ReportFieldValue(doc, c, item, carrier, page, objNum, location, area);
                 break;
         }
+    }
+
+    /// <summary>
+    /// A non-terminal field has no /Rect; its value is drawn by its widget
+    /// kids, so their union is where it shows.
+    /// </summary>
+    private static PdfRectangle? KidsArea(PdfDocument doc, PdfDictionary node)
+    {
+        if (doc.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is not PdfArray kids) return null;
+        PdfRectangle? union = null;
+        foreach (var k in kids)
+        {
+            if (doc.Resolve(k) is not PdfDictionary kid || RectOf(doc, kid) is not { } r) continue;
+            union = union is { } u
+                ? new PdfRectangle(Math.Min(u.Left, r.Left), Math.Min(u.Bottom, r.Bottom), Math.Max(u.Right, r.Right), Math.Max(u.Top, r.Top))
+                : r;
+        }
+        return union;
     }
 
     /// <summary>
@@ -94,7 +114,8 @@ public static partial class CarrierTextRecovery
     /// <c>[export display]</c> pair — both halves are text, and the export value
     /// never appears on the page.
     /// </summary>
-    private static void ReportOptions(PdfDocument doc, Collector c, PdfDictionary node, int page, int objNum, string? location)
+    private static void ReportOptions(
+        PdfDocument doc, Collector c, PdfDictionary node, int page, int objNum, string? location, PdfRectangle? area)
     {
         if (Deref(doc, node.GetOptional("Opt"), out _) is not PdfArray opts) return;
         foreach (var entry in opts)
@@ -102,13 +123,13 @@ public static partial class CarrierTextRecovery
             switch (Deref(doc, entry, out _))
             {
                 case PdfString s:
-                    c.Text("acroform /Opt", s.Value, page, objNum, location);
+                    c.Text("acroform /Opt", s.Value, page, objNum, location, area);
                     break;
                 case PdfArray pair:
                     if (pair.Count > 0)
-                        c.Text("acroform /Opt export value", ObjectText(doc, pair[0]), page, objNum, location);
+                        c.Text("acroform /Opt export value", ObjectText(doc, pair[0]), page, objNum, location, area);
                     if (pair.Count > 1)
-                        c.Text("acroform /Opt display value", ObjectText(doc, pair[1]), page, objNum, location);
+                        c.Text("acroform /Opt display value", ObjectText(doc, pair[1]), page, objNum, location, area);
                     break;
             }
         }
@@ -154,8 +175,9 @@ public static partial class CarrierTextRecovery
             {
                 if (Deref(doc, annotObj, out var annotNum) is not PdfDictionary annot) continue;
                 var owner = annot.GetNameOrNull("Subtype") == "Widget" ? "widget" : "annotation";
-                walker.Walk(annot.GetOptional("A"), $"{owner} /A", i, null, annotNum);
-                walker.WalkAdditional(annot.GetOptional("AA"), $"{owner} /AA", i, null, annotNum);
+                var area = RectOf(doc, annot);
+                walker.Walk(annot.GetOptional("A"), $"{owner} /A", i, null, annotNum, area);
+                walker.WalkAdditional(annot.GetOptional("AA"), $"{owner} /AA", i, null, annotNum, area);
             }
         }
 
@@ -163,8 +185,9 @@ public static partial class CarrierTextRecovery
         foreach (var (dict, fieldNum, page, name) in index.Fields)
         {
             var location = name.Length == 0 ? null : $"field '{name}'";
-            walker.Walk(dict.GetOptional("A"), "field /A", page, location, fieldNum);
-            walker.WalkAdditional(dict.GetOptional("AA"), "field /AA", page, location, fieldNum);
+            var area = RectOf(doc, dict) ?? KidsArea(doc, dict);
+            walker.Walk(dict.GetOptional("A"), "field /A", page, location, fieldNum, area);
+            walker.WalkAdditional(dict.GetOptional("AA"), "field /AA", page, location, fieldNum, area);
         }
 
         // Outline items: /A can be a URI or JavaScript action.
@@ -200,15 +223,15 @@ public static partial class CarrierTextRecovery
             _c = c;
         }
 
-        public void WalkAdditional(PdfObject? aa, string source, int page, string? location, int ownerObj)
+        public void WalkAdditional(PdfObject? aa, string source, int page, string? location, int ownerObj, PdfRectangle? area = null)
         {
             if (Deref(_doc, aa, out var aaNum) is not PdfDictionary triggers) return;
             foreach (var (trigger, action) in triggers)
-                Walk(action, $"{source} /{trigger.Value}", page, location, aaNum != 0 ? aaNum : ownerObj);
+                Walk(action, $"{source} /{trigger.Value}", page, location, aaNum != 0 ? aaNum : ownerObj, area);
         }
 
         /// <param name="ownerObj">Object number to report for a DIRECT action — the dictionary it is written in.</param>
-        public void Walk(PdfObject? start, string source, int page, string? location, int ownerObj)
+        public void Walk(PdfObject? start, string source, int page, string? location, int ownerObj, PdfRectangle? area = null)
         {
             if (start == null) return;
             var stack = new Stack<PdfObject>();
@@ -230,11 +253,11 @@ public static partial class CarrierTextRecovery
 
                 var kind = action.GetNameOrNull("S");
                 if (kind == "JavaScript" || action.ContainsKey("JS"))
-                    _c.Text($"JavaScript ({source})", ReadText(_doc, action, "JS"), page, objNum, location);
+                    _c.Text($"JavaScript ({source})", ReadText(_doc, action, "JS"), page, objNum, location, area);
                 if (action.ContainsKey("URI"))
-                    _c.Text($"action /URI ({source})", ReadText(_doc, action, "URI"), page, objNum, location);
+                    _c.Text($"action /URI ({source})", ReadText(_doc, action, "URI"), page, objNum, location, area);
                 if (kind is "Launch" or "GoToR" or "GoToE" or "SubmitForm" or "ImportData" or "Thread")
-                    _c.Text($"action /{kind} file target ({source})", FileSpecText(_doc, action.GetOptional("F")), page, objNum, location);
+                    _c.Text($"action /{kind} file target ({source})", FileSpecText(_doc, action.GetOptional("F")), page, objNum, location, area);
 
                 if (action.GetOptional("Next") is { } next) stack.Push(next);
             }

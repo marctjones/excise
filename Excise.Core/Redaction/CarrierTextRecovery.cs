@@ -77,6 +77,39 @@ public static partial class CarrierTextRecovery
 
         /// <summary>Where inside the carrier: a field name, attachment name, revision, element path.</summary>
         public string? Location { get; init; }
+
+        /// <summary>
+        /// True when the text is already visible to a reader of the document —
+        /// drawn on a page, in a visible annotation or widget appearance, or in
+        /// the title bar / bookmarks. Such a finding restates what the reader
+        /// can see; it is not a leak. False for everything hidden, and always
+        /// false for <see cref="CarrierFindingKind.Presence"/>.
+        /// </summary>
+        public bool VisibleElsewhere { get; init; }
+
+        /// <summary>How close the carrier sits to a redaction mark.</summary>
+        public CarrierRedactionProximity NearRedaction { get; init; }
+
+        /// <summary>The page-space rectangle of the owning annotation or widget, when there is one.</summary>
+        public PdfRectangle? Area { get; init; }
+    }
+
+    /// <summary>
+    /// Whether a finding sits near a redaction mark — a dark filled box, a
+    /// <c>/Redact</c> annotation, or text a box covers. A hidden carrier next to
+    /// a redaction is the classic leak: the page was blacked out, the carrier
+    /// was not.
+    /// </summary>
+    public enum CarrierRedactionProximity
+    {
+        /// <summary>No redaction mark on the finding's page, or a document-level carrier.</summary>
+        None = 0,
+
+        /// <summary>The finding's page carries a redaction mark.</summary>
+        SamePage = 1,
+
+        /// <summary>The finding's annotation or widget rectangle overlaps a redaction mark.</summary>
+        Overlapping = 2,
     }
 
     // ── Bounds ────────────────────────────────────────────────────────────
@@ -100,7 +133,7 @@ public static partial class CarrierTextRecovery
         var found = new List<CarrierText>();
         var collector = new Collector(found, cancellationToken, prefix: "", depth: 0);
         ScanInto(doc, collector, includeHistory: true);
-        return found;
+        return Classify(doc, found, cancellationToken);
     }
 
     /// <summary>
@@ -192,16 +225,16 @@ public static partial class CarrierTextRecovery
         public Collector Nested(string label, int hostPage, bool deeper) =>
             new(_found, _seen, _budget, Token, Prefix + label + " > ", deeper ? Depth + 1 : Depth, hostPage);
 
-        public void Text(string carrier, string? text, int page, int obj = 0, string? location = null)
+        public void Text(string carrier, string? text, int page, int obj = 0, string? location = null, PdfRectangle? area = null)
         {
             if (string.IsNullOrWhiteSpace(text)) return;
-            Add(carrier, Clip(text.Trim()), page, obj, location, CarrierFindingKind.Text);
+            Add(carrier, Clip(text.Trim()), page, obj, location, CarrierFindingKind.Text, area);
         }
 
-        public void Presence(string carrier, string description, int page, int obj = 0, string? location = null) =>
-            Add(carrier, description, page, obj, location, CarrierFindingKind.Presence);
+        public void Presence(string carrier, string description, int page, int obj = 0, string? location = null, PdfRectangle? area = null) =>
+            Add(carrier, description, page, obj, location, CarrierFindingKind.Presence, area);
 
-        private void Add(string carrier, string text, int page, int obj, string? location, CarrierFindingKind kind)
+        private void Add(string carrier, string text, int page, int obj, string? location, CarrierFindingKind kind, PdfRectangle? area)
         {
             Token.ThrowIfCancellationRequested();
             if (_budget.Exhausted) return;
@@ -232,6 +265,7 @@ public static partial class CarrierTextRecovery
             {
                 Kind = kind,
                 Location = effectiveLocation,
+                Area = Prefix.Length > 0 ? null : area,
             });
         }
 
@@ -386,18 +420,29 @@ public static partial class CarrierTextRecovery
                 if (Deref(doc, annotObj, out var objNum) is not PdfDictionary annot) continue;
                 var subtype = annot.GetNameOrNull("Subtype");
                 var isWidget = subtype == "Widget";
+                var area = RectOf(doc, annot);
                 foreach (var key in AnnotationTextKeys)
-                    c.Text($"annotation /{key}", ReadText(doc, annot, key), i, objNum, subtype is null ? null : $"/{subtype}");
+                    c.Text($"annotation /{key}", ReadText(doc, annot, key), i, objNum, subtype is null ? null : $"/{subtype}", area);
 
                 // /T is the FIELD NAME on a widget (noise), but the AUTHOR on a
                 // markup annotation (§12.5.6.2) — a person's name.
                 if (!isWidget && subtype is not ("Link" or "Popup"))
-                    c.Text("annotation /T (author)", ReadText(doc, annot, "T"), i, objNum, subtype is null ? null : $"/{subtype}");
+                    c.Text("annotation /T (author)", ReadText(doc, annot, "T"), i, objNum, subtype is null ? null : $"/{subtype}", area);
 
                 if (index.AnnotationsWithAppearanceScanned.Add(annot))
                     ScanAppearance(doc, page, annot, dr, c, i, objNum, isWidget ? "widget" : "annotation", subtype);
             }
         }
+    }
+
+    /// <summary>An annotation's normalised /Rect, or null.</summary>
+    private static PdfRectangle? RectOf(PdfDocument doc, PdfDictionary annot)
+    {
+        if (doc.Resolve(annot.GetOptional("Rect") ?? PdfNull.Instance) is not PdfArray r || r.Count < 4) return null;
+        var v = new double[4];
+        for (var k = 0; k < 4; k++)
+            if (!doc.Resolve(r[k]).TryGetNumber(out v[k])) return null;
+        return new PdfRectangle(v[0], v[1], v[2], v[3]).Normalize();
     }
 
     private static PdfDictionary? AcroFormDefaultResources(PdfDocument doc) =>
@@ -416,13 +461,14 @@ public static partial class CarrierTextRecovery
         Collector c, int pageNumber, int annotObj, string owner, string? subtype)
     {
         if (doc.Resolve(annot.GetOptional("AP") ?? PdfNull.Instance) is not PdfDictionary ap) return;
+        var area = RectOf(doc, annot);
         foreach (var mode in new[] { "N", "R", "D" })
         {
             var entry = Deref(doc, ap.GetOptional(mode), out var streamObj);
             if (entry is PdfStream single)
             {
                 ReportAppearanceStream(doc, page, single, defaultResources, c, pageNumber, streamObj != 0 ? streamObj : annotObj,
-                    $"{owner} /AP /{mode}", subtype is null ? null : $"/{subtype}");
+                    $"{owner} /AP /{mode}", subtype is null ? null : $"/{subtype}", area);
             }
             else if (entry is PdfDictionary states)
             {
@@ -431,7 +477,7 @@ public static partial class CarrierTextRecovery
                 {
                     if (Deref(doc, stateValue, out var stateObj) is PdfStream stateStream)
                         ReportAppearanceStream(doc, page, stateStream, defaultResources, c, pageNumber,
-                            stateObj != 0 ? stateObj : annotObj, $"{owner} /AP /{mode}", $"state /{stateName.Value}");
+                            stateObj != 0 ? stateObj : annotObj, $"{owner} /AP /{mode}", $"state /{stateName.Value}", area);
                 }
             }
         }
@@ -439,10 +485,10 @@ public static partial class CarrierTextRecovery
 
     private static void ReportAppearanceStream(
         PdfDocument doc, PdfPage page, PdfStream stream, PdfDictionary? defaultResources,
-        Collector c, int pageNumber, int objNum, string carrier, string? location)
+        Collector c, int pageNumber, int objNum, string carrier, string? location, PdfRectangle? area)
     {
         var text = StreamPaintedText(doc, page, stream, defaultResources, c.Token);
-        c.Text(carrier, text, pageNumber, objNum, location);
+        c.Text(carrier, text, pageNumber, objNum, location, area);
     }
 
     private static string? StreamPaintedText(

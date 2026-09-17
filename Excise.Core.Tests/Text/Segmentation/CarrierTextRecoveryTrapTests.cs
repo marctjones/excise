@@ -47,8 +47,10 @@ public class CarrierTextRecoveryTrapTests
         findings.Should().Contain(
             f => f.Kind == Kind.Text
                  && f.Carrier.Contains(trap.ExpectedCarrier, StringComparison.Ordinal)
-                 && f.Text.Contains(trap.Token, StringComparison.Ordinal),
-            $"{id}: the token is physically present in '{trap.ExpectedCarrier}' and must be read back. " +
+                 && f.Text.Contains(trap.Token, StringComparison.Ordinal)
+                 && f.VisibleElsewhere == trap.ExpectVisible,
+            $"{id}: the token is physically present in '{trap.ExpectedCarrier}' and must be read back, " +
+            $"classed {(trap.ExpectVisible ? "visible" : "hidden")}. " +
             $"Found: {string.Join(" | ", findings.Select(f => $"[{f.Kind} {f.Carrier}] {f.Text}"))}");
     }
 
@@ -65,6 +67,7 @@ public class CarrierTextRecoveryTrapTests
         findings.Where(f => f.Kind == Kind.Text).Should().NotContain(
             f => f.Text.Contains(trap.Token, StringComparison.Ordinal),
             "presence is not a recovery; the scan does not claim text it did not decode");
+        findings.Where(f => f.Kind == Kind.Presence).Should().OnlyContain(f => !f.VisibleElsewhere);
     }
 
     [Fact]
@@ -84,6 +87,61 @@ public class CarrierTextRecoveryTrapTests
         // actually had something to compare. Pre-registered: 2 %%EOF markers.
         var text = System.Text.Encoding.Latin1.GetString(CarrierTrapFixtures.Clean());
         text.Split("%%EOF").Length.Should().Be(3);
+    }
+
+    [Fact]
+    public void FilledForm_WhoseAppearanceShowsTheValue_HasNoHiddenFindings()
+    {
+        var findings = Scan(CarrierTrapFixtures.FilledForm("Jane Q Public", "Jane Q Public", blackBoxOverField: false));
+
+        findings.Should().Contain(f => f.Carrier == "acroform /V" && f.VisibleElsewhere,
+            "the value is still reported, as a duplicate of what the widget draws");
+        findings.Where(f => !f.VisibleElsewhere).Should().BeEmpty(
+            "an ordinary filled form restates what the reader sees — not a leak");
+    }
+
+    [Fact]
+    public void FilledForm_WhoseAppearanceWasRedacted_ReportsTheValueAsHidden_NextToTheMark()
+    {
+        var findings = Scan(CarrierTrapFixtures.FilledForm("Jane Q Public", "XXXXXXXXXX", blackBoxOverField: true));
+
+        var first = findings.First();
+        first.Carrier.Should().Be("acroform /V", "the hidden value beside a redaction mark ranks first");
+        first.Text.Should().Be("Jane Q Public");
+        first.VisibleElsewhere.Should().BeFalse();
+        first.NearRedaction.Should().Be(CarrierTextRecovery.CarrierRedactionProximity.Overlapping);
+        findings.Should().Contain(f => f.Carrier == "widget /AP /N" && f.Text == "XXXXXXXXXX" && f.VisibleElsewhere);
+    }
+
+    [Fact]
+    public void FilledForm_RedactedAppearanceWithoutAMark_IsHiddenButNotRankedAsNearOne()
+    {
+        var hit = Scan(CarrierTrapFixtures.FilledForm("Jane Q Public", "XXXXXXXXXX", blackBoxOverField: false))
+            .Single(f => f.Carrier == "acroform /V");
+        hit.VisibleElsewhere.Should().BeFalse();
+        hit.NearRedaction.Should().Be(CarrierTextRecovery.CarrierRedactionProximity.None);
+    }
+
+    [Fact]
+    public void TitledDocument_TitleAndBookmark_AreVisibleDuplicatesOnly()
+    {
+        var findings = Scan(CarrierTrapFixtures.Get("outline-title").Build(false))
+            .Concat(Scan(CarrierTrapFixtures.WithInfo("<< /Title (Quarterly Report) /Producer (P) >>")))
+            .ToList();
+
+        findings.Should().NotBeEmpty();
+        findings.Should().OnlyContain(f => f.VisibleElsewhere,
+            "a title and a bookmark are what the viewer shows; they are not hidden text");
+    }
+
+    [Fact]
+    public void Visibility_IgnoresCaseAndWhitespace()
+    {
+        // The page draws "Case file, public summary"; a carrier restating it
+        // with different case and spacing is a duplicate.
+        var hit = Scan(CarrierTrapFixtures.WithInfo("<< /Subject (CASE   FILE,public  Summary) >>")).Single();
+        hit.VisibleElsewhere.Should().BeTrue();
+        CarrierTextRecovery.NormalizeForVisibility(" A\tb\nC ").Should().Be("abc");
     }
 
     [Theory]

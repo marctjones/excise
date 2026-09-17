@@ -221,13 +221,29 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
     from the file prefix and only what the current revision no longer shows is
     reported.
 
+  **Only hidden text is a finding by default.** A carrier that restates text
+  the reader already sees is a *visible duplicate*. The visible text is: each
+  page's drawn text (not counting hidden layers or text under a dark box), the
+  painted appearance of every annotation and widget not flagged hidden, and the
+  title and bookmark titles. Comparison ignores case and whitespace. So a filled
+  form whose widgets show their values, or a titled document, reports nothing.
+  A field whose appearance was redacted while `/V` still holds the value is a
+  hidden finding. Hidden findings are ranked by how close they sit to a
+  redaction mark (a dark filled box, a `/Redact` annotation, covered text), and
+  the output says "overlaps redaction mark" or "page has redaction marks".
+  Duplicates do not set exit code 3 and are listed only with `--carriers all`
+  (or `--verbose`), under a `visibleDuplicates` JSON array and a "VISIBLE
+  DUPLICATES" section. Known gap: the walker does not tag render mode, so text
+  drawn invisibly (render mode 3) counts as visible.
+
   Content that is present but not decoded — an opaque attachment, a page
   `/Thumb`, an unreadable packet, a nested PDF past the depth limit — is listed
   under a new `present` JSON array and a "PRESENT" section, and does not set the
   certain exit code. The scan is bounded (findings, text length, payload size,
   revisions, nesting) and cancellable, and runs only in `unredact`.
-  `CarrierTextRecovery.CarrierText` gains `ObjectNumber`, `Kind` and
-  `Location`; `Scan` gains a cancellable overload.
+  `CarrierTextRecovery.CarrierText` gains `ObjectNumber`, `Kind`, `Location`,
+  `VisibleElsewhere`, `NearRedaction` and `Area`; `Scan` gains a cancellable
+  overload.
 - **Carrier traps for the unredaction scorecard and the redaction bench.**
   `CarrierTrapFixtures` generates one synthetic PDF per carrier above in
   memory. Each finding is corroborated by qpdf (`--json` object dump, `--check`,

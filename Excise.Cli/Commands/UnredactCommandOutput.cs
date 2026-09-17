@@ -25,6 +25,12 @@ internal static class UnredactCommandOutput
             WriteHuman(report, output);
     }
 
+    private static string CarrierLine(UnredactCertainFinding finding) =>
+        $"  {Where(finding.Page, finding.Object, finding.Location)} " +
+        $"[{finding.HiddenBy}]" +
+        (finding.Proximity is null ? "" : $" [{finding.Proximity}]") +
+        $": \"{finding.Text}\"";
+
     private static string Where(int page, int? obj, string? location)
     {
         var where = page > 0 ? $"page {page}" : "document";
@@ -59,15 +65,20 @@ internal static class UnredactCommandOutput
             {
                 if (finding.FromCarrier)
                 {
-                    output.WriteLine(
-                        $"  {Where(finding.Page, finding.Object, finding.Location)} " +
-                        $"[{finding.HiddenBy}]: \"{finding.Text}\"");
+                    output.WriteLine(CarrierLine(finding));
                     continue;
                 }
                 output.WriteLine(
                     $"  page {finding.Page} ({finding.X},{finding.Y}) " +
                     $"[{finding.HiddenBy}]: \"{finding.Text}\"");
             }
+        }
+
+        if (report.VisibleDuplicates is { Count: > 0 } duplicates)
+        {
+            output.WriteLine($"= VISIBLE DUPLICATES — carriers restating text the reader already sees ({duplicates.Count}):");
+            foreach (var finding in duplicates)
+                output.WriteLine(CarrierLine(finding));
         }
 
         if (report.Present is { Count: > 0 } present)

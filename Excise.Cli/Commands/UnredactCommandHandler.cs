@@ -31,14 +31,18 @@ internal static class UnredactCommandHandler
         {
             cancellationToken.ThrowIfCancellationRequested();
             var present = new List<UnredactPresenceFinding>();
-            var certain = CollectCertain(input, mode, present, cancellationToken, out var certainError);
+            var duplicates = new List<UnredactCertainFinding>();
+            var certain = CollectCertain(input, mode, present, duplicates, cancellationToken, out var certainError);
             if (certainError != null)
                 return certainError;
 
             cancellationToken.ThrowIfCancellationRequested();
             var residue = CollectResidue(input, mode, cancellationToken);
             var quantification = Quantify(mode, input.NoCorroboration, certain, residue);
-            var report = new UnredactReport(quantification, certain, residue, present.Count > 0 ? present : null);
+            var report = new UnredactReport(
+                quantification, certain, residue,
+                present.Count > 0 ? present : null,
+                input.IncludeVisibleCarriers ? duplicates : null);
             var exitCode = certain.Count > 0 ? 3 : residue.Count > 0 ? 4 : 0;
             return new UnredactCommandOutcome(exitCode, report, null);
         }
@@ -56,6 +60,7 @@ internal static class UnredactCommandHandler
         UnredactCommandInput input,
         UnredactMode mode,
         List<UnredactPresenceFinding> present,
+        List<UnredactCertainFinding> duplicates,
         CancellationToken cancellationToken,
         out UnredactCommandOutcome? error)
     {
@@ -75,23 +80,37 @@ internal static class UnredactCommandHandler
         }
 
         // These carriers are physically present and therefore CERTAIN, not a
-        // residue estimate (#1179). Presence notes (an opaque attachment, a
-        // thumbnail) are listed separately and never counted as recovered text.
+        // residue estimate (#1179). Only text a reader cannot already see is a
+        // finding; a carrier restating visible text (a filled field's value, the
+        // title) is a duplicate, listed only with --carriers all. Presence notes
+        // (an opaque attachment, a thumbnail) are listed separately and never
+        // counted as recovered text. The scan ranks hidden findings next to a
+        // redaction mark first.
         foreach (var carrier in CarrierTextRecovery.Scan(document, cancellationToken))
         {
             int? obj = carrier.ObjectNumber > 0 ? carrier.ObjectNumber : null;
+            var proximity = carrier.NearRedaction switch
+            {
+                CarrierTextRecovery.CarrierRedactionProximity.Overlapping => "overlaps redaction mark",
+                CarrierTextRecovery.CarrierRedactionProximity.SamePage => "page has redaction marks",
+                _ => null,
+            };
             if (carrier.Kind == CarrierTextRecovery.CarrierFindingKind.Presence)
             {
                 present.Add(new UnredactPresenceFinding(
                     carrier.PageNumber, carrier.Carrier, carrier.Text, obj, carrier.Location));
                 continue;
             }
-            findings.Add(new UnredactCertainFinding(
+            var finding = new UnredactCertainFinding(
                 carrier.PageNumber, carrier.Text, carrier.Carrier, 0, 0,
-                Object: obj, Location: carrier.Location)
+                Object: obj, Location: carrier.Location, Proximity: proximity)
             {
                 FromCarrier = true,
-            });
+            };
+            if (carrier.VisibleElsewhere)
+                duplicates.Add(finding);
+            else
+                findings.Add(finding);
         }
 
         if (!input.UseOcr)

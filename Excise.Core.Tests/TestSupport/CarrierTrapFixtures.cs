@@ -48,6 +48,8 @@ internal static class CarrierTrapFixtures
     /// <param name="Oracle">How qpdf/mutool corroborate it.</param>
     /// <param name="InBench">Whether a redactor can be scored on it (it has a findable token).</param>
     /// <param name="AttachmentName">For <see cref="Oracle.NestedPdfText"/>, the attachment key to extract.</param>
+    /// <param name="ExpectVisible">True when the carrier is itself something a reader sees (the title,
+    /// a bookmark), so the unredact channel classes it a visible duplicate rather than a hidden leak.</param>
     internal sealed record Trap(
         string Id,
         string Token,
@@ -55,7 +57,8 @@ internal static class CarrierTrapFixtures
         Oracle Oracle,
         Func<bool, byte[]> Build,
         bool InBench = true,
-        string? AttachmentName = null)
+        string? AttachmentName = null,
+        bool ExpectVisible = false)
     {
         public override string ToString() => Id;
     }
@@ -70,8 +73,8 @@ internal static class CarrierTrapFixtures
     {
         var traps = new List<Trap>();
         void Add(string id, string token, string carrier, Oracle oracle, Func<string, bool, byte[]> build,
-                 bool inBench = true, string? attachment = null) =>
-            traps.Add(new Trap(id, token, carrier, oracle, visible => build(token, visible), inBench, attachment));
+                 bool inBench = true, string? attachment = null, bool expectVisible = false) =>
+            traps.Add(new Trap(id, token, carrier, oracle, visible => build(token, visible), inBench, attachment, expectVisible));
 
         // ── AcroForm ────────────────────────────────────────────────────
         Add("acroform-v", "FIELDVALUETRAP", "acroform /V", Oracle.QpdfDump,
@@ -86,8 +89,9 @@ internal static class CarrierTrapFixtures
             (t, v) => Field(V(t, v), $"/FT /Ch /Ff 131072 /T (choice) /Opt [[({t}) (Shown choice)]]"));
         Add("acroform-opt-display", "OPTDISPLAYTRAP", "acroform /Opt", Oracle.QpdfDump,
             (t, v) => Field(V(t, v), $"/FT /Ch /Ff 131072 /T (choice) /Opt [(First) ({t})]"));
+        // A HIDDEN widget (/F 2): its appearance is never painted, so its text is a leak.
         Add("widget-appearance", "WIDGETAPPEARANCETRAP", "widget /AP /N", Oracle.QpdfDump,
-            (t, v) => Field(V(t, v), "/FT /Tx /T (name) /AP << /N 7 0 R >>",
+            (t, v) => Field(V(t, v), "/FT /Tx /T (name) /F 2 /AP << /N 7 0 R >>",
                 AppearanceStream($"BT /F1 10 Tf 2 4 Td ({t}) Tj ET", compress: true)));
         Add("widget-mk-ca", "CAPTIONNORMALTRAP", "widget /MK /CA", Oracle.QpdfDump,
             (t, v) => Field(V(t, v), $"/FT /Btn /Ff 65536 /T (button) /MK << /CA ({t}) >>"));
@@ -100,6 +104,9 @@ internal static class CarrierTrapFixtures
         Add("field-javascript-stream", "FIELDSCRIPTSTREAMTRAP", "JavaScript", Oracle.QpdfDump,
             (t, v) => Field(V(t, v), "/FT /Tx /T (name) /AA << /F << /S /JavaScript /JS 7 0 R >> >>",
                 Stream("", $"event.value = \"{t}\";", compress: true)));
+        // The classic leak: the appearance was redacted, the value was not.
+        Add("acroform-v-appearance-redacted", "REDACTEDFIELDTRAP", "acroform /V", Oracle.QpdfDump,
+            (t, v) => FilledForm(t, "XXXXXXXXXX", blackBoxOverField: true, visibleToken: V(t, v)));
         Add("nonterminal-field-javascript", "PARENTSCRIPTTRAP", "JavaScript (field /A", Oracle.QpdfDump,
             (t, v) => Doc(V(t, v), page: "/Annots [7 0 R]",
                 catalog: "/AcroForm << /Fields [6 0 R] >>",
@@ -113,7 +120,7 @@ internal static class CarrierTrapFixtures
         Add("annotation-appearance", "ANNOTAPPEARANCETRAP", "annotation /AP /N", Oracle.QpdfDump,
             (t, v) => Doc(V(t, v), page: "/Annots [6 0 R]", extra: new[]
             {
-                "<< /Type /Annot /Subtype /FreeText /Rect [72 600 372 620] /DA (/F1 10 Tf) /AP << /N 7 0 R >> >>",
+                "<< /Type /Annot /Subtype /FreeText /F 2 /Rect [72 600 372 620] /DA (/F1 10 Tf) /AP << /N 7 0 R >> >>",
                 AppearanceStream($"BT /F1 10 Tf 2 4 Td ({t}) Tj ET", compress: false),
             }));
         Add("annotation-author", "ANNOTAUTHORTRAP", "annotation /T (author)", Oracle.QpdfDump,
@@ -206,7 +213,7 @@ internal static class CarrierTrapFixtures
         Add("prior-revision", "PRIORREVISIONTRAP", "prior revision 1 of 2 page text", Oracle.PriorRevisionText,
             PriorRevision);
         Add("info-title", "INFOTITLETRAP", "/Info /Title", Oracle.QpdfDump,
-            (t, v) => Doc(V(t, v), info: $"<< /Title (Memo on {t}) /Producer (TrapGen) >>"));
+            (t, v) => Doc(V(t, v), info: $"<< /Title (Memo on {t}) /Producer (TrapGen) >>"), expectVisible: true);
         Add("info-custom-key", "INFOCUSTOMTRAP", "/Info /CaseName", Oracle.QpdfDump,
             (t, v) => Doc(V(t, v), info: $"<< /CaseName ({t}) /Producer (TrapGen) >>"));
         Add("xmp-description", "XMPDESCRIPTIONTRAP", "XMP dc:description", Oracle.QpdfDump,
@@ -218,7 +225,7 @@ internal static class CarrierTrapFixtures
             {
                 "<< /Type /Outlines /First 7 0 R /Last 7 0 R /Count 1 >>",
                 $"<< /Title (Chapter on {t}) /Parent 6 0 R /Dest [3 0 R /Fit] >>",
-            }));
+            }), expectVisible: true);
         Add("ocg-hidden", "HIDDENLAYERTRAP", "optional content (hidden by default)", Oracle.QpdfDump,
             (t, v) => Doc(V(t, v), extraContent: $"/OC /MC0 BDC BT /F1 12 Tf 72 500 Td ({t}) Tj ET EMC",
                 resources: "/Properties << /MC0 6 0 R >>",
@@ -322,7 +329,22 @@ internal static class CarrierTrapFixtures
 
     private static string? V(string token, bool visible) => visible ? token : null;
 
-    private static byte[] Field(string? visibleToken, string fieldEntries, params string[] extra)
+    /// <summary>
+    /// A filled text field whose value is <paramref name="value"/> and whose
+    /// painted appearance says <paramref name="appearanceText"/>. Equal strings
+    /// are an ordinary filled form; different strings are a redacted
+    /// appearance over an unredacted value.
+    /// </summary>
+    public static byte[] FilledForm(string value, string appearanceText, bool blackBoxOverField, string? visibleToken = null) =>
+        FieldWithContent(visibleToken,
+            blackBoxOverField ? "0 0 0 rg 70 598 204 24 re f" : "",
+            $"/FT /Tx /T (name) /V ({value}) /AP << /N 7 0 R >>",
+            AppearanceStream($"BT /F1 10 Tf 2 4 Td ({appearanceText}) Tj ET", compress: false));
+
+    private static byte[] Field(string? visibleToken, string fieldEntries, params string[] extra) =>
+        FieldWithContent(visibleToken, "", fieldEntries, extra);
+
+    private static byte[] FieldWithContent(string? visibleToken, string extraContent, string fieldEntries, params string[] extra)
     {
         var all = new List<string>
         {
@@ -331,7 +353,7 @@ internal static class CarrierTrapFixtures
         all.AddRange(extra);
         return Doc(visibleToken, page: "/Annots [6 0 R]",
             catalog: "/AcroForm << /Fields [6 0 R] /DR << /Font << /F1 5 0 R >> >> /DA (/F1 10 Tf 0 g) >>",
-            extra: all.ToArray());
+            extra: all.ToArray(), extraContent: extraContent);
     }
 
     private static string AppearanceStream(string content, bool compress) =>
