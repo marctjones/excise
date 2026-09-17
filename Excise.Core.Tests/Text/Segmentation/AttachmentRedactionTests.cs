@@ -248,7 +248,7 @@ public class AttachmentRedactionTests
                 ["EF"] = new PdfDictionary { ["F"] = doc.AddIndirectObject(stream) },
             };
             if (desc != null) fs["Desc"] = new PdfString(desc);
-            names.Add(new PdfString(name));
+            names.Add((PdfObject)new PdfString(name));
             names.Add(doc.AddIndirectObject(fs));
         }
 

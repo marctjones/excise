@@ -115,7 +115,7 @@ public sealed class RedactAttachmentTests : IDisposable
         foreach (var secret in new[] { DocPayload, AnnotPayload, AnnotDesc })
             SavedPdfLeakScanner.FindTerm(before, secret).Should().NotBeEmpty($"guard: {secret}");
 
-        var result = RedactCommandHandler.Execute(new RedactCommandRequest(input, output, PageWord));
+        var result = RedactCommandHandler.Execute(new RedactCommandRequest(input, output, PageWord), cancellationToken: TestContext.Current.CancellationToken);
 
         var saved = File.ReadAllBytes(output);
         foreach (var secret in new[] { DocPayload, AnnotPayload, AnnotDesc })
@@ -140,7 +140,7 @@ public sealed class RedactAttachmentTests : IDisposable
         var output = Path.Combine(_dir, "kept.pdf");
 
         var result = RedactCommandHandler.Execute(new RedactCommandRequest(
-            input, output, PageWord, KeepAttachments: true));
+            input, output, PageWord, KeepAttachments: true), cancellationToken: TestContext.Current.CancellationToken);
 
         var saved = File.ReadAllBytes(output);
         SavedPdfLeakScanner.FindTerm(saved, DocPayload).Should().NotBeEmpty("kept");
@@ -161,7 +161,7 @@ public sealed class RedactAttachmentTests : IDisposable
         var input = Input(portfolio: true);
         var output = Path.Combine(_dir, "portfolio-out.pdf");
 
-        var act = () => RedactCommandHandler.Execute(new RedactCommandRequest(input, output, PageWord));
+        var act = () => RedactCommandHandler.Execute(new RedactCommandRequest(input, output, PageWord), cancellationToken: TestContext.Current.CancellationToken);
 
         act.Should().Throw<PdfPortfolioRedactionException>().WithMessage("*portfolio*");
         File.Exists(output).Should().BeFalse();

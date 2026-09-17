@@ -176,6 +176,7 @@ namespace Excise.App.Models
         public string? PerformancePreset { get; set; }
         public string PrintScaling { get; set; }
         public string ReadingOrderStrategy { get; set; }
+        public bool RedactionKeepAttachments { get; set; }
         public bool RedactionWholeWord { get; set; }
         public string RedactionWidthPolicy { get; set; }
         public int RenderThreads { get; set; }
@@ -434,11 +435,11 @@ namespace Excise.App.Services
     public class RedactionService
     {
         public RedactionService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.RedactionService> logger, Microsoft.Extensions.Logging.ILoggerFactory _) { }
-        public void RedactArea(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfPageRect area) { }
         public void RedactArea(Excise.Core.Document.PdfPage page, Avalonia.Rect area, int renderDpi = 72) { }
+        public void RedactArea(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfPageRect area, bool keepAttachments = false) { }
         public void RedactAreas(Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfPageRect> areas) { }
         public void RedactAreas(Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Avalonia.Rect> areas, int renderDpi = 150) { }
-        public Excise.App.Models.TextRedactionResult RedactText(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false, bool allowLowConfidence = false, bool wholeWord = false, Excise.Core.Text.Segmentation.WidthPolicy width = 0) { }
+        public Excise.App.Models.TextRedactionResult RedactText(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false, bool allowLowConfidence = false, bool wholeWord = false, Excise.Core.Text.Segmentation.WidthPolicy width = 0, bool keepAttachments = false) { }
         public Excise.App.Models.TextRedactionResult RedactTextFlattenOcr(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false) { }
         public void RedactWithOptions(Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfPageRect> areas, Excise.App.Services.RedactionOptions options) { }
         public void RedactWithOptions(Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Avalonia.Rect> areas, Excise.App.Services.RedactionOptions options, int renderDpi = 150) { }
@@ -847,6 +848,7 @@ namespace Excise.App.ViewModels
         public System.Collections.ObjectModel.ObservableCollection<string> RecentFiles { get; set; }
         public int RedactAnnotationCount { get; }
         public string? RedactAnnotationNotice { get; }
+        public bool RedactionKeepAttachments { get; set; }
         public bool RedactionWholeWord { get; set; }
         public Excise.Core.Text.Segmentation.WidthPolicy RedactionWidthPolicy { get; set; }
         public Excise.App.ViewModels.RedactionWorkflowManager RedactionWorkflow { get; }
@@ -958,7 +960,7 @@ namespace Excise.App.ViewModels
         public void ApplyContinuousScrollPreference(bool enabled) { }
         public void ApplyPrintScalingPreference(string? printScaling) { }
         public void ApplyReadingOrderStrategyPreference(Excise.Core.Text.ReadingOrderStrategy strategy) { }
-        public void ApplyRedactionPolicyPreferences(bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy) { }
+        public void ApplyRedactionPolicyPreferences(bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy, bool keepAttachments = false) { }
         public System.Threading.Tasks.Task ApplyRedactionsCommand() { }
         public void ApplyWhitespaceModePreference(Excise.Core.Text.WhitespaceMode mode) { }
         public int AutoDetectAndApplyFormFields() { }
@@ -1073,6 +1075,7 @@ namespace Excise.App.ViewModels
         public Excise.App.Models.PerformancePreset[] PerformancePresetOptions { get; }
         public Excise.App.Services.Printing.PrintScalingMode[] PrintScalingOptions { get; }
         public Excise.Core.Text.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; }
+        public bool RedactionKeepAttachments { get; set; }
         public bool RedactionWholeWord { get; set; }
         public int RenderThreads { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ResetToDefaultsCommand { get; }

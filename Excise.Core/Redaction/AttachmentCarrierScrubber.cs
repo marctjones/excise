@@ -286,7 +286,8 @@ internal static class AttachmentCarrierScrubber
 
         foreach (var file in Enumerate(document))
         {
-            var size = SizeOf(document, file);
+            // A rewritten file reports the size it is saved with, not the original's.
+            long? size = SizeOf(document, file);
             AttachmentRedactionResult Result(AttachmentDisposition disposition, string? detail)
                 => new(file.Name, size, file.Location, disposition, detail);
 
@@ -329,6 +330,7 @@ internal static class AttachmentCarrierScrubber
                     var stillThere = terms.Any(t => ContainsTerm(newBytes, t, caseSensitive, wholeWord));
                     var payload = file.Payload!;
                     writes.Add(() => ReplacePayload(document, payload, newBytes));
+                    size = newBytes.Length;
                     results.Add((file, stillThere
                         ? Result(AttachmentDisposition.KeptNotClean,
                             "the term was cut out but can still be read in another encoding of the file")
@@ -364,6 +366,7 @@ internal static class AttachmentCarrierScrubber
                         var newBytes = output.ToArray();
                         var payload = file.Payload!;
                         writes.Add(() => ReplacePayload(document, payload, newBytes));
+                        size = newBytes.Length;
 
                         var unclean = reports.FirstOrDefault(r => !r.IsCleanSuccess);
                         var removed = reports.Sum(r => r.VerifiedRemovals);

@@ -455,6 +455,30 @@ namespace Excise.Core.Document
             Structure = 2,
         }
     }
+    public enum AttachmentDisposition
+    {
+        Removed = 0,
+        KeptTermNotFound = 1,
+        KeptTermRemoved = 2,
+        KeptNotClean = 3,
+        KeptNotChecked = 4,
+    }
+    public sealed class AttachmentRedactionRefusedException : System.InvalidOperationException
+    {
+        public AttachmentRedactionRefusedException(string attachmentName, string reason) { }
+        public string AttachmentName { get; }
+    }
+    public sealed class AttachmentRedactionResult : System.IEquatable<Excise.Core.Document.AttachmentRedactionResult>
+    {
+        public AttachmentRedactionResult(string Name, long? SizeBytes, string Location, Excise.Core.Document.AttachmentDisposition Disposition, string? Detail = null) { }
+        public string? Detail { get; init; }
+        public Excise.Core.Document.AttachmentDisposition Disposition { get; init; }
+        public bool IsClean { get; }
+        public string Location { get; init; }
+        public string Name { get; init; }
+        public long? SizeBytes { get; init; }
+        public override string ToString() { }
+    }
     public sealed class NamedDestination : System.IEquatable<Excise.Core.Document.NamedDestination>
     {
         public NamedDestination(string Name, int? PageNumber, double? X = default, double? Y = default, double? Zoom = default, string FitMode = "XYZ") { }
@@ -687,6 +711,7 @@ namespace Excise.Core.Document
         public Excise.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions(string? userPassword) { }
         public Excise.Core.Document.PdfStructElement? GetStructureTree() { }
         public byte[]? GetXmpMetadata() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> RemoveAllAttachments() { }
         public Excise.Core.Primitives.PdfObject Resolve(Excise.Core.Primitives.PdfObject obj) { }
         public string ResolveStructElementText(Excise.Core.Document.PdfStructElement element, int? inheritedPageNumber = default) { }
         public void Save(System.IO.Stream outputStream) { }
@@ -941,6 +966,10 @@ namespace Excise.Core.Document
         public double X { get; init; }
         public double Y { get; init; }
         public override string ToString() { }
+    }
+    public sealed class PdfPortfolioRedactionException : System.InvalidOperationException
+    {
+        public PdfPortfolioRedactionException() { }
     }
     public static class PdfRasterPageAuthoring
     {
@@ -2054,6 +2083,7 @@ namespace Excise.Core.Text.Segmentation
         public RedactedCopySafetyOptions() { }
         public Excise.Core.Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
         public Excise.Core.Operations.RedactionCarriers Carriers { get; init; }
+        public bool InspectKeptAttachments { get; init; }
         public bool RefuseOnUnresolvedRedactAnnotations { get; init; }
         public bool RunCarrierAudit { get; init; }
         public bool RunHiddenTextAudit { get; init; }
@@ -2091,7 +2121,11 @@ namespace Excise.Core.Text.Segmentation
                     System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyFailureStage> FailedStages,
                     System.Collections.Generic.IReadOnlyList<string> Warnings,
                     int UnresolvedRedactAnnotationCount = 0,
-                    bool PdfAIdentificationPreserved = false) { }
+                    bool PdfAIdentificationPreserved = false,
+                    System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? Attachments = null,
+                    System.Collections.Generic.IReadOnlyList<string>? XfaRemovals = null) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> AttachmentResults { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? Attachments { get; init; }
         public bool AttachmentsScrubbed { get; init; }
         public int CheckedTermCount { get; init; }
         public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus ContentVerificationStatus { get; init; }
@@ -2113,6 +2147,7 @@ namespace Excise.Core.Text.Segmentation
         public int SkippedShortTermCount { get; init; }
         public int UnresolvedRedactAnnotationCount { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string>? XfaRemovals { get; init; }
     }
     public sealed class RedactedCopySafetyRequest : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyRequest>
     {
@@ -2149,6 +2184,7 @@ namespace Excise.Core.Text.Segmentation
         public bool CaseSensitive { get; init; }
         public bool DrawBox { get; init; }
         public bool IncludeHiddenLayers { get; init; }
+        public bool KeepAttachments { get; init; }
         public bool ScrubDocumentCarriers { get; init; }
         public Excise.Core.Text.Segmentation.GlyphRemovalStrategy Strategy { get; init; }
         public bool WholeWord { get; init; }
@@ -2164,6 +2200,7 @@ namespace Excise.Core.Text.Segmentation
     public sealed class RedactionReport
     {
         public RedactionReport() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> Attachments { get; init; }
         public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierResult> Carriers { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HyphenatedTermCandidate> HyphenatedCandidates { get; init; }
         public int ImageRegionsRedacted { get; init; }

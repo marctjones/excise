@@ -362,7 +362,8 @@ public class AttachmentsPanelTests : IDisposable
             await WaitForAsync(() => Directory.GetFiles(folder).Length == 2);
 
             await ClickAsync(window, window.FindControl<Button>("RemoveAllAttachmentsButton")!);
-            await WaitForAsync(() => vm.Attachments.Count == 1);
+            // #1572: Remove All takes the page annotation's file too.
+            await WaitForAsync(() => vm.Attachments.Count == 0);
             vm.HasUnsavedDocumentChanges.Should().BeTrue();
         }
         finally
