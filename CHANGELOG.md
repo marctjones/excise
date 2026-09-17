@@ -10,6 +10,16 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Fixed
+- **Closing a document after an idle trim kept the whole document in memory**
+  (#1564, #1543). A cache trim — the idle trim, a window switch or OS
+  pressure — recorded the open document in render-ahead's single-page plan,
+  in either view, and nothing cleared that plan when the document closed. The
+  closed document, with every image it had decoded, stayed reachable, so the
+  close-time heap reclaim freed nothing: the #1543 bench on develop beed1e8b
+  held Altona at 705–713 MB 20 s and 45 s after Close Document, against
+  322–332 MB before render-ahead. Document changes now forget the plan, and
+  the close test covers both views with and without a trim first. Page-turn
+  render-ahead is unchanged.
 - **A failed open left the previous document's attachments listed** (#1563),
   and opening another document kept the old list on screen until the new one
   finished loading. Both now clear.
@@ -237,8 +247,14 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
     differ between two windows. Recent files are one list for the whole
     application.
   - Memory: closing a window releases its document, its caches and its view
-    model. Each window's viewer keeps its own tile-cache budget
-    (Preferences → Performance), so N windows can hold N budgets.
+    model. All windows share ONE tile-cache budget (Preferences →
+    Performance) rather than one each (`PdfViewerTileBudget`): when it is
+    exceeded, background windows give up render-ahead tiles first, then
+    scroll-back tiles, and only for the focused window their band tiles
+    (already composited, so nothing on screen changes). The focused window
+    never gives tiles to a background one, and a lone window evicts exactly
+    as before. The idle heap reclaim (#1496) runs once per app idle period,
+    not once per window.
 - **Attachments pane in the sidebar, visible by default** (#1563). Embedded
   files used to be reachable only through a Document ▸ Attachments… dialog.
   They are now listed under Outline and Thumbnails as soon as a document opens:

@@ -84,8 +84,9 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     private IDisposable? _pressureSource;
     private Action? _detach;
     private long _lastGcSampleTimestamp;
-    // True once this idle period has asked for a reclaim; activity clears it.
-    private bool _idleReclaimRequested;
+    // Whether this idle period has asked for a reclaim; activity clears it.
+    // Shared by every window's coordinator in the app (#1551 follow-up).
+    private readonly IdleReclaimGate _idleReclaimGate;
     private bool _disposed;
 
     internal ViewerCacheTrimCoordinator(
@@ -94,7 +95,8 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         Func<(long MemoryLoadBytes, long HighMemoryLoadThresholdBytes)>? sampleGc = null,
         Action<PdfViewerCacheTrimLevel>? trimThumbnails = null,
         ReleasedMemoryReclaimer? memoryReclaimer = null,
-        Func<long>? sampleFragmentedBytes = null)
+        Func<long>? sampleFragmentedBytes = null,
+        IdleReclaimGate? idleReclaimGate = null)
     {
         _trim = trim ?? throw new ArgumentNullException(nameof(trim));
         _trimThumbnails = trimThumbnails;
@@ -102,6 +104,7 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         _policy = policy;
         _sampleGc = sampleGc ?? SampleGcMemoryLoad;
         _sampleFragmentedBytes = sampleFragmentedBytes ?? SampleGcFragmentedBytes;
+        _idleReclaimGate = idleReclaimGate ?? new IdleReclaimGate();
         ConfigureIdleTimer(policy);
     }
 
@@ -162,14 +165,19 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     /// <paramref name="trimThumbnails"/> releases the sidebar's thumbnail tier
     /// at Warn and Critical; <paramref name="memoryReclaimer"/> then collects
     /// the managed garbage those trims leave behind (#1481).
+    /// <paramref name="idleReclaimGate"/>, when the app has several windows,
+    /// is shared by all their coordinators so an idle app pays one reclaim,
+    /// not one per window.
     /// </summary>
     internal static ViewerCacheTrimCoordinator Attach(
         Window window, PdfViewerControl viewer, CacheTrimPolicy policy, ILogger? logger = null,
         Action<PdfViewerCacheTrimLevel>? trimThumbnails = null,
-        ReleasedMemoryReclaimer? memoryReclaimer = null)
+        ReleasedMemoryReclaimer? memoryReclaimer = null,
+        IdleReclaimGate? idleReclaimGate = null)
     {
         var coordinator = new ViewerCacheTrimCoordinator(
-            viewer.TrimCaches, policy, trimThumbnails: trimThumbnails, memoryReclaimer: memoryReclaimer);
+            viewer.TrimCaches, policy, trimThumbnails: trimThumbnails, memoryReclaimer: memoryReclaimer,
+            idleReclaimGate: idleReclaimGate);
 
         EventHandler onDeactivated = (_, _) => coordinator.OnDeactivated();
         EventHandler<AvaloniaPropertyChangedEventArgs> onWindowProperty = (_, e) =>
@@ -218,7 +226,7 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     {
         if (_disposed)
             return;
-        _idleReclaimRequested = false;
+        _idleReclaimGate.Requested = false;
         if (_idleTimer != null)
         {
             _idleTimer.Stop();
@@ -363,10 +371,12 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         // after both trims above.
         switch (trigger)
         {
-            case CacheTrimTrigger.Idle when _memoryReclaimer != null && !_idleReclaimRequested:
+            case CacheTrimTrigger.Idle when _memoryReclaimer != null && !_idleReclaimGate.Requested:
                 // Once per idle period whatever the reading: a heap that was
                 // not fragmented enough will not become more so while idle.
-                _idleReclaimRequested = true;
+                // The GC is process-wide, so with a shared gate the period is
+                // the app's: activity in any window starts a new one.
+                _idleReclaimGate.Requested = true;
                 if (_sampleFragmentedBytes() >= IdleReclaimThresholdBytes)
                     _memoryReclaimer.Request(HeapReclaimTrigger.Idle);
                 break;
@@ -390,6 +400,18 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         _pressureSource?.Dispose();
         _pressureSource = null;
     }
+}
+
+/// <summary>
+/// Whether the current idle period has already asked for a heap reclaim
+/// (#1496). One instance per coordinator by default; the app shares one across
+/// every window's coordinator, because the collection is process-wide: N idle
+/// windows would otherwise run N blocking gen2 collections for one heap.
+/// UI thread only.
+/// </summary>
+internal sealed class IdleReclaimGate
+{
+    internal bool Requested { get; set; }
 }
 
 /// <summary>What asked for a cache trim (#1478); the <c>trigger</c> tag on <c>excise.app.cache_trim.requests</c>.</summary>

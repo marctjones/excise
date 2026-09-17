@@ -1647,10 +1647,19 @@ is collected.
 Each window's coordinator trims its own viewer and the thumbnails of the
 sessions it hosts. With in-app tabs, the Warn and Critical levels trim inactive
 tabs' thumbnails to nothing first. The reclaimer is shared, so N windows'
-requests still coalesce into one collection. The tile budget
-(`TileCacheBudgetMb`, default 200 MB) is per viewer, so N windows can hold N
-budgets. That is the documented cost of real windows (#1463's point 4) and the
-reason in-app tabs share one viewer.
+requests still coalesce into one collection, and every coordinator shares one
+`IdleReclaimGate`, so an idle app runs one idle reclaim (#1496) per idle
+period rather than one per window; activity in any window starts a new
+period. The tile budget (`TileCacheBudgetMb`, default 200 MB) is app-wide:
+App attaches every window's viewer to one `PdfViewerTileBudget` and makes the
+focused window's viewer its `Foreground`. Each viewer keeps its own LRU and
+its own cap; when the viewers together exceed the budget, the shared budget
+takes background viewers' render-ahead tiles first, then their scroll-back
+tiles, and, only for the foreground viewer, their band tiles (already baked
+into their composites). A background viewer never takes the foreground's
+tiles and keeps at least its own bands. With one window the shared budget
+changes nothing (`SharedTileBudgetTests`). In-app tabs still share one viewer,
+so an inactive tab holds no tiles at all.
 
 ### 7.7 Consumers that address the view model by name
 
