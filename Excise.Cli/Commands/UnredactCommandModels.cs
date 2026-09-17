@@ -24,7 +24,33 @@ internal sealed record UnredactCertainFinding(
     double X,
     double Y,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    double? Confidence = null);
+    double? Confidence = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    int? Object = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? Location = null)
+{
+    /// <summary>
+    /// A document carrier finding: it has no page position, so the human
+    /// output names the object and location instead of (0,0).
+    /// </summary>
+    [JsonIgnore]
+    public bool FromCarrier { get; init; }
+}
+
+/// <summary>
+/// Content a carrier holds that the scan did not decode into text (an opaque
+/// attachment, a thumbnail, an unreadable packet). Reported, never counted as
+/// recovered text.
+/// </summary>
+internal sealed record UnredactPresenceFinding(
+    int Page,
+    string Carrier,
+    string Description,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    int? Object = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? Location = null);
 
 internal sealed record UnredactResidueFinding(
     int Page,
@@ -49,7 +75,9 @@ internal sealed record UnredactQuantification(
 internal sealed record UnredactReport(
     UnredactQuantification Quantification,
     IReadOnlyList<UnredactCertainFinding> Certain,
-    IReadOnlyList<UnredactResidueFinding> Residue);
+    IReadOnlyList<UnredactResidueFinding> Residue,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<UnredactPresenceFinding>? Present = null);
 
 internal sealed record UnredactCommandOutcome(
     int ExitCode,

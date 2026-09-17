@@ -133,6 +133,44 @@ internal sealed class PdfDocumentObjectStore : IDisposable
         return reachable;
     }
 
+    /// <summary>
+    /// Object numbers the assembled cross-reference table marks in use. A
+    /// snapshot, so callers may resolve objects while iterating it.
+    /// </summary>
+    internal int[] SnapshotInUseObjectNumbers()
+    {
+        lock (_parseLock)
+            return _xref.Where(e => e.Value.InUse).Select(e => e.Key).OrderBy(n => n).ToArray();
+    }
+
+    /// <summary>
+    /// Copy of the bytes the document was opened from, or null when the source
+    /// is not seekable or is larger than <paramref name="maxBytes"/>. Reads under
+    /// the parse lock and restores the stream position, so concurrent object
+    /// resolution is unaffected. Used only by the unredact carrier scan, which
+    /// needs the raw file to reach revisions an incremental update superseded.
+    /// </summary>
+    internal byte[]? TryReadSourceBytes(long maxBytes)
+    {
+        lock (_parseLock)
+        {
+            if (!_stream.CanSeek || !_stream.CanRead || _stream.Length > maxBytes)
+                return null;
+            var saved = _stream.Position;
+            try
+            {
+                var buffer = new byte[_stream.Length];
+                _stream.Position = 0;
+                _stream.ReadExactly(buffer);
+                return buffer;
+            }
+            finally
+            {
+                _stream.Position = saved;
+            }
+        }
+    }
+
     internal PdfObject GetObject(PdfReference reference)
         => GetObject(reference.ObjectNum);
 

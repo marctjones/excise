@@ -194,6 +194,49 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   is still scanned.
 
 ### Added
+- **`excise unredact` reads every carrier a redaction can leave behind.** The
+  certain channel used to read only structure-tree `/ActualText`/`/Alt`/`/E` and
+  annotation `/Contents`/`/RC`. It now also reports, each finding labelled with
+  its carrier, page, object number and location:
+  - AcroForm `/V`, `/DV`, `/RV`, `/TU`, both halves of `/Opt` export/display
+    pairs, widget `/MK` captions (`/CA`, `/RC`, `/AC`), and the text every
+    annotation's appearance streams paint (decoded through the one content
+    walker);
+  - JavaScript (string or stream) and `/URI`, `/Launch`, `/GoToR`,
+    `/SubmitForm` targets from every action location — document name tree,
+    `/OpenAction`, `/AA` on the catalog, pages, annotations, non-terminal
+    fields, and outline items;
+  - XFA datasets values and template default values, captions, list items,
+    tooltips and scripts (safe XML loading, datasets-only forms included);
+  - attachments from the name tree, `/FileAttachment` annotations, and `/AF`
+    on the catalog, pages and annotations: name, `/F`, `/UF`, `/Desc`,
+    text-like payloads, and attached PDFs scanned recursively (page text and
+    every carrier, three levels deep);
+  - `/Info` and XMP content properties (tool-written producer, dates, ids and
+    history are filtered out), outline titles, markup-annotation authors,
+    `/Subj`, `/OverlayText`, structure-element `/T`, `/PieceInfo` private data,
+    and text in optional content that is hidden by default;
+  - unreferenced (orphan) objects, including a dropped content stream, and
+    text an incremental update superseded: each earlier revision is opened
+    from the file prefix and only what the current revision no longer shows is
+    reported.
+
+  Content that is present but not decoded — an opaque attachment, a page
+  `/Thumb`, an unreadable packet, a nested PDF past the depth limit — is listed
+  under a new `present` JSON array and a "PRESENT" section, and does not set the
+  certain exit code. The scan is bounded (findings, text length, payload size,
+  revisions, nesting) and cancellable, and runs only in `unredact`.
+  `CarrierTextRecovery.CarrierText` gains `ObjectNumber`, `Kind` and
+  `Location`; `Scan` gains a cancellable overload.
+- **Carrier traps for the unredaction scorecard and the redaction bench.**
+  `CarrierTrapFixtures` generates one synthetic PDF per carrier above in
+  memory. Each finding is corroborated by qpdf (`--json` object dump, `--check`,
+  `--show-attachment`) and mutool (`show -b` of the object excise names, page
+  text of an earlier revision) — excise does not vouch for itself. The
+  unredaction scorecard grades a new `carrier` channel against qpdf's object
+  dump, and `RedactionBenchmarkRunner` redacts every trap with each tool
+  (`redaction-carrier-traps` corpus) and records which carriers the unredact
+  channel still reads in the output (`unredactCarriers`, `carrier-recovery`).
 - **Several documents at once, in separate windows** (#1463, #1551–#1553).
   Opening a PDF while a window already shows one now opens it in a new
   window (File → Open, Open Recent, drag and drop, Finder or Explorer, and the

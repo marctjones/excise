@@ -152,7 +152,7 @@ internal static class PdfEmbeddedFileParser
     /// /Desc (description), and other metadata.
     /// Returns null if the file specification cannot be parsed.
     /// </summary>
-    private static PdfEmbeddedFile? ParseFileSpecification(
+    internal static PdfEmbeddedFile? ParseFileSpecification(
         PdfDocument doc,
         PdfDictionary fsDict,
         string name)

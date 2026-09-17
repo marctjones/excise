@@ -26,6 +26,7 @@
          Precedent: the same link in Excise.Rendering.Tests. Used by the
          #1158 no-box test to prove glyph removal is unweakened. -->
     <Compile Include="../Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
+    <Compile Include="../Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs" Link="TestSupport/CarrierTrapFixtures.cs" />
   </ItemGroup>
 
   <ItemGroup>
