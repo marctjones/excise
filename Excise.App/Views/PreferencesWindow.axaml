@@ -136,7 +136,7 @@
                                           Content="Render thumbnails in the background"
                                           IsChecked="{Binding ThumbnailPrewarm}"
                                           AutomationProperties.Name="Thumbnail Background Rendering"
-                                          AutomationProperties.HelpText="Pre-render every page thumbnail once the document has been idle for a few seconds (#1565)."/>
+                                          AutomationProperties.HelpText="Pre-render every page thumbnail once the document has been idle for the idle delay below."/>
 
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="Thumbnails kept around the visible ones" FontWeight="Medium"/>
@@ -155,14 +155,16 @@
                                           AutomationProperties.HelpText="Drop scroll-back caches when the window is deactivated, minimized, or idle."/>
 
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Idle delay before releasing caches (seconds)" FontWeight="Medium"/>
+                                    <TextBlock Text="Idle delay (seconds)" FontWeight="Medium"/>
+                                    <!-- #1565: this is now the app's one idle delay. It gates the
+                                         background thumbnail pre-render as well as the cache trim,
+                                         so it stays editable when soft trims are off. -->
                                     <NumericUpDown x:Name="IdleTrimSecondsNumericUpDown"
                                                    Value="{Binding IdleTrimSeconds}"
-                                                   IsEnabled="{Binding SoftCacheTrims}"
                                                    Minimum="10" Maximum="600" Increment="5" FormatString="0"
                                                    HorizontalAlignment="Stretch"
-                                                   AutomationProperties.Name="Idle Trim Delay"
-                                                   AutomationProperties.HelpText="Seconds without viewer activity before caches are released, 10 to 600."/>
+                                                   AutomationProperties.Name="Idle Delay"
+                                                   AutomationProperties.HelpText="Seconds without activity before scroll-back caches are released and background thumbnail rendering starts, 10 to 600. Lowering it warms thumbnails sooner."/>
                                 </StackPanel>
 
                                 <StackPanel Spacing="4">

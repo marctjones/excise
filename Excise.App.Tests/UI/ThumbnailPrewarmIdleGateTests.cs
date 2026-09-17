@@ -173,6 +173,73 @@ public class ThumbnailPrewarmIdleGateTests
         }
     }
 
+    /// <summary>
+    /// #1565, option (b): the quiet period IS the existing idle-trim
+    /// preference. One definition of idle, no second number.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public void TheQuietPeriod_IsTheIdleDelayPreference()
+    {
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
+
+        vm.ApplyPerformanceSettings(Excise.App.Models.PerformanceSettings.Balanced);
+        vm.ThumbnailPrewarmIdleDelay.Should().Be(
+            TimeSpan.FromSeconds(Excise.App.Models.PerformanceSettings.Balanced.IdleTrimSeconds));
+
+        vm.ApplyPerformanceSettings(Excise.App.Models.PerformanceSettings.LowMemory);
+        vm.ThumbnailPrewarmIdleDelay.Should().Be(
+            TimeSpan.FromSeconds(Excise.App.Models.PerformanceSettings.LowMemory.IdleTrimSeconds),
+            "lowering the idle delay makes thumbnails warm sooner, as Preferences says");
+
+        vm.ApplyPerformanceSettings(Excise.App.Models.PerformanceSettings.Balanced with
+        {
+            IdleTrimSeconds = 45,
+            SoftCacheTrims = false,
+        });
+        vm.ThumbnailPrewarmIdleDelay.Should().Be(TimeSpan.FromSeconds(45),
+            "it is a duration, not a trim trigger: a user who turned trimming off "
+            + "did not ask for the pre-warm to run during their first page");
+    }
+
+    [Fact(Timeout = 180_000)]
+    public async Task LoweringTheQuietPeriod_AppliesToAPendingPrewarm()
+    {
+        var path = NewPdf(4);
+        var session = new ThumbnailSidebarSession(NullLogger.Instance)
+        {
+            PrewarmIdleDelay = TimeSpan.FromMinutes(10),
+        };
+        using var document = PdfCoreDocument.Open(File.ReadAllBytes(path));
+        try
+        {
+            session.Start(path, document, document.PageCount,
+                cacheSalt: "prewarm-gate-" + Guid.NewGuid().ToString("N"));
+
+            // Let the queued pre-warm actually reach its wait before lowering
+            // the period. Without this the pool task may not have read the
+            // period yet, and it would then pick the new one up for free — so
+            // the assertion below would pass even with the re-queue removed.
+            // (Observed: with the re-queue planted out, this test passed in one
+            // run and failed in the next.)
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
+            session.ThumbnailRenderCountForTests.Should().Be(0, "fixture: nothing has warmed yet");
+
+            session.PrewarmIdleDelay = TimeSpan.FromMilliseconds(1);
+
+            // The new period is in force at once — not after the old one would
+            // have expired, which is what a user lowering the preference to
+            // make thumbnails warm sooner is asking for.
+            await session.PrewarmTask!.WaitAsync(TimeSpan.FromSeconds(30));
+            session.ThumbnailRenderCountForTests.Should().Be(document.PageCount);
+        }
+        finally
+        {
+            session.PrewarmEnabled = false;
+            session.Dispose();
+            TestPdfGenerator.CleanupTestFile(path);
+        }
+    }
+
     private static string ReadCacheDir(ThumbnailSidebarSession session) =>
         session.ThumbnailCacheDirForTests
         ?? throw new InvalidOperationException("the session has no thumbnail cache");

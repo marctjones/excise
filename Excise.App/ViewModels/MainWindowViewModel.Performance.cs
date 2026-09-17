@@ -43,6 +43,11 @@ public partial class MainWindowViewModel
         _performanceSettings = settings;
 
         _thumbnailSession.KeepMarginPages = settings.ThumbnailKeepMargin;
+        // #1565: the idle delay is the app's ONE definition of idle. It gates
+        // the background thumbnail pre-render as well as the cache trim, so
+        // lowering it makes thumbnails warm sooner. Applied whether or not soft
+        // trims are on: it is a duration, not a trim trigger.
+        _thumbnailSession.PrewarmIdleDelay = TimeSpan.FromSeconds(settings.IdleTrimSeconds);
         if (!fromPersistedStartup || !settings.ThumbnailPrewarm)
             _thumbnailSession.PrewarmEnabled = settings.ThumbnailPrewarm;
 

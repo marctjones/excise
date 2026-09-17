@@ -50,12 +50,23 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   the 2026-09-17 release-baseline run: open complete at +0.1 s, search index at
   +2.0 s, "pre-warm complete" at +5.0 s), which is what #1544 saw as a window
   still changing 5.6 s after launch where Preview settles in 1.4 s. It now
-  waits for a quiet period — 3 s in which nothing has opened a document, turned
-  a page, changed the zoom, scrolled the sidebar or reported search-index
+  waits for a quiet period in which nothing has opened a document, turned a
+  page, changed the zoom, scrolled the sidebar or reported search-index
   progress — and any of those starts the wait again, so a reader who keeps
   working never has 126 background page renders started underneath them. The
   `ThumbnailPrewarm` preference is unchanged and now means "warm when idle",
   as it always said.
+- **The quiet period IS the existing idle delay** (#1565) — Preferences ›
+  Performance › "Idle delay (seconds)", 30 s by default, formerly labelled
+  "Idle delay before releasing caches". There is one definition of idle in the
+  app rather than a second number nobody can find, so **lowering it also makes
+  thumbnails warm sooner** and raising it holds them back longer; the help text
+  on both controls says so. It applies whether or not "Drop scroll-back caches
+  when the window is deactivated, minimized, or idle" is on — it is a duration,
+  not a trim trigger, and a user who turned trimming off did not ask for the
+  pre-warm to run during their first page — so that box no longer disables it.
+  Changing it re-queues a pending pre-warm, so a lower value takes effect at
+  once instead of after the old period would have expired.
 - **Pre-warming a thumbnail no longer builds three bitmaps to throw them all
   away** (#1565). The pre-warm wants the WebP on disk and nothing else, but it
   went through the on-demand path, which produced the rendered master, a copy

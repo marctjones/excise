@@ -23,22 +23,21 @@ internal sealed class ThumbnailSidebarSession : IDisposable
 
     /// <summary>
     /// How long the document must be left alone before the background
-    /// pre-render of every thumbnail starts (#1565).
+    /// pre-render of every thumbnail starts (#1565). The running value comes
+    /// from the <c>IdleTrimSeconds</c> preference — see
+    /// <see cref="PrewarmIdleDelay"/>; this is only the value a session has
+    /// before any preferences have been applied to it, and it equals
+    /// <see cref="Models.PerformanceSettings.Balanced"/>'s.
     /// </summary>
     /// <remarks>
-    /// <para>Pre-warm used to start with the document. On
-    /// irs-1040-instructions.pdf (126 pages) it then held a CPU busy for 5.0 s
-    /// — measured from the release-baseline run's own log, document open
-    /// complete at +0.107 s, text index at +2.0 s, "pre-warm complete" at
-    /// +5.0 s — which is what #1544 saw as a window that keeps changing for
-    /// 5.6 s after launch while Preview settles in 1.4 s.</para>
-    /// <para>Three seconds is longer than the whole settling burst it must not
-    /// compete with: first page, the visible thumbnails and the search index
-    /// (2.0 s on that document). Every one of those re-arms the delay through
-    /// <see cref="NotifyActivity"/>, so the value is a quiet-period floor, not
-    /// a race against a measured number.</para>
+    /// Pre-warm used to start with the document. On irs-1040-instructions.pdf
+    /// (126 pages) it then held a CPU busy for 5.0 s — measured from the
+    /// release-baseline run's own log, document open complete at +0.107 s, text
+    /// index at +2.0 s, "pre-warm complete" at +5.0 s — which is what #1544 saw
+    /// as a window that keeps changing for 5.6 s after launch while Preview
+    /// settles in 1.4 s.
     /// </remarks>
-    internal static readonly TimeSpan DefaultPrewarmIdleDelay = TimeSpan.FromSeconds(3);
+    internal static readonly TimeSpan DefaultPrewarmIdleDelay = TimeSpan.FromSeconds(30);
 
     private readonly ILogger _logger;
     private long _lastActivityTicks = Environment.TickCount64;
@@ -61,18 +60,32 @@ internal sealed class ThumbnailSidebarSession : IDisposable
     }
 
     /// <summary>
-    /// The quiet period the pre-warm waits for, read when a pre-warm is queued
-    /// (#1565). A test seam: the shipped value is
-    /// <see cref="DefaultPrewarmIdleDelay"/>, and tests that must see the
-    /// pre-warm run set a short one before opening a document.
+    /// The quiet period the pre-warm waits for before it starts (#1565).
     /// </summary>
+    /// <remarks>
+    /// <para>This is the <c>IdleTrimSeconds</c> preference, pushed in by
+    /// <see cref="MainWindowViewModel.ApplyPerformanceSettings"/>. There is
+    /// deliberately ONE definition of idle in the app rather than a second
+    /// number nobody can find: lowering "Trim caches after (seconds)" also
+    /// makes thumbnails warm sooner, and raising it holds them back longer.
+    /// It is a duration, so it applies whether or not soft cache trims are on
+    /// — a user who turned trimming off did not ask for the pre-warm to run
+    /// during their first page.</para>
+    /// <para>Changing it re-queues a pending pre-warm, so the new period is in
+    /// force at once rather than after the old one expires. Tests that must
+    /// observe the pre-warm running set a short one.</para>
+    /// </remarks>
     internal TimeSpan PrewarmIdleDelay
     {
         get => _prewarmIdleDelay;
         set
         {
             ArgumentOutOfRangeException.ThrowIfNegative(value.Ticks, nameof(value));
+            if (_prewarmIdleDelay == value)
+                return;
             _prewarmIdleDelay = value;
+            if (_cache is { } cache && PrewarmEnabled)
+                QueuePrewarm(cache);
         }
     }
 
