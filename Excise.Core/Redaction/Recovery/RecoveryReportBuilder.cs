@@ -32,6 +32,8 @@ public sealed class RecoveryReportBuilder
     private readonly List<RedactionMark> _marks = new();
     private readonly List<(RecoveredFinding Finding, PdfRectangle? Hint)> _findings = new();
     private readonly List<string> _channelsRun = new();
+    private readonly Dictionary<string, RedactionFitAnalyzer.FitReport> _fits =
+        new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _channelsSkipped = new(StringComparer.Ordinal);
 
     /// <summary>
@@ -61,6 +63,17 @@ public sealed class RecoveryReportBuilder
     {
         ArgumentNullException.ThrowIfNull(finding);
         _findings.Add((finding, markHint));
+        return this;
+    }
+
+    /// <summary>
+    /// #1589 — attach a width-budget analysis to a mark. Only meaningful for a
+    /// mark nothing recovered; the builder does not enforce that, because
+    /// deciding it needs the findings, which the caller supplies afterwards.
+    /// </summary>
+    public RecoveryReportBuilder AddFit(string markId, RedactionFitAnalyzer.FitReport fit)
+    {
+        _fits[markId] = fit;
         return this;
     }
 
@@ -105,7 +118,17 @@ public sealed class RecoveryReportBuilder
         }
 
         var summaries = marks
-            .Select(m => new MarkSummary(m, Outcome(m, byMark[m.Id]), byMark[m.Id]))
+            .Select(m =>
+            {
+                var findings = byMark[m.Id];
+                var outcome = Outcome(m, findings);
+                // The constraint is only worth printing where the text did NOT
+                // come back: for a recovered mark it is redundant noise.
+                var fit = outcome is MarkRecoveryOutcome.Recovered or MarkRecoveryOutcome.PartiallyRecovered
+                    ? null
+                    : _fits.GetValueOrDefault(m.Id);
+                return new MarkSummary(m, outcome, findings, fit);
+            })
             .ToList();
 
         return new RecoveryReport(summaries, unlinked, documentLevel,

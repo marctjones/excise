@@ -52,6 +52,23 @@ internal sealed record UnredactQuantification(
 /// recovered" does, and a mark nothing recovered only appears here because
 /// marks are counted independently of what the channels found.
 /// </summary>
+/// <summary>
+/// #1589 — what could fit a mark nothing recovered. Absent for a mark whose
+/// text came back: a candidate list beside a recovered value invites reading
+/// the list as competing answers.
+/// </summary>
+internal sealed record UnredactMarkFit(
+    int MinCharacters,
+    int MaxCharacters,
+    IReadOnlyList<string> PatternClasses,
+    IReadOnlyList<string> TopCandidates,
+    int CandidatesFit,
+    int CandidatesConsidered,
+    double BitsLeaked,
+    string Confidence,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? Note);
+
 internal sealed record UnredactMarkSummary(
     string Id,
     int Page,
@@ -61,7 +78,9 @@ internal sealed record UnredactMarkSummary(
     /// <summary>recovered | partially-recovered | candidates-only | not-recovered.</summary>
     string Outcome,
     int Findings,
-    int CertainFindings);
+    int CertainFindings,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    UnredactMarkFit? Fit = null);
 
 /// <summary>
 /// #1587 — one finding from any channel, in the shared recovery model. Kept

@@ -25,7 +25,14 @@ internal static class UnredactRecoveryMapper
                 Rect(summary.Mark.Rect),
                 OutcomeOf(summary.Outcome),
                 summary.Findings.Count,
-                summary.Findings.Count(f => f.Confidence == RecoveryConfidence.Certain)));
+                summary.Findings.Count(f => f.Confidence == RecoveryConfidence.Certain),
+                summary.Fit is { } fit
+                    ? new UnredactMarkFit(
+                        fit.MinCharacters, fit.MaxCharacters, fit.PatternClasses,
+                        fit.Candidates.Take(10).Select(c => c.Text).ToList(),
+                        fit.Candidates.Count, fit.CandidatesConsidered,
+                        fit.BitsLeaked, fit.Confidence, fit.MetricNote)
+                    : null));
             linked.AddRange(summary.Findings.Select(Finding));
         }
 

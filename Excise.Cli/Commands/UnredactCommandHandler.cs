@@ -79,7 +79,10 @@ internal static class UnredactCommandHandler
         // marked-content, covered image/vector, form fields -- plus the marks
         // they were found under. The legacy flat list below is rebuilt from the
         // same report so the two can never disagree.
-        RecoveryScanner.ScanInto(document, builder, cancellationToken);
+        // #1589: --dictionary already exists for residue mode; the same word
+        // list ranks candidates for every mark that held.
+        var dictionary = LoadDictionary(input.DictionaryPath);
+        RecoveryScanner.ScanInto(document, builder, cancellationToken, dictionary);
 
         foreach (var hit in HiddenTextDetector.Scan(document, includeVisibleFailedRedactions: true))
         {
@@ -213,6 +216,21 @@ internal static class UnredactCommandHandler
             builder.ChannelSkipped(RecoveryScanner.Channels.Residue, "--mode certain");
 
 
+    }
+
+    /// <summary>Word list for #1589 candidate ranking, or null when none was given.</summary>
+    private static IReadOnlyList<string>? LoadDictionary(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return null;
+        try
+        {
+            return File.ReadAllLines(path)
+                .Select(line => line.Trim())
+                .Where(line => line.Length > 0)
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+        }
+        catch { return null; }
     }
 
     private static List<UnredactResidueFinding> CollectResidue(

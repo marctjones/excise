@@ -126,6 +126,30 @@ internal static class UnredactCommandOutput
                     (mark.Findings > 0
                         ? $" — {mark.Findings} finding(s), {mark.CertainFindings} certain"
                         : ""));
+
+                // #1589: for a mark that HELD, the width budget is the only
+                // thing left to say about what was under it.
+                if (mark.Fit is { } fit)
+                {
+                    var patterns = fit.PatternClasses.Count > 0
+                        ? string.Join("; ", fit.PatternClasses)
+                        : "no named pattern fits";
+                    output.WriteLine(
+                        $"      could fit: {fit.MinCharacters}-{fit.MaxCharacters} characters; {patterns}");
+                    if (fit.CandidatesConsidered > 0)
+                    {
+                        output.WriteLine(
+                            $"      {fit.CandidatesFit} of {fit.CandidatesConsidered} dictionary word(s) fit " +
+                            $"— {fit.BitsLeaked} bits, {fit.Confidence}" +
+                            (fit.TopCandidates.Count > 0
+                                ? $", top: {string.Join(", ", fit.TopCandidates.Take(5))}"
+                                : ""));
+                    }
+                    else if (fit.Note != null)
+                    {
+                        output.WriteLine($"      {fit.Note}");
+                    }
+                }
             }
         }
 

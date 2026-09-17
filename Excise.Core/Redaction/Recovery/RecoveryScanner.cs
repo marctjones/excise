@@ -50,7 +50,8 @@ public static class RecoveryScanner
     public static RecoveryReportBuilder ScanInto(
         PdfDocument document,
         RecoveryReportBuilder builder,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyList<string>? dictionary = null)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(builder);
@@ -67,6 +68,7 @@ public static class RecoveryScanner
         AddResidualArtefacts(document, builder, cancellationToken);
         AddXfaValues(document, builder, cancellationToken);
         AddImageLayerLeaks(document, builder, cancellationToken);
+        AddMarkFits(document, marks, builder, dictionary, cancellationToken);
 
         return builder;
     }
@@ -241,6 +243,88 @@ public static class RecoveryScanner
     /// a fully transparent soft mask. Neither is drawn, so the covered-image
     /// channel cannot see them.
     /// </summary>
+    /// <summary>
+    /// #1589 — for each mark, what could fit it. The font and size come from
+    /// the surviving glyphs nearest the mark on the same line, because a mark
+    /// carries no font of its own and the removed run almost certainly used its
+    /// neighbours'.
+    /// </summary>
+    private static void AddMarkFits(
+        PdfDocument document,
+        IReadOnlyList<RedactionMark> marks,
+        RecoveryReportBuilder builder,
+        IReadOnlyList<string>? dictionary,
+        CancellationToken cancellationToken)
+    {
+        foreach (var byPage in marks.GroupBy(m => m.PageNumber))
+        {
+            IReadOnlyList<Text.Letter> letters;
+            try { letters = document.GetPage(byPage.Key).Letters; }
+            catch { continue; }
+            if (letters.Count == 0) continue;
+
+            foreach (var mark in byPage)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var anchor = NearestAnchor(letters, mark.Rect);
+                if (anchor == null) continue;
+
+                var baseFont = ResolveBaseFont(document, byPage.Key, anchor.FontName);
+                var size = anchor.FontSize > 0 ? anchor.FontSize : 12;
+                // A redaction box is drawn AROUND the run it covers, so its
+                // width is an upper bound on the removed text. Half an em of
+                // padding is the usual producer habit; treating the box width
+                // as an equality silently rejects the right answer.
+                var fit = RedactionFitAnalyzer.Analyse(
+                    mark.Rect.Width, baseFont, size, dictionary,
+                    paddingPt: size * 0.5);
+                builder.AddFit(mark.Id, fit);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The surviving glyph nearest the mark on roughly its baseline. Vertical
+    /// proximity first: a glyph on the same line is the one whose font the
+    /// removed run shared, even if a closer glyph sits on the line above.
+    /// </summary>
+    private static Text.Letter? NearestAnchor(
+        IReadOnlyList<Text.Letter> letters, Document.PdfRectangle mark)
+    {
+        var m = mark.Normalize();
+        var midY = (m.Bottom + m.Top) / 2.0;
+        return letters
+            .Where(l => l.GlyphRectangle.Bottom <= m.Top && l.GlyphRectangle.Top >= m.Bottom)
+            .OrderBy(l => Math.Min(
+                Math.Abs(l.GlyphRectangle.Right - m.Left),
+                Math.Abs(l.GlyphRectangle.Left - m.Right)))
+            .FirstOrDefault()
+            ?? letters
+                .OrderBy(l => Math.Abs((l.GlyphRectangle.Bottom + l.GlyphRectangle.Top) / 2.0 - midY))
+                .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Letter.FontName is the RESOURCE name (/F1); metrics are keyed by
+    /// /BaseFont (Helvetica). Resolving is what keeps the fit analysis off the
+    /// no-metrics path for every standard-14 document.
+    /// </summary>
+    private static string ResolveBaseFont(PdfDocument document, int pageNumber, string resourceName)
+    {
+        try
+        {
+            foreach (var (name, font) in document.GetPage(pageNumber).GetFonts())
+            {
+                if (!string.Equals(name, resourceName, StringComparison.Ordinal)) continue;
+                var baseFont = font.GetNameOrNull("BaseFont");
+                if (!string.IsNullOrEmpty(baseFont)) return baseFont!;
+            }
+        }
+        catch { /* fall through to the resource name */ }
+        return resourceName;
+    }
+
     private static void AddImageLayerLeaks(
         PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken)
     {

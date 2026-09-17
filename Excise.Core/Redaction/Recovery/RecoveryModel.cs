@@ -166,10 +166,18 @@ public sealed record RedactionMark(
     string Description);
 
 /// <summary>One mark and everything any channel found under it (#1587).</summary>
+/// <param name="Fit">
+/// #1589 — what could fit this mark: character range, pattern classes, ranked
+/// dictionary candidates and bits leaked. Computed only for marks NO channel
+/// recovered text from, because that is where the question matters: for a mark
+/// whose text came back the constraint is redundant, and for one that held it
+/// is the only thing left to say.
+/// </param>
 public sealed record MarkSummary(
     RedactionMark Mark,
     MarkRecoveryOutcome Outcome,
-    IReadOnlyList<RecoveredFinding> Findings)
+    IReadOnlyList<RecoveredFinding> Findings,
+    RedactionFitAnalyzer.FitReport? Fit = null)
 {
     public bool HasCertain => Findings.Any(f => f.Confidence == RecoveryConfidence.Certain);
 }
