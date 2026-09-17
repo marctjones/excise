@@ -264,6 +264,22 @@ public class AppMetricsTests
         requests[1].Tags.Should().Contain("trigger", "os_pressure").And.Contain("level", "critical");
     }
 
+    [Fact]
+    public void Metrics_HeapReclaim_TagsTheIdleTrigger_ApartFromTheOthers()
+    {
+        using var capture = new AppMeterCapture();
+
+        AppMetrics.RecordHeapReclaim(HeapReclaimTrigger.Idle, durationMs: 12, heapBefore: 300, heapAfter: 100);
+        AppMetrics.RecordHeapReclaim(HeapReclaimTrigger.OsPressure, durationMs: 7, heapBefore: 200, heapAfter: 50);
+
+        capture.All("excise.app.heap_reclaim.duration").Select(m => m.Tags["trigger"])
+            .Should().Equal(new[] { "idle", "os_pressure" }, "#1496: idle reclaims are told apart from pressure ones");
+        capture.All("excise.app.heap_reclaim.heap_size")
+            .Where(m => m.Tags["trigger"] == "idle")
+            .Select(m => (m.Tags["phase"], m.Value))
+            .Should().Equal(("before", 300d), ("after", 100d));
+    }
+
     private readonly record struct Captured(string Instrument, double Value, Dictionary<string, string> Tags);
 
     private sealed class AppMeterCapture : IDisposable

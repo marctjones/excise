@@ -127,6 +127,118 @@ public class ReleasedMemoryReclaimTests
             "the GC memory-load fallback is the pressure signal where no native source exists");
     }
 
+    private static readonly CacheTrimPolicy IdleSoon =
+        new(OnMemoryPressure: true, SoftTriggers: true, IdleDelay: TimeSpan.FromMilliseconds(100));
+
+    /// <summary>
+    /// A reclaimer that runs each request inline, so every request is one
+    /// recorded collection and the coordinator's own gating is what is counted.
+    /// </summary>
+    private static ReleasedMemoryReclaimer InlineReclaimer(List<HeapReclaimTrigger> collections) =>
+        new(collections.Add, post: run => run());
+
+    [FixedAvaloniaFact]
+    public async Task IdleTrim_WithFragmentationAtTheThreshold_ReclaimsOnce_ThenNotAgainUntilActivity()
+    {
+        var collections = new List<HeapReclaimTrigger>();
+        var trims = new List<PdfViewerCacheTrimLevel>();
+        using var coordinator = new ViewerCacheTrimCoordinator(
+            trims.Add, IdleSoon, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
+            sampleFragmentedBytes: () => ViewerCacheTrimCoordinator.IdleReclaimThresholdBytes);
+
+        coordinator.OnActivity();
+        await PumpUntilAsync(() => trims.Count > 0, TimeSpan.FromSeconds(10));
+        trims.Should().Equal(PdfViewerCacheTrimLevel.Background);
+        collections.Should().Equal(new[] { HeapReclaimTrigger.Idle },
+            "#1496: an idle trim over a fragmented heap asks for exactly one reclaim, tagged Idle");
+
+        await PumpForAsync(TimeSpan.FromMilliseconds(400));
+        trims.Should().HaveCount(1, "fixture: the one-shot idle timer does not fire again without activity");
+        coordinator.TryRequestBackgroundTrim().Should().BeTrue();
+        trims.Should().HaveCount(2, "fixture: a second idle trim did run");
+        collections.Should().HaveCount(1,
+            "a second idle trim in the same idle period must not reclaim again: an app left idle for hours pays one GC");
+
+        coordinator.OnActivity();
+        await PumpUntilAsync(() => trims.Count > 2, TimeSpan.FromSeconds(10));
+        collections.Should().Equal(new[] { HeapReclaimTrigger.Idle, HeapReclaimTrigger.Idle },
+            "activity starts a new idle period, which may reclaim once more");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task IdleTrim_WithFragmentationBelowTheThreshold_RequestsNoReclaim()
+    {
+        var collections = new List<HeapReclaimTrigger>();
+        var trims = new List<PdfViewerCacheTrimLevel>();
+        int samples = 0;
+        using var coordinator = new ViewerCacheTrimCoordinator(
+            trims.Add, IdleSoon, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
+            sampleFragmentedBytes: () =>
+            {
+                samples++;
+                return ViewerCacheTrimCoordinator.IdleReclaimThresholdBytes - 1;
+            });
+
+        coordinator.OnActivity();
+        await PumpUntilAsync(() => trims.Count > 0, TimeSpan.FromSeconds(10));
+        await PumpForAsync(TimeSpan.FromMilliseconds(200));
+        samples.Should().Be(1, "fixture: the idle trim read the fragmentation");
+        collections.Should().BeEmpty("a heap with little committed-but-free memory is not worth a blocking collection");
+    }
+
+    [FixedAvaloniaFact]
+    public void DeactivateAndMinimize_NeverReclaim_HoweverFragmentedTheHeap()
+    {
+        var collections = new List<HeapReclaimTrigger>();
+        var trims = new List<PdfViewerCacheTrimLevel>();
+        int samples = 0;
+        using var coordinator = new ViewerCacheTrimCoordinator(
+            trims.Add, IdleSoon with { IdleDelay = TimeSpan.FromMinutes(10) }, () => (0, 0),
+            memoryReclaimer: InlineReclaimer(collections),
+            sampleFragmentedBytes: () => { samples++; return long.MaxValue; });
+
+        coordinator.OnDeactivated();
+        coordinator.OnMinimized();
+        coordinator.OnActivity();
+        coordinator.OnDeactivated();
+
+        trims.Should().Equal(Enumerable.Repeat(PdfViewerCacheTrimLevel.Background, 3),
+            "fixture: the soft triggers did trim");
+        collections.Should().BeEmpty("a window switch must not pay a blocking compacting GC");
+        samples.Should().Be(0, "deactivate and minimize do not even read the fragmentation");
+    }
+
+    [FixedAvaloniaFact]
+    public void TryRequestBackgroundTrim_TakesTheSameFragmentationGatedReclaimPath_AsTheIdleTimer()
+    {
+        long fragmented = ViewerCacheTrimCoordinator.IdleReclaimThresholdBytes - 1;
+        var collections = new List<HeapReclaimTrigger>();
+        var trims = new List<PdfViewerCacheTrimLevel>();
+        using (var coordinator = new ViewerCacheTrimCoordinator(
+                   trims.Add, IdleSoon with { IdleDelay = TimeSpan.FromMinutes(10) }, () => (0, 0),
+                   memoryReclaimer: InlineReclaimer(collections), sampleFragmentedBytes: () => fragmented))
+        {
+            coordinator.TryRequestBackgroundTrim().Should().BeTrue();
+            collections.Should().BeEmpty("below the threshold the #1497 harness trim does not reclaim either");
+
+            fragmented = ViewerCacheTrimCoordinator.IdleReclaimThresholdBytes;
+            coordinator.OnActivity();
+            coordinator.TryRequestBackgroundTrim().Should().BeTrue();
+            collections.Should().Equal(new[] { HeapReclaimTrigger.Idle },
+                "at the threshold the harness trim reclaims exactly as the idle timer would");
+        }
+        trims.Should().Equal(PdfViewerCacheTrimLevel.Background, PdfViewerCacheTrimLevel.Background);
+
+        collections.Clear();
+        using (var off = new ViewerCacheTrimCoordinator(
+                   trims.Add, IdleSoon with { SoftTriggers = false }, () => (0, 0),
+                   memoryReclaimer: InlineReclaimer(collections), sampleFragmentedBytes: () => long.MaxValue))
+        {
+            off.TryRequestBackgroundTrim().Should().BeFalse("soft triggers off refuses the trim");
+        }
+        collections.Should().BeEmpty("a refused trim asks for no reclaim");
+    }
+
     [FixedAvaloniaFact]
     public async Task Requests_CoalesceUntilTheQueuedCollectionRuns_AndNothingRunsWithoutARequest()
     {
