@@ -361,7 +361,11 @@ public class FileOpsCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Print me");
 
         var dialog = new RecordingUserDialogService();
-        var printer = new Excise.App.Tests.Utilities.Fakes.RecordingDocumentPrinter { IsSupported = false };
+        var printer = new Excise.App.Tests.Utilities.Fakes.RecordingDocumentPrinter
+        {
+            IsSupported = false,
+            UnsupportedReason = "Printing is not available on this test platform (reason 7f3a).",
+        };
         var vm = CreateViewModelWithDialogSpy(dialog, printer);
         await vm.LoadDocumentAsync(sourcePath);
 
@@ -370,7 +374,9 @@ public class FileOpsCommandTests
         printer.Requests.Should().BeEmpty();
         dialog.Messages.Should().ContainSingle();
         dialog.Messages[0].title.Should().Be("Print");
-        dialog.Messages[0].message.Should().Contain("#1546",
+        // #1546 shipped Windows printing, so the explanation no longer cites
+        // it; it must still be the unsupported printer's own reason.
+        dialog.Messages[0].message.Should().Be(printer.UnsupportedReason,
             "the command must surface the real platform explanation, not a generic/blank message");
 
         Cleanup(tempDir);
