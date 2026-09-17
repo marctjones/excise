@@ -96,34 +96,20 @@ internal static class RedactionFeatureStripper
             if (count > 0) rows.Add(new RedactedFeatureRemoval(feature, count, detail));
         }
 
-        // First, because the carrier term-scrub that follows it in RedactText
-        // would otherwise report having scrubbed values this deletes outright.
-        // ScrubDocumentCarriers: false means "the caller handles the
-        // document-level carriers itself" (#896), and /Info and XMP are two of
-        // them — so the wholesale strip respects that opt-out rather than
-        // deleting metadata behind the back of a caller who said it would do
-        // the scrub. Nothing else in this class is a carrier scrub, so nothing
-        // else is gated on it.
-        if (options.StripDocumentMetadata && options.ScrubDocumentCarriers
-            && HasDocumentMetadata(document))
-        {
-            var preserved = document.ScrubMetadataPreservingPdfAIdentity(scrubAttachments: false);
-            rows.Add(new RedactedFeatureRemoval(
-                "document /Info dictionary and XMP metadata packet", 1,
-                preserved
-                    ? "the PDF/A and/or PDF/UA identification was retained (#1507/#1586)"
-                    : null));
-        }
-
         if (options.RemoveScripts || options.RemoveExternalActions)
         {
-            var (scripts, external) = RemoveActions(
-                document, options.RemoveScripts, options.RemoveExternalActions);
+            var (scripts, external, reanchored) = RemoveActions(
+                document, options.RemoveScripts, options.RemoveExternalActions,
+                options.KeepAttachments);
             Row("JavaScript action(s)", scripts);
             Row("external-effect action(s)", external,
                 "Launch/SubmitForm/ImportData/GoToR/GoToE; internal navigation kept");
+            Row("embedded file(s) re-anchored at document level", reanchored,
+                "their /GoToE or /Launch action was removed and KeepAttachments was requested");
             if (scripts + external > 0)
                 invalidate |= PdfDocumentDerivedStateScope.CatalogActionsAndNames;
+            if (reanchored > 0)
+                invalidate |= PdfDocumentDerivedStateScope.Attachments;
         }
 
         if (options.RemovePieceInfo)
@@ -135,7 +121,13 @@ internal static class RedactionFeatureStripper
         if (options.RemoveHiddenAnnotationAppearances)
             Row("hidden annotation appearance stream(s)", RemoveHiddenAppearances(document));
 
-        if (options.RemoveHiddenLayerContent)
+        // Gated on IncludeHiddenLayers as well: that flag is the caller saying
+        // whether a hidden layer is in scope at all. A caller who asked NOT to
+        // reach into hidden layers (because the layer is legitimate content
+        // they want kept) must not have those layers DELETED instead — that
+        // would be the opposite of what they asked for, which is worse than
+        // either answer on its own.
+        if (options.RemoveHiddenLayerContent && options.IncludeHiddenLayers)
         {
             var (spans, groups) = RemoveHiddenOptionalContent(document);
             Row("hidden optional-content span(s)", spans,
@@ -170,6 +162,47 @@ internal static class RedactionFeatureStripper
             document.InvalidateDerivedState(invalidate);
 
         return rows;
+    }
+
+    /// <summary>
+    /// The wholesale <c>/Info</c> + XMP strip, as its OWN phase (#1586).
+    /// Returns the report row, or null when there was nothing to remove.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Why it is not part of <see cref="Apply"/>.</b> Two orderings
+    /// pull in opposite directions. The metadata strip must run EARLY — before
+    /// the carrier term-scrub, which would otherwise report having scrubbed
+    /// values this deletes outright, and before #1499's per-widget appearance
+    /// decision, which reads <c>PdfDocument.TargetsPdfA</c> from the packet
+    /// this rewrites. The rest of the strip must run LATE on the area path,
+    /// because removing an external action can ORPHAN the embedded file it
+    /// pointed at (a <c>/GoToE</c> link's <c>/T</c> target), and a caller who
+    /// passed <c>KeepAttachments</c> is owed that file in the attachment
+    /// report rather than quietly short by one. Measured: it made
+    /// <c>AttachmentRedactionTests</c> see 5 files where the fixture has
+    /// 6.</para>
+    /// <para><c>ScrubDocumentCarriers: false</c> means "the caller handles the
+    /// document-level carriers itself" (#896), and <c>/Info</c> and XMP are
+    /// two of them — so this respects that opt-out rather than deleting
+    /// metadata behind the back of a caller who said it would do the scrub.
+    /// Nothing else in this class is a carrier scrub, so nothing else is gated
+    /// on it.</para>
+    /// </remarks>
+    internal static RedactedFeatureRemoval? ApplyMetadataStrip(
+        PdfDocument document, RedactionOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(options);
+
+        if (!options.StripDocumentMetadata || !options.ScrubDocumentCarriers) return null;
+        if (!HasDocumentMetadata(document)) return null;
+
+        var preserved = document.ScrubMetadataPreservingPdfAIdentity(scrubAttachments: false);
+        return new RedactedFeatureRemoval(
+            "document /Info dictionary and XMP metadata packet", 1,
+            preserved
+                ? "the PDF/A and/or PDF/UA identification was retained (#1507/#1586)"
+                : null);
     }
 
     /// <summary>
@@ -220,10 +253,39 @@ internal static class RedactionFeatureStripper
     /// chain of each SURVIVING action is pruned too — a kept <c>/GoTo</c>
     /// whose <c>/Next</c> is a script would otherwise run the script.</para>
     /// </remarks>
-    private static (int Scripts, int External) RemoveActions(
-        PdfDocument document, bool removeScripts, bool removeExternal)
+    /// <param name="keepAttachments">
+    /// When true, an embedded file that the REMOVED action was the only route
+    /// to is re-anchored on the catalog <c>/AF</c> array instead of being
+    /// silently orphaned.
+    /// </param>
+    /// <remarks>
+    /// <para><b>Why the re-anchoring exists.</b> A <c>/GoToE</c> link's
+    /// <c>/T</c> target names an embedded file, and dropping the action drops
+    /// the only reference to it — so the file falls out of the saved document.
+    /// For the default (attachments are removed anyway) that is fine. For a
+    /// caller who passed <c>KeepAttachments</c> it is a silent loss of the
+    /// thing they explicitly asked to keep: measured on
+    /// <c>AttachmentRedactionTests</c>' all-routes fixture, the attachment
+    /// report went from 6 files to 5 with nothing saying which one went or
+    /// why.</para>
+    /// <para>Re-anchoring keeps both promises — the action is gone, the file
+    /// is still there and still listed — and it is REPORTED, because moving an
+    /// attachment from an action target to a document-level associated file is
+    /// a structural change the caller did not ask for.</para>
+    /// </remarks>
+    private static (int Scripts, int External, int ReanchoredFiles) RemoveActions(
+        PdfDocument document, bool removeScripts, bool removeExternal, bool keepAttachments)
     {
         int scripts = 0, external = 0;
+        // Filespecs reached only through an action we are about to remove.
+        var orphanedFileSpecs = new List<PdfObject>();
+
+        void Salvage(PdfDictionary action)
+        {
+            if (!keepAttachments) return;
+            foreach (var spec in FileSpecsUnder(document, action))
+                orphanedFileSpecs.Add(spec);
+        }
 
         bool Removable(PdfDictionary action, out bool isScript)
         {
@@ -246,6 +308,7 @@ internal static class RedactionFeatureStripper
                 case PdfDictionary single when single.GetOptional("S") != null:
                     if (Removable(single, out var isScript))
                     {
+                        Salvage(single);
                         // Drop the rest of the chain with it: the actions after
                         // a removed one were sequenced to run after it, and
                         // re-splicing them would change what the document does
@@ -262,7 +325,7 @@ internal static class RedactionFeatureStripper
                     {
                         if (Resolve(document, item) is PdfDictionary a && a.GetOptional("S") != null)
                         {
-                            if (Removable(a, out var s)) { Count(s); continue; }
+                            if (Removable(a, out var s)) { Salvage(a); Count(s); continue; }
                             PruneNext(a, depth + 1);
                         }
                         keep.Add(item);
@@ -285,7 +348,7 @@ internal static class RedactionFeatureStripper
             {
                 // A real action. /OpenAction may instead be a destination
                 // ARRAY, which Resolve gives us as PdfArray and we never reach.
-                if (Removable(dict, out var isScript)) { owner.Remove(key); Count(isScript); }
+                if (Removable(dict, out var isScript)) { Salvage(dict); owner.Remove(key); Count(isScript); }
                 else PruneNext(dict, 0);
                 return;
             }
@@ -321,7 +384,62 @@ internal static class RedactionFeatureStripper
             if (names.Count == 0) document.Catalog.Remove("Names");
         }
 
-        return (scripts, external);
+        return (scripts, external, ReanchorOrphanedFiles(document, orphanedFileSpecs));
+    }
+
+    /// <summary>
+    /// Every <c>/EF</c>-bearing file specification reachable from
+    /// <paramref name="action"/> — a <c>/GoToE</c> <c>/T</c> target, a
+    /// <c>/Launch</c> or <c>/ImportData</c> <c>/F</c>, or a <c>/D</c>
+    /// destination that names one.
+    /// </summary>
+    private static IEnumerable<PdfObject> FileSpecsUnder(PdfDocument document, PdfDictionary action)
+    {
+        var found = new List<PdfObject>();
+        var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        void Walk(PdfObject? value, int depth)
+        {
+            if (depth > 16 || value == null) return;
+            var resolved = Resolve(document, value);
+            if (!visited.Add(resolved)) return;
+            switch (resolved)
+            {
+                case PdfDictionary dict:
+                    if (dict.GetOptional("EF") != null) { found.Add(value); return; }
+                    foreach (var (_, inner) in dict) Walk(inner, depth + 1);
+                    break;
+                case PdfArray array:
+                    foreach (var item in array) Walk(item, depth + 1);
+                    break;
+            }
+        }
+        Walk(action, 0);
+        return found;
+    }
+
+    /// <summary>
+    /// Append <paramref name="specs"/> to the catalog <c>/AF</c> array so the
+    /// files stay reachable, skipping any that already are.
+    /// </summary>
+    private static int ReanchorOrphanedFiles(PdfDocument document, List<PdfObject> specs)
+    {
+        if (specs.Count == 0) return 0;
+
+        var af = Resolve(document, document.Catalog.GetOptional("AF") ?? PdfNull.Instance) as PdfArray;
+        var existing = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        if (af != null)
+            foreach (var item in af) existing.Add(Resolve(document, item));
+
+        var added = 0;
+        var target = af ?? new PdfArray();
+        foreach (var spec in specs)
+        {
+            if (!existing.Add(Resolve(document, spec))) continue;
+            target.Add(spec);
+            added++;
+        }
+        if (added > 0 && af == null) document.Catalog["AF"] = target;
+        return added;
     }
 
     // ───────────────────────── /PieceInfo, /Thumb ─────────────────────────

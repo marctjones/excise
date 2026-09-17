@@ -166,11 +166,12 @@ public static class PdfPageRedactionExtensions
         // RedactText path — hidden optional content the profile deletes is not
         // then walked for glyph removal, and the #1507 metadata strip runs
         // before #1499's per-widget appearance decision reads TargetsPdfA.
-        var removals = RedactionFeatureStripper.Apply(page.Document, options);
+        var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
         page.RedactAreaInternal(area, area, options.Strategy,
             options.ScrubDocumentCarriers, options.CloseWidth,
             removeAttachments: !options.KeepAttachments);
-        return AreaReport(page.Document, options, removals);
+        return AreaReport(page.Document, options, metadataRow,
+            RedactionFeatureStripper.Apply(page.Document, options));
     }
 
     public static void RedactArea(
@@ -330,12 +331,13 @@ public static class PdfPageRedactionExtensions
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
         if (options == null) throw new System.ArgumentNullException(nameof(options));
-        var removals = RedactionFeatureStripper.Apply(page.Document, options);
+        var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
         var list = areas.Select(a => a.Normalize()).ToList();
         page.RedactAreasInternal(list, list, options.Strategy,
             options.ScrubDocumentCarriers, options.CloseWidth,
             removeAttachments: !options.KeepAttachments);
-        return AreaReport(page.Document, options, removals);
+        return AreaReport(page.Document, options, metadataRow,
+            RedactionFeatureStripper.Apply(page.Document, options));
     }
 
     /// <summary>
@@ -346,6 +348,7 @@ public static class PdfPageRedactionExtensions
     private static RedactionReport AreaReport(
         Excise.Core.Document.PdfDocument document,
         RedactionOptions options,
+        RedactedFeatureRemoval? metadataRow,
         System.Collections.Generic.IReadOnlyList<RedactedFeatureRemoval> removals)
         => new()
         {
@@ -354,7 +357,10 @@ public static class PdfPageRedactionExtensions
             Carriers = System.Array.Empty<CarrierResult>(),
             Attachments = document.RedactionLedger.RemovedAttachments,
             Profile = options.Profile,
-            Removals = removals,
+            // The metadata strip ran first and is reported first.
+            Removals = metadataRow == null
+                ? removals
+                : new[] { metadataRow }.Concat(removals).ToList(),
             AccessibilityAndInteractivityRemoved =
                 RedactionFeatureStripper.DestroysAccessibility(options),
         };

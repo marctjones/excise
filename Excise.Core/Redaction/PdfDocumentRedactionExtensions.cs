@@ -144,7 +144,16 @@ public static class PdfDocumentRedactionExtensions
             // thumbnails, hidden layers and the metadata packet now go — and
             // that is the point: a redaction API whose safe form is opt-in is
             // how #896 happened.
-            profileOptions: RedactionOptions.Default, depth: 0);
+            // ...with the two parameters that the profile flags also read, so a
+            // caller passing scrubDocumentCarriers: false still gets the
+            // "I will handle the carriers myself" contract rather than a
+            // wholesale metadata strip it did not ask for.
+            profileOptions: RedactionOptions.Default with
+            {
+                ScrubDocumentCarriers = scrubDocumentCarriers,
+                IncludeHiddenLayers = includeHiddenLayers,
+            },
+            depth: 0);
 
     private static RedactionReport RedactTextCore(
         PdfDocument document,
@@ -231,7 +240,10 @@ public static class PdfDocumentRedactionExtensions
         // optional-content the profile deletes is not also walked for glyph
         // removal, and before the carrier term-scrub below, so a carrier this
         // deletes outright is not reported as having been scrubbed by term.
-        var profileRemovals = RedactionFeatureStripper.Apply(document, profileOptions);
+        var profileRemovals = new List<RedactedFeatureRemoval>();
+        if (RedactionFeatureStripper.ApplyMetadataStrip(document, profileOptions) is { } metadataRow)
+            profileRemovals.Add(metadataRow);
+        profileRemovals.AddRange(RedactionFeatureStripper.Apply(document, profileOptions));
 
         var pageCount = document.PageCount;
         progress?.Invoke(0, pageCount);

@@ -122,18 +122,33 @@ public class MetadataScrubTests
         act.Should().NotThrow();
     }
 
+    /// <summary>
+    /// #1583/#1586. ⚠️ <b>This test asserted the OPPOSITE until 2026-09-17</b>,
+    /// on the reasoning "we only scrub the standard PDF spec keys" — and that
+    /// was the leak. §14.3.3 says an Info dictionary may contain "any other
+    /// key", so a producer's <c>/CaseName (Zanzibar Quillfeather)</c> sat
+    /// untouched in a dictionary this method's own summary calls a removal of
+    /// "all document-level metadata". Measured on the carrier-trap survey: the
+    /// <c>info-custom-key</c> trap leaked to qpdf's object dump after
+    /// <c>ScrubMetadata</c> had run.
+    ///
+    /// <para>A caller that wants a key kept has
+    /// <see cref="PdfDocument.ScrubInfoKeys"/>, which names what goes. A
+    /// wholesale strip that strips a fixed list is a targeted scrub with a
+    /// misleading name.</para>
+    /// </summary>
     [Fact]
-    public void ScrubMetadata_PreservesNonMetadataInfoEntries()
+    public void ScrubMetadata_RemovesCustomInfoEntriesToo()
     {
-        // Custom Info-dict keys (e.g. /exciseAppVersion) should be left alone —
-        // we only scrub the standard PDF spec keys.
-        var pdf = BuildPdfWithMetadata(title: "T", customInfoKey: "exciseAppVersion", customInfoValue: "1.0");
+        var pdf = BuildPdfWithMetadata(title: "T", customInfoKey: "CaseName", customInfoValue: "Quillfeather");
         using var doc = PdfDocument.Open(pdf);
 
         doc.ScrubMetadata();
 
-        doc.Info.Should().NotBeNull();
-        doc.Info!.GetStringOrNull("exciseAppVersion").Should().Be("1.0");
+        doc.Info.Should().NotBeNull("the dictionary is emptied in place, not dropped, to preserve xref structure");
+        doc.Info!.GetStringOrNull("CaseName").Should().BeNull(
+            "a custom Info key is document-level metadata and a real carrier (#1583)");
+        doc.Info!.Count.Should().Be(0, "every key goes, not just the §14.3.3 Table 349 set");
     }
 
     [Fact]
