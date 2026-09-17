@@ -411,8 +411,13 @@ public class PerfScenarioTests
             .GetProperty("note").GetString().Should().Contain("found 1 in 1");
         records.Single(r => r.GetProperty("step").GetString() == "quit")
             .GetProperty("note").GetString().Should().Contain("answered 1").And.Contain("expected 2");
-        records.Should().OnlyContain(r => r.TryGetProperty("openDocuments", out _)
-                                          && r.TryGetProperty("documentWindows", out _));
+        foreach (var record in records)
+        {
+            record.TryGetProperty("openDocuments", out var openDocuments).Should().BeTrue();
+            record.TryGetProperty("documentWindows", out var documentWindows).Should().BeTrue();
+            openDocuments.ValueKind.Should().Be(JsonValueKind.Number);
+            documentWindows.ValueKind.Should().Be(JsonValueKind.Number);
+        }
     }
 
     [Fact]
