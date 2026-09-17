@@ -105,7 +105,7 @@ public class UnredactionBenchManifestTests
             r.Id.Should().MatchRegex("^[a-z0-9][a-z0-9-]*$",
                 $"line {r.LineNumber}: the id becomes a filename");
             r.Tier.Should().BeOneOf(new[] { "B", "C", "D" }, $"line {r.LineNumber}");
-            r.Status.Should().BeOneOf(new[] { "vetted", "excluded", "unvetted" }, $"line {r.LineNumber}");
+            r.Status.Should().BeOneOf(new[] { "vetted", "excluded", "blocked", "unvetted" }, $"line {r.LineNumber}");
             r.Source.Should().BeOneOf(new[] { "court", "agency", "foia", "sec", "press" }, $"line {r.LineNumber}");
             r.PublicBasis.Should().NotBeNullOrWhiteSpace($"line {r.LineNumber}");
         }
@@ -136,7 +136,7 @@ public class UnredactionBenchManifestTests
         {
             r.Sha256.Should().Be("-",
                 $"line {r.LineNumber} ({r.Id}): a hash implies someone fetched and accepted these bytes");
-            r.Vetting.Should().MatchRegex("(?i)(not yet|unvetted|nobody|pending|excluded|reject|do not)",
+            r.Vetting.Should().MatchRegex("(?i)(not yet|unvetted|nobody|pending|excluded|reject|do not|blocked)",
                 $"line {r.LineNumber} ({r.Id}): a non-vetted row must say plainly which it is");
         }
     }
@@ -166,11 +166,36 @@ public class UnredactionBenchManifestTests
     }
 
     [Fact]
+    public void ABlockedRowNamesTheObstacle()
+    {
+        // `blocked` only earns its place if it says what is in the way. Without
+        // that it is `unvetted` with a friendlier name, and the distinction the
+        // file is built on collapses.
+        foreach (var r in Rows().Where(r => r.Status == "blocked"))
+        {
+            r.Vetting.Should().MatchRegex("(?i)(403|user-agent|bot|wall|no durable|no stable|by hand|manual)",
+                $"line {r.LineNumber} ({r.Id}): say what blocks the fetch, not merely that something does");
+        }
+    }
+
+    /// <summary>
+    /// The grounds an exclusion may rest on. This list is the taxonomy, and the
+    /// manifest header states the same one — a gate that recognised a narrower
+    /// set than the grounds that actually arise would push an author to pad the
+    /// prose until the regex matched, which is worse than no gate.
+    /// </summary>
+    private const string ExclusionGrounds =
+        "(?i)(victim|private individual|identif|minor" +           // who it would expose
+        "|sealed|protective order|SSI|classified|controlled" +      // what it still is
+        "|terms|robots" +                                           // how it may be fetched
+        "|no verifiable|no stable|no reputable|no durable)";        // whether it can be sourced
+
+    [Fact]
     public void AnExcludedRowSaysWhyAndIsNeverDownloadable()
     {
         foreach (var r in Rows().Where(r => r.Status == "excluded"))
         {
-            r.Vetting.Should().MatchRegex("(?i)(victim|private individual|identif|minor|sealed|terms|robots)",
+            r.Vetting.Should().MatchRegex(ExclusionGrounds,
                 $"line {r.LineNumber} ({r.Id}): an exclusion names the ground it was excluded on");
             r.TruthUrl.Should().Be("-",
                 $"line {r.LineNumber} ({r.Id}): an excluded document gets no ground-truth pointer either");

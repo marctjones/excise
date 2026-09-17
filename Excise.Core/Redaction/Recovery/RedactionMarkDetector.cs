@@ -118,10 +118,22 @@ public static class RedactionMarkDetector
         }
 
         var pageArea = Math.Max(1e-6, page.CropBox.Width * page.CropBox.Height);
-        var fill = new Rgb(1, 1, 1);   // §8.6.8: the initial colour is black, but a
-                                       // producer that never sets one is not drawing
-                                       // a redaction; white keeps the default inert.
-        var fillSet = false;
+        // §8.6.8: the initial fill colour IS black, and a producer that draws a
+        // redaction bar without setting one is relying on exactly that.
+        //
+        // ⚠️ This used to start WHITE, with `fillSet` skipping any fill drawn
+        // before a colour operator, on the reasoning that "a producer that never
+        // sets one is not drawing a redaction". That was assumed, not measured,
+        // and it is false on the most famous failed redaction there is: every
+        // black bar in the Manafort breach-response filing (D.D.C. 1:17-cr-00201
+        // #471, 2019-01-08) is `x y w -h re f` with no colour operator in scope,
+        // and excise reported ZERO marks on a document whose bars are plainly
+        // visible and whose text pdftotext reads straight out (#1617).
+        //
+        // What keeps the furniture out is SIZE, not the colour operator: the
+        // same file's text underlines are 0.48-1.2pt tall and MinSidePt already
+        // rejects them, while the bars are 13.8pt.
+        var fill = new Rgb(0, 0, 0);
 
         foreach (var op in ops)
         {
@@ -131,16 +143,13 @@ public static class RedactionMarkDetector
                 {
                     var v = op.GetNumber(0);
                     fill = new Rgb(v, v, v);
-                    fillSet = true;
                     break;
                 }
                 case "rg" when op.Operands.Count >= 3:
                     fill = new Rgb(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2));
-                    fillSet = true;
                     break;
                 case "k" when op.Operands.Count >= 4:
                     fill = FromCmyk(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2), op.GetNumber(3));
-                    fillSet = true;
                     break;
                 case "sc":
                 case "scn":
@@ -151,7 +160,6 @@ public static class RedactionMarkDetector
                     if (TryReadComponents(op, out var scn))
                     {
                         fill = scn;
-                        fillSet = true;
                     }
                     break;
                 case "Do":
@@ -179,7 +187,7 @@ public static class RedactionMarkDetector
                 case "b":
                 case "b*":
                 {
-                    if (!fillSet || op.BoundingBox is not { } box) break;
+                    if (op.BoundingBox is not { } box) break;
                     if (Luminance(fill) > DarkLuminance) break;
                     var r = Transform(box, outer).Normalize();
                     if (r.Width < MinSidePt || r.Height < MinSidePt) break;

@@ -102,7 +102,14 @@ public static class HiddenTextDetector
 
         var ctm = Matrix23.Identity;
         var ctmStack = new Stack<Matrix23>();
-        var fillRgb = new Rgb(1, 1, 1); // white — default non-obstructive
+        // §8.6.8: the initial fill colour is BLACK. Starting white here made a
+        // bar drawn before any colour operator read as non-obstructive, so text
+        // under it was never reported hidden — the leak-detection half of the
+        // same wrong assumption fixed in RedactionMarkDetector (#1617). Measured
+        // on D.D.C. 1:17-cr-00201 #471 (Manafort, 2019-01-08), whose bars are
+        // `x y w -h re f` with no colour operator in scope: excise saw nothing
+        // under bars that are plainly visible and whose text pdftotext reads.
+        var fillRgb = new Rgb(0, 0, 0);
         var currentPath = new List<PdfRectangle>();
         var finder = new LetterFinder();
 
