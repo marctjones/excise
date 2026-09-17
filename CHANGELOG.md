@@ -20,9 +20,9 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   are still released with it (#1551).
 - **On macOS, excise ignored PDFs opened from Finder** (#1585). Double-click,
   "Open With" and `open -a` did nothing, whether excise was already running or
-  was started by the open. With Avalonia 12, those requests arrive through an
-  application feature, and excise only looked for them on the desktop
-  lifetime, where they no longer arrive. So excise never received them. It now
+  was started by the open. Avalonia delivers those requests through an
+  application feature, but excise only looked for them on the desktop
+  lifetime, which never carries them. So excise never received them. It now
   gets them from the application feature, and each PDF opens the way the Open
   Documents In preference says.
 - **A failed open left the previous document's attachments listed** (#1563),
