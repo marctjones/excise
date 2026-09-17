@@ -39,6 +39,14 @@ public enum RedactionMarkKind
     ShapeAnnotation,
 
     /// <summary>
+    /// A dark filled rectangle inside a Form XObject the page invokes with
+    /// <c>Do</c> (#1606). Distinguished from <see cref="FilledBox"/> because
+    /// the hidden-text detector walks the PAGE content stream only, so text
+    /// under this kind of box is nobody else's to recover.
+    /// </summary>
+    FormXObjectBox,
+
+    /// <summary>
     /// A hole where content used to be: a run of missing glyphs between
     /// surviving ones, with no box drawn over it. Inferred from a channel
     /// (the width residue), not painted on the page.

@@ -171,6 +171,36 @@ internal static class RecoveryFixtureBuilder
     }
 
     /// <summary>
+    /// #1606 — the covering box lives inside a Form XObject the page invokes
+    /// with Do. The page content stream holds the text and the Do, and nothing
+    /// else; the box is one level down.
+    /// </summary>
+    internal static byte[] TextUnderBoxInFormXObject(
+        string text, double x = 72, double y = 700, double fontSize = 14)
+    {
+        var width = text.Length * fontSize * 0.78 + 6;
+        // The form draws the box in its OWN space; /Matrix translates it onto
+        // the text, so a detector that ignores the matrix lands in the wrong
+        // place and finds nothing.
+        var formContent = string.Create(CultureInfo.InvariantCulture,
+            $"0 0 0 rg 0 0 {F(width)} {F(fontSize + 3)} re f\n");
+        var formBytes = Encoding.ASCII.GetBytes(formContent);
+
+        var content = string.Create(CultureInfo.InvariantCulture,
+            $"BT /F1 {fontSize} Tf {x} {y} Td ({text}) Tj ET\n" +
+            $"q /Fx0 Do Q\n");
+
+        var extraObjects = new List<Obj>
+        {
+            new($"<< /Type /XObject /Subtype /Form /BBox [0 0 {F(width)} {F(fontSize + 3)}] " +
+                $"/Matrix [1 0 0 1 {F(x - 2)} {F(y - 3)}] /Length {formBytes.Length} >>",
+                formBytes),
+        };
+        return Build(content, extraObjects: extraObjects,
+            resourcesExtra: "/XObject << /Fx0 7 0 R >>");
+    }
+
+    /// <summary>
     /// #1608 — a page drawing a REPLACEMENT image while the same-size original
     /// stays in the file, referenced by nothing. The shape of an editor that
     /// swaps an image rather than removing it.

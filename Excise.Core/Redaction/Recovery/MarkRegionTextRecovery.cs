@@ -56,7 +56,8 @@ public static class MarkRegionTextRecovery
         var found = new List<MarkRegionText>();
         foreach (var byPage in marks
                      .Where(m => m.Kind is RedactionMarkKind.RedactAnnotation
-                                        or RedactionMarkKind.ShapeAnnotation)
+                                        or RedactionMarkKind.ShapeAnnotation
+                                        or RedactionMarkKind.FormXObjectBox)
                      .GroupBy(m => m.PageNumber))
         {
             IReadOnlyList<Text.Letter> letters;
@@ -98,6 +99,8 @@ public static class MarkRegionTextRecovery
             "text inside an unapplied /Redact annotation — marked for redaction, never removed",
         RedactionMarkKind.ShapeAnnotation =>
             "text under an annotation-drawn box — the page content was never touched",
+        RedactionMarkKind.FormXObjectBox =>
+            "text under a box inside a Form XObject — the page-level walk does not descend into it",
         _ => "text inside a redaction mark",
     };
 

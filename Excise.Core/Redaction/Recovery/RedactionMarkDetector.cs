@@ -47,6 +47,12 @@ public static class RedactionMarkDetector
     /// <summary>Smaller than this in either dimension is a rule or a glyph-scale artefact.</summary>
     private const double MinSidePt = 2.0;
 
+    /// <summary>Form XObjects nest, and a self-referencing one is a real corpus shape.</summary>
+    private const int MaxFormDepth = 8;
+
+    /// <summary>ContentTransform declares no identity; this is it.</summary>
+    private static readonly ContentTransform Identity = new(1, 0, 0, 1, 0, 0);
+
     /// <summary>Scan every page.</summary>
     public static IReadOnlyList<RedactionMark> Detect(PdfDocument document)
     {
@@ -80,11 +86,27 @@ public static class RedactionMarkDetector
 
     private static void CollectContentFills(
         PdfPage page, List<(PdfRectangle, RedactionMarkKind, string)> found)
+        => CollectFills(page, null, Identity, found, depth: 0);
+
+    /// <summary>
+    /// Dark fills in a content stream, in PAGE space. <paramref name="outer"/>
+    /// is the transform mapping this stream's coordinates onto the page —
+    /// identity for the page's own content, the composed Do CTM × /Matrix for a
+    /// Form XObject.
+    /// </summary>
+    private static void CollectFills(
+        PdfPage page,
+        PdfStream? form,
+        ContentTransform outer,
+        List<(PdfRectangle, RedactionMarkKind, string)> found,
+        int depth)
     {
         IReadOnlyList<ContentOperator> ops;
         try
         {
-            ops = page.GetContentStream().Operators;
+            ops = form == null
+                ? page.GetContentStream().Operators
+                : new ContentStreamParser(form.DecodedData, page).Parse().Operators;
         }
         catch
         {
@@ -132,6 +154,23 @@ public static class RedactionMarkDetector
                         fillSet = true;
                     }
                     break;
+                case "Do":
+                {
+                    // #1606: a covering box drawn INSIDE a Form XObject. The
+                    // page content stream holds only the Do, so without
+                    // recursing the box is not a mark and the text under it
+                    // reads as a redaction that held. Text inside a form is
+                    // already in page.Letters (TextExtractor recurses), so
+                    // finding the MARK is all that is missing.
+                    if (op.Operands.Count == 0) break;
+                    var xname = op.GetName(0);
+                    if (page.GetXObject(xname) is not PdfStream nested) break;
+                    if (nested.GetNameOrNull("Subtype") != "Form") break;
+                    if (op.GraphicsTransform is not { } ctm) break;
+                    CollectFormFills(page, nested, ctm, pageArea, found, depth);
+                    break;
+                }
+
                 case "f":
                 case "F":
                 case "f*":
@@ -142,15 +181,67 @@ public static class RedactionMarkDetector
                 {
                     if (!fillSet || op.BoundingBox is not { } box) break;
                     if (Luminance(fill) > DarkLuminance) break;
-                    var r = box.Normalize();
+                    var r = Transform(box, outer).Normalize();
                     if (r.Width < MinSidePt || r.Height < MinSidePt) break;
                     if (r.Width * r.Height > MaxPageAreaFraction * pageArea) break;
-                    found.Add((r, RedactionMarkKind.FilledBox,
-                        $"{DescribeColor(fill)} filled rectangle"));
+                    found.Add((r,
+                        depth == 0 ? RedactionMarkKind.FilledBox : RedactionMarkKind.FormXObjectBox,
+                        depth == 0
+                            ? $"{DescribeColor(fill)} filled rectangle"
+                            : $"{DescribeColor(fill)} filled rectangle inside a Form XObject"));
                     break;
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// #1606 — recurse into a Form XObject, composing its <c>/Matrix</c>
+    /// (§8.10.1) with the CTM in force at the <c>Do</c>. Bounded: forms nest,
+    /// and a self-referencing form is a real corpus shape.
+    /// </summary>
+    private static void CollectFormFills(
+        PdfPage page,
+        PdfStream form,
+        ContentTransform ctm,
+        double pageArea,
+        List<(PdfRectangle, RedactionMarkKind, string)> found,
+        int depth)
+    {
+        if (depth >= MaxFormDepth) return;
+
+        var matrix = form.GetOptional("Matrix") is PdfArray m && m.Count == 6
+            ? new ContentTransform(
+                m.GetNumber(0), m.GetNumber(1), m.GetNumber(2),
+                m.GetNumber(3), m.GetNumber(4), m.GetNumber(5))
+            : Identity;
+
+        try { CollectFills(page, form, Compose(matrix, ctm), found, depth + 1); }
+        catch { /* a form whose content will not parse contributes no marks */ }
+    }
+
+    /// <summary>Matrix product: <paramref name="inner"/> then <paramref name="outer"/>.</summary>
+    private static ContentTransform Compose(ContentTransform inner, ContentTransform outer) => new(
+        inner.A * outer.A + inner.B * outer.C,
+        inner.A * outer.B + inner.B * outer.D,
+        inner.C * outer.A + inner.D * outer.C,
+        inner.C * outer.B + inner.D * outer.D,
+        inner.E * outer.A + inner.F * outer.C + outer.E,
+        inner.E * outer.B + inner.F * outer.D + outer.F);
+
+    /// <summary>Axis-aligned bounds of a rectangle mapped through a transform.</summary>
+    private static PdfRectangle Transform(PdfRectangle rect, ContentTransform m)
+    {
+        if (m.Equals(Identity)) return rect;
+        var r = rect.Normalize();
+        var corners = new[]
+        {
+            m.TransformPoint(r.Left, r.Bottom), m.TransformPoint(r.Right, r.Bottom),
+            m.TransformPoint(r.Left, r.Top), m.TransformPoint(r.Right, r.Top),
+        };
+        return new PdfRectangle(
+            corners.Min(c => c.X), corners.Min(c => c.Y),
+            corners.Max(c => c.X), corners.Max(c => c.Y));
     }
 
     private static void CollectAnnotations(

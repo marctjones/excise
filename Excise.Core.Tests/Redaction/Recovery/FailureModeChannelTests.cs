@@ -100,6 +100,47 @@ public class FailureModeChannelTests
     }
 
     [Fact]
+    public void BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered()
+    {
+        // #1606, the last registry gap. The page content stream holds the text
+        // and a Do; the covering box is one level down, so without recursing
+        // there is no mark and the text reads as a redaction that held.
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool is not on PATH");
+
+        var bytes = RecoveryFixtureBuilder.TextUnderBoxInFormXObject("FORMCOVERED");
+        MutoolTextOracle.ExtractAllPages(bytes).Should().Contain("FORMCOVERED",
+            "the text is in the page content stream, untouched");
+
+        using var doc = PdfDocument.Open(bytes);
+        var report = RecoveryScanner.Scan(doc);
+
+        report.Marks.Should().Contain(m => m.Mark.Description.Contains("Form XObject"),
+            "the box inside the form is recognised as a redaction mark");
+        report.AllFindings.Should().Contain(
+            f => f.Text != null && f.Text.Contains("FORMCOVERED"));
+    }
+
+    [Fact]
+    public void AFormXObjectWithNoDarkFill_ProducesNoMark()
+    {
+        // Negative control: forms are ubiquitous (headers, logos, stamps), and
+        // a recursion that treated every form as a mark would bury the report.
+        var bytes = RecoveryFixtureBuilder.Build(
+            "BT /F1 14 Tf 72 700 Td (PUBLIC) Tj ET\nq /Fx0 Do Q\n",
+            extraObjects: new[]
+            {
+                new RecoveryFixtureBuilder.Obj(
+                    "<< /Type /XObject /Subtype /Form /BBox [0 0 100 20] /Length 26 >>",
+                    System.Text.Encoding.ASCII.GetBytes("1 1 1 rg 0 0 100 20 re f\n ")),
+            },
+            resourcesExtra: "/XObject << /Fx0 7 0 R >>");
+
+        using var doc = PdfDocument.Open(bytes);
+        RecoveryScanner.Scan(doc).MarkCount.Should().Be(0,
+            "a white fill inside a form is page furniture, not a redaction");
+    }
+
+    [Fact]
     public void OrphanedOriginalImage_IsReportedAsAPresentOnlyLeak()
     {
         // #1608. The page draws a blacked-out replacement; the original is

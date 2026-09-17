@@ -90,6 +90,7 @@ internal static class UnredactRecoveryMapper
         RedactionMarkKind.FilledBox => "filled-box",
         RedactionMarkKind.RedactAnnotation => "redact-annotation",
         RedactionMarkKind.ShapeAnnotation => "shape-annotation",
+        RedactionMarkKind.FormXObjectBox => "form-xobject-box",
         RedactionMarkKind.EmptiedRegion => "emptied-region",
         _ => "unknown",
     };

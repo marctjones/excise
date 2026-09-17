@@ -42,10 +42,10 @@
       "id": "box-inside-form-xobject",
       "description": "Text and/or the covering box live inside a Form XObject the page invokes with Do.",
       "producers": ["LaTeX", "InDesign", "form flatteners"],
-      "channel": "hidden-text",
-      "status": "gap",
-      "issue": 1606,
-      "note": "HiddenTextDetector's own docstring defers Form XObject recursion. FormXObjectFlattener exists on the redaction side and is not used by the audit."
+      "channel": "mark-region",
+      "status": "covered",
+      "evidence": "FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
+      "note": "Closed by #1606. RedactionMarkDetector now descends into Form XObjects, composing the form's /Matrix (§8.10.1) with the CTM at the Do, and emits a distinct FormXObjectBox kind. Text inside a form was never the problem — TextExtractor already recurses, so page.Letters has it; finding the MARK was what was missing. HiddenTextDetector still does not recurse, and does not need to: the mark-region channel covers this kind precisely because the page-level walk cannot."
     },
     {
       "id": "box-light-or-low-contrast",
