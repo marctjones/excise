@@ -374,9 +374,7 @@ internal static partial class PrintDlgExInterop
     internal const uint PD_EXCL_COPIESANDCOLLATE = 0x00000100 | 0x00008000;
 
     internal const uint START_PAGE_GENERAL = 0xFFFFFFFF;
-    internal const uint PD_RESULT_CANCEL = 0;
     internal const uint PD_RESULT_PRINT = 1;
-    internal const uint PD_RESULT_APPLY = 2;
 
     // GetDeviceCaps indices (wingdi.h).
     internal const int HORZRES = 8;

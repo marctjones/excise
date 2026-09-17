@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "bfb49abec4618348c6d631b42b14365844df83492f213b5dcab0841877fde9ce",
+  "sourceFingerprint": "ab7dfa58f007bd03f3ef69561bb4fa0be4c99905615bdac95fee212c21e61f2d",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -15653,6 +15653,126 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Differential/ReduceFileSizeOracleTests.cs::ReduceFileSizeOracleTests.Lossless_RendersPixelIdenticalToTheOriginal",
+      "path": "Excise.Rendering.Tests/Differential/ReduceFileSizeOracleTests.cs",
+      "class": "ReduceFileSizeOracleTests",
+      "method": "Lossless_RendersPixelIdenticalToTheOriginal",
+      "line": 61,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/ReduceFileSizeOracleTests.cs::ReduceFileSizeOracleTests.Standard_DownsampledJpeg_RendersCloseToTheOriginal",
+      "path": "Excise.Rendering.Tests/Differential/ReduceFileSizeOracleTests.cs",
+      "class": "ReduceFileSizeOracleTests",
+      "method": "Standard_DownsampledJpeg_RendersCloseToTheOriginal",
+      "line": 95,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "images",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/ReduceFileSizeOracleTests.cs::ReduceFileSizeOracleTests.RedactionThenReduceFileSize_KeepsTheTermGone",
+      "path": "Excise.Rendering.Tests/Differential/ReduceFileSizeOracleTests.cs",
+      "class": "ReduceFileSizeOracleTests",
+      "method": "RedactionThenReduceFileSize_KeepsTheTermGone",
+      "line": 139,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Differential/ReferenceProcessResourcesTests.cs::ReferenceProcessResourcesTests.Capture_CurrentProcess_ReportsNonNegativeResourceValues",
       "path": "Excise.Rendering.Tests/Differential/ReferenceProcessResourcesTests.cs",
       "class": "ReferenceProcessResourcesTests",
@@ -21297,6 +21417,483 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs::XfaLayoutOracleTests.BoundValue_Caption_AndDraw_SitWhereTheTemplatePutsThem",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs",
+      "class": "XfaLayoutOracleTests",
+      "method": "BoundValue_Caption_AndDraw_SitWhereTheTemplatePutsThem",
+      "line": 69,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs::XfaLayoutOracleTests.RepeatingRows_FlowAcrossPages_InDataOrder",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs",
+      "class": "XfaLayoutOracleTests",
+      "method": "RepeatingRows_FlowAcrossPages_InDataOrder",
+      "line": 103,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs::XfaLayoutOracleTests.TableCells_StartAtTheirColumnOffsets",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs",
+      "class": "XfaLayoutOracleTests",
+      "method": "TableCells_StartAtTheirColumnOffsets",
+      "line": 132,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs::XfaLayoutOracleTests.ExclusiveGroup_MarksTheMemberTheDataSelects",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs",
+      "class": "XfaLayoutOracleTests",
+      "method": "ExclusiveGroup_MarksTheMemberTheDataSelects",
+      "line": 154,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs::XfaLayoutOracleTests.PasswordField_ShowsMaskCharacters_NotTheValue",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs",
+      "class": "XfaLayoutOracleTests",
+      "method": "PasswordField_ShowsMaskCharacters_NotTheValue",
+      "line": 180,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "images",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs::XfaLayoutOracleTests.RichText_KeepsParagraphs",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs",
+      "class": "XfaLayoutOracleTests",
+      "method": "RichText_KeepsParagraphs",
+      "line": 195,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs::XfaLayoutOracleTests.LaidOutPages_RenderWithInk_InAnIndependentRenderer",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutOracleTests.cs",
+      "class": "XfaLayoutOracleTests",
+      "method": "LaidOutPages_RenderWithInk_InAnIndependentRenderer",
+      "line": 211,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutRedactionTests.cs::XfaLayoutRedactionTests.AreaRedaction_RemovesTheXfaForm",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutRedactionTests.cs",
+      "class": "XfaLayoutRedactionTests",
+      "method": "AreaRedaction_RemovesTheXfaForm",
+      "line": 83,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutRedactionTests.cs::XfaLayoutRedactionTests.TextRedaction_RemovesTheXfaForm_AndSaysSo",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutRedactionTests.cs",
+      "class": "XfaLayoutRedactionTests",
+      "method": "TextRedaction_RemovesTheXfaForm_AndSaysSo",
+      "line": 99,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutRedactionTests.cs::XfaLayoutRedactionTests.TextRedaction_WithCarriersOff_StillRemovesTheXfaForm",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutRedactionTests.cs",
+      "class": "XfaLayoutRedactionTests",
+      "method": "TextRedaction_WithCarriersOff_StillRemovesTheXfaForm",
+      "line": 114,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutRedactionTests.cs::XfaLayoutRedactionTests.ReopeningARedactedForm_DoesNotLayItOutAgain",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutRedactionTests.cs",
+      "class": "XfaLayoutRedactionTests",
+      "method": "ReopeningARedactedForm_DoesNotLayItOutAgain",
+      "line": 128,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/XfaLayoutRedactionTests.cs::XfaLayoutRedactionTests.RedactingAnOrdinaryXfaDocument_KeepsItsXfa_AsBefore",
+      "path": "Excise.Rendering.Tests/Differential/XfaLayoutRedactionTests.cs",
+      "class": "XfaLayoutRedactionTests",
+      "method": "RedactingAnOrdinaryXfaDocument_KeepsItsXfa_AsBefore",
+      "line": 141,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/EncodedImageDecoderTests.cs::EncodedImageDecoderTests.EmptyAndMalformedPayloadsAreRefused",
       "path": "Excise.Rendering.Tests/EncodedImageDecoderTests.cs",
       "class": "EncodedImageDecoderTests",
@@ -26406,6 +27003,98 @@
         {
           "capability": "pdf.17.graphics.patterns-shadings",
           "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/PdfImageCodecsTests.cs::PdfImageCodecsTests.Encode_ProducesAJpegAnIndependentDecoderReads",
+      "path": "Excise.Rendering.Tests/PdfImageCodecsTests.cs",
+      "class": "PdfImageCodecsTests",
+      "method": "Encode_ProducesAJpegAnIndependentDecoderReads",
+      "line": 29,
+      "xunitKind": "theory",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/PdfImageCodecsTests.cs::PdfImageCodecsTests.Decode_RoundTripsTheCodecsOwnOutput",
+      "path": "Excise.Rendering.Tests/PdfImageCodecsTests.cs",
+      "class": "PdfImageCodecsTests",
+      "method": "Decode_RoundTripsTheCodecsOwnOutput",
+      "line": 49,
+      "xunitKind": "theory",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/PdfImageCodecsTests.cs::PdfImageCodecsTests.Decode_RefusesACodestreamThatDisagreesWithTheDictionary",
+      "path": "Excise.Rendering.Tests/PdfImageCodecsTests.cs",
+      "class": "PdfImageCodecsTests",
+      "method": "Decode_RefusesACodestreamThatDisagreesWithTheDictionary",
+      "line": 65,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/PdfImageCodecsTests.cs::PdfImageCodecsTests.Decode_ReadsAnAdobeRgbJpegWithoutAColorTransform",
+      "path": "Excise.Rendering.Tests/PdfImageCodecsTests.cs",
+      "class": "PdfImageCodecsTests",
+      "method": "Decode_ReadsAnAdobeRgbJpegWithoutAColorTransform",
+      "line": 76,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
             "parse",
             "render"
           ]
@@ -41086,15 +41775,15 @@
     }
   ],
   "summary": {
-    "testMethods": 1139,
+    "testMethods": 1158,
     "facets": {
-      "content-streams": 330,
+      "content-streams": 333,
       "content-strings-and-text": 7,
-      "differential-rendering": 594,
+      "differential-rendering": 609,
       "fonts": 203,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 315,
-      "images": 192,
+      "images": 198,
       "page-group-backdrop": 3,
       "renderer-integration-general": 31,
       "renderer-performance-and-lifetime": 12,
@@ -41102,8 +41791,8 @@
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 7,
-      "pdf.17.content.streams:parse": 337,
-      "pdf.17.content.streams:render": 739,
+      "pdf.17.content.streams:parse": 340,
+      "pdf.17.content.streams:render": 754,
       "pdf.17.content.text-state:extract": 7,
       "pdf.17.content.text-state:parse": 7,
       "pdf.17.content.text-state:render": 7,
@@ -41111,10 +41800,10 @@
       "pdf.17.graphics.color:render": 53,
       "pdf.17.graphics.fonts:extract": 203,
       "pdf.17.graphics.fonts:parse": 203,
-      "pdf.17.graphics.fonts:render": 736,
-      "pdf.17.graphics.images:extract": 192,
-      "pdf.17.graphics.images:parse": 192,
-      "pdf.17.graphics.images:render": 719,
+      "pdf.17.graphics.fonts:render": 751,
+      "pdf.17.graphics.images:extract": 198,
+      "pdf.17.graphics.images:parse": 198,
+      "pdf.17.graphics.images:render": 738,
       "pdf.17.graphics.paths-painting:parse": 315,
       "pdf.17.graphics.paths-painting:render": 315,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -41122,7 +41811,7 @@
       "pdf.17.graphics.state:parse": 315,
       "pdf.17.graphics.state:render": 315,
       "pdf.17.transparency.model:parse": 80,
-      "pdf.17.transparency.model:render": 628
+      "pdf.17.transparency.model:render": 643
     },
     "unclassified": 31,
     "allTestsMapped": true
