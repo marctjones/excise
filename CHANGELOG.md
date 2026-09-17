@@ -253,6 +253,12 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   dump, and `RedactionBenchmarkRunner` redacts every trap with each tool
   (`redaction-carrier-traps` corpus) and records which carriers the unredact
   channel still reads in the output (`unredactCarriers`, `carrier-recovery`).
+  An opt-in excise-only survey (`CARRIER_TRAP_SURVEY=1`,
+  `CarrierTrapExciseRedactionSurveyTests`) found `RedactText` leaving the term
+  in 12 of 47 traps, each confirmed with qpdf and mutool: field/annotation
+  JavaScript, `/RV`, hidden-widget appearances and `/Launch` targets (#1581);
+  attachment name-tree keys, page `/AF` files and PDFs nested in attachments
+  (#1582); custom `/Info` keys, structure-element `/T` and `/PieceInfo` (#1583).
 - **Several documents at once, in separate windows** (#1463, #1551–#1553).
   Opening a PDF while a window already shows one now opens it in a new
   window (File → Open, Open Recent, drag and drop, Finder or Explorer, and the

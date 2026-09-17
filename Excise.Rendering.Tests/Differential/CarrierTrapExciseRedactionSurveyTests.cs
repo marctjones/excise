@@ -16,6 +16,7 @@ namespace Excise.Rendering.Tests.Differential;
 /// and the unredact carrier channel (per-carrier attribution). A SURVEY: it
 /// prints the table and asserts only that it ran. The cross-tool version is
 /// <see cref="RedactionBenchmarkRunner"/>'s <c>redaction-carrier-traps</c> corpus.
+/// First run (2026-09-17): 12 of 47 traps leaked, filed as #1581, #1582, #1583.
 /// </summary>
 public sealed class CarrierTrapExciseRedactionSurveyTests
 {
