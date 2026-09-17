@@ -373,7 +373,16 @@ public static class PdfDocumentSanitizer
             // leaked. These are SEMANTIC values, so cut without trimming, exactly
             // as #1038 does — "Fallback SECRET" becomes "Fallback ", not
             // "Fallback" (and a second pass over an already-cut value is a no-op).
-            foreach (var key in new[] { "V", "DV" })
+            //
+            // #1581/#1586 adds /RV, the RICH-TEXT value (§12.7.4.3), for the
+            // same reason one step further on. The area path now scrubs it too,
+            // but the area path could not reach the measured trap at all: the
+            // widget sat at [72 600 272 620] while the term was drawn at y 680,
+            // so no match box ever overlapped it — and /RV needs no /V, so
+            // nothing else on the field drew excise's attention either. mutool
+            // DRAWS /RV, which is the part that makes it not merely a file-bytes
+            // leak: the redacted name was still on the page in another reader.
+            foreach (var key in new[] { "V", "DV", "RV" })
             {
                 if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
                     continue;
@@ -409,7 +418,9 @@ public static class PdfDocumentSanitizer
         {
             if (document.Resolve(stack.Pop()) is not PdfDictionary node || !visited.Add(node))
                 continue;
-            foreach (var key in new[] { "ActualText", "Alt", "E" })
+            // #1583: /T, the element title, is in this list too — see
+            // StructureTreeRedactionScrubber.StructureElementTextCarriers.
+            foreach (var key in Excise.Core.Text.Segmentation.StructureTreeRedactionScrubber.StructureElementTextCarriers)
             {
                 if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
                     continue;

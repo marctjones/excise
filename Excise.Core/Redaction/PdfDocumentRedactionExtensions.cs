@@ -111,6 +111,7 @@ public static class PdfDocumentRedactionExtensions
             options.WholeWord,
             options.Width == WidthPolicy.OvershootPreserveLayout,
             options.KeepAttachments,
+            options,
             depth: 0);
     }
 
@@ -137,7 +138,13 @@ public static class PdfDocumentRedactionExtensions
         bool overshootBox = false)   // #1189 — widen the box so it stops measuring the run
         => RedactTextCore(document, text, caseSensitive, strategy, drawBlackRect, includeHiddenLayers,
             scrubDocumentCarriers, closeWidth, boxColor, carriers, progress, carrierPolicy, wholeWord,
-            overshootBox, keepAttachments: false, depth: 0);
+            overshootBox, keepAttachments: false,
+            // #1586: this overload gets the Standard profile, like every other
+            // path. That CHANGES ITS BEHAVIOUR — scripts, /PieceInfo,
+            // thumbnails, hidden layers and the metadata packet now go — and
+            // that is the point: a redaction API whose safe form is opt-in is
+            // how #896 happened.
+            profileOptions: RedactionOptions.Default, depth: 0);
 
     private static RedactionReport RedactTextCore(
         PdfDocument document,
@@ -155,6 +162,11 @@ public static class PdfDocumentRedactionExtensions
         bool wholeWord,
         bool overshootBox,
         bool keepAttachments,
+        // #1586: the OUTPUT PROFILE removals. Threaded as the whole record
+        // rather than another dozen bools because the stripper reads the flags
+        // directly, and because a caller that forgets one gets Standard — the
+        // safe value — instead of silently getting less.
+        RedactionOptions profileOptions,
         int depth)
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
@@ -171,6 +183,7 @@ public static class PdfDocumentRedactionExtensions
                 Pages = pageResults,
                 Carriers = carrierResults,
                 WholeWord = wholeWord,
+                Profile = profileOptions.Profile,
             };
 
         int totalMatches = 0;
@@ -190,7 +203,8 @@ public static class PdfDocumentRedactionExtensions
                 document, new[] { text }, caseSensitive, wholeWord, depth,
                 (nested, term) => RedactTextCore(nested, term, caseSensitive, strategy, drawBlackRect,
                     includeHiddenLayers, scrubDocumentCarriers, closeWidth, boxColor, carriers, null,
-                    carrierPolicy, wholeWord, overshootBox, keepAttachments: true, depth + 1));
+                    carrierPolicy, wholeWord, overshootBox, keepAttachments: true,
+                    profileOptions, depth + 1));
         }
         else
         {
@@ -212,6 +226,12 @@ public static class PdfDocumentRedactionExtensions
             if (removedAttachments.Count > 0)
                 document.RedactionLedger.RecordRemovedAttachments(removedAttachments);
         }
+
+        // #1586: the output-profile removals. Before the page loop, so hidden
+        // optional-content the profile deletes is not also walked for glyph
+        // removal, and before the carrier term-scrub below, so a carrier this
+        // deletes outright is not reported as having been scrubbed by term.
+        var profileRemovals = RedactionFeatureStripper.Apply(document, profileOptions);
 
         var pageCount = document.PageCount;
         progress?.Invoke(0, pageCount);
@@ -513,6 +533,10 @@ public static class PdfDocumentRedactionExtensions
             ImageRegionsRedacted = imageCounts.RegionEdited,
             ImagesDroppedWhole = imageCounts.RemovedWhole,
             HyphenatedCandidates = hyphenCandidates,
+            Profile = profileOptions.Profile,
+            Removals = profileRemovals,
+            AccessibilityAndInteractivityRemoved =
+                RedactionFeatureStripper.DestroysAccessibility(profileOptions),
         };
     }
 

@@ -136,11 +136,41 @@ public static class PdfPageRedactionExtensions
     /// <see cref="RedactionOptions.KeepAttachments"/>) apply; the rest are RedactText-only.
     /// </summary>
     public static void RedactArea(this PdfPage page, PdfRectangle area, RedactionOptions options)
+        => page.RedactAreaWithReport(area, options);
+
+    /// <summary>
+    /// <see cref="RedactArea(PdfPage, PdfRectangle, RedactionOptions)"/>, and
+    /// tell the caller what the output profile removed (#1586).
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Why this exists.</b> The area path had no return channel at
+    /// all, so the profile removals — every script, the metadata packet, a
+    /// hidden layer — happened with nothing able to say so. A front end that
+    /// cannot report a removal it made on the user's behalf is the same shape
+    /// as a carrier that silently keeps a term.</para>
+    /// <para>⚠️ <b>The report is not a match report.</b> Area redaction has no
+    /// term, so <see cref="RedactionReport.Term"/> is empty and
+    /// <see cref="RedactionReport.Pages"/>, <see cref="RedactionReport.MatchesLocated"/>
+    /// and <see cref="RedactionReport.VerifiedRemovals"/> are all zero. Those
+    /// zeros mean "not applicable", not "nothing was redacted" — the geometry
+    /// the caller asked for was rewritten regardless. Read
+    /// <see cref="RedactionReport.Removals"/> and
+    /// <see cref="RedactionReport.Carriers"/>.</para>
+    /// </remarks>
+    public static RedactionReport RedactAreaWithReport(
+        this PdfPage page, PdfRectangle area, RedactionOptions options)
     {
+        if (page == null) throw new System.ArgumentNullException(nameof(page));
         if (options == null) throw new System.ArgumentNullException(nameof(options));
+        // #1586: the profile removals go first, for the same reasons as on the
+        // RedactText path — hidden optional content the profile deletes is not
+        // then walked for glyph removal, and the #1507 metadata strip runs
+        // before #1499's per-widget appearance decision reads TargetsPdfA.
+        var removals = RedactionFeatureStripper.Apply(page.Document, options);
         page.RedactAreaInternal(area, area, options.Strategy,
             options.ScrubDocumentCarriers, options.CloseWidth,
             removeAttachments: !options.KeepAttachments);
+        return AreaReport(page.Document, options, removals);
     }
 
     public static void RedactArea(
@@ -285,13 +315,49 @@ public static class PdfPageRedactionExtensions
         this PdfPage page,
         System.Collections.Generic.IEnumerable<PdfRectangle> areas,
         RedactionOptions options)
+        => page.RedactAreasWithReport(areas, options);
+
+    /// <summary>
+    /// <see cref="RedactAreas(PdfPage, System.Collections.Generic.IEnumerable{PdfRectangle}, RedactionOptions)"/>,
+    /// and tell the caller what the output profile removed (#1586). See
+    /// <see cref="RedactAreaWithReport"/> for what the report's zero counts
+    /// mean.
+    /// </summary>
+    public static RedactionReport RedactAreasWithReport(
+        this PdfPage page,
+        System.Collections.Generic.IEnumerable<PdfRectangle> areas,
+        RedactionOptions options)
     {
+        if (page == null) throw new System.ArgumentNullException(nameof(page));
         if (options == null) throw new System.ArgumentNullException(nameof(options));
+        var removals = RedactionFeatureStripper.Apply(page.Document, options);
         var list = areas.Select(a => a.Normalize()).ToList();
         page.RedactAreasInternal(list, list, options.Strategy,
             options.ScrubDocumentCarriers, options.CloseWidth,
             removeAttachments: !options.KeepAttachments);
+        return AreaReport(page.Document, options, removals);
     }
+
+    /// <summary>
+    /// The report an area redaction returns: no term, no per-page match
+    /// counts, and the profile removals plus whatever the XFA/attachment
+    /// passes recorded on the document's redaction ledger.
+    /// </summary>
+    private static RedactionReport AreaReport(
+        Excise.Core.Document.PdfDocument document,
+        RedactionOptions options,
+        System.Collections.Generic.IReadOnlyList<RedactedFeatureRemoval> removals)
+        => new()
+        {
+            Term = "",
+            Pages = System.Array.Empty<PageRedactionResult>(),
+            Carriers = System.Array.Empty<CarrierResult>(),
+            Attachments = document.RedactionLedger.RemovedAttachments,
+            Profile = options.Profile,
+            Removals = removals,
+            AccessibilityAndInteractivityRemoved =
+                RedactionFeatureStripper.DestroysAccessibility(options),
+        };
 
     public static void RedactAreas(
         this PdfPage page,
