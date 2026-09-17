@@ -167,6 +167,24 @@ else
     echo "::warning::no SVG rasterizer (rsvg-convert/ImageMagick) or PNG fallback — building .app without a custom icon"
 fi
 
+# LSEnvironment MallocSpaceEfficient=1 (#1496): by default macOS libmalloc
+# keeps freed SMALL (<= ~1 MB) and LARGE blocks dirty in the process
+# footprint, and malloc_zone_pressure_relief releases none of it. Page tiles,
+# composites and render bitmaps are exactly that size, so after closing the
+# 126-page IRS 1040 instructions the app kept ~685 MB (empty launch ~190 MB).
+# With the knob the freed pages leave the footprint (vmmap: resident but not
+# dirty) and the same close measures 278 MB. The knob is honoured by libmalloc but is not in
+# malloc(3) or MallocHelp; if a future macOS ignores it the app just falls
+# back to today's behaviour. Check it still works: after a close, `vmmap
+# --summary <pid>` must show `MALLOC_SMALL (empty)` with 0K dirty.
+# LSEnvironment applies only to LaunchServices launches (Finder, `open`), not
+# to `dotnet run` or executing Contents/MacOS/Excise.App directly (which is
+# how scripts/run-gui-perf-scenarios.sh launches; scripts/reader_bench.py
+# uses `open` and gets the knob).
+# ⚠️ With the knob, the footprint of a document still OPEN reads below its
+# live heap: IRS after paging, vmmap showed 262 MB allocated but 128 MB
+# dirty. Compare open-document footprints only between runs with the same
+# setting. Measured cost: band-render time +4% (IRS) to ~+10% (Altona).
 echo "▶ Writing Info.plist"
 cat > "$BUNDLE/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -194,6 +212,11 @@ ${ICON_PLIST}
     <true/>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.productivity</string>
+    <key>LSEnvironment</key>
+    <dict>
+        <key>MallocSpaceEfficient</key>
+        <string>1</string>
+    </dict>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>
