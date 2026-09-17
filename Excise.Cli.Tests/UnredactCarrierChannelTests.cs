@@ -258,7 +258,12 @@ public class UnredactCarrierChannelTests
 
             using var json = new StringWriter();
             UnredactCommandOutput.Write(outcome, json: true, json, new StringWriter());
-            json.ToString().Should().Contain("\"object\": 6").And.Contain("\"location\": \"field 'name'\"");
+            using (var parsed = System.Text.Json.JsonDocument.Parse(json.ToString()))
+            {
+                var certain = parsed.RootElement.GetProperty("certain")[0];
+                certain.GetProperty("object").GetInt32().Should().Be(6);
+                certain.GetProperty("location").GetString().Should().Be("field 'name'");
+            }
 
             using var human = new StringWriter();
             UnredactCommandOutput.Write(outcome, json: false, human, new StringWriter());

@@ -65,9 +65,9 @@ public static partial class CarrierTextRecovery
 
         var roots = new List<XElement>();
         if (XfaXmlCarrier.TryLoadXml(XfaXmlCarrier.Concatenate(streams), out var combined, out _)
-            && combined.Root is { } root)
+            && combined.Root is { } combinedRoot)
         {
-            roots.Add(root);
+            roots.Add(combinedRoot);
         }
         else
         {

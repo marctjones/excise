@@ -157,7 +157,11 @@ public sealed class CarrierTrapIndependentCorroborationTests : IDisposable
         switch (e.ValueKind)
         {
             case JsonValueKind.Object:
-                foreach (var p in e.EnumerateObject()) Collect(p.Value, p.Name, sb);
+                foreach (var p in e.EnumerateObject())
+                {
+                    sb.Append(p.Name).Append('\n');   // dictionary keys (/Thumb) are property names
+                    Collect(p.Value, p.Name, sb);
+                }
                 break;
             case JsonValueKind.Array:
                 foreach (var item in e.EnumerateArray()) Collect(item, null, sb);

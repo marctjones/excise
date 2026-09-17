@@ -123,12 +123,6 @@ public partial class PdfDocument : IDisposable
     internal int[] SnapshotInUseObjectNumbers() => _objectStore.SnapshotInUseObjectNumbers();
 
     /// <summary>
-    /// The indirect reference whose resolved (cached) object is <paramref name="obj"/>,
-    /// by identity, or null. Linear in the object cache; for diagnostics only.
-    /// </summary>
-    internal PdfReference? GetReferenceTo(PdfObject obj) => _objectStore.GetReferenceTo(obj);
-
-    /// <summary>
     /// The bytes this document was opened from, or null (not seekable, created
     /// in memory, or larger than <paramref name="maxBytes"/>).
     /// </summary>

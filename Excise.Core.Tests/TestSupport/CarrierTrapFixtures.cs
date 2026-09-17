@@ -425,6 +425,9 @@ internal static class CarrierTrapFixtures
     }
 
     private static string Xmp(string properties, string descriptionAttributes = "") =>
+        Stream("/Type /Metadata /Subtype /XML", XmpPacket(properties, descriptionAttributes), compress: false);
+
+    private static string XmpPacket(string properties, string descriptionAttributes) =>
         "<?xpacket begin=\"\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>" +
         "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">" +
         "<rdf:Description rdf:about=\"\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" " +
@@ -458,7 +461,7 @@ internal static class CarrierTrapFixtures
     // ── Low-level assembly ──────────────────────────────────────────────
 
     private static string Stream(string dictEntries, string data, bool compress) =>
-        Latin1(StreamBytes(dictEntries, Encoding.Latin1.GetBytes(data), compress));
+        StreamBytes(dictEntries, Encoding.Latin1.GetBytes(data), compress);
 
     private static string StreamBytes(string dictEntries, byte[] data, bool compress)
     {

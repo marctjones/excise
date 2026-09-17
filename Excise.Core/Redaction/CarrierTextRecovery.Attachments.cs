@@ -69,7 +69,10 @@ public static partial class CarrierTextRecovery
         var f = ReadText(doc, fs, "F");
         var displayName = uf ?? f ?? treeName ?? "(unnamed)";
 
-        c.Text($"{carrier} name", treeName, page, fsObj);
+        // The name-tree KEY lives in the tree node, not in the file
+        // specification, so it is not attributed to the filespec object
+        // (qpdf/mutool corroboration caught that mislabel).
+        c.Text($"{carrier} name", treeName, page, 0);
         c.Text($"{carrier} /UF", uf, page, fsObj);
         if (!string.Equals(f, uf, StringComparison.Ordinal))
             c.Text($"{carrier} /F", f, page, fsObj);
