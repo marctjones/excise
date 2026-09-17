@@ -158,6 +158,13 @@ public partial class MainWindow : Window
         // Add keyboard handler for Ctrl+C
         this.KeyDown += MainWindow_KeyDown;
 
+        // #1554: the tab strip binds to the window's tabs, never to the
+        // session the window shows; a local null stops it inheriting one.
+        DocumentTabStripHost.DataContext = null;
+        // Tunnel: Ctrl+Tab must reach the tabs before keyboard navigation
+        // treats Tab as a focus move.
+        AddHandler(KeyDownEvent, OnTabSwitchKeyDown, RoutingStrategies.Tunnel);
+
         // Subscribe to search highlights changes
         this.DataContextChanged += OnDataContextChanged;
         // #1551: a closed window lets go of its session, so the session's
@@ -193,29 +200,50 @@ public partial class MainWindow : Window
     /// </remarks>
     private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
     {
-        if (!_closeApproved &&
-            DataContext is MainWindowViewModel guardViewModel &&
-            guardViewModel.HasUnsavedDocumentChanges)
+        if (!_closeApproved && HostedViewModels().Any(vm => vm.HasUnsavedDocumentChanges))
         {
             e.Cancel = true;
 
             // Fire-and-forget deliberately: the handler must return
             // synchronously with Cancel set, and the continuation re-enters
             // Close() on the UI thread once the user has answered.
-            _ = PromptThenCloseAsync(guardViewModel);
+            _ = PromptThenCloseAsync();
             return;
         }
 
         PersistWindowStateOnClose();
     }
 
-    private async System.Threading.Tasks.Task PromptThenCloseAsync(MainWindowViewModel viewModel)
+    /// <summary>
+    /// Every session this window holds: all of its tabs (#1554), or the one
+    /// session it shows.
+    /// </summary>
+    private IReadOnlyList<MainWindowViewModel> HostedViewModels()
+    {
+        // A window whose tabs were all merged elsewhere holds nothing, even
+        // though it still shows the last of them until it closes.
+        if (_documentTabs is { } tabs)
+            return tabs.Tabs.Select(t => t.Session.ViewModel).ToArray();
+        return DataContext is MainWindowViewModel vm ? new[] { vm } : Array.Empty<MainWindowViewModel>();
+    }
+
+    private async System.Threading.Tasks.Task PromptThenCloseAsync()
     {
         try
         {
-            var proceed = await viewModel.ConfirmDiscardUnsavedChangesAsync("close this window");
-            if (!proceed)
-                return;
+            foreach (var viewModel in HostedViewModels())
+            {
+                if (!viewModel.HasUnsavedDocumentChanges)
+                    continue;
+
+                // Show the tab being asked about.
+                if (_documentTabs?.Tabs.FirstOrDefault(t => ReferenceEquals(t.Session.ViewModel, viewModel)) is { } tab)
+                    _documentTabs.SelectedTab = tab;
+
+                var proceed = await viewModel.ConfirmDiscardUnsavedChangesAsync("close this window");
+                if (!proceed)
+                    return;
+            }
 
             _closeApproved = true;
             Close();
@@ -493,6 +521,131 @@ public partial class MainWindow : Window
         Title = Excise.App.Workspace.DocumentWindowTitle.For(
             viewModel.IsDocumentLoaded ? viewModel.DocumentName : null,
             viewModel.HasUnsavedDocumentChanges);
+    }
+
+    // ── #1554: in-app document tabs ─────────────────────────────────────────
+
+    private ViewModels.DocumentTabsViewModel? _documentTabs;
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<MainWindowViewModel, System.Runtime.CompilerServices.StrongBox<double>> _scrollFractions = new();
+    private bool _switchingSession;
+    private int _switchGeneration;
+
+    /// <summary>
+    /// The tabs this window holds. The window shows the selected tab's
+    /// session; set by the workspace.
+    /// </summary>
+    internal ViewModels.DocumentTabsViewModel? DocumentTabs
+    {
+        get => _documentTabs;
+        set
+        {
+            if (ReferenceEquals(value, _documentTabs))
+                return;
+            if (_documentTabs != null)
+                _documentTabs.PropertyChanged -= OnDocumentTabsPropertyChanged;
+
+            _documentTabs = value;
+            DocumentTabStripHost.DataContext = value;
+            DocumentTabStripHost.IsVisible = value != null;
+            if (value != null)
+            {
+                value.PropertyChanged += OnDocumentTabsPropertyChanged;
+                ShowSelectedTab();
+            }
+        }
+    }
+
+    private void OnDocumentTabsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ViewModels.DocumentTabsViewModel.SelectedTab))
+            ShowSelectedTab();
+    }
+
+    private void ShowSelectedTab()
+    {
+        var next = _documentTabs?.SelectedTab?.Session.ViewModel;
+        // No selection means the last tab is leaving and the window is about
+        // to close: keep what is shown.
+        if (next == null || ReferenceEquals(next, DataContext))
+            return;
+
+        SwitchSession(next);
+    }
+
+    /// <summary>
+    /// Show <paramref name="next"/> in this window. The outgoing session's
+    /// scroll position is remembered and the incoming one's restored once the
+    /// viewer has laid the document out again.
+    /// </summary>
+    private void SwitchSession(MainWindowViewModel next)
+    {
+        if (DataContext is MainWindowViewModel current && _pdfViewerControl != null)
+        {
+            var viewport = _pdfViewerControl.GetViewportDiagnostics();
+            if (viewport.IsAvailable)
+                _scrollFractions.AddOrUpdate(current, new System.Runtime.CompilerServices.StrongBox<double>(VerticalFraction(viewport)));
+        }
+
+        var generation = ++_switchGeneration;
+        _switchingSession = true;
+        DataContext = next;
+
+        double? saved = _scrollFractions.TryGetValue(next, out var box) ? box.Value : null;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (generation != _switchGeneration)
+                return;
+            try
+            {
+                if (saved is double fraction && ReferenceEquals(DataContext, next))
+                    _pdfViewerControl?.TrySetViewportVerticalFraction(fraction);
+            }
+            finally
+            {
+                _switchingSession = false;
+            }
+        }, DispatcherPriority.ContextIdle);
+    }
+
+    internal static double VerticalFraction(PdfViewerViewportDiagnostics viewport)
+    {
+        var range = viewport.Extent.Height - viewport.Viewport.Height;
+        if (!(range > 0))
+            return 0;
+        return Math.Clamp(viewport.Offset.Y / range, 0, 1);
+    }
+
+    /// <summary>
+    /// Ctrl+Tab / Ctrl+Shift+Tab and Ctrl+PageDown / Ctrl+PageUp switch tabs;
+    /// on macOS also Cmd+Shift+] / Cmd+Shift+[. Only with more than one tab,
+    /// so Tab keeps moving focus everywhere else.
+    /// </summary>
+    private void OnTabSwitchKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (_documentTabs is not { Tabs.Count: > 1 } tabs)
+            return;
+
+        var control = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        var meta = e.KeyModifiers.HasFlag(KeyModifiers.Meta);
+        int step = 0;
+
+        if (control && e.Key == Key.Tab)
+            step = shift ? -1 : +1;
+        else if (control && e.Key == Key.PageDown)
+            step = +1;
+        else if (control && e.Key == Key.PageUp)
+            step = -1;
+        else if (OperatingSystem.IsMacOS() && meta && shift && e.Key == Key.OemCloseBrackets)
+            step = +1;
+        else if (OperatingSystem.IsMacOS() && meta && shift && e.Key == Key.OemOpenBrackets)
+            step = -1;
+
+        if (step == 0)
+            return;
+
+        e.Handled = true;
+        (step > 0 ? tabs.SelectNextTabCommand : tabs.SelectPreviousTabCommand).Execute().Subscribe();
     }
 
     private long? TileCacheResidentBytes() => _pdfViewerControl?.ContinuousTileCacheResidentBytes;
@@ -1181,6 +1334,11 @@ public partial class MainWindow : Window
     private void OnPageChanged(object? sender, PageChangedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel)
+            return;
+
+        // #1554: while the viewer swaps documents it reports pages of its own
+        // rebuild; the incoming tab's page is the view model's, not those.
+        if (_switchingSession)
             return;
 
         // Update ViewModel page index (convert from 1-based to 0-based)

@@ -123,9 +123,13 @@ public sealed class MultiDocumentWindowTests : IDisposable
         var b = harness.Workspace.Sessions.Single(s => !ReferenceEquals(s, a));
         await b.ViewModel.AddStickyNoteAnnotationCommand.Execute();
 
-        var items = a.ViewModel.OpenDocumentMenuItems;
+        var all = a.ViewModel.OpenDocumentMenuItems;
+        all.Take(3).Select(i => i.Header).Should().Equal("Move Tab to New Window", "Merge All Windows", "-");
+        all[0].IsEnabled.Should().BeFalse("a.pdf is its window's only tab");
+        all[1].IsEnabled.Should().BeTrue("two windows are open");
+        var items = all.Skip(3).ToList();
 
-        items.Select(i => i.Header).Should().Equal("menu-a.pdf", "menu-b.pdf •");
+        items.Select(i => i.Header).Should().Equal("menu-a.pdf", "menu-b.pdf \u2022");
         items[0].IsChecked.Should().BeTrue();
         items[1].IsChecked.Should().BeFalse();
         AutomationProperties.GetName(items[1])

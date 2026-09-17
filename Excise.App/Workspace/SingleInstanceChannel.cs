@@ -197,9 +197,6 @@ internal static class SingleInstanceChannel
             }
         }
 
-        /// <summary>Completes when the loop has stopped. For tests.</summary>
-        internal Task Completion => _loop;
-
         private async Task RunAsync()
         {
             var token = _cancellation.Token;

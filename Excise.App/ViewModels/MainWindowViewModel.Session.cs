@@ -28,6 +28,8 @@ public partial class MainWindowViewModel
     private DocumentOpenMode _documentOpenMode = DocumentOpenMode.Automatic;
     private string? _openDocumentsSignature;
     private ReactiveCommand<OpenDocumentEntry, Unit>? _activateOpenDocumentCommand;
+    private ReactiveCommand<Unit, Unit>? _moveToNewWindowCommand;
+    private ReactiveCommand<Unit, Unit>? _mergeAllWindowsCommand;
     private bool _sessionReleased;
 
     /// <summary>
@@ -69,6 +71,14 @@ public partial class MainWindowViewModel
         _activateOpenDocumentCommand ??= ReactiveCommand.Create<OpenDocumentEntry>(
             entry => SessionHost?.ActivateDocument(entry));
 
+    /// <summary>Window ▸ Move Tab to New Window (#1554).</summary>
+    internal ReactiveCommand<Unit, Unit> MoveToNewWindowCommand =>
+        _moveToNewWindowCommand ??= ReactiveCommand.Create(() => SessionHost?.MoveToNewWindow());
+
+    /// <summary>Window ▸ Merge All Windows (#1554).</summary>
+    internal ReactiveCommand<Unit, Unit> MergeAllWindowsCommand =>
+        _mergeAllWindowsCommand ??= ReactiveCommand.Create(() => SessionHost?.MergeAllWindows());
+
     /// <summary>
     /// The in-window Window menu (Windows and Linux; macOS builds its native
     /// menu from <see cref="OpenDocuments"/>). Built fresh on every read, like
@@ -85,6 +95,20 @@ public partial class MainWindowViewModel
                 items.Add(new MenuItem { Header = "No open documents", IsEnabled = false });
                 return items;
             }
+
+            items.Add(new MenuItem
+            {
+                Header = "Move Tab to New Window",
+                Command = MoveToNewWindowCommand,
+                IsEnabled = SessionHost?.CanMoveToNewWindow == true,
+            });
+            items.Add(new MenuItem
+            {
+                Header = "Merge All Windows",
+                Command = MergeAllWindowsCommand,
+                IsEnabled = SessionHost?.CanMergeAllWindows == true,
+            });
+            items.Add(new MenuItem { Header = "-" });
 
             foreach (var document in documents)
             {
@@ -122,7 +146,8 @@ public partial class MainWindowViewModel
     internal void NotifyOpenDocumentsChanged()
     {
         var signature = string.Join('\n', OpenDocuments.Select(d =>
-            $"{d.Title}|{d.FilePath}|{d.IsCurrent}|{d.HasUnsavedChanges}"));
+            $"{d.Title}|{d.FilePath}|{d.IsCurrent}|{d.HasUnsavedChanges}"))
+            + $"|{SessionHost?.CanMoveToNewWindow}|{SessionHost?.CanMergeAllWindows}";
         if (signature == _openDocumentsSignature)
             return;
         _openDocumentsSignature = signature;

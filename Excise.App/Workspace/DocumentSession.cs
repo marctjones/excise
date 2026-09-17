@@ -81,6 +81,19 @@ internal sealed class DocumentSession : IDocumentSessionHost, IDisposable
             _workspace.Activate(session);
     }
 
+    bool IDocumentSessionHost.CanMoveToNewWindow =>
+        Window is Views.MainWindow { DocumentTabs.Tabs.Count: > 1 };
+
+    void IDocumentSessionHost.MoveToNewWindow() => _workspace.MoveToNewWindow(this);
+
+    bool IDocumentSessionHost.CanMergeAllWindows => _workspace.Windows.Count > 1;
+
+    void IDocumentSessionHost.MergeAllWindows()
+    {
+        if (Window is Views.MainWindow window)
+            _workspace.MergeAllWindowsInto(window);
+    }
+
     void IDocumentSessionHost.ApplyPreferencesToOtherSessions(PreferencesViewModel preferences) =>
         _workspace.ApplyPreferencesToOtherSessions(this, preferences);
 

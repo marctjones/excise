@@ -59,6 +59,7 @@ public class PreferencesViewModel : ViewModelBase
     [
         DocumentOpenMode.Automatic,
         DocumentOpenMode.NewWindow,
+        DocumentOpenMode.NewTab,
         DocumentOpenMode.ReplaceCurrent,
     ];
 

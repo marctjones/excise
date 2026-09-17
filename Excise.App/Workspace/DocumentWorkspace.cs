@@ -7,11 +7,15 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
 using Excise.App.Models;
 using Excise.App.Services.Host;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using Microsoft.Extensions.Logging;
+using ReactiveUI;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace Excise.App.Workspace;
 
@@ -23,7 +27,7 @@ namespace Excise.App.Workspace;
 /// Design: docs/architecture/main-window-architecture.md §7. One instance per
 /// application. Everything runs on the UI thread.
 /// </remarks>
-internal sealed class DocumentWorkspace
+internal sealed class DocumentWorkspace : DocumentTabsViewModel.ITabsHost
 {
     /// <summary>How far a new document window is offset from the window it was opened from.</summary>
     internal const int CascadeOffset = 28;
@@ -99,7 +103,7 @@ internal sealed class DocumentWorkspace
     /// <paramref name="origin"/>, the window takes the origin's size and is
     /// offset from it.
     /// </summary>
-    internal MainWindow ShowInNewWindow(DocumentSession session, Window? origin = null)
+    internal MainWindow ShowInNewWindow(DocumentSession session, Window? origin = null, bool joinNativeTabs = true)
     {
         ArgumentNullException.ThrowIfNull(session);
 
@@ -108,6 +112,21 @@ internal sealed class DocumentWorkspace
             DataContext = session.ViewModel,
         };
         session.AttachToWindow(window);
+
+        // #1554: every document window holds tabs; one tab shows no strip.
+        var tabs = new DocumentTabsViewModel(this);
+        tabs.Add(session, select: true);
+        window.DocumentTabs = tabs;
+        tabs.PropertyChanged += (_, e) =>
+        {
+            // The shown tab is the active document when its window is the
+            // active one (or held the active document before the switch).
+            if (e.PropertyName == nameof(DocumentTabsViewModel.SelectedTab) &&
+                (window.IsActive || ReferenceEquals(_activeSession?.Window, window)) &&
+                tabs.SelectedTab?.Session is { IsDisposed: false } shown)
+                _activeSession = shown;
+            NotifyOpenDocumentsChanged();
+        };
 
         if (origin != null)
             PlaceCascaded(window, origin);
@@ -126,7 +145,7 @@ internal sealed class DocumentWorkspace
         if (OperatingSystem.IsMacOS())
         {
             MacWindowTabbing.Prepare(window, _logger);
-            if (origin != null && !ReferenceEquals(origin, window))
+            if (joinNativeTabs && origin != null && !ReferenceEquals(origin, window))
                 MacWindowTabbing.JoinTabGroupIfPreferred(window, origin, _logger);
         }
 
@@ -159,13 +178,46 @@ internal sealed class DocumentWorkspace
 
     /// <summary>The session <paramref name="window"/> currently shows.</summary>
     internal DocumentSession? SessionShownIn(Window window) =>
-        _sessions.FirstOrDefault(s => ReferenceEquals(s.Window, window)
-                                      && ReferenceEquals(window.DataContext, s.ViewModel))
+        (window as MainWindow)?.DocumentTabs?.SelectedTab?.Session
+        ?? _sessions.FirstOrDefault(s => ReferenceEquals(s.Window, window)
+                                         && ReferenceEquals(window.DataContext, s.ViewModel))
         ?? _sessions.FirstOrDefault(s => ReferenceEquals(s.Window, window));
 
-    /// <summary>Every session hosted by <paramref name="window"/>.</summary>
-    internal IReadOnlyList<DocumentSession> SessionsIn(Window window) =>
-        _sessions.Where(s => ReferenceEquals(s.Window, window)).ToArray();
+    /// <summary>Every session hosted by <paramref name="window"/>, in tab order.</summary>
+    internal IReadOnlyList<DocumentSession> SessionsIn(Window window)
+    {
+        var hosted = _sessions.Where(s => ReferenceEquals(s.Window, window)).ToList();
+        if ((window as MainWindow)?.DocumentTabs is { } tabs)
+            hosted.Sort((a, b) => IndexIn(tabs, a).CompareTo(IndexIn(tabs, b)));
+        return hosted;
+    }
+
+    private static int IndexIn(DocumentTabsViewModel tabs, DocumentSession session)
+    {
+        var tab = tabs.TabFor(session);
+        return tab == null ? int.MaxValue : tabs.Tabs.IndexOf(tab);
+    }
+
+    /// <summary>
+    /// Show <paramref name="session"/> as a new, selected tab of
+    /// <paramref name="window"/> (#1554).
+    /// </summary>
+    internal void ShowInNewTab(DocumentSession session, MainWindow window)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(window);
+        if (window.DocumentTabs is not { } tabs)
+        {
+            ShowInNewWindow(session, window);
+            return;
+        }
+
+        session.AttachToWindow(window);
+        tabs.Add(session, select: true);
+        _activeSession = session;
+        NotifyOpenDocumentsChanged();
+        window.Activate();
+    }
 
     /// <summary>The session that has <paramref name="path"/> open, if any.</summary>
     internal DocumentSession? FindSessionShowing(string path)
@@ -188,6 +240,9 @@ internal sealed class DocumentWorkspace
         if (session.Window is not { } window)
             return;
 
+        if (window is MainWindow { DocumentTabs: { } tabs } && tabs.TabFor(session) is { } tab)
+            tabs.SelectedTab = tab;
+
         if (window.WindowState == WindowState.Minimized)
             window.WindowState = WindowState.Normal;
         window.Activate();
@@ -203,7 +258,8 @@ internal sealed class DocumentWorkspace
         return origin.ViewModel.DocumentOpenMode switch
         {
             DocumentOpenMode.ReplaceCurrent => DocumentOpenMode.ReplaceCurrent,
-            DocumentOpenMode.NewTab => DocumentOpenMode.NewTab,
+            DocumentOpenMode.NewTab when origin.Window is MainWindow { DocumentTabs: not null }
+                => DocumentOpenMode.NewTab,
             _ => DocumentOpenMode.NewWindow,
         };
     }
@@ -289,7 +345,10 @@ internal sealed class DocumentWorkspace
             }
 
             var session = CreateSession();
-            ShowInNewWindow(session, origin.Window);
+            if (mode == DocumentOpenMode.NewTab && origin.Window is MainWindow tabWindow)
+                ShowInNewTab(session, tabWindow);
+            else
+                ShowInNewWindow(session, origin.Window);
             await LoadIntoAsync(session, path);
 
             // A file that did not open (a cancelled password prompt, a damaged
@@ -300,9 +359,9 @@ internal sealed class DocumentWorkspace
     }
 
     /// <summary>
-    /// Close <paramref name="session"/>'s window when another session exists
-    /// (Close Document with more than one open). False keeps the caller's
-    /// single-document behaviour.
+    /// Close <paramref name="session"/>'s tab, or its window when it is the
+    /// window's only tab, provided another session exists (Close Document with
+    /// more than one open). False keeps the caller's single-document behaviour.
     /// </summary>
     internal bool TryCloseSession(DocumentSession session)
     {
@@ -380,8 +439,88 @@ internal sealed class DocumentWorkspace
         }
     }
 
+    // ── #1554: what the tab strip asks for ──────────────────────────────────
+
+    /// <summary>
+    /// A tab's close button: exactly Close Document for that session, so the
+    /// unsaved-changes prompt and the last-document rule are the same ones.
+    /// </summary>
+    Task DocumentTabsViewModel.ITabsHost.CloseTabAsync(DocumentTabsViewModel tabs, DocumentTabViewModel tab)
+    {
+        if (tab.Session.IsDisposed)
+            return Task.CompletedTask;
+        Activate(tab.Session);
+        return ExecuteAsync(tab.Session.ViewModel.CloseDocumentCommand);
+    }
+
+    void DocumentTabsViewModel.ITabsHost.MoveTabToNewWindow(DocumentTabsViewModel tabs, DocumentTabViewModel tab) =>
+        MoveToNewWindow(tab.Session);
+
+    async Task DocumentTabsViewModel.ITabsHost.CopyPathAsync(string path)
+    {
+        var clipboard = (ActiveSession?.Window as TopLevel)?.Clipboard;
+        if (clipboard != null)
+            await clipboard.SetTextAsync(path);
+    }
+
+    void DocumentTabsViewModel.ITabsHost.RevealInFileManager(string path) =>
+        FileManagerReveal.Reveal(path, _logger);
+
+    /// <summary>
+    /// Take <paramref name="session"/> out of its window's tabs into a window
+    /// of its own. A window's only tab stays where it is.
+    /// </summary>
+    internal MainWindow? MoveToNewWindow(DocumentSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (session.Window is not MainWindow { DocumentTabs: { Tabs.Count: > 1 } tabs } origin)
+            return null;
+
+        tabs.Remove(session);
+        // Moving a tab OUT must not put it straight back into a native tab group.
+        return ShowInNewWindow(session, origin, joinNativeTabs: false);
+    }
+
+    /// <summary>
+    /// Every other window's tabs join <paramref name="target"/>, and the
+    /// emptied windows close (#1554). Nothing is prompted: no document closes.
+    /// </summary>
+    internal void MergeAllWindowsInto(MainWindow target)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        if (target.DocumentTabs is not { } targetTabs)
+            return;
+
+        foreach (var window in _windows.Where(w => !ReferenceEquals(w, target)).ToArray())
+        {
+            foreach (var session in SessionsIn(window))
+            {
+                window.DocumentTabs?.Remove(session);
+                session.AttachToWindow(target);
+                targetTabs.Add(session, select: false);
+            }
+
+            // Its sessions now belong to the target, so the emptied window's
+            // close disposes nothing and asks nothing.
+            window.Close();
+        }
+
+        NotifyOpenDocumentsChanged();
+        target.Activate();
+    }
+
+    private static async Task ExecuteAsync(ReactiveCommand<Unit, Unit> command) => await command.Execute();
+
     private void CloseSession(DocumentSession session)
     {
+        // #1554: one of several tabs goes as a tab, never with its window.
+        if (session.Window is MainWindow { DocumentTabs: { Tabs.Count: > 1 } tabs })
+        {
+            tabs.Remove(session);
+            RemoveSession(session);
+            return;
+        }
+
         if (session.Window is { } window)
         {
             // The window's Closing guard asks about unsaved changes; its
@@ -420,7 +559,11 @@ internal sealed class DocumentWorkspace
             RemoveSession(session);
 
         // A closed window can outlive its close for a while (the platform and
-        // the dispatcher may still hold it); it must not hold a session too.
+        // the dispatcher may still hold it); it must not hold a session too,
+        // neither as its DataContext nor through its tabs.
+        var tabs = window.DocumentTabs;
+        window.DocumentTabs = null;
+        tabs?.DetachAll();
         window.DataContext = null;
 
         ReassignDesktopMainWindow(window);

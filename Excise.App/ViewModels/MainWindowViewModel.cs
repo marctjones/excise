@@ -2745,7 +2745,10 @@ public partial class MainWindowViewModel : ViewModelBase
                       "  Ctrl+- - Zoom Out\n" +
                       "  Ctrl+0 - Actual Size\n\n" +
                       "Navigation:\n" +
-                      "  PgUp/PgDn - Previous/Next Page",
+                      "  PgUp/PgDn - Previous/Next Page\n\n" +
+                      "Tabs:\n" +
+                      "  Ctrl+Tab / Ctrl+Shift+Tab - Next/Previous Document Tab\n" +
+                      "  Ctrl+PgDn / Ctrl+PgUp - Next/Previous Document Tab",
             CloseButtonText = "Close",
             DefaultButton = FluentAvalonia.UI.Controls.FAContentDialogButton.Close
         };

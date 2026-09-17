@@ -193,8 +193,21 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   PDF it carries. A window with no document takes the file itself, and a file
   that is already open is brought to the front instead of being opened twice.
   Preferences → Documents → "Open Documents In" chooses Automatic (the
-  default), NewWindow, or ReplaceCurrent (the old single-document behaviour,
-  with its unsaved-changes prompt).
+  default), NewWindow, NewTab, or ReplaceCurrent (the old single-document
+  behaviour, with its unsaved-changes prompt).
+  - **In-app tabs** (#1554, NewTab): a tab strip above the document, shown
+    once a window holds two documents. Each tab has a close button (middle
+    click also closes), drags to reorder, and a context menu (Close Tab,
+    Close Other Tabs, Move Tab to New Window, Copy Path, Reveal in
+    Finder/Explorer); a button at the right lists every tab, so the strip
+    never scrolls or wraps. Ctrl+Tab / Ctrl+Shift+Tab and Ctrl+PgDn /
+    Ctrl+PgUp switch tabs (also ⌘⇧] / ⌘⇧[ on macOS). Window → Merge All
+    Windows gathers every window's documents as tabs, and Move Tab to New
+    Window splits one out, with its undo history and unsaved edits. A window
+    has one viewer, so an inactive tab holds no page tiles; switching
+    re-renders the visible page and restores that tab's scroll position.
+    Under memory pressure an inactive tab's thumbnails are released first.
+    Tabs are announced with their position and unsaved state.
   - **macOS:** document windows use native window tabbing. With System
     Settings → Desktop & Dock → "Prefer tabs when opening documents" set to
     Always, a new document opens as a tab of the current window. The Window

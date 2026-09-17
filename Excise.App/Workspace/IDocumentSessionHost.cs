@@ -52,6 +52,18 @@ internal interface IDocumentSessionHost
     /// <summary>Bring the document <paramref name="entry"/> describes to the front.</summary>
     void ActivateDocument(OpenDocumentEntry entry);
 
+    /// <summary>True when this session is one of several tabs in its window (#1554).</summary>
+    bool CanMoveToNewWindow { get; }
+
+    /// <summary>Move this session's tab into a window of its own.</summary>
+    void MoveToNewWindow();
+
+    /// <summary>True when more than one document window is open.</summary>
+    bool CanMergeAllWindows { get; }
+
+    /// <summary>Gather every window's documents as tabs of this session's window.</summary>
+    void MergeAllWindows();
+
     /// <summary>
     /// Apply a saved Preferences dialog to every OTHER session. Preferences
     /// are app-wide; the redaction policies among them must never differ

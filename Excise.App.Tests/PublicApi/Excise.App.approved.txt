@@ -667,6 +667,34 @@ namespace Excise.App.ViewModels
         public void SetDocument(string filePath) { }
         public void UpdateCurrentPath(string newPath) { }
     }
+    public sealed class DocumentTabViewModel : ReactiveUI.ReactiveObject
+    {
+        public string AccessibleName { get; }
+        public string CloseButtonName { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CloseCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CloseOthersCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CopyPathCommand { get; }
+        public string DisplayTitle { get; }
+        public string? FilePath { get; }
+        public bool HasFilePath { get; }
+        public bool HasUnsavedChanges { get; }
+        public bool IsSelected { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveToNewWindowCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RevealCommand { get; }
+        public string RevealHeader { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SelectCommand { get; }
+        public string Title { get; }
+        public string ToolTip { get; }
+    }
+    public sealed class DocumentTabsViewModel : ReactiveUI.ReactiveObject
+    {
+        public bool IsStripVisible { get; }
+        public System.Collections.ObjectModel.ObservableCollection<Avalonia.Controls.MenuItem> OverflowMenuItems { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SelectNextTabCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SelectPreviousTabCommand { get; }
+        public Excise.App.ViewModels.DocumentTabViewModel? SelectedTab { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.ViewModels.DocumentTabViewModel> Tabs { get; }
+    }
     public sealed class LicenseManifest
     {
         public LicenseManifest() { }
@@ -1169,6 +1197,12 @@ namespace Excise.App.Views
     public class BatesNumberingDialog : Avalonia.Controls.Window
     {
         public BatesNumberingDialog() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class DocumentTabStrip : Avalonia.Controls.UserControl
+    {
+        public DocumentTabStrip() { }
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public void InitializeComponent(bool loadXaml = true) { }
     }

@@ -5,6 +5,7 @@
         xmlns:access="using:Excise.App.Automation"
         xmlns:toolbar="using:Excise.App.Controls"
         xmlns:controls="using:Excise.Avalonia.Controls"
+        xmlns:views="using:Excise.App.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
@@ -1188,6 +1189,11 @@
              ExtendClientAreaToDecorationsHint put them under the macOS
              window buttons (found in the #1547 live check). -->
         <StackPanel Grid.Row="5">
+            <!-- #1554: in-app document tabs. Its DataContext is the window's
+                 DocumentTabsViewModel, set in code-behind; it shows only when
+                 the window holds more than one document. -->
+            <views:DocumentTabStrip x:Name="DocumentTabStripHost" IsVisible="False"/>
+
             <!-- Toast Notification InfoBar -->
             <ui:FAInfoBar x:Name="ToastInfoBar" IsOpen="False" IsClosable="True" Margin="0"/>
 

@@ -50,7 +50,7 @@
                                   HorizontalAlignment="Stretch"
                                   AutomationProperties.Name="Open Documents In"
                                   AutomationProperties.HelpText="Where a document opens when the window already shows one."/>
-                        <TextBlock Text="Automatic (default): a new window. On macOS, System Settings &gt; Desktop &amp; Dock &gt; Prefer tabs when opening documents decides whether it opens as a tab. NewWindow: always a new window. ReplaceCurrent: replace the document in the current window, as older versions did. A window with no document always takes the file, and a file that is already open is brought to the front."
+                        <TextBlock Text="Automatic (default): a new window. On macOS, System Settings &gt; Desktop &amp; Dock &gt; Prefer tabs when opening documents decides whether it opens as a tab. NewWindow: always a new window. NewTab: a tab in the current window (Ctrl+Tab switches tabs; right-click a tab to move it to its own window). ReplaceCurrent: replace the document in the current window, as older versions did. A window with no document always takes the file, and a file that is already open is brought to the front."
                                    FontSize="10"
                                    Foreground="{DynamicResource TextTertiaryBrush}"
                                    TextWrapping="Wrap"/>

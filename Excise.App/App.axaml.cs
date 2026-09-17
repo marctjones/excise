@@ -299,8 +299,16 @@ public partial class App : Application
             window, trimViewer, trimPolicy, logger,
             level =>
             {
+                // #1554: a tab nobody is looking at gives up its thumbnails
+                // entirely; the shown one keeps what the level allows.
+                var shown = workspace.SessionShownIn(window);
                 foreach (var session in workspace.SessionsIn(window))
-                    session.ViewModel.TrimThumbnailCaches(level);
+                {
+                    session.ViewModel.TrimThumbnailCaches(
+                        ReferenceEquals(session, shown) || level == Excise.Avalonia.Controls.PdfViewerCacheTrimLevel.Background
+                            ? level
+                            : Excise.Avalonia.Controls.PdfViewerCacheTrimLevel.Critical);
+                }
             },
             reclaimer);
         // Preferences → Performance changes soft trims live (#1478).
