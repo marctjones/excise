@@ -76,7 +76,6 @@ public partial class MainWindowViewModel
         if (!_documentService.IsDocumentLoaded || !FileState.HasUnsavedChanges)
             return true;
 
-        var message = BuildUnsavedChangesMessage(actionDescription);
         UnsavedChangesDecision decision;
         if (UnsavedChangesAnswer is { } automatedAnswer)
         {
@@ -89,7 +88,7 @@ public partial class MainWindowViewModel
         {
             decision = await _dialogService.ShowUnsavedChangesAsync(
                 "Unsaved Changes",
-                message,
+                BuildUnsavedChangesMessage(actionDescription),
                 FileState.GetSaveButtonText());
         }
 

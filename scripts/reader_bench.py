@@ -793,10 +793,12 @@ def multi_run(config, app, docs, repeat, out, cfg, excise_app, tabbing):
         except RuntimeError as e:
             raise RunFailed(f"could not size the window: {e}")
         title = ""
+        titles = []
         for k, copy in enumerate(copies, start=1):
             ok, title, windows, note = open_and_verify(
                 app_id, app, pid, copy, k, layout, title, excise_app, cfg, first=(k == 1))
             layout_seen.append(windows)
+            titles.append(title)
             if ok and not wait_settled(tracker, cfg["settle"]):
                 ok, note = False, "never settled"
             boundary(f"opened-{k}", ok=ok, note=note, title=title, windows=windows)
@@ -809,7 +811,17 @@ def multi_run(config, app, docs, repeat, out, cfg, excise_app, tabbing):
         while time.time() < deadline:
             park_pointer()
             title, windows = front_title(pid), document_windows(pid)
-            if title and copies[-1].stem not in title and windows == want:
+            # The front window must now show an EARLIER document, and a tabs
+            # layout keeps one window either way. Acrobat titles by /Title,
+            # never the file name, so "the third's stem is gone" could not
+            # fail there: it must show a title seen for an earlier document.
+            # excise and Preview name the file (Preview adds the page).
+            if app_id == "acrobat":
+                earlier = title in titles[:-1] and title != titles[-1]
+            else:
+                earlier = (any(c.stem in title for c in copies[:-1])
+                           and copies[-1].stem not in title)
+            if title and earlier and windows == want:
                 break
             time.sleep(0.5)
         else:
