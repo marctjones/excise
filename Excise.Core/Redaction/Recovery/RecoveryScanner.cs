@@ -37,6 +37,8 @@ public static class RecoveryScanner
         public const string Residue = "residue";
         public const string OcrDifferential = "ocr-differential";
         public const string PriorRevision = "prior-revision";
+        public const string Thumbnail = "thumbnail";
+        public const string Attachment = "attachment";
         public const string Xfa = "xfa";
     }
 
@@ -58,6 +60,7 @@ public static class RecoveryScanner
         AddMarkedContent(document, builder, cancellationToken);
         AddCoveredContent(document, builder, cancellationToken);
         AddFormFields(document, builder, cancellationToken);
+        AddResidualArtefacts(document, builder, cancellationToken);
 
         return builder;
     }
@@ -139,6 +142,32 @@ public static class RecoveryScanner
                     channel, hit.Description,
                     new RecoveryLocation(hit.PageNumber, hit.Covered, "covered content box")),
                 hit.Obstruction);
+        }
+    }
+
+    /// <summary>
+    /// #1592 — containers whose contents predate the redaction: page
+    /// thumbnails and embedded files. Reported present-only; the channel names
+    /// the leak and does not decode it.
+    /// </summary>
+    private static void AddResidualArtefacts(
+        PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken)
+    {
+        builder.ChannelRan(Channels.Thumbnail);
+        builder.ChannelRan(Channels.Attachment);
+        foreach (var artefact in ResidualArtefactRecovery.Scan(document))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var channel = artefact.Kind == "thumbnail" ? Channels.Thumbnail : Channels.Attachment;
+            // A thumbnail covers its whole page, so it gets no rectangle: a box
+            // the size of the page would link to every mark on it and say
+            // nothing. It is the PAGE that leaks, and the report says so.
+            builder.AddFinding(RecoveredFinding.PresentOnly(
+                channel, artefact.Description,
+                artefact.PageNumber > 0
+                    ? new RecoveryLocation(artefact.PageNumber, document.GetPage(artefact.PageNumber).CropBox,
+                        "whole page")
+                    : null));
         }
     }
 

@@ -46,12 +46,10 @@ internal static class UnredactCommandHandler
             var residue = CollectResidue(input, mode, builder, cancellationToken);
             DeclareUnrunChannels(input, mode, builder);
 
-            var quantification = Quantify(mode, input.NoCorroboration, certain, residue);
-            var report = new UnredactReport(
-                quantification, certain, residue,
-                UnredactRecoveryMapper.Map(builder.Build()));
-            var exitCode = certain.Count > 0 ? 3 : residue.Count > 0 ? 4 : 0;
-            return new UnredactCommandOutcome(exitCode, report, null);
+            var recovery = UnredactRecoveryMapper.Map(builder.Build());
+            var quantification = Quantify(mode, input.NoCorroboration, certain, residue, recovery);
+            var report = new UnredactReport(quantification, certain, residue, recovery);
+            return new UnredactCommandOutcome(ExitCodeFor(certain, residue, recovery), report, null);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -91,6 +89,10 @@ internal static class UnredactCommandHandler
                 Math.Round(hit.BoundingBox.Left, 1),
                 Math.Round(hit.BoundingBox.Bottom, 1)));
         }
+
+        // #1592: the prior-revision channel needs the file's literal bytes (it
+        // truncates at an earlier %%EOF), which an open PdfDocument cannot give.
+        AddPriorRevision(input, builder, cancellationToken);
 
         // These carriers are physically present and therefore CERTAIN, not a
         // residue estimate (#1179).
@@ -147,6 +149,46 @@ internal static class UnredactCommandHandler
     }
 
     /// <summary>
+    /// #1592 — text earlier revisions of the file still hold. An incremental
+    /// update leaves the pre-redaction document whole at the front of the file.
+    /// </summary>
+    private static void AddPriorRevision(
+        UnredactCommandInput input, RecoveryReportBuilder builder, CancellationToken cancellationToken)
+    {
+        byte[] bytes;
+        try { bytes = File.ReadAllBytes(input.FilePath); }
+        catch
+        {
+            builder.ChannelSkipped(
+                RecoveryScanner.Channels.PriorRevision, "could not re-read the file bytes");
+            return;
+        }
+
+        var (findings, summary) = PriorRevisionRecovery.Scan(bytes, cancellationToken);
+        builder.ChannelRan(RecoveryScanner.Channels.PriorRevision);
+
+        // An earlier revision excise cannot open is NOT evidence that it is
+        // clean -- another tool may well read it -- so the shortfall is
+        // reported rather than swallowed.
+        if (summary.RevisionsUnreadable > 0)
+        {
+            builder.ChannelSkipped(
+                RecoveryScanner.Channels.PriorRevision + " (partial)",
+                $"{summary.RevisionsUnreadable} of {summary.RevisionCount} revision(s) would not parse");
+        }
+
+        foreach (var finding in findings)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            builder.AddFinding(RecoveredFinding.Certain(
+                RecoveryScanner.Channels.PriorRevision,
+                $"revision {finding.RevisionIndex} of {summary.RevisionCount}",
+                finding.Text,
+                new RecoveryLocation(finding.PageNumber, finding.Rect, "prior-revision glyph boxes")));
+        }
+    }
+
+    /// <summary>
     /// #1587 — name the channels that did NOT run, and why. Without this a
     /// report over four channels reads exactly like one over nine, which is the
     /// overstatement the Coverage rule (#1181) exists to prevent.
@@ -171,12 +213,9 @@ internal static class UnredactCommandHandler
             builder.ChannelSkipped(RecoveryScanner.Channels.Residue, "--mode certain");
 
         // Not implemented yet, and saying so is the honest report. Silence here
-        // would read as "this document has no prior revision and no XFA", which
-        // is a claim nothing in this run checked.
-        builder.ChannelSkipped(
-            RecoveryScanner.Channels.PriorRevision, "not implemented (#1592)");
-        builder.ChannelSkipped(
-            RecoveryScanner.Channels.Xfa, "not implemented (#1592)");
+        // would read as "this document has no XFA data", which is a claim
+        // nothing in this run checked.
+        builder.ChannelSkipped(RecoveryScanner.Channels.Xfa, "not implemented (#1609)");
     }
 
     private static List<UnredactResidueFinding> CollectResidue(
@@ -256,13 +295,63 @@ internal static class UnredactCommandHandler
         return findings;
     }
 
+    /// <summary>
+    /// Exit status over EVERY channel, not just the two legacy lists.
+    ///
+    /// <para>3 = text was recovered, 4 = something is constrained or present but
+    /// nothing was read, 0 = nothing found. The channels added in #1587/#1592 —
+    /// prior revision, marked content, form fields, thumbnails, attachments —
+    /// report only into the recovery model, so a status computed from the legacy
+    /// lists alone returned 0 over a document whose redacted name this tool had
+    /// just recovered. A script checking the exit code would have called that
+    /// file clean. Measured on an incremental-update fixture before the fix;
+    /// pinned by <c>UnredactExitStatusTests</c>.</para>
+    /// </summary>
+    private static int ExitCodeFor(
+        IReadOnlyList<UnredactCertainFinding> certain,
+        IReadOnlyList<UnredactResidueFinding> residue,
+        UnredactRecoveryModel recovery)
+    {
+        var all = recovery.Linked.Concat(recovery.Unlinked).Concat(recovery.DocumentLevel).ToList();
+        if (certain.Count > 0 || all.Any(f => f.Confidence == "certain")) return 3;
+        if (residue.Count > 0 || all.Count > 0) return 4;
+        return 0;
+    }
+
+    /// <summary>
+    /// The headline counts, over EVERY channel.
+    ///
+    /// <para>These used to count only the two legacy lists, which meant a
+    /// document whose name the prior-revision or marked-content channel had
+    /// recovered still printed "0 finding(s), 0 RECOVERED". The model-only
+    /// channels are counted here so the headline cannot contradict the per-mark
+    /// summary printed directly above it.</para>
+    /// </summary>
     private static UnredactQuantification Quantify(
         UnredactMode mode,
         bool noCorroboration,
         IReadOnlyList<UnredactCertainFinding> certain,
-        IReadOnlyList<UnredactResidueFinding> residue)
+        IReadOnlyList<UnredactResidueFinding> residue,
+        UnredactRecoveryModel recovery)
     {
         var uniqueRecoveries = residue.Count(finding => finding.CandidatesFit == 1);
+
+        // Channels that report ONLY into the model. The legacy lists already
+        // hold hidden-text and carrier findings, so counting those again would
+        // double them.
+        var legacyChannels = new[]
+        {
+            RecoveryScanner.Channels.HiddenText,
+            RecoveryScanner.Channels.Carrier,
+            RecoveryScanner.Channels.Residue,
+            RecoveryScanner.Channels.OcrDifferential,
+        };
+        var modelOnly = recovery.Linked
+            .Concat(recovery.Unlinked)
+            .Concat(recovery.DocumentLevel)
+            .Where(f => !legacyChannels.Contains(f.Channel, StringComparer.Ordinal))
+            .ToList();
+        var modelCertain = modelOnly.Count(f => f.Confidence == "certain");
         var residueBitsTotal = Math.Round(residue.Sum(finding => finding.ResidualEntropyBits), 2);
         var corroboration = mode is UnredactMode.Residue or UnredactMode.Both
             ? noCorroboration
@@ -271,11 +360,11 @@ internal static class UnredactCommandHandler
             : "n/a (certain mode)";
 
         return new UnredactQuantification(
-            certain.Count + residue.Count,
-            certain.Count,
+            certain.Count + residue.Count + modelOnly.Count,
+            certain.Count + modelCertain,
             residue.Count,
             residueBitsTotal,
-            certain.Count + uniqueRecoveries,
+            certain.Count + uniqueRecoveries + modelCertain,
             corroboration);
     }
 

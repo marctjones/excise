@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -125,6 +127,102 @@ internal static class RecoveryFixtureBuilder
             $"{F(x + 5)} {F(y + size - 5)} l S Q\n" +
             $"q 0 0 0 rg {F(x)} {F(y)} {F(size)} {F(size)} re f Q\n");
         return Build(content);
+    }
+
+    /// <summary>
+    /// #1592 — text drawn with render mode 3 (invisible, §9.3.6). Fully
+    /// extractable, never painted: how every OCR layer is written.
+    /// </summary>
+    internal static byte[] InvisibleText(string text, double x = 72, double y = 700)
+        => Build(string.Create(CultureInfo.InvariantCulture,
+            $"BT /F1 14 Tf 3 Tr {x} {y} Td ({text}) Tj ET\n"));
+
+    /// <summary>
+    /// #1592 — the covering box is a dark /Square ANNOTATION, not page content.
+    /// The page content stream holds the text and nothing else.
+    /// </summary>
+    internal static byte[] TextUnderSquareAnnotation(
+        string text, double x = 72, double y = 700, double fontSize = 14)
+    {
+        var width = text.Length * fontSize * 0.78 + 6;
+        var content = string.Create(CultureInfo.InvariantCulture,
+            $"BT /F1 {fontSize} Tf {x} {y} Td ({text}) Tj ET\n");
+        var extraObjects = new List<Obj>
+        {
+            new($"<< /Type /Annot /Subtype /Square " +
+                $"/Rect [{F(x - 2)} {F(y - 3)} {F(x + width)} {F(y + fontSize)}] " +
+                $"/IC [0 0 0] /C [0 0 0] /F 4 /P 3 0 R >>"),
+        };
+        return Build(content, extraObjects: extraObjects, pageExtra: "/Annots [7 0 R]");
+    }
+
+    /// <summary>#1592 — a page carrying a /Thumb pre-render of itself.</summary>
+    internal static byte[] PageWithThumbnail(string text = "VISIBLE")
+    {
+        var pixels = new byte[] { 0x10, 0x20, 0x30, 0x40 };
+        var content = string.Create(CultureInfo.InvariantCulture,
+            $"BT /F1 14 Tf 72 700 Td ({text}) Tj ET\n");
+        var extraObjects = new List<Obj>
+        {
+            new("<< /Type /XObject /Subtype /Image /Width 2 /Height 2 " +
+                "/ColorSpace /DeviceGray /BitsPerComponent 8 /Length 4 >>", pixels),
+        };
+        return Build(content, extraObjects: extraObjects, pageExtra: "/Thumb 7 0 R");
+    }
+
+    /// <summary>#1592 — a document carrying an embedded file.</summary>
+    internal static byte[] PageWithAttachment(string fileName = "notes.txt")
+    {
+        var payload = Encoding.ASCII.GetBytes("attachment payload");
+        var content = "BT /F1 14 Tf 72 700 Td (COVER PAGE) Tj ET\n";
+        var extraObjects = new List<Obj>
+        {
+            new($"<< /Type /EmbeddedFile /Length {payload.Length} >>", payload),
+            new($"<< /Type /Filespec /F ({fileName}) /UF ({fileName}) /EF << /F 7 0 R >> >>"),
+        };
+        return Build(content,
+            extraObjects: extraObjects,
+            catalogExtra: "/Names << /EmbeddedFiles << /Names [(item) 8 0 R] >> >>");
+    }
+
+    /// <summary>
+    /// #1592 — an INCREMENTAL UPDATE: <paramref name="original"/> bytes
+    /// followed by an appended revision that replaces the page's content
+    /// stream. The original revision stays whole at the front of the file, so
+    /// truncating at the first <c>%%EOF</c> yields the pre-redaction document.
+    /// </summary>
+    internal static byte[] IncrementalUpdate(byte[] original, string replacementContent)
+    {
+        using var ms = new MemoryStream();
+        ms.Write(original);
+        void Write(string s) => ms.Write(Encoding.ASCII.GetBytes(s));
+
+        // Object 4 is the content stream in every fixture Build() produces.
+        var offset = ms.Position;
+        var body = Encoding.ASCII.GetBytes(replacementContent);
+        Write($"4 0 obj\n<< /Length {body.Length} >>\nstream\n");
+        ms.Write(body);
+        Write("\nendstream\nendobj\n");
+
+        var xref = ms.Position;
+        // A one-entry update section, with /Prev pointing at the original's
+        // xref so a reader chains back through the revisions (§7.5.6).
+        var priorXref = FindLastStartxref(original);
+        Write($"xref\n4 1\n{offset:D10} 00000 n \n");
+        Write($"trailer\n<< /Size 9 /Root 1 0 R /Prev {priorXref} >>\n" +
+              $"startxref\n{xref}\n%%EOF\n");
+        return ms.ToArray();
+    }
+
+    private static long FindLastStartxref(byte[] bytes)
+    {
+        var text = Encoding.ASCII.GetString(bytes);
+        var idx = text.LastIndexOf("startxref", StringComparison.Ordinal);
+        if (idx < 0) return 0;
+        var digits = new string(text[(idx + 9)..]
+            .SkipWhile(c => !char.IsDigit(c))
+            .TakeWhile(char.IsDigit).ToArray());
+        return long.TryParse(digits, out var value) ? value : 0;
     }
 
     /// <summary>

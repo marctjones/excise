@@ -29,7 +29,17 @@ internal static class UnredactCommandOutput
     {
         var quantification = report.Quantification;
         WriteRecoveryModel(report.Recovery, output);
-        if (report.Certain.Count == 0 && report.Residue.Count == 0)
+
+        // The all-clear must account for EVERY channel. The legacy Certain and
+        // Residue lists predate #1587/#1592, and the channels added there report
+        // only into the recovery model -- so this line printed the green tick
+        // over a document whose redacted name the prior-revision channel had
+        // just recovered. An all-clear that cannot see a channel is the exact
+        // false reassurance this tool exists to remove.
+        var recovered = report.Recovery is { } model
+            ? model.Linked.Count + model.Unlinked.Count + model.DocumentLevel.Count
+            : 0;
+        if (report.Certain.Count == 0 && report.Residue.Count == 0 && recovered == 0)
         {
             output.WriteLine("✓ No recoverable text or measurable residue found.");
         }
