@@ -186,6 +186,31 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   is still scanned.
 
 ### Added
+- **Dynamic XFA forms are displayed** (#1547, phase 2). A dynamic XFA form
+  used to open as its "Please wait..." placeholder page. excise now lays the
+  form out when it opens and shows the result as ordinary pages, so page view,
+  thumbnails, search, text selection, printing and redaction all work on it.
+  The layout covers subforms (positioned, top-to-bottom, left-to-right and
+  table layouts), draws and fields with captions, borders and fills, fonts
+  mapped to the base-14 families, page areas and content areas with
+  pagination and page breaks, repeating subforms (`occur`), and data from the
+  form's datasets (normal, global and `dataRef` binding). Scripts do not run
+  (#1570, #1571), so the banner now says excise shows the form's initial
+  layout and still points to Acrobat Reader or Firefox for filling it in. When
+  a form cannot be laid out, the placeholder and the phase-1 warning stay.
+  Images (#1575), barcodes (#1576) and text outside WinAnsi (#1577) are not
+  drawn yet, and gradient and pattern fills are drawn as their base colour
+  (#1578). Myriad Pro, the Designer default, is drawn as Helvetica at 90% width
+  to match its metrics. The layout runs only for documents that
+  `DetectXfaForm()` classifies as dynamic and that set `/NeedsRendering true`
+  (a document with real page content keeps its pages), and it is bounded in size, depth,
+  pages and time. The XML parser prohibits DTDs and never resolves external
+  references. Saving keeps the XFA form, and the saved pages are marked, so
+  reopening the file shows the same pages. **Any redaction of a laid-out form
+  removes the XFA form whole**, because it restates every value on the pages
+  and XFA viewers would regenerate the redacted values from it. Library API:
+  `PdfDocument.ApplyXfaLayout()`, `HasXfaLayoutPages()` and `RemoveXfaForm()`
+  in `Excise.Core.Xfa`. Design: `docs/architecture/xfa-rendering.md`.
 - **XFA forms are detected and explained on open** (#1547, phase 1). A
   dynamic XFA form (catalog `/NeedsRendering true`, or no AcroForm field with a
   widget) now opens with a warning banner saying excise cannot display it yet
@@ -194,7 +219,7 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   banner stays until closed or the document changes. `excise info` prints the
   classification and `info --json` adds `"xfaForm": "none" | "static" |
   "dynamic"`. Detection is `PdfDocument.DetectXfaForm()` in Excise.Core.
-  excise still does not render or fill XFA.
+  (Phase 1 did not render XFA; phase 2 above does.)
 - **Printing on macOS** (#1545, superseding #621's won't-fix). File → Print…
   and ⌘P open the standard macOS print sheet, attached to the excise window,
   through PDFKit (`PDFDocument printOperationForPrintInfo:scalingMode:autoRotate:`

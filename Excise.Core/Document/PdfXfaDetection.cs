@@ -27,8 +27,9 @@ public enum PdfXfaFormKind
 }
 
 /// <summary>
-/// Detects XFA forms so the viewer can say when it cannot show one (#1547,
-/// phase 1). Detection only: excise does not render or fill XFA.
+/// Detects XFA forms (#1547, phase 1). A dynamic form is laid out by
+/// <c>Excise.Core.Xfa.PdfXfaLayout.ApplyXfaLayout</c> (phase 2); excise does
+/// not fill XFA forms or run their scripts.
 /// </summary>
 public static class PdfXfaDetection
 {

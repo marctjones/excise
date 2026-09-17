@@ -146,6 +146,16 @@ public static class PdfDocumentRedactionExtensions
 
         int totalMatches = 0;
 
+        // #1547: when the pages were generated from an XFA form, the XFA packet
+        // restates them and XFA viewers regenerate the pages from it. It goes
+        // before anything else, whatever the carrier scope: a surviving packet
+        // would undo this redaction in the next viewer.
+        if (Excise.Core.Xfa.PdfXfaLayout.RemoveXfaSourceOfLaidOutPages(document))
+        {
+            carrierResults.Add(new CarrierResult(
+                "/XFA (the form excise laid out into these pages; removed whole)", true, null));
+        }
+
         var pageCount = document.PageCount;
         progress?.Invoke(0, pageCount);
         for (int pageNum = 1; pageNum <= pageCount; pageNum++)

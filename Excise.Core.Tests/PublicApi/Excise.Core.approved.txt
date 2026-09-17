@@ -2276,3 +2276,34 @@ namespace Excise.Core.Writing
         public static void SerializeStreamDictionary(Excise.Core.Primitives.PdfStream stream, System.Text.StringBuilder sb) { }
     }
 }
+namespace Excise.Core.Xfa
+{
+    public static class PdfXfaLayout
+    {
+        public static Excise.Core.Xfa.XfaLayoutResult ApplyXfaLayout(this Excise.Core.Document.PdfDocument document, Excise.Core.Xfa.XfaLayoutOptions? options = null, System.Threading.CancellationToken cancellationToken = default) { }
+        public static bool HasXfaLayoutPages(this Excise.Core.Document.PdfDocument document) { }
+        public static bool RemoveXfaForm(this Excise.Core.Document.PdfDocument document) { }
+    }
+    public sealed class XfaLayoutOptions
+    {
+        public XfaLayoutOptions() { }
+        public System.TimeSpan TimeLimit { get; init; }
+    }
+    public sealed class XfaLayoutResult
+    {
+        public XfaLayoutResult() { }
+        public string? FailureReason { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> Omissions { get; init; }
+        public int PageCount { get; init; }
+        public System.Collections.Generic.IReadOnlyDictionary<string, int> ScriptsNotRun { get; init; }
+        public bool ShowsForm { get; }
+        public Excise.Core.Xfa.XfaLayoutStatus Status { get; init; }
+    }
+    public enum XfaLayoutStatus
+    {
+        NotDynamicXfa = 0,
+        AlreadyLaidOut = 1,
+        LaidOut = 2,
+        Failed = 3,
+    }
+}

@@ -194,7 +194,12 @@ public partial class MainWindowViewModel
     private Task StartThumbnailSessionAsync(string filePath)
     {
         _logger.LogInformation(">>> STEP 8: Creating thumbnail placeholders (lazy load)");
-        StartThumbnailSession(filePath, PdfCoreDocument!);
+        // #1547: a laid-out XFA form's pages are not the pages in the file, so
+        // they must not share (or reuse) the file's cached thumbnails.
+        StartThumbnailSession(
+            filePath,
+            PdfCoreDocument!,
+            cacheSalt: _documentService.XfaLayout is { ShowsForm: true } ? "xfa-layout-v1" : null);
         return Task.CompletedTask;
     }
 
