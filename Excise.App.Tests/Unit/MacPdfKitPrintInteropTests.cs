@@ -89,7 +89,8 @@ public class MacPdfKitPrintInteropTests : IDisposable
     {
         var printer = new UnsupportedDocumentPrinter();
         printer.IsSupported.Should().BeFalse();
-        printer.UnsupportedReason.Should().Contain("#1546");
+        printer.UnsupportedReason.Should().Contain("Linux printing is not planned")
+            .And.Contain("Save As", "the refusal must say what to do instead (#1546 made Windows a printing platform)");
         var result = await printer.PrintAsync(new DocumentPrintRequest("x.pdf", "x", PrintScalingMode.ShrinkOversized, null));
         result.Outcome.Should().Be(DocumentPrintOutcome.Failed);
     }

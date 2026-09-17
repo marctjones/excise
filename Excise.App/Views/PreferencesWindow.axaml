@@ -295,7 +295,7 @@
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
 
-                        <TextBlock Text="File &gt; Print opens the system print sheet with the document as currently edited. Pending redactions are applied to the printed copy."
+                        <TextBlock Text="File &gt; Print opens the system print dialog with the document as currently edited. Pending redactions are applied to the printed copy."
                                    FontSize="11"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    TextWrapping="Wrap"/>
@@ -310,7 +310,7 @@
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Print Page Scaling"
                                       AutomationProperties.HelpText="How printed pages are scaled onto the paper."/>
-                            <TextBlock Text="ShrinkOversized (default): pages larger than the paper are scaled down; smaller pages print at actual size. FitToPage: every page is scaled up or down to fill the paper. ActualSize: every page prints at 100%. Pages are drawn by macOS's own PDF renderer, so small differences from the excise viewer are possible."
+                            <TextBlock Text="ShrinkOversized (default): pages larger than the paper are scaled down; smaller pages print at actual size. FitToPage: every page is scaled up or down to fill the paper. ActualSize: every page prints at 100%. On macOS pages are drawn by macOS's own PDF renderer, so small differences from the excise viewer are possible; on Windows they are drawn by excise's renderer."
                                        FontSize="10"
                                        Foreground="{DynamicResource TextTertiaryBrush}"
                                        TextWrapping="Wrap"/>

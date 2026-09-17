@@ -457,6 +457,7 @@ Located in `Excise.App/Excise.App.csproj`:
 - SkiaSharp 3.119.4 (MIT) - 2D graphics / rasterization
 - SkiaSharp.HarfBuzz 3.119.4 (MIT) - OpenType shaping for synthesised annotation text in Excise.Rendering (#1363); brings native HarfBuzzSharp 8.3.1.5 (MIT)
 - BouncyCastle.Cryptography 2.7.0 (MIT) - crypto primitives for encryption and CMS signatures
+- System.Drawing.Common 10.0.12 (MIT) - Windows printing only (`PrintDocument`, #1546); managed, never loaded on macOS/Linux
 
 The legacy PdfPig / PDFsharp / PDFtoImage dependencies were removed in v2.0.
 All remaining licenses are permissive (MIT/Apache 2.0/BSD-3), no copyleft restrictions.
@@ -1097,9 +1098,13 @@ and cost real planning time.
    assembly (bit 11) is now gated on the CLI `merge`/`split` commands (#677,
    `DocumentAction.AssembleDocument` → `CanAssemble`); still NOT gated: bit 11
    in the GUI page-organization surface (reorder/rotate/delete in the app).
-   GUI printing (macOS, #1545) is gated on bit 3 AND bit 12: excise prints
-   full-quality through PDFKit and cannot produce the degraded output a
-   bit-12-clear document allows, so such a document does not print either.
+   GUI printing (macOS #1545, Windows #1546) is gated on bit 3 AND bit 12:
+   excise prints full-quality (PDFKit on macOS, its own 600 DPI-capped raster
+   through `System.Drawing.Printing` on Windows) and cannot produce the
+   degraded output a bit-12-clear document allows, so such a document does
+   not print either. ⚠️ The Windows printer was written and tested on macOS
+   only (fake dialog and spooler); `PrintDlgExW`, `PrintDocument` and a real
+   driver have not been exercised on Windows.
 
 **Previously listed here and now FIXED — do not re-add:**
 - ~~Inline images `BI...ID...EI` not handled~~ → **parsed and re-serialised**

@@ -499,13 +499,19 @@ public class DocumentPrintingTests : IDisposable
     }
 
     [Fact]
-    public void Factory_PicksPdfKitOnMacOs_AndTheHonestRefusalElsewhere()
+    public void Factory_PicksPdfKitOnMacOs_GdiOnWindows_AndTheHonestRefusalElsewhere()
     {
         var printer = DocumentPrinterFactory.CreateForCurrentPlatform(NullLoggerFactory.Instance);
         if (OperatingSystem.IsMacOS())
         {
             printer.Should().BeOfType<MacPdfKitDocumentPrinter>();
             printer.IsSupported.Should().BeTrue();
+        }
+        else if (OperatingSystem.IsWindows())
+        {
+            // #1546. Not executed on the macOS dev box.
+            printer.Should().BeOfType<WindowsDocumentPrinter>();
+            printer.IsSupported.Should().Be(Environment.Is64BitProcess);
         }
         else
         {

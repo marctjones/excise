@@ -41,7 +41,8 @@ internal static class ApplicationComposition
         services.AddSingleton(_ => new ReleasedMemoryReclaimer());
 
         // #1545: printing. The platform half is chosen here (PDFKit on macOS,
-        // an honest refusal elsewhere until #1546); the workflow that writes
+        // PrintDlgEx + PrintDocument on Windows (#1546), an honest refusal
+        // elsewhere); the workflow that writes
         // and deletes the print copy is platform-neutral. Explicit factories
         // for the same reason as the host adapters below: internal types.
         services.AddSingleton<Excise.App.Services.Printing.IDocumentPrinter>(provider =>
