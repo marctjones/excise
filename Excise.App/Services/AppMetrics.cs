@@ -50,8 +50,9 @@ internal static class AppMetrics
 
     internal static readonly Histogram<long> HeapReclaimDuration = Meter.CreateHistogram<long>(
         "excise.app.heap_reclaim.duration", "ms",
-        "Wall time of one compacting gen2 collection after a document close/replace or an OS-pressure trim, " +
-        "tagged by trigger (document_closed, document_replaced, os_pressure, gc_memory_load) (#1481).");
+        "Wall time of one compacting gen2 collection after a document close/replace, an OS-pressure trim " +
+        "or a fragmented idle trim, tagged by trigger (document_closed, document_replaced, os_pressure, " +
+        "gc_memory_load, idle) (#1481, #1496).");
 
     internal static readonly Histogram<long> HeapReclaimHeapSize = Meter.CreateHistogram<long>(
         "excise.app.heap_reclaim.heap_size", "By",
@@ -151,6 +152,7 @@ internal static class AppMetrics
             HeapReclaimTrigger.DocumentReplaced => "document_replaced",
             HeapReclaimTrigger.OsPressure => "os_pressure",
             HeapReclaimTrigger.GcMemoryLoad => "gc_memory_load",
+            HeapReclaimTrigger.Idle => "idle",
             _ => "unknown",
         };
         var triggerPair = new KeyValuePair<string, object?>("trigger", triggerTag);
