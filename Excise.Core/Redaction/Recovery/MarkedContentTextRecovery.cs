@@ -32,7 +32,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// Recovery has no such constraint: reading a carrier is never destructive, and
 /// a channel that skipped the named form would be blind to a leak that is
 /// physically present. Where this reports a named-form carrier, the scrub side
-/// cannot currently close it; see #1593.</para>
+/// cannot currently close it; see #1599.</para>
 ///
 /// <para><b>Location comes from the enclosed glyphs, not the carrier.</b> A
 /// carrier has no geometry of its own. The span's own <c>/MCID</c> is not used

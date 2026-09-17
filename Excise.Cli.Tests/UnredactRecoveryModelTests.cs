@@ -28,7 +28,7 @@ public class UnredactRecoveryModelTests
         var path = WriteFixture(TextUnderBox("MANAFORT"));
         try
         {
-            var outcome = UnredactCommandHandler.Execute(Input(path));
+            var outcome = UnredactCommandHandler.Execute(Input(path), TestContext.Current.CancellationToken);
 
             outcome.Report.Should().NotBeNull();
             var recovery = outcome.Report!.Recovery;
@@ -53,7 +53,7 @@ public class UnredactRecoveryModelTests
             "q 0 0 0 rg 72 400 200 18 re f Q\n");
         try
         {
-            var recovery = UnredactCommandHandler.Execute(Input(path)).Report!.Recovery!;
+            var recovery = UnredactCommandHandler.Execute(Input(path), TestContext.Current.CancellationToken).Report!.Recovery!;
 
             recovery.Marks.Should().Be(1);
             recovery.MarksNotRecovered.Should().Be(1);
@@ -69,7 +69,7 @@ public class UnredactRecoveryModelTests
         var path = WriteFixture(TextUnderBox("MANAFORT"));
         try
         {
-            var recovery = UnredactCommandHandler.Execute(Input(path)).Report!.Recovery!;
+            var recovery = UnredactCommandHandler.Execute(Input(path), TestContext.Current.CancellationToken).Report!.Recovery!;
             var finding = recovery.Linked.Single(f => f.Channel == "hidden-text");
 
             finding.Confidence.Should().Be("certain");
@@ -91,7 +91,7 @@ public class UnredactRecoveryModelTests
         var path = WriteFixture(TextUnderBox("X"));
         try
         {
-            var recovery = UnredactCommandHandler.Execute(Input(path)).Report!.Recovery!;
+            var recovery = UnredactCommandHandler.Execute(Input(path), TestContext.Current.CancellationToken).Report!.Recovery!;
 
             recovery.ChannelsRun.Should().Contain("hidden-text");
             recovery.ChannelsSkipped.Should().ContainKey("residue")
@@ -110,7 +110,7 @@ public class UnredactRecoveryModelTests
         var path = WriteFixture(TextUnderBox("MANAFORT"));
         try
         {
-            var outcome = UnredactCommandHandler.Execute(Input(path));
+            var outcome = UnredactCommandHandler.Execute(Input(path), TestContext.Current.CancellationToken);
             var writer = new StringWriter();
             UnredactCommandOutput.Write(outcome, json: true, writer, TextWriter.Null);
 
@@ -132,7 +132,7 @@ public class UnredactRecoveryModelTests
         var path = WriteFixture(TextUnderBox("MANAFORT"));
         try
         {
-            var outcome = UnredactCommandHandler.Execute(Input(path));
+            var outcome = UnredactCommandHandler.Execute(Input(path), TestContext.Current.CancellationToken);
             var writer = new StringWriter();
             UnredactCommandOutput.Write(outcome, json: false, writer, TextWriter.Null);
             var text = writer.ToString();

@@ -113,7 +113,7 @@ public static class RecoveryScanner
             cancellationToken.ThrowIfCancellationRequested();
             var carrier = hit.NamedPropertyList
                 // Worth saying out loud in the report: the scrub side cannot
-                // currently remove this form (#1593), so a leak reported here
+                // currently remove this form (#1599), so a leak reported here
                 // will still be there after a re-redaction.
                 ? $"{hit.Carrier} (named property list)"
                 : hit.Carrier;

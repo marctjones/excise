@@ -66,7 +66,7 @@ public class RecoveryChannelTests
     [Fact]
     public void MarkedContentActualText_InANamedPropertyList_IsAlsoRecovered()
     {
-        // The form the SCRUBBER cannot remove (#1182 follow-up, #1593). Recovery
+        // The form the SCRUBBER cannot remove (#1182 follow-up, #1599). Recovery
         // has no such constraint, and a channel blind to it would miss a leak
         // that is physically present.
         using var doc = PdfDocument.Open(
