@@ -10,6 +10,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using Excise.App.Services;
 using Excise.App.ViewModels;
+using Excise.App.Views;
+using Excise.App.Workspace;
 using Excise.Avalonia.Controls;
 using Microsoft.Extensions.Logging;
 
@@ -33,7 +35,9 @@ internal static class PerfScenarioHost
         MainWindowViewModel viewModel,
         ViewerCacheTrimCoordinator? cacheTrim,
         CacheTrimPolicy trimPolicy,
-        ILogger logger)
+        ILogger logger,
+        DocumentWorkspace? workspace = null,
+        Func<MainWindow, ViewerCacheTrimCoordinator?>? cacheTrimFor = null)
     {
         PerfScenarioOptions? options = null;
         try
@@ -51,7 +55,9 @@ internal static class PerfScenarioHost
                     "Performance scenario: PdfViewerControl not found; viewer counters will be zero");
             }
 
-            var target = new AppPerfScenarioTarget(viewModel, viewer, cacheTrim);
+            // #1551-#1554: with the workspace, every step follows the active
+            // document into whichever window shows it.
+            var target = new AppPerfScenarioTarget(viewModel, viewer, cacheTrim, workspace, cacheTrimFor);
             using var journal = new PerfStepJournal(options.OutputDirectory)
             {
                 AckTimeout = options.SampleWindow,

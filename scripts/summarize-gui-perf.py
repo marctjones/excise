@@ -230,6 +230,10 @@ def collect_run(directory):
             "continuousResidentMB": mb(step, "continuousResidentBytes"),
             "continuousEntries": step.get("continuousEntries"),
             "singlePageEntries": step.get("singlePageEntries"),
+            # #1551-#1554: absent in journals written before the multi-document
+            # set existed, which is None (not measured), never 0.
+            "openDocuments": step.get("openDocuments"),
+            "documentWindows": step.get("documentWindows"),
             # Outer numbers. None when the boundary was not acknowledged in
             # time — recorded as absent rather than paired with a stale sample.
             "rssMB": outer.get("rssMB"),
@@ -280,6 +284,49 @@ def never_rendered(run):
                 "entries at every boundary - the viewer was never driven, so these "
                 "numbers are NOT a measurement of this scenario")
     return None
+
+
+def step_value(run, label, metric):
+    for step in run["steps"]:
+        if step.get("step") == label:
+            return step.get(metric)
+    return None
+
+
+def evaluate_checks(group, checks, calibration, noise, scenario):
+    """A scenario's declared checks (tests/gui-perf-scenarios.json "checks").
+
+    `drop`: did `metric` fall from boundary `from` to boundary `to`? The delta
+    is the median over the group's runs and is judged against this scenario's
+    floor, so "it dropped" is only claimed above the noise. A rise, or no
+    change, is reported as DID-NOT-DROP whatever the floor says: the check
+    exists because closing a document is supposed to give memory back.
+    """
+    results = []
+    scenario_floor = derive_floor(calibration, noise, scenario=scenario)
+    for check in checks or []:
+        if check.get("kind") != "drop":
+            results.append({"check": check, "verdict": "UNKNOWN-CHECK"})
+            continue
+        metric = check["metric"]
+        pairs = [(step_value(r, check["from"], metric), step_value(r, check["to"], metric)) for r in group]
+        deltas = [b - a for a, b in pairs if a is not None and b is not None]
+        delta = median(deltas) if deltas else None
+        floor_entry = scenario_floor.get(metric)
+        if delta is None:
+            outcome = "NO-DATA"
+        elif delta >= 0:
+            outcome = "DID-NOT-DROP"
+        else:
+            judged = verdict(delta, floor_entry)
+            outcome = "DROPPED" if judged == "IMPROVED" else f"DROPPED ({judged})"
+        results.append({
+            "check": check, "delta": delta, "runs": len(deltas),
+            "from": median([a for a, _ in pairs if a is not None]),
+            "to": median([b for _, b in pairs if b is not None]),
+            "floor": (floor_entry or {}).get("value"), "verdict": outcome,
+        })
+    return results
 
 
 def peak_and_final(run, metric):
@@ -479,9 +526,11 @@ def main():
 
     root = Path(args.run_dir)
     scenario_why = {}
+    scenario_checks = {}
     try:
         doc = json.loads(Path(args.scenario_file).read_text())
         scenario_why = {s["id"]: s.get("why", "") for s in doc.get("scenarios", [])}
+        scenario_checks = {s["id"]: s.get("checks") or [] for s in doc.get("scenarios", [])}
     except (OSError, json.JSONDecodeError):
         pass
 
@@ -582,6 +631,14 @@ def main():
             manifest["baseline"] = args.baseline
             manifest["comparison"] = comparison
 
+    checks = {}
+    for scenario in scenarios:
+        if scenario_checks.get(scenario):
+            group = [r for r in measured_runs if r["scenario"] == scenario]
+            checks[scenario] = evaluate_checks(group, scenario_checks[scenario], calibration, noise, scenario)
+    if checks:
+        manifest["checks"] = checks
+
     (root / "run.json").write_text(json.dumps(manifest, indent=2, default=str))
     if calibration["measured"]:
         (root / "calibration.json").write_text(json.dumps(calibration, indent=2, default=str))
@@ -590,7 +647,8 @@ def main():
     tsv = ["\t".join([
         "scenario", "repeat", "seq", "step", "op", "ok", "wallMs",
         "rssMB", "footprintMB", "committedMB", "liveHeapMB", "fragmentedMB",
-        "continuousResidentMB", "cpuTotalMs", "gen2", "load1", "outerSampled", "note"])]
+        "continuousResidentMB", "cpuTotalMs", "gen2", "load1", "outerSampled",
+        "openDocuments", "documentWindows", "note"])]
     for run in sorted(measured_runs, key=lambda r: (r["scenario"] or "", r["repeat"])):
         for step in run["steps"]:
             tsv.append("\t".join(str(x) for x in [
@@ -600,7 +658,8 @@ def main():
                 fmt(step["liveHeapMB"]), fmt(step["fragmentedMB"]),
                 fmt(step["continuousResidentMB"]), fmt(step["cpuTotalMs"]),
                 step["gen2Collections"], fmt(step["load1"], 2),
-                step["outerSampled"], step["note"] or ""]))
+                step["outerSampled"], step.get("openDocuments"), step.get("documentWindows"),
+                step["note"] or ""]))
     (root / "summary.tsv").write_text("\n".join(tsv) + "\n")
 
     # ------------------------------------------------------------- summary.md
@@ -760,17 +819,36 @@ def main():
         lines.append("")
 
         representative = group[0]
+        # Documents/windows only where a journal recorded them with more than
+        # one document open at some boundary: the single-document tables keep
+        # their shape.
+        multi = any((s.get("openDocuments") or 0) > 1 for s in representative["steps"])
+        docs_head, docs_rule = (" docs/windows |", "---|") if multi else ("", "")
         lines += ["| step | op | wall ms | footprint MB | rss MB | committed MB | "
-                  "live MB | frag MB | tiles MB | gen2 | ok |",
-                  "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|"]
+                  "live MB | frag MB | tiles MB | gen2 |" + docs_head + " ok |",
+                  "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|" + docs_rule + "---|"]
         for step in representative["steps"]:
+            docs_cell = (f" {step.get('openDocuments')}/{step.get('documentWindows')} |" if multi else "")
             lines.append(
                 f"| {step['step']} | {step['op']} | {fmt(step['wallMs'])} | "
                 f"{fmt(step['footprintMB'])} | {fmt(step['rssMB'])} | "
                 f"{fmt(step['committedMB'])} | {fmt(step['liveHeapMB'])} | "
                 f"{fmt(step['fragmentedMB'])} | {fmt(step['continuousResidentMB'])} | "
-                f"{step['gen2Collections']} | {'yes' if step['ok'] else 'NO'} |")
+                f"{step['gen2Collections']} |{docs_cell} {'yes' if step['ok'] else 'NO'} |")
         lines.append("")
+
+        for result in checks.get(scenario, []):
+            check = result["check"]
+            if result["verdict"] == "UNKNOWN-CHECK":
+                lines += [f"> ⚠️ Unknown check kind `{check.get('kind')}`; nothing was evaluated.", ""]
+                continue
+            flag = "" if result["verdict"].startswith("DROPPED") and "(" not in result["verdict"] else "⚠️ "
+            lines += [
+                f"{flag}**Check `{check['kind']}` {check['metric']}**: `{check['from']}` "
+                f"{fmt(result['from'])} -> `{check['to']}` {fmt(result['to'])} "
+                f"(median delta {fmt(result['delta'])} over {result['runs']} run(s), floor "
+                f"{'UNKNOWN' if result['floor'] is None else fmt(result['floor'])}): "
+                f"**{result['verdict']}**. _{check.get('why', '')}_", ""]
 
         for step in representative["steps"]:
             if step["note"]:
@@ -840,6 +918,12 @@ def main():
         warning = never_rendered(run)
         if warning:
             print(f"!! {run['scenario']}: {warning}")
+
+    for scenario, results in checks.items():
+        for result in results:
+            if not result["verdict"].startswith("DROPPED") or "(" in result["verdict"]:
+                print(f"!! {scenario}: check {result['check'].get('kind')} "
+                      f"{result['check'].get('metric')}: {result['verdict']}")
 
     total_failures = sum(r["failures"] for r in measured_runs)
     if total_failures:

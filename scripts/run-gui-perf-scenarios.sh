@@ -36,9 +36,23 @@
 #   scripts/run-gui-perf-scenarios.sh --calibrate           # runner + sampler overhead, noise floor
 #   scripts/run-gui-perf-scenarios.sh --list                # print the plan, run nothing
 #   scripts/run-gui-perf-scenarios.sh --baseline logs/gui-perf_OLD/run.json
+#   scripts/run-gui-perf-scenarios.sh --set multi-document  # the optional multi-document set
+#
+# THE MULTI-DOCUMENT SET (#1551-#1554) is opt-in: a scenario with a "set" runs
+# only under --set NAME (or when named with --scenario). Its "settings" are
+# written into that launch's isolated window.json, which is how
+# multi-tabs-* get Open Documents In = NewTab without touching anyone's real
+# preferences. Four scenarios, one launch each at --repeats 1; estimated from
+# their idle steps plus opens and settles (not yet measured):
+#   multi-windows-open3  ~1.5 min   3 windows, idle 30 s, close one, 45 s after
+#   multi-tabs-open3     ~1.5 min   the same as tabs of one window
+#   multi-tabs-switch    ~1.5 min   page/scroll must survive each tab switch
+#   multi-quit-dirty     ~1 min     quit review answers 2 prompts in process
+# so `--set multi-document --repeats 5` is ~30 min plus the Release build.
 #
 # OPTIONS
-#   --scenario ID       one scenario (repeatable); default: all
+#   --scenario ID       one scenario (repeatable); default: every scenario with no "set"
+#   --set NAME          every scenario whose "set" is NAME (e.g. multi-document)
 #   --repeats N         repeats per scenario (default 1; use 5 for a noise floor)
 #   --sample MODE       boundary (default) | 1s | 5s | none
 #                       How much the OUTER sampler does; the knob the
@@ -84,10 +98,12 @@ BUILD=1
 KEEP_BUNDLE=0
 LIST_ONLY=0
 SELECTED=()
+SCENARIO_SET=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --scenario) SELECTED+=("$2"); shift 2 ;;
+    --set) SCENARIO_SET="$2"; shift 2 ;;
     --repeats) REPEATS="$2"; shift 2 ;;
     --sample) SAMPLE_MODE="$2"; shift 2 ;;
     --vmmap) DO_VMMAP=1; shift ;;
@@ -120,13 +136,17 @@ if [ ! -f "$SCENARIO_FILE" ]; then
   exit 1
 fi
 
+# $1: "" = the default set (scenarios with no "set"), "*" = every scenario,
+# anything else = that set.
 all_scenarios() {
   python3 -c '
 import json, sys
 doc = json.load(open(sys.argv[1]))
+want = sys.argv[2]
 for s in doc["scenarios"]:
-    print(s["id"])
-' "$SCENARIO_FILE"
+    if want == "*" or (s.get("set") or "") == want:
+        print(s["id"])
+' "$SCENARIO_FILE" "${1:-}"
 }
 
 scenario_docs() {
@@ -146,14 +166,23 @@ for s in doc["scenarios"]:
 # NOTE: macOS ships bash 3.2 — no `mapfile`, no `local -n`, no associative
 # arrays. Everything below stays inside 3.2, the same constraint
 # check-unwired-api.sh records having learned the hard way.
+if [ -n "$SCENARIO_SET" ] && [ "${#SELECTED[@]}" -gt 0 ]; then
+  echo "--set and --scenario are exclusive; name the scenarios or the set" >&2
+  exit 2
+fi
 if [ "${#SELECTED[@]}" -eq 0 ]; then
   while IFS= read -r line; do
     [ -n "$line" ] && SELECTED[${#SELECTED[@]}]="$line"
-  done < <(all_scenarios)
+  done < <(all_scenarios "$SCENARIO_SET")
+  if [ "${#SELECTED[@]}" -eq 0 ]; then
+    # Same rule as a typo'd --scenario: an empty plan is not a run.
+    echo "no scenario has set '$SCENARIO_SET'" >&2
+    exit 2
+  fi
 else
   # A scenario name that matches nothing is a TYPO, not "run everything" — the
   # same rule --fixture enforces in the reference-performance bench.
-  known="$(all_scenarios)"
+  known="$(all_scenarios '*')"
   for want in "${SELECTED[@]}"; do
     if ! printf '%s\n' "$known" | grep -qxF "$want"; then
       echo "unknown scenario '$want'. Known:" >&2
@@ -174,6 +203,7 @@ done < <(scenario_docs)
 
 if [ "$LIST_ONLY" = "1" ]; then
   echo "scenario file : $SCENARIO_FILE"
+  echo "set           : ${SCENARIO_SET:-(default: scenarios with no set)}"
   echo "scenarios     : ${SELECTED[*]}"
   echo "repeats       : $REPEATS"
   echo "sample mode   : $SAMPLE_MODE   (vmmap=$DO_VMMAP)"
@@ -189,6 +219,7 @@ if [ "$MISSING" = "1" ]; then
 fi
 
 mkdir -p "$OUT"
+APP_HOME_ROOT="/private/tmp/excise-gui-perf/$(basename "$OUT")"
 
 # ------------------------------------------------------------------ safety gates
 
@@ -232,6 +263,7 @@ cleanup_bundle() {
   if [ "$KEEP_BUNDLE" = "0" ] && [ "$BUILD" = "1" ]; then
     rm -rf "$BUNDLE_DIR"
   fi
+  rm -rf "$APP_HOME_ROOT"
 }
 trap cleanup_bundle EXIT
 
@@ -354,15 +386,30 @@ launch_one() {
   #   - the user's real settings: DocumentStates, zoom.txt, recent.txt and
   #     window geometry were written into ~/Library/Application Support/Excise.App.
   # A cold thumbnail/tile cache on every launch is also the reproducible choice.
-  local app_home="$dir/home"
+  #
+  # The isolated HOME lives under /private/tmp, not under logs/: the app's own
+  # settings and caches stay out of ~/Documents (the reader bench learned why:
+  # macOS guards that folder, and every rebuilt ad-hoc-signed bundle is a new
+  # app to it). The evidence the app writes ($dir) stays in logs/.
+  local app_home="$APP_HOME_ROOT/${dir#"$OUT"/}/home"
   rm -rf "$app_home"; mkdir -p "$app_home"
   # EXCISE_GUI_PERF_SEED_WINDOW_JSON=<file> starts the launch from a RESTORED
   # window state instead of defaults -- how the hollow-scroll case above is
-  # reproduced on purpose.
-  if [ -n "${EXCISE_GUI_PERF_SEED_WINDOW_JSON:-}" ]; then
-    mkdir -p "$app_home/Library/Application Support/Excise.App"
-    cp "$EXCISE_GUI_PERF_SEED_WINDOW_JSON" "$app_home/Library/Application Support/Excise.App/window.json"
-  fi
+  # reproduced on purpose. A scenario's "settings" (the multi-document set's
+  # DocumentOpenMode) are merged over it, into this launch's window.json only.
+  python3 - "$SCENARIO_FILE" "$scenario" "${EXCISE_GUI_PERF_SEED_WINDOW_JSON:-}" \
+    "$app_home/Library/Application Support/Excise.App/window.json" <<'PYEOF' || return 1
+import json, os, sys
+scenarios = json.load(open(sys.argv[1]))["scenarios"]
+settings = next((s.get("settings") or {} for s in scenarios if s["id"] == sys.argv[2]), {})
+if not settings and not sys.argv[3]:
+    sys.exit(0)
+seeded = json.load(open(sys.argv[3])) if sys.argv[3] else {}
+seeded.update(settings)
+os.makedirs(os.path.dirname(sys.argv[4]), exist_ok=True)
+with open(sys.argv[4], "w") as f:
+    json.dump(seeded, f)
+PYEOF
   local -a env_args=("HOME=$app_home" "EXCISE_TRACE_VIEWER=$dir/metrics.jsonl")
   if [ "$mode" = "runner" ]; then
     env_args+=(
@@ -439,7 +486,10 @@ echo "==> output: $OUT"
   echo "sample=$SAMPLE_MODE"
   echo "vmmap=$DO_VMMAP"
   echo "repeats=$REPEATS"
+  echo "set=${SCENARIO_SET:-default}"
   echo "scenarios=${SELECTED[*]}"
+  echo "systemTabbing=$(defaults read -g AppleWindowTabbingMode 2>/dev/null || echo fullscreen)"
+  echo "appHome=$APP_HOME_ROOT"
   echo "exe=$EXE"
   echo "started=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 } > "$OUT/run-meta.txt"

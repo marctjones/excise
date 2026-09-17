@@ -172,10 +172,59 @@ public class PerfScenarioTests
     [InlineData("""{"op":"search"}""", "text")]
     [InlineData("""{"op":"redactText"}""", "text")]
     [InlineData("""{"op":"trim"}""", "background|warn|critical")]
+    [InlineData("""{"op":"openAnother","level":"tab"}""", "document")]
+    [InlineData("""{"op":"openAnother","document":"x.pdf"}""", "window|tab")]
+    [InlineData("""{"op":"openAnother","document":"x.pdf","level":"replace"}""", "window|tab")]
+    [InlineData("""{"op":"switchDocument","count":0}""", "non-zero")]
+    [InlineData("""{"op":"expectDocuments"}""", "documents and/or windows")]
+    [InlineData("""{"op":"quitReview","count":2}""", "discard")]
+    [InlineData("""{"op":"quitReview","level":"save","count":2}""", "discard")]
+    [InlineData("""{"op":"quitReview","level":"discard"}""", "prompt count")]
     public void Parse_StepMissingItsRequiredArgument_ThrowsAtParseTime(string step, string expected) =>
         Throwing(() => PerfScenarioFile.Parse(
                 $$"""{"schemaVersion":1,"scenarios":[{"id":"a","why":"w","steps":[{{step}}]}]}"""))
             .Should().Throw<InvalidOperationException>().WithMessage($"*{expected}*");
+
+    [Fact]
+    public void Parse_QuitReviewBeforeTheLastStep_Throws() =>
+        // The harness quits right after an approved quit review, so a later
+        // step would never run while the scenario still read as complete.
+        Throwing(() => PerfScenarioFile.Parse(
+                """
+                {"schemaVersion":1,"scenarios":[{"id":"a","why":"w","steps":[
+                  {"op":"quitReview","level":"discard","count":0},
+                  {"op":"idle","seconds":1}]}]}
+                """))
+            .Should().Throw<InvalidOperationException>().WithMessage("*last step*");
+
+    [Fact]
+    public void ShippedScenarioFile_MultiDocumentScenariosAreOptIn()
+    {
+        var path = TryFindRepoFile("tests", "gui-perf-scenarios.json");
+        Assert.SkipWhen(path == null, "tests/gui-perf-scenarios.json not found above the test output directory.");
+
+        // run-gui-perf-scenarios.sh runs every scenario WITHOUT a "set" by
+        // default and a set only with --set. A multi-document scenario that
+        // forgot its set would silently join (and lengthen) the default run.
+        var multiOps = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "openAnother", "switchDocument", "expectDocuments", "quitReview" };
+        using var document = JsonDocument.Parse(File.ReadAllText(path!));
+        var multi = document.RootElement.GetProperty("scenarios").EnumerateArray()
+            .Where(s => s.GetProperty("steps").EnumerateArray()
+                .Any(step => multiOps.Contains(step.GetProperty("op").GetString() ?? string.Empty)))
+            .ToList();
+
+        multi.Should().NotBeEmpty("the multi-document scenarios (#1551-#1554) are part of the shipped file");
+        foreach (var scenario in multi)
+        {
+            var id = scenario.GetProperty("id").GetString();
+            scenario.TryGetProperty("set", out var setName).Should().BeTrue($"scenario '{id}' needs \"set\"");
+            setName.GetString().Should().Be("multi-document", $"scenario '{id}'");
+            scenario.TryGetProperty("settings", out var settings).Should().BeTrue(
+                $"scenario '{id}' must seed its DocumentOpenMode rather than inherit the default");
+            settings.GetProperty("DocumentOpenMode").GetString().Should().BeOneOf("NewWindow", "NewTab");
+        }
+    }
 
     [Fact]
     public void Select_UnknownId_ThrowsAndNamesWhatExists()
@@ -317,6 +366,53 @@ public class PerfScenarioTests
         records.First().GetProperty("step").GetString().Should().Be("baseline");
         records.Select(r => r.GetProperty("step").GetString())
             .Should().Equal("baseline", "pre-open", "open", "waitidle", "scrollpages", "trim", "close");
+    }
+
+    [Fact]
+    public async Task Runner_ExecutesTheMultiDocumentSteps_InOrder()
+    {
+        var target = new FakeTarget();
+        var scenario = PerfScenarioFile.Parse(
+            """
+            {"schemaVersion":1,"scenarios":[{"id":"s","why":"w","steps":[
+              {"op":"open","document":"a.pdf"},
+              {"op":"openAnother","document":"b.pdf","level":"Tab"},
+              {"op":"switchDocument"},
+              {"op":"switchDocument","count":-2},
+              {"op":"expectDocuments","documents":2,"windows":1},
+              {"op":"quitReview","level":"discard","count":0}]}]}
+            """)[0];
+
+        var (result, _) = await RunAsync(target, scenario);
+
+        target.Calls.Should().Equal(
+            "open:a.pdf", "openAnother:b.pdf:tab", "switch:1", "switch:-2",
+            "expect:2/1", "quitReview");
+        result.Failures.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Runner_ReportsAWrongDocumentLayout_AndAWrongPromptCount_AsFailures()
+    {
+        // Both are the "measured the wrong thing" shape: three documents that
+        // opened as one replaced document, or a quit review that asked nothing.
+        var target = new FakeTarget { LayoutMismatch = "found 1 in 1", PromptsAnswered = 1 };
+        var scenario = PerfScenarioFile.Parse(
+            """
+            {"schemaVersion":1,"scenarios":[{"id":"s","why":"w","steps":[
+              {"op":"expectDocuments","documents":3,"label":"three-open"},
+              {"op":"quitReview","level":"discard","count":2,"label":"quit"}]}]}
+            """)[0];
+
+        var (result, records) = await RunAsync(target, scenario);
+
+        result.Failures.Should().Be(2);
+        records.Single(r => r.GetProperty("step").GetString() == "three-open")
+            .GetProperty("note").GetString().Should().Contain("found 1 in 1");
+        records.Single(r => r.GetProperty("step").GetString() == "quit")
+            .GetProperty("note").GetString().Should().Contain("answered 1").And.Contain("expected 2");
+        records.Should().OnlyContain(r => r.TryGetProperty("openDocuments", out _)
+                                          && r.TryGetProperty("documentWindows", out _));
     }
 
     [Fact]
@@ -511,6 +607,10 @@ public class PerfScenarioTests
 
         internal bool CloseHangs { get; init; }
 
+        internal string? LayoutMismatch { get; init; }
+
+        internal int PromptsAnswered { get; init; }
+
         /// <summary>Every path the runner handed to <see cref="OpenAsync"/>, verbatim.</summary>
         internal List<string> OpenedPaths { get; } = new();
 
@@ -577,6 +677,31 @@ public class PerfScenarioTests
         {
             Calls.Add("trim:" + level);
             return Task.FromResult(TrimAllowed);
+        }
+
+        public Task OpenAnotherAsync(string path, string expect, CancellationToken cancellationToken)
+        {
+            OpenedPaths.Add(path);
+            Calls.Add($"openAnother:{Path.GetFileName(path)}:{expect}");
+            return Task.CompletedTask;
+        }
+
+        public Task SwitchDocumentAsync(int offset, CancellationToken cancellationToken)
+        {
+            Calls.Add("switch:" + offset);
+            return Task.CompletedTask;
+        }
+
+        public string? DescribeDocumentMismatch(int? documents, int? windows)
+        {
+            Calls.Add($"expect:{documents}/{windows}");
+            return LayoutMismatch;
+        }
+
+        public Task<int> ReviewUnsavedChangesForQuitAsync(CancellationToken cancellationToken)
+        {
+            Calls.Add("quitReview");
+            return Task.FromResult(PromptsAnswered);
         }
 
         public PerfSample Sample() => PerfSample.FromRuntime();

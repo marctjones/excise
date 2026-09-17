@@ -244,7 +244,9 @@ public partial class App : Application
                 {
                     DispatcherTimer.RunOnce(
                         () => _ = Automation.PerfScenarioHost.RunAsync(
-                            desktop.MainWindow!, vm, trimForScenario, trimPolicy, logger),
+                            desktop.MainWindow!, vm, trimForScenario, trimPolicy, logger,
+                            workspace,
+                            scenarioWindow => cacheTrims.TryGetValue(scenarioWindow, out var scenarioTrim) ? scenarioTrim : null),
                         TimeSpan.FromMilliseconds(1200),
                         DispatcherPriority.Background);
                 };

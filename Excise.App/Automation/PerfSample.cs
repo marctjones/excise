@@ -43,7 +43,9 @@ internal readonly record struct PerfSample(
     int SinglePageEntries,
     double ZoomLevel,
     int CurrentPageIndex,
-    int TotalPages)
+    int TotalPages,
+    int OpenDocuments = 0,
+    int DocumentWindows = 0)
 {
     /// <summary>Read the runtime/process half of a sample. Never forces a GC.</summary>
     internal static PerfSample FromRuntime()
