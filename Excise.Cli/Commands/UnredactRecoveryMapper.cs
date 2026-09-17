@@ -28,6 +28,7 @@ internal static class UnredactRecoveryMapper
                 summary.Findings.Count(f => f.Confidence == RecoveryConfidence.Certain),
                 summary.Fit is { } fit
                     ? new UnredactMarkFit(
+                        fit.WidthPt, fit.WidthBasis,
                         fit.MinCharacters, fit.MaxCharacters, fit.PatternClasses,
                         fit.Candidates.Take(10).Select(c => c.Text).ToList(),
                         fit.Candidates.Count, fit.CandidatesConsidered,

@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "bfb49abec4618348c6d631b42b14365844df83492f213b5dcab0841877fde9ce",
+  "sourceFingerprint": "54f572fb667183da1cf38001663e00661b02704f8b958d83503a406ff0a9b595",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -20929,11 +20929,401 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs::UnredactionBenchManifestTests.TheManifestExistsAndParses",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs",
+      "class": "UnredactionBenchManifestTests",
+      "method": "TheManifestExistsAndParses",
+      "line": 62,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs::UnredactionBenchManifestTests.TheSchemaIsClosed_SoNoColumnCanEverCarryARecoveredValue",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs",
+      "class": "UnredactionBenchManifestTests",
+      "method": "TheSchemaIsClosed_SoNoColumnCanEverCarryARecoveredValue",
+      "line": 76,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs::UnredactionBenchManifestTests.EveryRowIsWellFormed",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs",
+      "class": "UnredactionBenchManifestTests",
+      "method": "EveryRowIsWellFormed",
+      "line": 98,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs::UnredactionBenchManifestTests.EveryRowCarriesAnAssessment_NotJustAVerdict",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs",
+      "class": "UnredactionBenchManifestTests",
+      "method": "EveryRowCarriesAnAssessment_NotJustAVerdict",
+      "line": 115,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs::UnredactionBenchManifestTests.AnUnvettedRowIsNeverMistakenForAClearedOne",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs",
+      "class": "UnredactionBenchManifestTests",
+      "method": "AnUnvettedRowIsNeverMistakenForAClearedOne",
+      "line": 130,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs::UnredactionBenchManifestTests.AVettedRowIsFullyGrounded",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs",
+      "class": "UnredactionBenchManifestTests",
+      "method": "AVettedRowIsFullyGrounded",
+      "line": 145,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs::UnredactionBenchManifestTests.AnExcludedRowSaysWhyAndIsNeverDownloadable",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs",
+      "class": "UnredactionBenchManifestTests",
+      "method": "AnExcludedRowSaysWhyAndIsNeverDownloadable",
+      "line": 169,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs::UnredactionBenchManifestTests.TheDownloadScriptAndTheRegistryAgreeWithTheManifest",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs",
+      "class": "UnredactionBenchManifestTests",
+      "method": "TheDownloadScriptAndTheRegistryAgreeWithTheManifest",
+      "line": 181,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs::UnredactionBenchManifestTests.TheBenchCorpusIsGitignored",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionBenchManifestTests.cs",
+      "class": "UnredactionBenchManifestTests",
+      "method": "TheBenchCorpusIsGitignored",
+      "line": 206,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Differential/UnredactionScorecardTests.cs::UnredactionScorecardTests.Score_GradesPerChannelStratumTool_AndComputesExciseAdvantage",
       "path": "Excise.Rendering.Tests/Differential/UnredactionScorecardTests.cs",
       "class": "UnredactionScorecardTests",
       "method": "Score_GradesPerChannelStratumTool_AndComputesExciseAdvantage",
-      "line": 38,
+      "line": 39,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionScorecardTests.cs::the.ANegativeControlStratum_ScoresSpecificity_SoSilenceIsNotAMiss",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionScorecardTests.cs",
+      "class": "the",
+      "method": "ANegativeControlStratum_ScoresSpecificity_SoSilenceIsNotAMiss",
+      "line": 65,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -20972,7 +21362,7 @@
       "path": "Excise.Rendering.Tests/Differential/UnredactionScorecardTests.cs",
       "class": "the",
       "method": "NoReferenceForAStratum_IsReportedNotCountedAsAWin",
-      "line": 64,
+      "line": 101,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -21011,7 +21401,202 @@
       "path": "Excise.Rendering.Tests/Differential/UnredactionScorecardTests.cs",
       "class": "the",
       "method": "ConsolidatedScorecard_CertainAndResidue_ExciseLeadsTheReferences",
-      "line": 72,
+      "line": 109,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionTierABenchTests.cs::UnredactionTierABenchTests.EveryRegistryModeHasAnAxis",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionTierABenchTests.cs",
+      "class": "UnredactionTierABenchTests",
+      "method": "EveryRegistryModeHasAnAxis",
+      "line": 25,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionTierABenchTests.cs::UnredactionTierABenchTests.EveryModeTheRegistryCallsCovered_RecoversItsPlantedAnswer",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionTierABenchTests.cs",
+      "class": "UnredactionTierABenchTests",
+      "method": "EveryModeTheRegistryCallsCovered_RecoversItsPlantedAnswer",
+      "line": 35,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionTierABenchTests.cs::UnredactionTierABenchTests.EveryModeTheRegistryCallsAGap_IsMeasuredAndStillZero",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionTierABenchTests.cs",
+      "class": "UnredactionTierABenchTests",
+      "method": "EveryModeTheRegistryCallsAGap_IsMeasuredAndStillZero",
+      "line": 53,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionTierABenchTests.cs::UnredactionTierABenchTests.TheBenchReportsWhichModesItCannotYetPose",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionTierABenchTests.cs",
+      "class": "UnredactionTierABenchTests",
+      "method": "TheBenchReportsWhichModesItCannotYetPose",
+      "line": 73,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionTierABenchTests.cs::UnredactionTierABenchTests.TheScorecardRendersWithItsCoverageStated",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionTierABenchTests.cs",
+      "class": "UnredactionTierABenchTests",
+      "method": "TheScorecardRendersWithItsCoverageStated",
+      "line": 91,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -41086,11 +41671,11 @@
     }
   ],
   "summary": {
-    "testMethods": 1139,
+    "testMethods": 1154,
     "facets": {
       "content-streams": 330,
       "content-strings-and-text": 7,
-      "differential-rendering": 594,
+      "differential-rendering": 609,
       "fonts": 203,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 315,
@@ -41103,7 +41688,7 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 7,
       "pdf.17.content.streams:parse": 337,
-      "pdf.17.content.streams:render": 739,
+      "pdf.17.content.streams:render": 754,
       "pdf.17.content.text-state:extract": 7,
       "pdf.17.content.text-state:parse": 7,
       "pdf.17.content.text-state:render": 7,
@@ -41111,10 +41696,10 @@
       "pdf.17.graphics.color:render": 53,
       "pdf.17.graphics.fonts:extract": 203,
       "pdf.17.graphics.fonts:parse": 203,
-      "pdf.17.graphics.fonts:render": 736,
+      "pdf.17.graphics.fonts:render": 751,
       "pdf.17.graphics.images:extract": 192,
       "pdf.17.graphics.images:parse": 192,
-      "pdf.17.graphics.images:render": 719,
+      "pdf.17.graphics.images:render": 734,
       "pdf.17.graphics.paths-painting:parse": 315,
       "pdf.17.graphics.paths-painting:render": 315,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -41122,7 +41707,7 @@
       "pdf.17.graphics.state:parse": 315,
       "pdf.17.graphics.state:render": 315,
       "pdf.17.transparency.model:parse": 80,
-      "pdf.17.transparency.model:render": 628
+      "pdf.17.transparency.model:render": 643
     },
     "unclassified": 31,
     "allTestsMapped": true

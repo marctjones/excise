@@ -1737,6 +1737,294 @@ namespace Excise.Core.Primitives
         public static Excise.Core.Primitives.PdfString op_Implicit(string s) { }
     }
 }
+namespace Excise.Core.Redaction.Recovery
+{
+    public static class CoveredContentRecovery
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.CoveredContentRecovery.CoveredContent> Scan(Excise.Core.Document.PdfDocument document) { }
+        public readonly struct CoveredContent : System.IEquatable<Excise.Core.Redaction.Recovery.CoveredContentRecovery.CoveredContent>
+        {
+            public CoveredContent(int PageNumber, string Kind, string Description, Excise.Core.Document.PdfRectangle Covered, Excise.Core.Document.PdfRectangle Obstruction) { }
+            public Excise.Core.Document.PdfRectangle Covered { get; init; }
+            public string Description { get; init; }
+            public string Kind { get; init; }
+            public Excise.Core.Document.PdfRectangle Obstruction { get; init; }
+            public int PageNumber { get; init; }
+        }
+    }
+    public static class FormFieldValueRecovery
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.FormFieldValueRecovery.FieldValue> Scan(Excise.Core.Document.PdfDocument document) { }
+        public readonly struct FieldValue : System.IEquatable<Excise.Core.Redaction.Recovery.FormFieldValueRecovery.FieldValue>
+        {
+            public FieldValue(int PageNumber, string FieldName, string Value, Excise.Core.Document.PdfRectangle? Rect) { }
+            public string FieldName { get; init; }
+            public int PageNumber { get; init; }
+            public Excise.Core.Document.PdfRectangle? Rect { get; init; }
+            public string Value { get; init; }
+        }
+    }
+    public static class ImageLayerRecovery
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.ImageLayerRecovery.ImageLayerLeak> Scan(Excise.Core.Document.PdfDocument document) { }
+        public readonly struct ImageLayerLeak : System.IEquatable<Excise.Core.Redaction.Recovery.ImageLayerRecovery.ImageLayerLeak>
+        {
+            public ImageLayerLeak(string Kind, int ObjectNumber, int Width, int Height, string Description) { }
+            public string Description { get; init; }
+            public int Height { get; init; }
+            public string Kind { get; init; }
+            public int ObjectNumber { get; init; }
+            public int Width { get; init; }
+        }
+    }
+    public enum MarkRecoveryOutcome
+    {
+        Recovered = 0,
+        PartiallyRecovered = 1,
+        CandidatesOnly = 2,
+        NotRecovered = 3,
+    }
+    public static class MarkRegionTextRecovery
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.MarkRegionTextRecovery.MarkRegionText> Scan(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionMark> marks) { }
+        public readonly struct MarkRegionText : System.IEquatable<Excise.Core.Redaction.Recovery.MarkRegionTextRecovery.MarkRegionText>
+        {
+            public MarkRegionText(int PageNumber, string MarkId, string Kind, string Text, Excise.Core.Document.PdfRectangle Rect) { }
+            public string Kind { get; init; }
+            public string MarkId { get; init; }
+            public int PageNumber { get; init; }
+            public Excise.Core.Document.PdfRectangle Rect { get; init; }
+            public string Text { get; init; }
+        }
+    }
+    public sealed class MarkSummary : System.IEquatable<Excise.Core.Redaction.Recovery.MarkSummary>
+    {
+        public MarkSummary(Excise.Core.Redaction.Recovery.RedactionMark Mark, Excise.Core.Redaction.Recovery.MarkRecoveryOutcome Outcome, System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RecoveredFinding> Findings, Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport? Fit = null) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RecoveredFinding> Findings { get; init; }
+        public Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport? Fit { get; init; }
+        public bool HasCertain { get; }
+        public Excise.Core.Redaction.Recovery.RedactionMark Mark { get; init; }
+        public Excise.Core.Redaction.Recovery.MarkRecoveryOutcome Outcome { get; init; }
+    }
+    public static class MarkedContentTextRecovery
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.MarkedContentTextRecovery.MarkedContentText> Scan(Excise.Core.Document.PdfDocument document) { }
+        public readonly struct MarkedContentText : System.IEquatable<Excise.Core.Redaction.Recovery.MarkedContentTextRecovery.MarkedContentText>
+        {
+            public MarkedContentText(int PageNumber, string Carrier, string Text, Excise.Core.Document.PdfRectangle? Enclosed, bool NamedPropertyList) { }
+            public string Carrier { get; init; }
+            public Excise.Core.Document.PdfRectangle? Enclosed { get; init; }
+            public bool NamedPropertyList { get; init; }
+            public int PageNumber { get; init; }
+            public string Text { get; init; }
+        }
+    }
+    public static class PriorRevisionRecovery
+    {
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Findings",
+                "Summary"})]
+        public static System.ValueTuple<System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.PriorRevisionRecovery.PriorRevisionText>, Excise.Core.Redaction.Recovery.PriorRevisionRecovery.PriorRevisionSummary> Scan(byte[] pdfBytes, System.Threading.CancellationToken cancellationToken = default) { }
+        public readonly struct PriorRevisionSummary : System.IEquatable<Excise.Core.Redaction.Recovery.PriorRevisionRecovery.PriorRevisionSummary>
+        {
+            public PriorRevisionSummary(int RevisionCount, int RevisionsParsed, int RevisionsUnreadable, int PagesRemoved) { }
+            public int PagesRemoved { get; init; }
+            public int RevisionCount { get; init; }
+            public int RevisionsParsed { get; init; }
+            public int RevisionsUnreadable { get; init; }
+        }
+        public readonly struct PriorRevisionText : System.IEquatable<Excise.Core.Redaction.Recovery.PriorRevisionRecovery.PriorRevisionText>
+        {
+            public PriorRevisionText(int RevisionIndex, int PageNumber, string Text, Excise.Core.Document.PdfRectangle Rect) { }
+            public int PageNumber { get; init; }
+            public Excise.Core.Document.PdfRectangle Rect { get; init; }
+            public int RevisionIndex { get; init; }
+            public string Text { get; init; }
+        }
+    }
+    public sealed class RecoveredFinding : System.IEquatable<Excise.Core.Redaction.Recovery.RecoveredFinding>
+    {
+        public RecoveredFinding(string Channel, string Carrier, Excise.Core.Redaction.Recovery.RecoveryConfidence Confidence, string? Text, System.Collections.Generic.IReadOnlyList<string> Candidates, double ResidualBits, Excise.Core.Redaction.Recovery.RecoveryLocation? Location, string? MarkId = null, double? Score = default) { }
+        public System.Collections.Generic.IReadOnlyList<string> Candidates { get; init; }
+        public string Carrier { get; init; }
+        public string Channel { get; init; }
+        public Excise.Core.Redaction.Recovery.RecoveryConfidence Confidence { get; init; }
+        public Excise.Core.Redaction.Recovery.RecoveryLocation? Location { get; init; }
+        public string? MarkId { get; init; }
+        public double ResidualBits { get; init; }
+        public double? Score { get; init; }
+        public string? Text { get; init; }
+        public Excise.Core.Redaction.Recovery.RecoveredFinding LinkedTo(string markId) { }
+        public static Excise.Core.Redaction.Recovery.RecoveredFinding Candidate(string channel, string carrier, System.Collections.Generic.IReadOnlyList<string> candidates, double residualBits, Excise.Core.Redaction.Recovery.RecoveryLocation? location) { }
+        public static Excise.Core.Redaction.Recovery.RecoveredFinding Certain(string channel, string carrier, string text, Excise.Core.Redaction.Recovery.RecoveryLocation? location, double? score = default) { }
+        public static Excise.Core.Redaction.Recovery.RecoveredFinding PresentOnly(string channel, string carrier, Excise.Core.Redaction.Recovery.RecoveryLocation? location) { }
+    }
+    public enum RecoveryConfidence
+    {
+        Certain = 0,
+        Candidate = 1,
+        PresentOnly = 2,
+    }
+    public sealed class RecoveryLocation : System.IEquatable<Excise.Core.Redaction.Recovery.RecoveryLocation>
+    {
+        public RecoveryLocation(int PageNumber, Excise.Core.Document.PdfRectangle Rect, string Provenance) { }
+        public int PageNumber { get; init; }
+        public string Provenance { get; init; }
+        public Excise.Core.Document.PdfRectangle Rect { get; init; }
+    }
+    public sealed class RecoveryReport : System.IEquatable<Excise.Core.Redaction.Recovery.RecoveryReport>
+    {
+        public RecoveryReport(System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.MarkSummary> Marks, System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RecoveredFinding> Unlinked, System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RecoveredFinding> DocumentLevel, System.Collections.Generic.IReadOnlyList<string> ChannelsRun, System.Collections.Generic.IReadOnlyDictionary<string, string> ChannelsSkipped) { }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Redaction.Recovery.RecoveredFinding> AllFindings { get; }
+        public System.Collections.Generic.IReadOnlyList<string> ChannelsRun { get; init; }
+        public System.Collections.Generic.IReadOnlyDictionary<string, string> ChannelsSkipped { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RecoveredFinding> DocumentLevel { get; init; }
+        public int MarkCount { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.MarkSummary> Marks { get; init; }
+        public int MarksCandidatesOnly { get; }
+        public int MarksNotRecovered { get; }
+        public int MarksPartial { get; }
+        public int MarksRecovered { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RecoveredFinding> Unlinked { get; init; }
+    }
+    public sealed class RecoveryReportBuilder
+    {
+        public RecoveryReportBuilder() { }
+        public Excise.Core.Redaction.Recovery.RecoveryReportBuilder AddFinding(Excise.Core.Redaction.Recovery.RecoveredFinding finding, Excise.Core.Document.PdfRectangle? markHint = default) { }
+        public Excise.Core.Redaction.Recovery.RecoveryReportBuilder AddFit(string markId, Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport fit) { }
+        public Excise.Core.Redaction.Recovery.RecoveryReportBuilder AddMarks(System.Collections.Generic.IEnumerable<Excise.Core.Redaction.Recovery.RedactionMark> marks) { }
+        public Excise.Core.Redaction.Recovery.RecoveryReport Build() { }
+        public Excise.Core.Redaction.Recovery.RecoveryReportBuilder ChannelRan(string channel) { }
+        public Excise.Core.Redaction.Recovery.RecoveryReportBuilder ChannelSkipped(string channel, string reason) { }
+    }
+    public static class RecoveryScanner
+    {
+        public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(Excise.Core.Document.PdfDocument document, System.Threading.CancellationToken cancellationToken = default) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryReportBuilder ScanInto(Excise.Core.Document.PdfDocument document, Excise.Core.Redaction.Recovery.RecoveryReportBuilder builder, System.Threading.CancellationToken cancellationToken = default, System.Collections.Generic.IReadOnlyList<string>? dictionary = null) { }
+        public static class Channels
+        {
+            public const string Attachment = "attachment";
+            public const string Carrier = "carrier";
+            public const string CoveredImage = "covered-image";
+            public const string CoveredVector = "covered-vector";
+            public const string FormField = "form-field";
+            public const string HiddenText = "hidden-text";
+            public const string ImageLayer = "image-layer";
+            public const string MarkRegion = "mark-region";
+            public const string MarkedContent = "marked-content";
+            public const string OcrDifferential = "ocr-differential";
+            public const string PriorRevision = "prior-revision";
+            public const string Residue = "residue";
+            public const string Thumbnail = "thumbnail";
+            public const string Xfa = "xfa";
+        }
+    }
+    public static class RedactionFitAnalyzer
+    {
+        public static Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport Analyse(Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.WidthBudget budget, string baseFont, double fontSizePt, System.Collections.Generic.IReadOnlyList<string>? dictionary = null, double tolerancePt = 0.5, int maxCandidates = 50) { }
+        public static Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport Analyse(double widthPt, string baseFont, double fontSizePt, System.Collections.Generic.IReadOnlyList<string>? dictionary = null, double tolerancePt = 0.5, int maxCandidates = 50, double paddingPt = 0) { }
+        public static string Describe(Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport report) { }
+        public static double SpaceAdvancePt(string baseFont, double fontSizePt) { }
+        public readonly struct Candidate : System.IEquatable<Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.Candidate>
+        {
+            public Candidate(string Text, double WidthPt, double ErrorPt) { }
+            public double ErrorPt { get; init; }
+            public string Text { get; init; }
+            public double WidthPt { get; init; }
+        }
+        public sealed class FitReport : System.IEquatable<Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport>
+        {
+            public FitReport(double WidthPt, string Font, double FontSizePt, int MinCharacters, int MaxCharacters, System.Collections.Generic.IReadOnlyList<string> PatternClasses, System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.Candidate> Candidates, int CandidatesConsidered, double BitsLeaked, string Confidence, string? MetricNote, string WidthBasis = "mark width") { }
+            public double BitsLeaked { get; init; }
+            public System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.Candidate> Candidates { get; init; }
+            public int CandidatesConsidered { get; init; }
+            public string Confidence { get; init; }
+            public string Font { get; init; }
+            public double FontSizePt { get; init; }
+            public int MaxCharacters { get; init; }
+            public string? MetricNote { get; init; }
+            public int MinCharacters { get; init; }
+            public System.Collections.Generic.IReadOnlyList<string> PatternClasses { get; init; }
+            public string WidthBasis { get; init; }
+            public double WidthPt { get; init; }
+        }
+        public readonly struct WidthBudget : System.IEquatable<Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.WidthBudget>
+        {
+            public WidthBudget(double UpperPt, double PaddingPt, string Basis) { }
+            public string Basis { get; init; }
+            public double LowerPt { get; }
+            public double PaddingPt { get; init; }
+            public double UpperPt { get; init; }
+            public static Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.WidthBudget FromMark(double markWidthPt, double fontSizePt) { }
+            public static Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.WidthBudget FromNeighbourGap(double gapPt, double spaceAdvancePt, int openSides) { }
+            public static Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.WidthBudget Intersect(Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.WidthBudget box, Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.WidthBudget gap, double epsilonPt = 0.5) { }
+        }
+    }
+    public sealed class RedactionMark : System.IEquatable<Excise.Core.Redaction.Recovery.RedactionMark>
+    {
+        public RedactionMark(string Id, int PageNumber, Excise.Core.Document.PdfRectangle Rect, Excise.Core.Redaction.Recovery.RedactionMarkKind Kind, string Description) { }
+        public string Description { get; init; }
+        public string Id { get; init; }
+        public Excise.Core.Redaction.Recovery.RedactionMarkKind Kind { get; init; }
+        public int PageNumber { get; init; }
+        public Excise.Core.Document.PdfRectangle Rect { get; init; }
+    }
+    public static class RedactionMarkDetector
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionMark> Detect(Excise.Core.Document.PdfDocument document) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionMark> DetectPage(Excise.Core.Document.PdfPage page, int pageNumber) { }
+    }
+    public enum RedactionMarkKind
+    {
+        FilledBox = 0,
+        RedactAnnotation = 1,
+        ShapeAnnotation = 2,
+        FormXObjectBox = 3,
+        EmptiedRegion = 4,
+    }
+    public static class ResidualArtefactRecovery
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.ResidualArtefactRecovery.ResidualArtefact> Scan(Excise.Core.Document.PdfDocument document) { }
+        public readonly struct ResidualArtefact : System.IEquatable<Excise.Core.Redaction.Recovery.ResidualArtefactRecovery.ResidualArtefact>
+        {
+            public ResidualArtefact(string Kind, int PageNumber, string Description) { }
+            public string Description { get; init; }
+            public string Kind { get; init; }
+            public int PageNumber { get; init; }
+        }
+    }
+    public static class RestoredCopyBuilder
+    {
+        public static Excise.Core.Redaction.Recovery.RestoredCopyBuilder.RestoreResult Apply(Excise.Core.Document.PdfDocument document, Excise.Core.Redaction.Recovery.RecoveryReport report) { }
+        public readonly struct RestoreResult : System.IEquatable<Excise.Core.Redaction.Recovery.RestoredCopyBuilder.RestoreResult>
+        {
+            public RestoreResult(int ItemsDrawn, int DocumentLevelItems, bool SummaryPageAdded) { }
+            public int DocumentLevelItems { get; init; }
+            public int ItemsDrawn { get; init; }
+            public bool SummaryPageAdded { get; init; }
+        }
+    }
+    public static class XfaValueRecovery
+    {
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Values",
+                "Summary"})]
+        public static System.ValueTuple<System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.XfaValueRecovery.XfaValue>, Excise.Core.Redaction.Recovery.XfaValueRecovery.XfaSummary> Scan(Excise.Core.Document.PdfDocument document) { }
+        public readonly struct XfaSummary : System.IEquatable<Excise.Core.Redaction.Recovery.XfaValueRecovery.XfaSummary>
+        {
+            public XfaSummary(bool HasXfa, int PacketsExamined, int PacketsUnexamined) { }
+            public bool HasXfa { get; init; }
+            public int PacketsExamined { get; init; }
+            public int PacketsUnexamined { get; init; }
+        }
+        public readonly struct XfaValue : System.IEquatable<Excise.Core.Redaction.Recovery.XfaValueRecovery.XfaValue>
+        {
+            public XfaValue(string FieldPath, string Value) { }
+            public string FieldPath { get; init; }
+            public string Value { get; init; }
+        }
+    }
+}
 namespace Excise.Core.Security
 {
     public enum PdfEncryptionAlgorithm
@@ -1812,11 +2100,13 @@ namespace Excise.Core.Text
         public Excise.Core.Document.PdfRectangle GlyphRectangle { get; }
         public bool IsCidFont { get; set; }
         public bool IsInHiddenOptionalContent { get; set; }
+        public bool IsInvisible { get; }
         public int? MarkedContentId { get; set; }
         public int OperandByteOffset { get; set; }
         public Excise.Core.Document.PdfPoint StartBaseLine { get; }
         public double StartX { get; }
         public double StartY { get; }
+        public int TextRenderMode { get; }
         public int TjElementIndex { get; set; }
         public string Value { get; }
         public double Width { get; }
@@ -1914,9 +2204,10 @@ namespace Excise.Core.Text.Segmentation
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierText> Scan(Excise.Core.Document.PdfDocument doc) { }
         public readonly struct CarrierText : System.IEquatable<Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierText>
         {
-            public CarrierText(string Carrier, string Text, int PageNumber) { }
+            public CarrierText(string Carrier, string Text, int PageNumber, Excise.Core.Document.PdfRectangle? Rect = default) { }
             public string Carrier { get; init; }
             public int PageNumber { get; init; }
+            public Excise.Core.Document.PdfRectangle? Rect { get; init; }
             public string Text { get; init; }
         }
     }
@@ -1946,9 +2237,10 @@ namespace Excise.Core.Text.Segmentation
     }
     public sealed class HiddenTextRecord : System.IEquatable<Excise.Core.Text.Segmentation.HiddenTextRecord>
     {
-        public HiddenTextRecord(int PageNumber, string Text, Excise.Core.Document.PdfRectangle BoundingBox, string HiddenBy) { }
+        public HiddenTextRecord(int PageNumber, string Text, Excise.Core.Document.PdfRectangle BoundingBox, string HiddenBy, Excise.Core.Document.PdfRectangle? ObstructionBox = default) { }
         public Excise.Core.Document.PdfRectangle BoundingBox { get; init; }
         public string HiddenBy { get; init; }
+        public Excise.Core.Document.PdfRectangle? ObstructionBox { get; init; }
         public int PageNumber { get; init; }
         public string Text { get; init; }
     }

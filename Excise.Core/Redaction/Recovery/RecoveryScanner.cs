@@ -272,13 +272,29 @@ public static class RecoveryScanner
 
                 var baseFont = ResolveBaseFont(document, byPage.Key, anchor.FontName);
                 var size = anchor.FontSize > 0 ? anchor.FontSize : 12;
+
                 // A redaction box is drawn AROUND the run it covers, so its
                 // width is an upper bound on the removed text. Half an em of
                 // padding is the usual producer habit; treating the box width
                 // as an equality silently rejects the right answer.
-                var fit = RedactionFitAnalyzer.Analyse(
-                    mark.Rect.Width, baseFont, size, dictionary,
-                    paddingPt: size * 0.5);
+                var budget = RedactionFitAnalyzer.WidthBudget.FromMark(mark.Rect.Width, size);
+
+                // #1589's neighbour-shift half: the surviving glyphs on either
+                // side bound the same span independently, and tighter — a box
+                // can be drawn generously, a glyph cannot be drawn where the
+                // next one already is. Intersecting the two is where excise's
+                // exact content-stream positions beat a pixel measurement.
+                var gap = NeighbourGap(letters, mark.Rect);
+                if (gap.WidthPt > 0)
+                {
+                    budget = RedactionFitAnalyzer.WidthBudget.Intersect(budget,
+                        RedactionFitAnalyzer.WidthBudget.FromNeighbourGap(
+                            gap.WidthPt,
+                            RedactionFitAnalyzer.SpaceAdvancePt(baseFont, size),
+                            gap.OpenSides));
+                }
+
+                var fit = RedactionFitAnalyzer.Analyse(budget, baseFont, size, dictionary);
                 builder.AddFit(mark.Id, fit);
             }
         }
@@ -304,6 +320,59 @@ public static class RecoveryScanner
                 .OrderBy(l => Math.Abs((l.GlyphRectangle.Bottom + l.GlyphRectangle.Top) / 2.0 - midY))
                 .FirstOrDefault();
     }
+
+    /// <summary>
+    /// #1589 — the glyph-to-glyph gap across the mark: from the right edge of
+    /// the last surviving glyph that ENDS before it to the left edge of the
+    /// first that BEGINS after it, both on the mark's own baseline.
+    ///
+    /// <para>Returns 0 unless the mark is genuinely bracketed. A mark at the
+    /// start or end of a line has only one neighbour, and inventing the other
+    /// from the page box would produce a budget far looser than the mark's own
+    /// width while looking like a tighter measurement.</para>
+    /// </summary>
+    private readonly record struct MarkGap(double WidthPt, int OpenSides);
+
+    private static MarkGap NeighbourGap(
+        IReadOnlyList<Text.Letter> letters, Document.PdfRectangle mark)
+    {
+        var m = mark.Normalize();
+        var onLine = letters
+            .Where(l => l.GlyphRectangle.Bottom <= m.Top && l.GlyphRectangle.Top >= m.Bottom)
+            .ToList();
+        if (onLine.Count == 0) return default;
+
+        double? left = null, right = null;
+        var leftIsSpace = false;
+        var rightIsSpace = false;
+        foreach (var l in onLine)
+        {
+            var r = l.GlyphRectangle.Normalize();
+            if (r.Right <= m.Left + 0.01 && (left == null || r.Right > left))
+            {
+                left = r.Right;
+                leftIsSpace = IsWhitespace(l.Value);
+            }
+            if (r.Left >= m.Right - 0.01 && (right == null || r.Left < right))
+            {
+                right = r.Left;
+                rightIsSpace = IsWhitespace(l.Value);
+            }
+        }
+
+        if (left == null || right == null) return default;
+        var gap = right.Value - left.Value;
+        if (gap <= 0) return default;
+
+        // A side bounded by a SURVIVING space needs no slack: the space is
+        // still drawn, so the removed run began exactly where it ends. Only a
+        // side bounded by real ink might have had a space eaten with the text.
+        var open = (leftIsSpace ? 0 : 1) + (rightIsSpace ? 0 : 1);
+        return new MarkGap(gap, open);
+    }
+
+    private static bool IsWhitespace(string? value) =>
+        !string.IsNullOrEmpty(value) && value.All(char.IsWhiteSpace);
 
     /// <summary>
     /// Letter.FontName is the RESOURCE name (/F1); metrics are keyed by

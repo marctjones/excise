@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "858cecb8c8bf7cbbe9d1a7088371d5ec2766369f304abc5eec9626a1f337790a",
+  "sourceFingerprint": "0f095c341559a111101c33f1483dd7d3eb3fd08179d856ac78068e403fca8f7e",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -4221,6 +4221,353 @@
     {
       "id": "Excise.Core/Redaction/PdfPageRedactionExtensions.cs",
       "path": "Excise.Core/Redaction/PdfPageRedactionExtensions.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/CoveredContentRecovery.cs",
+      "path": "Excise.Core/Redaction/Recovery/CoveredContentRecovery.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/FormFieldValueRecovery.cs",
+      "path": "Excise.Core/Redaction/Recovery/FormFieldValueRecovery.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction",
+        "forms"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.forms",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/ImageLayerRecovery.cs",
+      "path": "Excise.Core/Redaction/Recovery/ImageLayerRecovery.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction",
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/MarkRegionTextRecovery.cs",
+      "path": "Excise.Core/Redaction/Recovery/MarkRegionTextRecovery.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/MarkedContentTextRecovery.cs",
+      "path": "Excise.Core/Redaction/Recovery/MarkedContentTextRecovery.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/PriorRevisionRecovery.cs",
+      "path": "Excise.Core/Redaction/Recovery/PriorRevisionRecovery.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/RecoveryModel.cs",
+      "path": "Excise.Core/Redaction/Recovery/RecoveryModel.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/RecoveryReportBuilder.cs",
+      "path": "Excise.Core/Redaction/Recovery/RecoveryReportBuilder.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
+      "path": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/RedactionFitAnalyzer.cs",
+      "path": "Excise.Core/Redaction/Recovery/RedactionFitAnalyzer.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/RedactionMarkDetector.cs",
+      "path": "Excise.Core/Redaction/Recovery/RedactionMarkDetector.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/ResidualArtefactRecovery.cs",
+      "path": "Excise.Core/Redaction/Recovery/ResidualArtefactRecovery.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/RestoredCopyBuilder.cs",
+      "path": "Excise.Core/Redaction/Recovery/RestoredCopyBuilder.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/XfaValueRecovery.cs",
+      "path": "Excise.Core/Redaction/Recovery/XfaValueRecovery.cs",
       "kind": "source-file",
       "facets": [
         "redaction"
@@ -8821,6 +9168,29 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Cli/Commands/UnredactRecoveryMapper.cs",
+      "path": "Excise.Cli/Commands/UnredactRecoveryMapper.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Cli/Commands/ValidateCommand.cs",
       "path": "Excise.Cli/Commands/ValidateCommand.cs",
       "kind": "source-file",
@@ -9249,16 +9619,16 @@
     }
   ],
   "summary": {
-    "records": 448,
+    "records": 463,
     "facets": {
       "annotations": 11,
       "content-and-graphics": 19,
       "document-structure": 32,
       "fonts": 30,
-      "forms": 8,
-      "images": 29,
+      "forms": 9,
+      "images": 30,
       "product-integration-general": 254,
-      "redaction": 52,
+      "redaction": 67,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 20,
       "transparency": 2
@@ -9281,9 +9651,9 @@
       "pdf.17.graphics.fonts:extract": 30,
       "pdf.17.graphics.fonts:parse": 30,
       "pdf.17.graphics.fonts:render": 30,
-      "pdf.17.graphics.images:extract": 29,
-      "pdf.17.graphics.images:parse": 29,
-      "pdf.17.graphics.images:render": 29,
+      "pdf.17.graphics.images:extract": 30,
+      "pdf.17.graphics.images:parse": 30,
+      "pdf.17.graphics.images:render": 30,
       "pdf.17.graphics.paths-painting:author": 2,
       "pdf.17.graphics.paths-painting:mutate": 19,
       "pdf.17.graphics.paths-painting:parse": 19,
@@ -9299,18 +9669,18 @@
       "pdf.17.interactive.annotations:parse": 11,
       "pdf.17.interactive.annotations:preserve": 11,
       "pdf.17.interactive.annotations:render": 11,
-      "pdf.17.interactive.forms:mutate": 8,
-      "pdf.17.interactive.forms:parse": 8,
-      "pdf.17.interactive.forms:render": 8,
-      "pdf.17.interactive.forms:write": 8,
+      "pdf.17.interactive.forms:mutate": 9,
+      "pdf.17.interactive.forms:parse": 9,
+      "pdf.17.interactive.forms:render": 9,
+      "pdf.17.interactive.forms:write": 9,
       "pdf.17.interactive.redaction-annotations:mutate": 11,
       "pdf.17.interactive.redaction-annotations:parse": 11,
       "pdf.17.interactive.redaction-annotations:preserve": 11,
       "pdf.17.interactive.redaction-annotations:render": 11,
-      "pdf.17.security.redaction-content-removal:extract": 52,
-      "pdf.17.security.redaction-content-removal:mutate": 52,
-      "pdf.17.security.redaction-content-removal:render": 52,
-      "pdf.17.security.redaction-content-removal:write": 52,
+      "pdf.17.security.redaction-content-removal:extract": 67,
+      "pdf.17.security.redaction-content-removal:mutate": 67,
+      "pdf.17.security.redaction-content-removal:render": 67,
+      "pdf.17.security.redaction-content-removal:write": 67,
       "pdf.17.syntax.encryption:mutate": 20,
       "pdf.17.syntax.encryption:parse": 20,
       "pdf.17.syntax.encryption:preserve": 20,

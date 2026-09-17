@@ -44,6 +44,7 @@ public static class RedactionFitAnalyzer
     /// <param name="MinCharacters">Using the font's WIDEST glyph — fewest that can fill the span.</param>
     /// <param name="MaxCharacters">Using the font's NARROWEST glyph — most that can fit.</param>
     /// <param name="Confidence">"fits exactly" | "narrowed" | "wide open".</param>
+    /// <param name="WidthBasis">Where the budget came from — see <see cref="WidthBudget"/>.</param>
     public sealed record FitReport(
         double WidthPt,
         string Font,
@@ -55,7 +56,106 @@ public static class RedactionFitAnalyzer
         int CandidatesConsidered,
         double BitsLeaked,
         string Confidence,
-        string? MetricNote);
+        string? MetricNote,
+        string WidthBasis = "mark width");
+
+    /// <summary>
+    /// The admissible interval for the removed text's rendered width:
+    /// <c>[UpperPt - PaddingPt, UpperPt]</c>.
+    ///
+    /// <para><b>Why an interval and not a number.</b> Two independent
+    /// measurements bound the same quantity and neither is exact. A redaction
+    /// BOX is drawn around the run with some padding, so it is an upper bound.
+    /// The GAP between the surviving glyphs on either side — the neighbour-shift
+    /// channel (Bland et al., PETS 2023) — is also an upper bound, loose by the
+    /// word spaces the removed run sat between. Intersecting the two is strictly
+    /// tighter than either, and it is the one place where excise's exact
+    /// content-stream positions beat a pixel measurement outright.</para>
+    ///
+    /// <para>The intersection can come out EMPTY, and that is a finding, not an
+    /// error: the box and the surviving glyphs disagree about how much room the
+    /// removed text had. Falling back to the box alone and saying so is the
+    /// honest move — narrowing to an interval derived from a contradiction
+    /// would silently drop the right answer.</para>
+    /// </summary>
+    public readonly record struct WidthBudget(double UpperPt, double PaddingPt, string Basis)
+    {
+        public double LowerPt => Math.Max(0, UpperPt - PaddingPt);
+
+        /// <summary>The box width with a producer-padding allowance.</summary>
+        public static WidthBudget FromMark(double markWidthPt, double fontSizePt) =>
+            new(markWidthPt, fontSizePt * 0.5, "mark width");
+
+        /// <summary>
+        /// The glyph-to-glyph gap between the surviving neighbours. The removed
+        /// run cannot have been wider than the gap; how much NARROWER it could
+        /// be depends on what bounds the gap.
+        ///
+        /// <para><paramref name="openSides"/> is how many of the two sides end
+        /// at a glyph that is NOT whitespace. Each of those could have had a
+        /// word space between it and the removed run, so each costs one space
+        /// advance of slack. A side bounded by a surviving SPACE costs nothing:
+        /// the space is still there, so the removed text started exactly where
+        /// it ends. That distinction is the whole value of this channel — on a
+        /// redaction that deletes the word and leaves the spaces around it, both
+        /// sides are closed and the gap is an EQUALITY, not a bound.</para>
+        /// </summary>
+        public static WidthBudget FromNeighbourGap(double gapPt, double spaceAdvancePt, int openSides) =>
+            new(gapPt, Math.Max(0, spaceAdvancePt) * Math.Clamp(openSides, 0, 2), "neighbour gap");
+
+        /// <summary>
+        /// The tighter of two bounds on the same span, or the first one with a
+        /// note when they genuinely contradict each other.
+        /// </summary>
+        /// <param name="epsilonPt">
+        /// How far the two may cross before it counts as a contradiction. This
+        /// is not slop for its own sake: the box comes from a content-stream
+        /// <c>re</c> and the gap from accumulated glyph advances, so the two
+        /// describe the same edge through different arithmetic and land a
+        /// hundredth of a point apart routinely. Without this, the commonest
+        /// case in the corpus — a box drawn flush to the removed run, both
+        /// bounds agreeing to 0.04pt — reported as a DISAGREEMENT and fell back
+        /// to the loose box bound, i.e. the tightest available measurement was
+        /// discarded precisely when it was right.
+        /// </param>
+        public static WidthBudget Intersect(WidthBudget box, WidthBudget gap, double epsilonPt = 0.5)
+        {
+            var upper = Math.Min(box.UpperPt, gap.UpperPt);
+            var lower = Math.Max(box.LowerPt, gap.LowerPt);
+            if (upper <= 0 || lower - upper > epsilonPt)
+                return box with { Basis = "mark width (neighbour gap disagrees)" };
+
+            // Crossed by less than epsilon: the two agree on a point, and the
+            // interval collapses onto it rather than inverting.
+            if (lower > upper) return new WidthBudget(upper, 0, "mark width ∩ neighbour gap");
+
+            return new WidthBudget(upper, upper - lower, "mark width ∩ neighbour gap");
+        }
+    }
+
+    /// <summary>
+    /// The font's word-space advance in points, or 0 when it has no metric for
+    /// one. Exposed because the neighbour gap is only interpretable with it.
+    /// </summary>
+    public static double SpaceAdvancePt(string baseFont, double fontSizePt)
+    {
+        var w = MeasureWidth(" ", baseFont, fontSizePt);
+        return w < 0 ? 0 : w;
+    }
+
+    /// <summary>Analyse one mark against a <see cref="WidthBudget"/>.</summary>
+    public static FitReport Analyse(
+        WidthBudget budget,
+        string baseFont,
+        double fontSizePt,
+        IReadOnlyList<string>? dictionary = null,
+        double tolerancePt = 0.5,
+        int maxCandidates = 50)
+    {
+        var report = Analyse(budget.UpperPt, baseFont, fontSizePt, dictionary,
+            tolerancePt, maxCandidates, budget.PaddingPt);
+        return report with { WidthBasis = budget.Basis };
+    }
 
     /// <param name="ErrorPt">Rendered width minus the budget. Negative = narrower than the gap.</param>
     public readonly record struct Candidate(string Text, double WidthPt, double ErrorPt);

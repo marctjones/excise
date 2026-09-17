@@ -61,6 +61,8 @@ internal sealed record UnredactQuantification(
 /// the list as competing answers.
 /// </summary>
 internal sealed record UnredactMarkFit(
+    double WidthPt,
+    string WidthBasis,
     int MinCharacters,
     int MaxCharacters,
     IReadOnlyList<string> PatternClasses,

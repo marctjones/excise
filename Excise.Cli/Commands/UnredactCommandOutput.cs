@@ -149,7 +149,8 @@ internal static class UnredactCommandOutput
                         ? string.Join("; ", fit.PatternClasses)
                         : "no named pattern fits";
                     output.WriteLine(
-                        $"      could fit: {fit.MinCharacters}-{fit.MaxCharacters} characters; {patterns}");
+                        $"      could fit: {fit.MinCharacters}-{fit.MaxCharacters} characters; {patterns}" +
+                        $" (budget {fit.WidthPt}pt from {fit.WidthBasis})");
                     if (fit.CandidatesConsidered > 0)
                     {
                         output.WriteLine(
