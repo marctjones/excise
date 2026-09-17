@@ -34,6 +34,115 @@ public partial class PdfViewerControl
     }
 
     /// <summary>
+    /// A tile budget this viewer shares with other viewers, or null for none
+    /// (the default). UI thread only. While set, this viewer's tile cache is
+    /// bounded by <see cref="ContinuousTileCacheByteBudget"/> AND by what the
+    /// shared budget leaves it; see <see cref="PdfViewerTileBudget"/> for who
+    /// gives way. Setting it applies the budget at once. A host that discards
+    /// the viewer sets it back to null, or the shared budget keeps the viewer
+    /// (and counts its tiles) until then.
+    /// </summary>
+    public PdfViewerTileBudget? SharedTileBudget
+    {
+        get => _sharedTileBudget;
+        set
+        {
+            Dispatcher.UIThread.VerifyAccess();
+            if (ReferenceEquals(value, _sharedTileBudget))
+                return;
+            _sharedTileBudget?.Detach(this);
+            _sharedTileBudget = value;
+            value?.Attach(this);
+            EnforceContinuousCacheBudget();
+        }
+    }
+
+    private PdfViewerTileBudget? _sharedTileBudget;
+
+    /// <summary>
+    /// The byte budget the tile cache may fill right now. Without a shared
+    /// budget this is <see cref="EffectiveContinuousCacheByteBudget"/>. With
+    /// one, the shared budget first takes what it may from the other viewers,
+    /// and the result is the smaller of the two. Call it once per eviction
+    /// pass, not per tile: it may evict other viewers' tiles.
+    /// </summary>
+    private long ContinuousCacheBudgetNow()
+    {
+        long own = EffectiveContinuousCacheByteBudget;
+        if (_sharedTileBudget is not { } shared || ContinuousCacheByteBudgetOverride != null)
+            return own;
+        long resident = ContinuousCacheResidentBytes();
+        return Math.Min(own, shared.BudgetFor(this, resident, ContinuousCacheProtectedBytes()));
+    }
+
+    /// <summary>
+    /// What a shared budget must leave this viewer: its current bands' tiles,
+    /// plus the most recent tile when that one is not in a band (the tile being
+    /// cached, which the LRU loop never evicts first).
+    /// </summary>
+    private long ContinuousCacheProtectedBytes()
+    {
+        long bytes = 0;
+        bool first = true;
+        foreach (var (key, bitmap) in _continuousCache)
+        {
+            if (first || _continuousRequiredKeys.Contains(key))
+                bytes += ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
+            first = false;
+        }
+        return bytes;
+    }
+
+    /// <summary>
+    /// A shared budget needs <paramref name="bytesWanted"/> for another
+    /// viewer: evict render-ahead tiles, then other tiles outside the current
+    /// bands, least recently used first, and with
+    /// <paramref name="includeBands"/> the band tiles last. Stops once enough
+    /// is freed. Keeps <see cref="ContinuousCacheMinEntries"/>. Composites are
+    /// never touched, so nothing on screen changes. UI thread only.
+    /// </summary>
+    internal (int Tiles, long Bytes) EvictTilesForSharedBudget(long bytesWanted, bool includeBands)
+    {
+        int tiles = 0;
+        long freed = 0;
+        for (int pass = 0; pass < 3 && freed < bytesWanted; pass++)
+        {
+            if (pass == 2 && !includeBands)
+                break;
+            var node = _continuousCache.Last;
+            while (node != null && freed < bytesWanted && _continuousCache.Count > ContinuousCacheMinEntries)
+            {
+                var previous = node.Previous;
+                var key = node.Value.Key;
+                bool inBand = _continuousRequiredKeys.Contains(key);
+                bool take = pass switch
+                {
+                    0 => !inBand && _continuousLookAheadTiles.Contains(key),
+                    1 => !inBand,
+                    _ => true,
+                };
+                if (take)
+                {
+                    var bitmap = node.Value.Bitmap;
+                    freed += ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
+                    _continuousCache.Remove(node);
+                    _continuousLookAheadTiles.Remove(key);
+                    bitmap.Dispose();
+                    tiles++;
+                }
+                node = previous;
+            }
+        }
+        if (tiles > 0)
+        {
+            RefreshContinuousByteMirrors();
+            if (TraceEnabled)
+                Trace($"SharedTileBudget evicted tiles={tiles} bytes={freed} bands={includeBands}");
+        }
+        return (tiles, freed);
+    }
+
+    /// <summary>
     /// Resident bytes the continuous view's tile cache holds now (4 bytes per
     /// pixel). UI thread only. Computed on read, so it does not depend on a
     /// metrics listener being enabled.
@@ -92,14 +201,14 @@ public partial class PdfViewerControl
 
     /// <summary>
     /// Evict tiles until the cache fits
-    /// <see cref="EffectiveContinuousCacheByteBudget"/>, skipping every tile of
+    /// <see cref="ContinuousCacheBudgetNow"/>, skipping every tile of
     /// the current bands: render-ahead tiles first (#1564), then
     /// least-recently-used ones. Unlike <see cref="TrimContinuousTiles"/> this
     /// stops as soon as the budget is met. Returns how many tiles were disposed.
     /// </summary>
     internal int EnforceContinuousCacheBudget()
     {
-        long budget = EffectiveContinuousCacheByteBudget;
+        long budget = ContinuousCacheBudgetNow();
         long resident = ContinuousCacheResidentBytes();
         int evicted = 0;
         for (int pass = 0; pass < 2; pass++)

@@ -659,11 +659,25 @@ public partial class PdfViewerControl
         }
     }
 
-    /// <summary>Cached single-page results may be stale: cancel and start over.</summary>
+    /// <summary>
+    /// Cached single-page results may be stale (document change, content or
+    /// annotation-setting change): cancel and start over.
+    /// </summary>
+    /// <remarks>
+    /// The plan is forgotten too, not only superseded by the generation bump:
+    /// its anchor holds the document, and <see cref="TrimCaches"/> writes one
+    /// in either view. Left in place across a close, it kept the closed
+    /// document and everything it had decoded alive: Altona's footprint after
+    /// Close Document stayed at 705 MB instead of ~326 MB whenever an idle
+    /// trim had run first (#1543 bench, develop beed1e8b).
+    /// </remarks>
     private void InvalidateSinglePageLookAhead()
     {
         _singlePageLookAheadGeneration++;
         CancelSinglePageLookAhead();
+        _singlePageLookAheadAnchor = default;
+        _singlePageLookAheadDone = false;
+        _singlePageLookAheadAttempted.Clear();
     }
 
     private void SuppressSinglePageLookAheadAfterTrim()

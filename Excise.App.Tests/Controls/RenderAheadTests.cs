@@ -371,18 +371,47 @@ public class RenderAheadTests
         }
     }
 
-    [FixedAvaloniaFact]
-    public async Task ClosingTheDocument_LeavesNothingThatKeepsItAlive()
+    /// <summary>
+    /// A closed document must be collectable whatever render-ahead did before
+    /// the close. The trim case is the one the #1543 bench caught on develop
+    /// beed1e8b: the idle trim ran 3 s before Close Document, and Altona's
+    /// footprint stayed at 705 MB after close instead of ~326 MB, because
+    /// <c>TrimCaches</c> stored the open document in the single-page
+    /// look-ahead anchor (in either view) and nothing cleared it on close.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(PdfViewMode.Continuous, false)]
+    [InlineData(PdfViewMode.Continuous, true)]
+    [InlineData(PdfViewMode.SinglePage, false)]
+    [InlineData(PdfViewMode.SinglePage, true)]
+    public async Task ClosingTheDocument_LeavesNothingThatKeepsItAlive(PdfViewMode mode, bool trimBeforeClose)
     {
-        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 4);
-        try
+        Window window;
+        PdfViewerControl viewer;
+        if (mode == PdfViewMode.Continuous)
         {
+            ItemsControl items;
+            (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 4);
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             await WaitLookAheadIdleAsync(window, viewer);
             viewer.CurrentPage = 2;
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
             await WaitLookAheadIdleAsync(window, viewer);
             viewer.ContinuousLookAheadStartCount.Should().BeGreaterThan(0, "fixture");
+        }
+        else
+        {
+            Image image;
+            (window, viewer, image) = ShowSinglePageViewer(MultiPagePdf(4));
+            viewer.CurrentPage = 2;
+            await WaitUntilAsync(window, () => !viewer.IsLoading && image.Source is WriteableBitmap, "page 2 rendered");
+            await WaitSinglePageLookAheadIdleAsync(window, viewer, expectedStarts: 2);
+        }
+
+        try
+        {
+            if (trimBeforeClose)
+                viewer.TrimCaches(PdfViewerCacheTrimLevel.Background);
 
             var weak = DetachDocument(viewer);
             await PumpAsync(window, TimeSpan.FromMilliseconds(500));

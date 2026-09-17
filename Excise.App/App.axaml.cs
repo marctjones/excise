@@ -120,9 +120,15 @@ public partial class App : Application
             _workspace = workspace;
             var reclaimer = _serviceProvider.GetRequiredService<ReleasedMemoryReclaimer>();
             var cacheTrims = new Dictionary<MainWindow, ViewerCacheTrimCoordinator>();
+            // One tile budget and one idle reclaim for the whole app, however
+            // many document windows are open (#1551 follow-up).
+            var tileBudget = new Excise.Avalonia.Controls.PdfViewerTileBudget(
+                Models.PerformanceSettings.Balanced.TileCacheBudgetMb * 1024L * 1024L);
+            var idleReclaimGate = new IdleReclaimGate();
             workspace.WindowCreated += window =>
             {
-                var coordinator = AttachCacheTrim(window, workspace, reclaimer, logger);
+                AttachSharedTileBudget(window, tileBudget);
+                var coordinator = AttachCacheTrim(window, workspace, reclaimer, idleReclaimGate, logger);
                 if (coordinator != null)
                 {
                     cacheTrims[window] = coordinator;
@@ -286,6 +292,7 @@ public partial class App : Application
         MainWindow window,
         Workspace.DocumentWorkspace workspace,
         ReleasedMemoryReclaimer reclaimer,
+        IdleReclaimGate idleReclaimGate,
         ILogger logger)
     {
         var (trimViewer, trimPolicy) = window.CacheTrimTarget();
@@ -310,11 +317,35 @@ public partial class App : Application
                             : Excise.Avalonia.Controls.PdfViewerCacheTrimLevel.Critical);
                 }
             },
-            reclaimer);
+            reclaimer,
+            idleReclaimGate);
         // Preferences → Performance changes soft trims live (#1478).
         window.CacheTrimPolicyChanged += cacheTrim.UpdatePolicy;
         window.Closed += (_, _) => cacheTrim.Dispose();
         return cacheTrim;
+    }
+
+    /// <summary>
+    /// #1551 follow-up: every document window's viewer draws on ONE tile
+    /// budget, so N windows hold one Preferences → Performance budget rather
+    /// than N. The focused window is the budget's foreground: its tiles are
+    /// the last to go, and background windows give way first.
+    /// </summary>
+    private static void AttachSharedTileBudget(MainWindow window, Excise.Avalonia.Controls.PdfViewerTileBudget budget)
+    {
+        window.UseSharedTileBudget(budget);
+        var (viewer, _) = window.CacheTrimTarget();
+        if (viewer == null)
+            return;
+        window.Activated += (_, _) => budget.Foreground = viewer;
+        window.Deactivated += (_, _) =>
+        {
+            if (ReferenceEquals(budget.Foreground, viewer))
+                budget.Foreground = null;
+        };
+        window.Closed += (_, _) => window.UseSharedTileBudget(null);
+        if (window.IsActive)
+            budget.Foreground = viewer;
     }
 
     /// <summary>

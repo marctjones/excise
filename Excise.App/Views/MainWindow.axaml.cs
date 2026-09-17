@@ -57,6 +57,26 @@ public partial class MainWindow : Window
          CacheTrimPolicyFor(_performanceSettings));
 
     /// <summary>
+    /// Join (or, with null, leave) the app-wide tile budget every document
+    /// window shares (#1551 follow-up). Set by App when the window is created
+    /// and cleared when it closes. The shared budget takes this window's
+    /// Preferences → Performance tile budget, like every later apply does, so
+    /// the most recently applied value is the app-wide one.
+    /// </summary>
+    internal void UseSharedTileBudget(PdfViewerTileBudget? budget)
+    {
+        _pdfViewerControl ??= this.FindControl<PdfViewerControl>("PdfViewerControl");
+        if (_pdfViewerControl == null)
+            return;
+        if (budget != null)
+            budget.ByteBudget = TileCacheBudgetBytes(_performanceSettings);
+        _pdfViewerControl.SharedTileBudget = budget;
+    }
+
+    private static long TileCacheBudgetBytes(PerformanceSettings settings) =>
+        settings.TileCacheBudgetMb * 1024L * 1024L;
+
+    /// <summary>
     /// The performance settings last applied to this window's viewer. Starts as
     /// the persisted values so <see cref="CacheTrimTarget"/> is right even when
     /// it is read before a DataContext is set.
@@ -84,7 +104,9 @@ public partial class MainWindow : Window
         _pdfViewerControl ??= this.FindControl<PdfViewerControl>("PdfViewerControl");
         if (_pdfViewerControl != null)
         {
-            _pdfViewerControl.ContinuousTileCacheByteBudget = settings.TileCacheBudgetMb * 1024L * 1024L;
+            _pdfViewerControl.ContinuousTileCacheByteBudget = TileCacheBudgetBytes(settings);
+            if (_pdfViewerControl.SharedTileBudget is { } shared)
+                shared.ByteBudget = TileCacheBudgetBytes(settings);
             _pdfViewerControl.SinglePageCacheCapacity = settings.SinglePageCachedPages;
             _pdfViewerControl.ContinuousRenderConcurrency = settings.RenderThreads;
         }

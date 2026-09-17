@@ -240,6 +240,42 @@ public class ReleasedMemoryReclaimTests
     }
 
     [FixedAvaloniaFact]
+    public void TwoWindows_SharingTheIdleGate_ReclaimOncePerAppIdlePeriod()
+    {
+        var collections = new List<HeapReclaimTrigger>();
+        var gate = new IdleReclaimGate();
+        var policy = IdleSoon with { IdleDelay = TimeSpan.FromMinutes(10) };
+        using var first = new ViewerCacheTrimCoordinator(
+            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
+            sampleFragmentedBytes: () => long.MaxValue, idleReclaimGate: gate);
+        using var second = new ViewerCacheTrimCoordinator(
+            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
+            sampleFragmentedBytes: () => long.MaxValue, idleReclaimGate: gate);
+
+        first.TryRequestBackgroundTrim().Should().BeTrue();
+        second.TryRequestBackgroundTrim().Should().BeTrue();
+        collections.Should().Equal(new[] { HeapReclaimTrigger.Idle },
+            "the heap is the process's: a second idle window must not run a second blocking collection");
+
+        second.OnActivity();
+        first.TryRequestBackgroundTrim().Should().BeTrue();
+        collections.Should().Equal(new[] { HeapReclaimTrigger.Idle, HeapReclaimTrigger.Idle },
+            "activity in ANY window starts a new idle period");
+
+        // Unshared (the default), each coordinator keeps its own period.
+        collections.Clear();
+        using var alone1 = new ViewerCacheTrimCoordinator(
+            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
+            sampleFragmentedBytes: () => long.MaxValue);
+        using var alone2 = new ViewerCacheTrimCoordinator(
+            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
+            sampleFragmentedBytes: () => long.MaxValue);
+        alone1.TryRequestBackgroundTrim();
+        alone2.TryRequestBackgroundTrim();
+        collections.Should().HaveCount(2, "fixture: without a shared gate the periods are independent");
+    }
+
+    [FixedAvaloniaFact]
     public async Task Requests_CoalesceUntilTheQueuedCollectionRuns_AndNothingRunsWithoutARequest()
     {
         var collections = new List<HeapReclaimTrigger>();
