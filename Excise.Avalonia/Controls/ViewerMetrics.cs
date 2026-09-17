@@ -34,6 +34,14 @@ internal static class ViewerMetrics
         "excise.viewer.continuous.band.render.duration", "ms",
         "Wall time of one continuous-view band render (SkiaRenderer.RenderPage), tagged by dpi.");
 
+    internal static readonly Histogram<double> LookAheadRenderDuration = Meter.CreateHistogram<double>(
+        "excise.viewer.lookahead.render.duration", "ms",
+        "Wall time of one render-ahead render (#1564), tagged by dpi and view (continuous, single_page). " +
+        "Kept out of the band and single-page histograms, which describe what the reader waited for.");
+
+    internal const string LookAheadContinuous = "continuous";
+    internal const string LookAheadSinglePage = "single_page";
+
     internal static readonly Histogram<long> CompositeSize = Meter.CreateHistogram<long>(
         "excise.viewer.continuous.composite.size", "By",
         "Bytes of one published continuous-view page composite (BGRA), tagged by dpi.");
@@ -130,6 +138,15 @@ internal static class ViewerMetrics
     {
         if (BandRenderDuration.Enabled)
             BandRenderDuration.Record(elapsed.TotalMilliseconds, new KeyValuePair<string, object?>("dpi", dpi));
+    }
+
+    /// <param name="view"><see cref="LookAheadContinuous"/> or <see cref="LookAheadSinglePage"/>.</param>
+    internal static void RecordLookAheadRender(TimeSpan elapsed, int dpi, string view)
+    {
+        if (LookAheadRenderDuration.Enabled)
+            LookAheadRenderDuration.Record(elapsed.TotalMilliseconds,
+                new KeyValuePair<string, object?>("dpi", dpi),
+                new KeyValuePair<string, object?>("view", view));
     }
 
     internal static void RecordComposite(long bytes, int dpi)

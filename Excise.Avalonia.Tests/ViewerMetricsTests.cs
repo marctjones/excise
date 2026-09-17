@@ -28,6 +28,7 @@ public class ViewerMetricsTests
     private static Instrument[] AllInstruments() =>
     [
         ViewerMetrics.BandRenderDuration,
+        ViewerMetrics.LookAheadRenderDuration,
         ViewerMetrics.CompositeSize,
         ViewerMetrics.SinglePageRenderDuration,
         ViewerMetrics.ContinuousTileBytes,
@@ -65,6 +66,7 @@ public class ViewerMetricsTests
         static void Exercise()
         {
             ViewerMetrics.RecordBandRender(TimeSpan.FromMilliseconds(3), 120);
+            ViewerMetrics.RecordLookAheadRender(TimeSpan.FromMilliseconds(3), 120, ViewerMetrics.LookAheadContinuous);
             ViewerMetrics.RecordComposite(4096, 120);
             ViewerMetrics.RecordSinglePageRender(ViewerMetrics.SinglePageRenderStart(), 144);
             ViewerMetrics.RecordCacheTrim(PdfViewerCacheTrimLevel.Critical, 1, 2, 3);
@@ -127,6 +129,24 @@ public class ViewerMetricsTests
             .Match<CapturedMeasurement>(m => m.Value >= 0 && m.Tag("dpi") == "144");
         capture.Instruments["excise.viewer.continuous.band.render.duration"].Unit.Should().Be("ms");
         capture.Instruments["excise.viewer.continuous.composite.size"].Unit.Should().Be("By");
+    }
+
+    [Fact]
+    public void Metrics_LookAheadRender_IsItsOwnHistogram_TaggedByDpiAndView()
+    {
+        using var capture = MetricCapture.Start();
+
+        ViewerMetrics.RecordLookAheadRender(TimeSpan.FromMilliseconds(40), 192, ViewerMetrics.LookAheadContinuous);
+        ViewerMetrics.RecordLookAheadRender(TimeSpan.FromMilliseconds(55), 144, ViewerMetrics.LookAheadSinglePage);
+
+        var renders = capture.Of("excise.viewer.lookahead.render.duration");
+        renders.Single(m => m.Tag("view") == "continuous").Should()
+            .Match<CapturedMeasurement>(m => m.Value == 40 && m.Tag("dpi") == "192");
+        renders.Single(m => m.Tag("view") == "single_page").Should()
+            .Match<CapturedMeasurement>(m => m.Value == 55 && m.Tag("dpi") == "144");
+        capture.Of("excise.viewer.continuous.band.render.duration").Should().BeEmpty(
+            "a render-ahead is not a band the reader waited for (#1564)");
+        capture.Instruments["excise.viewer.lookahead.render.duration"].Unit.Should().Be("ms");
     }
 
     [Fact]

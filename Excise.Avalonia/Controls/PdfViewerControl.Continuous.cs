@@ -341,6 +341,7 @@ public partial class PdfViewerControl
         {
             _continuousItems.ContainerPrepared += OnContinuousContainerPrepared;
             _continuousItems.ContainerClearing += OnContinuousContainerClearing;
+            _continuousItems.LayoutUpdated += OnContinuousItemsLayoutUpdated;
         }
         if (_continuousScrollViewer != null)
         {
@@ -385,6 +386,10 @@ public partial class PdfViewerControl
 
         if (_continuousScrollViewer != null) _continuousScrollViewer.IsVisible = continuous;
         if (_scrollViewer != null) _scrollViewer.IsVisible = !continuous;
+
+        // #1564: render-ahead belongs to the view that scheduled it.
+        if (continuous) CancelSinglePageLookAhead();
+        else CancelContinuousLookAhead();
 
         if (continuous)
         {
@@ -571,6 +576,9 @@ public partial class PdfViewerControl
         _continuousDocCts = new CancellationTokenSource();
         _continuousInFlight.Clear();
         _continuousRequiredKeys = new HashSet<ContinuousTileKey>();
+        // The look-ahead batch is linked to the old document token, so it is
+        // already cancelled; drop its plan with it (#1564).
+        CancelContinuousLookAhead();
     }
 
     private void InvalidateContinuousCache()
@@ -584,6 +592,7 @@ public partial class PdfViewerControl
         ReleaseSlotComposites(_continuousSlots);
         foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
+        _continuousLookAheadTiles.Clear();
         RefreshContinuousByteMirrors();
         _continuousPageLinks.Clear();
         // Same lifetime as the link cache: an annotation cache that outlived
@@ -657,6 +666,13 @@ public partial class PdfViewerControl
             realizedPages = pages;
         }
 
+        if (_continuousLookAheadSamplePages.Count > 0)
+        {
+            // #1564: the neighbours rendered ahead from here keep theirs too.
+            var keep = new HashSet<int>(realizedPages);
+            keep.UnionWith(_continuousLookAheadSamplePages);
+            realizedPages = keep;
+        }
         ReleaseContinuousImageSamples(realizedPages, ViewerMetrics.DecodedSampleReleaseUnrealized);
     }
 
@@ -1001,6 +1017,7 @@ public partial class PdfViewerControl
         // A programmatic jump is in flight and hasn't landed. The offset we would
         // read here is the STALE one, so deriving CurrentPage from it would undo
         // the navigation the user just asked for.
+        _recomposeFromCacheOnLayout = true;
         if (_pendingContinuousPage is not null)
         {
             RenderVisibleContinuousTiles();
@@ -1026,6 +1043,56 @@ public partial class PdfViewerControl
     }
 
     // ---- Container realization -> on-demand render ---------------------
+
+    // #1564: set by a scroll, consumed by the layout pass that follows it.
+    private bool _recomposeFromCacheOnLayout;
+
+    /// <summary>
+    /// Publish the composites a scroll made possible from cached tiles in the
+    /// SAME frame as the scroll (#1564).
+    /// </summary>
+    /// <remarks>
+    /// The render pass is posted at <see cref="DispatcherPriority.Render"/>
+    /// from the scroll handler and from container realization. Both happen
+    /// before or during the layout pass of the frame that shows the new
+    /// offset, and a Render-priority job posted then runs after that frame is
+    /// drawn. So even a page whose every tile was rendered ahead appeared one
+    /// frame late: measured on the #1544 bench with render-ahead, the turned-to
+    /// page drew exactly one 60 Hz frame (17 ms) after the first change on 151
+    /// of 162 turns (turn drawn p50 59–61 ms against first change 42–44 ms).
+    /// LayoutUpdated is raised at the end of that layout pass, after the
+    /// turned-to page's container is realized and before the frame renders;
+    /// the composite set here invalidates layout, which the same frame
+    /// re-measures. This only composites what is already cached
+    /// (RecomposeSlot keeps the previous composite when a cell is missing and
+    /// skips a band it already shows), once per layout pass after a scroll —
+    /// the work the posted pass would have done one frame later, which then
+    /// finds nothing to do. Rendering stays with the posted pass.
+    /// </remarks>
+    private void OnContinuousItemsLayoutUpdated(object? sender, EventArgs e)
+    {
+        if (!_recomposeFromCacheOnLayout)
+            return;
+        _recomposeFromCacheOnLayout = false;
+        if (_continuousDetached || _continuousItems == null || ViewMode != PdfViewMode.Continuous
+            || _pendingContinuousPage is not null)
+            return;
+        try
+        {
+            foreach (var container in _continuousItems.GetRealizedContainers())
+            {
+                if (container.DataContext is PdfPageSlot slot)
+                    RecomposeSlot(slot);
+            }
+        }
+        catch
+        {
+            // Layout callback: never throw into the layout manager.
+        }
+    }
+
+    /// <summary>Test hook: run what the end of a layout pass runs after a scroll.</summary>
+    internal bool RecomposeFromCacheOnLayoutPending => _recomposeFromCacheOnLayout;
 
     private void OnContinuousContainerPrepared(object? sender, ContainerPreparedEventArgs e)
     {
@@ -1108,6 +1175,7 @@ public partial class PdfViewerControl
         }
 
         _continuousRequiredKeys = required;
+        OnContinuousRequiredKeysChanged(required, offset, viewport, dpi);
 
         // #1466: only a realized page may hold a composite. Container recycling
         // cannot release it (see OnContinuousContainerClearing), so the pass
@@ -1139,6 +1207,7 @@ public partial class PdfViewerControl
         // once every covering cell is available, so the previous composite (which
         // covers the old band + overscan) stays on screen during a scroll until the
         // new one is ready — no blank strip (#848), and one bitmap means no seams.
+        bool anyPending = false;
         foreach (var (slot, cells) in perSlot)
         {
             // #855: schedule the page's missing cells as ONE batch. A cell render
@@ -1159,9 +1228,17 @@ public partial class PdfViewerControl
                 pending.Add((cell, key));
             }
             if (pending.Count > 0)
+            {
+                anyPending = true;
                 _ = RenderContinuousCellsAsync(slot, pending);
+            }
             RecomposeSlot(slot);
         }
+
+        // #1564: the bands are complete (or waiting only on renders already in
+        // flight, whose completion re-asks). Render the next turn's page ahead.
+        if (!anyPending)
+            MaybeScheduleContinuousLookAhead();
     }
 
     /// <summary>
@@ -1187,22 +1264,37 @@ public partial class PdfViewerControl
     /// the composite is a contiguous crop of one render rather than a mosaic of
     /// independently-clipped ones — if anything less seam-prone.
     /// </summary>
+    /// <param name="lookAhead">
+    /// Non-null for a render-ahead batch (#1564): its cells are not in the
+    /// current bands by design, so they are not dropped as stale; it is
+    /// cancelled through its own token instead, which the render observes
+    /// between operators. It keeps its own counters and histogram, and its
+    /// tiles are marked so trims and budget cuts drop them first.
+    /// </param>
     private async Task RenderContinuousCellsAsync(
-        PdfPageSlot slot, List<(GridCell Cell, ContinuousTileKey Key)> batch)
+        PdfPageSlot slot, List<(GridCell Cell, ContinuousTileKey Key)> batch,
+        ContinuousLookAheadBatch? lookAhead = null)
     {
-        if (_continuousDetached || batch.Count == 0) return;
+        if (_continuousDetached || batch.Count == 0)
+        {
+            OnContinuousBandRenderFinished(lookAhead, current: false, batch);
+            return;
+        }
         // Fire-and-forget (`_ = RenderContinuousCellsAsync(...)`). An unobserved
         // exception here — e.g. the document being disposed mid-render during
         // teardown — must never surface: it would destabilise the whole
         // dispatcher (observed as cross-test dispatcher-pump timeouts / null
         // ItemsSource). Everything below the in-flight bookkeeping is guarded.
         var doc = Document;
-        if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
+        double zoom = ZoomLevel;
+        if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount || zoom <= 0)
+        {
+            OnContinuousBandRenderFinished(lookAhead, current: false, batch);
+            return;
+        }
 
         int pageNumber = slot.PageNumber;
         int dpi = batch[0].Key.Dpi;
-        double zoom = ZoomLevel;
-        if (zoom <= 0) return;
         double pxPerDip = dpi / (96.0 * zoom);
 
         var claimed = new List<(GridCell Cell, ContinuousTileKey Key)>(batch.Count);
@@ -1213,6 +1305,15 @@ public partial class PdfViewerControl
         {
             foreach (var entry in batch)
             {
+                if (lookAhead != null)
+                {
+                    // The planner already skipped cached and in-flight cells on
+                    // this dispatcher turn; peek so nothing is promoted.
+                    if (PeekContinuousCached(entry.Key) != null || !_continuousInFlight.Add(entry.Key))
+                        continue;
+                    claimed.Add(entry);
+                    continue;
+                }
                 if (TryGetContinuousCached(entry.Key, out var cached) && cached != null)
                 {
                     ContinuousRenderCacheHitCount++;
@@ -1227,7 +1328,11 @@ public partial class PdfViewerControl
             }
             if (claimed.Count == 0)
             {
-                RecomposeSlot(slot);
+                if (lookAhead == null)
+                    RecomposeSlot(slot);
+                // Nothing left to claim: a render-ahead step moves on to its
+                // next target.
+                OnContinuousBandRenderFinished(lookAhead, current: lookAhead != null && !_continuousDetached, claimed);
                 return;
             }
 
@@ -1259,10 +1364,12 @@ public partial class PdfViewerControl
         catch
         {
             foreach (var (_, key) in claimed) _continuousInFlight.Remove(key);
+            OnContinuousBandRenderFinished(lookAhead, current: false, claimed);
             return;
         }
 
-        var token = _continuousDocCts.Token;
+        var documentToken = _continuousDocCts.Token;
+        var token = lookAhead?.Token ?? documentToken;
         // #1492: every image and mask stream this band's render reads. Filled
         // by the renderer when RenderPage returns (or throws), on the render
         // thread, before the awaited task completes; read only after that.
@@ -1283,14 +1390,24 @@ public partial class PdfViewerControl
                 // rapid scrolling from rendering every intermediate viewport).
                 if (token.IsCancellationRequested)
                 {
-                    ContinuousRenderCancellationCount += claimed.Count;
+                    if (lookAhead != null) ContinuousLookAheadCancellationCount++;
+                    else ContinuousRenderCancellationCount += claimed.Count;
                     return;
                 }
-                int stale = claimed.RemoveAll(e => !_continuousRequiredKeys.Contains(e.Key));
-                ContinuousRenderCancellationCount += stale;
-                if (claimed.Count == 0) return;
-
-                ContinuousRenderStartCount++;
+                if (lookAhead == null)
+                {
+                    // A visible batch's cells are stale once no band needs them.
+                    // (A render-ahead batch is exempt: its cells are never in
+                    // the bands; OnContinuousRequiredKeysChanged cancels it.)
+                    int stale = claimed.RemoveAll(e => !_continuousRequiredKeys.Contains(e.Key));
+                    ContinuousRenderCancellationCount += stale;
+                    if (claimed.Count == 0) return;
+                    ContinuousRenderStartCount++;
+                }
+                else
+                {
+                    ContinuousLookAheadStartCount++;
+                }
                 var renderWatch = System.Diagnostics.Stopwatch.StartNew();
                 // Read the styled property HERE, on the UI thread. Avalonia
                 // properties are not thread-affine-safe to read from the render
@@ -1309,6 +1426,10 @@ public partial class PdfViewerControl
                     // instance state and is not reentrant, and several pages'
                     // bands may render concurrently.
                     var renderer = new SkiaRenderer();
+                    // Only render-ahead passes its token: it is the render a
+                    // page turn elsewhere should abandon mid-page. The visible
+                    // path keeps its historical call unchanged.
+                    var renderToken = lookAhead != null ? token : CancellationToken.None;
                     return renderer.RenderPage(page, new RenderOptions
                     {
                         Dpi = dpi,
@@ -1319,23 +1440,37 @@ public partial class PdfViewerControl
                         RevealHiddenAnnotations = revealHidden,
                         HighlightFormFields = highlightFields,
                         ImageSampleStreamSink = imageSamples,
-                    });
+                    }, renderToken);
                 }, token);
                 renderWatch.Stop();
-                ViewerMetrics.RecordBandRender(renderWatch.Elapsed, dpi);
-                ContinuousRenderCompletedCount++;
-                ContinuousRenderWallMs += renderWatch.ElapsedMilliseconds;
+                if (lookAhead != null)
+                {
+                    ViewerMetrics.RecordLookAheadRender(renderWatch.Elapsed, dpi, ViewerMetrics.LookAheadContinuous);
+                    ContinuousLookAheadCompletedCount++;
+                }
+                else
+                {
+                    ViewerMetrics.RecordBandRender(renderWatch.Elapsed, dpi);
+                    ContinuousRenderCompletedCount++;
+                    ContinuousRenderWallMs += renderWatch.ElapsedMilliseconds;
+                }
 
                 try
                 {
                     if (token.IsCancellationRequested) return;
-                    int cached = SliceBandIntoCells(skBitmap, claimed, bandXDip, bandYDip, pxPerDip);
+                    int cached = SliceBandIntoCells(skBitmap, claimed, bandXDip, bandYDip, pxPerDip,
+                        lookAhead != null);
                     if (cached > 0)
                     {
                         Trace($"BandRendered page={pageNumber} cells={cached} " +
                               $"band={bandXDip:F0},{bandYDip:F0} bmpPx={skBitmap?.Width}x{skBitmap?.Height} " +
-                              $"dpi={dpi} zoom={zoom:F3} ms={renderWatch.ElapsedMilliseconds}");
-                        RecomposeSlot(slot);
+                              $"dpi={dpi} zoom={zoom:F3} ms={renderWatch.ElapsedMilliseconds}" +
+                              (lookAhead != null ? " lookAhead=1" : ""));
+                        // A render-ahead page is normally not realized; only a
+                        // realized one (zoomed out, or paged onto mid-render)
+                        // has a composite to rebuild.
+                        if (lookAhead == null || _continuousItems?.ContainerFromItem(slot) != null)
+                            RecomposeSlot(slot);
                     }
                 }
                 finally
@@ -1351,6 +1486,7 @@ public partial class PdfViewerControl
         catch (OperationCanceledException)
         {
             // Scrolled away / document changed before the render finished.
+            if (lookAhead != null) ContinuousLookAheadCancellationCount++;
         }
         catch
         {
@@ -1371,6 +1507,11 @@ public partial class PdfViewerControl
             {
                 try { ReleaseImageSamplesOfUnrealizedPages(); } catch { }
             }
+            // #1564: continue render-ahead (or start it, once the last visible
+            // band has landed). A cancelled look-ahead still reports in, so a
+            // visible pass that coalesced onto it gets its cells back.
+            bool live = !documentToken.IsCancellationRequested && !_continuousDetached;
+            try { OnContinuousBandRenderFinished(lookAhead, live, claimed); } catch { }
         }
     }
 
@@ -1385,7 +1526,7 @@ public partial class PdfViewerControl
     private int SliceBandIntoCells(
         SKBitmap? band,
         List<(GridCell Cell, ContinuousTileKey Key)> cells,
-        double bandXDip, double bandYDip, double pxPerDip)
+        double bandXDip, double bandYDip, double pxPerDip, bool lookAhead = false)
     {
         if (band == null || band.Width <= 0 || band.Height <= 0) return 0;
 
@@ -1426,8 +1567,8 @@ public partial class PdfViewerControl
             if (!band.ExtractSubset(sub, new SKRectI(x, y, x + w, y + h))) continue;
             var bitmap = Imaging.SkiaInterop.ToAvaloniaBitmap(sub);
             if (bitmap == null) continue;
-            AddToContinuousCache(key, bitmap);
-            cachedCount++;
+            if (AddToContinuousCache(key, bitmap, lookAhead))
+                cachedCount++;
         }
 
         return cachedCount;
@@ -1701,6 +1842,7 @@ public partial class PdfViewerControl
             {
                 _continuousCache.Remove(node);
                 _continuousCache.AddFirst(node);
+                _continuousLookAheadTiles.Remove(key);
                 bmp = node.Value.Bitmap;
                 return true;
             }
@@ -1714,8 +1856,18 @@ public partial class PdfViewerControl
     /// replaced under the same key, and every tile evicted to get back under the
     /// byte budget, is disposed (#1467). Internal for tests.
     /// </summary>
-    internal void AddToContinuousCache(ContinuousTileKey key, WriteableBitmap bmp)
+    /// <param name="lookAhead">
+    /// A render-ahead tile (#1564). It goes in at the MRU end like any other —
+    /// the next page is worth more than a page scrolled past long ago — but its
+    /// eviction never takes a tile of the current bands: when the budget
+    /// cannot hold it without doing so, the look-ahead tile itself is dropped.
+    /// </param>
+    /// <returns>False when the tile was not kept (a refused look-ahead tile).</returns>
+    internal bool AddToContinuousCache(ContinuousTileKey key, WriteableBitmap bmp, bool lookAhead = false)
     {
+        if (lookAhead)
+            return AddLookAheadTileToContinuousCache(key, bmp);
+        _continuousLookAheadTiles.Remove(key);
         for (var node = _continuousCache.First; node != null; node = node.Next)
         {
             if (!node.Value.Key.Equals(key)) continue;
@@ -1736,11 +1888,57 @@ public partial class PdfViewerControl
         while (_continuousCache.Count > ContinuousCacheMinEntries &&
                ContinuousCacheResidentBytes() > EffectiveContinuousCacheByteBudget)
         {
-            var evicted = _continuousCache.Last!.Value.Bitmap;
+            var (evictedKey, evicted) = _continuousCache.Last!.Value;
             _continuousCache.RemoveLast();
+            _continuousLookAheadTiles.Remove(evictedKey);
             evicted.Dispose();
         }
         RefreshContinuousByteMirrors();
+        return true;
+    }
+
+    private bool AddLookAheadTileToContinuousCache(ContinuousTileKey key, WriteableBitmap bmp)
+    {
+        // A look-ahead render never replaces a cached tile: the planner and the
+        // claim both skipped cached keys, and a key cached since then by a
+        // visible render is the one to keep.
+        if (PeekContinuousCached(key) != null)
+        {
+            bmp.Dispose();
+            return false;
+        }
+
+        _continuousCache.AddFirst((key, bmp));
+        _continuousLookAheadTiles.Add(key);
+        long budget = EffectiveContinuousCacheByteBudget;
+        long resident = ContinuousCacheResidentBytes();
+        var node = _continuousCache.Last;
+        while (node != null && resident > budget && _continuousCache.Count > ContinuousCacheMinEntries)
+        {
+            var previous = node.Previous;
+            if (node != _continuousCache.First && !_continuousRequiredKeys.Contains(node.Value.Key))
+            {
+                var bitmap = node.Value.Bitmap;
+                resident -= ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
+                _continuousCache.Remove(node);
+                _continuousLookAheadTiles.Remove(node.Value.Key);
+                bitmap.Dispose();
+            }
+            node = previous;
+        }
+
+        bool kept = true;
+        if (resident > budget && _continuousCache.Count > ContinuousCacheMinEntries)
+        {
+            // Only the current bands (and this tile) are left, and they do not
+            // fit: the bands win.
+            _continuousCache.RemoveFirst();
+            _continuousLookAheadTiles.Remove(key);
+            bmp.Dispose();
+            kept = false;
+        }
+        RefreshContinuousByteMirrors();
+        return kept;
     }
 
     private long ContinuousCacheResidentBytes()

@@ -13,8 +13,10 @@ public enum PdfViewerCacheTrimLevel
 {
     /// <summary>
     /// The app is in the background or idle. Drops the continuous view's
-    /// scroll-back tiles (every tile outside the current bands) and every
-    /// single-page bitmap except the one on screen. What is visible stays
+    /// render-ahead tiles (#1564) and scroll-back tiles (every tile outside the
+    /// current bands) and every single-page bitmap except the one on screen,
+    /// render-ahead pages included. Render-ahead is not restarted until the
+    /// reader moves. What is visible stays
     /// cached, so returning to the window costs nothing; scrolling back to a
     /// dropped band re-renders it.
     /// </summary>
@@ -79,11 +81,18 @@ public partial class PdfViewerControl
         if (!Enum.IsDefined(level))
             throw new ArgumentOutOfRangeException(nameof(level), level, "unknown cache trim level");
 
+        // #1564: render-ahead goes first. A look-ahead render the current bands
+        // do not need is cancelled, and none is planned again until the reader
+        // moves: a trim must not cause a render (#1478), and re-rendering what
+        // was just released would undo the trim.
+        SuppressContinuousLookAheadAfterTrim();
+        SuppressSinglePageLookAheadAfterTrim();
+
         // Background and Warn keep the current bands' tiles; Critical keeps
         // none. _continuousRequiredKeys is the set the last render pass
         // computed, and the one a queued render checks, so it is the band the
         // pipeline itself considers current.
-        var (tiles, tileBytes) = TrimContinuousTiles(
+        var (tiles, tileBytes, lookAheadTiles) = TrimContinuousTiles(
             level == PdfViewerCacheTrimLevel.Critical ? null : _continuousRequiredKeys);
 
         int composites = 0;
@@ -115,7 +124,7 @@ public partial class PdfViewerControl
         RefreshContinuousByteMirrors();
 
         var result = new CacheTrimResult(level, tiles, tileBytes, composites, compositeBytes, singlePage, singlePageBytes,
-            sampleStreams, sampleBytes);
+            sampleStreams, sampleBytes, lookAheadTiles);
         LastCacheTrim = result;
         CacheTrimCount++;
         ViewerMetrics.RecordCacheTrim(level, tileBytes, compositeBytes, singlePageBytes);
@@ -126,12 +135,15 @@ public partial class PdfViewerControl
     /// <summary>
     /// Unlink and dispose every tile whose key is not in <paramref name="keep"/>
     /// (all of them when it is null). Sized before disposal: a disposed bitmap
-    /// throws on PixelSize.
+    /// throws on PixelSize. <c>LookAhead</c> counts the render-ahead tiles
+    /// among them (#1564); a look-ahead tile is never in the bands, so every
+    /// level releases all of them.
     /// </summary>
-    private (int Count, long Bytes) TrimContinuousTiles(IReadOnlySet<ContinuousTileKey>? keep)
+    private (int Count, long Bytes, int LookAhead) TrimContinuousTiles(IReadOnlySet<ContinuousTileKey>? keep)
     {
         int count = 0;
         long bytes = 0;
+        int lookAhead = 0;
         var node = _continuousCache.First;
         while (node != null)
         {
@@ -141,12 +153,14 @@ public partial class PdfViewerControl
                 var bitmap = node.Value.Bitmap;
                 bytes += ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
                 _continuousCache.Remove(node);
+                if (_continuousLookAheadTiles.Remove(node.Value.Key))
+                    lookAhead++;
                 bitmap.Dispose();
                 count++;
             }
             node = next;
         }
-        return (count, bytes);
+        return (count, bytes, lookAhead);
     }
 
     /// <summary>
@@ -200,7 +214,8 @@ public partial class PdfViewerControl
         int Tiles, long TileBytes,
         int Composites, long CompositeBytes,
         int SinglePageBitmaps, long SinglePageBytes,
-        int DecodedSampleStreams = 0, long DecodedSampleBytes = 0)
+        int DecodedSampleStreams = 0, long DecodedSampleBytes = 0,
+        int LookAheadTiles = 0)
     {
         /// <summary>
         /// Bitmap bytes only (native pixels). Decoded samples are managed
