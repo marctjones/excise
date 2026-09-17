@@ -68,6 +68,9 @@ internal static class AttachmentCarrierScrubber
         /// <summary>The dictionary to strip <see cref="OwnerKey"/> from (a Sound or RichMedia annotation).</summary>
         internal PdfDictionary? Owner { get; init; }
         internal string? OwnerKey { get; init; }
+
+        /// <summary>The key in the document's <c>/EmbeddedFiles</c> name tree, when listed there (#1582).</summary>
+        internal string? NameTreeKey { get; init; }
     }
 
     // ───────────────────────── enumeration ─────────────────────────
@@ -84,7 +87,7 @@ internal static class AttachmentCarrierScrubber
             if (!specs.Add(fs)) return;
             var payload = PayloadOf(document, fs);
             if (payload != null && !streams.Add(payload)) return;
-            found.Add(new Found(NameOf(document, fs, key), location, fs, payload));
+            found.Add(new Found(NameOf(document, fs, key), location, fs, payload) { NameTreeKey = key });
         }
 
         void AddSpecArray(PdfObject? value, string location)
@@ -296,6 +299,18 @@ internal static class AttachmentCarrierScrubber
                 results.Add((file, Result(AttachmentDisposition.KeptNotChecked, allTerms.Count == 0
                     ? "there was no term to look for (area redaction); the file may contain the redacted text"
                     : $"the term is shorter than {MinTermLength} characters, so attachments were not searched")));
+                continue;
+            }
+
+            // #1582: the name-tree key is a second name the file is listed
+            // under, and a reader shows it. When it holds the term the file
+            // goes, as it does when /F or /UF holds it (#1151).
+            if (file.NameTreeKey is { } treeKey && file.FileSpec is { } keyedSpec
+                && terms.Any(t => WithoutTerm(treeKey, t, caseSensitive, wholeWord) != treeKey))
+            {
+                writes.Add(() => RemoveFromEmbeddedFilesTree(document, keyedSpec, terms, caseSensitive, wholeWord));
+                results.Add((file, Result(AttachmentDisposition.Removed,
+                    "removed: its name in the document's attachment list held the term")));
                 continue;
             }
 
@@ -601,6 +616,62 @@ internal static class AttachmentCarrierScrubber
                 if (document.Resolve(kid) is PdfDictionary child)
                     WalkNameTree(document, child, visit, seen);
         }
+    }
+
+    /// <summary>
+    /// Drop <paramref name="fileSpec"/>'s entry from the <c>/EmbeddedFiles</c>
+    /// name tree, strip its embedded data wherever else it is referenced, and
+    /// cut the terms from any <c>/Limits</c> string that repeats the key.
+    /// </summary>
+    private static void RemoveFromEmbeddedFilesTree(
+        PdfDocument document, PdfDictionary fileSpec, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord)
+    {
+        var names = ResolveDict(document, document.Catalog.GetOptional("Names"));
+        if (ResolveDict(document, names?.GetOptional("EmbeddedFiles")) is not { } root) return;
+
+        var stack = new Stack<PdfDictionary>();
+        var seen = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        stack.Push(root);
+        while (stack.Count > 0)
+        {
+            var node = stack.Pop();
+            if (!seen.Add(node)) continue;
+
+            if (document.Resolve(node.GetOptional("Names") ?? PdfNull.Instance) is PdfArray pairs)
+            {
+                for (var i = pairs.Count - 2; i >= 0; i -= 2)
+                {
+                    if (ReferenceEquals(document.Resolve(pairs[i + 1]), fileSpec))
+                    {
+                        pairs.RemoveAt(i + 1);
+                        pairs.RemoveAt(i);
+                    }
+                }
+            }
+
+            if (document.Resolve(node.GetOptional("Limits") ?? PdfNull.Instance) is PdfArray limits)
+            {
+                for (var i = 0; i < limits.Count; i++)
+                {
+                    if (document.Resolve(limits[i]) is not PdfString limit) continue;
+                    var cut = limit.Value;
+                    foreach (var term in terms)
+                        cut = WithoutTerm(cut, term, caseSensitive, wholeWord);
+                    if (cut != limit.Value)
+                        limits[i] = new PdfString(cut);
+                }
+            }
+
+            if (document.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
+                foreach (var kid in kids)
+                    if (document.Resolve(kid) is PdfDictionary child)
+                        stack.Push(child);
+        }
+
+        RemoveKey(fileSpec, "EF", null);
+        RemoveKey(fileSpec, "RF", null);
+        RemoveKey(fileSpec, "Desc", null);
+        document.InvalidateDerivedState(PdfDocumentDerivedStateScope.Attachments);
     }
 
     /// <summary>File specifications with <c>/EF</c> reachable from an annotation without leaving it.</summary>
