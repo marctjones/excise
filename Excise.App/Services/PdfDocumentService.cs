@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
 using Excise.Core.Operations;
+using Excise.Core.Xfa;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,7 +21,19 @@ public class PdfDocumentService
     private string? _currentFilePath;
     private string? _currentUserPassword;
 
+    /// <summary>
+    /// How long laying out a dynamic XFA form may take on open (#1547) before
+    /// excise gives up and shows the document's own pages.
+    /// </summary>
+    internal static readonly TimeSpan XfaLayoutTimeLimit = TimeSpan.FromSeconds(15);
+
     public int PageCount => _currentDocument?.PageCount ?? 0;
+
+    /// <summary>
+    /// #1547: what happened when the current document's dynamic XFA form was
+    /// laid out on open. Null when the document is not a dynamic XFA form.
+    /// </summary>
+    public XfaLayoutResult? XfaLayout { get; private set; }
     public bool IsDocumentLoaded => _currentDocument != null;
 
     /// <summary>
@@ -111,6 +124,7 @@ public class PdfDocumentService
             throw new FileNotFoundException($"PDF file not found: {filePath}");
 
         bool replacing = DisposeIfLoaded(_currentDocument);
+        XfaLayout = null;
         // Open from bytes so the file is not held open — matches the
         // previous file-based behavior that kept the file freely writable.
         _currentDocument = userPassword is null
@@ -118,6 +132,7 @@ public class PdfDocumentService
             : PdfDocument.Open(File.ReadAllBytes(filePath), userPassword);
         _currentFilePath = filePath;
         _currentUserPassword = userPassword;
+        XfaLayout = LayOutDynamicXfa(_currentDocument);
 
         _logger.LogInformation(
             "PDF loaded. Pages: {PageCount}, Version: {Version}, File: {FileName}",
@@ -128,6 +143,58 @@ public class PdfDocumentService
         if (replacing)
             DocumentReleased?.Invoke(releaseReason);
     }
+
+    /// <summary>
+    /// #1547: replace a dynamic XFA form's placeholder pages with the form's
+    /// layout, before anything else reads the document. Every other document
+    /// costs one <see cref="PdfXfaDetection.DetectXfaForm"/> call and nothing
+    /// more. A form that cannot be laid out keeps its own pages.
+    /// </summary>
+    private XfaLayoutResult? LayOutDynamicXfa(PdfDocument document)
+    {
+        try
+        {
+            if (document.DetectXfaForm() != PdfXfaFormKind.Dynamic)
+                return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "XFA detection failed");
+            return null;
+        }
+
+        try
+        {
+            using var timeout = new System.Threading.CancellationTokenSource(XfaLayoutTimeLimit);
+            var result = document.ApplyXfaLayout(
+                new XfaLayoutOptions { TimeLimit = XfaLayoutTimeLimit }, timeout.Token);
+            _logger.LogInformation(
+                "Dynamic XFA form: {Status}, {Pages} page(s), omissions [{Omissions}], scripts not run [{Scripts}], reason {Reason}",
+                result.Status, result.PageCount, string.Join("; ", result.Omissions),
+                string.Join(", ", result.ScriptsNotRun.Select(kv => $"{kv.Key}={kv.Value}")),
+                result.FailureReason);
+            return result;
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("XFA layout timed out after {Seconds} s", XfaLayoutTimeLimit.TotalSeconds);
+            return FailedXfaLayout(document, "Laying out the form took too long.");
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            // A layout defect must never stop the document opening.
+            _logger.LogWarning(ex, "XFA layout failed");
+            return FailedXfaLayout(document, ex.Message);
+        }
+    }
+
+    private static XfaLayoutResult FailedXfaLayout(PdfDocument document, string reason)
+        => new()
+        {
+            Status = XfaLayoutStatus.Failed,
+            PageCount = document.PageCount,
+            FailureReason = reason,
+        };
 
     /// <summary>
     /// Dispose without leaving the instance in a caller's local: the release
@@ -165,6 +232,9 @@ public class PdfDocumentService
             ? PdfDocument.Open(File.ReadAllBytes(savePath))
             : PdfDocument.Open(File.ReadAllBytes(savePath), _currentUserPassword);
         _currentFilePath = savePath;
+        // #1547: the saved copy is marked (so this is a no-op re-check), or a
+        // redaction removed its XFA form (so the result goes back to null).
+        XfaLayout = LayOutDynamicXfa(_currentDocument);
         DocumentReleased?.Invoke(DocumentReleaseReason.SaveReload);
     }
 
@@ -514,6 +584,7 @@ public class PdfDocumentService
         bool closing = DisposeIfLoaded(_currentDocument);
         _currentDocument = null;
         _currentFilePath = null;
+        XfaLayout = null;
         if (closing)
             DocumentReleased?.Invoke(DocumentReleaseReason.Closed);
     }

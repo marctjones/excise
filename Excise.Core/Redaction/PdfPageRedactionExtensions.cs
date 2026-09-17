@@ -161,6 +161,12 @@ public static class PdfPageRedactionExtensions
         area = area.Normalize();
         imageArea = imageArea.Normalize();
 
+        // #1547: pages excise generated from an XFA form are restated, value for
+        // value, in the XFA packet, and XFA viewers regenerate the pages from
+        // it. Redacting the page while that packet survives would be undone by
+        // the next viewer, so it goes whatever the carrier scope.
+        Excise.Core.Xfa.PdfXfaLayout.RemoveXfaSourceOfLaidOutPages(page.Document);
+
         // Positionless document-level carriers (#897). Idempotent — RedactAreas
         // applies it once per rectangle — because the underlying operations are
         // removals of keys that may already be absent, and the #1507 PDF/A
@@ -299,6 +305,7 @@ public static class PdfPageRedactionExtensions
                 strategy, scrubDocumentCarriers, closeWidth);
         }
 
+        Excise.Core.Xfa.PdfXfaLayout.RemoveXfaSourceOfLaidOutPages(page.Document);   // #1547, see RedactAreaInternal
         if (scrubDocumentCarriers)
             page.Document.ScrubMetadataPreservingPdfAIdentity(scrubAttachments: false);   // #1507
         foreach (var area in list)

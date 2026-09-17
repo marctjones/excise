@@ -13,13 +13,14 @@ using Excise.App.ViewModels;
 using Excise.App.Views;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.Core.Xfa;
 using FluentAvalonia.UI.Controls;
 using Xunit;
 
 namespace Excise.App.Tests.UI;
 
 /// <summary>
-/// #1547 phase 1 — opening an XFA form shows a banner that says what excise
+/// #1547 — opening an XFA form shows a banner that says what excise
 /// can and cannot do with it. A dynamic XFA form otherwise shows only its
 /// placeholder page with no explanation.
 /// </summary>
@@ -95,6 +96,28 @@ public class XfaFormNoticeTests : IDisposable
         {
             window.Close();
         }
+    }
+
+    [FixedAvaloniaFact]
+    public async Task LaidOutDynamicXfa_ShowsTheForm_AndAnInformationalNotice()
+    {
+        var path = Path.Combine(_tempDir, "laid-out.pdf");
+        File.WriteAllBytes(path, Excise.TestSupport.XfaTestForms.BuildPdf(
+            Excise.TestSupport.XfaTestForms.PositionedTemplate()));
+        var vm = MainWindowViewModelTestFactory.Create();
+
+        await vm.LoadDocumentAsync(path);
+
+        vm.XfaFormKind.Should().Be(PdfXfaFormKind.Dynamic);
+        vm.IsXfaFormLaidOut.Should().BeTrue();
+        vm.PdfCoreDocument!.HasXfaLayoutPages().Should().BeTrue(
+            "the view model shows the laid-out pages, not the placeholder");
+        vm.IsXfaNoticeOpen.Should().BeTrue();
+        vm.XfaNoticeSeverity.Should().Be(FAInfoBarSeverity.Informational);
+        vm.XfaNoticeTitle.Should().Be(MainWindowViewModel.LaidOutXfaNoticeTitle);
+        vm.XfaNoticeMessage.Should().Be(MainWindowViewModel.LaidOutXfaNoticeMessage);
+        vm.XfaNoticeMessage.Should().Contain("scripts don't run");
+        vm.HasUnsavedDocumentChanges.Should().BeFalse("laying out the form is not an edit");
     }
 
     [FixedAvaloniaFact]

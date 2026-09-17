@@ -42,6 +42,7 @@ partial class Program
             CreateProfileWorkflowsCommand(),
             CreateAnnotationBenchCommand(),
             CreatePdfiumRenderCommand(),
+            CreateXfaLayoutCommand(),
         };
 
         var parserExitCode = rootCommand.Parse(args).Invoke();

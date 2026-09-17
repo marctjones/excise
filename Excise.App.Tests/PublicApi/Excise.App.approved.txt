@@ -366,6 +366,7 @@ namespace Excise.App.Services
         public bool IsEncrypted { get; }
         public int PageCount { get; }
         public string PdfVersion { get; }
+        public Excise.Core.Xfa.XfaLayoutResult? XfaLayout { get; }
         public void AddPagesFromPdf(string sourcePdfPath, System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
         public Excise.App.Services.PageOperationDiagnostics AnalyzePageOperationPreservation(System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
         public void CloseDocument() { }
@@ -775,6 +776,7 @@ namespace Excise.App.ViewModels
         public bool IsThumbnailsSidebarVisible { get; set; }
         public bool IsTypewriterMode { get; set; }
         public bool IsTypewriterStyleInspectorVisible { get; }
+        public bool IsXfaFormLaidOut { get; }
         public bool IsXfaNoticeOpen { get; set; }
         public ReactiveUI.ReactiveCommand<Excise.App.Models.OutlineNode, System.Reactive.Unit> JumpToOutlineCommand { get; }
         public ReactiveUI.ReactiveCommand<Excise.App.Models.SearchMatch, System.Reactive.Unit>? JumpToSearchMatchCommand { get; }
