@@ -167,8 +167,9 @@ public class PdfEmbeddedFileTests
         using var doc = PdfDocument.Open(pdf);
         doc.GetEmbeddedFiles().Should().ContainSingle();
 
-        var restore = doc.ScrubEmbeddedFilesReversibly();
+        var (removed, restore) = doc.ScrubEmbeddedFilesReversibly();
         doc.GetEmbeddedFiles().Should().BeEmpty("the scrub itself is unchanged");
+        removed.Should().ContainSingle().Which.Name.Should().Be("secret.xml");
 
         restore();
         var files = doc.GetEmbeddedFiles();

@@ -9,7 +9,54 @@ semantic versioning.
 Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
+### Changed
+- **Redacted output carries no attachments by default** (#1572). Product
+  decision by Marc Jones, 2026-09-17. Before, only the GUI's redacted-copy flow
+  removed attachments; `excise redact`, batch `redaction.apply`, scripting and
+  the library's `RedactText`/`RedactArea` removed only files whose name,
+  description or content matched the term, so an attachment excise could not
+  read (an image, a spreadsheet) always shipped. Every redaction entry point now
+  removes every embedded file and names each one with its size: the CLI prints
+  `ATTACHMENT REMOVED:` notes, batch results carry an `attachments` array,
+  `RedactionReport.Attachments` and `RedactedCopySafetyReport.Attachments` list
+  them, and the redacted-copy dialog names them. Opt out with
+  `--keep-attachments`, batch `keepAttachments: true`,
+  `RedactionOptions.KeepAttachments` or Preferences › Redaction › Attachments.
+  Kept attachments are still examined: text files (txt, csv, xml, html, json,
+  md, or a `text/*` type) have the term cut out and their `/CheckSum` dropped;
+  nested PDFs are redacted with the same options, and an unreadable or
+  password-protected one refuses the whole redaction
+  (`AttachmentRedactionRefusedException`, batch `ATTACHMENT_REFUSED`); anything
+  else is reported as not checked and the redaction is not a clean success. A
+  PDF portfolio (`/Collection`) is refused rather than stripped unless
+  attachments are kept (`PdfPortfolioRedactionException`, batch
+  `PORTFOLIO_REFUSED`). This reverses the "defaults reproduce prior behaviour"
+  rule of #1187 for this one option, deliberately.
+- **Any redaction of a document with an XFA form removes the XFA packet**
+  (#1574). #1547 phase 2 did this for forms excise laid out itself; a STATIC
+  XFA form (the IRS W-4, W-9 and 1040 shape) kept its `datasets` packet through
+  area redaction, which has no term to scrub it by, and Acrobat merges those
+  values back onto the page. `RedactArea`, `RedactAreas` and `RedactText` now
+  remove `/AcroForm /XFA` (and `/NeedsRendering`) from any document, report it
+  as an `/XFA` carrier row (and a "XFA form" line in the redacted-copy dialog),
+  and keep the AcroForm fields, which every non-XFA viewer already uses.
+
 ### Fixed
+- **Attachments on page annotations survived "attachments scrubbed"**
+  (#1572). `PdfDocument.ScrubEmbeddedFiles()` removed only
+  `/Catalog/Names/EmbeddedFiles` and `/Catalog/AF`, so a file attached through
+  a `/FileAttachment` annotation — its payload, `/Desc` and the annotation's
+  `/Contents` — was still in the redacted copy the dialog called scrubbed. It
+  now removes page and annotation `/AF` arrays, FileAttachment, RichMedia and
+  Sound annotations, Screen and Movie annotations with embedded media, and
+  detaches any other embedded file specification (actions, form XObjects,
+  structure elements); an annotation a structure element still references is
+  reduced to a stub. New `PdfDocument.RemoveAllAttachments()` returns what it
+  removed. Verified with poppler's `pdfdetach`, qpdf's object graph and the
+  decompressing saved-byte scanner. The redacted-copy dialog used to print
+  "none found" for attachments the area pass had already removed; it now names
+  them. The Attachments pane's Remove All now removes page attachments too, and
+  undo restores them.
 - **A failed open left the previous document's attachments listed** (#1563),
   and opening another document kept the old list on screen until the new one
   finished loading. Both now clear.

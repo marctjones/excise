@@ -128,12 +128,43 @@ public sealed class CarrierScrubPolicyTests
     }
 
     [Fact]
-    public void RefusalOnAnUnnamedCarrier_StillReachesTheReport()
+    public void ReportOnlyHitOnAnUnnamedCarrier_StillReachesTheReport()
     {
-        // #1188: RedactText names five carriers in its summary. A mode refused
-        // on one of the others (here XFA, which has no RemoveWhole) must not be
-        // dropped just because the carrier is absent from that list — silently
-        // skipping it is exactly what the carrier policy forbids.
+        // #1188: RedactText names five carriers in its summary. A carrier
+        // outside that list that still HOLDS the term (here a form field name
+        // under ReportOnly) must not be dropped just because the carrier is
+        // absent from the list — silently skipping it is exactly what the
+        // carrier policy forbids.
+        //
+        // This used an XFA RemoveWhole refusal until #1574: redaction now
+        // removes an XFA form whole before the term scrub runs, so no XFA
+        // refusal can reach a RedactText report any more (the refusal itself
+        // is still pinned on ScrubTerms by RemoveWhole_OnXfa_IsRefused...).
+        var formPdf = Build(
+            "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [6 0 R] >> >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>",
+            Stream("", "BT ET"),
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+            "<< /FT /Tx /T (yourself) >>");
+
+        using var doc = PdfDocument.Open(formPdf);
+        var report = doc.RedactText(Term, RedactionOptions.Default with
+        {
+            CarrierPolicy = CarrierScrubPolicy.Default.With(RedactionCarriers.FormFields, CarrierScrubMode.ReportOnly),
+        });
+
+        report.Carriers.Should().Contain(c => c.Carrier == "/FormFields" && c.RefusedReason != null,
+            "the ReportOnly hit is surfaced even though form fields are not one of the five named carriers");
+        report.IsCleanSuccess.Should().BeFalse("a carrier that still holds the term is not a clean success");
+    }
+
+    [Fact]
+    public void XfaForm_IsRemovedWhole_AndReported_WhateverTheCarrierPolicy()
+    {
+        // #1574: the XFA packet restates field values and a viewer merges them
+        // back, so a redaction removes it whole — even when the caller asked for
+        // a policy the XFA term scrub would refuse.
         var xfaPdf = Build(
             "<< /Type /Catalog /Pages 2 0 R /AcroForm << /XFA 6 0 R >> >>",
             "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
@@ -141,6 +172,7 @@ public sealed class CarrierScrubPolicyTests
             Stream("", "BT ET"),
             "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
             Stream("", "<xdp><field>yourself</field></xdp>"));
+        SavedPdfLeakScanner.FindTerm(xfaPdf, "yourself").Should().NotBeEmpty("guard");
 
         using var doc = PdfDocument.Open(xfaPdf);
         var report = doc.RedactText(Term, RedactionOptions.Default with
@@ -148,9 +180,9 @@ public sealed class CarrierScrubPolicyTests
             CarrierPolicy = CarrierScrubPolicy.Uniform(CarrierScrubMode.RemoveWhole),
         });
 
-        report.Carriers.Should().Contain(c => c.RefusedReason != null && c.RefusedReason.Contains("XFA"),
-            "the refusal is surfaced even though XFA is not one of the five named carriers");
-        report.IsCleanSuccess.Should().BeFalse("a refused carrier is not a clean success");
+        report.Carriers.Should().Contain(c => c.Carrier.StartsWith("/XFA", StringComparison.Ordinal) && c.Scrubbed);
+        report.Carriers.Should().NotContain(c => c.RefusedReason != null && c.RefusedReason.Contains("XFA"));
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "yourself").Should().BeEmpty();
     }
 
     [Fact]

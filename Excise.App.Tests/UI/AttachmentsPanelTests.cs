@@ -768,24 +768,31 @@ public class AttachmentsPanelTests : IDisposable
         vm.HasUnsavedDocumentChanges.Should().BeTrue();
     }
 
+    /// <summary>
+    /// #1572: Remove All used to strip only the document-level tree and left a
+    /// page's /FileAttachment file in place. It now removes both, and the
+    /// toast counts what the strip removed.
+    /// </summary>
     [FixedAvaloniaFact(Timeout = 30000)]
-    public async Task StripAttachments_ReportsWhatActuallyRemains()
+    public async Task StripAttachments_RemovesPageAnnotationAttachmentsToo()
     {
         var (vm, toasts) = CreateWithToasts();
         await vm.LoadDocumentAsync(PdfWithBothCarriers());
+        vm.Attachments.Should().HaveCount(2, "precondition");
         toasts.Clear();
 
         vm.StripAllAttachments();
 
-        vm.Attachments.Should().ContainSingle(a => a.PageNumber == 2,
-            "Remove All strips the document-level tree; a page annotation's file is not part of it");
-        toasts.Should().ContainSingle().Which.Details.Should().Be("1 attachment on a page annotation remains.",
-            "the pane must never claim a removal the document does not show");
-        toasts[0].Message.Should().StartWith("1 attachment removed");
+        vm.Attachments.Should().BeEmpty("the page annotation's file is an attachment like any other (#1572)");
+        toasts.Should().ContainSingle().Which.Message.Should().StartWith("2 attachments removed");
+
+        await vm.UndoCommand.Execute();
+        vm.Attachments.Should().HaveCount(2, "undo restores the annotation as well as the document-level entry");
+        vm.Attachments.Should().ContainSingle(a => a.PageNumber == 2);
     }
 
     [FixedAvaloniaFact(Timeout = 30000)]
-    public async Task StripAttachments_WithOnlyAnnotationAttachments_ChangesNothing()
+    public async Task StripAttachments_WithOnlyAnnotationAttachments_RemovesThem()
     {
         var (vm, toasts) = CreateWithToasts();
         await vm.LoadDocumentAsync(PdfWithBothCarriers("annotation-only.pdf", documentLevel: false));
@@ -794,10 +801,58 @@ public class AttachmentsPanelTests : IDisposable
 
         vm.StripAllAttachments();
 
-        vm.Attachments.Should().ContainSingle();
-        vm.HasUnsavedDocumentChanges.Should().BeFalse("nothing was removed, so nothing is pending");
-        vm.CanUndo.Should().BeFalse();
-        toasts.Should().ContainSingle(t => t.Message == "No attachments removed");
+        vm.Attachments.Should().BeEmpty();
+        vm.HasUnsavedDocumentChanges.Should().BeTrue();
+        vm.CanUndo.Should().BeTrue();
+        toasts.Should().ContainSingle(t => t.Message.StartsWith("1 attachment removed"));
+    }
+
+    /// <summary>
+    /// #1572, checked by tools that are not excise: poppler's pdfdetach lists
+    /// annotation attachments (qpdf's --list-attachments does not), and the
+    /// saved-byte scanner reads inside compressed streams.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task StripThenSave_RemovesAnnotationAttachment_VerifiedByPdfdetach()
+    {
+        Assert.SkipWhen(PdfdetachList(PdfWithoutAttachment("probe.pdf")) == null,
+            "pdfdetach (poppler) is not installed [requires: tool:pdfdetach]");
+
+        var pdf = PdfWithBothCarriers("both-for-pdfdetach.pdf");
+        PdfdetachList(pdf).Should().Contain(AnnotationFileName,
+            "the independent oracle must see the annotation attachment BEFORE the strip");
+        Excise.TestSupport.SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(pdf), AnnotationFileName)
+            .Should().NotBeEmpty("guard: the scanner must see the file name before the strip");
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        await vm.LoadDocumentAsync(pdf);
+        vm.StripAllAttachments();
+        var strippedPath = Path.Combine(_tempDir, "stripped-both.pdf");
+        await vm.SaveFileAsAsync(strippedPath);
+
+        PdfdetachList(strippedPath).Should().Contain("0 embedded files",
+            "pdfdetach — not excise — must find no attachment of either kind");
+        Excise.TestSupport.SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(strippedPath), AnnotationFileName)
+            .Should().BeEmpty();
+        Excise.TestSupport.SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(strippedPath), AttachmentMarker)
+            .Should().BeEmpty();
+    }
+
+    private static string? PdfdetachList(string path)
+    {
+        try
+        {
+            using var p = Process.Start(new ProcessStartInfo("pdfdetach", $"-list \"{path}\"")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            })!;
+            var output = p.StandardOutput.ReadToEnd();
+            p.WaitForExit(10000);
+            return p.ExitCode == 0 ? output : null;
+        }
+        catch { return null; }
     }
 
     /// <summary>

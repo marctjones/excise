@@ -77,6 +77,7 @@ public partial class MainWindowViewModel
         // other. A security choice that silently resets to the less-safe
         // default on every launch is worse than no choice at all.
         settings.RedactionWholeWord = RedactionWholeWord;
+        settings.RedactionKeepAttachments = RedactionKeepAttachments;   // #1572
         settings.RedactionWidthPolicy = RedactionWidthPolicy.ToString();
         settings.LinkUriCarrierPolicy = LinkUriCarrierPolicy.ToString();
         settings.MetadataCarrierPolicy = MetadataCarrierPolicy.ToString();

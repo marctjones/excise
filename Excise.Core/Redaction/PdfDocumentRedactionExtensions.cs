@@ -95,7 +95,8 @@ public static class PdfDocumentRedactionExtensions
         Action<int, int>? progress = null)
     {
         if (options == null) throw new ArgumentNullException(nameof(options));
-        return document.RedactText(
+        return RedactTextCore(
+            document,
             text,
             options.CaseSensitive,
             options.Strategy,
@@ -108,9 +109,16 @@ public static class PdfDocumentRedactionExtensions
             progress,
             options.CarrierPolicy,
             options.WholeWord,
-            options.Width == WidthPolicy.OvershootPreserveLayout);
+            options.Width == WidthPolicy.OvershootPreserveLayout,
+            options.KeepAttachments,
+            depth: 0);
     }
 
+    /// <summary>
+    /// The per-parameter form of
+    /// <see cref="RedactText(PdfDocument, string, RedactionOptions, Action{int, int})"/>.
+    /// Attachments are removed (#1572); use the options overload to keep them.
+    /// </summary>
     public static RedactionReport RedactText(
         this PdfDocument document,
         string text,
@@ -127,6 +135,27 @@ public static class PdfDocumentRedactionExtensions
         Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy = null,  // #1188/#1169 — per-carrier MODE
         bool wholeWord = false,   // #1052 — opt-in whole-word matching
         bool overshootBox = false)   // #1189 — widen the box so it stops measuring the run
+        => RedactTextCore(document, text, caseSensitive, strategy, drawBlackRect, includeHiddenLayers,
+            scrubDocumentCarriers, closeWidth, boxColor, carriers, progress, carrierPolicy, wholeWord,
+            overshootBox, keepAttachments: false, depth: 0);
+
+    private static RedactionReport RedactTextCore(
+        PdfDocument document,
+        string text,
+        bool caseSensitive,
+        GlyphRemovalStrategy strategy,
+        bool drawBlackRect,
+        bool includeHiddenLayers,
+        bool scrubDocumentCarriers,
+        bool closeWidth,
+        (double R, double G, double B)? boxColor,
+        Excise.Core.Operations.RedactionCarriers carriers,
+        Action<int, int>? progress,
+        Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy,
+        bool wholeWord,
+        bool overshootBox,
+        bool keepAttachments,
+        int depth)
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
@@ -146,14 +175,42 @@ public static class PdfDocumentRedactionExtensions
 
         int totalMatches = 0;
 
-        // #1547: when the pages were generated from an XFA form, the XFA packet
-        // restates them and XFA viewers regenerate the pages from it. It goes
-        // before anything else, whatever the carrier scope: a surviving packet
-        // would undo this redaction in the next viewer.
-        if (Excise.Core.Xfa.PdfXfaLayout.RemoveXfaSourceOfLaidOutPages(document))
+        // #1572: attachments. Everything that can refuse runs first, so a
+        // refused redaction leaves the document exactly as it was: a portfolio
+        // (whose attachments ARE the documents) when they would be removed,
+        // and a nested PDF that cannot be redacted when they are kept.
+        List<(AttachmentCarrierScrubber.Found File, Excise.Core.Document.AttachmentRedactionResult Result)>? keptAttachments = null;
+        IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> removedAttachments =
+            Array.Empty<Excise.Core.Document.AttachmentRedactionResult>();
+        if (keepAttachments)
         {
-            carrierResults.Add(new CarrierResult(
-                "/XFA (the form excise laid out into these pages; removed whole)", true, null));
+            // A nested PDF is redacted with exactly these options, its own
+            // attachments included.
+            keptAttachments = AttachmentCarrierScrubber.RedactKept(
+                document, new[] { text }, caseSensitive, wholeWord, depth,
+                (nested, term) => RedactTextCore(nested, term, caseSensitive, strategy, drawBlackRect,
+                    includeHiddenLayers, scrubDocumentCarriers, closeWidth, boxColor, carriers, null,
+                    carrierPolicy, wholeWord, overshootBox, keepAttachments: true, depth + 1));
+        }
+        else
+        {
+            AttachmentCarrierScrubber.ThrowIfPortfolio(document);
+        }
+
+        // #1547/#1574: an XFA packet restates the form — every page of a form
+        // excise laid out, every field value of a static form — and XFA viewers
+        // put it back on the page. It goes before anything else, whatever the
+        // carrier scope: a surviving packet would undo this redaction in the
+        // next viewer.
+        if (Excise.Core.Xfa.PdfXfaLayout.RemoveXfaFormForRedaction(document) is { } xfaRow)
+            carrierResults.Add(new CarrierResult(xfaRow, true, null));
+
+        if (!keepAttachments)
+        {
+            // #1572, decided 2026-09-17: redacted output carries no attachments.
+            removedAttachments = AttachmentCarrierScrubber.RemoveAll(document);
+            if (removedAttachments.Count > 0)
+                document.RedactionLedger.RecordRemovedAttachments(removedAttachments);
         }
 
         var pageCount = document.PageCount;
@@ -284,7 +341,7 @@ public static class PdfDocumentRedactionExtensions
                         // every RedactText call — including the documented case
                         // where a term below the sanitizer's 3-character floor
                         // deliberately leaves carriers alone.
-                        imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, strategy, scrubDocumentCarriers: false, closeWidth: closeWidth);
+                        imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, strategy, scrubDocumentCarriers: false, closeWidth: closeWidth, removeAttachments: false);
                     }
 
                     // A box whose width equals the removed run is itself a
@@ -440,8 +497,15 @@ public static class PdfDocumentRedactionExtensions
         // every page, so a page this call also redacted is not named.
         carrierResults.AddRange(SharedImageCarrierResults(document, imageCounts.TouchedImages));
 
+        // #1572: a kept attachment the term-based carrier scrub removed after
+        // all (its name or description held the term) is reported as removed.
+        var attachmentResults = keptAttachments != null
+            ? AttachmentCarrierScrubber.Reconcile(document, keptAttachments)
+            : removedAttachments.ToList();
+
         return new RedactionReport
         {
+            Attachments = attachmentResults,
             Term = text,
             Pages = pageResults,
             Carriers = carrierResults,

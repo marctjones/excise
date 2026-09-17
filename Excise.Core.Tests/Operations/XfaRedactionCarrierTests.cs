@@ -144,31 +144,37 @@ public class XfaRedactionCarrierTests
             "an XML-unaware byte replacement");
     }
 
+    /// <summary>
+    /// #943 then #1574. The W-9 is a static XFA form: its XFA restates dozens
+    /// of page labels, which #943 scrubbed by term. Since #1574 a redaction
+    /// removes the whole packet (its datasets are merged back onto the page by
+    /// Acrobat), so the question becomes: is the packet gone from the saved
+    /// file, and do the AcroForm fields survive?
+    /// </summary>
     [Fact]
-    public void RealIrsW9_RedactTextRemovesFormFromXfaCarrierValues()
+    public void RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields()
     {
-        const string fixture = "../../../../test-pdfs/smoke/irs-w9.pdf";
-        if (!File.Exists(fixture)) return;
+        var fixture = Excise.TestSupport.TestRepoLayout.FindFile("test-pdfs", "smoke", "irs-w9.pdf");
+        Assert.SkipWhen(fixture == null,
+            Excise.TestSupport.TestRepoLayout.AbsenceReason("smoke corpus", "test-pdfs/smoke/irs-w9.pdf"));
 
-        using var doc = PdfDocument.Open(fixture);
-        doc.RedactText("Form", drawBlackRect: false).VerifiedRemovals.Should().BeGreaterThan(0,
+        using var doc = PdfDocument.Open(fixture!);
+        doc.DetectXfaForm().Should().Be(PdfXfaFormKind.Static, "fixture sanity: the W-9 is a static XFA form");
+        var fieldsBefore = doc.GetAcroForm()!.Fields.Count;
+
+        var report = doc.RedactText("Form", drawBlackRect: false);
+        report.VerifiedRemovals.Should().BeGreaterThan(0,
             "fixture sanity: the W-9 page content must contain the reported term");
+        report.Carriers.Should().Contain(c => c.Carrier.StartsWith("/XFA (static XFA form", StringComparison.Ordinal));
 
         var saved = Save(doc);
         using var reopened = PdfDocument.Open(saved);
-        var parsed = ParseXfa(reopened);
-        var carrierValues = parsed.Descendants().Attributes()
-            .Where(a => !a.IsNamespaceDeclaration).Select(a => a.Value)
-            .Concat(parsed.DescendantNodes().OfType<XText>().Select(n => n.Value))
-            .Concat(parsed.DescendantNodes().OfType<XComment>().Select(n => n.Value))
-            .Concat(parsed.DescendantNodes().OfType<XProcessingInstruction>().Select(n => n.Data));
-
-        carrierValues.Should().NotContain(value =>
-                value.Contains("Form", StringComparison.OrdinalIgnoreCase),
-            "the real W-9 carries dozens of page labels in /XFA; mutool cannot see them, so " +
-            "the saved XFA XML itself is the oracle");
+        reopened.DetectXfaForm().Should().Be(PdfXfaFormKind.None);
+        reopened.GetAcroForm()!.Fields.Count.Should().Be(fieldsBefore,
+            "the AcroForm fields are the static form's own fallback and stay");
         CombinedEncodings(saved).Should().NotContain("Form W-9",
             "the exact leak reported in #943 must not remain recoverable in saved bytes");
+        Excise.TestSupport.SavedPdfLeakScanner.FindTerm(saved, "Form W-9").Should().BeEmpty();
     }
 
     private static PdfDocument CreateDocument()

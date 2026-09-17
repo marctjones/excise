@@ -415,7 +415,8 @@ public partial class MainWindow : Window
             settings.RedactionWholeWord,
             settings.RedactionWidthPolicy,
             settings.LinkUriCarrierPolicy,
-            settings.MetadataCarrierPolicy);
+            settings.MetadataCarrierPolicy,
+            settings.RedactionKeepAttachments);
         viewModel.ApplyPrintScalingPreference(settings.PrintScaling);
         viewModel.ApplyDocumentOpenModePreference(settings.DocumentOpenMode);
         // Preferences → Performance: subscribe first so the restore below

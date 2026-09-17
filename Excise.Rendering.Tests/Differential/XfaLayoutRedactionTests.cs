@@ -138,14 +138,71 @@ public class XfaLayoutRedactionTests : IDisposable
     }
 
     [Fact]
-    public void RedactingAnOrdinaryXfaDocument_KeepsItsXfa_AsBefore()
+    public void RedactingAnXfaFormExciseDidNotLayOut_AlsoRemovesItsXfa()
     {
-        // Not laid out by excise: the pre-#1547 behaviour (term strip) holds.
+        // #1574 widened decision 5: any XFA packet restates the form's values,
+        // so any redaction removes it — not only one of a form excise laid out.
         using var document = PdfDocument.Open(XfaTestForms.BuildPdf(
             XfaTestForms.PositionedTemplate(), XfaTestForms.Data("<FullName>Plain</FullName>")));
 
-        document.RedactText("Placeholder-term-not-present");
+        var report = document.RedactText("Placeholder-term-not-present");
 
-        document.DetectXfaForm().Should().Be(PdfXfaFormKind.Dynamic);
+        document.DetectXfaForm().Should().Be(PdfXfaFormKind.None);
+        report.Carriers.Should().Contain(c => c.Carrier.StartsWith("/XFA (dynamic XFA form", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// #1574's reproduction: area redaction of a STATIC XFA form removed the
+    /// field value from the page and the widget but left it in the XFA
+    /// datasets, where Acrobat merges it back. Checked with the saved bytes,
+    /// mutool (text and catalog), and Poppler (text and raster): the value is
+    /// gone everywhere, the XFA form is gone, and the field outside the box
+    /// still shows.
+    /// </summary>
+    [Fact]
+    public void StaticXfaForm_AreaRedaction_RemovesTheDatasets_AndKeepsTheOtherField()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        Assert.SkipUnless(PdftotextTextExtractor.IsAvailable, "pdftotext (poppler) not installed");
+        Assert.SkipUnless(PdftocairoReferenceRenderer.IsAvailable, "pdftocairo (poppler) not installed");
+
+        const string city = "Springfield";
+        var input = XfaTestForms.BuildStaticPdf($"Zanzibar {Secret}", city, $"{Secret}-notes");
+        var inputPath = Path.Combine(Path.GetTempPath(), $"excise-static-xfa-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(inputPath, input);
+        _temp.Add(inputPath);
+
+        // Guards: the oracles see the leak and the second field BEFORE.
+        SavedPdfLeakScanner.FindTerm(input, Secret).Should().NotBeEmpty();
+        MutoolShow(inputPath, "trailer/Root/AcroForm/XFA").Should().NotBe("null");
+        MutoolTextExtractor.ExtractPage(inputPath, 1).Should().Contain(Secret).And.Contain(city);
+
+        using var document = PdfDocument.Open(input);
+        document.DetectXfaForm().Should().Be(PdfXfaFormKind.Static, "fixture sanity");
+        document.Pages[0].RedactArea(new PdfRectangle(90, 590, 410, 640));
+
+        var path = Save(document);
+        AssertNoXfaSurvives(path, File.ReadAllBytes(path));
+        PdftotextTextExtractor.ExtractPage(path, 1).Should().NotContain(Secret)
+            .And.Contain(city, "the AcroForm field outside the box still shows in Poppler");
+        MutoolTextExtractor.ExtractPage(path, 1).Should().Contain(city).And.Contain("Name:");
+
+        using var raster = PdftocairoReferenceRenderer.RenderPage(path, 1, 72);
+        raster.Should().NotBeNull("pdftocairo must render the redacted form");
+        DarkPixels(raster!, 100, 792 - 530, 400, 792 - 500).Should().BeGreaterThan(20,
+            "pdftocairo still draws the City field's appearance");
+    }
+
+    private static int DarkPixels(SkiaSharp.SKBitmap bitmap, int left, int top, int right, int bottom)
+    {
+        var count = 0;
+        for (var y = Math.Max(0, top); y < Math.Min(bitmap.Height, bottom); y++)
+        for (var x = Math.Max(0, left); x < Math.Min(bitmap.Width, right); x++)
+        {
+            var c = bitmap.GetPixel(x, y);
+            if (c.Red + c.Green + c.Blue < 3 * 128)
+                count++;
+        }
+        return count;
     }
 }

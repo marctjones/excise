@@ -218,12 +218,39 @@ public static class PdfXfaLayout
     }
 
     /// <summary>
-    /// The redaction rule for laid-out XFA documents (decision 5 in
-    /// docs/architecture/xfa-rendering.md): once any page content is being
-    /// redacted, the XFA packet goes, whatever the caller's carrier scope.
+    /// The redaction rule for XFA documents (decision 5 in
+    /// docs/architecture/xfa-rendering.md): once a document is being redacted,
+    /// its XFA packet goes, whatever the caller's carrier scope. Returns the
+    /// carrier-row text describing what was removed, or null when the document
+    /// has no XFA form. The removal is also recorded on the document's
+    /// redaction ledger for reports that run afterwards.
     /// </summary>
-    internal static bool RemoveXfaSourceOfLaidOutPages(PdfDocument document)
-        => document.HasXfaLayoutPages() && document.RemoveXfaForm();
+    /// <remarks>
+    /// <para>#1547 phase 2 applied this to forms excise laid out itself. #1574
+    /// extends it to every document with <c>/AcroForm /XFA</c>: a static XFA
+    /// form restates each field value in its <c>datasets</c> packet, Acrobat
+    /// merges those values back onto the page when it opens the file, and an
+    /// area redaction has no term to scrub them by. A static form keeps its
+    /// AcroForm fields, which every non-XFA viewer already uses, so what is
+    /// lost is the XFA behaviour (scripts, dynamic layout) in Acrobat.</para>
+    /// </remarks>
+    internal static string? RemoveXfaFormForRedaction(PdfDocument document)
+    {
+        if (!HasXfaEntry(document))
+            return null;
+
+        var kind = document.HasXfaLayoutPages()
+            ? "the form excise laid out into these pages"
+            : document.DetectXfaForm() == PdfXfaFormKind.Static
+                ? "static XFA form; the AcroForm fields remain"
+                : "dynamic XFA form excise did not lay out; only the pages already in the file remain";
+        if (!document.RemoveXfaForm())
+            return null;
+
+        var row = $"/XFA ({kind}; removed whole)";
+        document.RedactionLedger.RecordXfaRemoval(row);
+        return row;
+    }
 
     private static XfaLayoutResult Failed(PdfDocument document, string reason, XfaReport report)
         => new()

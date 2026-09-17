@@ -246,6 +246,15 @@ partial class Program
                 "PAGE_OUT_OF_RANGE",
                 $"Page {ex.PageNumber} is outside the document range 1..{ex.PageCount}.");
         }
+        catch (PdfPortfolioRedactionException ex)
+        {
+            // #1572: refused before anything was written.
+            throw new AutomationContractException("PORTFOLIO_REFUSED", ex.Message, "SECURITY");
+        }
+        catch (AttachmentRedactionRefusedException ex)
+        {
+            throw new AutomationContractException("ATTACHMENT_REFUSED", ex.Message, "SECURITY");
+        }
     }
 
     private static JsonElement ExecuteAutomationStepCore(
@@ -385,7 +394,8 @@ partial class Program
             step.Text!,
             step.CaseSensitive ?? false,
             step.AllowDecrypt ?? false,
-            Password: step.Password));
+            Password: step.Password,
+            KeepAttachments: step.KeepAttachments ?? false));   // #1572
         foreach (var diagnostic in result.Diagnostics)
             Console.Error.WriteLine(diagnostic);
         return new RedactionStepResult(
@@ -397,7 +407,10 @@ partial class Program
             // titles, annotations away from the box, terms under the scrub
             // floor). A batch run is unattended, so reporting this in the step
             // result is the only way it reaches anyone.
-            result.CarrierNotes);
+            result.CarrierNotes,
+            // #1572: every attachment removed or kept, by name and size.
+            result.Attachments.Select(a => new RedactionAttachmentResult(
+                a.Name, a.SizeBytes, a.Location, a.Disposition.ToString(), a.Detail)).ToArray());
     }
 
     private static AuditStepResult ExecuteAuditStep(AutomationBatchStep step, string baseDirectory)
@@ -573,7 +586,8 @@ partial class Program
         string[]? Option,
         bool? AllowFindings,
         bool? IgnorePermissions,
-        bool? ForAccessibility);
+        bool? ForAccessibility,
+        bool? KeepAttachments = null);   // #1572 — redaction.apply opt-out of attachment removal
 
     internal sealed record AutomationBatchReport(
         int SchemaVersion,
@@ -631,7 +645,16 @@ partial class Program
 
     internal sealed record RedactionStepResult(
         string InputPath, string OutputPath, int RedactedOccurrenceCount, bool CaseSensitive,
-        IReadOnlyList<string> CarrierNotes);
+        IReadOnlyList<string> CarrierNotes,
+        IReadOnlyList<RedactionAttachmentResult> Attachments);
+
+    /// <summary>
+    /// One attachment a redaction step removed or kept (#1572).
+    /// <c>disposition</c> is <c>Removed</c>, <c>KeptTermNotFound</c>,
+    /// <c>KeptTermRemoved</c>, <c>KeptNotClean</c> or <c>KeptNotChecked</c>.
+    /// </summary>
+    internal sealed record RedactionAttachmentResult(
+        string Name, long? SizeBytes, string Location, string Disposition, string? Detail);
 
     internal sealed record AuditStepResult(
         string InputPath, int HitCount, AuditStepHit[] Hits);

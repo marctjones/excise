@@ -19,6 +19,8 @@ internal static class CliRedactedCopySafetyAdapter
         VerifyRequestedTerms = false,
         RunHiddenTextAudit = false,
         RunRasterRedactionAudit = false,
+        // RedactText already removed or redacted the attachments (#1572).
+        InspectKeptAttachments = false,
     };
 
     internal static IReadOnlyList<string> AuditTermRedaction(

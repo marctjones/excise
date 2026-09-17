@@ -34,15 +34,21 @@ named below), not to this page.
    user's annotations, redactions or added pages, and a second layout would
    replace them. A tool that rewrites all the pages, Acrobat included, drops
    the marker, so its output is laid out afresh.
-5. **Any redaction of a document with generated pages removes `/XFA` and
-   `/NeedsRendering` whole.** The generated pages ARE the form, so the XFA
-   packet is a positionless copy of everything on them. Area redaction never
-   scrubbed XFA (it has no term), and a term-strip cannot see every way a value
-   reaches the page. Without this rule, a redacted-and-saved file would be
-   re-rendered from the untouched datasets by Acrobat, pdf.js, or excise
-   itself. This deliberately overrides the XFA carrier's "RemoveWhole is not
-   defined" refusal. That refusal assumes the packet is the only copy of the
-   form; here it is not. The removal is reported as an XFA carrier row.
+5. **Any redaction of a document with an XFA form removes `/XFA` and
+   `/NeedsRendering` whole.** For a form excise laid out, the generated pages
+   ARE the form, so the XFA packet is a positionless copy of everything on
+   them. For a static XFA form (#1574 — the IRS W-4/W-9/1040 shape), the
+   `datasets` packet repeats each field value and Acrobat merges it back onto
+   the page when the file opens. Area redaction never scrubbed XFA (it has no
+   term), and a term-strip cannot see every way a value reaches the page.
+   Without this rule, a redacted-and-saved file would be re-rendered from the
+   untouched datasets by Acrobat, pdf.js, or excise itself. A static form
+   keeps its AcroForm fields, which every non-XFA viewer already uses; what is
+   lost is the XFA behaviour in Acrobat. This deliberately overrides the XFA
+   carrier's "RemoveWhole is not defined" refusal, which still applies to a
+   direct `PdfDocumentSanitizer.ScrubTerms` call. The removal is reported as an
+   `/XFA` carrier row (`PdfXfaLayout.RemoveXfaFormForRedaction`) and, for area
+   redaction, on the redacted-copy report.
 6. **Scripts do not run.** FormCalc (#1570) and JavaScript (#1571) are separate
    work. excise lays out the form's initial state and says so in the banner.
 7. **Display only.** Values are drawn as page content, not as AcroForm widgets.
@@ -217,5 +223,7 @@ XFA is untrusted input:
   from the spec in places: it draws captions whose `presence` hides them, and
   it honours breaks inside hidden subforms. So "agrees with pdf.js" needs
   per-file judgement.
-- Area redaction of a static XFA form (one excise did not lay out) still leaves
-  field values in the datasets packet: #1574.
+- Area redaction of a static XFA form removes the packet too (#1574):
+  `XfaLayoutRedactionTests.StaticXfaForm_AreaRedaction_RemovesTheDatasets_AndKeepsTheOtherField`
+  checks it with mutool (catalog and text), Poppler (text and raster) and the
+  saved bytes.
