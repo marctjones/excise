@@ -9305,12 +9305,20 @@
       "currentState": "unimplemented",
       "fixtureStatus": "not-contracted",
       "fixtures": []
+    },
+    {
+      "capability": "pdfe.product.platform.printing",
+      "section": "product-capabilities",
+      "mode": "author",
+      "currentState": "partial",
+      "fixtureStatus": "not-contracted",
+      "fixtures": []
     }
   ],
   "summary": {
-    "targetModes": 898,
+    "targetModes": 899,
     "fixtureStatus": {
-      "not-contracted": 667,
+      "not-contracted": 668,
       "recorded-passing": 231
     }
   }

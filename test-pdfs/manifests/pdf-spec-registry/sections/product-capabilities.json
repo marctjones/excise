@@ -703,14 +703,14 @@
       ],
       "classification": "product",
       "decision": {
-        "state": "deferred",
-        "rationale": "Printing is a future platform-by-platform decision, not a current cross-platform conformance promise."
+        "state": "supported",
+        "rationale": "macOS prints through PDFKit and the system print sheet (#1545); other platforms are decided one by one (Windows is #1546; Linux printing is not planned)."
       },
       "modes": {
-        "author": "unimplemented"
+        "author": "partial"
       },
       "evidence": [],
-      "notes": "Advanced print-production controls are excluded from product scope.",
+      "notes": "macOS only. The document as currently edited, with pending redactions applied, is written to a temporary copy and printed by PDFKit; pages are rasterised by Apple's renderer. Advanced print-production controls are excluded from product scope.",
       "documentation": [],
       "tracking": {
         "owner": "PDF capability registry",
@@ -720,14 +720,20 @@
         "corpusRefs": [],
         "referenceToolRefs": [],
         "architectureRefs": [],
-        "issueRefs": [],
+        "issueRefs": [
+          "#1545",
+          "#1546"
+        ],
         "knownLimitations": [
+          "macOS only; Windows is #1546 and Linux printing is not planned.",
+          "Pages are rasterised by Apple's PDF renderer, not excise's.",
+          "A document whose /P allows only degraded printing (bit 12 clear) does not print.",
           "Advanced print-production controls are excluded from product scope."
         ],
         "processorRoles": [
           "author"
         ],
-        "supportLevel": "deferred",
+        "supportLevel": "partial",
         "normativeSourcePins": [
           {
             "source": "pdfe-product",
@@ -740,6 +746,35 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/DocumentPrintingTests.cs::Print_HandsThePrinterTheCurrentState_AndDeletesTheCopy",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/DocumentPrintingTests.cs::Print_WithPendingRedaction_TheCopyHoldsNoRedactedText_IndependentExtractor",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/MacPdfKitPrintInteropTests.cs::PdfKit_BuildsAPrintOperation_WithTheRequestedPanelOptions_WithoutRunningIt",
+            "modes": [
+              "author"
+            ]
+          }
         ]
       }
     },

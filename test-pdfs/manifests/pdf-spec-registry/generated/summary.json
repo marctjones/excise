@@ -22,10 +22,10 @@
   "capabilities": 282,
   "decisionStates": {
     "blocked": 1,
-    "deferred": 10,
+    "deferred": 9,
     "preserve-only": 13,
     "required": 247,
-    "supported": 11
+    "supported": 12
   },
   "modeCoverage": {
     "author": 23,

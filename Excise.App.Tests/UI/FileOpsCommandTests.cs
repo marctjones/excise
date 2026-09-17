@@ -266,26 +266,49 @@ public class FileOpsCommandTests
     }
 
     // ── PrintCommand ─────────────────────────────────────────────────────
-    // #621: excise deliberately does not print. The command's real effect is
-    // showing that explanation via IUserDialogService — verify it actually
-    // does that (as opposed to silently no-op'ing) rather than asserting
-    // print output that was never meant to exist.
+    // #1545 (superseding #621's refusal): the command's real effect is handing
+    // the platform printer a print copy of the open document. The full
+    // contract (current state, deletion, redaction safety, permissions) is in
+    // DocumentPrintingTests.
     [FixedAvaloniaFact]
-    public async Task PrintCommand_Execute_DocumentLoaded_ShowsPrintNotSupportedMessage()
+    public async Task PrintCommand_Execute_DocumentLoaded_HandsThePrinterACopy()
     {
         var (sourcePath, _, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Print me");
 
         var dialog = new RecordingUserDialogService();
-        var vm = CreateViewModelWithDialogSpy(dialog);
+        var printer = new Excise.App.Tests.Utilities.Fakes.RecordingDocumentPrinter();
+        var vm = CreateViewModelWithDialogSpy(dialog, printer);
         await vm.LoadDocumentAsync(sourcePath);
 
         await vm.PrintCommand.Execute();
 
+        printer.Requests.Should().ContainSingle();
+        printer.CopyExistedDuringPrint.Should().Equal(true);
+        File.Exists(printer.Requests[0].PdfPath).Should().BeFalse("the print copy is deleted afterwards");
+        dialog.Messages.Should().BeEmpty();
+
+        Cleanup(tempDir);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task PrintCommand_Execute_UnsupportedPlatform_ShowsTheHonestExplanation()
+    {
+        var (sourcePath, _, tempDir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Print me");
+
+        var dialog = new RecordingUserDialogService();
+        var printer = new Excise.App.Tests.Utilities.Fakes.RecordingDocumentPrinter { IsSupported = false };
+        var vm = CreateViewModelWithDialogSpy(dialog, printer);
+        await vm.LoadDocumentAsync(sourcePath);
+
+        await vm.PrintCommand.Execute();
+
+        printer.Requests.Should().BeEmpty();
         dialog.Messages.Should().ContainSingle();
         dialog.Messages[0].title.Should().Be("Print");
-        dialog.Messages[0].message.Should().Contain("doesn't print directly",
-            "the command must surface the real, deliberate #621 explanation, not a generic/blank message");
+        dialog.Messages[0].message.Should().Contain("#1546",
+            "the command must surface the real platform explanation, not a generic/blank message");
 
         Cleanup(tempDir);
     }
@@ -375,7 +398,9 @@ public class FileOpsCommandTests
         public Task<bool> ShowConfirmAsync(string title, string message) => Task.FromResult(false);
     }
 
-    private static MainWindowViewModel CreateViewModelWithDialogSpy(IUserDialogService dialog)
+    private static MainWindowViewModel CreateViewModelWithDialogSpy(
+        IUserDialogService dialog,
+        Excise.App.Services.Printing.IDocumentPrinter? printer = null)
     {
         var loggerFactory = NullLoggerFactory.Instance;
         return MainWindowViewModelTestFactory.Create(
@@ -388,7 +413,8 @@ public class FileOpsCommandTests
             new SignatureVerificationService(NullLogger<SignatureVerificationService>.Instance),
             new FilenameSuggestionService(),
             new ToastService(),
-            dialogService: dialog);
+            dialogService: dialog,
+            printer: printer);
     }
 
     // ── Fixture helpers ──────────────────────────────────────────────────

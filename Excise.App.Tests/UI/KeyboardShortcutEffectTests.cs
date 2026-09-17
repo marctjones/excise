@@ -52,7 +52,9 @@ public class KeyboardShortcutEffectTests
 
     private string Temp(string name) => Path.Combine(_tempDir, name);
 
-    private static MainWindowViewModel NewVmWithDialog(IUserDialogService dialog)
+    private static MainWindowViewModel NewVmWithDialog(
+        IUserDialogService dialog,
+        Excise.App.Services.Printing.IDocumentPrinter? printer = null)
     {
         var loggerFactory = NullLoggerFactory.Instance;
         return MainWindowViewModelTestFactory.Create(
@@ -65,7 +67,8 @@ public class KeyboardShortcutEffectTests
             new SignatureVerificationService(NullLogger<SignatureVerificationService>.Instance),
             new FilenameSuggestionService(),
             new ToastService(),
-            dialogService: dialog);
+            dialogService: dialog,
+            printer: printer);
     }
 
     private sealed class RecordingDialogService : IUserDialogService
@@ -419,27 +422,29 @@ public class KeyboardShortcutEffectTests
         window.Close();
     }
 
+    // #1545: Ctrl+P reaches the print workflow — the printer is handed a
+    // print copy. (The fake stands in for PDFKit; the sheet is checked live.)
     [FixedAvaloniaFact(Timeout = 20000)]
-    public async Task CtrlP_ShowsPrintExplanationDialog()
+    public async Task CtrlP_HandsTheDocumentToThePrinter()
     {
         var path = Temp("print_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 1);
 
         var dialog = new RecordingDialogService();
-        var vm = NewVmWithDialog(dialog);
+        var printer = new Excise.App.Tests.Utilities.Fakes.RecordingDocumentPrinter();
+        var vm = NewVmWithDialog(dialog, printer);
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
 
         await window.PressKeyAsync(Key.P, RawInputModifiers.Control);
         await KeyboardTestHelpers.FlushDispatcherAsync();
-        for (int i = 0; i < 20 && dialog.Messages.Count == 0; i++)
+        for (int i = 0; i < 40 && printer.Requests.Count == 0; i++)
             await Task.Delay(50);
 
-        dialog.Messages.Should().ContainSingle(m => m.Title == "Print",
-            "Ctrl+P must surface the #621 print-explanation dialog");
-        dialog.Messages.Single().Message.Should().Contain("doesn't print directly",
-            "the dialog must carry the deliberate #621 explanation, not a stub");
+        printer.Requests.Should().ContainSingle("Ctrl+P must start a print of the open document");
+        printer.CopyExistedDuringPrint.Should().Equal(true);
+        dialog.Messages.Should().BeEmpty("a print that reaches the printer shows no refusal dialog");
 
         window.Close();
     }

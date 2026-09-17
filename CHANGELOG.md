@@ -186,6 +186,26 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   is still scanned.
 
 ### Added
+- **Printing on macOS** (#1545, superseding #621's won't-fix). File → Print…
+  and ⌘P open the standard macOS print sheet, attached to the excise window,
+  through PDFKit (`PDFDocument printOperationForPrintInfo:scalingMode:autoRotate:`
+  run with `runOperationModalForWindow:`), called through the Objective-C
+  runtime like the other macOS interop. What prints is the document as
+  currently edited: the live document is serialised by the normal writer into
+  a private copy, and on that copy — never the live document — pending
+  type-over text is flattened and PENDING redactions are applied by the same
+  glyph-removal engine Apply All uses, so a marked-but-unapplied redaction is
+  removed from the printout, not covered. Tests prove it with the saved-bytes
+  leak scanner and mutool, plus a planted-leak control. The copy is written
+  plaintext (the /P gate has already run, PDFKit would otherwise enforce /P
+  itself and defeat the scripting override, and the print spooler stores the
+  job unencrypted anyway), owner-only, under the app cache folder, and is
+  deleted when the sheet finishes on every outcome; a crash leftover is swept
+  on the next print. Print… is enabled only with a document open whose /P
+  allows full-quality printing (bits 3 and 12). Page scaling is a new
+  Preferences → Printing setting (shrink oversized, the default; fit to page;
+  actual size). Known limitation: pages are rasterised by Apple's renderer.
+  Other platforms keep an honest explanation (Windows is #1546).
 - **Safe-redacted-copy refusal for unresolved `/Redact` annotations** (#1430)
   — the `redactionReviewDrafts.safeRedactedCopy` product-policy rule was
   unimplemented, so excise would produce output treated as safely redacted
