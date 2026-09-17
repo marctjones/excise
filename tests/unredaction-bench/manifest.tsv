@@ -1,0 +1,41 @@
+# manifest.tsv — the unredaction bench's real-world documents (#1591, bench #1590).
+#
+# WHAT IS IN GIT AND WHAT IS NOT
+# ------------------------------
+# THIS FILE is tracked: ids, URLs, hashes and the VETTING RECORD.
+# The PDFs are not — they land in test-pdfs/unredaction-bench/, gitignored.
+# The recovered or published VALUES are not, anywhere, ever. There is no column
+# for them and UnredactionBenchManifestTests fails if one is added (#1602).
+# Ground truth for tier B lives in a gitignored local file built by hand:
+#   test-pdfs/unredaction-bench/ground-truth.local.tsv
+# so the repository never republishes text a court or an agency tried to
+# withhold, even where a newspaper already has.
+#
+# COLUMNS (tab-separated)
+#   id            stable slug; also the local filename stem
+#   tier          B — the hidden value is already published, so the bench can SCORE
+#                 C — public record, no published ground truth; leak CLASS only, never values
+#                 D — sensitive-provenance sources under a value-free positional design (#1603)
+#   status        vetted   — all three vetting questions answered yes; the script downloads it
+#                 excluded — assessed and REJECTED; never downloaded. The reason is the point.
+#                 unvetted — recorded so the next reader knows it exists and that NOBODY HAS
+#                            LOOKED YET. Not downloaded. This is deliberately distinct from
+#                            `excluded`: "we checked and it is fine" must not read the same as
+#                            "nobody has checked" (#1591).
+#   url           direct PDF URL, no credentials, no paid PACER; RECAP mirror where one exists
+#   sha256        64 hex of the exact bytes, or `-` when the row is not `vetted`
+#   source        court | agency | foia | sec | press
+#   public_basis  why this document is lawfully public
+#   truth_url     where the hidden value was PUBLISHED (tier B), or `-`
+#   vetting       THE ASSESSMENT, not the verdict. Says what was checked and what was found,
+#                 including for `excluded` rows, so a later reader can re-judge it.
+#
+# VETTING (all three must be yes for `vetted`)
+#   1. tier B: the text under the redaction is already published by a reputable
+#      outlet or the court; or tier C: the document is plainly public record.
+#   2. Recovery would NOT identify private individuals or victims. This is a
+#      hard exclusion and it outranks "but it is already posted somewhere".
+#   3. The source's terms permit automated download.
+#
+#id	tier	status	url	sha256	source	public_basis	truth_url	vetting
+doj-epstein-2025-release	D	excluded	-	-	agency	DOJ public release, December 2025	-	EXCLUDED, and not because it is unavailable — it is posted and the files are exactly the failure modes this bench measures. Vetting question 2 fails: the redactions in this release cover victim and third-party names, so recovering them would identify the people the redaction exists to protect, and a bench that scores that recovery is doing the harm regardless of who reads the number. Question 1 also fails for tier B (no published ground truth) and the whole point of the release is that there is none. If this is ever revisited it is under #1603's value-free POSITIONAL design only — measure whether a mark leaks, never what it leaks — and that is a separate decision a human makes, not a status change here.

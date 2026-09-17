@@ -126,6 +126,20 @@ check_dir "isartor"        "scripts/download-test-pdfs.sh"    "Isartor PDF/A rou
 check_dir "pdfjs"          "scripts/download-pdfjs-corpus.sh" "corpus rendering scan (685 pages)"
 check_dir "pdfium"         "scripts/download-pdfium-corpus.sh" "corpus rendering scan (331 pages) — the harshest of the four"
 check_dir "poppler"        "scripts/download-poppler-corpus.sh" "Poppler regression corpus exploratory rendering"
+check_dir "unredaction-bench" "scripts/download-unredaction-bench.sh" "unredaction bench tier B/C real-world documents (#1590) — vetted rows only"
+
+# The bench corpus is only half the prerequisite. Tier-B scoring also needs the
+# ground truth, and that file is written BY HAND and never by a script, so its
+# absence is the normal state and has to be reported as information rather than
+# as a missing download.
+if [[ -f "$TEST_PDF_DIR/unredaction-bench/ground-truth.local.tsv" ]]; then
+    printf "  %s✓%s %-18s %slocal tier-B ground truth present (gitignored, never committed)%s\n" \
+        "$GREEN" "$RESET" "bench truth" "$DIM" "$RESET"
+else
+    printf "  %s·%s %-18s %sabsent — tier-B SCORING skips; leak-class survey still runs%s\n" \
+        "$DIM" "$RESET" "bench truth" "$DIM" "$RESET"
+    printf "                     %sscripts/download-unredaction-bench.sh --ground-truth%s\n" "$DIM" "$RESET"
+fi
 
 echo
 echo "================================================="

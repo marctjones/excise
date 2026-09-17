@@ -38,3 +38,4 @@ pdfua-matterhorn	extended	test-pdfs/pdfua	download-pdfua-matterhorn.sh	~30M	CC-B
 gwg-processing-steps	planned	test-pdfs/gwg-steps	#1111 (source membership-gated; OCG need met by tests/bench-tiers/tier-ocg.tsv)	?	GWG	ISO 19593-1 optional content; public sample 404s — see tier-ocg
 safedocs	extended	test-pdfs/safedocs	download-safedocs.sh	~200M	CommonCrawl-ToU	malformed-PDF subset (qpdf-flagged) for removal-path robustness, the #1039 class (#1112)
 govdocs1	extended	test-pdfs/govdocs1	download-govdocs1.sh	~100M	US-Gov-PublicDomain	text-bearing producer-diverse .gov PDF subset; redaction-target diversity + x-ray sweep (#1113)
+unredaction-bench	extended	test-pdfs/unredaction-bench	download-unredaction-bench.sh	varies	mixed-public-record	real-world redacted documents for the unredaction bench (#1590); vetted rows only, ground truth stays local
