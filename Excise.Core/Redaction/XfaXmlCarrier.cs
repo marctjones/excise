@@ -63,7 +63,7 @@ internal static class XfaXmlCarrier
                 // Both a single XDP stream and a packet array are legal /XFA
                 // values. Replacing a changed array with one complete stream
                 // avoids unsafe byte-offset splitting after XML serialization.
-                acroForm["XFA"] = document.AddIndirectObject(new PdfStream(combinedRewrite));
+                acroForm["XFA"] = document.AddIndirectObject(PdfStream.CreateCompressed(combinedRewrite));
             }
 
             return new ScrubResult(combinedChanged, combinedHasRemainingTerm ? 1 : 0);
@@ -303,8 +303,9 @@ internal static class XfaXmlCarrier
 
     private static void ReplaceStreamData(PdfStream stream, byte[] bytes)
     {
+        // The setter owns /Filter and /Length (#1549: it now Flate-encodes,
+        // so /Length is the COMPRESSED size, not bytes.Length).
         stream.DecodedData = bytes;
-        stream["Length"] = new PdfInteger(bytes.Length);
     }
 
     private static bool XmlContainsAnyTerm(

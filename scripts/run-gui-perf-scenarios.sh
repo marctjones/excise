@@ -61,11 +61,14 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-# A calibration pass is ~40 launches. A sleeping display makes the app die at
-# startup with -6661, which would abort the run, so hold the machine awake.
+# A calibration pass is ~64 launches, ~25 min. A sleeping DISPLAY makes the app
+# die at startup with -6661, so hold the DISPLAY awake (-d), not just the
+# system (-i). `-i` alone was the first version, and the first calibration
+# aborted after 13 launches: displaysleep is 10 min on this machine,
+# PreventUserIdleDisplaySleep was 0, and the preflight read activeDisplays=0.
 if [ -z "${EXCISE_GUI_PERF_CAFFEINATED:-}" ] && command -v caffeinate >/dev/null 2>&1; then
   export EXCISE_GUI_PERF_CAFFEINATED=1
-  exec caffeinate -i "$0" "$@"
+  exec caffeinate -d -i "$0" "$@"
 fi
 
 SCENARIO_FILE="$ROOT/tests/gui-perf-scenarios.json"
@@ -321,6 +324,15 @@ launch_one() {
   mkdir -p "$dir"
   printf 'time\tseq\tstep\tkind\trssMB\tfootprintMB\tcpuSec\tload1\n' > "$dir/samples.tsv"
 
+  if ! python3 "$ROOT/scripts/displaylink-preflight.py" > "$dir/preflight.txt" 2>&1 \
+     && grep -q 'CGMainDisplayID=[1-9].*activeDisplays=0 ' "$dir/preflight.txt"; then
+    # A display that is merely ASLEEP (a main display exists, none active) is
+    # not the #18895 wedge (CGMainDisplayID=0). `-d` stops idle sleep but does
+    # not wake a display that already slept, so assert user activity ONCE and
+    # re-check. One wake, never a loop: if it is still down, it is a wedge.
+    echo "    display asleep (activeDisplays=0); waking it once"
+    caffeinate -u -t 2; sleep 3
+  fi
   if ! python3 "$ROOT/scripts/displaylink-preflight.py" > "$dir/preflight.txt" 2>&1; then
     cat "$dir/preflight.txt"
     echo "ABORTING: -6661 display state. Do not retry in a loop; log out and back in." >&2
@@ -328,7 +340,30 @@ launch_one() {
   fi
   cat "$dir/preflight.txt"
 
-  local -a env_args=("EXCISE_TRACE_VIEWER=$dir/metrics.jsonl")
+  # Every launch gets its OWN, EMPTY app state. On macOS AppPaths resolves
+  # config, data and cache under $HOME/Library, so a per-launch HOME isolates
+  # all three. Without this the app restored the previous launch's window.json,
+  # and two things went wrong (2026-09-16):
+  #   - measurement: window.json's DocumentStates restores each document's
+  #     LAST PAGE and zoom. An earlier harness run left Altona at page 15 of 17
+  #     (LastPageIndex 14, zoom 0.85), so the next launch opened near the end
+  #     and "scroll forward 17 pages" hit the bottom at once. The first
+  #     calibration's 10 Altona scroll runs rendered 3 bands instead of 17.
+  #     (Not the view mode, as first written: the DEFAULT is continuous, and
+  #     isolated continuous launches scroll fine.)
+  #   - the user's real settings: DocumentStates, zoom.txt, recent.txt and
+  #     window geometry were written into ~/Library/Application Support/Excise.App.
+  # A cold thumbnail/tile cache on every launch is also the reproducible choice.
+  local app_home="$dir/home"
+  rm -rf "$app_home"; mkdir -p "$app_home"
+  # EXCISE_GUI_PERF_SEED_WINDOW_JSON=<file> starts the launch from a RESTORED
+  # window state instead of defaults -- how the hollow-scroll case above is
+  # reproduced on purpose.
+  if [ -n "${EXCISE_GUI_PERF_SEED_WINDOW_JSON:-}" ]; then
+    mkdir -p "$app_home/Library/Application Support/Excise.App"
+    cp "$EXCISE_GUI_PERF_SEED_WINDOW_JSON" "$app_home/Library/Application Support/Excise.App/window.json"
+  fi
+  local -a env_args=("HOME=$app_home" "EXCISE_TRACE_VIEWER=$dir/metrics.jsonl")
   if [ "$mode" = "runner" ]; then
     env_args+=(
       "EXCISE_PERF_SCENARIO=$SCENARIO_FILE"
@@ -376,8 +411,12 @@ launch_one() {
     echo "   LEFTOVER PROCESS $pid — recording and killing" >&2
     echo "leftover=$pid" >> "$dir/notes.txt"
     kill -9 "$pid" 2>/dev/null
+    rm -rf "$app_home"
     return 1
   fi
+  # The isolated state holds this launch's caches; the evidence is already in
+  # $dir (journal, samples, metrics), and 64 launches of caches add up.
+  rm -rf "$app_home"
 
   if grep -q -- "-6661" "$dir/app.log" 2>/dev/null; then
     echo "ABORTING: -6661 in the app log." >&2

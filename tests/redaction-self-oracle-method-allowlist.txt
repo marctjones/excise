@@ -11,15 +11,7 @@ Excise.App.Tests/Unit/RedactionWorkflowServiceTests.cs::CaptureMark_ReadsThePrev
 Excise.Cli.Tests/AuditInspectionHandlerTests.cs::Execute_DeepAudit_UsesInjectedDifferentialScanner  # handler-wiring test: injects a FakeDifferentialScanner and asserts the audit handler CALLS it; asserts nothing about redaction content. The real scanner is an oracle-backed component tested in Excise.Core.Tests (SavedPdfLeakScanner) — this file exercises plumbing, not removal (#1358)
 Excise.Core.Tests/Content/RedactionBoundsTests.cs::Redaction_AreaPartiallyOverlaps_RemovesIntersecting  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_OptionsOverload_ByteEquivalentToParamOverload  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactArea_OverAcroFormField_RemovesValueAndAppearanceBytes  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_FindsAndRemovesFreeTextAnnotationContent  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_FindsAndRemovesSignatureAppearanceContent  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_FindsAndRemovesOrphanedMergedWidgetValue  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_FindsAndRemovesLinkedFieldValue_WhenWidgetHasNoP  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactArea_PartialGlyphOverlap_RemovesGlyphButKeepsNeighbor  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactArea_OverRotatedText_RemovesSavedBytes  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_DefaultIncludesHiddenOptionalContentText  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactArea_OverHiddenOptionalContentText_RemovesSavedBytes  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_DoesNotMatchAcrossAWordGap_NoSpaceGlyph  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/ArabicPresentationFormRedactionTests.cs::RedactText_BaseLetterNeedle_RemovesPresentationFormWord  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::RedactText_PrecomposedNeedle_RemovesDecomposedWord  # no independent oracle yet
@@ -27,15 +19,11 @@ Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::RedactText
 Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::RedactText_PrecomposedNeedle_RemovesOtherCombiningMarks  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::RedactText_Type0FontWithSingleByteCodespaceEncoding_RemovesOnlyTargetedByte  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::RedactText_Type0WithCharSpacingAndHorizontalScaling_RemovesSecret_KeepsRestInPlace  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::RedactText_MiddleRunOfMultiRunBtBlock_FollowingKeptRunStaysPut  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::LetterFinder_PopulatesRawBytes_FromTwoByteCode  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::Redaction_KeepsCidGlyph_ReencodedWithOriginalCodeNotUnicode  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::SimpleFont_StillUsesUnicodePath_NotRegressed  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::Guard_TheFieldValueIsReachableBeforeRedaction  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::ARedactionThatMatchesNothingLeavesTheValueAlone  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_OverFormText_RemovesItFromSavedPdfBytes  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormSharedByAnotherPage_LeavesOtherPageIntact  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormResourceNameCollision_RenamesAndKeepsBothFonts  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::RedactText_AsciiNeedle_RemovesFullwidthText  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::RedactText_KatakanaNeedle_RemovesHalfwidthKatakana  # no independent oracle yet
@@ -44,7 +32,6 @@ Excise.Core.Tests/Text/Segmentation/HarakatNiqqudRedactionTests.cs::RedactText_B
 Excise.Core.Tests/Text/Segmentation/HiddenTextDetectorTests.cs::Scan_TextWithBlackRectOnTop_IsDetected  # DETECTOR unit tests. Excise.Core.Tests cannot reference Excise.Rendering (dependency runs the other way), so the independent check for this property lives in Excise.Rendering.Tests/Differential/XRayBadRedactionTests.cs -- x-ray vs excise audit on a deliberately fake redaction, with a positive control (#1122). These tests stay unit-level on purpose.
 Excise.Core.Tests/Text/Segmentation/HiddenTextDetectorTests.cs::Scan_ImageOverlay_IsDetected  # DETECTOR unit tests. Excise.Core.Tests cannot reference Excise.Rendering (dependency runs the other way), so the independent check for this property lives in Excise.Rendering.Tests/Differential/XRayBadRedactionTests.cs -- x-ray vs excise audit on a deliberately fake redaction, with a positive control (#1122). These tests stay unit-level on purpose.
 Excise.Core.Tests/Text/Segmentation/HiddenTextDetectorTests.cs::ScanPage_TjOperatorWithString_ExtractsText  # DETECTOR unit tests. Excise.Core.Tests cannot reference Excise.Rendering (dependency runs the other way), so the independent check for this property lives in Excise.Rendering.Tests/Differential/XRayBadRedactionTests.cs -- x-ray vs excise audit on a deliberately fake redaction, with a positive control (#1122). These tests stay unit-level on purpose.
-Excise.Core.Tests/Text/Segmentation/IncrementalRedactionRegressionTests.cs::RedactText_IncrementalPageContent_DoesNotSerializePreviousRevisionBytes  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/IndirectXObjectResourceRedactionTests.cs::Guard_TheFixtureTextIsReachableBeforeRedaction  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/IndirectXObjectResourceRedactionTests.cs::TheSurroundingTextInTheFormSurvives  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/InvisibleSeparatorRedactionTests.cs::RedactText_PlainNeedle_RemovesWordSplitByInvisibleChar  # no independent oracle yet
@@ -64,8 +51,6 @@ Excise.Core.Tests/Text/Segmentation/RotatedPageRedactionTests.cs::Rotation_Norma
 Excise.Core.Tests/Text/Segmentation/RtlRedactionTests.cs::RedactText_LogicalNeedle_RemovesVisualOrderArabicWord  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/RtlRedactionTests.cs::RedactText_LogicalPhraseSpanningNumber_RemovesVisualOrderLine  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/RtlRedactionTests.cs::RedactText_NumberOnly_RemovesTheNumberAndKeepsTheWords  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/RtlRedactionTests.cs::RedactText_HebrewPhraseWithTrailingNumber_RemovesVisualOrderLine  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/ScannedOcrRedactionRegressionTests.cs::RedactText_HiddenOcrLayerUnderRaster_RemovesTextAndRasterBytesFromSavedPdf  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/TiledDocumentRedactionCountTests.cs::TheCountIsVisibleOccurrences_NotOncePerTileOfTheCanvas  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/Type3RedactionCountTests.cs::Type3Text_RedactionReportsTheRemoval_NotZero  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/UnterminatedTextObjectRedactionTests.cs::TheUnterminatedBlocksOtherText_SurvivesRedaction  # no independent oracle yet

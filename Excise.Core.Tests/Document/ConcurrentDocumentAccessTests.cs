@@ -9,6 +9,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Document;
 
@@ -164,7 +165,7 @@ public class ConcurrentDocumentAccessTests
                 using var ms = new MemoryStream();
                 doc.Save(ms);
                 var saved = ms.ToArray();
-                var haystack = Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved);
+                var haystack = SavedPdfLeakScanner.AllCarriersText(saved);
                 if (haystack.Contains(job.Secret, StringComparison.Ordinal))
                     leaks.Enqueue($"{job.Secret} survives in the saved bytes after a concurrent redaction");
             }

@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.Logging;
+using ReactiveUI;
 using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
@@ -36,7 +37,21 @@ public partial class MainWindowViewModel
     /// may only hold the user password because owner-password verification
     /// is not yet supported (#324).
     /// </summary>
-    public bool IgnoreDocumentPermissions { get; set; }
+    public bool IgnoreDocumentPermissions
+    {
+        get => _ignoreDocumentPermissions;
+        set
+        {
+            if (_ignoreDocumentPermissions == value)
+                return;
+            _ignoreDocumentPermissions = value;
+            // Print… is the one command whose enablement follows /P (#1545).
+            this.RaisePropertyChanged(nameof(CanPrint));
+            this.RaisePropertyChanged(nameof(PrintDisabledReason));
+        }
+    }
+
+    private bool _ignoreDocumentPermissions;
 
     /// <summary>
     /// The permissions in force for the currently loaded document

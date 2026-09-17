@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "issue": 1543,
+  "why": "Like-for-like memory and CPU comparison of excise, Preview and Acrobat. Every app is driven by the SAME real keystrokes (the only driver all three accept) and measured from OUTSIDE the process, summed over every process the app owns. excise's in-app runner (#1497) cannot drive the other two; its driving-fidelity check showed keystrokes do the same render work.",
+  "window": { "x": 0, "y": 33, "width": 1200, "height": 800 },
+  "repeats": 5,
+  "pageStepSeconds": 0.25,
+  "settle": { "cpuPercentBelow": 3.0, "quietSeconds": 2, "timeoutSeconds": 60 },
+  "documents": [
+    { "id": "w9",     "path": "test-pdfs/smoke/irs-w9.pdf",
+      "why": "6 light pages: the fixed cost of having any document open" },
+    { "id": "irs",    "path": "test-pdfs/smoke/irs-1040-instructions.pdf",
+      "why": "126 text-heavy pages: fonts, text, many pages" },
+    { "id": "altona", "path": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf",
+      "why": "17 pages, 122 MB, image-heavy with transparency and CMYK: the worst case for image decode" },
+    { "id": "scan",   "path": "test-pdfs/reader-bench/scan-irs-20p-200dpi.pdf",
+      "make": "scripts/make-reader-bench-scan.py",
+      "why": "20 pages, one 200 dpi JPEG each, no text: the common real-world scanned document" }
+  ],
+  "apps": {
+    "excise": {
+      "name": "excise",
+      "launch": "exec",
+      "processPath": "/Contents/MacOS/Excise.App",
+      "nextPage": { "keyCode": 121, "modifiers": [] },
+      "why": "Page Down is excise's next-page key (verified: 30 presses -> page 31). Isolated HOME with a seeded window.json fixes the window size; the default view is continuous."
+    },
+    "preview": {
+      "name": "Preview",
+      "launch": "open",
+      "bundlePath": "/System/Applications/Preview.app",
+      "processPath": "/Preview.app/Contents/MacOS/Preview",
+      "nextPage": { "keyCode": 125, "modifiers": ["option"] },
+      "why": "Option-Down is Preview's next-page key; Page Down only scrolls one screen (verified: 3 Page Downs -> page 2, 3 Option-Downs -> +3 pages). Opened with `open -F` so no window state is restored."
+    },
+    "acrobat": {
+      "name": "Adobe Acrobat",
+      "launch": "open",
+      "bundlePath": "/Applications/Adobe Acrobat DC/Adobe Acrobat.app",
+      "processPath": "/Adobe Acrobat.app/Contents/MacOS/AdobeAcrobat",
+      "nextPage": { "keyCode": 124, "modifiers": [] },
+      "why": "Acrobat 26 in Reader mode. Its UI is an embedded browser (AcroCEF) plus system WebKit processes, so the per-app process sum matters more here than anywhere."
+    }
+  }
+}

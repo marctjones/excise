@@ -1,5 +1,6 @@
 using Excise.App.Services;
 using Excise.App.Services.Host;
+using Excise.App.Services.Printing;
 using Excise.App.Tests.Utilities.Fakes;
 using Excise.App.ViewModels;
 using Microsoft.Extensions.Logging;
@@ -40,7 +41,9 @@ internal static class MainWindowViewModelTestFactory
         IWindowHost? windowHost = null,
         ITextClipboard? clipboard = null,
         ISettingsStore? settingsStore = null,
-        IRecentFilesStore? recentFilesStore = null)
+        IRecentFilesStore? recentFilesStore = null,
+        IDocumentPrinter? printer = null,
+        DocumentPrintWorkflowService? printWorkflow = null)
     {
         // #1481: the default collects nothing, so the serial suite's many
         // close/replace calls do not each run a blocking, compacting gen2 GC.
@@ -108,6 +111,14 @@ internal static class MainWindowViewModelTestFactory
         settingsStore ??= new FileSettingsStore();
         recentFilesStore ??= new FileRecentFilesStore();
 
+        // #1545: never the macOS PDFKit printer. The suite runs on a Mac, and a
+        // headless test must not reach AppKit's print sheet. The fake still
+        // takes the real temp-copy path, so PrintCommand is exercised.
+        printWorkflow ??= new DocumentPrintWorkflowService(
+            redactionWorkflowService,
+            printer ?? new RecordingDocumentPrinter(),
+            NullLogger<DocumentPrintWorkflowService>.Instance);
+
         var viewModel = new MainWindowViewModel(
             logger,
             documentService,
@@ -125,6 +136,7 @@ internal static class MainWindowViewModelTestFactory
             imageExportWorkflow,
             annotationWorkflow,
             memoryReclaimer,
+            printWorkflow,
             filePicker,
             windowHost,
             clipboard,

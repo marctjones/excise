@@ -331,7 +331,7 @@ def build_calibration(run_root, runs_by_key):
                 "static class doing Task.Delay and counter reads — and a "
                 "near-zero result is the correct one, not a failed measurement.",
             "samplerOverhead":
-                "`w9-launch-idle` with the OUTER sampler at end-only, 5s and 1s, "
+                "`w9-launch-idle` with the OUTER sampler at none, 5s and 1s, "
                 "3 runs each. Question: does watching cost more than the thing "
                 "watched? Pick the cheapest interval that still resolves the "
                 "effect being chased.",
@@ -367,7 +367,18 @@ def build_calibration(run_root, runs_by_key):
                 }
 
     # 2. sampler overhead
-    for mode in ("end-only", "5s", "1s"):
+    # "none" is the baseline: no outer sampling at all. The harness renamed it
+    # from "end-only" and this loop kept the old name, so the one mode that
+    # measures what sampling COSTS was silently dropped and "sampler overhead"
+    # compared 1s against 5s only (#1497, found 2026-09-16). An unknown mode
+    # directory is now an error rather than a quiet skip.
+    known_modes = ("none", "5s", "1s")
+    seen_modes = {key[0][len("calib-sampler-"):] for key in runs_by_key
+                  if key[0].startswith("calib-sampler-")}
+    unknown = seen_modes - set(known_modes)
+    if unknown:
+        raise SystemExit(f"summarize-gui-perf: unknown sampler mode dir(s): {sorted(unknown)}")
+    for mode in known_modes:
         group = [r for key, r in runs_by_key.items() if key[0] == "calib-sampler-" + mode]
         if not group:
             continue

@@ -275,6 +275,7 @@ public class BatchAutomationCommandTests : IDisposable
         {
             doc.RootElement.GetProperty("command").GetString().Should().Be(PdfCommandIds.DocumentInfo);
             doc.RootElement.GetProperty("pageCount").GetInt32().Should().Be(1);
+            doc.RootElement.GetProperty("xfaForm").GetString().Should().Be("none"); // #1547
         }
 
         var text = await RunCliCaptureAsync(["text", input, "--page", "1", "--json"]);

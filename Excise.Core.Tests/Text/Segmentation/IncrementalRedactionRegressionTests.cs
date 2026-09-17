@@ -4,6 +4,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text.Segmentation;
 
@@ -37,7 +38,7 @@ public sealed class IncrementalRedactionRegressionTests
 
         doc.RedactText("CURRENTREVISIONSECRET", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
 
-        var saved = Encoding.Latin1.GetString(doc.SaveToBytes());
+        var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
         saved.Should().NotContain("CURRENTREVISIONSECRET");
         saved.Should().NotContain("OLDREVISIONSECRET",
             "full-save redaction output must not copy older incremental revisions");
@@ -73,7 +74,7 @@ public sealed class IncrementalRedactionRegressionTests
 
         doc.GetPage(1).RedactArea(new PdfRectangle(95, 645, 265, 685));
 
-        var saved = Encoding.Latin1.GetString(doc.SaveToBytes());
+        var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
         saved.Should().NotContain("CURRENTANNOTREVISIONSECRET");
         saved.Should().NotContain("OLDANNOTREVISIONSECRET",
             "unreachable old annotation appearance objects must be garbage-collected on redaction save");

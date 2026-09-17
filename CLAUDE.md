@@ -1096,8 +1096,10 @@ and cost real planning time.
    — every open today is user-level, so restrictions always apply. Page
    assembly (bit 11) is now gated on the CLI `merge`/`split` commands (#677,
    `DocumentAction.AssembleDocument` → `CanAssemble`); still NOT gated: bit 11
-   in the GUI page-organization surface (reorder/rotate/delete in the app) and
-   printing (doesn't exist, #621/#622 dropped it).
+   in the GUI page-organization surface (reorder/rotate/delete in the app).
+   GUI printing (macOS, #1545) is gated on bit 3 AND bit 12: excise prints
+   full-quality through PDFKit and cannot produce the degraded output a
+   bit-12-clear document allows, so such a document does not print either.
 
 **Previously listed here and now FIXED — do not re-add:**
 - ~~Inline images `BI...ID...EI` not handled~~ → **parsed and re-serialised**

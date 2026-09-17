@@ -126,8 +126,18 @@ public class PdfStream : PdfDictionary
     /// <summary>
     /// Gets or sets the decoded (uncompressed) stream data.
     /// For unfiltered streams, returns the encoded data directly.
-    /// Setting this will also update the encoded data (without compression).
+    /// Setting this replaces the stream's bytes and re-encodes them
+    /// losslessly with <c>/FlateDecode</c> (#1549), dropping any previous
+    /// <c>/Filter</c> and <c>/DecodeParms</c> and updating <c>/Length</c>.
     /// </summary>
+    /// <remarks>
+    /// Until #1549 the setter stored the bytes raw, so every page excise edited
+    /// or redacted was saved with an uncompressed content stream: measured on
+    /// irs-w4.pdf, redacting one term grew the file from 208,845 to 1,001,684
+    /// bytes (4.8x). The bytes stay raw (no <c>/Filter</c>) when Flate would
+    /// not make them smaller, and always for an XMP <c>/Type /Metadata</c>
+    /// stream, which must stay readable without decompression (§14.3.2).
+    /// </remarks>
     public byte[] DecodedData
     {
         get
@@ -147,11 +157,43 @@ public class PdfStream : PdfDictionary
         }
         set
         {
-            ReplaceBytes(decoded: value, encoded: value); // No compression for now
-            Remove("Filter");
+            ArgumentNullException.ThrowIfNull(value);
             Remove("DecodeParms");
-            SetInt("Length", value.Length);
+
+            byte[]? compressed = null;
+            if (value.Length > 0 && GetNameOrNull("Type") != "Metadata")
+            {
+                compressed = Excise.Core.Filters.BasicStreamFilters.EncodeFlate(value);
+                if (compressed.Length >= value.Length)
+                    compressed = null;
+            }
+
+            if (compressed == null)
+            {
+                ReplaceBytes(decoded: value, encoded: value);
+                Remove("Filter");
+                SetInt("Length", value.Length);
+                return;
+            }
+
+            ReplaceBytes(decoded: value, encoded: compressed);
+            SetName("Filter", "FlateDecode");
+            SetInt("Length", compressed.Length);
         }
+    }
+
+    /// <summary>
+    /// A new stream holding <paramref name="data"/> Flate-encoded on the way
+    /// in (#1549) — the constructor for bytes excise itself generates (a
+    /// rewritten content stream, a raster page, an XFA rewrite). The public
+    /// <see cref="PdfStream(byte[])"/> constructor keeps its documented
+    /// uncompressed shape.
+    /// </summary>
+    internal static PdfStream CreateCompressed(byte[] data)
+    {
+        var stream = new PdfStream();
+        stream.DecodedData = data;
+        return stream;
     }
 
     /// <summary>

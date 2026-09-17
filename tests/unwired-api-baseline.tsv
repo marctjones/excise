@@ -24,14 +24,12 @@ Excise.App	nowhere	LicenseFileName	triage:app surface likely XAML/framework bind
 Excise.App	nowhere	LicenseKind	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	LicenseValue	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	MarkPageForOperation	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
-Excise.App	nowhere	PagesIndexed	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	SetCommandId	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	SetShowToolTip	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	TypeIndicator	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	tests-only	AddPagesFromPdf	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ApplyBatesNumbersToSet	triage:#1306 wired the SINGLE-document Bates path (ApplyBatesNumbers) to the GUI; this multi-file batch entry point stays deliberately unwired - it stamps a continuing sequence across files on disk and writes new ones, which is a CLI/batch shape, and Excise.Cli cannot reference Excise.App
 Excise.App	tests-only	CalculateNextNumber	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	CurrentDocument	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	CurrentPageText	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ExecuteFileAsync	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	GetCurrentDocumentAsStream	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
@@ -40,17 +38,15 @@ Excise.App	tests-only	GetPageWidth	triage:test-covered app service/helper surfac
 Excise.App	tests-only	HasRecentFiles	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	JumpToOutlineCommand	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	PreferencesPath	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	ShowInfo	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SuggestPageSubsetFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SuggestSafeRedactedFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ValidateScript	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.Core	nowhere	Failures	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
 Excise.Core	nowhere	FromFile	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
 Excise.Core	nowhere	PdfEmbeddedFileAuthoring	triage:public library AUTHORING API (#1413). #1414 shipped the attachments panel, but it only lists, saves and strips - excise has no UI that ADDS an attachment, so this stays tests-only by design
 Excise.Core	nowhere	PdfOutlineAuthoring	triage:public library AUTHORING API, same shape as #1413's embedded-file/AcroForm authoring rows below - no GUI surface creates outline entries yet
+Excise.Core	nowhere	PdfXfaDetection	triage:static class holding the DetectXfaForm extension method; production callers (MainWindowViewModel.Xfa, InfoCommandHandler) use extension syntax, so the class name itself never appears (#1547)
 Excise.Core	nowhere	RemainingHeight	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	nowhere	SetCreator	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
-Excise.Core	tests-only	AcroFormAuthoring	triage:public library AUTHORING API (#1413); tests exercise contract; external callers may use it
 Excise.Core	tests-only	AddChildOutlineItem	triage:public library AUTHORING API, same shape as #1413's embedded-file/AcroForm authoring rows - no GUI surface creates outline entries yet
 Excise.Core	tests-only	AddEmbeddedFile	triage:public library AUTHORING API (#1413). #1414 shipped the attachments panel, but it only lists, saves and strips - excise has no UI that ADDS an attachment, so this stays tests-only by design
 Excise.Core	tests-only	AddOutlineItem	triage:public library AUTHORING API, same shape as #1413's embedded-file/AcroForm authoring rows - no GUI surface creates outline entries yet
@@ -62,7 +58,6 @@ Excise.Core	tests-only	ContainsFoldable	triage:public library/domain API; tests 
 Excise.Core	tests-only	ContainsLigatures	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ContainsPresentationForms	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	DateField	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	Direction	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	DocumentJavaScriptActions	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	Dropdown	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	EndBaseLine	triage:public library/domain API; tests exercise contract; external callers may use it

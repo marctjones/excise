@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text.Segmentation;
 
@@ -38,7 +39,7 @@ public class InlineImageRedactionEndToEndTests
         page.RedactArea(new PdfRectangle(50, 550, 250, 750)); // fully covers the image
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().NotContain(MarkerStr,
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain(MarkerStr,
             "the redacted inline image's pixel bytes must be absent from the saved PDF");
 
         // And it survives reopen as a structurally clean document.
@@ -58,7 +59,7 @@ public class InlineImageRedactionEndToEndTests
         page.RedactArea(new PdfRectangle(0, 0, 40, 40)); // misses the image entirely
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().Contain(MarkerStr,
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().Contain(MarkerStr,
             "an inline image outside the redaction area must round-trip losslessly");
     }
 

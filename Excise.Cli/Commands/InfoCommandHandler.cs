@@ -40,6 +40,12 @@ internal static class InfoCommandHandler
             document.Version,
             document.PageCount,
             document.IsEncrypted,
+            document.DetectXfaForm() switch
+            {
+                PdfXfaFormKind.Static => "static",
+                PdfXfaFormKind.Dynamic => "dynamic",
+                _ => "none",
+            },
             new DocumentMetadataInfo(
                 document.Title,
                 document.Author,
@@ -62,6 +68,7 @@ internal sealed record DocumentInfoResult(
     string Version,
     int PageCount,
     bool Encrypted,
+    string XfaForm,
     DocumentMetadataInfo Metadata,
     IReadOnlyList<DocumentPageInfo> Pages);
 

@@ -73,6 +73,7 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _revealHiddenTextItem;
         private readonly NativeMenuItem _revealRasterizedHiddenItem;
         private readonly NativeMenuItem _formAuthoringItem;
+        private readonly NativeMenuItem _printItem;
         private IReadOnlyList<string>? _recentFilesSnapshot;
 
         public MenuState(MainWindowViewModel viewModel)
@@ -101,6 +102,9 @@ internal static class MacNativeMenuBuilder
             // each must be reachable from the menu. On macOS this native menu is
             // the only one (the in-window MainMenuBar is hidden).
             _formAuthoringItem = CommandItem("Form Authoring Mode", _viewModel.ToggleFormAuthoringModeCommand);
+            // #1545: enabled only when a document is open AND its /P flags allow
+            // printing, so it is not a document item; Refresh sets it.
+            _printItem = CommandItem("Print...", _viewModel.PrintCommand, Key.P);
         }
 
         public NativeMenu Create()
@@ -178,7 +182,7 @@ internal static class MacNativeMenuBuilder
                     Separator(),
                     TrackDocumentItem(CommandItem("Export Current Page...", _viewModel.ExportCurrentPageCommand, Key.E)),
                     TrackDocumentItem(CommandItem("Export All Pages as Images...", _viewModel.ExportPagesCommand)),
-                    TrackDocumentItem(CommandItem("Print...", _viewModel.PrintCommand, Key.P)),
+                    _printItem,
                     Separator(),
                     // #1448. Listed here deliberately, same reasoning as #1414
                     // above: on macOS the in-window menu bar is hidden
@@ -244,6 +248,7 @@ internal static class MacNativeMenuBuilder
             or nameof(MainWindowViewModel.UndoMenuHeader)
             or nameof(MainWindowViewModel.RedoMenuHeader)
             or nameof(MainWindowViewModel.IsDocumentLoaded)
+            or nameof(MainWindowViewModel.CanPrint)
             or nameof(MainWindowViewModel.HasSelectedPages)
             or nameof(MainWindowViewModel.CanRemoveSelectedPages)
             or nameof(MainWindowViewModel.CanMoveSelectedPagesEarlier)
@@ -272,6 +277,8 @@ internal static class MacNativeMenuBuilder
             var isDocumentLoaded = _viewModel.IsDocumentLoaded;
             foreach (var item in _documentItems)
                 item.IsEnabled = isDocumentLoaded;
+            _printItem.IsEnabled = _viewModel.CanPrint;
+            _printItem.ToolTip = _viewModel.PrintDisabledReason;
             foreach (var item in _selectedPageItems)
                 item.IsEnabled = isDocumentLoaded && _viewModel.HasSelectedPages;
             foreach (var item in _selectedPageRemoveItems)

@@ -169,10 +169,19 @@ internal sealed class AppPerfScenarioTarget : IPerfScenarioTarget
 
     public async Task ScrollPagesAsync(int pages, CancellationToken cancellationToken)
     {
-        if (_viewer == null) return;
+        // Every way this step can do nothing is a FAILURE, not a quiet return.
+        // Until 2026-09-16 all three returned or were ignored, and the first
+        // calibration recorded 10 of 10 Altona scroll runs that never moved:
+        // 3 band renders where a real scroll makes 17, 0 step failures, and a
+        // tight "noise floor" made of five identical non-measurements.
+        if (_viewer == null)
+            throw new InvalidOperationException("no viewer to scroll");
 
         var viewport = _viewer.GetViewportDiagnostics();
-        if (!viewport.IsAvailable) return;
+        if (!viewport.IsAvailable)
+            throw new InvalidOperationException($"viewport unavailable in {viewport.ViewMode} mode");
+
+        var before = viewport.Offset.Y;
 
         // Step in viewport-sized increments so the scroll looks like a reader
         // paging through, and the continuous cache sees the same eviction
@@ -186,8 +195,22 @@ internal sealed class AppPerfScenarioTarget : IPerfScenarioTarget
         for (var i = 0; i < steps; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            _viewer.TryScrollViewportBy(pages > 0 ? stepDip : -stepDip);
+            if (!_viewer.TryScrollViewportBy(pages > 0 ? stepDip : -stepDip))
+                throw new InvalidOperationException($"TryScrollViewportBy refused at step {i + 1}/{steps}");
             await Task.Delay(PollInterval, cancellationToken).ConfigureAwait(true);
+        }
+
+        // The offset has to have MOVED, by at least one viewport step, in the
+        // requested direction. A scroll clamped at an edge, or undone by a
+        // later layout pass, measures nothing while looking like a scroll.
+        var after = _viewer.GetViewportDiagnostics();
+        var moved = after.Offset.Y - before;
+        if (Math.Sign(moved) != Math.Sign(pages) || Math.Abs(moved) < Math.Min(stepDip, total) * 0.5)
+        {
+            throw new InvalidOperationException(
+                $"viewport did not scroll: offset {before:F0} -> {after.Offset.Y:F0} dip " +
+                $"(wanted {(pages > 0 ? "+" : "-")}{total:F0}; extent {after.Extent.Height:F0}, " +
+                $"viewport {after.Viewport.Height:F0}, mode {after.ViewMode})");
         }
     }
 

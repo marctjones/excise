@@ -28,6 +28,10 @@ excise batch workflow.json --json --progress --output report.json
 
 `--password` is supported by `info`, `text`, `render`, `redact`, and batch
 workflow document-open steps.
+
+`info --json` includes `xfaForm`: `none`, `static` (XFA data alongside usable
+AcroForm fields, which excise fills), or `dynamic` (a form only an XFA engine
+can display; excise shows its placeholder page). See #1547.
 Password values are accepted as inputs but are not written to JSON reports
 or progress events.
 
@@ -208,7 +212,8 @@ counters are read when a listener asks):
 
 | Meter | Instrument | Unit | Kind | Source |
 | --- | --- | --- | --- | --- |
-| `Excise.Viewer` | `excise.viewer.continuous.band.render.duration` | ms | histogram, tag `dpi` | each completed continuous band render |
+| `Excise.Viewer` | `excise.viewer.continuous.band.render.duration` | ms | histogram, tag `dpi` | each completed continuous band render the reader waited for (render-ahead excluded) |
+| `Excise.Viewer` | `excise.viewer.lookahead.render.duration` | ms | histogram, tags `dpi`, `view` (`continuous`, `single_page`) | each completed render-ahead of a neighbouring page (#1564) |
 | `Excise.Viewer` | `excise.viewer.continuous.composite.size` | By | histogram, tag `dpi` | each published page composite |
 | `Excise.Viewer` | `excise.viewer.single_page.render.duration` | ms | histogram, tag `dpi` | each single-page render that reached the screen (cache hits excluded) |
 | `Excise.Viewer` | `excise.viewer.continuous.cache.resident_bytes` | By | gauge, tag `viewer` | continuous tile LRU |

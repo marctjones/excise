@@ -168,17 +168,22 @@ portfolio workflows, or certificate-authority trust decisions.
 Current release-quality limitations are tracked in GitHub Issues and surfaced in
 release notes:
 
-- **Printing — intentionally not implemented (#621, closed as won't-fix).**
-  Avalonia (excise's UI framework) ships no print API at all, so shipping this
-  would mean building and maintaining three separate platform pipelines from
-  scratch (CUPS shell-out on macOS/Linux, `System.Drawing.Printing` on
-  Windows) plus a print-options dialog, for a workflow most users reach a
-  dedicated PDF viewer for, not an editor. The Print menu item and Ctrl+P
-  explain the workaround rather than pretending to work: use
-  **Document → Export Current Page / Export All Pages as Images**, then print
-  that image from your OS's own viewer, which already has a real, tested
-  print pipeline. Revisit only if real user demand shows up — see #621 for
-  the full reasoning.
+- **Printing — macOS only** (#1545, superseding #621). File → Print… (⌘P)
+  opens the standard macOS print sheet — printer, copies, page range, paper,
+  orientation, scale, duplex where the driver supports it, preview, and the
+  PDF menu (Save as PDF) — for the document **as currently edited**: unsaved
+  page changes, filled form fields, pending type-over text, and pending
+  redactions, which are *removed* from the printed copy rather than covered.
+  Page scaling (shrink oversized / fit to page / actual size) is in
+  Preferences → Printing. Print… is disabled when the document's permissions
+  deny printing (`/P` bit 3), and also when they allow only degraded printing
+  (bit 12 clear), because excise cannot produce degraded output. Pages are
+  drawn by macOS's own PDF renderer, not excise's, so small visual differences
+  from the viewer are possible. To print, excise writes a temporary plaintext
+  copy (owner-only, under the app's cache folder) and deletes it when the
+  print sheet closes. Windows printing is #1546; Linux printing is not
+  planned — on those platforms Print… explains this, and you can Save As and
+  print from another viewer.
 - **Digital signatures** — excise checks ByteRange structure, verifies the
   detached CMS signature/digest over the signed bytes, and evaluates the signer
   certificate chain against the OS trust store, reporting a consolidated state

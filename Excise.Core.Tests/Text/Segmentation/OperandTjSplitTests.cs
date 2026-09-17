@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text.Segmentation;
 
@@ -41,7 +42,7 @@ public class OperandTjSplitTests
         var saved = doc.SaveToBytes();
 
         // Term gone from the saved bytes (any carrier).
-        (Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved))
+        SavedPdfLeakScanner.AllCarriersText(saved)
             .Should().NotContain("Farrar");
 
         using var after = PdfDocument.Open(saved);
@@ -68,7 +69,7 @@ public class OperandTjSplitTests
         doc.RedactText("SECRET", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
         var saved = doc.SaveToBytes();
 
-        Encoding.ASCII.GetString(saved).Should().NotContain("SECRET");
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("SECRET");
         using var after = PdfDocument.Open(saved);
         after.GetPage(1).Text.Should().Contain("Keep").And.Contain("tail").And.NotContain("SECRET");
     }

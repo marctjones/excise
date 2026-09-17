@@ -63,6 +63,12 @@ public class WindowSettings
     public string MetadataCarrierPolicy { get; set; } = "Strip";
 
     /// <summary>
+    /// Print page scaling (#1545). Persisted as a string; parsed back to
+    /// <see cref="Excise.App.Services.Printing.PrintScalingMode"/>.
+    /// </summary>
+    public string PrintScaling { get; set; } = "ShrinkOversized";
+
+    /// <summary>
     /// Trim the viewer's caches when the OS reports memory pressure (#1478).
     /// Only fires when the OS asks, so it is on by default. No UI: an
     /// internal switch for A/B measurement in a live session.

@@ -250,7 +250,7 @@ this file, `Forms.cs` and `Typewriter.cs`; see §1.7)
 | Member (line) | What it does | State | Services | Callers |
 |---|---|---|---|---|
 | `ExportCurrentPageAsync` (2380–2432), `ExportCurrentPageToImageAsync` (2434–2464), `ExportPagesAsync` (2466–2509), `ExportPagesToImagesAsync` (2511–2547) | raster export gated on bit 5; the two `*Async` pickers inline `FilePickerSaveOptions`/`FolderPickerOpenOptions` | — | `_imageExportWorkflow`, `GetStorageProvider()` | commands, S |
-| `PrintAsync` (2549–2570) | deliberate refusal (#621) | — | `_dialogService.ShowMessageAsync` | command, V (Ctrl+P) |
+| `PrintAsync`, `CanPrint`, `PrintScaling` (`MainWindowViewModel.Printing.cs`) | #1545: /P bits 3+12 gate, then a print copy of the current state (pending redactions applied) through `IDocumentPrinter` (PDFKit on macOS; honest refusal elsewhere) | `_printScaling` | `_printWorkflow` (`DocumentPrintWorkflowService`), `_dialogService`, `_toastService` | command, V (Ctrl+P), M (native menu enablement) |
 | `AllowedExternalLinkSchemes` (2581), `OpenExternalLinkAsync` (2593–2628), `ShowDangerousLinkRefusalAsync` (2638–2657) | #625 link policy with confirmation | — | `_dialogService`, `UrlOpener` | commands ← V (`:981`, `:988`) |
 | `VerifySignaturesAsync` (3122–3125) | delegates to the workflow service | — | `_signatureWorkflowService` | command |
 | `ShowAbout` (2689–2699), `ShowKeyboardShortcuts` (2716–2748), `KeyboardShortcutsDialogRequested` (2713), `ShowDocumentation` (2761–2777), `DocumentationOpener` (2759) | help; the shortcut text is a **hard-coded string that duplicates the key map in `MainWindow_KeyDown`** | — | `GetMainWindow()`, `FAContentDialog`, `UrlOpener` | commands, M |
@@ -1178,7 +1178,7 @@ void Push(string description, Func<Task> undo, Func<Task> redo);   void Clear();
 #### `DocumentToolsViewModel` (or one small VM per tool)
 
 Attachments (with its own `AttachmentsViewModel` as the dialog's DataContext),
-Bates, Security, Signing, MakeSearchable, page-image export, print refusal,
+Bates, Security, Signing, MakeSearchable, page-image export, print (#1545),
 external/dangerous links, help (About, shortcuts, documentation), verify
 signatures. Each tool: guard → prompt → service → toast, ≤ 40 lines, with its
 service injected (`BatesNumberingService`, `SignatureApplicationService`,

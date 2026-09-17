@@ -2,18 +2,18 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "2231cafab8214e2f2b91bcb123be4b081021d44f",
+  "sourceRevision": "beed1e8b4c11e286a610717dc4f52a2dab3935f8",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 6616,
-    "observedComponentDependencies": 84,
+    "retainedSymbols": 6764,
+    "observedComponentDependencies": 85,
     "declaredDependencies": 83,
     "acceptedExceptions": 1,
-    "undeclaredDependencies": 0,
+    "undeclaredDependencies": 1,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
     "unownedShippingSymbols": 0,
@@ -24,21 +24,21 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 325,
-      "typeDependencyCount": 22,
+      "references": 340,
+      "typeDependencyCount": 25,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Views.MainWindow",
           "target": "Excise.App.ViewModels.MainWindowViewModel",
-          "references": 119
+          "references": 120
         }
       ]
     },
     {
       "source": "app",
       "target": "avalonia",
-      "references": 131,
+      "references": 133,
       "typeDependencyCount": 27,
       "classification": "declared",
       "evidence": [
@@ -66,8 +66,8 @@
     {
       "source": "app",
       "target": "core-document",
-      "references": 298,
-      "typeDependencyCount": 51,
+      "references": 325,
+      "typeDependencyCount": 58,
       "classification": "declared",
       "evidence": [
         {
@@ -80,13 +80,13 @@
     {
       "source": "app",
       "target": "core-encryption",
-      "references": 6,
-      "typeDependencyCount": 2,
+      "references": 11,
+      "typeDependencyCount": 3,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.App.ViewModels.SecurityDialogViewModel",
-          "target": "Excise.Core.Security.PdfEncryptionAlgorithm",
+          "source": "Excise.App.ViewModels.MainWindowViewModel",
+          "target": "Excise.Core.Security.PdfPermissions",
           "references": 5
         }
       ]
@@ -108,8 +108,8 @@
     {
       "source": "app",
       "target": "core-redaction",
-      "references": 25,
-      "typeDependencyCount": 9,
+      "references": 31,
+      "typeDependencyCount": 13,
       "classification": "declared",
       "evidence": [
         {
@@ -165,13 +165,13 @@
       "source": "app-main-window",
       "target": "app",
       "references": 662,
-      "typeDependencyCount": 76,
+      "typeDependencyCount": 77,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.App.Services.PdfDocumentService",
-          "references": 114
+          "references": 113
         }
       ]
     },
@@ -332,14 +332,14 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 366,
-      "typeDependencyCount": 21,
+      "references": 382,
+      "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 74
+          "references": 83
         }
       ]
     },
@@ -374,14 +374,14 @@
     {
       "source": "avalonia",
       "target": "rendering",
-      "references": 23,
+      "references": 27,
       "typeDependencyCount": 3,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Rendering.RenderOptions",
-          "references": 17
+          "references": 19
         }
       ]
     },
@@ -416,8 +416,8 @@
     {
       "source": "cli",
       "target": "core-document",
-      "references": 136,
-      "typeDependencyCount": 35,
+      "references": 140,
+      "typeDependencyCount": 37,
       "classification": "declared",
       "evidence": [
         {
@@ -668,8 +668,8 @@
     {
       "source": "core-document",
       "target": "core-parsing",
-      "references": 81,
-      "typeDependencyCount": 15,
+      "references": 82,
+      "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
@@ -682,8 +682,8 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1332,
-      "typeDependencyCount": 197,
+      "references": 1340,
+      "typeDependencyCount": 202,
       "classification": "declared",
       "evidence": [
         {
@@ -750,6 +750,20 @@
       ]
     },
     {
+      "source": "core-primitives",
+      "target": "core-parsing",
+      "references": 2,
+      "typeDependencyCount": 1,
+      "classification": "undeclared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Primitives.PdfStream",
+          "target": "Excise.Core.Filters.BasicStreamFilters",
+          "references": 2
+        }
+      ]
+    },
+    {
       "source": "core-redaction",
       "target": "core-content",
       "references": 193,
@@ -808,8 +822,8 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 455,
-      "typeDependencyCount": 96,
+      "references": 449,
+      "typeDependencyCount": 95,
       "classification": "declared",
       "evidence": [
         {

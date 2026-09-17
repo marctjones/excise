@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "11f4c7615acaed163140f119e85f3c836af04d9edbee2f6176db1ae61d9fda32",
+  "sourceFingerprint": "858cecb8c8bf7cbbe9d1a7088371d5ec2766369f304abc5eec9626a1f337790a",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -1579,6 +1579,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Document/PdfXfaDetection.cs",
+      "path": "Excise.Core/Document/PdfXfaDetection.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -6785,6 +6795,36 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Services/Printing/DocumentPrintWorkflowService.cs",
+      "path": "Excise.App/Services/Printing/DocumentPrintWorkflowService.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Printing/IDocumentPrinter.cs",
+      "path": "Excise.App/Services/Printing/IDocumentPrinter.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Printing/MacPdfKitDocumentPrinter.cs",
+      "path": "Excise.App/Services/Printing/MacPdfKitDocumentPrinter.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Services/RedactedCopyDialogFormatter.cs",
       "path": "Excise.App/Services/RedactedCopyDialogFormatter.cs",
       "kind": "source-file",
@@ -7476,6 +7516,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/ViewModels/MainWindowViewModel.Printing.cs",
+      "path": "Excise.App/ViewModels/MainWindowViewModel.Printing.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/ViewModels/MainWindowViewModel.Redaction.cs",
       "path": "Excise.App/ViewModels/MainWindowViewModel.Redaction.cs",
       "kind": "source-file",
@@ -7713,6 +7763,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/ViewModels/MainWindowViewModel.Xfa.cs",
+      "path": "Excise.App/ViewModels/MainWindowViewModel.Xfa.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -9054,6 +9114,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.LookAhead.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.LookAhead.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Avalonia/Controls/PdfViewerControl.SinglePagePlaceholder.cs",
       "path": "Excise.Avalonia/Controls/PdfViewerControl.SinglePagePlaceholder.cs",
       "kind": "source-file",
@@ -9179,7 +9249,7 @@
     }
   ],
   "summary": {
-    "records": 441,
+    "records": 448,
     "facets": {
       "annotations": 11,
       "content-and-graphics": 19,
@@ -9187,7 +9257,7 @@
       "fonts": 30,
       "forms": 8,
       "images": 29,
-      "product-integration-general": 247,
+      "product-integration-general": 254,
       "redaction": 52,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 20,
@@ -9266,7 +9336,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 20,
       "pdfe.product.security.signature-and-permission-warning:write": 20
     },
-    "fallbackRecords": 247,
+    "fallbackRecords": 254,
     "allRecordsMapped": true
   }
 }

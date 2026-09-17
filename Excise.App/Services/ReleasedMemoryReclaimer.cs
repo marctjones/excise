@@ -12,12 +12,18 @@ internal enum HeapReclaimTrigger
     DocumentReplaced,
     OsPressure,
     GcMemoryLoad,
+    /// <summary>
+    /// The idle soft trim, gated on the heap holding enough committed-but-free
+    /// memory to be worth a blocking collection (#1496).
+    /// </summary>
+    Idle,
 }
 
 /// <summary>
 /// Runs ONE compacting, blocking gen2 collection after the app has released a
-/// large amount of managed memory (#1481): a document closed or replaced, or an
-/// OS-pressure cache trim at Warn or Critical.
+/// large amount of managed memory (#1481): a document closed or replaced, an
+/// OS-pressure cache trim at Warn or Critical, or an idle trim while the heap
+/// is fragmented (#1496).
 /// </summary>
 /// <remarks>
 /// <para>Why: the .NET GC does not run while the app is idle, so a replaced
