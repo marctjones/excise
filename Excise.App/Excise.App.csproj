@@ -155,6 +155,13 @@
          ASN.1 reader. See #1494; do NOT pin back to 2.6.2. -->
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
     <PackageReference Include="SkiaSharp" Version="3.119.4" /> <!-- MIT License -->
+    <!-- #1546: Windows printing (System.Drawing.Printing.PrintDocument). MIT,
+         managed only (no native assets), brings Microsoft.Win32.SystemEvents
+         (MIT). It compiles for every RID but is Windows-only at run time, so
+         every use sits in [SupportedOSPlatform("windows")] code reached only
+         behind OperatingSystem.IsWindows() (DocumentPrinterFactory); the
+         assembly is never loaded on macOS or Linux. -->
+    <PackageReference Include="System.Drawing.Common" Version="10.0.12" />
 
     <!-- MVVM and Utilities. ReactiveUI on the 23.2.x line; the Avalonia
          scheduler glue is vendored (see the #593 note above). -->

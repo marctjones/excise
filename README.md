@@ -168,22 +168,34 @@ portfolio workflows, or certificate-authority trust decisions.
 Current release-quality limitations are tracked in GitHub Issues and surfaced in
 release notes:
 
-- **Printing — macOS only** (#1545, superseding #621). File → Print… (⌘P)
-  opens the standard macOS print sheet — printer, copies, page range, paper,
-  orientation, scale, duplex where the driver supports it, preview, and the
-  PDF menu (Save as PDF) — for the document **as currently edited**: unsaved
-  page changes, filled form fields, pending type-over text, and pending
-  redactions, which are *removed* from the printed copy rather than covered.
-  Page scaling (shrink oversized / fit to page / actual size) is in
-  Preferences → Printing. Print… is disabled when the document's permissions
-  deny printing (`/P` bit 3), and also when they allow only degraded printing
-  (bit 12 clear), because excise cannot produce degraded output. Pages are
-  drawn by macOS's own PDF renderer, not excise's, so small visual differences
-  from the viewer are possible. To print, excise writes a temporary plaintext
-  copy (owner-only, under the app's cache folder) and deletes it when the
-  print sheet closes. Windows printing is #1546; Linux printing is not
-  planned — on those platforms Print… explains this, and you can Save As and
-  print from another viewer.
+- **Printing — macOS and Windows** (#1545, superseding #621; #1546).
+  File → Print… (⌘P / Ctrl+P) prints the document **as currently edited**:
+  unsaved page changes, filled form fields, pending type-over text, and
+  pending redactions, which are *removed* from the printed copy rather than
+  covered. Page scaling (shrink oversized / fit to page / actual size) is in
+  Preferences → Printing, and each page is turned to the paper orientation
+  that fits it. Print… is disabled when the document's permissions deny
+  printing (`/P` bit 3), and also when they allow only degraded printing
+  (bit 12 clear), because excise cannot produce degraded output. To print,
+  excise writes a temporary plaintext copy (owner-only, under the app's cache
+  folder) and deletes it when the print operation ends.
+  - **macOS** opens the standard print sheet — printer, copies, page range,
+    paper, orientation, scale, duplex where the driver supports it, preview,
+    and the PDF menu (Save as PDF). Pages are drawn by macOS's own PDF
+    renderer, not excise's, so small visual differences from the viewer are
+    possible.
+  - **Windows** opens the standard Windows print dialog (printer, page ranges,
+    copies and collation, and the printer's own Preferences for paper,
+    orientation and duplex). There is no print preview. Pages are rasterised by
+    excise's own renderer at the printer's resolution, capped at 600 DPI, and
+    sent through the Windows print spooler, so the printout matches the viewer
+    and no Acrobat or other PDF handler is needed. "Print to file" is hidden;
+    choose *Microsoft Print to PDF* instead, or use Save As. The PDF's
+    per-annotation *print* flag is not consulted yet: what the viewer shows is
+    what prints. ⚠️ The Windows path was built and unit-tested on macOS and
+    has not yet been checked on a Windows machine.
+  - **Linux** printing is not planned — Print… explains this, and you can
+    Save As and print from another viewer.
 - **Digital signatures** — excise checks ByteRange structure, verifies the
   detached CMS signature/digest over the signed bytes, and evaluates the signer
   certificate chain against the OS trust store, reporting a consolidated state

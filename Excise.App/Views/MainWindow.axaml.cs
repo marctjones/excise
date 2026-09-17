@@ -199,6 +199,9 @@ public partial class MainWindow : Window
             return;
         }
 
+        // #1546: a Windows print job still being sent is aborted, best
+        // effort, rather than left for the process exit to cut short.
+        (DataContext as MainWindowViewModel)?.CancelPrintInProgress();
         PersistWindowStateOnClose();
     }
 

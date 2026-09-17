@@ -195,6 +195,28 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   classification and `info --json` adds `"xfaForm": "none" | "static" |
   "dynamic"`. Detection is `PdfDocument.DetectXfaForm()` in Excise.Core.
   excise still does not render or fill XFA.
+- **Printing on Windows** (#1546). File → Print… and Ctrl+P open the
+  Windows common print dialog (`PrintDlgExW`, owned by the excise window):
+  printer, page ranges, copies and collation, and the driver's Preferences.
+  Each chosen page is rasterised by excise's own renderer at the printer's
+  resolution (capped at 600 DPI and 48 million pixels a page) and sent through
+  .NET's `System.Drawing.Printing.PrintDocument`, placed from the page DC's
+  own geometry with the Preferences → Printing scaling, and turned to the
+  paper orientation that fits it (the equivalent of PDFKit's auto-rotate).
+  Copies the driver cannot make are produced by excise, collated or not.
+  Rasterising and spooling run off the UI thread; closing the window aborts a
+  job still being sent. It uses the same platform-neutral print copy as macOS
+  — pending redactions applied, owner-only, deleted afterwards — and the same
+  /P bits 3 + 12 gate. The WinForms `PrintDialog` was not used because it
+  would bring WinForms into an Avalonia app for a wrapper around the same
+  call; the WinRT print manager would need a separate Windows target
+  framework. New dependency: System.Drawing.Common 10.0.12 (MIT, managed),
+  referenced for every RID but only ever loaded on Windows. What prints is
+  what the viewer shows: the per-annotation `/Print` flag is not consulted
+  yet. ⚠️ Built and tested on macOS only — the page geometry, sheet order,
+  scaling, rasterising and the view-model path run against a fake dialog and
+  spooler; the Win32 dialog, `PrintDocument` and real drivers still need a
+  check on Windows. Linux printing remains out of scope.
 - **Printing on macOS** (#1545, superseding #621's won't-fix). File → Print…
   and ⌘P open the standard macOS print sheet, attached to the excise window,
   through PDFKit (`PDFDocument printOperationForPrintInfo:scalingMode:autoRotate:`
