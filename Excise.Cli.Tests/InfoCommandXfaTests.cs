@@ -56,7 +56,9 @@ public sealed class InfoCommandXfaTests : IDisposable
     [InlineData(false, "static")]
     public void Info_ReportsTheXfaFormKind(bool needsRendering, string expected)
     {
-        var result = InfoCommandHandler.Execute(new DocumentInfoRequest(WriteXfaPdf(needsRendering), null));
+        var result = InfoCommandHandler.Execute(
+            new DocumentInfoRequest(WriteXfaPdf(needsRendering), null),
+            TestContext.Current.CancellationToken);
 
         result.XfaForm.Should().Be(expected);
     }
