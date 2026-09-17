@@ -82,10 +82,10 @@ public static class RedactedCopySafetyPolicy
         // Removal refuses a portfolio; keeping redacts each kept file with
         // the captured/requested terms, and refuses a nested PDF it cannot
         // redact.
-        List<(AttachmentCarrierScrubber.Found File, AttachmentRedactionResult Result)>? keptAttachments = null;
+        List<(Excise.Core.Document.PdfAttachmentGraph.Found File, AttachmentRedactionResult Result)>? keptAttachments = null;
         if (options.ScrubAttachments)
         {
-            AttachmentCarrierScrubber.ThrowIfPortfolio(document);
+            Excise.Core.Document.PdfAttachmentGraph.ThrowIfPortfolio(document);
         }
         else if (options.InspectKeptAttachments)
         {
@@ -145,7 +145,7 @@ public static class RedactedCopySafetyPolicy
             removedAttachments.AddRange(document.RedactionLedger.RemovedAttachments);
             try
             {
-                removedAttachments.AddRange(AttachmentCarrierScrubber.RemoveAll(document));
+                removedAttachments.AddRange(Excise.Core.Document.PdfAttachmentGraph.RemoveAll(document));
                 attachmentsScrubbed = true;
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)

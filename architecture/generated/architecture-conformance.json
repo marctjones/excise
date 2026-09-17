@@ -2,18 +2,18 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "735deb292ef0c0161b7a55e780a4592e31901624",
+  "sourceRevision": "f99bb8dfc2f844870397533265b9a91f72648226",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7362,
-    "observedComponentDependencies": 71,
+    "retainedSymbols": 7363,
+    "observedComponentDependencies": 70,
     "declaredDependencies": 68,
     "acceptedExceptions": 1,
-    "undeclaredDependencies": 2,
+    "undeclaredDependencies": 1,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
     "unownedShippingSymbols": 0,
@@ -430,28 +430,14 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1336,
-      "typeDependencyCount": 202,
+      "references": 1411,
+      "typeDependencyCount": 213,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfAnnotationAuthoring",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 95
-        }
-      ]
-    },
-    {
-      "source": "core-document",
-      "target": "core-redaction",
-      "references": 4,
-      "typeDependencyCount": 1,
-      "classification": "undeclared",
-      "evidence": [
-        {
-          "source": "Excise.Core.Document.PdfDocument",
-          "target": "Excise.Core.Text.Segmentation.AttachmentCarrierScrubber",
-          "references": 4
         }
       ]
     },
@@ -556,8 +542,8 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 641,
-      "typeDependencyCount": 81,
+      "references": 636,
+      "typeDependencyCount": 86,
       "classification": "declared",
       "evidence": [
         {
@@ -598,8 +584,8 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 545,
-      "typeDependencyCount": 106,
+      "references": 470,
+      "typeDependencyCount": 101,
       "classification": "declared",
       "evidence": [
         {

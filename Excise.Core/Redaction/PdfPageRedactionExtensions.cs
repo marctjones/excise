@@ -178,7 +178,7 @@ public static class PdfPageRedactionExtensions
 
         // #1572: refuse a portfolio BEFORE anything changes.
         if (removeAttachments)
-            AttachmentCarrierScrubber.ThrowIfPortfolio(page.Document);
+            Excise.Core.Document.PdfAttachmentGraph.ThrowIfPortfolio(page.Document);
 
         // #1547/#1574: an XFA packet restates the form's values — every page
         // of a form excise laid out, and every field of a static form — and
@@ -335,7 +335,7 @@ public static class PdfPageRedactionExtensions
 
         // #1572/#1547/#1574 — see RedactAreaInternal.
         if (removeAttachments)
-            AttachmentCarrierScrubber.ThrowIfPortfolio(page.Document);
+            Excise.Core.Document.PdfAttachmentGraph.ThrowIfPortfolio(page.Document);
         Excise.Core.Xfa.PdfXfaLayout.RemoveXfaFormForRedaction(page.Document);
         if (removeAttachments)
             RemoveAttachmentsForRedaction(page.Document);
@@ -397,7 +397,7 @@ public static class PdfPageRedactionExtensions
     /// </summary>
     internal static void RemoveAttachmentsForRedaction(PdfDocument document)
     {
-        var removed = AttachmentCarrierScrubber.RemoveAll(document);
+        var removed = Excise.Core.Document.PdfAttachmentGraph.RemoveAll(document);
         if (removed.Count > 0)
             document.RedactionLedger.RecordRemovedAttachments(removed);
     }

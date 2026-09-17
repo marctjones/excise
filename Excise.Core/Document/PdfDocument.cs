@@ -732,7 +732,7 @@ public partial class PdfDocument : IDisposable
     /// its name, size and where it was attached (#1572).
     /// </summary>
     public IReadOnlyList<AttachmentRedactionResult> RemoveAllAttachments()
-        => Excise.Core.Text.Segmentation.AttachmentCarrierScrubber.RemoveAll(this);
+        => PdfAttachmentGraph.RemoveAll(this);
 
     /// <summary>
     /// <see cref="ScrubEmbeddedFiles"/>, returning what it removed and an
@@ -748,7 +748,7 @@ public partial class PdfDocument : IDisposable
     internal (IReadOnlyList<AttachmentRedactionResult> Removed, Action Restore) ScrubEmbeddedFilesReversibly()
     {
         var undo = new List<Action>();
-        var removed = Excise.Core.Text.Segmentation.AttachmentCarrierScrubber.RemoveAll(this, undo);
+        var removed = PdfAttachmentGraph.RemoveAll(this, undo);
         return (removed, () =>
         {
             for (var i = undo.Count - 1; i >= 0; i--)

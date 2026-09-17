@@ -179,7 +179,7 @@ public static class PdfDocumentRedactionExtensions
         // refused redaction leaves the document exactly as it was: a portfolio
         // (whose attachments ARE the documents) when they would be removed,
         // and a nested PDF that cannot be redacted when they are kept.
-        List<(AttachmentCarrierScrubber.Found File, Excise.Core.Document.AttachmentRedactionResult Result)>? keptAttachments = null;
+        List<(Excise.Core.Document.PdfAttachmentGraph.Found File, Excise.Core.Document.AttachmentRedactionResult Result)>? keptAttachments = null;
         IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> removedAttachments =
             Array.Empty<Excise.Core.Document.AttachmentRedactionResult>();
         if (keepAttachments)
@@ -194,7 +194,7 @@ public static class PdfDocumentRedactionExtensions
         }
         else
         {
-            AttachmentCarrierScrubber.ThrowIfPortfolio(document);
+            Excise.Core.Document.PdfAttachmentGraph.ThrowIfPortfolio(document);
         }
 
         // #1547/#1574: an XFA packet restates the form — every page of a form
@@ -208,7 +208,7 @@ public static class PdfDocumentRedactionExtensions
         if (!keepAttachments)
         {
             // #1572, decided 2026-09-17: redacted output carries no attachments.
-            removedAttachments = AttachmentCarrierScrubber.RemoveAll(document);
+            removedAttachments = Excise.Core.Document.PdfAttachmentGraph.RemoveAll(document);
             if (removedAttachments.Count > 0)
                 document.RedactionLedger.RecordRemovedAttachments(removedAttachments);
         }
