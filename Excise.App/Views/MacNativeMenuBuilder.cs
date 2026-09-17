@@ -169,6 +169,10 @@ internal static class MacNativeMenuBuilder
                 Separator(),
                 TabActionItem("Show Previous Window Tab", Workspace.MacWindowTabbing.TabAction.SelectPreviousTab),
                 TabActionItem("Show Next Window Tab", Workspace.MacWindowTabbing.TabAction.SelectNextTab),
+                // ⚠️ #1615: these two are the APPKIT actions on the NSWindow tab
+                // group, while the in-window AXAML menu's identically titled
+                // items act on the in-app tabs. Left as they were deliberately:
+                // which a macOS user should get is a product call.
                 TabActionItem("Move Tab to New Window", Workspace.MacWindowTabbing.TabAction.MoveTabToNewWindow),
                 TabActionItem("Merge All Windows", Workspace.MacWindowTabbing.TabAction.MergeAllWindows),
                 Separator(),
