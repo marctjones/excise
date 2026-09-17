@@ -489,13 +489,13 @@
         },
         {
           "op": "openAnother",
-          "label": "open-scotus",
-          "document": "test-pdfs/smoke/scotus-trump-v-us.pdf",
+          "label": "open-scan",
+          "document": "test-pdfs/reader-bench/scan-irs-20p-200dpi.pdf",
           "level": "window"
         },
         {
           "op": "viewMode",
-          "label": "view-continuous-scotus",
+          "label": "view-continuous-scan",
           "level": "continuous"
         },
         {
@@ -515,7 +515,7 @@
         },
         {
           "op": "close",
-          "label": "close-scotus"
+          "label": "close-scan"
         },
         {
           "op": "waitIdle",
@@ -595,13 +595,13 @@
         },
         {
           "op": "openAnother",
-          "label": "open-scotus",
-          "document": "test-pdfs/smoke/scotus-trump-v-us.pdf",
+          "label": "open-scan",
+          "document": "test-pdfs/reader-bench/scan-irs-20p-200dpi.pdf",
           "level": "tab"
         },
         {
           "op": "viewMode",
-          "label": "view-continuous-scotus",
+          "label": "view-continuous-scan",
           "level": "continuous"
         },
         {
@@ -621,7 +621,7 @@
         },
         {
           "op": "close",
-          "label": "close-scotus"
+          "label": "close-scan"
         },
         {
           "op": "waitIdle",
@@ -692,18 +692,18 @@
         },
         {
           "op": "openAnother",
-          "label": "open-scotus",
-          "document": "test-pdfs/smoke/scotus-trump-v-us.pdf",
+          "label": "open-scan",
+          "document": "test-pdfs/reader-bench/scan-irs-20p-200dpi.pdf",
           "level": "tab"
         },
         {
           "op": "viewMode",
-          "label": "view-continuous-scotus",
+          "label": "view-continuous-scan",
           "level": "continuous"
         },
         {
           "op": "waitIdle",
-          "label": "idle-scotus"
+          "label": "idle-scan"
         },
         {
           "op": "expectDocuments",
@@ -713,12 +713,12 @@
         },
         {
           "op": "pageBy",
-          "label": "scotus-to-page-13",
+          "label": "scan-to-page-13",
           "count": 12
         },
         {
           "op": "waitIdle",
-          "label": "idle-scotus-p13"
+          "label": "idle-scan-p13"
         },
         {
           "op": "switchDocument",
@@ -740,12 +740,12 @@
         },
         {
           "op": "switchDocument",
-          "label": "switch-back-to-scotus",
+          "label": "switch-back-to-scan",
           "count": -1
         },
         {
           "op": "waitIdle",
-          "label": "idle-scotus-restored"
+          "label": "idle-scan-restored"
         },
         {
           "op": "switchDocument",
@@ -847,18 +847,18 @@
         },
         {
           "op": "openAnother",
-          "label": "open-scotus-clean",
-          "document": "test-pdfs/smoke/scotus-trump-v-us.pdf",
+          "label": "open-scan-clean",
+          "document": "test-pdfs/reader-bench/scan-irs-20p-200dpi.pdf",
           "level": "window"
         },
         {
           "op": "viewMode",
-          "label": "view-continuous-scotus",
+          "label": "view-continuous-scan",
           "level": "continuous"
         },
         {
           "op": "waitIdle",
-          "label": "idle-scotus"
+          "label": "idle-scan"
         },
         {
           "op": "expectDocuments",
