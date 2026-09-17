@@ -46,6 +46,8 @@ public sealed class RedactedCopySafetyPolicyTests
             VerifyRequestedTerms = false,
             RunHiddenTextAudit = false,
             RunRasterRedactionAudit = false,
+            // The CLI adapter's shape: RedactText already handled attachments (#1572).
+            InspectKeptAttachments = false,
         };
 
         var report = RedactedCopySafetyPolicy.Evaluate(

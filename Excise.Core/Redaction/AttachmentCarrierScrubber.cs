@@ -32,6 +32,9 @@ internal static class AttachmentCarrierScrubber
     /// <summary>How deep nested PDF attachments are redacted before excise refuses.</summary>
     internal const int MaxNestedPdfDepth = 3;
 
+    /// <summary>The shortest term cut from a kept attachment (the carrier-scrub floor).</summary>
+    private const int MinTermLength = 3;
+
     private static readonly string[] PayloadKeys = { "UF", "F", "DOS", "Mac", "Unix" };
 
     private static readonly HashSet<string> TextExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -275,6 +278,12 @@ internal static class AttachmentCarrierScrubber
         var results = new List<(Found, AttachmentRedactionResult)>();
         var writes = new List<Action>();
 
+        // The document-carrier scrub's floor (#999): cutting one- and
+        // two-character fragments out of a file corrupts it for no security
+        // benefit, so such a term is reported rather than applied.
+        var allTerms = terms;
+        terms = terms.Where(t => t.Length >= MinTermLength).ToList();
+
         foreach (var file in Enumerate(document))
         {
             var size = SizeOf(document, file);
@@ -283,8 +292,9 @@ internal static class AttachmentCarrierScrubber
 
             if (terms.Count == 0)
             {
-                results.Add((file, Result(AttachmentDisposition.KeptNotChecked,
-                    "there was no term to look for (area redaction); the file may contain the redacted text")));
+                results.Add((file, Result(AttachmentDisposition.KeptNotChecked, allTerms.Count == 0
+                    ? "there was no term to look for (area redaction); the file may contain the redacted text"
+                    : $"the term is shorter than {MinTermLength} characters, so attachments were not searched")));
                 continue;
             }
 
