@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Excise.App.ViewModels"
+        x:Class="Excise.App.Views.ReduceFileSizeDialog"
+        x:DataType="vm:ReduceFileSizeDialogViewModel"
+        Title="Reduce File Size"
+        Width="460" Height="300"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Grid Margin="18" RowDefinitions="Auto,Auto,Auto,*,Auto">
+
+        <TextBlock Grid.Row="0"
+                   Text="Save a smaller copy of this document."
+                   FontWeight="SemiBold" FontSize="13"
+                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+        <TextBlock Grid.Row="1"
+                   Margin="0,6,0,12"
+                   TextWrapping="Wrap" FontSize="11"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   Text="You choose where the copy goes next. Your original file is never changed."/>
+
+        <ComboBox x:Name="ReduceFileSizePresetBox" Grid.Row="2"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Static vm:ReduceFileSizeDialogViewModel.Choices}"
+                  SelectedItem="{Binding Selected}"
+                  AutomationProperties.Name="Reduce file size preset"/>
+
+        <TextBlock x:Name="ReduceFileSizePresetDescription" Grid.Row="3"
+                   Margin="0,10,0,0"
+                   TextWrapping="Wrap" FontSize="12"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   Text="{Binding Selected.Description}"/>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Margin="0,14,0,0" Spacing="8">
+            <Button x:Name="ReduceFileSizeCancelButton" Content="Cancel" Padding="20,5"
+                    IsCancel="True" Click="OnCancel"
+                    AutomationProperties.Name="Cancel Reduce File Size"/>
+            <Button x:Name="ReduceFileSizeContinueButton" Content="Choose Location..." Padding="20,5"
+                    IsDefault="True" Click="OnContinue"
+                    AutomationProperties.Name="Choose where to save the smaller copy"/>
+        </StackPanel>
+    </Grid>
+</Window>

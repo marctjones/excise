@@ -225,6 +225,7 @@
       ],
       "dependsOn": [
         "core-primitives",
+        "core-content",
         "core-document",
         "core-encryption"
       ]

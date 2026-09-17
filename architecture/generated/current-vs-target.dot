@@ -118,6 +118,7 @@ digraph excise_architecture {
   "core-text" -> "core-fonts" [label="target + observed\n6 refs", color="#15803d", style="solid", penwidth=2];
   "core-text" -> "core-primitives" [label="target + observed\n53 refs", color="#15803d", style="solid", penwidth=2];
   "core-writing" -> "core" [label="observed via parent boundary\n2 refs", color="#2563eb", style="dashed", penwidth=1];
+  "core-writing" -> "core-content" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "core-writing" -> "core-document" [label="target + observed\n10 refs", color="#15803d", style="solid", penwidth=2];
   "core-writing" -> "core-encryption" [label="target + observed\n61 refs", color="#15803d", style="solid", penwidth=2];
   "core-writing" -> "core-primitives" [label="target + observed\n133 refs", color="#15803d", style="solid", penwidth=2];

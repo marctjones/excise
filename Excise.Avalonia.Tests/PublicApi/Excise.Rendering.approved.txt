@@ -8,6 +8,10 @@ namespace Excise.Rendering
     {
         public InvalidPageGeometryException(string message) { }
     }
+    public static class PdfImageCodecs
+    {
+        public static Excise.Core.Writing.IPdfJpegCodec CreateJpegCodec() { }
+    }
     public class RenderOptions : System.IEquatable<Excise.Rendering.RenderOptions>
     {
         public const long DefaultMaxPixelCount = 268435456;

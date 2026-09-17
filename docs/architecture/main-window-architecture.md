@@ -48,7 +48,7 @@ Two concurrent facts a reader must know:
 | File | Lines | Role today |
 |---|---:|---|
 | `Excise.App/ViewModels/MainWindowViewModel.cs` | 3,223 | services, all cross-cutting state, document lifecycle, page organisation, zoom/fit, clipboard, pickers, recent files, links, help, preferences |
-| `MainWindowViewModel.Commands.cs` | 298 | declares 95 `ReactiveCommand` properties and wires them; `CurrentModeText` |
+| `MainWindowViewModel.Commands.cs` | 303 | declares 96 `ReactiveCommand` properties and wires them; `CurrentModeText` |
 | `MainWindowViewModel.Annotations.cs` | 603 | annotation authoring from selection/drag; `ClearCurrentTextSelection` |
 | `MainWindowViewModel.Attachments.cs` | 262 | embedded-file list, save, strip; owns the `AttachmentsDialog` DataContext |
 | `MainWindowViewModel.Bates.cs` | 128 | Bates stamping via a dialog |
@@ -60,6 +60,7 @@ Two concurrent facts a reader must know:
 | `MainWindowViewModel.Performance.cs` | 83 | performance settings, preference persistence |
 | `MainWindowViewModel.Permissions.cs` | 85 | `/P` permission gate |
 | `MainWindowViewModel.Redaction.cs` | 231 | mark/remove/clear/apply-all redactions |
+| `MainWindowViewModel.ReduceFileSize.cs` | 193 | Reduce File Size (#1550): preset dialog, save-copy picker, background optimize, before/after message |
 | `MainWindowViewModel.Scripting.cs` | 550 | script-facing surface and a second load/save path |
 | `MainWindowViewModel.Search.cs` | 536 | search state, commands, debounce, result publishing |
 | `MainWindowViewModel.Searchable.cs` | 139 | OCR "make searchable" dialog and run |
@@ -268,7 +269,7 @@ this file, `Forms.cs` and `Typewriter.cs`; see §1.7)
 
 Line numbers are within the named partial. "cs" means `MainWindowViewModel.cs`.
 
-**`Commands.cs`** — declares 95 `ReactiveCommand` properties (35–133, all
+**`Commands.cs`** — declares 96 `ReactiveCommand` properties (35–133, all
 `{ get; private set; } = null!`), creates them in `InitializeCommands`
 (135–150) via seven `Initialize*Commands` methods plus `InitializeSearchCommands`
 (`Search.cs:209`), `InitializeScriptingCommands` (`Scripting.cs:100`, empty)
@@ -284,7 +285,7 @@ reads mode flags from cs, `Forms.cs` and `Typewriter.cs`.
 | Editing modes (189–215) | `ToggleTextSelectionMode`→cs:1731; `ToggleFormAuthoringMode`→inline lambda with a bit-4 check (192–203); `ToggleTypewriterMode`→`Typewriter.cs:53`; `ToggleFreehand/Line/Arrow/Polygon/PolyLineMode`→`Forms.cs:103`; `DiscardPendingTypewriterEdits`→`Typewriter.cs:219`; `GoToNextPendingTypewriterEdit`→`:236`; `SetTypewriterColor`→`TypewriterStyle.cs:80` |
 | Annotations (217–231) | ten `Add*Annotation*` commands → `Annotations.cs` |
 | View/navigation (233–260) | `ToggleOutline/Thumbnails/ClipboardSidebar`, five annotation-display toggles, `ToggleContinuousView`, `CopyText`, `ZoomIn/Out/ActualSize/FitWidth/FitPage`, `Next/PreviousPage`, `GoToPage`, `RotatePageLeft/Right/180` → cs; `ToggleRevealHiddenText`/`ToggleRevealRasterizedHidden` → inline lambdas (244–245) over `HiddenText.cs` |
-| Document utility (262–290) | `MakeSearchable`→`Searchable.cs:30`; `Security`→`Security.cs:38`; `Attachments`→`Attachments.cs:171`; `BatesNumbering`→`Bates.cs:47`; `AutoDetectFields`→`Forms.cs:265`; `SaveFlattenedFormCopy`→`Forms.cs:360`; `SignDocument`→`Signing.cs:35`; `SaveAs`, `CloseDocument`, `Exit`, `LoadRecentFile`, `ExportCurrentPage`, `ExportPages`, `Print`, `OpenExternalLink`, `ShowDangerousLinkRefusal`, `VerifySignatures`, `ShowPreferences` → cs |
+| Document utility (262–290) | `MakeSearchable`→`Searchable.cs:30`; `Security`→`Security.cs:38`; `Attachments`→`Attachments.cs:171`; `BatesNumbering`→`Bates.cs:47`; `ReduceFileSize`→`ReduceFileSize.cs:37`; `AutoDetectFields`→`Forms.cs:265`; `SaveFlattenedFormCopy`→`Forms.cs:360`; `SignDocument`→`Signing.cs:35`; `SaveAs`, `CloseDocument`, `Exit`, `LoadRecentFile`, `ExportCurrentPage`, `ExportPages`, `Print`, `OpenExternalLink`, `ShowDangerousLinkRefusal`, `VerifySignatures`, `ShowPreferences` → cs |
 | Help (292–297) | `About`, `ShowShortcuts`, `ShowDocumentation` → cs |
 | Elsewhere | `UndoCommand`/`RedoCommand` created in `History.cs:55-56`; six search commands in `Search.cs:211-221`; `JumpToOutlineCommand` lazy in `Commands.cs:106-107` |
 
@@ -400,6 +401,15 @@ instead.
 | `ApplyAllRedactionsAsync` (89–142) | private | save-path, `RedactedCopyRequest` with `BuildRedactedCopySafetyOptions()`, `CreateRedactedCopy`, publish | typewriter ops, path | `_redactionWorkflowService`, `_filenameSuggestionService`, doc service, dialog | command, `SaveFileAsync` |
 | `PublishRedactedCopySuccessAsync` (144–164) | private | move to applied, clear typewriter + history, exit mode, **`LoadDocumentAsync` of the output**, formatted dialog | many | `_redactedCopyDialogFormatter`, dialog | above |
 | `_redactedSavePathProviderForTests` (187), `SetRedactedSavePathProviderForTests` (189), `ResolveRedactedSavePathAsync` (192–206) | seam/private | picker via `ShowSaveRedactedFileDialog(Window, …)` (cs:2935) | — | `GetMainWindow()` | above, T |
+
+**`ReduceFileSize.cs`** (#1550)
+
+| Member (line) | Kind | Does | State | Services | Callers |
+|---|---|---|---|---|---|
+| `ReduceFileSizePresetOverride` (35) | seam | — | — | — | T |
+| `ReduceFileSizeAsync` (37–89), `PromptForReduceFileSizePresetAsync` (91–104) | async | refuse unsaved edits → preset dialog (`new Views.ReduceFileSizeDialog`) → save picker → refuse the open file's own path | `FileState` (read) | doc service, `_filePicker`, dialog service, `GetMainWindow()` | `ReduceFileSizeCommand` |
+| `ReduceFileSizeToAsync` (111–150) | internal | `SaveToBytes()` on the UI thread, then `PdfDocumentOptimizer.SaveOptimizedCopy` on the thread pool with the document's re-encryption options; never opens the copy | `OperationStatus` | doc service, dialog service | above, T |
+| `DescribeReduceFileSizeResult` (152–175) | internal static | before → after sizes, skipped images, warnings | — | — | above, T |
 
 **`Scripting.cs`** — the script contract (script globals are the whole VM
 type, `Services/ScriptingService.cs:79,97`):

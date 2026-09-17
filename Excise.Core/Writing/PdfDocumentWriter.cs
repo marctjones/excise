@@ -32,6 +32,27 @@ public class PdfDocumentWriter
     }
 
     /// <summary>
+    /// Write for size rather than for inspection — Reduce File Size (#1550).
+    /// Three things change, and an ordinary save keeps none of them:
+    /// <list type="bullet">
+    /// <item>Info-dictionary, annotation, form-field and font dictionaries are
+    /// packed into object streams too, instead of kept at the top level where
+    /// a raw byte scan can read them (#1431/#1432/#1434). That greppability is
+    /// a convenience for external inspection, not a security boundary, and on
+    /// a form-heavy file it costs more than every other saving together
+    /// (irs-1040.pdf: 78 KB of 266 KB). Signature dictionaries stay out.</item>
+    /// <item>Object streams hold up to <see cref="MaxObjectsPerCompactObjectStream"/>
+    /// objects, so Flate sees more shared context per stream.</item>
+    /// <item>The cross-reference stream uses the narrowest field widths that
+    /// fit and a PNG Up predictor (§7.4.4.4), as qpdf does
+    /// (irs-1040-instructions.pdf: 192 KB → a few KB).</item>
+    /// </list>
+    /// </summary>
+    internal bool OptimizeForSize { get; init; }
+
+    private const int MaxObjectsPerCompactObjectStream = 200;
+
+    /// <summary>
     /// Write the document to a stream.
     /// </summary>
     public void Write(Stream stream)
@@ -368,13 +389,13 @@ public class PdfDocumentWriter
 
         var rootRef = SaveSession.CatalogReference;
         var packable = allObjects
-            .Where(o => CanPackIntoObjectStream(o, rootRef))
+            .Where(o => CanPackIntoObjectStream(o, rootRef, OptimizeForSize))
             .ToList();
         if (packable.Count == 0)
             return false;
 
         var topLevel = allObjects
-            .Where(o => !CanPackIntoObjectStream(o, rootRef))
+            .Where(o => !CanPackIntoObjectStream(o, rootRef, OptimizeForSize))
             .ToList();
 
         foreach (var (objNum, gen, obj) in topLevel)
@@ -385,7 +406,8 @@ public class PdfDocumentWriter
 
         var maxExisting = allObjects.Count == 0 ? 0 : allObjects.Max(o => o.ObjectNumber);
         var objectStreamNumber = maxExisting + 1;
-        foreach (var chunk in packable.Chunk(MaxObjectsPerObjectStream))
+        var perStream = OptimizeForSize ? MaxObjectsPerCompactObjectStream : MaxObjectsPerObjectStream;
+        foreach (var chunk in packable.Chunk(perStream))
         {
             var objectStream = BuildObjectStream(chunk, objectStreamNumber);
             _objectOffsets[objectStreamNumber] = writer.BaseStream.Position;
@@ -401,15 +423,25 @@ public class PdfDocumentWriter
 
     private static bool CanPackIntoObjectStream(
         (int ObjectNumber, int Generation, PdfObject Object) item,
-        PdfReference rootRef)
+        PdfReference rootRef,
+        bool packCarrierDictionaries)
     {
         if (item.Generation != 0) return false;
         if (item.Object is PdfStream) return false;
         if (item.ObjectNumber == rootRef.ObjectNum) return false;
-        if (item.Object is PdfDictionary dict
-            && (ContainsDocumentCarrierText(dict) || ContainsSignatureData(dict)
-                || ContainsFormFieldOrFontCarrierText(dict))) return false;
-        return true;
+        if (item.Object is not PdfDictionary dict) return true;
+        if (packCarrierDictionaries)
+        {
+            // ContainsSignatureData also matches any /Contents key, which is
+            // every page dictionary and every commented annotation; here only
+            // a real signature dictionary or signature field stays out.
+            return dict.GetOptional("ByteRange") == null
+                   && dict.GetNameOrNull("Type") != "Sig"
+                   && dict.GetNameOrNull("FT") != "Sig";
+        }
+
+        return !(ContainsDocumentCarrierText(dict) || ContainsSignatureData(dict)
+                 || ContainsFormFieldOrFontCarrierText(dict));
     }
 
     private static bool ContainsDocumentCarrierText(PdfDictionary dict)
@@ -636,8 +668,23 @@ public class PdfDocumentWriter
             _compressedObjectEntries.Count > 0 ? _compressedObjectEntries.Keys.Max() : 0) + 1;
 
         const int w1 = 1;
-        const int w2 = 8;
-        const int w3 = 4;
+        var w2 = 8;
+        var w3 = 4;
+        if (OptimizeForSize)
+        {
+            long largestField2 = Math.Max(
+                _objectOffsets.Count > 0 ? _objectOffsets.Values.Max() : 0,
+                _compressedObjectEntries.Count > 0 ? _compressedObjectEntries.Values.Max(e => e.ObjectStreamNumber) : 0);
+            // The xref stream's own offset is not known until its row is
+            // written, but it is xrefOffset, which is the largest offset.
+            largestField2 = Math.Max(largestField2, xrefOffset);
+            var largestField3 = Math.Max(
+                65535,
+                _compressedObjectEntries.Count > 0 ? _compressedObjectEntries.Values.Max(e => e.Index) : 0);
+            w2 = BytesNeeded(largestField2);
+            w3 = BytesNeeded(largestField3);
+        }
+
         using var raw = new MemoryStream(size * (w1 + w2 + w3));
         WriteXRefRow(raw, 0, 0, 65535, w2, w3);
         for (var objNum = 1; objNum < size; objNum++)
@@ -650,17 +697,55 @@ public class PdfDocumentWriter
                 WriteXRefRow(raw, 0, 0, 65535, w2, w3);
         }
 
-        var xrefData = FlateCompress(raw.ToArray());
+        var columns = w1 + w2 + w3;
+        var rows = raw.ToArray();
+        var xrefData = FlateCompress(OptimizeForSize ? PngUpPredict(rows, columns) : rows);
         var trailer = BuildTrailerDictionary(size);
         trailer["Type"] = new PdfName("XRef");
         trailer["W"] = new PdfArray(new PdfInteger(w1), new PdfInteger(w2), new PdfInteger(w3));
         trailer["Filter"] = new PdfName("FlateDecode");
+        if (OptimizeForSize)
+        {
+            trailer["DecodeParms"] = new PdfDictionary
+            {
+                ["Predictor"] = new PdfInteger(12),
+                ["Columns"] = new PdfInteger(columns),
+            };
+        }
         trailer["Length"] = new PdfInteger(xrefData.Length);
         var stream = new PdfStream(trailer, xrefData);
 
         WriteIndirectObject(writer, xrefObjNum, 0, stream, isEncryptDict: false);
         writer.Write(Encoding.ASCII.GetBytes($"startxref\n{xrefOffset}\n%%EOF\n"));
         return xrefOffset;
+    }
+
+    private static int BytesNeeded(long value)
+    {
+        var bytes = 1;
+        while (bytes < 8 && value >= 1L << (8 * bytes))
+            bytes++;
+        return bytes;
+    }
+
+    /// <summary>PNG "Up" filter (§7.4.4.4, predictor 12): each row prefixed with tag 2.</summary>
+    private static byte[] PngUpPredict(byte[] rows, int columns)
+    {
+        var rowCount = rows.Length / columns;
+        var output = new byte[rowCount * (columns + 1)];
+        for (var r = 0; r < rowCount; r++)
+        {
+            var target = r * (columns + 1);
+            output[target] = 2;
+            for (var c = 0; c < columns; c++)
+            {
+                var current = rows[r * columns + c];
+                var above = r == 0 ? (byte)0 : rows[(r - 1) * columns + c];
+                output[target + 1 + c] = unchecked((byte)(current - above));
+            }
+        }
+
+        return output;
     }
 
     private static void WriteXRefRow(Stream stream, int type, long field2, int field3, int w2, int w3)

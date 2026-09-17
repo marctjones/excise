@@ -78,6 +78,7 @@ MainWindow/MenuItem:MoveSelectedPagesLaterCommand	B	reached only by Command.Exec
 MainWindow/MenuItem:OpenFileCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/MenuItem:PrintCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/MenuItem:RedoCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
+MainWindow/MenuItem:ReduceFileSizeCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/MenuItem:RemoveCurrentPageCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/MenuItem:RemoveSelectedPagesCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/MenuItem:RotatePage180Command	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
