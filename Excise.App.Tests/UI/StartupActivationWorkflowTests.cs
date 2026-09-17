@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -112,6 +114,70 @@ public class StartupActivationWorkflowTests
             TestPdfGenerator.CleanupTestFile(pdfPath);
             TestPdfGenerator.CleanupTestFile(textPath);
         }
+    }
+
+    /// <summary>
+    /// #1585: the activation handler was attached only when
+    /// <c>ApplicationLifetime</c> implemented <see cref="IActivatableLifetime"/>,
+    /// which Avalonia 12's desktop lifetime never does, so macOS open-documents
+    /// events were dropped. The platform lifetime is an application feature;
+    /// this binds a stand-in where Avalonia.Native registers its own and checks
+    /// that a file activation raised on it reaches the open route.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public void FileActivation_OnThePlatformLifetimeFeature_ReachesTheOpenRoute()
+    {
+        var pdfPath = Path.Combine(Path.GetTempPath(), $"excise-activation-route-{Guid.NewGuid():N}.pdf");
+        var textPath = Path.Combine(Path.GetTempPath(), $"excise-activation-route-{Guid.NewGuid():N}.txt");
+        TestPdfGenerator.CreateSimpleTextPdf(pdfPath, "ACTIVATION ROUTE");
+        File.WriteAllText(textPath, "not a pdf");
+        try
+        {
+            // Avalonia's reference assemblies forbid implementing the
+            // lifetime in user code, so the stand-in is generated at run time.
+            var platform = new Mock<IActivatableLifetime>();
+            var platformLifetime = platform.Object;
+            using (BindPlatformService(platformLifetime))
+            {
+
+                var lifetime = Excise.App.App.ResolveActivatableLifetime(Application.Current!);
+                lifetime.Should().BeSameAs(platformLifetime,
+                    "Avalonia.Native raises open-documents events on the lifetime feature, not on ApplicationLifetime");
+
+                var opened = new List<IReadOnlyList<string>>();
+                Excise.App.App.SubscribeFileActivation(lifetime!, opened.Add);
+                platform.Raise(l => l.Activated += null, platformLifetime, new ActivatedEventArgs(ActivationKind.Reopen));
+                platform.Raise(l => l.Activated += null, platformLifetime,
+                    new FileActivatedEventArgs([MockStorageItem(textPath), MockStorageItem(pdfPath)]));
+
+                opened.Should().ContainSingle("a reopen is not a file activation; the file activation opens once")
+                    .Which.Should().Equal(Path.GetFullPath(pdfPath));
+            }
+        }
+        finally
+        {
+            TestPdfGenerator.CleanupTestFile(pdfPath);
+            TestPdfGenerator.CleanupTestFile(textPath);
+        }
+    }
+
+    /// <summary>
+    /// Register <paramref name="service"/> where a platform backend registers
+    /// its services, for the life of the returned scope. AvaloniaLocator's
+    /// registration API is hidden from the reference assemblies, so this goes
+    /// through reflection; it is the same call Avalonia.Native makes.
+    /// </summary>
+    private static IDisposable BindPlatformService<TService>(TService service)
+    {
+        var locator = typeof(AvaloniaLocator);
+        const System.Reflection.BindingFlags publicStatic =
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static;
+        var scope = (IDisposable)locator.GetMethod("EnterScope", publicStatic)!.Invoke(null, null)!;
+        var mutable = locator.GetProperty("CurrentMutable", publicStatic)!.GetValue(null)!;
+        var registration = locator.GetMethod("Bind")!.MakeGenericMethod(typeof(TService)).Invoke(mutable, null)!;
+        registration.GetType().GetMethod("ToConstant")!.MakeGenericMethod(typeof(TService))
+            .Invoke(registration, [service]);
+        return scope;
     }
 
     private static IStorageItem MockStorageItem(string path)

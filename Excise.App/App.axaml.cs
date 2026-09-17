@@ -93,19 +93,10 @@ public partial class App : Application
         // Register this before building the main window. macOS Launch Services
         // may deliver document-open activation while the Avalonia lifetime is
         // still starting, and queueing here avoids dropping that early event.
-        if (ApplicationLifetime is IActivatableLifetime activatable)
-        {
-            activatable.Activated += (_, e) =>
-            {
-                if (e is not FileActivatedEventArgs fileArgs)
-                    return;
-
-                // #1463: every PDF Finder hands over, each in its own session.
-                var paths = ResolveActivatedPdfPaths(fileArgs.Files);
-                if (paths.Count > 0)
-                    OpenOrQueueActivatedPaths(paths);
-            };
-        }
+        if (ResolveActivatableLifetime(this) is { } activatable)
+            SubscribeFileActivation(activatable, OpenOrQueueActivatedPaths);
+        else if (OperatingSystem.IsMacOS())
+            logger.LogWarning("No activatable lifetime: files opened from Finder will not reach excise");
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -431,6 +422,36 @@ public partial class App : Application
         {
             logger.LogError(ex, "Failed to open {Path}", path);
         }
+    }
+
+    /// <summary>
+    /// #1585: the platform lifetime that raises macOS open-documents events.
+    /// Avalonia 12's desktop lifetime does not implement
+    /// <see cref="IActivatableLifetime"/>; it is an application feature
+    /// (Avalonia.Native raises <see cref="FileActivatedEventArgs"/> on it).
+    /// Checking <c>ApplicationLifetime</c> alone found nothing, so every file
+    /// Finder handed over was dropped without a trace.
+    /// </summary>
+    internal static IActivatableLifetime? ResolveActivatableLifetime(Application application) =>
+        application.TryGetFeature(typeof(IActivatableLifetime)) as IActivatableLifetime
+        ?? application.ApplicationLifetime as IActivatableLifetime;
+
+    /// <summary>
+    /// Route every PDF in a file activation to <paramref name="open"/>.
+    /// #1463: every PDF Finder hands over, each in its own session.
+    /// </summary>
+    internal static void SubscribeFileActivation(
+        IActivatableLifetime lifetime, Action<IReadOnlyList<string>> open)
+    {
+        lifetime.Activated += (_, e) =>
+        {
+            if (e is not FileActivatedEventArgs fileArgs)
+                return;
+
+            var paths = ResolveActivatedPdfPaths(fileArgs.Files);
+            if (paths.Count > 0)
+                open(paths);
+        };
     }
 
     // internal (not private): see OpenPathAsync's note — this is the

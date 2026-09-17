@@ -393,6 +393,116 @@ public sealed class MultiDocumentTabTests : IDisposable
         released.IsAlive.Should().BeFalse("a closed tab's view model must be collectable");
     }
 
+    /// <summary>
+    /// #1584: Avalonia.Native binds a window's native menu to the first
+    /// <see cref="NativeMenu"/> it is given and throws "The menu being updated
+    /// does not match" when handed another. A tab switch used to attach the
+    /// shown session's own menu, which killed the app on the second tab. The
+    /// headless platform has no exporter, so this watches the invariant: the
+    /// window's menu instance never changes, and its items act on the shown tab.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task SwitchingTabs_KeepsTheWindowsOneNativeMenu_AndItsItemsActOnTheShownTab()
+    {
+        using var harness = new Harness();
+        var (_, window, tabs) = await OpenTabsAsync(harness, NewPdf("m1.pdf", "M1"), NewPdf("m2.pdf", "M2"));
+        var a = tabs.Tabs[0].Session.ViewModel;
+        var b = tabs.Tabs[1].Session.ViewModel;
+        window.AttachesNativeMenuWithoutExporterForTesting = true;
+
+        var attached = new List<NativeMenu?>();
+        void OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        {
+            if (e.Property == NativeMenu.MenuProperty)
+                attached.Add((NativeMenu?)e.NewValue);
+        }
+        window.PropertyChanged += OnPropertyChanged;
+        try
+        {
+            tabs.SelectedTab = tabs.Tabs[0];
+            await FlushAsync();
+            var menu = NativeMenu.GetMenu(window);
+            menu.Should().NotBeNull("the attach path must have run for this test to mean anything");
+            ActsOnlyOn(menu!, a, other: b);
+            var aSubmenus = Submenus(menu!);
+
+            tabs.SelectedTab = tabs.Tabs[1];
+            await FlushAsync();
+            NativeMenu.GetMenu(window).Should().BeSameAs(menu,
+                "Avalonia.Native throws when a window's native menu is replaced by another instance");
+            ActsOnlyOn(menu!, b, other: a);
+
+            tabs.SelectedTab = tabs.Tabs[0];
+            await FlushAsync();
+            NativeMenu.GetMenu(window).Should().BeSameAs(menu);
+            ActsOnlyOn(menu!, a, other: b);
+            Submenus(menu!).Should().Equal(aSubmenus,
+                "a session shown again reuses its items, and an item's submenu is never replaced");
+
+            attached.Should().ContainSingle("the window's menu is set once and never swapped")
+                .Which.Should().BeSameAs(menu);
+        }
+        finally
+        {
+            window.PropertyChanged -= OnPropertyChanged;
+        }
+    }
+
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task ClosingATab_ReleasesItsSession_WithTheNativeMenuAttached()
+    {
+        using var harness = new Harness();
+        var (_, window, tabs) = await OpenTabsAsync(harness, NewPdf("keep-menu.pdf", "KEEP"));
+        window.AttachesNativeMenuWithoutExporterForTesting = true;
+        var released = await OpenAndCloseTabAsync(harness, tabs, NewPdf("gone-menu.pdf", "GONE"));
+
+        for (var i = 0; i < 10 && released.IsAlive; i++)
+        {
+            await FlushAsync();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        }
+
+        NativeMenu.GetMenu(window).Should().NotBeNull("the attach path must have run");
+        ActsOnlyOn(NativeMenu.GetMenu(window)!, tabs.SelectedTab!.Session.ViewModel, other: null);
+        released.IsAlive.Should().BeFalse(
+            "a closed tab's view model must be collectable even after the window's menu showed it");
+    }
+
+    private static readonly System.Reflection.PropertyInfo[] CommandProperties =
+        typeof(MainWindowViewModel).GetProperties()
+            .Where(p => typeof(System.Windows.Input.ICommand).IsAssignableFrom(p.PropertyType)
+                        && p.GetIndexParameters().Length == 0)
+            .ToArray();
+
+    private static void ActsOnlyOn(NativeMenu menu, MainWindowViewModel shown, MainWindowViewModel? other)
+    {
+        var leaves = ToolbarOverflowMenuEntriesTests.NativeLeaves(menu).ToList();
+        leaves.Should().Contain(n => ReferenceEquals(n.Command, shown.SaveFileCommand),
+            "File > Save must save the shown tab");
+        if (other == null)
+            return;
+        var otherCommands = CommandProperties.Select(p => p.GetValue(other)).Where(c => c != null).ToList();
+        leaves.Where(n => otherCommands.Any(c => ReferenceEquals(c, n.Command)))
+            .Select(n => n.Header)
+            .Should().BeEmpty("no menu item may act on a tab that is not shown");
+    }
+
+    private static List<NativeMenu> Submenus(NativeMenu menu)
+    {
+        var result = new List<NativeMenu>();
+        foreach (var item in menu.Items.OfType<NativeMenuItem>())
+        {
+            if (item.Menu is { } submenu)
+            {
+                result.Add(submenu);
+                result.AddRange(Submenus(submenu));
+            }
+        }
+        return result;
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static async Task<WeakReference> OpenAndCloseTabAsync(Harness harness, DocumentTabsViewModel tabs, string path)
     {

@@ -20,6 +20,21 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   322–332 MB before render-ahead. Document changes now forget the plan, and
   the close test covers both views with and without a trim first. Page-turn
   render-ahead is unchanged.
+- **Opening a second document as a tab crashed excise on macOS** (#1584).
+  Each tab had its own native menu, and switching tabs gave the window a
+  different menu object. Avalonia's macOS menu code only accepts the first menu
+  a window is given, so it threw "The menu being updated does not match" and
+  the app quit. Each window now keeps one menu for its whole life. A tab
+  switch replaces the entries in that menu with the new tab's entries, so
+  every menu item acts on the tab you are looking at. A closed tab's entries
+  are still released with it (#1551).
+- **On macOS, excise ignored PDFs opened from Finder** (#1585). Double-click,
+  "Open With" and `open -a` did nothing, whether excise was already running or
+  was started by the open. Avalonia delivers those requests through an
+  application feature, but excise only looked for them on the desktop
+  lifetime, which never carries them. So excise never received them. It now
+  gets them from the application feature, and each PDF opens the way the Open
+  Documents In preference says.
 - **A failed open left the previous document's attachments listed** (#1563),
   and opening another document kept the old list on screen until the new one
   finished loading. Both now clear.
