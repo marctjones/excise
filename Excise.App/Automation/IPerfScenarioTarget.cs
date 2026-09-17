@@ -65,6 +65,35 @@ internal interface IPerfScenarioTarget
     /// </returns>
     Task<bool> TrimAsync(string level, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Open <paramref name="path"/> from the active document through the
+    /// workspace's routing (#1551-#1554) and check it landed in a new
+    /// <c>window</c> or a new <c>tab</c> (<paramref name="expect"/>). Throws on
+    /// anything else.
+    /// </summary>
+    Task OpenAnotherAsync(string path, string expect, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Show the open document <paramref name="offset"/> places after (or
+    /// before) the active one, and check a document shown before comes back
+    /// on the page and scroll position it was left at. Throws when it does not.
+    /// </summary>
+    Task SwitchDocumentAsync(int offset, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Null when <paramref name="documents"/> documents are open in
+    /// <paramref name="windows"/> windows (a null expectation is not checked);
+    /// otherwise what was found instead.
+    /// </summary>
+    string? DescribeDocumentMismatch(int? documents, int? windows);
+
+    /// <summary>
+    /// Run the quit review over every open document, answering each
+    /// unsaved-changes prompt with Discard in process. Returns how many prompts
+    /// were answered; throws when the review kept a document open.
+    /// </summary>
+    Task<int> ReviewUnsavedChangesForQuitAsync(CancellationToken cancellationToken);
+
     /// <summary>Take an in-process sample, including the viewer's counters.</summary>
     PerfSample Sample();
 }

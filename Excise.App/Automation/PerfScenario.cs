@@ -57,6 +57,40 @@ internal enum PerfStepOp
     /// 2026-09-14 and is not re-tested here (#1497).
     /// </summary>
     Trim,
+
+    /// <summary>
+    /// Open a document from the ACTIVE document through the workspace's routing
+    /// (#1551-#1554), the way File ▸ Open does, so it follows the
+    /// Open Documents In preference the launch seeded into window.json.
+    /// <see cref="PerfScenarioStep.Level"/> says where it must land:
+    /// <c>window</c> or <c>tab</c>; anywhere else is a step failure.
+    /// </summary>
+    OpenAnother,
+
+    /// <summary>
+    /// Show the next (<see cref="PerfScenarioStep.Count"/> &gt; 0, default +1)
+    /// or previous open document: the tab strip's Ctrl+Tab command when the
+    /// active window holds several tabs, the Window menu's activation
+    /// otherwise. A document shown before must come back on the page and
+    /// scroll position it was left at, or the step fails.
+    /// </summary>
+    SwitchDocument,
+
+    /// <summary>
+    /// Fail unless <see cref="PerfScenarioStep.Documents"/> documents are open
+    /// in <see cref="PerfScenarioStep.Windows"/> windows (either may be omitted).
+    /// </summary>
+    ExpectDocuments,
+
+    /// <summary>
+    /// Run the quit review over every open document (File ▸ Exit's
+    /// <c>ReviewUnsavedChangesAsync("quit excise")</c>), answering each
+    /// unsaved-changes prompt with <see cref="PerfScenarioStep.Level"/>
+    /// (only <c>discard</c>) in process instead of showing the dialog.
+    /// Fails unless exactly <see cref="PerfScenarioStep.Count"/> prompts were
+    /// answered. Must be the LAST step: the harness quits right after it.
+    /// </summary>
+    QuitReview,
 }
 
 /// <summary>One step of a scenario. Unused fields stay null by design.</summary>
@@ -68,7 +102,9 @@ internal sealed record PerfScenarioStep(
     double? Value = null,
     int? Count = null,
     string? Level = null,
-    double? Seconds = null)
+    double? Seconds = null,
+    int? Documents = null,
+    int? Windows = null)
 {
     /// <summary>The name this step carries in the journal and the metrics marker.</summary>
     internal string Name => Label ?? Op.ToString().ToLowerInvariant();
@@ -119,6 +155,13 @@ internal static class PerfScenarioFile
                 throw new InvalidOperationException($"gui-perf scenario '{id}': 'steps' array missing.");
 
             var stepList = steps.EnumerateArray().Select(step => ParseStep(id, step)).ToList();
+
+            // After an approved quit review the harness shuts the app down, so
+            // a step after it would never run while its scenario still read
+            // as complete.
+            var quit = stepList.FindIndex(s => s.Op == PerfStepOp.QuitReview);
+            if (quit >= 0 && quit != stepList.Count - 1)
+                throw new InvalidOperationException($"gui-perf scenario '{id}': 'quitReview' must be the last step.");
 
             // A scenario with no steps would launch, quit, and report a row of
             // numbers that measured nothing — the vacuous-pass shape
@@ -175,7 +218,9 @@ internal static class PerfScenarioFile
             Value: OptionalDouble(step, "value"),
             Count: OptionalInt(step, "count"),
             Level: OptionalString(step, "level"),
-            Seconds: OptionalDouble(step, "seconds"));
+            Seconds: OptionalDouble(step, "seconds"),
+            Documents: OptionalInt(step, "documents"),
+            Windows: OptionalInt(step, "windows"));
 
         // Fail at parse time, not three minutes into a launched scenario.
         switch (op)
@@ -194,10 +239,25 @@ internal static class PerfScenarioFile
                 throw new InvalidOperationException($"gui-perf scenario '{scenarioId}': '{opText}' needs text.");
             case PerfStepOp.Trim when string.IsNullOrWhiteSpace(parsed.Level):
                 throw new InvalidOperationException($"gui-perf scenario '{scenarioId}': 'trim' needs level background|warn|critical.");
+            case PerfStepOp.OpenAnother when string.IsNullOrWhiteSpace(parsed.Document):
+                throw new InvalidOperationException($"gui-perf scenario '{scenarioId}': 'openAnother' needs a document.");
+            case PerfStepOp.OpenAnother when !IsOneOf(parsed.Level, "window", "tab"):
+                throw new InvalidOperationException($"gui-perf scenario '{scenarioId}': 'openAnother' needs level window|tab.");
+            case PerfStepOp.SwitchDocument when parsed.Count == 0:
+                throw new InvalidOperationException($"gui-perf scenario '{scenarioId}': 'switchDocument' count must be non-zero.");
+            case PerfStepOp.ExpectDocuments when parsed.Documents is null && parsed.Windows is null:
+                throw new InvalidOperationException($"gui-perf scenario '{scenarioId}': 'expectDocuments' needs documents and/or windows.");
+            case PerfStepOp.QuitReview when !IsOneOf(parsed.Level, "discard"):
+                throw new InvalidOperationException($"gui-perf scenario '{scenarioId}': 'quitReview' needs level discard.");
+            case PerfStepOp.QuitReview when parsed.Count is null or < 0:
+                throw new InvalidOperationException($"gui-perf scenario '{scenarioId}': 'quitReview' needs the expected prompt count (count >= 0).");
         }
 
         return parsed;
     }
+
+    private static bool IsOneOf(string? value, params string[] allowed) =>
+        value != null && allowed.Contains(value, StringComparer.OrdinalIgnoreCase);
 
     private static bool TryParseOp(string text, out PerfStepOp op) =>
         Enum.TryParse(text.Replace("-", string.Empty).Replace("_", string.Empty), ignoreCase: true, out op);
