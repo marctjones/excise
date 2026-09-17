@@ -1,0 +1,341 @@
+# Linux runner — ADVISORY (#1594)
+#
+# WHAT THIS IS FOR
+#
+# excise is developed and released on macOS (MEMORY: "macOS-first platform
+# priority"). Nothing else compiles or runs it. This job answers one question
+# per push: does excise still build, publish and start on Linux, and do the
+# handful of behaviours that are genuinely different there still hold — the
+# Unix-socket single-instance handoff, "open with" argument handling, and font
+# resolution on a machine with no Microsoft fonts installed.
+#
+# WHAT THIS IS NOT, AND WHY THE LAST ONE WAS DELETED
+#
+# The previous Linux job (removed at a708774d, #1355) tried to be a full gate:
+# coverage floors, a corpus skip allowlist with its own environment-conditioning
+# syntax, and SkiaSharp pixel differentials against reference renderers. Those
+# measure the runner's freetype/fontconfig build as much as they measure excise,
+# a macOS-only maintainer could not re-baseline them, and the job sat
+# permanently red — so it was ignored, which is how a real regression hides.
+#
+# Kept out on purpose, and not to be re-added without reading #1355:
+#   - reference-renderer oracles (mutool/poppler/ghostscript/pdfium/PDFBox)
+#   - coverage floors (coverage is an observation; LOCAL_GATES.md "Coverage")
+#   - corpus scans and anything needing a gitignored corpus
+#   - visual/pixel baselines
+#
+# The authoritative gates are LOCAL: scripts/test-tier.sh t0/t1/full.
+#
+# "Advisory" is a branch-protection setting, not a YAML property. It is
+# advisory because it is not a required check; there is no key here for it.
+#
+# NO TAGS. `on.push` names only the develop branch, and a branch filter never
+# matches a tag ref. Linux packaging is #1596 and is a separate workflow.
+
+name: Linux (advisory)
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: linux-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Any 10.0.x SDK; global.json's rollForward latestFeature accepts whatever
+  # patch lands. Never pin a patch floor (MEMORY: "SDK: any 10.0.x").
+  DOTNET_VERSION: '10.0.x'
+  # NU3012: ReactiveUI/Splat's author signing cert was revoked upstream (#343).
+  DOTNET_NUGET_SIGNATURE_VERIFICATION: false
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+  TRX_DIR: ${{ github.workspace }}/artifacts/trx
+
+jobs:
+  linux:
+    name: Linux build + headless tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Record the toolchain
+        run: |
+          dotnet --info
+          cat global.json
+          mkdir -p "$TRX_DIR"
+
+      - name: Install xvfb
+        # The Avalonia headless session drives a real app lifecycle (the #631
+        # accessibility tests), which crashed the test host outright on a
+        # displayless runner and killed the whole assembly with no captured
+        # output (#752). xvfb is the same shim the deleted job used.
+        #
+        # The X11 client libraries are NOT left to chance: the deleted job only
+        # ever ran Avalonia's HEADLESS platform, while the GUI smoke at the end
+        # of this job launches the real app on Avalonia's X11 backend — a
+        # backend nothing in this repo's history has exercised. These are a few
+        # seconds of apt and remove one whole class of first-run failure.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb fontconfig \
+            libx11-6 libice6 libsm6 libxext6 libxi6 \
+            libxcursor1 libxrandr2 libxrender1
+
+      - name: Cache nuget
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-linux-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-linux-
+
+      - name: Restore
+        run: dotnet restore excise.sln
+
+      # ── build: 0 warnings ────────────────────────────────────────────────
+      - name: Build (Debug, warnings are errors)
+        run: dotnet build excise.sln -c Debug --no-restore -warnaserror
+
+      - name: Build (Release, warnings are errors)
+        # Release excludes the Roslyn-scripting branches (EnableScripting is
+        # off there), so a warning inside them only appears in this build.
+        run: dotnet build excise.sln -c Release --no-restore -warnaserror
+
+      # ── publish ──────────────────────────────────────────────────────────
+      # NOTE the absence of --no-restore, which every other dotnet step here
+      # carries. `dotnet restore excise.sln` above restores for no RID, so a
+      # RID-specific publish with --no-restore fails NETSDK1047 ("assets file
+      # doesn't have a target for net10.0/linux-x64") — no csproj declares
+      # RuntimeIdentifiers. Publish does its own RID restore; let it.
+      - name: Publish linux-x64
+        run: |
+          dotnet publish Excise.App/Excise.App.csproj -c Release -r linux-x64 \
+            --self-contained false \
+            -o artifacts/publish/linux-x64-framework-dependent
+          dotnet publish Excise.App/Excise.App.csproj -c Release -r linux-x64 \
+            --self-contained true \
+            -o artifacts/publish/linux-x64-self-contained
+          dotnet publish Excise.Cli/Excise.Cli.csproj -c Release -r linux-x64 \
+            --self-contained false \
+            -o artifacts/publish/linux-x64-cli
+
+      - name: The published CLI starts and renders
+        # A publish that produces an unrunnable binary is a publish that
+        # passed. This also proves SkiaSharp's Linux native component
+        # (libSkiaSharp, from SkiaSharp.NativeAssets.Linux.NoDependencies)
+        # loads and rasterises — the one piece of the stack that is not
+        # managed, on the platform where it is least exercised.
+        run: |
+          set -euo pipefail
+          CLI=artifacts/publish/linux-x64-cli/excise
+          "$CLI" --help > /dev/null
+          mkdir -p artifacts/cli-smoke
+          "$CLI" render test-pdfs/pdf20/ascii85-image.pdf \
+            --page 1 --dpi 72 --output artifacts/cli-smoke/page1.png
+          test -s artifacts/cli-smoke/page1.png
+          ls -l artifacts/cli-smoke/
+
+      # ── the checker the test steps depend on ─────────────────────────────
+      - name: Self-test the trx verdict
+        # Two reasons the steps below cannot trust `dotnet test`'s exit code:
+        # a --filter matching nothing exits 0, and the Linux Avalonia test host
+        # exits 1 on NATIVE TEARDOWN after every test has passed (#752 — the
+        # deleted scripts/run-avalonia-tests-linux.sh existed for exactly
+        # that). assert-trx-green.sh is the verdict; prove its red paths before
+        # trusting it (#1527).
+        run: scripts/assert-trx-green.sh --self-test
+
+      # ── the platform-agnostic suites, on Linux ───────────────────────────
+      # No corpora, no reference tools. Anything needing either carries its own
+      # declared Assert.Skip reason (#1172) and reports as skipped — there is
+      # no hand-maintained exclusion list here, because a list is how #1527
+      # happened.
+      - name: Excise.Core.Tests
+        run: |
+          dotnet test Excise.Core.Tests --no-build -c Debug \
+            --results-directory "$TRX_DIR" \
+            --logger "trx;LogFileName=core.trx" \
+            --logger "console;verbosity=normal"
+
+      - name: Excise.Cli.Tests
+        run: |
+          dotnet test Excise.Cli.Tests --no-build -c Debug \
+            --results-directory "$TRX_DIR" \
+            --logger "trx;LogFileName=cli.trx" \
+            --logger "console;verbosity=normal"
+
+      - name: Excise.Avalonia.Tests (headless, xvfb)
+        # `|| true` then the trx verdict: see the self-test step's comment. A
+        # genuinely failing test still reds the next step — the tolerance is
+        # for the shutdown segfault only, and the trx has to positively confirm
+        # passes to earn it.
+        run: |
+          xvfb-run -a dotnet test Excise.Avalonia.Tests --no-build -c Debug \
+            --results-directory "$TRX_DIR" \
+            --logger "trx;LogFileName=avalonia.trx" \
+            --logger "console;verbosity=normal" || true
+
+      - name: Verify Core/Cli/Avalonia actually ran
+        run: |
+          scripts/assert-trx-green.sh \
+            "$TRX_DIR/core.trx" "$TRX_DIR/cli.trx" "$TRX_DIR/avalonia.trx" \
+            --min-passed 1000
+
+      # ── the Linux-specific behaviours ────────────────────────────────────
+      - name: No Microsoft fonts are installed
+        # The base-14 fallback claim in #1594 is only worth anything if the
+        # machine genuinely lacks Arial/Times New Roman/Courier New. Assert the
+        # precondition instead of assuming it: if a future runner image ships
+        # the msttcorefonts, the font step below silently stops testing
+        # fallback and nothing would say so.
+        run: |
+          set -uo pipefail
+          fc-list | sed -n '1,20p'
+          echo "--- looking for Microsoft core fonts ---"
+          if fc-list | grep -Eiq ':[^:]*(Arial|Times New Roman|Courier New)'; then
+            echo "Microsoft core fonts ARE installed on this image — the base-14"
+            echo "fallback step below is no longer testing fallback. Fix the step"
+            echo "or the image, do not delete this check."
+            exit 1
+          fi
+          echo "none present: base-14 names must resolve through fallback"
+
+      - name: Base-14 font resolution with no Microsoft fonts
+        # Excise.Rendering/Fonts/PdfFontResolver.cs maps the base-14 names onto
+        # whatever typefaces the host has. On macOS that is CoreText with
+        # Helvetica present; here it is fontconfig with neither Helvetica nor
+        # Arial, which is the case the dev box can never reach.
+        #
+        # Filtered to the font tests and explicitly away from the four
+        # environment-sensitive families (Differential needs mutool and friends,
+        # Corpus needs a gitignored corpus, Visual is a pixel baseline
+        # calibrated elsewhere, Benchmark is a timing threshold) — the same
+        # exclusion the deleted job used, and the reason this is not an oracle
+        # run.
+        run: |
+          xvfb-run -a dotnet test Excise.Rendering.Tests --no-build -c Debug \
+            --filter "FullyQualifiedName~Font&FullyQualifiedName!~Differential&FullyQualifiedName!~Corpus&FullyQualifiedName!~Visual&FullyQualifiedName!~Benchmark" \
+            --results-directory "$TRX_DIR" \
+            --logger "trx;LogFileName=linux-fonts.trx" \
+            --logger "console;verbosity=normal" || true
+
+      - name: Linux-specific tests (filtered Excise.App.Tests)
+        # Excise.App.Tests is SERIAL BY DESIGN (xunit parallelism races
+        # SkiaSharp's process-wide native font manager and crashes the host,
+        # #363) and ~17 minutes unfiltered, so this takes a filtered subset by
+        # fully-qualified class name:
+        #
+        #   MultiDocumentWindowTests      — the single-instance handoff (#1553).
+        #                                   SingleInstanceChannel uses
+        #                                   NamedPipeServerStream, which on
+        #                                   Linux IS a Unix domain socket under
+        #                                   the temp directory (hence the
+        #                                   ~100-byte name limit the pipe-name
+        #                                   test asserts). IsEnabled is false on
+        #                                   macOS by design, so this is the
+        #                                   first real exercise of the channel
+        #                                   anywhere.
+        #   StartupDocumentResolverTests  — what a file manager hands us on the
+        #   StartupActivationWorkflowTests  command line, and what the app does
+        #                                   with it.
+        run: |
+          xvfb-run -a dotnet test Excise.App.Tests --no-build -c Debug \
+            --filter "FullyQualifiedName~Excise.App.Tests.UI.MultiDocumentWindowTests|FullyQualifiedName~Excise.App.Tests.Unit.StartupDocumentResolverTests|FullyQualifiedName~Excise.App.Tests.UI.StartupActivationWorkflowTests" \
+            --results-directory "$TRX_DIR" \
+            --logger "trx;LogFileName=linux-platform.trx" \
+            --logger "console;verbosity=normal" \
+            --blame-hang-timeout 180000 || true
+
+      - name: Verify the Linux-specific tests actually ran
+        # Floors, not exact counts: a rename that empties either filter has to
+        # show up as a red rather than as a silent 0-test pass. Raise them once
+        # the first real run reports true counts; never lower them.
+        run: |
+          scripts/assert-trx-green.sh "$TRX_DIR/linux-fonts.trx" --min-passed 50
+          scripts/assert-trx-green.sh "$TRX_DIR/linux-platform.trx" --min-passed 20
+
+      - name: Skips carry a reason (#1172, on this runner's trx)
+        # #1594's acceptance: every test this runner cannot run must SAY why.
+        # The gate reads the trx and fails any NotExecuted result with an empty
+        # reason, and re-checks absence claims built by
+        # TestRepoLayout.AbsenceReason by test -e'ing the paths they name — so
+        # a skip that claims a corpus is missing while it is present is a red
+        # (#1527). Reuses the unfiltered Core run's trx rather than running the
+        # suite a second time.
+        run: scripts/check-skip-budget.sh Excise.Core.Tests/Excise.Core.Tests.csproj --trx "$TRX_DIR/core.trx"
+
+      # ── headless app smoke ──────────────────────────────────────────────
+      - name: GUI smoke (launch, open a PDF, quit)
+        # #1497's in-process scenario runner under xvfb. The `null` scenario is
+        # mark → waitIdle → idle 10s and the runner quits the app itself; a
+        # TRACKED fixture PDF is passed on the command line, so this also
+        # exercises the startup-activation ("open with") path for real.
+        # SAMPLE_MS=250 because no outer sampler is attached and the default
+        # 20s-per-boundary wait would be the whole runtime.
+        #
+        # Deliberately NOT downloading the smoke corpus: every
+        # document-opening scenario in tests/gui-perf-scenarios.json points at
+        # the gitignored test-pdfs/smoke/, fetched from live .gov URLs. An
+        # advisory launch check must not turn URL rot into a red that looks
+        # like a code defect.
+        #
+        # HOME is redirected so the app's settings and caches (window.json,
+        # thumbnail cache) start cold and stay out of the runner's real home —
+        # the same isolation scripts/run-gui-perf-scenarios.sh uses, and the
+        # reason a view-mode preference cannot leak into the measurement.
+        #
+        # Blocking, not continue-on-error: the job is already advisory, and a
+        # smoke test that cannot fail is not a smoke test (#1527).
+        run: |
+          set -uo pipefail
+          OUT="$GITHUB_WORKSPACE/artifacts/gui-smoke"
+          APP_HOME="$GITHUB_WORKSPACE/artifacts/gui-smoke-home"
+          mkdir -p "$OUT" "$APP_HOME"
+          EXE=Excise.App/bin/Debug/net10.0/Excise.App
+          test -x "$EXE" || { echo "no Debug build of the app at $EXE"; exit 1; }
+          PDF=Excise.App.Tests/Resources/sample-pdfs/birth-certificate-request-scrambled.pdf
+          set +e
+          HOME="$APP_HOME" \
+          EXCISE_PERF_SCENARIO=tests/gui-perf-scenarios.json \
+          EXCISE_PERF_SCENARIO_ID=null \
+          EXCISE_PERF_SCENARIO_OUT="$OUT" \
+          EXCISE_PERF_SCENARIO_SAMPLE_MS=250 \
+            timeout 180 xvfb-run -a "$EXE" "$PDF" > "$OUT/app.log" 2>&1
+          RC=$?
+          set -e
+          echo "--- app log ---"; cat "$OUT/app.log" || true
+          echo "--- exit $RC ---"
+          test -f "$OUT/scenario-result.json" || {
+            echo "no scenario-result.json — the app died before the runner finished"; exit 1; }
+          cat "$OUT/scenario-result.json"
+          # `|| true` on the extraction only: an absent key leaves the variable
+          # empty and the defaults below (steps 0, failures 1) fail the step —
+          # never the other way round.
+          STEPS=$(grep -o '"steps": *[0-9]*' "$OUT/scenario-result.json" | grep -o '[0-9][0-9]*' || true)
+          FAILURES=$(grep -o '"failures": *[0-9]*' "$OUT/scenario-result.json" | grep -o '[0-9][0-9]*' || true)
+          [ "${STEPS:-0}" -ge 1 ] || { echo "the scenario ran no steps"; exit 1; }
+          [ "${FAILURES:-1}" -eq 0 ] || { echo "$FAILURES scenario step(s) failed"; exit 1; }
+          [ "$RC" -eq 0 ] || { echo "the app exited $RC after a clean scenario"; exit 1; }
+
+      # ── artifacts ────────────────────────────────────────────────────────
+      - name: Upload trx and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-test-results
+          path: |
+            artifacts/trx/
+            artifacts/gui-smoke/
+            artifacts/cli-smoke/
+            **/TestResults/
+          retention-days: 14
+          if-no-files-found: warn
