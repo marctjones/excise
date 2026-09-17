@@ -2326,6 +2326,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OutlineNodes.Clear();
         this.RaisePropertyChanged(nameof(HasOutline));
         RefreshAttachments(); // no document loaded -> empties the list
+        ClearXfaNotice(); // #1547
         RefreshHiddenTextHighlights(); // no document loaded -> cancels + empties
         OperationStatus = string.Empty; // e.g. a stale "Indexing for search… 3/10"
 

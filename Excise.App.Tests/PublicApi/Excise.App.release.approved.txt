@@ -736,6 +736,7 @@ namespace Excise.App.ViewModels
         public bool IsThumbnailsSidebarVisible { get; set; }
         public bool IsTypewriterMode { get; set; }
         public bool IsTypewriterStyleInspectorVisible { get; }
+        public bool IsXfaNoticeOpen { get; set; }
         public ReactiveUI.ReactiveCommand<Excise.App.Models.OutlineNode, System.Reactive.Unit> JumpToOutlineCommand { get; }
         public ReactiveUI.ReactiveCommand<Excise.App.Models.SearchMatch, System.Reactive.Unit>? JumpToSearchMatchCommand { get; }
         public Excise.App.ViewModels.DocumentOpenTiming? LastDocumentOpenTiming { get; }
@@ -843,6 +844,10 @@ namespace Excise.App.ViewModels
         public double ViewportHeight { get; set; }
         public double ViewportWidth { get; set; }
         public Excise.Core.Text.WhitespaceMode WhitespaceMode { get; set; }
+        public Excise.Core.Document.PdfXfaFormKind XfaFormKind { get; }
+        public string XfaNoticeMessage { get; }
+        public FluentAvalonia.UI.Controls.FAInfoBarSeverity XfaNoticeSeverity { get; }
+        public string XfaNoticeTitle { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ZoomActualSizeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ZoomFitPageCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ZoomFitWidthCommand { get; }

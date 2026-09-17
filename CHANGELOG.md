@@ -186,6 +186,15 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   is still scanned.
 
 ### Added
+- **XFA forms are detected and explained on open** (#1547, phase 1). A
+  dynamic XFA form (catalog `/NeedsRendering true`, or no AcroForm field with a
+  widget) now opens with a warning banner saying excise cannot display it yet
+  and to use Adobe Acrobat Reader or Firefox; a static XFA form gets an
+  informational banner saying excise fills the standard form fields. The
+  banner stays until closed or the document changes. `excise info` prints the
+  classification and `info --json` adds `"xfaForm": "none" | "static" |
+  "dynamic"`. Detection is `PdfDocument.DetectXfaForm()` in Excise.Core.
+  excise still does not render or fill XFA.
 - **Safe-redacted-copy refusal for unresolved `/Redact` annotations** (#1430)
   — the `redactionReviewDrafts.safeRedactedCopy` product-policy rule was
   unimplemented, so excise would produce output treated as safely redacted

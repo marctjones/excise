@@ -109,6 +109,7 @@ public partial class MainWindowViewModel
         ResetThumbnailSession();
         OutlineNodes.Clear();
         this.RaisePropertyChanged(nameof(HasOutline));
+        ClearXfaNotice();
 
         PdfCoreDocument = null;
 
@@ -259,6 +260,9 @@ public partial class MainWindowViewModel
                     : $"{Attachments.Count} embedded files travel with this PDF. Open Tools ▸ Attachments to review them.");
         }
 
+        // #1547: a dynamic XFA form shows only a placeholder page here; say why.
+        RefreshXfaNotice();
+
         await RestoreDocumentStateAsync(filePath);
 
         if (OperationStatus == "Opening PDF…")
@@ -303,6 +307,7 @@ public partial class MainWindowViewModel
         PdfCoreDocument = null;
         ResetThumbnailSession();
         OutlineNodes.Clear();
+        ClearXfaNotice();
         OperationStatus = string.Empty;
 
         this.RaisePropertyChanged(nameof(DocumentName));

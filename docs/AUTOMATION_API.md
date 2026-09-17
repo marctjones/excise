@@ -28,6 +28,10 @@ excise batch workflow.json --json --progress --output report.json
 
 `--password` is supported by `info`, `text`, `render`, `redact`, and batch
 workflow document-open steps.
+
+`info --json` includes `xfaForm`: `none`, `static` (XFA data alongside usable
+AcroForm fields, which excise fills), or `dynamic` (a form only an XFA engine
+can display; excise shows its placeholder page). See #1547.
 Password values are accepted as inputs but are not written to JSON reports
 or progress events.
 
