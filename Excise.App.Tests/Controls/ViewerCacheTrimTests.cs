@@ -130,6 +130,10 @@ public class ViewerCacheTrimTests
     {
         var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(
             ContinuousImageSampleReleaseTests.ImageDocument(pageCount: 4));
+        // Render-ahead (#1564) would pin page 2's samples too, and the trim
+        // would release them as well; RenderAheadTests covers that. This test
+        // counts the streams of one planted out-of-band page exactly.
+        viewer.RenderAheadEnabled = false;
         try
         {
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);

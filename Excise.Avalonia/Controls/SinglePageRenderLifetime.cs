@@ -91,6 +91,27 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
     }
 
     /// <summary>
+    /// Whether (page, dpi) is cached, without counting a hit or miss and
+    /// without moving the entry in LRU order. Render-ahead (#1564) asks this
+    /// to decide whether a neighbour needs rendering; that question is not a
+    /// display request and must not promote the entry.
+    /// </summary>
+    internal bool Contains(int pageNumber, int dpi)
+    {
+        lock (_gate)
+        {
+            if (_disposed)
+                return false;
+            foreach (var entry in _cache)
+            {
+                if (entry.PageNumber == pageNumber && entry.Dpi == dpi)
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Transfers ownership of <paramref name="bitmap"/> to the cache. Replaced
     /// and evicted entries are disposed immediately.
     /// </summary>

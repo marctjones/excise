@@ -91,30 +91,38 @@ public partial class PdfViewerControl
     }
 
     /// <summary>
-    /// Evict least-recently-used tiles until the cache fits
+    /// Evict tiles until the cache fits
     /// <see cref="EffectiveContinuousCacheByteBudget"/>, skipping every tile of
-    /// the current bands. Unlike <see cref="TrimContinuousTiles"/> this stops as
-    /// soon as the budget is met. Returns how many tiles were disposed.
+    /// the current bands: render-ahead tiles first (#1564), then
+    /// least-recently-used ones. Unlike <see cref="TrimContinuousTiles"/> this
+    /// stops as soon as the budget is met. Returns how many tiles were disposed.
     /// </summary>
     internal int EnforceContinuousCacheBudget()
     {
         long budget = EffectiveContinuousCacheByteBudget;
         long resident = ContinuousCacheResidentBytes();
         int evicted = 0;
-        var node = _continuousCache.Last;
-        while (node != null && resident > budget && _continuousCache.Count > ContinuousCacheMinEntries)
+        for (int pass = 0; pass < 2; pass++)
         {
-            var previous = node.Previous;
-            if (!_continuousRequiredKeys.Contains(node.Value.Key))
+            bool lookAheadOnly = pass == 0;
+            var node = _continuousCache.Last;
+            while (node != null && resident > budget && _continuousCache.Count > ContinuousCacheMinEntries)
             {
-                var bitmap = node.Value.Bitmap;
-                // Sized before disposal: a disposed bitmap throws on PixelSize.
-                resident -= ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
-                _continuousCache.Remove(node);
-                bitmap.Dispose();
-                evicted++;
+                var previous = node.Previous;
+                var key = node.Value.Key;
+                if (!_continuousRequiredKeys.Contains(key)
+                    && (!lookAheadOnly || _continuousLookAheadTiles.Contains(key)))
+                {
+                    var bitmap = node.Value.Bitmap;
+                    // Sized before disposal: a disposed bitmap throws on PixelSize.
+                    resident -= ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
+                    _continuousCache.Remove(node);
+                    _continuousLookAheadTiles.Remove(key);
+                    bitmap.Dispose();
+                    evicted++;
+                }
+                node = previous;
             }
-            node = previous;
         }
         if (evicted > 0)
             RefreshContinuousByteMirrors();

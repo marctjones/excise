@@ -547,6 +547,7 @@ public partial class PdfViewerControl : UserControl
         // into controls that are no longer attached. Keep cached bitmaps alive:
         // the control may be reattached and its Image still owns that binding.
         _singlePageRenderLifetime.CancelRender();
+        CancelSinglePageLookAhead();
         IsLoading = false;
 
         // A detached viewer (e.g. a closed window during a test) must do NO more
@@ -568,6 +569,7 @@ public partial class PdfViewerControl : UserControl
         {
             _continuousItems.ContainerPrepared -= OnContinuousContainerPrepared;
             _continuousItems.ContainerClearing -= OnContinuousContainerClearing;
+            _continuousItems.LayoutUpdated -= OnContinuousItemsLayoutUpdated;
         }
 
         // Cancel in-flight grid-cell renders for the now-detached control and
@@ -738,6 +740,7 @@ public partial class PdfViewerControl : UserControl
             || change.Property == HighlightFormFieldsProperty)
         {
             InvalidateContinuousCache();
+            InvalidateSinglePageLookAhead();
             InvalidateVisual();
             // #1473: no hidden single-page render in continuous view; the switch
             // to single-page renders with the new annotation settings. The
@@ -1650,12 +1653,15 @@ public partial class PdfViewerControl : UserControl
 
         var doc = Document;
         var pageNumber = CurrentPage;
+        long requestSequence = ++_singlePageRequestSequence;
         var page = doc.GetPage(pageNumber);
         // Logical DPI drives layout and coordinate mapping (unchanged); the
         // raster is produced at the on-screen magnification (device-pixel-ratio ×
         // zoom) so text is crisp on HiDPI (#682) AND when zoomed in (#683),
-        // bounded by the single-page memory budget.
-        var logicalDpi = EffectiveSinglePageRenderDpi(page);
+        // bounded by the single-page memory budget. The plan is shared with
+        // render-ahead (#1564), so both produce the same bitmap under one key.
+        var spec = ComputeSinglePageRenderSpec(page);
+        var logicalDpi = spec.LogicalDpi;
         if (logicalDpi != _currentSinglePageRenderDpi)
         {
             // The display-scale correction depends on the logical DPI, which
@@ -1665,19 +1671,18 @@ public partial class PdfViewerControl : UserControl
             _currentSinglePageRenderDpi = logicalDpi;
             UpdateZoomTransform();
         }
-        var box = page.EffectiveCropBox;
-        var widthPt = page.Rotation is 90 or 270 ? box.Height : box.Width;
-        var heightPt = page.Rotation is 90 or 270 ? box.Width : box.Height;
-        double scale = ZoomLevel * EffectiveRenderScaling;
-        double maxScale = MaxSinglePageRenderScale(widthPt, heightPt, logicalDpi);
-        var (renderDpi, bitmapDpi) = SinglePageRenderPlan(logicalDpi, scale, maxScale);
+        var widthPt = spec.WidthPt;
+        var heightPt = spec.HeightPt;
+        double maxScale = spec.MaxScale;
+        var renderDpi = spec.DeviceDpi;
+        var bitmapDpi = spec.BitmapDpi;
         Trace($"SinglePageRender page={pageNumber} logicalDpi={logicalDpi} deviceDpi={renderDpi} " +
               $"bitmapDpi={bitmapDpi:F0} zoom={ZoomLevel:F3} dpr={EffectiveRenderScaling:F2} maxScale={maxScale:F2}");
-        // MaxSinglePagePreviewPixels is a DEVICE-pixel (memory) ceiling, so it is
-        // NOT scaled by the device-pixel-ratio: a normal page at device resolution
-        // stays far under it (crisp), while a very large page is still capped at
-        // the same memory bound (it simply doesn't gain the HiDPI sharpening).
-        long maxPixels = MaxSinglePagePreviewPixels;
+
+        // #1564: render-ahead may be rendering this very page. Wait for it
+        // rather than render it twice; any other look-ahead yields the CPU.
+        if (!await JoinOrCancelSinglePageLookAheadAsync(doc, pageNumber, renderDpi, requestSequence))
+            return;
 
         // Cache hit short-circuits the renderer entirely — this is the
         // common case for backwards-paging, undoing redactions, and
@@ -1708,6 +1713,7 @@ public partial class PdfViewerControl : UserControl
             }
             HasError = false;
             ErrorMessage = null;
+            ScheduleSinglePageLookAhead();
             return;
         }
 
@@ -1726,26 +1732,13 @@ public partial class PdfViewerControl : UserControl
             // sharp render runs, if nothing real is on screen yet.
             ShowSinglePagePlaceholder(pageNumber, widthPt, heightPt, logicalDpi);
 
-            // Captured on the UI thread — see the continuous path's note.
-            var showAnnotations = ShowAnnotations;
-            var showComments = ShowCommentAnnotations;
-            var showFields = ShowFieldAndLinkAnnotations;
-            var revealHidden = RevealHiddenAnnotations;
-            var highlightFields = HighlightFormFields;
             long renderStart = ViewerMetrics.SinglePageRenderStart();
+            // Built on the UI thread (it reads styled properties) — see the
+            // continuous path's note.
+            var options = SinglePageRenderOptions(renderDpi);
             var skBitmap = await Task.Run(() =>
             {
                 token.ThrowIfCancellationRequested();
-                var options = new Excise.Rendering.RenderOptions
-                {
-                    Dpi = renderDpi,
-                    MaxPixelCount = maxPixels,
-                    RenderAnnotations = showAnnotations,
-                    ShowCommentAnnotations = showComments,
-                    ShowFieldAndLinkAnnotations = showFields,
-                    RevealHiddenAnnotations = revealHidden,
-                    HighlightFormFields = highlightFields
-                };
                 return _renderer.RenderPage(page, options, token);
             }, token);
 
@@ -1768,7 +1761,7 @@ public partial class PdfViewerControl : UserControl
                 var bitmap = SkiaInterop.ToAvaloniaBitmap(skBitmap);
                 if (bitmap != null)
                 {
-                    var dip = SinglePageLayoutSize(widthPt, heightPt, logicalDpi);
+                    var dip = spec.LayoutSize;
                     Trace($"SinglePageRender page={pageNumber} RENDERED px={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dip={dip.Width:F0}x{dip.Height:F0}");
                     // Keep the bitmap still on screen: at a small
                     // SinglePageCacheCapacity it is the LRU tail this insert
@@ -1819,7 +1812,10 @@ public partial class PdfViewerControl : UserControl
             // Only the most-recent render should clear IsLoading; older
             // races would otherwise flicker the overlay back on.
             if (renderLease.IsCurrent)
+            {
                 IsLoading = false;
+                ScheduleSinglePageLookAhead();
+            }
         }
     }
 
@@ -1921,6 +1917,7 @@ public partial class PdfViewerControl : UserControl
     /// <summary>Drop the cached bitmaps — call when document changes or content edits invalidate prior renders.</summary>
     public void InvalidatePageCache()
     {
+        InvalidateSinglePageLookAhead();
         _singlePageRenderLifetime.InvalidateCache();
     }
 
