@@ -99,7 +99,7 @@
         <!-- Stage 4, hiding by priority, is the panel's own IsVisible handling. -->
     </Window.Styles>
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
 
         <!-- Menu Bar -->
         <Menu x:Name="MainMenuBar"
@@ -539,21 +539,6 @@
             </MenuItem>
         </Menu>
 
-        <StackPanel Grid.Row="1">
-            <!-- Toast Notification InfoBar -->
-            <ui:FAInfoBar x:Name="ToastInfoBar" IsOpen="False" IsClosable="True" Margin="0"/>
-
-            <!-- #1547: persistent XFA notice. Stays until closed or the
-                 document changes, because a dynamic XFA placeholder page
-                 stays on screen too. -->
-            <ui:FAInfoBar x:Name="XfaFormInfoBar"
-                          IsOpen="{Binding IsXfaNoticeOpen, Mode=TwoWay}"
-                          IsClosable="True"
-                          Severity="{Binding XfaNoticeSeverity}"
-                          Title="{Binding XfaNoticeTitle}"
-                          Message="{Binding XfaNoticeMessage}"
-                          Margin="0"/>
-        </StackPanel>
 
         <!-- Modern Title Bar Area -->
         <Grid Grid.Row="2" Height="40" Background="{DynamicResource ToolbarBackgroundBrush}"
@@ -1194,12 +1179,32 @@
           </StackPanel>
         </Border>
 
+        <!-- Notices sit between the toolbar/search bar and the document.
+             Row 1 used to hold them, above the custom title bar, where
+             ExtendClientAreaToDecorationsHint put them under the macOS
+             window buttons (found in the #1547 live check). -->
+        <StackPanel Grid.Row="5">
+            <!-- Toast Notification InfoBar -->
+            <ui:FAInfoBar x:Name="ToastInfoBar" IsOpen="False" IsClosable="True" Margin="0"/>
+
+            <!-- #1547: persistent XFA notice. Stays until closed or the
+                 document changes, because a dynamic XFA placeholder page
+                 stays on screen too. -->
+            <ui:FAInfoBar x:Name="XfaFormInfoBar"
+                          IsOpen="{Binding IsXfaNoticeOpen, Mode=TwoWay}"
+                          IsClosable="True"
+                          Severity="{Binding XfaNoticeSeverity}"
+                          Title="{Binding XfaNoticeTitle}"
+                          Message="{Binding XfaNoticeMessage}"
+                          Margin="0"/>
+        </StackPanel>
+
         <!-- Main Content Area. Auto/Auto on the sidebar columns lets them
              collapse to 0 width when their Border's IsVisible flips false,
              so toggling Show Thumbnails / Show Clipboard History gives the
              central pane the freed space rather than just blanking the
              column. -->
-        <Grid Grid.Row="5" ColumnDefinitions="Auto,*,Auto">
+        <Grid Grid.Row="6" ColumnDefinitions="Auto,*,Auto">
 
             <!-- Thumbnail Sidebar — split into Outline (top) + Thumbnails (bottom).
                  The outline pane only takes screen space when the document
@@ -1733,7 +1738,7 @@
         </Grid>
 
         <!-- Status Bar -->
-        <Border Grid.Row="6"
+        <Border Grid.Row="7"
                 Background="{DynamicResource SecondaryBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,1,0,0"
