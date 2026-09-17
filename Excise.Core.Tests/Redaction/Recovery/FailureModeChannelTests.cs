@@ -99,29 +99,42 @@ public class FailureModeChannelTests
         findings.Should().NotContain(f => f.Channel == RecoveryScanner.Channels.Attachment);
     }
 
-    // ── modes with NO channel: the gaps, demonstrated ───────────────────────
+    // ── newly closed, and the controls that keep them honest ────────────────
 
     [Fact]
-    public void Gap_InvisibleTextRenderMode3_IsNotReported()
+    public void InvisibleTextRenderMode3_IsRecovered()
     {
-        // #1607. Tr 3 text is fully extractable and never painted — how every
-        // OCR layer is written. ContentStreamWalker parses Tr and discards it,
-        // so no sink can tell this glyph from a visible one.
+        // #1607, now closed. Tr 3 text is fully extractable and never painted —
+        // how every OCR layer is written. The walker used to parse Tr and throw
+        // it away, so no sink could tell this glyph from a visible one.
         Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool is not on PATH");
 
-        var bytes = RecoveryFixtureBuilder.InvisibleText("INVISIBLE_SECRET");
-        MutoolTextOracle.ExtractAllPages(bytes).Should().Contain("INVISIBLE_SECRET",
+        var bytes = RecoveryFixtureBuilder.InvisibleText("INVISIBLESECRET");
+        MutoolTextOracle.ExtractAllPages(bytes).Should().Contain("INVISIBLESECRET",
             "the leak is real: an independent engine reads the invisible text");
 
         using var doc = PdfDocument.Open(bytes);
-        RecoveryScanner.Scan(doc).AllFindings.Should().NotContain(
-            f => f.Text != null && f.Text.Contains("INVISIBLE_SECRET"),
-            "KNOWN GAP #1607 — when this starts failing, the gap is closed: " +
-            "flip text-render-mode-3 to covered in tests/unredaction-failure-modes.json");
+        var finding = RecoveryScanner.Scan(doc).AllFindings.Single(
+            f => f.Text != null && f.Text.Contains("INVISIBLESECRET"));
+
+        finding.Confidence.Should().Be(RecoveryConfidence.Certain);
+        finding.Carrier.Should().Contain("render mode 3");
     }
 
     [Fact]
-    public void Gap_BoxDrawnByAnnotation_LeavesTheMarkLookingLikeItHeld()
+    public void VisibleText_IsNotReportedAsInvisible()
+    {
+        // The negative control for pairing D. Ordinary text is render mode 0,
+        // and a detector that flagged everything would pass the test above.
+        using var doc = PdfDocument.Open(
+            RecoveryFixtureBuilder.TextUnderBox("PUBLIC", drawBox: false));
+
+        RecoveryScanner.Scan(doc).AllFindings
+            .Should().NotContain(f => f.Carrier.Contains("invisible text"));
+    }
+
+    [Fact]
+    public void AnnotationDrawnBox_TextInsideTheMarkIsRecovered()
     {
         // #1606, and the dangerous direction. The mark IS detected (a dark
         // /Square annotation), so the report shows a redaction — and grades it
@@ -129,8 +142,8 @@ public class FailureModeChannelTests
         // A reader takes that row as "this redaction held".
         Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool is not on PATH");
 
-        var bytes = RecoveryFixtureBuilder.TextUnderSquareAnnotation("ANNOT_COVERED");
-        MutoolTextOracle.ExtractAllPages(bytes).Should().Contain("ANNOT_COVERED",
+        var bytes = RecoveryFixtureBuilder.TextUnderSquareAnnotation("ANNOTCOVERED");
+        MutoolTextOracle.ExtractAllPages(bytes).Should().Contain("ANNOTCOVERED",
             "the text is in the page content stream, untouched");
 
         using var doc = PdfDocument.Open(bytes);
@@ -138,10 +151,47 @@ public class FailureModeChannelTests
 
         report.Marks.Should().Contain(m => m.Mark.Kind == RedactionMarkKind.ShapeAnnotation,
             "the annotation IS recognised as a redaction mark");
-        report.AllFindings.Should().NotContain(
-            f => f.Text != null && f.Text.Contains("ANNOT_COVERED"),
-            "KNOWN GAP #1606 — the hidden-text detector walks the page content " +
-            "stream, and an annotation is not in it. When this starts failing, " +
-            "flip box-drawn-by-annotation to covered in the registry.");
+
+        // #1606, now closed. The hidden-text detector walks the page content
+        // stream and an annotation is not in it; the mark-region channel reads
+        // the page inside the mark instead.
+        var finding = report.AllFindings.Single(
+            f => f.Text != null && f.Text.Contains("ANNOTCOVERED"));
+        finding.Channel.Should().Be(RecoveryScanner.Channels.MarkRegion);
+        finding.Confidence.Should().Be(RecoveryConfidence.Certain);
+
+        // And the mark no longer reads as a redaction that held.
+        report.Marks.Single(m => m.Mark.Kind == RedactionMarkKind.ShapeAnnotation)
+            .Outcome.Should().NotBe(MarkRecoveryOutcome.NotRecovered);
+    }
+
+    [Fact]
+    public void UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered()
+    {
+        // The tier-A bench caught the registry claiming this mode covered on
+        // the strength of a test that only checked the MARK was detected. The
+        // text is what matters: §12.5.6.23 says the annotation marks a region
+        // intended for redaction, so text still inside one is material somebody
+        // meant to remove.
+        using var doc = PdfDocument.Open(
+            RecoveryFixtureBuilder.UnappliedRedactAnnotation("CONFIDENTIAL"));
+        var report = RecoveryScanner.Scan(doc);
+
+        var finding = report.AllFindings.Single(
+            f => f.Text != null && f.Text.Contains("CONFIDENTIAL"));
+        finding.Channel.Should().Be(RecoveryScanner.Channels.MarkRegion);
+        finding.Carrier.Should().Contain("never removed");
+    }
+
+    [Fact]
+    public void AContentStreamBox_IsNotDoubleReportedByTheMarkRegionChannel()
+    {
+        // The mark-region channel is restricted to ANNOTATION marks precisely
+        // so it does not duplicate every ordinary hidden-text finding.
+        using var doc = PdfDocument.Open(RecoveryFixtureBuilder.TextUnderBox("MANAFORT"));
+
+        RecoveryScanner.Scan(doc).AllFindings
+            .Where(f => f.Text != null && f.Text.Contains("MANAFORT"))
+            .Should().ContainSingle("a box in page content is the hidden-text channel's job alone");
     }
 }

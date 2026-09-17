@@ -33,10 +33,10 @@
       "id": "box-drawn-by-annotation",
       "description": "The covering box is a /Square or /Highlight ANNOTATION, not page content. The mark is detected; the text under it is not reported, because the hidden-text detector walks the page content stream and an annotation is not in it.",
       "producers": ["hand annotation in a viewer", "markup tools"],
-      "channel": "hidden-text",
-      "status": "gap",
-      "issue": 1606,
-      "note": "DANGEROUS DIRECTION: the mark appears in the report with outcome not-recovered while the text is trivially extractable. A false 'the redaction held'."
+      "channel": "mark-region",
+      "status": "covered",
+      "evidence": "FailureModeChannelTests.AnnotationDrawnBox_TextInsideTheMarkIsRecovered",
+      "note": "Closed by the mark-region channel (#1606), which reads the page inside an annotation-derived mark instead of watching draw order. Before it, the mark appeared with outcome not-recovered while the text was trivially extractable — a false 'the redaction held'."
     },
     {
       "id": "box-inside-form-xobject",
@@ -60,18 +60,19 @@
       "id": "text-render-mode-3",
       "description": "Text drawn with Tr 3 (invisible). Fully extractable, never painted. This is how every OCR layer is written.",
       "producers": ["ocrmypdf", "Acrobat OCR", "scanner software", "any searchable-image PDF"],
-      "channel": null,
-      "status": "gap",
-      "issue": 1607,
-      "note": "ContentStreamWalker parses Tr and DISCARDS it ('render mode itself was write-only state'), so no sink can see that a glyph is invisible. Needs the walker to carry render mode through to its sinks."
+      "channel": "hidden-text",
+      "status": "covered",
+      "evidence": "FailureModeChannelTests.InvisibleTextRenderMode3_IsRecovered",
+      "note": "Closed by #1607: ContentStreamWalker now tracks Tr through the q/Q text-state snapshot and carries it on WalkedGlyph and Letter, and HiddenTextDetector pairing D reports glyphs that paint nothing (modes 3 and 7). Before it, Tr was parsed and discarded as write-only state."
     },
     {
       "id": "redact-annotation-unapplied",
       "description": "A /Redact annotation marks an intention that was never applied; the text is untouched and the annotation says where to look.",
       "producers": ["Acrobat 'mark for redaction' without 'apply'"],
-      "channel": "hidden-text",
+      "channel": "mark-region",
       "status": "covered",
-      "evidence": "RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack"
+      "evidence": "FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
+      "note": "This row claimed covered on the strength of a test that only asserted the MARK was detected, not that the text came back — and the tier-A bench caught the overstatement. The mark-region channel makes the claim true."
     },
     {
       "id": "ocr-layer-left-in-place",

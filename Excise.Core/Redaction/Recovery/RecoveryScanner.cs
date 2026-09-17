@@ -37,6 +37,7 @@ public static class RecoveryScanner
         public const string Residue = "residue";
         public const string OcrDifferential = "ocr-differential";
         public const string PriorRevision = "prior-revision";
+        public const string MarkRegion = "mark-region";
         public const string Thumbnail = "thumbnail";
         public const string Attachment = "attachment";
         public const string Xfa = "xfa";
@@ -53,9 +54,11 @@ public static class RecoveryScanner
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.AddMarks(RedactionMarkDetector.Detect(document));
+        var marks = RedactionMarkDetector.Detect(document);
+        builder.AddMarks(marks);
 
         AddHiddenText(document, builder, cancellationToken);
+        AddMarkRegionText(document, marks, builder, cancellationToken);
         AddCarriers(document, builder, cancellationToken);
         AddMarkedContent(document, builder, cancellationToken);
         AddCoveredContent(document, builder, cancellationToken);
@@ -83,6 +86,28 @@ public static class RecoveryScanner
                 // The detector knows exactly which fill covered this run; the
                 // hint keeps the link exact instead of re-deriving it.
                 hit.ObstructionBox);
+        }
+    }
+
+    /// <summary>
+    /// #1606 — text still inside an ANNOTATION-derived mark. The one channel
+    /// that reads the page instead of watching draw order, which is what makes
+    /// it the only one that can see an unapplied /Redact annotation or a box
+    /// drawn as an annotation.
+    /// </summary>
+    private static void AddMarkRegionText(
+        PdfDocument document,
+        IReadOnlyList<RedactionMark> marks,
+        RecoveryReportBuilder builder,
+        CancellationToken cancellationToken)
+    {
+        builder.ChannelRan(Channels.MarkRegion);
+        foreach (var hit in MarkRegionTextRecovery.Scan(document, marks))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            builder.AddFinding(RecoveredFinding.Certain(
+                Channels.MarkRegion, hit.Kind, hit.Text,
+                new RecoveryLocation(hit.PageNumber, hit.Rect, "glyph boxes inside the mark")));
         }
     }
 

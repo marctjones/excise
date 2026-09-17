@@ -57,7 +57,10 @@ internal readonly record struct WalkedGlyph(
     // TjElementIndex is which TJ array element the string was, or -1 for a plain
     // Tj/'/" show. Tracking only, computed on the one walk — no second parser.
     int OperandByteOffset,
-    int TjElementIndex);
+    int TjElementIndex,
+    // §9.3.6 render mode in force when this glyph was shown. 3 and 7 paint
+    // nothing, so a glyph carrying either is extractable and invisible (#1607).
+    int TextRenderMode);
 
 /// <summary>
 /// What a <see cref="ContentStreamWalker"/> consumer implements. Implemented by
@@ -233,6 +236,16 @@ internal sealed class ContentStreamWalker
     private double _wordSpacing;
     private double _horizontalScaling = 100;
     private double _textRise;
+
+    /// <summary>
+    /// §9.3.6 text rendering mode (Tr). 3 = INVISIBLE (neither filled nor
+    /// stroked), 7 = clip only; both paint nothing. Tracked because a sink
+    /// cannot otherwise tell a painted glyph from one that is fully extractable
+    /// and never appears on the page -- which is how every OCR layer is
+    /// written, and was the #1607 blind spot. Until then this operator was
+    /// parsed and discarded as "write-only state".
+    /// </summary>
+    private int _textRenderMode;
 
     // Text matrix
     private double _tm_a = 1, _tm_b, _tm_c, _tm_d = 1, _tm_e, _tm_f;
@@ -741,13 +754,14 @@ internal sealed class ContentStreamWalker
         double CharSpacing,
         double WordSpacing,
         double HorizontalScaling,
-        double TextRise);
+        double TextRise,
+        int TextRenderMode);
 
     private TextStateSnapshot CaptureTextState() => new(
         _fontSize, _fontName, _currentFont, _decoder, _is2ByteFont,
         _cidFontDict, _cidMetrics, _isVerticalWriting, _registeredEncodingCMap,
         _registeredCidToUnicode, _textLeading, _charSpacing, _wordSpacing,
-        _horizontalScaling, _textRise);
+        _horizontalScaling, _textRise, _textRenderMode);
 
     private void RestoreTextState(in TextStateSnapshot s)
     {
@@ -766,6 +780,7 @@ internal sealed class ContentStreamWalker
         _wordSpacing = s.WordSpacing;
         _horizontalScaling = s.HorizontalScaling;
         _textRise = s.TextRise;
+        _textRenderMode = s.TextRenderMode;
     }
 
     private bool ExecuteTextObjectOperator(string name)
@@ -828,8 +843,10 @@ internal sealed class ContentStreamWalker
                 return true;
 
             case "Tr":
-                // Recognized (must not fall to the unknown-operator path);
-                // render mode itself was write-only state — IDE0051/#911.
+                // §9.3.6. Carried to the sinks since #1607 -- an invisible
+                // glyph is extractable text that never appears on the page.
+                if (operands.Count >= 1)
+                    _textRenderMode = (int)GetNumber(operands[0]);
                 return true;
 
             case "Ts":
@@ -1169,7 +1186,7 @@ internal sealed class ContentStreamWalker
             x, y, cell, glyphWidth,
             _fontSize, _fontName,
             displacementThousandths, spacing, _isVerticalWriting, _isCidFont,
-            operandByteOffset, tjElementIndex);
+            operandByteOffset, tjElementIndex, _textRenderMode);
         sink.OnGlyph(in glyph);
 
         // Advance the text position (§9.4.4).

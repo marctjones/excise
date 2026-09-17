@@ -316,7 +316,52 @@ public static class HiddenTextDetector
                 }
         }
 
+        // Pairing D (#1607): INVISIBLE text — §9.3.6 render mode 3 (neither
+        // filled nor stroked) or 7 (clip only). Hidden by render mode, not by
+        // anything drawn over it, so pairings A-C are all blind to it: there is
+        // no obstruction to find and no contrast to measure. This is how every
+        // OCR layer in every searchable-image PDF is written, and equally how
+        // text can be planted on a page that appears to show nothing.
+        //
+        // Runs over the page's letters directly rather than the text entries
+        // above, because the mechanism has nothing to do with draw order.
+        AddInvisibleTextRecords(letters, pageNumber, records);
+
         return records;
+    }
+
+    /// <summary>
+    /// #1607 — runs of glyphs whose render mode paints nothing, grouped into
+    /// contiguous runs on a line so the report names words rather than letters.
+    /// </summary>
+    private static void AddInvisibleTextRecords(
+        IReadOnlyList<Text.Letter> letters, int pageNumber, List<HiddenTextRecord> records)
+    {
+        var invisible = letters.Where(l => l.IsInvisible).ToList();
+        if (invisible.Count == 0) return;
+
+        foreach (var line in invisible
+                     .GroupBy(l => Math.Round(l.GlyphRectangle.Bottom, 0))
+                     .OrderByDescending(g => g.Key))
+        {
+            var ordered = line.OrderBy(l => l.GlyphRectangle.Left).ToList();
+            var text = string.Concat(ordered.Select(l => l.Value));
+            if (string.IsNullOrWhiteSpace(text)) continue;
+
+            var box = new PdfRectangle(
+                ordered.Min(l => l.GlyphRectangle.Left),
+                ordered.Min(l => l.GlyphRectangle.Bottom),
+                ordered.Max(l => l.GlyphRectangle.Right),
+                ordered.Max(l => l.GlyphRectangle.Top));
+
+            var mode = ordered[0].TextRenderMode;
+            records.Add(new HiddenTextRecord(
+                pageNumber, text, box,
+                mode == 7
+                    ? "invisible text (render mode 7, clip only) — extractable, never painted"
+                    : "invisible text (render mode 3) — extractable, never painted; "
+                      + "the shape of an OCR layer"));
+        }
     }
 
     /// <summary>

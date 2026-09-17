@@ -135,6 +135,24 @@ public class Letter
     /// </summary>
     public PdfPoint EndBaseLine => new(StartX + Width, StartY);
 
+    /// <summary>
+    /// §9.3.6 text rendering mode in force when this glyph was shown. 0 (fill)
+    /// is the default and by far the commonest; <b>3 is INVISIBLE</b> and 7 is
+    /// clip-only — neither paints anything.
+    ///
+    /// <para>#1607: a glyph with mode 3 is fully extractable text that never
+    /// appears on the page. That is how every OCR layer in every
+    /// searchable-image PDF is written, and it is also how text can be hidden
+    /// without anything being drawn over it — a mechanism none of the
+    /// contrast/occlusion pairings model. Settable like
+    /// <see cref="MarkedContentId"/> because the walker assigns it after
+    /// construction.</para>
+    /// </summary>
+    public int TextRenderMode { get; internal set; }
+
+    /// <summary>True when this glyph paints nothing (§9.3.6 modes 3 and 7).</summary>
+    public bool IsInvisible => TextRenderMode == 3 || TextRenderMode == 7;
+
     public Letter(
         string value,
         PdfRectangle glyphRectangle,

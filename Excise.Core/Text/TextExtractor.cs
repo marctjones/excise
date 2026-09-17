@@ -583,6 +583,9 @@ public class TextExtractor
             // equivalent to _optionalContentHiddenStack.Any(hidden => hidden)
             // without the per-letter enumeration (#600).
             IsInHiddenOptionalContent = _hiddenOptionalContentDepth > 0,
+            // §9.3.6, #1607. Mode 3 and 7 paint nothing, so this letter is
+            // extractable text that never appeared on the page.
+            TextRenderMode = glyph.TextRenderMode,
             IsCidFont = glyph.IsCidFont,
             // #776: the innermost enclosing /MCID span, for the a11y bridge.
             MarkedContentId = _currentMcid,
