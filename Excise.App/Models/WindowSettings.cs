@@ -73,7 +73,7 @@ public class WindowSettings
     /// Persisted as a string; parsed back to
     /// <see cref="Excise.App.Models.DocumentOpenMode"/>.
     /// </summary>
-    public string DocumentOpenMode { get; set; } = "ReplaceCurrent";
+    public string DocumentOpenMode { get; set; } = "Automatic";
 
     /// <summary>
     /// Trim the viewer's caches when the OS reports memory pressure (#1478).

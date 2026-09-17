@@ -87,8 +87,10 @@ internal sealed class DocumentWorkspace
             session.ViewModel.RecentFiles = _sharedRecentFiles;
 
         session.ViewModel.SessionHost = session;
+        session.ViewModel.PropertyChanged += OnSessionPropertyChanged;
         _sessions.Add(session);
         _logger.LogInformation("Document session created ({Count} open)", _sessions.Count);
+        NotifyOpenDocumentsChanged();
         return session;
     }
 
@@ -117,7 +119,42 @@ internal sealed class DocumentWorkspace
 
         WindowCreated?.Invoke(window);
         window.Show();
+
+        // #1552: Avalonia disables native tabbing on every window; turn it back
+        // on, and honour "Prefer tabs when opening documents" for a window
+        // opened from another one. No-ops off macOS and in a headless host.
+        if (OperatingSystem.IsMacOS())
+        {
+            MacWindowTabbing.Prepare(window, _logger);
+            if (origin != null && !ReferenceEquals(origin, window))
+                MacWindowTabbing.JoinTabGroupIfPreferred(window, origin, _logger);
+        }
+
         return window;
+    }
+
+    /// <summary>
+    /// The open documents in opening order, as the Window menu lists them,
+    /// with <paramref name="current"/> marked.
+    /// </summary>
+    internal IReadOnlyList<OpenDocumentEntry> DescribeOpenDocuments(DocumentSession? current)
+    {
+        var entries = new List<OpenDocumentEntry>(_sessions.Count);
+        foreach (var session in _sessions)
+        {
+            if (session.IsDisposed)
+                continue;
+            var path = session.FilePath;
+            var title = path != null ? Path.GetFileName(path) : "Untitled";
+            entries.Add(new OpenDocumentEntry(
+                title,
+                path,
+                ReferenceEquals(session, current),
+                session.ViewModel.HasUnsavedDocumentChanges,
+                session));
+        }
+
+        return entries;
     }
 
     /// <summary>The session <paramref name="window"/> currently shows.</summary>
@@ -395,8 +432,34 @@ internal sealed class DocumentWorkspace
         _loading.Remove(session);
         if (ReferenceEquals(_activeSession, session))
             _activeSession = null;
+        session.ViewModel.PropertyChanged -= OnSessionPropertyChanged;
         session.Dispose();
         _logger.LogInformation("Document session closed ({Count} open)", _sessions.Count);
+        NotifyOpenDocumentsChanged();
+    }
+
+    // The Window menu shows every document's name and unsaved state, so any
+    // session's change of either is news to all of them. FileState does not
+    // raise its own changes; SaveButtonText and StatusBarText are what every
+    // dirty-state change raises by hand, so they stand in for it.
+    private void OnSessionPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(MainWindowViewModel.DocumentName):
+            case nameof(MainWindowViewModel.IsDocumentLoaded):
+            case nameof(MainWindowViewModel.SaveButtonText):
+            case nameof(MainWindowViewModel.StatusBarText):
+            case null:
+                NotifyOpenDocumentsChanged();
+                break;
+        }
+    }
+
+    private void NotifyOpenDocumentsChanged()
+    {
+        foreach (var session in _sessions.ToArray())
+            session.ViewModel.NotifyOpenDocumentsChanged();
     }
 
     private void ReassignDesktopMainWindow(Window closed)

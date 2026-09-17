@@ -72,6 +72,15 @@ internal sealed class DocumentSession : IDocumentSessionHost, IDisposable
 
     Task IDocumentSessionHost.RequestQuitAsync() => _workspace.RequestQuitAsync();
 
+    IReadOnlyList<OpenDocumentEntry> IDocumentSessionHost.OpenDocuments => _workspace.DescribeOpenDocuments(this);
+
+    void IDocumentSessionHost.ActivateDocument(OpenDocumentEntry entry)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+        if (entry.Key is DocumentSession session && !session.IsDisposed)
+            _workspace.Activate(session);
+    }
+
     void IDocumentSessionHost.ApplyPreferencesToOtherSessions(PreferencesViewModel preferences) =>
         _workspace.ApplyPreferencesToOtherSessions(this, preferences);
 

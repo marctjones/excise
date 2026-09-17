@@ -1151,17 +1151,22 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task ShowErrorDialogAsync(string title, string message)
     {
+        // #1551: a workspace session reports through its own dialog service,
+        // whose owner is the session's window rather than the desktop's first
+        // window. A stand-alone view model keeps the desktop lookup below:
+        // headless tests steer MainWindowResolver and must not get a modal.
+        if (SessionHost != null)
+        {
+            await _dialogService.ShowMessageAsync(title, message);
+            return;
+        }
+
         try
         {
-            // #1551: a workspace session's own window, not the desktop's first
-            // one. A stand-alone view model keeps the desktop lookup: headless
-            // tests steer MainWindowResolver and must not get a modal here.
-            var mainWindow = SessionHost != null
-                ? GetMainWindow()
-                : global::Avalonia.Application.Current?.ApplicationLifetime is
-                    global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                    ? desktop.MainWindow
-                    : null;
+            var mainWindow = global::Avalonia.Application.Current?.ApplicationLifetime is
+                global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                ? desktop.MainWindow
+                : null;
 
             if (mainWindow != null)
             {

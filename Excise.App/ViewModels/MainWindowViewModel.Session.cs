@@ -1,6 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
+using System.Reactive;
+using Avalonia.Automation;
+using Avalonia.Controls;
 using Excise.App.Models;
 using Excise.App.Workspace;
 using Microsoft.Extensions.Logging;
@@ -20,7 +25,9 @@ public partial class MainWindowViewModel
 {
     private NotifyCollectionChangedEventHandler? _recentFilesChangedHandler;
     private ObservableCollection<string>? _observedRecentFiles;
-    private DocumentOpenMode _documentOpenMode = DocumentOpenMode.ReplaceCurrent;
+    private DocumentOpenMode _documentOpenMode = DocumentOpenMode.Automatic;
+    private string? _openDocumentsSignature;
+    private ReactiveCommand<OpenDocumentEntry, Unit>? _activateOpenDocumentCommand;
     private bool _sessionReleased;
 
     /// <summary>
@@ -48,6 +55,79 @@ public partial class MainWindowViewModel
     {
         get => _documentOpenMode;
         set => this.RaiseAndSetIfChanged(ref _documentOpenMode, value);
+    }
+
+    /// <summary>
+    /// Every open document (#1553), in opening order, this one marked current.
+    /// Empty for a view model with no workspace.
+    /// </summary>
+    internal IReadOnlyList<OpenDocumentEntry> OpenDocuments =>
+        SessionHost?.OpenDocuments ?? Array.Empty<OpenDocumentEntry>();
+
+    /// <summary>Window ▸ &lt;document&gt;: bring that document's window forward.</summary>
+    internal ReactiveCommand<OpenDocumentEntry, Unit> ActivateOpenDocumentCommand =>
+        _activateOpenDocumentCommand ??= ReactiveCommand.Create<OpenDocumentEntry>(
+            entry => SessionHost?.ActivateDocument(entry));
+
+    /// <summary>
+    /// The in-window Window menu (Windows and Linux; macOS builds its native
+    /// menu from <see cref="OpenDocuments"/>). Built fresh on every read, like
+    /// <see cref="RecentFileMenuItems"/>.
+    /// </summary>
+    public ObservableCollection<MenuItem> OpenDocumentMenuItems
+    {
+        get
+        {
+            var items = new ObservableCollection<MenuItem>();
+            var documents = OpenDocuments;
+            if (documents.Count == 0)
+            {
+                items.Add(new MenuItem { Header = "No open documents", IsEnabled = false });
+                return items;
+            }
+
+            foreach (var document in documents)
+            {
+                var item = new MenuItem
+                {
+                    Header = OpenDocumentMenuHeader(document),
+                    Command = ActivateOpenDocumentCommand,
+                    CommandParameter = document,
+                    ToggleType = MenuItemToggleType.Radio,
+                    IsChecked = document.IsCurrent,
+                };
+                if (document.FilePath != null)
+                    ToolTip.SetTip(item, document.FilePath);
+                AutomationProperties.SetName(item, OpenDocumentAccessibleName(document));
+                items.Add(item);
+            }
+
+            return items;
+        }
+    }
+
+    /// <summary>The menu label: the file name, with a marker for unsaved edits.</summary>
+    internal static string OpenDocumentMenuHeader(OpenDocumentEntry document) =>
+        document.HasUnsavedChanges ? $"{document.Title} \u2022" : document.Title;
+
+    /// <summary>What a screen reader says for a Window menu entry.</summary>
+    internal static string OpenDocumentAccessibleName(OpenDocumentEntry document) =>
+        document.HasUnsavedChanges ? $"{document.Title}, unsaved changes" : document.Title;
+
+    /// <summary>
+    /// The workspace's list of documents, or a name or unsaved state in it,
+    /// changed. Raises only when what the menu shows actually differs, because
+    /// the workspace forwards every status-bar change (a link hover included).
+    /// </summary>
+    internal void NotifyOpenDocumentsChanged()
+    {
+        var signature = string.Join('\n', OpenDocuments.Select(d =>
+            $"{d.Title}|{d.FilePath}|{d.IsCurrent}|{d.HasUnsavedChanges}"));
+        if (signature == _openDocumentsSignature)
+            return;
+        _openDocumentsSignature = signature;
+        this.RaisePropertyChanged(nameof(OpenDocuments));
+        this.RaisePropertyChanged(nameof(OpenDocumentMenuItems));
     }
 
     /// <summary>Apply the persisted open mode; an unknown value keeps the default.</summary>

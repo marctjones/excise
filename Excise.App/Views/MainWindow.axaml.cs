@@ -444,7 +444,18 @@ public partial class MainWindow : Window
             {
                 UpdateRedactionOverlays();
             }
+
+            // #1552/#1553: the title names the document (and says when it has
+            // unsaved edits); dirty-state changes raise SaveButtonText.
+            if (args.PropertyName is null
+                or nameof(viewModel.DocumentName)
+                or nameof(viewModel.IsDocumentLoaded)
+                or nameof(viewModel.SaveButtonText))
+            {
+                UpdateTitle(viewModel);
+            }
         };
+        UpdateTitle(viewModel);
         viewModel.PropertyChanged += pageChanged;
         _viewModelUnsubscribers.Add(() => viewModel.PropertyChanged -= pageChanged);
 
@@ -475,6 +486,13 @@ public partial class MainWindow : Window
         // Only clear the provider if it is still this window's.
         if (viewModel.ViewerTileCacheResidentBytesProvider == (Func<long?>)TileCacheResidentBytes)
             viewModel.ViewerTileCacheResidentBytesProvider = null;
+    }
+
+    private void UpdateTitle(MainWindowViewModel viewModel)
+    {
+        Title = Excise.App.Workspace.DocumentWindowTitle.For(
+            viewModel.IsDocumentLoaded ? viewModel.DocumentName : null,
+            viewModel.HasUnsavedDocumentChanges);
     }
 
     private long? TileCacheResidentBytes() => _pdfViewerControl?.ContinuousTileCacheResidentBytes;

@@ -32,6 +32,31 @@
         <ScrollViewer Grid.Row="1" Padding="20">
             <StackPanel Spacing="20">
 
+                <!-- Documents (#1463) -->
+                <Border Background="{DynamicResource CardBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="20">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Documents"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Open Documents In" FontWeight="Medium"/>
+                        <ComboBox x:Name="DocumentOpenModeComboBox"
+                                  ItemsSource="{Binding DocumentOpenModeOptions}"
+                                  SelectedItem="{Binding SelectedDocumentOpenMode}"
+                                  HorizontalAlignment="Stretch"
+                                  AutomationProperties.Name="Open Documents In"
+                                  AutomationProperties.HelpText="Where a document opens when the window already shows one."/>
+                        <TextBlock Text="Automatic (default): a new window. On macOS, System Settings &gt; Desktop &amp; Dock &gt; Prefer tabs when opening documents decides whether it opens as a tab. NewWindow: always a new window. ReplaceCurrent: replace the document in the current window, as older versions did. A window with no document always takes the file, and a file that is already open is brought to the front."
+                                   FontSize="10"
+                                   Foreground="{DynamicResource TextTertiaryBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Performance Settings Section -->
                 <Border Background="{DynamicResource CardBrush}"
                         BorderBrush="{DynamicResource BorderBrush}"

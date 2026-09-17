@@ -74,6 +74,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, validates the signer certificate chain against the OS trust store (distinguishing valid-and-trusted from valid-but-untrusted, modified, and unverifiable signatures), and clearly reports remaining OS trust-chain validation limitations (revocation is not checked)
 - **Attachments** — Document ▸ Attachments… lists files embedded in the PDF (name, size, description), saves one to a location you choose, and strips them all; a warning appears on open when a document carries attachments, because they are invisible on the page and can hold a full copy of the document's data (ZUGFeRD/Factur-X). excise never opens or runs an attachment
 - Open a PDF by dragging it onto the window
+- **Several documents at once** — each opens in its own window, with its own undo history and unsaved-changes state; on macOS the windows use native tabs when System Settings asks for them, and Preferences ▸ Documents can switch back to replacing the current document
 - Prompts before closing, quitting, or opening another file with unsaved changes — and saves a **copy**, never overwriting your original
 - Bates numbering
 - CLI-first automation with stable JSON, batch workflows, progress NDJSON, and

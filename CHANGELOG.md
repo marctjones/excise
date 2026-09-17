@@ -186,6 +186,38 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   is still scanned.
 
 ### Added
+- **Several documents at once, in separate windows** (#1463, #1551–#1553).
+  Opening a PDF while a window already shows one now opens it in a new
+  window (File → Open, Open Recent, drag and drop, Finder or Explorer, and the
+  command line). File → Open accepts several files, and a drop opens every
+  PDF it carries. A window with no document takes the file itself, and a file
+  that is already open is brought to the front instead of being opened twice.
+  Preferences → Documents → "Open Documents In" chooses Automatic (the
+  default), NewWindow, or ReplaceCurrent (the old single-document behaviour,
+  with its unsaved-changes prompt).
+  - **macOS:** document windows use native window tabbing. With System
+    Settings → Desktop & Dock → "Prefer tabs when opening documents" set to
+    Always, a new document opens as a tab of the current window. The Window
+    menu has Show Previous/Next Tab, Move Tab to New Window, Merge All
+    Windows, Show or Hide Tab Bar, and the list of open documents.
+  - **Windows and Linux:** a Window menu lists the open documents, and
+    opening a PDF from Explorer or a file manager while excise runs hands it to
+    the running process instead of starting a second one
+    (`EXCISE_SINGLE_INSTANCE=0` turns that off).
+  - Each window is one document session with its own undo history, search,
+    selection, redaction marks, unsaved-changes state, toasts and dialogs.
+    Close Document (⌘W / Ctrl+W) closes the window when another document is
+    open; the last window stays open and empty, as before. Quit asks about
+    every document with unsaved changes, in turn, and a Cancel keeps all of
+    them open. The window title names the document and says when it has
+    unsaved edits.
+  - Preferences are app-wide: a Preferences save applies to every open
+    window, so the redaction carrier policies and whole-word rule can never
+    differ between two windows. Recent files are one list for the whole
+    application.
+  - Memory: closing a window releases its document, its caches and its view
+    model. Each window's viewer keeps its own tile-cache budget
+    (Preferences → Performance), so N windows can hold N budgets.
 - **XFA forms are detected and explained on open** (#1547, phase 1). A
   dynamic XFA form (catalog `/NeedsRendering true`, or no AcroForm field with a
   widget) now opens with a warning banner saying excise cannot display it yet

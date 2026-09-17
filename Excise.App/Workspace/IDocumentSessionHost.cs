@@ -45,9 +45,32 @@ internal interface IDocumentSessionHost
     Task RequestQuitAsync();
 
     /// <summary>
+    /// Every open document, in opening order, for the Window menu (#1553).
+    /// </summary>
+    IReadOnlyList<OpenDocumentEntry> OpenDocuments { get; }
+
+    /// <summary>Bring the document <paramref name="entry"/> describes to the front.</summary>
+    void ActivateDocument(OpenDocumentEntry entry);
+
+    /// <summary>
     /// Apply a saved Preferences dialog to every OTHER session. Preferences
     /// are app-wide; the redaction policies among them must never differ
     /// between two open windows.
     /// </summary>
     void ApplyPreferencesToOtherSessions(PreferencesViewModel preferences);
 }
+
+/// <summary>
+/// One open document as the Window menu shows it (#1553).
+/// </summary>
+/// <param name="Title">The file name, or "Untitled" for an empty window.</param>
+/// <param name="FilePath">The full path, or null for an empty window.</param>
+/// <param name="IsCurrent">True for the session asking.</param>
+/// <param name="HasUnsavedChanges">True when the document has unsaved edits.</param>
+/// <param name="Key">Identifies the session to <see cref="IDocumentSessionHost.ActivateDocument"/>.</param>
+internal sealed record OpenDocumentEntry(
+    string Title,
+    string? FilePath,
+    bool IsCurrent,
+    bool HasUnsavedChanges,
+    object Key);

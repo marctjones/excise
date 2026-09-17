@@ -18,9 +18,9 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
     }
 
     /// <summary>
-    /// #1551: a document session's dialogs are owned by that session's window.
-    /// <paramref name="ownerResolver"/> is the session's
-    /// <see cref="Host.IWindowHost"/>; null falls back to the desktop main window.
+    /// #1551: a document session's dialogs are owned by that session's window,
+    /// as <paramref name="windowHost"/> resolves it. With no host, or no window
+    /// yet, the desktop main window is the owner, as before.
     /// </summary>
     internal AvaloniaUserDialogService(ILogger<AvaloniaUserDialogService> logger, Host.IWindowHost? windowHost)
         : this(logger)

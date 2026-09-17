@@ -527,6 +527,10 @@
                           access:CommandAccessibility.CommandId="view.toggleClipboardHistory"/>
             </MenuItem>
 
+            <!-- WINDOW MENU (#1553): every open document; the view model builds
+                 the entries (macOS builds its native Window menu instead). -->
+            <MenuItem Header="_Window" Name="WindowMenu" ItemsSource="{Binding OpenDocumentMenuItems}"/>
+
             <!-- HELP MENU -->
             <MenuItem Header="_Help">
                 <MenuItem Header="_Keyboard Shortcuts" Command="{Binding ShowShortcutsCommand}" InputGesture="F1"

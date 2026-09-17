@@ -81,6 +81,7 @@ public partial class MainWindowViewModel
         settings.LinkUriCarrierPolicy = LinkUriCarrierPolicy.ToString();
         settings.MetadataCarrierPolicy = MetadataCarrierPolicy.ToString();
         settings.PrintScaling = PrintScaling.ToString();
+        settings.DocumentOpenMode = DocumentOpenMode.ToString(); // #1463
         _performanceSettings.WriteTo(settings);
     }
 }

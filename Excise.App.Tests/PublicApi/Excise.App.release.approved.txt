@@ -769,6 +769,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveSelectedPagesEarlierCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveSelectedPagesLaterCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> NextPageCommand { get; }
+        public System.Collections.ObjectModel.ObservableCollection<Avalonia.Controls.MenuItem> OpenDocumentMenuItems { get; }
         public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> OpenExternalLinkCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> OpenFileCommand { get; }
         public string OperationStatus { get; set; }
@@ -992,6 +993,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CancelCommand { get; }
         public Excise.Core.Operations.CarrierScrubMode[] CarrierScrubModeOptions { get; }
         public bool DialogResult { get; }
+        public Excise.App.Models.DocumentOpenMode[] DocumentOpenModeOptions { get; }
         public int IdleTrimSeconds { get; set; }
         public string ManagedHeapText { get; }
         public int MaxRenderThreads { get; }
@@ -1009,6 +1011,7 @@ namespace Excise.App.ViewModels
         public int RenderThreads { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ResetToDefaultsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveCommand { get; }
+        public Excise.App.Models.DocumentOpenMode SelectedDocumentOpenMode { get; set; }
         public Excise.Core.Operations.CarrierScrubMode SelectedLinkUriCarrierPolicy { get; set; }
         public Excise.Core.Operations.CarrierScrubMode SelectedMetadataCarrierPolicy { get; set; }
         public Excise.App.Models.PerformancePreset SelectedPerformancePreset { get; set; }

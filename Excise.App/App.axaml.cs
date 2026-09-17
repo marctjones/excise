@@ -153,6 +153,17 @@ public partial class App : Application
             var mainWindow = workspace.ShowInNewWindow(session);
             desktop.MainWindow = mainWindow;
 
+            // #1553: documents a second launch hands over (Windows, Linux).
+            if (Workspace.SingleInstanceChannel.IsEnabled)
+            {
+                var channel = Workspace.SingleInstanceChannel.Server.TryStart(
+                    Workspace.SingleInstanceChannel.DefaultPipeName(),
+                    paths => Dispatcher.UIThread.Post(() => OpenPathsOnUiThread(vm, paths, logger)),
+                    logger);
+                if (channel != null)
+                    desktop.Exit += (_, _) => channel.Dispose();
+            }
+
             logger.LogInformation("Main window created successfully");
 
             // #1497: the performance-scenario runner drives a trim in process
