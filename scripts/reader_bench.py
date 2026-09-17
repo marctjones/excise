@@ -325,7 +325,7 @@ class RunFailed(Exception):
     pass
 
 
-def launch(app_id, app, doc_copy, run_dir, cfg, excise_app):
+def launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env=None):
     """Launch every app the same way: `open -n -F -a <bundle>`.
 
     Launching excise directly (Popen) made this script's own process tree
@@ -346,6 +346,8 @@ def launch(app_id, app, doc_copy, run_dir, cfg, excise_app):
             {"X": w["x"], "Y": w["y"], "Width": w["width"], "Height": w["height"], "IsMaximized": False}))
         log = str(run_dir / "app.log")
         args += ["-a", bundle, "--env", f"HOME={home}", "--stdout", log, "--stderr", log]
+        for k, v in (extra_env or {}).items():
+            args += ["--env", f"{k}={v}"]
         match = bundle + "/Contents/MacOS/Excise.App"
     else:
         args += ["-a", app["bundlePath"]]
@@ -411,7 +413,16 @@ def read_page(app_id, pid, run_dir, label, win_cfg):
     return ocr_page(png, region)
 
 
-def one_run(app_id, app, doc, repeat, out, cfg, excise_app):
+def tolerated_start(app_id, label, page):
+    """Preview reports the page occupying most of the view. Resizing its window
+    right after opening shifts the scroll position, and on Altona's short
+    landscape pages that makes page 2 the reported one (5 of 5 runs on
+    2026-09-16; Home still reads page 1 later in the same run). The document is
+    open and at its start, which is all verify-start is for."""
+    return app_id == "preview" and label == "verify-start" and page == 2
+
+
+def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
     run_dir = out / app_id / (doc["id"] if doc else "empty") / f"r{repeat}"
     run_dir.mkdir(parents=True, exist_ok=True)
     doc_copy = None
@@ -422,7 +433,7 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app):
 
     steps, failures = [], []
     park_pointer()
-    pid, before, t0 = launch(app_id, app, doc_copy, run_dir, cfg, excise_app)
+    pid, before, t0 = launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env)
     tracker = Tracker(app, pid, before, t0)
     sampler = threading.Thread(target=tracker.loop, args=(1.0,), daemon=True)
     sampler.start()
@@ -463,7 +474,7 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app):
 
     def verify(label, expect):
         page, evidence = read_page(app_id, pid, run_dir, label, cfg["window"])
-        ok = page == expect
+        ok = page == expect or tolerated_start(app_id, label, page)
         boundary(label, ok=ok, page=page, expect=expect,
                  note=None if ok else f"expected page {expect}, read {page!r} from {evidence[:80]!r}")
 
@@ -573,6 +584,9 @@ def summarize(out):
         row = rows.setdefault(key_, {"runs": 0, "failed": 0, "at": {}, "peakFp": [], "peakFpMain": [],
                                      "cpu": [], "idleCpu": [], "procCount": []})
         row["runs"] += 1
+        tolerated = {st["step"] for st in r["steps"]
+                     if not st["ok"] and tolerated_start(r["app"], st["step"], st.get("page"))}
+        r["failures"] = [f for f in r["failures"] if f not in tolerated]
         if r["failures"]:
             row["failed"] += 1
             continue
@@ -633,6 +647,11 @@ def summarize(out):
                                     "at": {lb: [list(x) for x in v] for lb, v in row["at"].items()}})
         lines.append("")
     fails = [(r["app"], r["doc"], r["repeat"], r["failures"]) for r in results if r["failures"]]
+    tolerated_runs = sum(1 for r in results for st in r["steps"]
+                         if not st["ok"] and tolerated_start(r["app"], st["step"], st.get("page")))
+    if tolerated_runs:
+        lines += [f"Note: {tolerated_runs} Preview start check(s) read page 2 after the window resize and were "
+                  "accepted (see tolerated_start).", ""]
     if fails:
         lines += ["## Failed runs (excluded from the medians)", ""]
         lines += [f"- {a} {d} r{k}: {'; '.join(f)}" for a, d, k, f in fails]
