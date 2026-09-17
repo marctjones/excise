@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Redaction.Recovery;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
 using Xunit;
@@ -61,6 +62,42 @@ public class UnredactionScorecardTests
     }
 
     [Fact]
+    public void ANegativeControlStratum_ScoresSpecificity_SoSilenceIsNotAMiss()
+    {
+        // #1616: `highlight-readable` is a yellow highlight over text that stays
+        // readable — nothing is redacted there. Recovering nothing is the right
+        // answer; recall would have scored it 0%, which is how correct behaviour
+        // came to be printed as total failure.
+        var quiet = UnredactionScorecard.Score(new[]
+        {
+            new Row("certain", "highlight-readable", "excise", false,
+                Polarity: UnredactionScorecard.Polarity.NegativeControl),
+            new Row("certain", "highlight-readable", "excise", false,
+                Polarity: UnredactionScorecard.Polarity.NegativeControl),
+        }).Single();
+
+        quiet.RecallPct.Should().Be(0, "nothing was recovered");
+        quiet.ScorePct.Should().Be(100, "and on a negative control that is the correct answer");
+        quiet.Metric.Should().Be("specificity");
+
+        // A false positive on the control must move the number DOWN, or the row
+        // cannot report a regression either.
+        var noisy = UnredactionScorecard.Score(new[]
+        {
+            new Row("certain", "highlight-readable", "excise", true,
+                Polarity: UnredactionScorecard.Polarity.NegativeControl),
+            new Row("certain", "highlight-readable", "excise", false,
+                Polarity: UnredactionScorecard.Polarity.NegativeControl),
+        }).Single();
+
+        noisy.ScorePct.Should().Be(50, "one of the two attempts recovered text that was never hidden");
+        UnredactionScorecard.Render(new[] { noisy },
+            new UnredactionScorecard.Coverage(new[] { "certain" }, new[] { "excise" }, Array.Empty<string>()))
+            .Should().Contain("negative control")
+            .And.NotContain("recall 1/2", "a control row must not be rendered as recall");
+    }
+
+    [Fact]
     public void NoReferenceForAStratum_IsReportedNotCountedAsAWin()
     {
         var grades = UnredactionScorecard.Score(new[] { new Row("residue", "B1", "excise", true) });
@@ -76,11 +113,17 @@ public class UnredactionScorecardTests
         Assert.SkipUnless(File.Exists(manifest),
             "constructed corpus absent [requires: corpus:redaction-synthetic]");
 
-        static string Class(string colour) => colour switch
+        // The generator builds `highlight-readable` as a NEGATIVE CONTROL — a
+        // yellow highlight over text that stays readable is not a redaction, so
+        // recovering nothing there is correct and recovering something is a
+        // false positive. Scored as recall it read 0/8, i.e. correct behaviour
+        // printed as total failure (#1616).
+        static (string Stratum, UnredactionScorecard.Polarity Polarity) Class(string colour) => colour switch
         {
-            "black-on-white" or "low-contrast" => "occluded",
-            "white-on-black" => "inverted-box",
-            _ => "highlight",
+            "black-on-white" or "low-contrast" => ("occluded", UnredactionScorecard.Polarity.Leak),
+            "white-on-black" => ("inverted-box", UnredactionScorecard.Polarity.Leak),
+            "highlight-readable" => ("highlight-readable", UnredactionScorecard.Polarity.NegativeControl),
+            _ => ("highlight", UnredactionScorecard.Polarity.Leak),
         };
 
         var xrayAvailable = XRayBadRedactionDetector.IsAvailable;
@@ -96,19 +139,25 @@ public class UnredactionScorecardTests
         foreach (var c in cases)
         {
             var path = Path.Combine(corpus, c.Id + ".pdf");
-            var stratum = Class(c.Colour);
+            var (stratum, polarity) = Class(c.Colour);
 
+            // Score what `excise unredact` ACTUALLY does — the whole recovery
+            // scan — not one of its channels. Probing HiddenTextDetector alone
+            // scored inverted-box at 0/8 while the shipped command recovers it
+            // as Certain (#1616): the tool understating itself, which buries a
+            // future regression under a number that was already zero.
             bool exciseGot;
             using (var doc = PdfDocument.Open(File.ReadAllBytes(path)))
-                exciseGot = HiddenTextDetector.Scan(doc)
-                    .Any(h => h.Text.Contains(c.Answer, StringComparison.OrdinalIgnoreCase));
-            rows.Add(new Row("certain", stratum, "excise", exciseGot));
+                exciseGot = RecoveryScanner.Scan(doc, TestContext.Current.CancellationToken).AllFindings
+                    .Any(f => f.Text != null && f.Text.Contains(c.Answer, StringComparison.OrdinalIgnoreCase));
+            rows.Add(new Row("certain", stratum, "excise", exciseGot, Polarity: polarity));
 
             if (!xrayAvailable) continue;
             var xr = XRayBadRedactionDetector.Inspect(path);
             if (xr == null) continue;
             rows.Add(new Row("certain", stratum, "xray",
-                xr.Any(b => b.Text.Contains(c.Answer, StringComparison.OrdinalIgnoreCase))));
+                xr.Any(b => b.Text.Contains(c.Answer, StringComparison.OrdinalIgnoreCase)),
+                Polarity: polarity));
         }
 
         // #1181: RESIDUE channel — excise's exact PDF metrics (±0.5pt) vs the

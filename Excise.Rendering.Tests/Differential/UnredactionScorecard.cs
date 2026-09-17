@@ -20,14 +20,44 @@ namespace Excise.Rendering.Tests.Differential;
 /// </summary>
 public static class UnredactionScorecard
 {
-    /// <summary>One recovery attempt: did <paramref name="Tool"/> recover the placed answer.</summary>
-    public sealed record Row(string Channel, string Stratum, string Tool, bool Recovered, double ResidualBits = 0);
+    /// <summary>
+    /// What a recovery on this stratum MEANS. A stratum built as a negative
+    /// control — text a producer never redacted, such as a coloured highlight
+    /// over readable text — is not a miss when nothing is recovered; it is a
+    /// miss when something IS. Folding both into one "recall" column reports
+    /// correct behaviour as 0% and hides a later regression behind a number
+    /// that was already zero (#1616).
+    /// </summary>
+    public enum Polarity
+    {
+        /// <summary>The answer is hidden here. Recovering it is the win.</summary>
+        Leak,
 
-    /// <summary>Per (channel, stratum, tool) recall.</summary>
+        /// <summary>Nothing is hidden here. Recovering something is a FALSE POSITIVE.</summary>
+        NegativeControl,
+    }
+
+    /// <summary>One recovery attempt: did <paramref name="Tool"/> recover the placed answer.</summary>
+    public sealed record Row(
+        string Channel, string Stratum, string Tool, bool Recovered,
+        double ResidualBits = 0, Polarity Polarity = Polarity.Leak);
+
+    /// <summary>
+    /// Per (channel, stratum, tool) score. <see cref="ScorePct"/> is recall on a
+    /// leak stratum and specificity on a negative control — in both cases
+    /// higher is better, which is what makes the comparison columns meaningful
+    /// across the two kinds.
+    /// </summary>
     public sealed record Grade(
-        string Channel, string Stratum, string Tool, int Recovered, int Total, double MedianResidualBits)
+        string Channel, string Stratum, string Tool, int Recovered, int Total, double MedianResidualBits,
+        Polarity Polarity = Polarity.Leak)
     {
         public double RecallPct => Total == 0 ? 0 : 100.0 * Recovered / Total;
+
+        /// <summary>Recovered, of those that should be (leak) or should not be (control).</summary>
+        public double ScorePct => Polarity == Polarity.NegativeControl ? 100.0 - RecallPct : RecallPct;
+
+        public string Metric => Polarity == Polarity.NegativeControl ? "specificity" : "recall";
     }
 
     /// <summary>What the scorecard did and did not see — never assume full coverage.</summary>
@@ -41,8 +71,15 @@ public static class UnredactionScorecard
             .Select(g =>
             {
                 var bits = g.Select(r => r.ResidualBits).OrderBy(b => b).ToList();
+                // A stratum is one kind or the other; mixing polarities within
+                // one would make the column unreadable, so the stricter reading
+                // wins and the disagreement is visible as a control row.
+                var polarity = g.Any(r => r.Polarity == Polarity.NegativeControl)
+                    ? Polarity.NegativeControl
+                    : Polarity.Leak;
                 return new Grade(g.Key.Channel, g.Key.Stratum, g.Key.Tool,
-                    g.Count(r => r.Recovered), g.Count(), bits.Count == 0 ? 0 : bits[bits.Count / 2]);
+                    g.Count(r => r.Recovered), g.Count(), bits.Count == 0 ? 0 : bits[bits.Count / 2],
+                    polarity);
             })
             .OrderBy(g => g.Channel).ThenBy(g => g.Stratum).ThenBy(g => g.Tool)
             .ToList();
@@ -63,11 +100,11 @@ public static class UnredactionScorecard
             if (excise == null) continue;
             var refs = byCS.Where(g => g.Tool != "excise").ToList();
             if (refs.Count == 0)
-                result.Add((byCS.Key.Channel, byCS.Key.Stratum, excise.RecallPct, double.NaN, "(none)"));
+                result.Add((byCS.Key.Channel, byCS.Key.Stratum, excise.ScorePct, double.NaN, "(none)"));
             else
             {
-                var best = refs.OrderByDescending(g => g.RecallPct).First();
-                result.Add((byCS.Key.Channel, byCS.Key.Stratum, excise.RecallPct, best.RecallPct, best.Tool));
+                var best = refs.OrderByDescending(g => g.ScorePct).First();
+                result.Add((byCS.Key.Channel, byCS.Key.Stratum, excise.ScorePct, best.ScorePct, best.Tool));
             }
         }
         return result;
@@ -83,7 +120,9 @@ public static class UnredactionScorecard
         sb.AppendLine();
         foreach (var g in grades)
             sb.AppendLine($"  {g.Channel,-8} {g.Stratum,-14} {g.Tool,-10} " +
-                $"recall {g.Recovered}/{g.Total} ({g.RecallPct,5:F1}%)" +
+                (g.Polarity == Polarity.NegativeControl
+                    ? $"specificity {g.Total - g.Recovered}/{g.Total} ({g.ScorePct,5:F1}%)  [negative control]"
+                    : $"recall {g.Recovered}/{g.Total} ({g.RecallPct,5:F1}%)") +
                 (g.MedianResidualBits > 0 ? $"  median {g.MedianResidualBits:F1} bits" : ""));
         sb.AppendLine();
         sb.AppendLine("── excise vs best reference ──");
