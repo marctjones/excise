@@ -175,6 +175,22 @@ public class AttachmentRedactionTests
     }
 
     [Fact]
+    public void AreaPassRemovals_AreReported_EvenWhenTheCopyItselfKeepsAttachments()
+    {
+        // A caller whose area pass used the default (remove) but whose copy
+        // options keep attachments must still be told what went.
+        using var doc = PdfDocument.Open(BuildAllRoutesPdf());
+
+        doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720));
+        var report = RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForAreas(
+            new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, new PdfRectangle(60, 690, 300, 720))) },
+            options: new RedactedCopySafetyOptions { ScrubAttachments = false }));
+
+        report.AttachmentResults.Should().HaveCount(6)
+            .And.OnlyContain(a => a.Disposition == AttachmentDisposition.Removed);
+    }
+
+    [Fact]
     public void RedactArea_BoolOverloadWithCarriersOff_KeepsAttachments()
     {
         using var doc = PdfDocument.Open(BuildAllRoutesPdf());

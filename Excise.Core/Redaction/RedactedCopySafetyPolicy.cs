@@ -137,12 +137,13 @@ public static class RedactedCopySafetyPolicy
             }
         }
 
+        // #1572: whatever an earlier area pass removed is on the ledger, and is
+        // reported whatever this copy's own attachment choice is — a removal
+        // the caller did not expect must still be named.
+        removedAttachments.AddRange(document.RedactionLedger.RemovedAttachments);
         if (options.ScrubAttachments)
         {
-            // #1572: every attachment, by every route — and the report names
-            // each one, including those the area redaction already removed
-            // (recorded on the ledger, since they are gone by now).
-            removedAttachments.AddRange(document.RedactionLedger.RemovedAttachments);
+            // Every attachment, by every route, each one named.
             try
             {
                 removedAttachments.AddRange(Excise.Core.Document.PdfAttachmentGraph.RemoveAll(document));
