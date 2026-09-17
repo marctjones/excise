@@ -57,6 +57,8 @@ Removal applies to **every** way content can land in the redaction area, not jus
 | **Form XObjects (`Do` → `/Form`)** | Flatten-then-redact (#355) | `FormXObjectFlattener` |
 | **Embedded files, every route** | Removed by default on every entry point; kept only on request, then redacted or reported (#1572) | `AttachmentCarrierScrubber` |
 | **XFA form (`/AcroForm /XFA`)** | Removed whole on any redaction (#1547, #1574) | `PdfXfaLayout.RemoveXfaFormForRedaction` |
+| **JavaScript, `/Launch`, `/SubmitForm`, `/ImportData`, `/GoToR`, `/GoToE`** | Removed whole by the output profile, found by walking the reachable graph (#1586, #1581) | `RedactionFeatureStripper` |
+| **`/PieceInfo`, page `/Thumb`, hidden-annotation `/AP`, OFF optional-content layers, `/Info` + XMP** | Removed whole by the output profile (#1586, #1583) | `RedactionFeatureStripper` |
 
 **Inline images (#354):** the parser now retains the binary data on
 `ContentOperator.InlineImageData` and `ContentStreamWriter` re-emits valid
@@ -77,6 +79,51 @@ by another page is left intact (its content legitimately remains there).
 > ⚠️ If you add a new way for content to reach a page (a new XObject kind, a
 > pattern, a soft mask), make sure the redaction passes reach into it too, or
 > it becomes a cover-don't-remove leak.
+
+### 5. WHEN A SCRUB CANNOT WORK, REMOVE — AND SAY SO (#1586)
+
+Some carriers cannot be made safe by cutting the term out, for structural
+reasons rather than unfinished work. The **output profile** removes those
+WHOLE, on every entry point, and every removal is in the report.
+
+| Carrier | Why a term scrub cannot work |
+|---|---|
+| JavaScript | can COMPUTE the string (`"Zan" + "zibar"`); no substring match finds it |
+| `/Launch` & friends | the external name IS the leak, and a stripped filename reveals its own length and shape |
+| `/PieceInfo` | a producer's private dictionary with no schema — nothing to parse |
+| page `/Thumb` | a rendered picture of the page BEFORE the redaction; nothing regenerates it |
+| OFF optional-content layers, hidden-annotation `/AP` | invisible to the reviewer, readable by every tool |
+| `/Info`, XMP | §14.3.3 and XMP both admit ARBITRARY keys/schemas, so a targeted scrub must know names a producer is free to invent |
+
+Three rules that are load-bearing, each from a measured defect:
+
+1. **Walk the reachable object graph; never enumerate locations.** The old
+   `ScrubJavaScript` knew about the document name tree, `/OpenAction` and the
+   catalog `/AA`. #1581 was four leaks in the places it did not know about,
+   including `/JS` stored as a **stream**. Prune the `/Next` chain of each
+   SURVIVING action too: a kept `/GoTo` whose `/Next` is a script still runs it.
+2. **Report every removal.** These happen with NO term match, so the report is
+   the only thing between a removal and "the tool mangled my document"
+   (`RedactionReport.Removals`). Maximum additionally reports
+   `AccessibilityAndInteractivityRemoved` — destroying accessibility silently
+   is the same class of failure as a carrier that silently keeps a term.
+3. **A removal a caller opted out of must not happen anyway.**
+   `RemoveHiddenLayerContent` is gated on `IncludeHiddenLayers`, because
+   deleting the layers a caller asked you not to touch is worse than either
+   answer alone. And removing a `/GoToE` action orphans the embedded file it
+   targets, so under `KeepAttachments` that filespec is re-anchored and
+   reported rather than silently lost.
+
+⚠️ **The engine reads the FLAGS, never `RedactionOptions.Profile`.** The enum is
+a label for the report. Anything that rebuilds `CarrierScrubPolicy` from
+`CarrierScrubPolicy.Default` silently undoes most of Maximum — two front ends
+did exactly that while #1586 was being wired.
+
+⚠️ **The covering box is `/Artifact`-marked content** (§14.8.2.2), and that is
+a security-adjacent FIX rather than polish: an untagged filled rectangle on a
+tagged page fails PDF/UA-1 clause 7.1, so every excise redaction of a tagged
+PDF produced a non-conformant file, silently, until #1586's veraPDF gate found
+it. Do not unwrap it.
 
 Not a limitation (corrected #1097): a Form XObject **cannot** live inside a
 compressed object stream. ISO 32000-1 §7.5.7 forbids stream objects in an

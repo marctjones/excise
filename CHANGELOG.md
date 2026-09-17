@@ -10,6 +10,80 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Changed
+- **Redaction output profiles: Standard is the new default everywhere, and
+  Maximum is an explicit choice** (#1586). Product decision by Marc Jones,
+  2026-09-17; it supersedes the "defaults were deliberately not flipped" note
+  for these carriers (#1169/#1187). Every path — GUI, `excise redact`, batch
+  `redaction.apply`, scripting, and the library's
+  `RedactText`/`RedactArea`/`RedactAreas` — now removes the hidden machinery a
+  term scrub cannot make safe, and REPORTS each removal:
+  - **all JavaScript** (the document name tree, `/OpenAction`, and
+    catalog/page/annotation/field `/A` and `/AA`, including `/JS` held as a
+    STREAM) and every **external-effect action** (`/Launch`, `/SubmitForm`,
+    `/ImportData`, `/GoToR`, `/GoToE`). Internal `/GoTo` and `/Named`
+    navigation is kept. Found by walking the reachable object graph, with the
+    `/Next` chain of each surviving action pruned — enumerating known
+    locations is what #1581 was.
+  - **`/PieceInfo`** (catalog, pages and form XObjects), **page `/Thumb`**
+    images (a picture of the page *before* the redaction, which nothing
+    regenerates), and the **appearance stream of any hidden annotation or
+    widget** (`/F` Hidden/NoView, or on an OFF layer).
+  - **content in optional-content groups that are OFF by default**, those
+    groups' definitions, and annotations on them. The most destructive Standard
+    step on a real document — a hidden layer is often a watermark — so every
+    removal is counted in the report. Gated on `IncludeHiddenLayers`: a caller
+    who asked not to reach into hidden layers does not get them deleted
+    instead.
+  - the document **`/Info` dictionary and XMP `/Metadata` packet, wholesale**,
+    keeping only the PDF/A and PDF/UA identification. This is what makes the
+    library, CLI and batch paths match the GUI safe copy, and it closes #1583's
+    custom-`/Info`-key leak by construction: §14.3.3 lets a producer use any
+    key, so a targeted scrub must know names it cannot know.
+  - Accessibility and navigation carriers are **KEPT** and term-scrubbed:
+    `/TU`, `/Alt`, `/ActualText`, `/E`, structure-element `/T`, field names,
+    bookmark titles and link targets.
+  - **Maximum** (`--profile maximum`, batch `profile: maximum`, Preferences ›
+    Redaction › Output Profile) adds: remove-whole on every kept carrier, and
+    strips bookmarks, link annotations, comments/markup and field names, and
+    flattens forms and annotations. The report, the CLI and the redacted-copy
+    dialog all say the output is **no longer accessible or interactive**.
+  - Opt out per removal with `RedactionOptions.RemoveScripts`,
+    `.RemoveExternalActions`, `.RemovePieceInfo`, `.RemoveThumbnails`,
+    `.RemoveHiddenLayerContent`, `.RemoveHiddenAnnotationAppearances` and
+    `.StripDocumentMetadata`. The engine reads only these flags;
+    `RedactionOptions.Profile` is a label for the report, so a hand-built option
+    set cannot misreport what ran.
+  - ⚠️ **Behaviour changes for existing callers.** A `RedactText` or
+    `RedactArea` call that used to keep `/Title`, `/Author`, the XMP packet,
+    every custom schema, all JavaScript, `/PieceInfo`, thumbnails and hidden
+    layers now loses them. `StripDocumentMetadata = false` restores the old
+    surgical metadata scrub.
+  - `RedactArea`/`RedactAreas` gained report-returning overloads
+    (`RedactAreaWithReport`, `RedactAreasWithReport`); the area path previously
+    had no return channel at all.
+- **PDF/UA identification survives the metadata strip** (#1586, extending
+  #1507). Measured with veraPDF 1.28 `-f ua1` on
+  `test-pdfs/pdfua/7.1-t01-pass-a.pdf`, which passes as shipped: removing the
+  catalog `/Metadata` fails clause 7.1 test 8; re-emitting `pdfuaid:part` alone
+  fails 7.1 test 9 (`dc:title` is required); `pdfuaid:part` plus a
+  **synthesised** `dc:title` passes. The identity-only packet now carries both
+  identifications and a fixed placeholder title, so no document-derived text
+  rides back in. This supersedes `PdfAIdentityXmp`'s "a PDF/UA claim is
+  deliberately NOT preserved" note, whose premise — that the strip deletes the
+  title — is no longer true.
+- **`PdfDocument.ScrubMetadata` now clears EVERY `/Info` key**, not the
+  §14.3.3 Table 349 list (#1583). A producer's `/CaseName (…)` survived the
+  call the API described as removing "all document-level metadata", and the
+  carrier-trap survey measured it leaking to qpdf afterwards. Use
+  `ScrubInfoKeys` to name what goes instead.
+- **The carrier-scrub 3-character floor applies to `Strip` and not to
+  `RemoveWhole`** (#1586). Stripping "of" out of every `/Alt` corrupts
+  unrelated values, which is what the floor is for; dropping the whole value is
+  destruction the caller chose, and it is Maximum's mode. Applying the floor
+  there left a 2-character term sitting in a carrier under the one profile
+  whose promise is that no carrier keeps it. `ScrubTerms` now reports the floor
+  per carrier instead of skipping the whole pass.
+
 - **Redacted output carries no attachments by default** (#1572). Product
   decision by Marc Jones, 2026-09-17. Before, only the GUI's redacted-copy flow
   removed attachments; `excise redact`, batch `redaction.apply`, scripting and
@@ -45,6 +119,36 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   and keep the AcroForm fields, which every non-XFA viewer already uses.
 
 ### Fixed
+- **The redaction covering box was untagged content** (#1586). A filled
+  rectangle appended to a TAGGED page is neither tagged as real content nor
+  marked as an artifact, so every excise redaction of a tagged PDF produced a
+  file that fails PDF/UA-1 clause 7.1 — silently, in the core feature, and no
+  existing test could see it. Found by #1586's new veraPDF accessibility gate on
+  its first run, while looking for a different defect. The box is now wrapped in
+  `/Artifact BMC … EMC` (§14.8.2.2), which is what it is: it carries no meaning,
+  and a screen reader announcing it would be reading the redaction rather than
+  the document.
+- **Redaction leaks in interactive carriers** (#1581), each confirmed with
+  qpdf's object dump after redaction and each now clean: a widget's `/AA /K`
+  JavaScript, a widget's `/AA /F` JavaScript held as a **stream**, a
+  non-terminal field's `/A` JavaScript, a `/Launch` action's file target, the
+  appearance stream of a widget flagged hidden, and a text field's **`/RV`**
+  rich value. `/RV` is the one the profile's removals do not cover: it needs no
+  `/V`, and the measured trap put the widget at `[72 600 272 620]` while the
+  term was drawn at y 680, so no match box ever overlapped it — `/RV` therefore
+  joins `/V` and `/DV` in the **document-level** field scrub. mutool *draws*
+  `/RV`, so the redacted name was still on the page in another reader, not only
+  in the bytes.
+- **Redaction leaks in document-level carriers** (#1583): custom `/Info` keys,
+  structure-element `/T`, and `/PieceInfo` private data. Structure-element text
+  carriers are now their own list (`/ActualText`, `/Alt`, `/E`, `/T`), kept
+  separate from the marked-content property-list carriers, which have no title.
+- **`KeepAttachments` silently lost a file to the action strip** (#1586).
+  Removing a `/GoToE` action drops the only reference to the embedded file it
+  targets, so a caller who explicitly asked to keep attachments got one fewer
+  with nothing saying which or why (6 files → 5 on the all-routes fixture).
+  Such a file specification is now re-anchored on the catalog `/AF` and
+  reported.
 - **Closing a document after an idle trim kept the whole document in memory**
   (#1564, #1543). A cache trim — the idle trim, a window switch or OS
   pressure — recorded the open document in render-ahead's single-page plan,

@@ -48,7 +48,8 @@ public class RedactProfileCommandTests
         try
         {
             var result = RedactCommandHandler.Execute(new RedactCommandRequest(
-                inputPath, outputPath, token));
+                inputPath, outputPath, token),
+                cancellationToken: TestContext.Current.CancellationToken);
 
             result.AccessibilityRemoved.Should().BeFalse(
                 "Standard keeps the accessibility and navigation carriers");
@@ -70,7 +71,8 @@ public class RedactProfileCommandTests
         {
             var result = RedactCommandHandler.Execute(new RedactCommandRequest(
                 inputPath, outputPath, token,
-                Profile: RedactionProfile.Maximum));
+                Profile: RedactionProfile.Maximum),
+                cancellationToken: TestContext.Current.CancellationToken);
 
             result.AccessibilityRemoved.Should().BeTrue(
                 "the CLI must be able to PRINT the warning, so the flag has to reach it");
@@ -95,7 +97,8 @@ public class RedactProfileCommandTests
         {
             RedactCommandHandler.Execute(new RedactCommandRequest(
                 inputPath, outputPath, token,
-                Profile: RedactionProfile.Maximum));
+                Profile: RedactionProfile.Maximum),
+                cancellationToken: TestContext.Current.CancellationToken);
 
             var saved = File.ReadAllBytes(outputPath);
             Excise.TestSupport.SavedPdfLeakScanner.FindTerm(saved, token)

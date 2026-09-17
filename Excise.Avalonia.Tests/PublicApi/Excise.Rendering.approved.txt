@@ -291,6 +291,7 @@ namespace Excise.Rendering.Differential
     {
         public static bool IsAvailable { get; }
         public static Excise.Rendering.Differential.VeraPdfResult? Validate(string pdfPath, int timeoutMs = 120000) { }
+        public static Excise.Rendering.Differential.VeraPdfResult? Validate(string pdfPath, string? flavour, int timeoutMs = 120000) { }
     }
     public sealed class VeraPdfResult : System.IEquatable<Excise.Rendering.Differential.VeraPdfResult>
     {
