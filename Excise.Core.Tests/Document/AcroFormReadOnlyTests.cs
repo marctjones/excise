@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Document;
 
@@ -290,9 +291,8 @@ public class AcroFormReadOnlyTests
         matches.Should().BeGreaterThan(0);
 
         var saved = doc.SaveToBytes();
-        var savedAscii = Encoding.ASCII.GetString(saved);
-        var savedUtf16 = Encoding.BigEndianUnicode.GetString(saved);
-        (savedAscii + savedUtf16).Should().NotContain("SECRET-Consectetur",
+        var savedText = SavedPdfLeakScanner.AllCarriersText(saved);
+        savedText.Should().NotContain("SECRET-Consectetur",
             "the option text must be gone from the saved bytes in every carrier, not just page.Text");
 
         using var reopened = PdfDocument.Open(saved);
@@ -365,9 +365,8 @@ public class AcroFormReadOnlyTests
         matches.Should().BeGreaterThan(0, "RedactText must actually find the signature appearance text");
 
         var saved = doc.SaveToBytes();
-        var savedAscii = Encoding.ASCII.GetString(saved);
-        var savedUtf16 = Encoding.BigEndianUnicode.GetString(saved);
-        (savedAscii + savedUtf16).Should().NotContain("SIGSECRET",
+        var savedText = SavedPdfLeakScanner.AllCarriersText(saved);
+        savedText.Should().NotContain("SIGSECRET",
             "the signature appearance text must be gone from the saved bytes in every carrier");
 
         using var reopened = PdfDocument.Open(saved);
@@ -424,9 +423,8 @@ public class AcroFormReadOnlyTests
         matches.Should().BeGreaterThan(0);
 
         var saved = doc.SaveToBytes();
-        var savedAscii = Encoding.ASCII.GetString(saved);
-        var savedUtf16 = Encoding.BigEndianUnicode.GetString(saved);
-        (savedAscii + savedUtf16).Should().NotContain("TAILSECRET");
+        var savedText = SavedPdfLeakScanner.AllCarriersText(saved);
+        savedText.Should().NotContain("TAILSECRET");
     }
 
     // ─── PDF builder ─────────────────────────────────────────────────────────

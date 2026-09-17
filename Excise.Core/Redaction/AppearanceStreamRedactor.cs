@@ -93,13 +93,10 @@ internal static class AppearanceStreamRedactor
         }
         catch { return false; }
 
-        // Replace the content, stored UNCOMPRESSED so the writer emits it
-        // verbatim (the old /Filter no longer describes these bytes).
-        ap.SetDecodedData(newBytes);
-        ap.SetEncodedData(newBytes);
-        ap.Remove("Filter");
-        ap.Remove("DecodeParms");
-        ap.SetInt("Length", newBytes.Length);
+        // Replace the content. The setter re-encodes with Flate and rewrites
+        // /Filter, /DecodeParms and /Length together, so the old /Filter can
+        // never describe the new bytes (#1549 — this used to store them raw).
+        ap.DecodedData = newBytes;
         return true;
     }
 }

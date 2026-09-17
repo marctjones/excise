@@ -4,6 +4,7 @@ using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Parsing;
 
@@ -212,7 +213,7 @@ public class MalformedDictionaryRecoveryTests
 
         // Carrier-agnostic: search the SAVED BYTES in both encodings, per
         // CLAUDE.md. Extraction alone has passed on leaking files three times.
-        (Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved))
+        SavedPdfLeakScanner.AllCarriersText(saved)
             .Should().NotContain(secret,
                 "a file excise only opens because of a tolerant parse path must not " +
                 "be a file excise silently under-redacts");

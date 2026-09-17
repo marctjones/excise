@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text.Segmentation;
 
@@ -128,7 +129,7 @@ public class CidRedactionEndToEndTests
         // CARRIER-AGNOSTIC: the secret must be nowhere in the SAVED BYTES,
         // in any text carrier, ASCII or UTF-16BE.
         var saved = doc.SaveToBytes();
-        (Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved))
+        SavedPdfLeakScanner.AllCarriersText(saved)
             .Should().NotContain("SECRET",
                 "the redacted text must be gone from every carrier in the saved file");
 
@@ -171,9 +172,7 @@ public class CidRedactionEndToEndTests
         // CARRIER-AGNOSTIC: the secret must be nowhere in the SAVED BYTES,
         // in any carrier — ASCII, UTF-16BE, or UTF-8.
         var saved = doc.SaveToBytes();
-        (Encoding.ASCII.GetString(saved)
-         + Encoding.BigEndianUnicode.GetString(saved)
-         + Encoding.UTF8.GetString(saved))
+        SavedPdfLeakScanner.AllCarriersText(saved)
             .Should().NotContain("SECRET",
                 "the redacted text must be gone from every carrier in the saved file");
 

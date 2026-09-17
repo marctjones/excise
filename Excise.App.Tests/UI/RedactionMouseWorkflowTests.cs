@@ -15,6 +15,7 @@ using Excise.Core.Graphics;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.App.Tests.UI;
 
@@ -108,7 +109,7 @@ public class RedactionMouseWorkflowTests
                     $"{scenario.Name}: content outside the selected mouse-redaction area must remain extractable");
             }
 
-            var savedLatin1 = Encoding.Latin1.GetString(savedBytes);
+            var savedLatin1 = SavedPdfLeakScanner.AllCarriersText(savedBytes);
             foreach (var removedBytes in scenario.SavedBytesMustNotContain)
             {
                 savedLatin1.Should().NotContain(removedBytes,

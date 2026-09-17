@@ -70,6 +70,7 @@ internal static class InfoCommand
             Version: result.Version,
             PageCount: result.PageCount,
             Encrypted: result.Encrypted,
+            XfaForm: result.XfaForm,
             Metadata: result.Metadata,
             Pages: result.Pages);
         Console.WriteLine(CliJson.Serialize(report, CliJsonContext.Default.DocumentInfoJsonReport));
@@ -84,6 +85,13 @@ internal static class InfoCommand
         Console.WriteLine($"PDF Version: {result.Version}");
         Console.WriteLine($"Page Count: {result.PageCount}");
         Console.WriteLine($"Encrypted: {result.Encrypted}");
+        // #1547: excise does not render XFA; say so where a user looks first.
+        Console.WriteLine(result.XfaForm switch
+        {
+            "dynamic" => "XFA Form: dynamic (excise cannot display it; use Adobe Acrobat Reader or Firefox)",
+            "static" => "XFA Form: static (excise fills the standard AcroForm fields, not the XFA data)",
+            _ => "XFA Form: none",
+        });
         Console.WriteLine();
 
         // #1205: every one of these is document-authored text printed to a
@@ -119,6 +127,7 @@ internal static class InfoCommand
         string Version,
         int PageCount,
         bool Encrypted,
+        string XfaForm,
         DocumentMetadataInfo Metadata,
         IReadOnlyList<DocumentPageInfo> Pages);
 }

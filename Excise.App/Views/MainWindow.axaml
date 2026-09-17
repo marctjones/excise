@@ -537,8 +537,21 @@
             </MenuItem>
         </Menu>
 
-        <!-- Toast Notification InfoBar -->
-        <ui:FAInfoBar x:Name="ToastInfoBar" Grid.Row="1" IsOpen="False" IsClosable="True" Margin="0"/>
+        <StackPanel Grid.Row="1">
+            <!-- Toast Notification InfoBar -->
+            <ui:FAInfoBar x:Name="ToastInfoBar" IsOpen="False" IsClosable="True" Margin="0"/>
+
+            <!-- #1547: persistent XFA notice. Stays until closed or the
+                 document changes, because a dynamic XFA placeholder page
+                 stays on screen too. -->
+            <ui:FAInfoBar x:Name="XfaFormInfoBar"
+                          IsOpen="{Binding IsXfaNoticeOpen, Mode=TwoWay}"
+                          IsClosable="True"
+                          Severity="{Binding XfaNoticeSeverity}"
+                          Title="{Binding XfaNoticeTitle}"
+                          Message="{Binding XfaNoticeMessage}"
+                          Margin="0"/>
+        </StackPanel>
 
         <!-- Modern Title Bar Area -->
         <Grid Grid.Row="2" Height="40" Background="{DynamicResource ToolbarBackgroundBrush}"

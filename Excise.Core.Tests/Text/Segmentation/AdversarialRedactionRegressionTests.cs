@@ -4,6 +4,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text.Segmentation;
 
@@ -205,7 +206,7 @@ public sealed class AdversarialRedactionRegressionTests
         page.RedactArea(new PdfRectangle(95, 645, 265, 680));
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().NotContain("FORMSECRET",
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("FORMSECRET",
             "redacting the widget area must remove both /V and stale /AP appearance text");
 
         using var reopened = PdfDocument.Open(saved);
@@ -237,7 +238,7 @@ public sealed class AdversarialRedactionRegressionTests
         doc.GetPage(1).RedactArea(new PdfRectangle(80, 680, 290, 735));
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().NotContain("ANNOTSECRET",
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("ANNOTSECRET",
             "annotation contents and appearance streams must not survive an overlapping redaction");
 
         using var reopened = PdfDocument.Open(saved);
@@ -277,7 +278,7 @@ public sealed class AdversarialRedactionRegressionTests
         removed.Should().BeGreaterThan(0, "RedactText must actually find the annotation content");
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().NotContain("ANNOTSECRET",
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("ANNOTSECRET",
             "a word RedactText reports as removed must actually be gone from the saved bytes — " +
             "'found but not removable' is a new leak, not a fix");
 
@@ -337,7 +338,7 @@ public sealed class AdversarialRedactionRegressionTests
         removed.Should().BeGreaterThan(0, "RedactText must actually find the signature appearance text");
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().NotContain("SIGSECRET",
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("SIGSECRET",
             "a word RedactText reports as removed must actually be gone from the saved bytes — " +
             "'found but not removable' is a new leak, not a fix");
 
@@ -388,7 +389,7 @@ public sealed class AdversarialRedactionRegressionTests
         removed.Should().BeGreaterThan(0, "RedactText must actually find the orphaned widget's value");
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().NotContain("WIDGETSECRET",
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("WIDGETSECRET",
             "a word RedactText reports as removed must actually be gone from the saved bytes — " +
             "'found but not removable' is a new leak, not a fix");
 
@@ -424,7 +425,7 @@ public sealed class AdversarialRedactionRegressionTests
         removed.Should().BeGreaterThan(0, "RedactText must find the value of a field whose widget lacks /P");
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().NotContain("NOPAGESECRET",
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("NOPAGESECRET",
             "a word RedactText reports as removed must actually be gone from the saved bytes");
 
         using var reopened = PdfDocument.Open(saved);
@@ -487,7 +488,7 @@ public sealed class AdversarialRedactionRegressionTests
         page.RedactArea(bounds);
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().NotContain("ROTSECRET");
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("ROTSECRET");
 
         using var reopened = PdfDocument.Open(saved);
         string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value))
@@ -511,17 +512,18 @@ public sealed class AdversarialRedactionRegressionTests
         using (var excluded = PdfDocument.Open(pdf))
         {
             excluded.RedactText("HIDDENSECRET", includeHiddenLayers: false).VerifiedRemovals.Should().Be(0);
-            Encoding.Latin1.GetString(excluded.SaveToBytes()).Should().Contain("HIDDENSECRET",
+            SavedPdfLeakScanner.AllCarriersText(excluded.SaveToBytes()).Should().Contain("HIDDENSECRET",
                 "callers can explicitly exclude hidden layers when they are not doing security redaction");
         }
 
         using (var included = PdfDocument.Open(pdf))
         {
             included.RedactText("HIDDENSECRET").VerifiedRemovals.Should().Be(1);
-            var saved = Encoding.Latin1.GetString(included.SaveToBytes());
-            saved.Should().NotContain("HIDDENSECRET",
+            // #1549: saved streams are Flate-encoded; scan through the inflating scanner.
+            var saved = included.SaveToBytes();
+            SavedPdfLeakScanner.FindTerm(saved, "HIDDENSECRET").Should().BeEmpty(
                 "security redaction must include text hidden in default-off optional-content layers");
-            saved.Should().Contain("VISIBLE");
+            SavedPdfLeakScanner.AllCarriersText(saved).Should().Contain("VISIBLE");
         }
     }
 
@@ -537,9 +539,9 @@ public sealed class AdversarialRedactionRegressionTests
 
         page.RedactArea(BoundingBoxOf(hiddenLetters));
 
-        var saved = Encoding.Latin1.GetString(doc.SaveToBytes());
-        saved.Should().NotContain("HIDDENSECRET");
-        saved.Should().Contain("VISIBLE");
+        var saved = doc.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(saved, "HIDDENSECRET").Should().BeEmpty();
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().Contain("VISIBLE");
     }
 
     [Fact]
@@ -611,7 +613,7 @@ public sealed class AdversarialRedactionRegressionTests
         doc.RedactText("STICKYSECRET", drawBlackRect: false);
         var saved = doc.SaveToBytes();
 
-        Encoding.Latin1.GetString(saved).Should().NotContain("STICKYSECRET",
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("STICKYSECRET",
             "a /Text annotation's /RC rich-text carrier must be scrubbed like its /Contents");
     }
 
@@ -634,7 +636,7 @@ public sealed class AdversarialRedactionRegressionTests
         doc.RedactText(term, drawBlackRect: false);
         var saved = doc.SaveToBytes();
 
-        Encoding.Latin1.GetString(saved).Should().NotContain(term,
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain(term,
             $"a form/widget carrier (/Opt or /MK /CA) holding '{term}' must be scrubbed");
         // still a valid document.
         using var reopened = PdfDocument.Open(saved);

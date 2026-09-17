@@ -983,6 +983,16 @@ namespace Excise.Core.Document
         Uncover = 10,
         Fade = 11,
     }
+    public static class PdfXfaDetection
+    {
+        public static Excise.Core.Document.PdfXfaFormKind DetectXfaForm(this Excise.Core.Document.PdfDocument document) { }
+    }
+    public enum PdfXfaFormKind
+    {
+        None = 0,
+        Static = 1,
+        Dynamic = 2,
+    }
     public static class SignatureAppearanceAuthoring
     {
         public static void ApplyVisibleAppearance(Excise.Core.Document.PdfDocument document, Excise.Core.Primitives.PdfDictionary widget, System.Collections.Generic.IReadOnlyList<string> lines) { }

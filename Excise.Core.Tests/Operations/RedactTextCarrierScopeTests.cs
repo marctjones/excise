@@ -5,6 +5,7 @@ using Excise.Core.Text.Segmentation;
 using System.IO;
 using System.Text;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Operations;
 
@@ -61,8 +62,7 @@ public class RedactTextCarrierScopeTests
             using var doc = PdfDocument.Open(path);
             doc.RedactText(Secret);
             var bytes = SaveToBytes(doc);
-            var combined = Encoding.Latin1.GetString(bytes)
-                         + Encoding.BigEndianUnicode.GetString(bytes);
+            var combined = SavedPdfLeakScanner.AllCarriersText(bytes);
 
             combined.Should().NotContain(Secret,
                 "a caller who asks to redact a term should not also have to know that /Info, " +
@@ -148,8 +148,7 @@ public class RedactTextCarrierScopeTests
             PdfDocumentSanitizer.ScrubTerms(doc, new[] { Secret });
             var bytes = SaveToBytes(doc);
 
-            var combined = Encoding.Latin1.GetString(bytes)
-                         + Encoding.BigEndianUnicode.GetString(bytes);
+            var combined = SavedPdfLeakScanner.AllCarriersText(bytes);
 
             combined.Should().NotContain(Secret,
                 "the term must be gone from EVERY carrier in the saved bytes — page content, " +
@@ -203,8 +202,7 @@ public class RedactTextCarrierScopeTests
             using var doc = PdfDocument.Open(path);
             doc.RedactText(Secret.ToLowerInvariant());   // fixture stores it upper-case
             var bytes = SaveToBytes(doc);
-            var combined = Encoding.Latin1.GetString(bytes)
-                         + Encoding.BigEndianUnicode.GetString(bytes);
+            var combined = SavedPdfLeakScanner.AllCarriersText(bytes);
 
             combined.ToUpperInvariant().Should().NotContain(Secret,
                 "RedactText matched page content case-insensitively, so the carrier scrub must " +

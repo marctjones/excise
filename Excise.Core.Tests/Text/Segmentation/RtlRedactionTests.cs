@@ -5,6 +5,7 @@ using Excise.Core.Document;
 using Excise.Core.Tests.Text;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text.Segmentation;
 
@@ -238,9 +239,7 @@ public class RtlDigitIslandRedactionTests
     }
 
     private static string SearchableTextOf(byte[] saved) =>
-        Encoding.ASCII.GetString(saved) +
-        Encoding.BigEndianUnicode.GetString(saved) +
-        Encoding.UTF8.GetString(saved);
+        SavedPdfLeakScanner.AllCarriersText(saved);
 
     private static string ReverseString(string s)
     {

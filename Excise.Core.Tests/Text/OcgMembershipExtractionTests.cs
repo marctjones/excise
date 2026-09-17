@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text;
 
@@ -158,10 +159,9 @@ public sealed class OcgMembershipExtractionTests
         {
             included.RedactText("SECRETA").VerifiedRemovals.Should().Be(1);
             var saved = included.SaveToBytes();
-            (Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved))
-                .Should().NotContain("SECRETA",
-                    "security redaction must remove text hidden in OCMD-governed optional content");
-            Encoding.ASCII.GetString(saved).Should().Contain("VISIBLE");
+            SavedPdfLeakScanner.FindTerm(saved, "SECRETA").Should().BeEmpty(
+                "security redaction must remove text hidden in OCMD-governed optional content");
+            SavedPdfLeakScanner.AllCarriersText(saved).Should().Contain("VISIBLE");
         }
 
         // Opt-out: caller excludes hidden layers -> no match, text retained.

@@ -110,7 +110,7 @@ public class RedactionServiceTests : IDisposable
 
         var outputPath = Path.Combine(_tempDir, "carriers.pdf");
         doc.Save(outputPath);
-        var saved = System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(outputPath));
+        var saved = SavedPdfLeakScanner.AllCarriersText(File.ReadAllBytes(outputPath));
 
         saved.Should().NotContain("SecretWord in the title",
             "drawing a box over a name and saving must not leave the name in the document " +
@@ -295,7 +295,7 @@ public class RedactionServiceTests : IDisposable
 
         // Assert — on the saved bytes, not on a list of what the service says it
         // did. A service can record a term it failed to remove.
-        System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(outputPath))
+        SavedPdfLeakScanner.AllCarriersText(File.ReadAllBytes(outputPath))
             .Should().NotContain("SecretTerm");
     }
 

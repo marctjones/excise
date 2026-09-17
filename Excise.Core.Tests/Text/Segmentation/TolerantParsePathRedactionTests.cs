@@ -4,6 +4,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text.Segmentation;
 
@@ -251,10 +252,12 @@ public class TolerantParsePathRedactionTests
     }
 
     /// <summary>
-    /// Saved bytes as searchable text. PDF strings may be literal ASCII or
-    /// UTF-16BE, so both are searched — a leak hiding behind an encoding is
-    /// still a leak.
+    /// Saved bytes as searchable text across every carrier, INCLUDING inflated
+    /// stream bodies. PDF strings may be literal ASCII or UTF-16BE, so both are
+    /// searched — a leak hiding behind an encoding is still a leak. A raw-only
+    /// scan went blind here when #1549 made redacted content streams save
+    /// Flate-encoded.
     /// </summary>
     private static string Utf16AndAsciiOf(byte[] saved)
-        => Encoding.ASCII.GetString(saved) + "\n" + Encoding.BigEndianUnicode.GetString(saved);
+        => SavedPdfLeakScanner.AllCarriersText(saved);
 }

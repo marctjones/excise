@@ -13,6 +13,7 @@ using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.App.Tests.UI;
 
@@ -167,7 +168,7 @@ public class RedactionAndSearchCommandTests
 
         window.Close();
         var savedBytes = File.ReadAllBytes(outputPath);
-        var savedText = Encoding.ASCII.GetString(savedBytes) + Encoding.BigEndianUnicode.GetString(savedBytes);
+        var savedText = SavedPdfLeakScanner.AllCarriersText(savedBytes);
         return (outputPath, savedText, savedBytes);
     }
 

@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.Text.Segmentation;
 
@@ -34,7 +35,7 @@ public sealed class ScannedOcrRedactionRegressionTests
         doc.RedactText(ocrSecret, drawBlackRect: false).VerifiedRemovals.Should().Be(1);
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should()
+        SavedPdfLeakScanner.AllCarriersText(saved).Should()
             .NotContain(ocrSecret)
             .And.NotContain(rasterMarker,
                 "a scanned-page image overlapping the targeted OCR text must not remain reachable after save");
@@ -60,7 +61,7 @@ public sealed class ScannedOcrRedactionRegressionTests
         doc.GetPage(1).RedactArea(new PdfRectangle(110, 650, 150, 680));
 
         var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().NotContain(rasterMarker,
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain(rasterMarker,
             "image-only sensitive pixels must be redacted at object/reachability level, not only by dropping the Do operator");
 
         using var reopened = PdfDocument.Open(saved);

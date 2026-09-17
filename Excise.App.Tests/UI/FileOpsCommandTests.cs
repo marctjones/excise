@@ -265,6 +265,69 @@ public class FileOpsCommandTests
         Cleanup(tempDir);
     }
 
+    /// <summary>
+    /// #1562: File ▸ Close Document left the Outline pane showing the closed
+    /// document's bookmarks — the open path cleared <c>OutlineNodes</c>, the
+    /// close path never did. The same sweep found the attachments list, the
+    /// current page's search highlight rects, the per-page search-match index,
+    /// a stale status line and the form-authoring / path-annotation modes
+    /// surviving a close; each is asserted here.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task CloseDocumentCommand_ClearsOutlineAttachmentsAndOtherPerDocumentState()
+    {
+        var (basePath, _, tempDir) = MakePaths();
+        TestPdfGenerator.CreateMultiPagePdf(basePath, pageCount: 2);
+        var sourcePath = Path.Combine(tempDir, "with-outline-and-attachment.pdf");
+        using (var document = PdfDocument.Open(basePath))
+        {
+            document.AddOutlineItem("Chapter One", 1);
+            document.AddOutlineItem("Chapter Two", 2);
+            document.AddEmbeddedFile("note.txt", Encoding.UTF8.GetBytes("attached"));
+            document.Save(sourcePath);
+        }
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        await vm.LoadDocumentAsync(sourcePath);
+
+        // Preconditions: the open path populated every panel under test.
+        vm.OutlineNodes.Should().HaveCount(2);
+        vm.HasOutline.Should().BeTrue();
+        vm.HasAttachments.Should().BeTrue();
+
+        vm.SearchMatches = new System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.SearchMatch>(
+            [new Excise.App.Models.SearchMatch { PageIndex = 0, MatchedText = "x", Width = 5, Height = 5 }]);
+        vm.MatchesByPageIndexForBenchmark.Should().NotBeEmpty();
+        vm.CurrentPageSearchHighlights.Add(
+            PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, 5, 5)));
+        vm.OperationStatus = "Indexing for search… 1/2";
+        vm.IsFormAuthoringMode = true;
+
+        var raised = new List<string?>();
+        vm.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        await vm.CloseDocumentCommand.Execute();
+
+        vm.IsDocumentLoaded.Should().BeFalse();
+        vm.OutlineNodes.Should().BeEmpty("the outline pane must not keep the closed document's bookmarks");
+        vm.HasOutline.Should().BeFalse();
+        raised.Should().Contain(nameof(MainWindowViewModel.HasOutline),
+            "the pane's visibility binds to HasOutline, which only updates when raised");
+        vm.Attachments.Should().BeEmpty("the attachments list must not describe a closed document");
+        vm.HasAttachments.Should().BeFalse();
+        raised.Should().Contain(nameof(MainWindowViewModel.HasAttachments));
+        vm.SearchMatches.Should().BeEmpty();
+        vm.MatchesByPageIndexForBenchmark.Should().BeEmpty(
+            "a stale per-page index would re-highlight the old matches on the next document");
+        vm.CurrentPageSearchHighlights.Should().BeEmpty();
+        vm.HiddenTextHighlights.Should().BeEmpty();
+        vm.OperationStatus.Should().BeEmpty();
+        vm.IsFormAuthoringMode.Should().BeFalse();
+        vm.IsPathAnnotationMode.Should().BeFalse();
+
+        Cleanup(tempDir);
+    }
+
     // ── PrintCommand ─────────────────────────────────────────────────────
     // #621: excise deliberately does not print. The command's real effect is
     // showing that explanation via IUserDialogService — verify it actually

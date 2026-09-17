@@ -2314,12 +2314,26 @@ public partial class MainWindowViewModel : ViewModelBase
         ClipboardHistory.Clear();
 
         SearchText = string.Empty;
-        SearchMatches.Clear();
-        CurrentSearchMatchIndex = -1;
+        // #1562: ClearSearch (not SearchMatches.Clear()) so the per-page match
+        // index is emptied too, and drop the current page's highlight rects —
+        // nothing else clears them when the page index is already 0.
+        ClearSearch();
+        CurrentPageSearchHighlights.Clear();
         IsSearchVisible = false;
+
+        // #1562: per-document panels the open path refreshes but close never
+        // did. Each of these showed the CLOSED document's data afterwards.
+        OutlineNodes.Clear();
+        this.RaisePropertyChanged(nameof(HasOutline));
+        RefreshAttachments(); // no document loaded -> empties the list
+        ClearXfaNotice(); // #1547
+        RefreshHiddenTextHighlights(); // no document loaded -> cancels + empties
+        OperationStatus = string.Empty; // e.g. a stale "Indexing for search… 3/10"
 
         IsRedactionMode = false;
         IsTypewriterMode = false;
+        IsFormAuthoringMode = false;
+        IsPathAnnotationMode = false;
         CurrentPageIndex = 0;
         ApplyZoomTransition(_viewportSession.ResetZoomWithoutPersisting());
     }
