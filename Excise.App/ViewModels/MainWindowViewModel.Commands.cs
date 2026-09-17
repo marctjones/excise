@@ -101,6 +101,8 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> RemoveAllAttachmentsCommand { get; private set; } = null!;
     /// <summary>#1306 — stamp sequential Bates numbers on every page.</summary>
     public ReactiveCommand<Unit, Unit> BatesNumberingCommand { get; private set; } = null!;
+    /// <summary>#1550 — write a smaller copy of the document.</summary>
+    public ReactiveCommand<Unit, Unit> ReduceFileSizeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, int> AutoDetectFieldsCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> SaveFlattenedFormCopyCommand { get; private set; } = null!;
     /// <summary>#1308 — apply a digital signature to the saved file.</summary>
@@ -298,6 +300,9 @@ public partial class MainWindowViewModel
             _toastService.ShowError("Could not remove attachments", ex.Message);
         });
         BatesNumberingCommand = ReactiveCommand.CreateFromTask(ApplyBatesNumberingAsync);
+        ReduceFileSizeCommand = ReactiveCommand.CreateFromTask(ReduceFileSizeAsync);
+        ReduceFileSizeCommand.ThrownExceptions.Subscribe(ex =>
+            _logger.LogError(ex, "ReduceFileSizeCommand threw exception"));
         SecurityCommand.ThrownExceptions.Subscribe(ex =>
             _logger.LogError(ex, "SecurityCommand threw exception"));
         AutoDetectFieldsCommand = ReactiveCommand.Create(() => AutoDetectAndApplyFormFields());

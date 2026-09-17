@@ -206,7 +206,9 @@ internal static class MacNativeMenuBuilder
                     // MainWindow.axaml is unreachable on this project's
                     // primary platform. Without this, setting/changing/
                     // removing a document password is unreachable on macOS.
-                    TrackDocumentItem(CommandItem("Security...", _viewModel.SecurityCommand))));
+                    TrackDocumentItem(CommandItem("Security...", _viewModel.SecurityCommand)),
+                    // #1550. Same reasoning: the in-window menu is hidden on macOS.
+                    TrackDocumentItem(CommandItem("Reduce File Size...", _viewModel.ReduceFileSizeCommand))));
 
             Add(menu,
                 Submenu("Redaction",

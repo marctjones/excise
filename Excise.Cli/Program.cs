@@ -37,6 +37,7 @@ partial class Program
             MakeSearchableCommand.Create(),
             EncryptCommand.Create(),
             DecryptCommand.Create(),
+            OptimizeCommand.Create(),
             SaveSizeReportCommand.Create(),
         };
 

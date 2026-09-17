@@ -179,6 +179,7 @@ namespace Excise.Core.Automation
         public const string PreviousPage = "view.previousPage";
         public const string Print = "document.print";
         public const string Redo = "edit.redo";
+        public const string ReduceFileSize = "document.reduceFileSize";
         public const string RemoveAllAttachments = "document.removeAllAttachments";
         public const string RemoveCurrentPage = "document.removeCurrentPage";
         public const string RemovePendingRedaction = "redaction.removePending";
@@ -2269,6 +2270,16 @@ namespace Excise.Core.Validation
 }
 namespace Excise.Core.Writing
 {
+    public interface IPdfJpegCodec
+    {
+        byte[]? Decode(byte[] jpeg, int width, int height, int components, int? colorTransform);
+        byte[]? Encode(byte[] samples, int width, int height, int components, int quality);
+    }
+    public static class PdfDocumentOptimizer
+    {
+        public static Excise.Core.Writing.PdfOptimizationResult Optimize(Excise.Core.Document.PdfDocument document, Excise.Core.Writing.PdfOptimizationOptions options, System.Threading.CancellationToken cancellationToken = default) { }
+        public static Excise.Core.Writing.PdfOptimizationResult SaveOptimizedCopy(byte[] savedPdf, string outputPath, Excise.Core.Writing.PdfOptimizationOptions options, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions = null, System.Threading.CancellationToken cancellationToken = default) { }
+    }
     public class PdfDocumentWriter
     {
         public PdfDocumentWriter(Excise.Core.Document.PdfDocument document, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions = null) { }
@@ -2279,6 +2290,41 @@ namespace Excise.Core.Writing
         public static string Serialize(Excise.Core.Primitives.PdfObject obj) { }
         public static void SerializeObject(Excise.Core.Primitives.PdfObject obj, System.Text.StringBuilder sb) { }
         public static void SerializeStreamDictionary(Excise.Core.Primitives.PdfStream stream, System.Text.StringBuilder sb) { }
+    }
+    public sealed class PdfOptimizationOptions : System.IEquatable<Excise.Core.Writing.PdfOptimizationOptions>
+    {
+        public PdfOptimizationOptions() { }
+        public bool DeduplicateStreams { get; init; }
+        public int ImageDpiThreshold { get; init; }
+        public Excise.Core.Writing.IPdfJpegCodec? JpegCodec { get; init; }
+        public int JpegQuality { get; init; }
+        public Excise.Core.Writing.PdfOptimizationPreset Preset { get; init; }
+        public bool RecompressStreams { get; init; }
+        public bool RemovePrivateApplicationData { get; init; }
+        public bool RemoveThumbnails { get; init; }
+        public int? TargetImageDpi { get; init; }
+        public static Excise.Core.Writing.PdfOptimizationOptions ForPreset(Excise.Core.Writing.PdfOptimizationPreset preset, Excise.Core.Writing.IPdfJpegCodec? jpegCodec = null) { }
+        public static bool TryParsePreset(string? text, out Excise.Core.Writing.PdfOptimizationPreset preset) { }
+    }
+    public enum PdfOptimizationPreset
+    {
+        Lossless = 0,
+        High = 1,
+        Standard = 2,
+        Screen = 3,
+    }
+    public sealed class PdfOptimizationResult : System.IEquatable<Excise.Core.Writing.PdfOptimizationResult>
+    {
+        public PdfOptimizationResult() { }
+        public int ImagesDownsampled { get; init; }
+        public System.Collections.Generic.IReadOnlyDictionary<string, int> ImagesSkipped { get; init; }
+        public long OutputSizeBytes { get; init; }
+        public Excise.Core.Writing.PdfOptimizationPreset Preset { get; init; }
+        public int PrivateDataEntriesRemoved { get; init; }
+        public int StreamsDeduplicated { get; init; }
+        public int StreamsRecompressed { get; init; }
+        public int ThumbnailsRemoved { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
     }
 }
 namespace Excise.Core.Xfa

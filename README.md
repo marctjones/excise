@@ -77,6 +77,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - **Several documents at once** — each opens in its own window, with its own undo history and unsaved-changes state; on macOS the windows use native tabs when System Settings asks for them. Preferences ▸ Documents can instead open documents as tabs inside one window (close, reorder by dragging, move a tab to its own window, overflow list) or replace the current document as before
 - Prompts before closing, quitting, or opening another file with unsaved changes — and saves a **copy**, never overwriting your original
 - Bates numbering
+- **Reduce File Size** — Document ▸ Reduce File Size… writes a smaller copy to a location you choose and shows the size before and after. *Lossless* recompresses and deduplicates data and drops page thumbnails and other applications' private data, so pages look exactly the same; *High* (300 dpi), *Standard* (150 dpi) and *Screen* (96 dpi) also downsample images well above that resolution. The original file is never changed, and a redacted document stays redacted
 - CLI-first automation with stable JSON, batch workflows, progress NDJSON, and
   AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME examples
 - Roslyn-based GUI scripting for developer/test automation in Debug builds; Release builds exclude it by default unless `-p:EnableScripting=true` is set
@@ -117,6 +118,7 @@ excise commands          [id]             [--json]
 excise batch             <workflow.json>  [--json] [--progress] [--output report.json]
 excise draw              <file>                                 # graphics-API demo
 excise redact            <input> <output> <text>  [--case-sensitive]
+excise optimize          <input> <output> [--preset lossless|high|standard|screen] [--password P] [--json]
 excise fill-form         <input> <output> --field Name=Value [...] [--flatten]
 excise add-field         <input> <output> --type T --name N --page P --rect "l,b,r,t" [--value v] [--option o]...
 excise autodetect-fields <input> [output] [--apply]
@@ -380,6 +382,9 @@ excise render report.pdf -o report-p1.png --page 1 --dpi 200
 
 # Glyph-level redact a phrase
 excise redact report.pdf report-redacted.pdf "ACCOUNT 9876"
+
+# Write a smaller copy for email: downsample images above 188 dpi to 150 dpi
+excise optimize scan.pdf scan-small.pdf --preset standard
 
 # Audit a "redacted" PDF for hidden text leftovers — both structural and rasterized
 excise audit purportedly-redacted.pdf --deep --json

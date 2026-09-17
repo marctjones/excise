@@ -383,6 +383,10 @@
                           ToolTip.Tip="Stamp a sequential Bates number on every page."
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="document.batesNumbering"/>
+                <MenuItem Header="Reduce File Si_ze..." Command="{Binding ReduceFileSizeCommand}"
+                          ToolTip.Tip="Save a smaller copy of this document. The original is not changed."
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="document.reduceFileSize"/>
             </MenuItem>
 
             <!-- REDACTION MENU -->

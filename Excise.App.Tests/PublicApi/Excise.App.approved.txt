@@ -852,6 +852,7 @@ namespace Excise.App.ViewModels
         public Excise.App.ViewModels.RedactionWorkflowManager RedactionWorkflow { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RedoCommand { get; }
         public string RedoMenuHeader { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ReduceFileSizeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RemoveAllAttachmentsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RemoveCurrentPageCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Guid, System.Reactive.Unit> RemovePendingRedactionCommand { get; }
@@ -1115,6 +1116,22 @@ namespace Excise.App.ViewModels
         public bool RemovePending(System.Guid id) { }
         public void Reset() { }
     }
+    public sealed class ReduceFileSizeChoice : System.IEquatable<Excise.App.ViewModels.ReduceFileSizeChoice>
+    {
+        public ReduceFileSizeChoice(Excise.Core.Writing.PdfOptimizationPreset Preset, string Label, string Description) { }
+        public string Description { get; init; }
+        public string Label { get; init; }
+        public Excise.Core.Writing.PdfOptimizationPreset Preset { get; init; }
+        public override string ToString() { }
+    }
+    public sealed class ReduceFileSizeDialogViewModel : ReactiveUI.ReactiveObject
+    {
+        public ReduceFileSizeDialogViewModel() { }
+        public bool Confirmed { get; }
+        public Excise.App.ViewModels.ReduceFileSizeChoice Selected { get; set; }
+        public static System.Collections.Generic.IReadOnlyList<Excise.App.ViewModels.ReduceFileSizeChoice> Choices { get; }
+        public void Confirm() { }
+    }
     public class SaveRedactedVersionDialogViewModel : ReactiveUI.ReactiveObject
     {
         public SaveRedactedVersionDialogViewModel(string suggestedFilePath, int pendingCount) { }
@@ -1235,6 +1252,12 @@ namespace Excise.App.Views
     public class PreferencesWindow : Avalonia.Controls.Window
     {
         public PreferencesWindow() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class ReduceFileSizeDialog : Avalonia.Controls.Window
+    {
+        public ReduceFileSizeDialog() { }
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public void InitializeComponent(bool loadXaml = true) { }
     }

@@ -4,15 +4,15 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "beed1e8b4c11e286a610717dc4f52a2dab3935f8",
+  "sourceRevision": "47c0c1183409a081c74ea10480847bfbbe46a3fb",
   "summary": {
-    "interactions": 164,
-    "menuItems": 107,
+    "interactions": 165,
+    "menuItems": 108,
     "buttons": 48,
     "mouseGestures": 9,
     "keyboardShortcuts": 28,
-    "declaredCommandIds": 112,
-    "commandIdsReachableFromTheGui": 103,
+    "declaredCommandIds": 113,
+    "commandIdsReachableFromTheGui": 104,
     "commandIdsWithNoGuiPath": 0,
     "cliOnlyCommandIds": 9,
     "controlsWithNoCommandId": 0,
@@ -865,6 +865,15 @@
       "commandParameter": null,
       "shortcut": "Ctrl+P",
       "commandId": "document.print"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Reduce File Size...",
+      "label": "Reduce File Size...",
+      "command": "ReduceFileSizeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "document.reduceFileSize"
     },
     {
       "kind": "menu",

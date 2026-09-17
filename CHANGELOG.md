@@ -282,6 +282,55 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   and XFA viewers would regenerate the redacted values from it. Library API:
   `PdfDocument.ApplyXfaLayout()`, `HasXfaLayoutPages()` and `RemoveXfaForm()`
   in `Excise.Core.Xfa`. Design: `docs/architecture/xfa-rendering.md`.
+- **Reduce File Size** (#1550). Document ▸ Reduce File Size… (also in the
+  macOS menu bar) and `excise optimize <in> <out> --preset
+  lossless|high|standard|screen [--password] [--allow-decrypt] [--json]` write
+  a smaller **copy**. The command never overwrites the input, and the GUI
+  refuses while there are unsaved edits. Both show the size before and after.
+  - **Lossless** (the default): re-encodes uncompressed and weakly compressed
+    streams with the strongest Flate level and keeps the result only when it
+    is smaller; points byte-identical images, form XObjects and font programs
+    at one copy; and drops page thumbnails and `/PieceInfo`. The copy is also
+    written for size: form-field, font and Info dictionaries go into object
+    streams (an ordinary save keeps them greppable, #1431), object streams
+    hold 200 objects, and the xref stream uses minimal widths and a PNG
+    predictor. Pages render pixel-identically (mutool).
+  - **High / Standard / Screen**: also downsample images above 375 / 188 /
+    120 dpi, measured at their largest placed size, to 300 / 150 / 96 dpi
+    (JPEG quality 85 / 75 / 60).
+  - **What is skipped, and reported with the reason**: images the optimizer
+    cannot measure (drawn inside a form XObject) or that it cannot re-encode
+    faithfully (masks, `/Decode`, colour spaces other than gray/RGB/ICC 1-3,
+    not 8 bpc, CCITT/JBIG2/JPX).
+  - **Redaction**: the optimizer works on a copy reopened from an ordinary
+    save, so a redacted document stays redacted (saved-bytes leak scanner and
+    mutool, every preset). Encrypted inputs stay encrypted with the same
+    settings. Signed inputs get a warning that their signatures will no longer
+    validate. Already-embedded fonts are not subset.
+  - **Measured on the smoke corpus, Lossless** (input → output):
+    - irs-w4 208,845 → 181,149 (−13%)
+    - irs-1040 220,237 → 190,241 (−14%); qpdf's own optimizer gets 199,086
+    - irs-1040-instructions 4,434,643 → 4,383,765 (−1%)
+    - state-ds11 2,568,395 → 2,223,367 (−13%)
+    - irs-pub509 1,195,405 → 1,189,086 (−0.5%)
+    - every output passes `qpdf --check`
+  - **Measured on the 20-page 200 dpi scan** (`reader-bench/scan-irs-20p-200dpi.pdf`,
+    10,392,181 bytes):
+    - Standard → 5,551,763 (−47%)
+    - Screen → 2,295,485 (−78%)
+    - Lossless and High leave it as it is: its JPEGs are already compact and
+      below High's threshold
+  - **Measured with the lossy presets on the two heavy fixtures** (each run
+    under 3 s; every output passes `qpdf --check`, keeps its page count, and
+    renders page 1 pixel-identically in mutool):
+    - irs-1040-instructions: High, Standard and Screen all give 4,383,765
+      (−1%, the same as Lossless). Its two images, both large CMYK JPEGs, are
+      drawn inside form XObjects, so they are reported as skipped.
+    - Altona (17 pages, 127,724,771 bytes): High → 124,590,100, Standard →
+      124,558,758, Screen → 124,553,723 (−2.5%), 0.6 s. One image is
+      downsampled (Screen changes only page 2: mean difference 0.7 of 255 in
+      mutool); 86 images are inside forms and 3–6 are in colour spaces the
+      optimizer does not re-encode, and all of those are reported.
 - **XFA forms are detected and explained on open** (#1547, phase 1). A
   dynamic XFA form (catalog `/NeedsRendering true`, or no AcroForm field with a
   widget) now opens with a warning banner saying excise cannot display it yet

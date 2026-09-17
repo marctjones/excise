@@ -89,6 +89,8 @@ public static class PdfCommandIds
     public const string RemoveAllAttachments = "document.removeAllAttachments";
     /// <summary>#1306 — stamp sequential Bates numbers on every page.</summary>
     public const string BatesNumbering = "document.batesNumbering";
+    /// <summary>#1550 — write a smaller copy of the document.</summary>
+    public const string ReduceFileSize = "document.reduceFileSize";
     public const string CombineDocuments = "document.combine";
     public const string SplitDocument = "document.split";
 

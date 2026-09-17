@@ -224,6 +224,32 @@ public class PdfStream : PdfDictionary
     }
 
     /// <summary>
+    /// Replace both byte fields at once and set <c>/Filter</c> to
+    /// <paramref name="filter"/> (or remove it when null), dropping
+    /// <c>/DecodeParms</c> and updating <c>/Length</c> (#1550). For the file-size
+    /// optimizer, which chooses its own encoding (a stronger Flate level, or a
+    /// JPEG) where the <see cref="DecodedData"/> setter would pick Optimal Flate.
+    /// </summary>
+    /// <param name="encoded">The bytes the writer will emit.</param>
+    /// <param name="decoded">What a reader of <see cref="DecodedData"/> sees:
+    /// the samples for Flate, the codestream itself for a pass-through filter
+    /// such as <c>DCTDecode</c>.</param>
+    /// <param name="filter">The single filter that turns
+    /// <paramref name="encoded"/> into <paramref name="decoded"/>.</param>
+    internal void ReplaceEncoding(byte[] encoded, byte[] decoded, string? filter)
+    {
+        ArgumentNullException.ThrowIfNull(encoded);
+        ArgumentNullException.ThrowIfNull(decoded);
+        Remove("DecodeParms");
+        if (filter == null)
+            Remove("Filter");
+        else
+            SetName("Filter", filter);
+        ReplaceBytes(decoded: decoded, encoded: encoded);
+        SetInt("Length", encoded.Length);
+    }
+
+    /// <summary>
     /// The one writer of the byte fields for every caller outside the deferred
     /// decode itself (#1468). <paramref name="encoded"/> null keeps the current
     /// encoded bytes.

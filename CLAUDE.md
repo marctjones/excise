@@ -154,7 +154,8 @@ SavedPdfLeakScanner.FindTerm(saved, "REDACTED_TEXT").Should().BeEmpty();
 //    presence: /T, /TU, /BaseFont, /FontName, with /FT, /Subtype /Widget and
 //    /Type /Font|/FontDescriptor as extra structural catches
 //    (ContainsFormFieldOrFontCarrierText, #1431/#1432/#1434) — OUT of object
-//    streams so they stay greppable. Key presence, not type markers: a
+//    streams so they stay greppable. A Reduce File Size copy does NOT
+//    (PdfDocumentWriter.OptimizeForSize, #1550): it packs all of them. Key presence, not type markers: a
 //    NON-TERMINAL field node (§12.7.3.2 — /T+/TU+/Kids, no /FT, no
 //    /Subtype /Widget; 6 of them in irs-w4, 30 in irs-1040) and a font dict
 //    with no /Type both slip a type-marker test. But that list is not the
@@ -1157,7 +1158,7 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── MutoolReferenceRenderer.cs        # 348 uses in Differential tests
+    ├── MutoolReferenceRenderer.cs        # 355 uses in Differential tests
     ├── GhostscriptReferenceRenderer.cs   #  113
     ├── PdftocairoReferenceRenderer.cs    #  81
     ├── PdftoppmReferenceRenderer.cs      #  18

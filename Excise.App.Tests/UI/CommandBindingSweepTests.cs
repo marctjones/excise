@@ -182,7 +182,8 @@ public class CommandBindingSweepTests
             "Redaction Mode",
             "Apply Redaction",
             "Verify Digital Signatures...",
-            "Security..."
+            "Security...",
+            "Reduce File Size..."
         });
 
         var topLevelHeaders = menu.Items
