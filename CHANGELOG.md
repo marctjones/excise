@@ -18,6 +18,13 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   switch replaces the entries in that menu with the new tab's entries, so
   every menu item acts on the tab you are looking at. A closed tab's entries
   are still released with it (#1551).
+- **On macOS, excise ignored PDFs opened from Finder** (#1585). Double-click,
+  "Open With" and `open -a` did nothing, whether excise was already running or
+  was started by the open. With Avalonia 12, those requests arrive through an
+  application feature, and excise only looked for them on the desktop
+  lifetime, where they no longer arrive. So excise never received them. It now
+  gets them from the application feature, and each PDF opens the way the Open
+  Documents In preference says.
 - **A failed open left the previous document's attachments listed** (#1563),
   and opening another document kept the old list on screen until the new one
   finished loading. Both now clear.
