@@ -134,10 +134,23 @@ if [ "$INSTALL_HOOK" = "1" ]; then
 #!/usr/bin/env bash
 # Installed by scripts/test-tier.sh --install-hook (#646, #1600).
 #
-# Two lines on purpose: the logic is scripts/pre-push-hook.sh, which is tracked,
-# reviewable and covered by scripts/test-check-gate-asymmetry.sh. stdin (git's
-# push range, one line per pushed ref) is inherited by the exec.
-exec "$(git rev-parse --show-toplevel)/scripts/pre-push-hook.sh" "$@"
+# A stub on purpose: the logic is scripts/pre-push-hook.sh, which is tracked,
+# reviewable and covered by scripts/test-check-gate-asymmetry.sh, so a later fix
+# lands without re-installing. stdin (git's push range, one line per pushed ref)
+# is inherited by the exec.
+#
+# ⚠️ Hooks live in the SHARED git dir, so this one file serves every worktree —
+# including a branch that predates #1600 and has no scripts/pre-push-hook.sh. A
+# bare exec would fail there with "No such file or directory" and no gate would
+# run, so the absence is reported and the push REFUSED, never skipped.
+hook="$(git rev-parse --show-toplevel)/scripts/pre-push-hook.sh"
+if [ ! -x "$hook" ]; then
+    echo "pre-push: $hook is missing on this branch (it predates #1600)." >&2
+    echo "  Merge develop into it, or run scripts/test-tier.sh t0 here and" >&2
+    echo "  push with --no-verify once it passes." >&2
+    exit 1
+fi
+exec "$hook" "$@"
 HOOKEOF
     chmod +x "$HOOK"
     say "${G}Installed${N} $HOOK"

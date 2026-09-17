@@ -268,8 +268,16 @@ ok
 # 14. The installed hook is a STUB that execs the tracked script, so a fix lands
 #     without re-installing. Read out of test-tier.sh rather than installed,
 #     because hooks live in the shared git dir (see the header).
-grep -q 'exec "\$(git rev-parse --show-toplevel)/scripts/pre-push-hook.sh"' "$ROOT/scripts/test-tier.sh" \
+grep -q 'hook="\$(git rev-parse --show-toplevel)/scripts/pre-push-hook.sh"' "$ROOT/scripts/test-tier.sh" \
     || fail "test-tier.sh --install-hook must install a stub that execs scripts/pre-push-hook.sh"
+grep -q 'exec "\$hook" "\$@"' "$ROOT/scripts/test-tier.sh" \
+    || fail "the stub must exec the tracked script, passing stdin and arguments through"
+# The stub serves EVERY worktree through the shared git dir, including a branch
+# with no scripts/pre-push-hook.sh. Missing must refuse, never skip.
+grep -q 'if \[ ! -x "\$hook" \]; then' "$ROOT/scripts/test-tier.sh" \
+    || fail "the stub must handle a branch that predates the tracked hook script"
+awk '/if \[ ! -x "\$hook" \]; then/,/^fi$/' "$ROOT/scripts/test-tier.sh" | grep -q 'exit 1' \
+    || fail "a missing hook script must REFUSE the push (exit 1), not fall through to no gate"
 grep -q 'git rev-parse --git-path hooks/pre-push' "$ROOT/scripts/test-tier.sh" \
     || fail "the hook path must come from git, not \$ROOT/.git (a worktree's .git is a FILE)"
 ok
