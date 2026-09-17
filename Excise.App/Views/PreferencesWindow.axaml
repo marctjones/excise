@@ -261,6 +261,19 @@
                         </StackPanel>
 
                         <StackPanel Spacing="8">
+                            <TextBlock Text="Attachments" FontWeight="Medium"/>
+                            <CheckBox x:Name="RedactionKeepAttachmentsCheckBox"
+                                      Content="Keep attachments in redacted copies"
+                                      IsChecked="{Binding RedactionKeepAttachments}"
+                                      AutomationProperties.Name="Keep Attachments When Redacting"
+                                      AutomationProperties.HelpText="Keep the PDF's embedded files in a redacted copy instead of removing them."/>
+                            <TextBlock Text="Off (default): a redacted copy contains none of the PDF's attached files. On: text attachments (txt, csv, xml, html, json, md) have the redacted text cut out and attached PDFs are redacted too; any other attachment is listed in the report as not checked, because it may still contain the redacted text. A PDF portfolio can only be redacted with this on."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
                             <TextBlock Text="Covering Box Width" FontWeight="Medium"/>
                             <ComboBox x:Name="RedactionWidthPolicyComboBox"
                                       ItemsSource="{Binding WidthPolicyOptions}"

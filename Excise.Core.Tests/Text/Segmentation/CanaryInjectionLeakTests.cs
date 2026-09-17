@@ -397,6 +397,8 @@ public class CanaryInjectionLeakTests
         // #1151 — selective, not wholesale: an attachment containing the term is
         // removed; an UNRELATED attachment must survive (over-removal is
         // collateral). Two attachments, one carries the canary.
+        // Since #1572 (Marc, 2026-09-17) redaction removes EVERY attachment by
+        // default, so the selective contract belongs to KeepAttachments.
         var content = "BT /F1 14 Tf 72 700 Td (Body text) Tj ET\n";
         var body = Encoding.Latin1.GetBytes(content);
         var secret = $"note: {Canary}\n";
@@ -419,7 +421,7 @@ public class CanaryInjectionLeakTests
         byte[] saved;
         using (var doc = PdfDocument.Open(pdf))
         {
-            doc.RedactText(Canary);
+            doc.RedactText(Canary, new RedactionOptions { KeepAttachments = true });
             using var ms = new MemoryStream();
             doc.Save(ms);
             saved = ms.ToArray();
@@ -442,7 +444,9 @@ public class CanaryInjectionLeakTests
         // -- the common case a real document mixes both in. None of the other
         // #1428 tests exercise catalog-level and annotation-level attachments
         // coexisting on the same document, so this scenario had no direct pin
-        // beyond the code-reading that caught it.
+        // beyond the code-reading that caught it. Run with KeepAttachments:
+        // the default (#1572) removes every attachment, which cannot show
+        // whether the annotation walk ran.
         var content = "BT /F1 14 Tf 72 700 Td (Body text) Tj ET\n";
         var body = Encoding.Latin1.GetBytes(content);
         var keep = "unrelated catalog-level attachment\n";
@@ -475,7 +479,7 @@ public class CanaryInjectionLeakTests
         byte[] saved;
         using (var doc = PdfDocument.Open(pdf))
         {
-            doc.RedactText(Canary);
+            doc.RedactText(Canary, new RedactionOptions { KeepAttachments = true });
             using var ms = new MemoryStream();
             doc.Save(ms);
             saved = ms.ToArray();

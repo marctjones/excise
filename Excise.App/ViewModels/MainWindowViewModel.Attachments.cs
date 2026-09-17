@@ -353,8 +353,8 @@ public partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Remove All Attachments: strip the document-level embedded files from
-    /// the in-memory document, as an undoable pending edit.
+    /// Remove All Attachments: strip every embedded file from the in-memory
+    /// document, as an undoable pending edit.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -365,11 +365,12 @@ public partial class MainWindowViewModel
     /// only copy would be destroying data to protect it.
     /// </para>
     /// <para>
-    /// The strip covers <c>/Names/EmbeddedFiles</c> and the catalog's
-    /// <c>/AF</c>. An attachment carried by a page's <c>/FileAttachment</c>
-    /// annotation is not removed by it (#1572), so the count and the toast are taken
-    /// from the list as re-read AFTER the strip — the pane never claims a
-    /// removal the document does not show.
+    /// Since #1572 the strip covers every route an attachment takes — the
+    /// document-level tree and <c>/AF</c> arrays AND page
+    /// <c>/FileAttachment</c> annotations (plus embedded media) — so the count
+    /// is what the strip itself reports removing, which can exceed the rows the
+    /// pane lists. The list is still re-read afterwards, and anything left
+    /// there is reported rather than hidden.
     /// </para>
     /// </remarks>
     public void StripAllAttachments()
@@ -378,17 +379,18 @@ public partial class MainWindowViewModel
         if (document == null || Attachments.Count == 0)
             return;
 
-        var before = Attachments.Count;
-        var restore = document.ScrubEmbeddedFilesReversibly();
+        var (removedFiles, restore) = document.ScrubEmbeddedFilesReversibly();
         RefreshAttachments();
-        var removed = before - Attachments.Count;
+        var removed = removedFiles.Count;
 
         if (removed <= 0)
         {
-            // Nothing the strip covers: leave the document clean and say why.
+            // The strip found nothing to remove: leave the document clean and say so.
+            restore();
+            RefreshAttachments();
             _toastService.ShowWarning(
                 "No attachments removed",
-                "These attachments belong to page annotations, which Remove All does not change.");
+                "excise found no embedded file it could remove.");
             return;
         }
 
@@ -409,7 +411,7 @@ public partial class MainWindowViewModel
             },
             redo: () =>
             {
-                restore = document.ScrubEmbeddedFilesReversibly();
+                (_, restore) = document.ScrubEmbeddedFilesReversibly();
                 FileState.PageEditsCount++;
                 RefreshAttachments();
                 RaiseStripBookkeeping();
@@ -421,11 +423,12 @@ public partial class MainWindowViewModel
             : $"{removed} attachments removed — save to persist";
         if (Attachments.Count > 0)
         {
+            // Not expected since #1572; if it happens the user must know.
             _toastService.ShowWarning(
                 message,
                 Attachments.Count == 1
-                    ? "1 attachment on a page annotation remains."
-                    : $"{Attachments.Count} attachments on page annotations remain.");
+                    ? "1 attachment could not be removed."
+                    : $"{Attachments.Count} attachments could not be removed.");
         }
         else
         {

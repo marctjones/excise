@@ -45,9 +45,9 @@ public enum WidthPolicy
 
 /// <summary>
 /// One place to see and set how redaction behaves (#1187). Every field here is
-/// enforced by the <b>engine</b> (Excise.Core) — the defaults reproduce the
-/// pre-#1187 behaviour exactly, so constructing <see cref="Default"/> changes
-/// nothing.
+/// enforced by the <b>engine</b> (Excise.Core). The defaults reproduced the
+/// pre-#1187 behaviour exactly until 2026-09-17, when
+/// <see cref="KeepAttachments"/> made attachment removal the default (#1572).
 ///
 /// <para><b>Knobs NOT in this record, and why.</b> This type deliberately holds
 /// only what Core can honour; a field Core would silently ignore is the
@@ -154,7 +154,29 @@ public sealed record RedactionOptions
     public Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
         = Operations.CarrierScrubPolicy.Default;
 
-    /// <summary>The all-defaults options — reproduces pre-#1187 behaviour.</summary>
+    /// <summary>
+    /// Keep the document's embedded files instead of removing them. Default
+    /// false: redacted output carries no attachments (#1572). Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>The default was flipped on 2026-09-17</b> (Marc's decision):
+    /// before, only the GUI's redacted-copy flow removed attachments and
+    /// <c>RedactText</c> removed just the ones whose name, description or
+    /// content matched the term — so an attachment excise could not read (a
+    /// spreadsheet, an image) always survived.</para>
+    /// <para>With this set, kept attachments are still examined:
+    /// text files (txt, csv, xml, html, json, md, or a <c>text/*</c> type) have
+    /// the term cut out; nested PDFs are redacted with these same options, or
+    /// the redaction is refused (<see cref="Excise.Core.Document.AttachmentRedactionRefusedException"/>);
+    /// anything else is reported as not checked, and
+    /// <see cref="RedactionReport.IsCleanSuccess"/> is false.</para>
+    /// <para>A PDF portfolio (<c>/Collection</c>) is refused when this is
+    /// false (<see cref="Excise.Core.Document.PdfPortfolioRedactionException"/>): its
+    /// attachments are the documents.</para>
+    /// </remarks>
+    public bool KeepAttachments { get; init; } = false;
+
+    /// <summary>The all-defaults options.</summary>
     public static RedactionOptions Default { get; } = new();
 
     internal bool CloseWidth => Width == WidthPolicy.CloseGap;

@@ -54,6 +54,12 @@ public class WindowSettings
     public bool RedactionWholeWord { get; set; }
 
     /// <summary>
+    /// Keep attachments in redacted copies (#1572). Default false — since
+    /// 2026-09-17 redacted output carries no attachments.
+    /// </summary>
+    public bool RedactionKeepAttachments { get; set; }
+
+    /// <summary>
     /// Redaction width / covering-box policy (#1189). Persisted as a string;
     /// parsed back to <see cref="Excise.Core.Text.Segmentation.WidthPolicy"/>.
     /// </summary>

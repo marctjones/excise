@@ -82,6 +82,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
         Excise.Core.Operations.CarrierScrubMode.Strip;
     private bool _redactionWholeWord;
+    private bool _redactionKeepAttachments;
     private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
         Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
     private bool _isRedactionMode;
@@ -349,6 +350,21 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Keep the document's attachments in a redacted copy (#1572). Default
+    /// false: since 2026-09-17 every redacted copy is written without them.
+    /// </summary>
+    /// <remarks>
+    /// When on, kept text attachments have the redacted text cut out, nested
+    /// PDFs are redacted too, and anything else is listed in the redacted-copy
+    /// report as not checked. A PDF portfolio is refused when this is off.
+    /// </remarks>
+    public bool RedactionKeepAttachments
+    {
+        get => _redactionKeepAttachments;
+        set => this.RaiseAndSetIfChanged(ref _redactionKeepAttachments, value);
+    }
+
+    /// <summary>
     /// How the removed run's WIDTH is handled (#1189). Default
     /// <see cref="Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout"/>.
     /// </summary>
@@ -373,9 +389,11 @@ public partial class MainWindowViewModel : ViewModelBase
     /// user did not choose.
     /// </summary>
     public void ApplyRedactionPolicyPreferences(
-        bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy)
+        bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy,
+        bool keepAttachments = false)
     {
         RedactionWholeWord = wholeWord;
+        RedactionKeepAttachments = keepAttachments;   // #1572
 
         if (Enum.TryParse<Excise.Core.Text.Segmentation.WidthPolicy>(widthPolicy, out var width))
             RedactionWidthPolicy = width;
@@ -403,6 +421,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             CarrierPolicy = policy,
             WholeWord = RedactionWholeWord,   // #1052
+            ScrubAttachments = !RedactionKeepAttachments,   // #1572
         };
     }
 

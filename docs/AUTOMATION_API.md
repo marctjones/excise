@@ -175,6 +175,17 @@ Rules enforced by the batch contract:
   `DECRYPT_CONFIRMATION_REQUIRED` unless `allowDecrypt: true` was supplied,
   because excise could not write encrypted output; that error code no longer
   occurs.)
+- `redaction.apply` removes every attachment from its output by default
+  (#1572, decided 2026-09-17) and lists each one in the step result's
+  `attachments` array (`name`, `sizeBytes`, `location`, `disposition`,
+  `detail`). `keepAttachments: true` keeps them: text attachments have the
+  term cut out (`KeptTermRemoved` / `KeptTermNotFound`), attached PDFs are
+  redacted with the same options, and anything else is `KeptNotChecked` — it
+  may still contain the term, and a `carrierNotes` line says the redaction was
+  not clean. An attached PDF excise cannot open (or one with a password) fails
+  the step with `ATTACHMENT_REFUSED`; a PDF portfolio fails with
+  `PORTFOLIO_REFUSED` unless `keepAttachments: true` (both category
+  `SECURITY`, nothing written).
 - Document `/P` permissions are enforced (#642): `text.extract` and
   `render.page` require the document's copy/extract permission, `form.fillForm`
   requires the form fill-in permission, and `form.addField` requires the modify

@@ -67,7 +67,10 @@ public class RedactionService
     /// <summary>
     /// Redact a rectangular area on <paramref name="page"/>.
     /// </summary>
-    public void RedactArea(PdfPage page, PdfPageRect area)
+    /// <param name="keepAttachments">Keep the document's embedded files
+    /// (#1572). Default false: the engine removes every attachment, since an
+    /// area has no term to check one against.</param>
+    public void RedactArea(PdfPage page, PdfPageRect area, bool keepAttachments = false)
     {
         var visualArea = PdfCoordinateMapper.ToVisualPoints(page, area);
         if (!IntersectsVisualPage(visualArea, page.VisualWidth, page.VisualHeight))
@@ -87,8 +90,13 @@ public class RedactionService
             .ToList();
 
         // The engine also strips the document's positionless carriers (/Info,
-        // XMP) by default — see #897 and the note at the top of this class.
-        page.RedactArea(coreRect, GlyphRemovalStrategy.AnyOverlap);
+        // XMP) by default — see #897 and the note at the top of this class —
+        // and, unless kept, every attachment (#1572).
+        page.RedactArea(coreRect, new Excise.Core.Text.Segmentation.RedactionOptions
+        {
+            Strategy = GlyphRemovalStrategy.AnyOverlap,
+            KeepAttachments = keepAttachments,
+        });
         // #1450: the Core helper, not a GUI copy — it threads the tracked
         // source spans/array boundaries RedactArea just produced through the
         // append, instead of re-serializing the whole page a second time.
@@ -158,7 +166,8 @@ public class RedactionService
         string inputPath, string outputPath, string textToRedact, bool caseSensitive = false,
         bool allowLowConfidence = false, bool wholeWord = false,
         Excise.Core.Text.Segmentation.WidthPolicy width =
-            Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout)
+            Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout,
+        bool keepAttachments = false)
     {
         _logger.LogInformation(
             "RedactText: '{Text}' in {Input} (wholeWord={WholeWord})",
@@ -188,6 +197,7 @@ public class RedactionService
                 CaseSensitive = caseSensitive,
                 WholeWord = wholeWord,   // #1052
                 Width = width,           // #1189
+                KeepAttachments = keepAttachments,   // #1572
             });
             int totalMatches = redaction.VerifiedRemovals;
             // #643: this path opens without a password, so only empty-user-
@@ -195,9 +205,17 @@ public class RedactionService
             // stays encrypted with the same parameters.
             doc.Save(outputPath, doc.GetReEncryptionOptions(userPassword: null));
 
-            var warnings = confidence.ShouldWarn
-                ? new[] { BuildConfidenceWarning(confidence) }
-                : null;
+            var warnings = new List<string>();
+            if (confidence.ShouldWarn)
+                warnings.Add(BuildConfidenceWarning(confidence));
+            // #1572: a kept attachment excise could not check, or whose own
+            // redaction was not clean, may still hold the term.
+            foreach (var attachment in redaction.Attachments.Where(a => !a.IsClean))
+                warnings.Add($"Kept attachment {attachment}.");
+            var removedAttachments = redaction.Attachments.Count(
+                a => a.Disposition == AttachmentDisposition.Removed);
+            if (removedAttachments > 0)
+                _logger.LogInformation("Removed {Count} attachment(s) from the redacted output", removedAttachments);
 
             _logger.LogInformation(
                 "Redacted {Count} occurrence(s) of '{Text}' (wholeWord={WholeWord})",

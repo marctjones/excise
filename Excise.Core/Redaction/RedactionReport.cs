@@ -140,6 +140,14 @@ public sealed class RedactionReport
     public int ImagesDroppedWhole { get; init; }
 
     /// <summary>
+    /// Every embedded file this redaction removed or kept (#1572), with its
+    /// name and size. A kept file excise could not check, or whose own
+    /// redaction was not clean, makes <see cref="IsCleanSuccess"/> false.
+    /// </summary>
+    public IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> Attachments { get; init; }
+        = Array.Empty<Excise.Core.Document.AttachmentRedactionResult>();
+
+    /// <summary>
     /// Occurrences excise located. NOT a success count — kept because the gap
     /// between this and <see cref="VerifiedRemovals"/> is the signal that
     /// something went wrong.
@@ -157,13 +165,15 @@ public sealed class RedactionReport
     public int Survived => Pages.Sum(p => p.OccurrencesRemainingAfter);
 
     /// <summary>
-    /// True when everything located was verified gone and no carrier was
-    /// refused. Anything else needs a human to read the detail.
+    /// True when everything located was verified gone, no carrier was
+    /// refused, and no kept attachment is unchecked or unclean. Anything else
+    /// needs a human to read the detail.
     /// </summary>
     public bool IsCleanSuccess =>
         Survived == 0 &&
         Carriers.All(c => c.RefusedReason == null) &&
-        HyphenatedCandidates.Count == 0;
+        HyphenatedCandidates.Count == 0 &&
+        Attachments.All(a => a.IsClean);
 
     /// <summary>A one-line summary safe to print. States the gap when there is one.</summary>
     public override string ToString()
@@ -177,6 +187,11 @@ public sealed class RedactionReport
             parts.Add($"{c.Carrier} NOT scrubbed ({c.RefusedReason})");
         if (HyphenatedCandidates.Count > 0)
             parts.Add($"{HyphenatedCandidates.Count} hyphen-wrapped occurrence(s) NOT removed");
+        var removedFiles = Attachments.Count(a => a.Disposition == Excise.Core.Document.AttachmentDisposition.Removed);
+        if (removedFiles > 0)
+            parts.Add($"{removedFiles} attachment(s) removed");
+        foreach (var a in Attachments.Where(a => !a.IsClean))
+            parts.Add($"attachment {a}");
         return string.Join("; ", parts);
     }
 }

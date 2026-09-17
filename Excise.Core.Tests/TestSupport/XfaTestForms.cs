@@ -84,6 +84,69 @@ internal static class XfaTestForms
         return document.SaveToBytes();
     }
 
+    /// <summary>
+    /// A STATIC XFA form (#1574), the shape of the IRS forms: two AcroForm text
+    /// widgets with appearance streams — FullName at [100 600 400 630] holding
+    /// <paramref name="fullName"/>, City at [100 500 400 530] holding
+    /// <paramref name="city"/> — a "Name:" label drawn in page content, no
+    /// <c>/NeedsRendering</c>, and one <c>/XFA</c> stream whose datasets repeat
+    /// both values plus <paramref name="datasetsOnly"/>, which no page shows.
+    /// </summary>
+    public static byte[] BuildStaticPdf(string fullName, string city, string datasetsOnly)
+    {
+        var xdp =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<xdp:xdp xmlns:xdp=\"http://ns.adobe.com/xdp/\">"
+            + Template(
+                "<field name=\"FullName\" x=\"1.39in\" y=\"2.25in\" w=\"4.17in\" h=\"0.42in\"><ui><textEdit/></ui></field>"
+                + "<field name=\"City\" x=\"1.39in\" y=\"3.64in\" w=\"4.17in\" h=\"0.42in\"><ui><textEdit/></ui></field>",
+                layout: "position")
+            + "<xfa:datasets xmlns:xfa=\"http://www.xfa.org/schema/xfa-data/1.0/\"><xfa:data>"
+            + Data($"<FullName>{fullName}</FullName><City>{city}</City><Notes>{datasetsOnly}</Notes>")
+            + "</xfa:data></xfa:datasets></xdp:xdp>";
+
+        static string Appearance(string value) => $"/Tx BMC BT /F1 12 Tf 2 8 Td ({value}) Tj ET EMC";
+        var nameAp = Appearance(fullName);
+        var cityAp = Appearance(city);
+        const string content = "BT /F1 12 Tf 50 612 Td (Name:) Tj 0 -100 Td (City:) Tj ET";
+
+        var bodies = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R /AcroForm 11 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+                "/Resources << /Font << /F1 5 0 R >> >> /Annots [6 0 R 8 0 R] >>",
+            RawStream("", content),
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+            $"<< /Type /Annot /Subtype /Widget /FT /Tx /T (FullName) /V ({fullName}) /Rect [100 600 400 630] " +
+                "/P 3 0 R /DA (/F1 12 Tf 0 g) /AP << /N 7 0 R >> >>",
+            RawStream("/Type /XObject /Subtype /Form /BBox [0 0 300 30] /Resources << /Font << /F1 5 0 R >> >>", nameAp),
+            $"<< /Type /Annot /Subtype /Widget /FT /Tx /T (City) /V ({city}) /Rect [100 500 400 530] " +
+                "/P 3 0 R /DA (/F1 12 Tf 0 g) /AP << /N 9 0 R >> >>",
+            RawStream("/Type /XObject /Subtype /Form /BBox [0 0 300 30] /Resources << /Font << /F1 5 0 R >> >>", cityAp),
+            RawStream("", xdp),
+            "<< /Fields [6 0 R 8 0 R] /DA (/F1 12 Tf 0 g) /DR << /Font << /F1 5 0 R >> >> /XFA 10 0 R >>",
+        };
+
+        var sb = new StringBuilder("%PDF-1.7\n");
+        var offsets = new List<int>();
+        for (var i = 0; i < bodies.Length; i++)
+        {
+            offsets.Add(Encoding.UTF8.GetByteCount(sb.ToString()));
+            sb.Append(i + 1).Append(" 0 obj\n").Append(bodies[i]).Append("\nendobj\n");
+        }
+        var xref = Encoding.UTF8.GetByteCount(sb.ToString());
+        sb.Append("xref\n0 ").Append(bodies.Length + 1).Append("\n0000000000 65535 f \n");
+        foreach (var offset in offsets)
+            sb.Append(offset.ToString("D10")).Append(" 00000 n \n");
+        sb.Append("trailer\n<< /Size ").Append(bodies.Length + 1)
+          .Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF\n");
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    private static string RawStream(string dictionary, string data)
+        => $"<< {dictionary} /Length {Encoding.UTF8.GetByteCount(data)} >>\nstream\n{data}\nendstream";
+
     private static PdfReference Stream(PdfDocument document, string xml)
         => document.AddIndirectObject(new PdfStream(Encoding.UTF8.GetBytes(xml)));
 
