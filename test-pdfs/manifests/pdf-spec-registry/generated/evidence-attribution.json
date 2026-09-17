@@ -8010,13 +8010,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -21484,13 +21482,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -22996,13 +22992,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -24469,13 +24463,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -94807,13 +94799,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -96229,13 +96219,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -97665,13 +97653,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -99127,13 +99113,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -107399,13 +107383,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -108859,13 +108841,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -114166,8 +114146,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7358,
-    "testMethodsWithCapabilityCandidate": 4505,
+    "testMethods": 7385,
+    "testMethodsWithCapabilityCandidate": 4532,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
