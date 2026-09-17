@@ -27,7 +27,10 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   nested PDFs are redacted with the same options, and an unreadable or
   password-protected one refuses the whole redaction
   (`AttachmentRedactionRefusedException`, batch `ATTACHMENT_REFUSED`); anything
-  else is reported as not checked and the redaction is not a clean success. A
+  else is reported as not checked and the redaction is not a clean success.
+  A kept file listed in the attachment name tree under a key holding the term
+  is removed, as one whose `/F` or `/UF` holds it already was; files attached
+  only through a page `/AF` are examined too (#1582's attachment carriers). A
   PDF portfolio (`/Collection`) is refused rather than stripped unless
   attachments are kept (`PdfPortfolioRedactionException`, batch
   `PORTFOLIO_REFUSED`). This reverses the "defaults reproduce prior behaviour"
