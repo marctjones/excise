@@ -7,8 +7,11 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <!-- Suppress platform-specific warnings for cross-platform PDF rendering -->
-    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <!-- CA1416 (platform compatibility) is deliberately NOT suppressed any
+         more (#1546): the Windows-only print code must stay reachable only
+         behind OperatingSystem.IsWindows(), and this analyzer is what proves
+         it. The old blanket suppression dated from the PDFium era and hid
+         nothing when removed (0 warnings, 2026-09-17). -->
     <!-- AllowUnsafeBlocks is used by Imaging/SkiaInterop.cs to copy pixels
          directly from SkiaSharp output into Avalonia's WriteableBitmap, which
          turns the per-render bottleneck (PNG encode + decode) into a

@@ -211,7 +211,10 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   would bring WinForms into an Avalonia app for a wrapper around the same
   call; the WinRT print manager would need a separate Windows target
   framework. New dependency: System.Drawing.Common 10.0.12 (MIT, managed),
-  referenced for every RID but only ever loaded on Windows. What prints is
+  referenced for every RID but only ever loaded on Windows. To make that
+  guard checkable, Excise.App no longer suppresses the platform-compatibility
+  analyzer (CA1416) project-wide: the suppression hid nothing (0 warnings
+  without it), and a planted unguarded `PrinterSettings` call now warns. What prints is
   what the viewer shows: the per-annotation `/Print` flag is not consulted
   yet (#1573). ⚠️ Built and tested on macOS only — the page geometry, sheet order,
   scaling, rasterising and the view-model path run against a fake dialog and
