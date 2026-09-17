@@ -89,6 +89,12 @@ public class ThumbnailPrewarmIdleGateTests
         var session = StartedSession(path, out var document);
         try
         {
+            // A wider gate than the other tests use: this one re-arms from a
+            // loop, so the margin that matters is how long a stall between one
+            // Task.Delay ending and the next NotifyActivity may last on a
+            // loaded machine. 3 s against 400 ms spacing tolerates 2.6 s.
+            session.PrewarmIdleDelay = TimeSpan.FromSeconds(3);
+            session.NotifyActivity();
             // Use the document steadily for longer than the quiet period. Each
             // call re-arms it, so the pre-warm must still not have started.
             for (var i = 0; i < 8; i++)
