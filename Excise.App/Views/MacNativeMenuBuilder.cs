@@ -233,8 +233,12 @@ internal static class MacNativeMenuBuilder
                     CommandItem("Documentation", _viewModel.ShowDocumentationCommand)));
 
             menu.NeedsUpdate += (_, _) => Refresh();
+            // #1551: RecentFiles is one collection shared by every session, so
+            // subscribing to it here would root this menu — and its view model —
+            // for the life of the process. The view model relays collection
+            // changes as RecentFileMenuItems and drops that subscription when
+            // its session ends; the menu listens to the view model alone.
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
-            _viewModel.RecentFiles.CollectionChanged += (_, _) => QueueRefresh();
             Refresh();
             return menu;
         }
@@ -278,7 +282,9 @@ internal static class MacNativeMenuBuilder
             or nameof(MainWindowViewModel.IsClipboardSidebarVisible)
             or nameof(MainWindowViewModel.RevealHiddenText)
             or nameof(MainWindowViewModel.RevealRasterizedHidden)
-            or nameof(MainWindowViewModel.OpenDocuments);
+            or nameof(MainWindowViewModel.OpenDocuments)
+            or nameof(MainWindowViewModel.RecentFiles)
+            or nameof(MainWindowViewModel.RecentFileMenuItems);
 
         private void Refresh()
         {

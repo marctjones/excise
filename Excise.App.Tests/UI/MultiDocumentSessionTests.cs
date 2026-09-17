@@ -387,10 +387,55 @@ public sealed class MultiDocumentSessionTests : IDisposable
         keep.IsDisposed.Should().BeFalse();
     }
 
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task ClosingAWindow_ReleasesItsSession_EvenWithANativeMenuBuilt()
+    {
+        // The headless platform exports no native menu, so the window never
+        // builds one; production macOS always does. Build it here: a menu that
+        // subscribed to the app-wide RecentFiles collection kept every closed
+        // window's view model alive.
+        using var harness = new Harness();
+        var keep = harness.OpenWindow();
+        var released = await OpenAndCloseSecondSessionAsync(
+            harness, NewPdf("released-menu.pdf", "RELEASED"), buildNativeMenu: true);
+
+        for (var i = 0; i < 10 && released.IsAlive; i++)
+        {
+            await FlushAsync();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        }
+
+        released.IsAlive.Should().BeFalse(
+            "the shared recent-files list must not root a closed window's native menu and view model");
+    }
+
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task NativeOpenRecentMenu_FollowsTheSharedRecentFilesList()
+    {
+        using var harness = new Harness();
+        var a = harness.OpenWindow();
+        var b = harness.OpenWindow();
+        var menu = Excise.App.Views.MacNativeMenuBuilder.Create(b.ViewModel);
+        var path = NewPdf("shared-recent.pdf", "SHARED");
+
+        a.ViewModel.RecentFiles.Insert(0, path);
+        await FlushAsync();
+
+        ToolbarOverflowMenuEntriesTests.NativeLeaves(menu).Should().Contain(
+            n => ReferenceEquals(n.Command, b.ViewModel.LoadRecentFileCommand)
+                 && (string?)n.CommandParameter == path,
+            "a file added to recent files in one window appears in every window's Open Recent menu");
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static async Task<WeakReference> OpenAndCloseSecondSessionAsync(Harness harness, string path)
+    private static async Task<WeakReference> OpenAndCloseSecondSessionAsync(
+        Harness harness, string path, bool buildNativeMenu = false)
     {
         var session = harness.OpenWindow();
+        if (buildNativeMenu)
+            Excise.App.Views.MacNativeMenuBuilder.Create(session.ViewModel).Items.Should().NotBeEmpty();
         await session.ViewModel.LoadDocumentAsync(path);
         await session.ViewModel.GoToPageCommand.Execute(0);
         var reference = new WeakReference(session.ViewModel);
