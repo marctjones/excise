@@ -24,7 +24,19 @@
     "inherits whatever was last used interactively - and in single-page mode",
     "TryScrollViewportBy scrolls within ONE page, so an 'altona-scroll' run",
     "would measure nothing like #1461 while still producing a full row of",
-    "plausible numbers."
+    "plausible numbers.",
+    "",
+    "MULTI-DOCUMENT SET (#1551-#1554). Scenarios with \"set\": \"multi-document\"",
+    "run only with --set multi-document (or by --scenario id); the default run",
+    "is the single-document set above. Each carries \"settings\", which the",
+    "harness writes into the launch's ISOLATED window.json (DocumentOpenMode is",
+    "Preferences > Documents > Open Documents In), so openAnother lands where",
+    "the preference sends it and the step fails if it lands anywhere else.",
+    "\"checks\" are read by summarize-gui-perf.py: a 'drop' check reports whether",
+    "the footprint fell between two labelled boundaries, against the floor.",
+    "multi-quit-dirty is the one scenario that mutates and then leaves: its",
+    "quitReview answers the unsaved-changes prompts in process (never a dialog)",
+    "and must be its last step."
   ],
   "scenarios": [
     {
@@ -418,6 +430,452 @@
           "op": "idle",
           "label": "idle-20s",
           "seconds": 20
+        }
+      ]
+    },
+    {
+      "id": "multi-windows-open3",
+      "set": "multi-document",
+      "settings": {
+        "DocumentOpenMode": "NewWindow"
+      },
+      "why": "What a second and third document cost when each opens in its own window (#1552), what three burn at idle, and whether closing one gives its memory back. Marginal cost = the footprint delta between one-open, two-open and three-open.",
+      "checks": [
+        {
+          "kind": "drop",
+          "from": "three-open-idle-30s",
+          "to": "closed-one-idle-45s",
+          "metric": "footprintMB",
+          "why": "closing one of three documents must give memory back (#1551 section 7.6: disposing the session releases the document)"
+        }
+      ],
+      "steps": [
+        {
+          "op": "mark",
+          "label": "launched"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-launch"
+        },
+        {
+          "op": "open",
+          "label": "open-w9",
+          "document": "test-pdfs/smoke/irs-w9.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-w9",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "one-open"
+        },
+        {
+          "op": "openAnother",
+          "label": "open-irs",
+          "document": "test-pdfs/smoke/irs-1040-instructions.pdf",
+          "level": "window"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-irs",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "two-open"
+        },
+        {
+          "op": "openAnother",
+          "label": "open-scotus",
+          "document": "test-pdfs/smoke/scotus-trump-v-us.pdf",
+          "level": "window"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-scotus",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "three-open"
+        },
+        {
+          "op": "expectDocuments",
+          "label": "expect-three",
+          "documents": 3,
+          "windows": 3
+        },
+        {
+          "op": "idle",
+          "label": "three-open-idle-30s",
+          "seconds": 30
+        },
+        {
+          "op": "close",
+          "label": "close-scotus"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-close"
+        },
+        {
+          "op": "expectDocuments",
+          "label": "expect-two",
+          "documents": 2,
+          "windows": 2
+        },
+        {
+          "op": "idle",
+          "label": "closed-one-idle-20s",
+          "seconds": 20
+        },
+        {
+          "op": "idle",
+          "label": "closed-one-idle-45s",
+          "seconds": 25
+        }
+      ]
+    },
+    {
+      "id": "multi-tabs-open3",
+      "set": "multi-document",
+      "settings": {
+        "DocumentOpenMode": "NewTab"
+      },
+      "why": "The same three documents as tabs of one window (#1554): one viewer and one compositor surface instead of three, so the marginal cost should differ from multi-windows-open3. Closing the selected tab must still give its memory back.",
+      "checks": [
+        {
+          "kind": "drop",
+          "from": "three-open-idle-30s",
+          "to": "closed-one-idle-45s",
+          "metric": "footprintMB",
+          "why": "closing one of three documents must give memory back (#1551 section 7.6: disposing the session releases the document)"
+        }
+      ],
+      "steps": [
+        {
+          "op": "mark",
+          "label": "launched"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-launch"
+        },
+        {
+          "op": "open",
+          "label": "open-w9",
+          "document": "test-pdfs/smoke/irs-w9.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-w9",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "one-open"
+        },
+        {
+          "op": "openAnother",
+          "label": "open-irs",
+          "document": "test-pdfs/smoke/irs-1040-instructions.pdf",
+          "level": "tab"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-irs",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "two-open"
+        },
+        {
+          "op": "openAnother",
+          "label": "open-scotus",
+          "document": "test-pdfs/smoke/scotus-trump-v-us.pdf",
+          "level": "tab"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-scotus",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "three-open"
+        },
+        {
+          "op": "expectDocuments",
+          "label": "expect-three",
+          "documents": 3,
+          "windows": 1
+        },
+        {
+          "op": "idle",
+          "label": "three-open-idle-30s",
+          "seconds": 30
+        },
+        {
+          "op": "close",
+          "label": "close-scotus"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-close"
+        },
+        {
+          "op": "expectDocuments",
+          "label": "expect-two",
+          "documents": 2,
+          "windows": 1
+        },
+        {
+          "op": "idle",
+          "label": "closed-one-idle-20s",
+          "seconds": 20
+        },
+        {
+          "op": "idle",
+          "label": "closed-one-idle-45s",
+          "seconds": 25
+        }
+      ]
+    },
+    {
+      "id": "multi-tabs-switch",
+      "set": "multi-document",
+      "settings": {
+        "DocumentOpenMode": "NewTab"
+      },
+      "why": "Switching tabs swaps the window's DataContext and restores the outgoing tab's scroll position at ContextIdle (#1554). Each switchDocument step fails unless a tab shown before comes back on its page and scroll offset, and its wall time is the switch cost up to the restored position (polled every 16 ms).",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "launched"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-launch"
+        },
+        {
+          "op": "open",
+          "label": "open-w9",
+          "document": "test-pdfs/smoke/irs-w9.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-w9",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-w9"
+        },
+        {
+          "op": "openAnother",
+          "label": "open-irs",
+          "document": "test-pdfs/smoke/irs-1040-instructions.pdf",
+          "level": "tab"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-irs",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-irs"
+        },
+        {
+          "op": "openAnother",
+          "label": "open-scotus",
+          "document": "test-pdfs/smoke/scotus-trump-v-us.pdf",
+          "level": "tab"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-scotus",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-scotus"
+        },
+        {
+          "op": "expectDocuments",
+          "label": "expect-three-tabs",
+          "documents": 3,
+          "windows": 1
+        },
+        {
+          "op": "pageBy",
+          "label": "scotus-to-page-13",
+          "count": 12
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-scotus-p13"
+        },
+        {
+          "op": "switchDocument",
+          "label": "switch-to-w9",
+          "count": 1
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-w9-shown"
+        },
+        {
+          "op": "pageBy",
+          "label": "w9-to-page-4",
+          "count": 3
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-w9-p4"
+        },
+        {
+          "op": "switchDocument",
+          "label": "switch-back-to-scotus",
+          "count": -1
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-scotus-restored"
+        },
+        {
+          "op": "switchDocument",
+          "label": "switch-to-irs",
+          "count": -1
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-irs-shown"
+        },
+        {
+          "op": "scrollPages",
+          "label": "irs-scroll-5",
+          "count": 5
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-irs-scrolled"
+        },
+        {
+          "op": "switchDocument",
+          "label": "switch-back-to-w9",
+          "count": -1
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-w9-restored"
+        },
+        {
+          "op": "switchDocument",
+          "label": "switch-back-to-irs",
+          "count": 1
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-irs-restored"
+        },
+        {
+          "op": "idle",
+          "label": "three-tabs-idle-20s",
+          "seconds": 20
+        }
+      ]
+    },
+    {
+      "id": "multi-quit-dirty",
+      "set": "multi-document",
+      "settings": {
+        "DocumentOpenMode": "NewWindow"
+      },
+      "why": "Quit with two unsaved documents and one clean one (#1551): the quit review must activate and ask about exactly the two dirty documents. The prompts are answered Discard in process by the harness, never by clicking a dialog; the step fails unless exactly two were asked.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "launched"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-launch"
+        },
+        {
+          "op": "open",
+          "label": "open-w9",
+          "document": "test-pdfs/smoke/irs-w9.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-w9",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-w9"
+        },
+        {
+          "op": "redactText",
+          "label": "dirty-w9",
+          "text": "Taxpayer"
+        },
+        {
+          "op": "openAnother",
+          "label": "open-irs",
+          "document": "test-pdfs/smoke/irs-1040-instructions.pdf",
+          "level": "window"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-irs",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-irs"
+        },
+        {
+          "op": "redactText",
+          "label": "dirty-irs",
+          "text": "income"
+        },
+        {
+          "op": "openAnother",
+          "label": "open-scotus-clean",
+          "document": "test-pdfs/smoke/scotus-trump-v-us.pdf",
+          "level": "window"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous-scotus",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-scotus"
+        },
+        {
+          "op": "expectDocuments",
+          "label": "expect-three-windows",
+          "documents": 3,
+          "windows": 3
+        },
+        {
+          "op": "idle",
+          "label": "three-open-idle-10s",
+          "seconds": 10
+        },
+        {
+          "op": "quitReview",
+          "label": "quit-review-two-dirty",
+          "level": "discard",
+          "count": 2
         }
       ]
     }
