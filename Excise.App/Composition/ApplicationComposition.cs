@@ -18,26 +18,34 @@ internal static class ApplicationComposition
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddSingleton<PdfDocumentService>();
+        // #1551: one dependency-injection SCOPE per document session
+        // (DocumentSessionFactory). Everything that carries the state of one
+        // document, or belongs to the window that shows it, is scoped, so two
+        // open documents never share it. ValidateScopes (App.axaml.cs) rejects
+        // a scoped service resolved from the root, which is what keeps a later
+        // registration from quietly making one of these app-wide again.
+        services.AddScoped<PdfDocumentService>();
+        services.AddScoped<DocumentSearchSession>();
+        services.AddScoped<DocumentTextIndexSession>();
+        services.AddScoped<PageOrganizationWorkflowService>();
+        services.AddScoped<AnnotationWorkflowService>();
+        services.AddScoped<SignatureVerificationWorkflowService>();
+        services.AddScoped<ToastService>();
+
+        // Stateless, or app-wide by design (§7.2 of
+        // docs/architecture/main-window-architecture.md).
         services.AddSingleton<IPageImageRenderer, PageImageRenderer>();
         services.AddSingleton<RedactionService>();
         services.AddSingleton<RedactedCopyDialogFormatter>();
         services.AddSingleton<RedactionWorkflowService>();
         services.AddSingleton<PdfTextExtractionService>();
         services.AddSingleton<PdfSearchService>();
-        services.AddSingleton<DocumentSearchSession>();
-        services.AddSingleton<DocumentTextIndexSession>();
         services.AddSingleton<SignatureVerificationService>();
         services.AddSingleton<SignatureVerificationSummaryFormatter>();
-        services.AddSingleton<SignatureVerificationWorkflowService>();
-        services.AddSingleton<PageOrganizationWorkflowService>();
         services.AddSingleton<DocumentImageExportWorkflowService>();
-        services.AddSingleton<AnnotationWorkflowService>();
         services.AddSingleton<FilenameSuggestionService>();
-        services.AddSingleton<ToastService>();
-        services.AddSingleton<IUserDialogService, AvaloniaUserDialogService>();
-        // #1481: one instance, shared by the view model (close/replace) and the
-        // cache-trim coordinator (OS pressure), so their requests coalesce.
+        // #1481: one instance, shared by every session (close/replace) and the
+        // cache-trim coordinators (OS pressure), so their requests coalesce.
         services.AddSingleton(_ => new ReleasedMemoryReclaimer());
 
         // #1545: printing. The platform half is chosen here (PDFKit on macOS,
@@ -58,23 +66,35 @@ internal static class ApplicationComposition
         // and Microsoft.Extensions.DependencyInjection only discovers PUBLIC
         // constructors.
         //
-        // AvaloniaWindowHost is one instance on purpose: the file picker
-        // resolves its storage provider from the same host the view model's
-        // StorageProviderOverride forwards to, so setting that override steers
-        // the real picker rather than a second, unused host.
-        services.AddSingleton<IWindowHost>(_ => new AvaloniaWindowHost());
-        services.AddSingleton<IFilePicker>(provider => new AvaloniaFilePicker(
+        // The window host is one instance PER SESSION (#1551): the session
+        // points it at the window that shows the document, and the file
+        // picker and the dialog service resolve their owner from that same
+        // instance, so a dialog opened from the second window is owned by the
+        // second window.
+        services.AddScoped<IWindowHost>(_ => new AvaloniaWindowHost());
+        services.AddScoped<IFilePicker>(provider => new AvaloniaFilePicker(
             provider.GetRequiredService<IWindowHost>(),
             provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<AvaloniaFilePicker>>()));
+        services.AddScoped<IUserDialogService>(provider => new AvaloniaUserDialogService(
+            provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<AvaloniaUserDialogService>>(),
+            provider.GetRequiredService<IWindowHost>()));
         services.AddSingleton<ITextClipboard>(_ => new AvaloniaTextClipboard());
         services.AddSingleton<ISettingsStore>(_ => new FileSettingsStore());
         services.AddSingleton<IRecentFilesStore>(_ => new FileRecentFilesStore());
 
-        // The desktop lifetime has one main window and therefore one document
-        // session. Use an explicit factory so constructor selection cannot fall
-        // back to MainWindowViewModel's temporary test/design-time graph when a
-        // production registration is missing.
-        services.AddSingleton(CreateMainWindowViewModel);
+        // One view model per document session. Use an explicit factory so
+        // constructor selection cannot fall back to MainWindowViewModel's
+        // temporary test/design-time graph when a production registration is
+        // missing.
+        services.AddScoped(CreateMainWindowViewModel);
+
+        // The application's open documents (#1463).
+        services.AddSingleton(provider => new Workspace.DocumentSessionFactory(
+            provider.GetRequiredService<IServiceScopeFactory>()));
+        services.AddSingleton(provider => new Workspace.DocumentWorkspace(
+            provider.GetRequiredService<Workspace.DocumentSessionFactory>(),
+            provider.GetRequiredService<ISettingsStore>(),
+            provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Workspace.DocumentWorkspace>>()));
 
         return services;
     }

@@ -57,6 +57,13 @@ namespace Excise.App.Models
         public string TypeIndicator { get; }
         public string UnicodeSecurityNotice { get; }
     }
+    public enum DocumentOpenMode
+    {
+        Automatic = 0,
+        NewWindow = 1,
+        NewTab = 2,
+        ReplaceCurrent = 3,
+    }
     public sealed class OutlineNode
     {
         public OutlineNode(string title, int? pageNumber, System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.OutlineNode> children) { }
@@ -152,6 +159,7 @@ namespace Excise.App.Models
         public bool CacheTrimOnMemoryPressure { get; set; }
         public bool CacheTrimSoftTriggers { get; set; }
         public bool ContinuousScrollEnabled { get; set; }
+        public string DocumentOpenMode { get; set; }
         public System.Collections.Generic.List<Excise.App.Models.WindowSettings.DocumentState> DocumentStates { get; set; }
         public double Height { get; set; }
         public bool IsMaximized { get; set; }

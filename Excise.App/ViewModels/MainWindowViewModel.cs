@@ -174,6 +174,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void InitializeSessionState()
     {
+        ObserveRecentFiles(_recentFiles);
         LoadRecentFiles();
         LoadZoomPreference(); // Issue #32: Persist zoom level
     }
@@ -1005,7 +1006,14 @@ public partial class MainWindowViewModel : ViewModelBase
     public ObservableCollection<string> RecentFiles
     {
         get => _recentFiles;
-        set => this.RaiseAndSetIfChanged(ref _recentFiles, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _recentFiles, value);
+            // #1551: one list per application, observed by every session.
+            ObserveRecentFiles(value);
+            this.RaisePropertyChanged(nameof(HasRecentFiles));
+            this.RaisePropertyChanged(nameof(RecentFileMenuItems));
+        }
     }
 
     public bool HasRecentFiles => RecentFiles.Count > 0;
@@ -1145,10 +1153,15 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            var mainWindow = global::Avalonia.Application.Current?.ApplicationLifetime is
-                global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                ? desktop.MainWindow
-                : null;
+            // #1551: a workspace session's own window, not the desktop's first
+            // one. A stand-alone view model keeps the desktop lookup: headless
+            // tests steer MainWindowResolver and must not get a modal here.
+            var mainWindow = SessionHost != null
+                ? GetMainWindow()
+                : global::Avalonia.Application.Current?.ApplicationLifetime is
+                    global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    ? desktop.MainWindow
+                    : null;
 
             if (mainWindow != null)
             {
@@ -2274,6 +2287,11 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!await ConfirmDiscardUnsavedChangesAsync("close this document"))
             return;
 
+        // #1463: with other documents open, closing this one closes its
+        // window or tab. The last one keeps the empty window, as before.
+        if (SessionHost?.TryCloseSession() == true)
+            return;
+
         CloseDocument();
     }
 
@@ -2374,6 +2392,13 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _logger.LogInformation("Exit command triggered");
 
+        // #1463: every open document is reviewed, not only this one.
+        if (SessionHost is { } host)
+        {
+            await host.RequestQuitAsync();
+            return;
+        }
+
         if (!await ConfirmDiscardUnsavedChangesAsync("quit excise"))
             return;
 
@@ -2393,6 +2418,14 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogWarning("Recent file not found: {FilePath}", filePath);
             // Issue #25: Remove deleted file from recent files list
             RemoveFromRecentFiles(filePath);
+            return;
+        }
+
+        // #1463: the workspace decides where the file goes, and asks about
+        // unsaved changes only when it replaces this session's document.
+        if (SessionHost is { } host)
+        {
+            await host.OpenDocumentsAsync([filePath], replaceConfirmed: false);
             return;
         }
 

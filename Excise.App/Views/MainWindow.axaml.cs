@@ -15,6 +15,7 @@ using Excise.App.Models;
 using Excise.App.Services.Host;
 using Excise.App.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 
@@ -25,7 +26,10 @@ public partial class MainWindow : Window
     private PdfViewerControl? _pdfViewerControl;
     private readonly ISettingsStore _settingsStore;
     private readonly WindowSettings _windowSettings;
-    private object? _nativeMenuDataContext;
+    // #1551: one native menu per document session, built on first show and
+    // reused when the same session is shown again. Weak keys, so a closed
+    // session's menu goes with it.
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<MainWindowViewModel, NativeMenu> _nativeMenus = new();
     private NativeMenu? _nativeMenu;
     private bool _isNativeWindowOpened;
     private bool _nativeMenuAttachScheduled;
@@ -156,6 +160,9 @@ public partial class MainWindow : Window
 
         // Subscribe to search highlights changes
         this.DataContextChanged += OnDataContextChanged;
+        // #1551: a closed window lets go of its session, so the session's
+        // memory can be released with it.
+        this.Closed += (_, _) => UnbindViewModel();
         this.Opened += (_, _) =>
         {
             _isNativeWindowOpened = true;
@@ -294,86 +301,183 @@ public partial class MainWindow : Window
         }
     }
 
+    // #1551: the session this window is bound to, and how to let go of it.
+    // Every subscription made in BindViewModel is undone in UnbindViewModel,
+    // so a window can show another session (a tab switch) and a closed
+    // session is not kept alive by its window's handlers.
+    private MainWindowViewModel? _boundViewModel;
+    private readonly List<Action> _viewModelUnsubscribers = new();
+    private bool _hasBoundViewModel;
+
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         // Get reference to PdfViewerControl
         _pdfViewerControl ??= this.FindControl<PdfViewerControl>("PdfViewerControl");
 
-        if (DataContext is MainWindowViewModel viewModel)
+        var next = DataContext as MainWindowViewModel;
+        if (ReferenceEquals(next, _boundViewModel))
+            return;
+
+        UnbindViewModel();
+        if (next != null)
+            BindViewModel(next);
+    }
+
+    private void BindViewModel(MainWindowViewModel viewModel)
+    {
+        var rebinding = _hasBoundViewModel;
+        _hasBoundViewModel = true;
+        _boundViewModel = viewModel;
+
+        if (!viewModel.WindowPreferencesApplied)
         {
-            viewModel.ApplyContinuousScrollPreference(_windowSettings.ContinuousScrollEnabled);
-            if (Enum.TryParse<Excise.Core.Text.ReadingOrderStrategy>(
-                    _windowSettings.ReadingOrderStrategy, out var strategy))
-                viewModel.ApplyReadingOrderStrategyPreference(strategy);
-            if (Enum.TryParse<Excise.Core.Text.WhitespaceMode>(
-                    _windowSettings.WhitespaceMode, out var whitespaceMode))
-                viewModel.ApplyWhitespaceModePreference(whitespaceMode);
-            viewModel.ApplyRedactionPolicyPreferences(
-                _windowSettings.RedactionWholeWord,
-                _windowSettings.RedactionWidthPolicy,
-                _windowSettings.LinkUriCarrierPolicy,
-                _windowSettings.MetadataCarrierPolicy);
-            viewModel.ApplyPrintScalingPreference(_windowSettings.PrintScaling);
-            // Preferences → Performance: subscribe first so the restore below
-            // reaches the viewer through the same path a Save does.
-            viewModel.PerformanceSettingsApplied += OnPerformanceSettingsApplied;
-            viewModel.ViewerTileCacheResidentBytesProvider = () => _pdfViewerControl?.ContinuousTileCacheResidentBytes;
-            viewModel.ApplyPerformanceSettings(
-                PerformanceSettings.FromWindowSettings(_windowSettings), fromPersistedStartup: true);
-            SchedulePlatformMenuConfigure();
+            // The first session shown by this window takes the settings loaded
+            // when the window was built, exactly as before #1551. A session
+            // shown later reads them again, because a Preferences save since
+            // then changed them.
+            ApplyPersistedPreferences(viewModel, rebinding ? _settingsStore.Load() : _windowSettings);
+        }
+        else
+        {
+            Subscribe(viewModel);
+            OnPerformanceSettingsApplied(viewModel, viewModel.PerformanceSettings);
+        }
 
-            // Subscribe to toast notifications
-            viewModel.ToastService.ToastRequested += OnToastRequested;
+        viewModel.ViewerTileCacheResidentBytesProvider = TileCacheResidentBytes;
+        SchedulePlatformMenuConfigure();
 
-            // Subscribe to search highlights collection changes
-            viewModel.CurrentPageSearchHighlights.CollectionChanged += OnSearchHighlightsChanged;
+        // Push the viewer's *visible* viewport (inside-the-scrollbars)
+        // into the VM so Fit Width / Fit Page fit against what the user
+        // actually sees, not the outer control bounds. Using outer
+        // bounds gave a result ~16-20 DIPs too big — exactly the strip
+        // a vertical scrollbar reserves — which made Fit Width pop a
+        // horizontal scrollbar that then stole more space and broke
+        // the fit recursively.
+        if (_pdfViewerControl != null)
+        {
+            var initial = _pdfViewerControl.GetVisibleViewportSize();
+            viewModel.ViewportWidth = initial.Width;
+            viewModel.ViewportHeight = initial.Height;
+        }
 
-            // Subscribe to redaction collection changes
-            viewModel.RedactionWorkflow.PendingRedactions.CollectionChanged += OnRedactionsChanged;
-            viewModel.RedactionWorkflow.AppliedRedactions.CollectionChanged += OnRedactionsChanged;
-            viewModel.AnnotationsChanged += OnAnnotationsChanged;
-
-            // #846: before a structural mutation reloads the document, let the
-            // continuous view snapshot the reader's position so the rebuild
-            // restores it instead of jumping to the top of the page.
-            viewModel.PreserveReadingPositionRequested += (_, _) =>
-                _pdfViewerControl?.PreserveContinuousReadingPositionOnNextRebuild();
-
-            // #917: one document means the viewer's Document reference no
-            // longer changes on a structural mutation, so nothing tells the
-            // continuous view to re-lay-out. This does.
-            viewModel.DocumentStructureChanged += (_, _) =>
-                _pdfViewerControl?.RefreshContinuousLayout();
-
-            // Subscribe to page changes to update redaction overlays
-            viewModel.PropertyChanged += (s, args) =>
-            {
-                if (args.PropertyName == nameof(viewModel.CurrentPageIndex))
-                {
-                    UpdateRedactionOverlays();
-                }
-            };
-
-            // Push the viewer's *visible* viewport (inside-the-scrollbars)
-            // into the VM so Fit Width / Fit Page fit against what the user
-            // actually sees, not the outer control bounds. Using outer
-            // bounds gave a result ~16-20 DIPs too big — exactly the strip
-            // a vertical scrollbar reserves — which made Fit Width pop a
-            // horizontal scrollbar that then stole more space and broke
-            // the fit recursively.
-            if (_pdfViewerControl != null)
-            {
-                var initial = _pdfViewerControl.GetVisibleViewportSize();
-                viewModel.ViewportWidth = initial.Width;
-                viewModel.ViewportHeight = initial.Height;
-                _pdfViewerControl.VisibleViewportChanged += (s, size) =>
-                {
-                    viewModel.ViewportWidth = size.Width;
-                    viewModel.ViewportHeight = size.Height;
-                };
-            }
+        if (rebinding)
+        {
+            // The overlays and the toast belonged to the session shown before.
+            CloseToast();
+            UpdateSearchHighlightsCanvas();
+            UpdateRedactionOverlays();
         }
     }
+
+    private void ApplyPersistedPreferences(MainWindowViewModel viewModel, WindowSettings settings)
+    {
+        viewModel.ApplyContinuousScrollPreference(settings.ContinuousScrollEnabled);
+        if (Enum.TryParse<Excise.Core.Text.ReadingOrderStrategy>(
+                settings.ReadingOrderStrategy, out var strategy))
+            viewModel.ApplyReadingOrderStrategyPreference(strategy);
+        if (Enum.TryParse<Excise.Core.Text.WhitespaceMode>(
+                settings.WhitespaceMode, out var whitespaceMode))
+            viewModel.ApplyWhitespaceModePreference(whitespaceMode);
+        viewModel.ApplyRedactionPolicyPreferences(
+            settings.RedactionWholeWord,
+            settings.RedactionWidthPolicy,
+            settings.LinkUriCarrierPolicy,
+            settings.MetadataCarrierPolicy);
+        viewModel.ApplyPrintScalingPreference(settings.PrintScaling);
+        viewModel.ApplyDocumentOpenModePreference(settings.DocumentOpenMode);
+        // Preferences → Performance: subscribe first so the restore below
+        // reaches the viewer through the same path a Save does.
+        Subscribe(viewModel);
+        viewModel.ApplyPerformanceSettings(
+            PerformanceSettings.FromWindowSettings(settings), fromPersistedStartup: true);
+        viewModel.WindowPreferencesApplied = true;
+    }
+
+    private void Subscribe(MainWindowViewModel viewModel)
+    {
+        viewModel.PerformanceSettingsApplied += OnPerformanceSettingsApplied;
+        _viewModelUnsubscribers.Add(() => viewModel.PerformanceSettingsApplied -= OnPerformanceSettingsApplied);
+
+        // Subscribe to toast notifications
+        var toasts = viewModel.ToastService;
+        toasts.ToastRequested += OnToastRequested;
+        _viewModelUnsubscribers.Add(() => toasts.ToastRequested -= OnToastRequested);
+
+        // Subscribe to search highlights collection changes
+        var highlights = viewModel.CurrentPageSearchHighlights;
+        highlights.CollectionChanged += OnSearchHighlightsChanged;
+        _viewModelUnsubscribers.Add(() => highlights.CollectionChanged -= OnSearchHighlightsChanged);
+
+        // Subscribe to redaction collection changes
+        var pending = viewModel.RedactionWorkflow.PendingRedactions;
+        var applied = viewModel.RedactionWorkflow.AppliedRedactions;
+        pending.CollectionChanged += OnRedactionsChanged;
+        applied.CollectionChanged += OnRedactionsChanged;
+        _viewModelUnsubscribers.Add(() =>
+        {
+            pending.CollectionChanged -= OnRedactionsChanged;
+            applied.CollectionChanged -= OnRedactionsChanged;
+        });
+
+        viewModel.AnnotationsChanged += OnAnnotationsChanged;
+        _viewModelUnsubscribers.Add(() => viewModel.AnnotationsChanged -= OnAnnotationsChanged);
+
+        // #846: before a structural mutation reloads the document, let the
+        // continuous view snapshot the reader's position so the rebuild
+        // restores it instead of jumping to the top of the page.
+        EventHandler preserveReadingPosition = (_, _) =>
+            _pdfViewerControl?.PreserveContinuousReadingPositionOnNextRebuild();
+        viewModel.PreserveReadingPositionRequested += preserveReadingPosition;
+        _viewModelUnsubscribers.Add(() => viewModel.PreserveReadingPositionRequested -= preserveReadingPosition);
+
+        // #917: one document means the viewer's Document reference no
+        // longer changes on a structural mutation, so nothing tells the
+        // continuous view to re-lay-out. This does.
+        EventHandler structureChanged = (_, _) => _pdfViewerControl?.RefreshContinuousLayout();
+        viewModel.DocumentStructureChanged += structureChanged;
+        _viewModelUnsubscribers.Add(() => viewModel.DocumentStructureChanged -= structureChanged);
+
+        // Subscribe to page changes to update redaction overlays
+        System.ComponentModel.PropertyChangedEventHandler pageChanged = (_, args) =>
+        {
+            if (args.PropertyName == nameof(viewModel.CurrentPageIndex))
+            {
+                UpdateRedactionOverlays();
+            }
+        };
+        viewModel.PropertyChanged += pageChanged;
+        _viewModelUnsubscribers.Add(() => viewModel.PropertyChanged -= pageChanged);
+
+        if (_pdfViewerControl != null)
+        {
+            var viewer = _pdfViewerControl;
+            EventHandler<Size> viewportChanged = (_, size) =>
+            {
+                viewModel.ViewportWidth = size.Width;
+                viewModel.ViewportHeight = size.Height;
+            };
+            viewer.VisibleViewportChanged += viewportChanged;
+            _viewModelUnsubscribers.Add(() => viewer.VisibleViewportChanged -= viewportChanged);
+        }
+    }
+
+    private void UnbindViewModel()
+    {
+        var viewModel = _boundViewModel;
+        if (viewModel == null)
+            return;
+
+        _boundViewModel = null;
+        foreach (var unsubscribe in _viewModelUnsubscribers)
+            unsubscribe();
+        _viewModelUnsubscribers.Clear();
+
+        // Only clear the provider if it is still this window's.
+        if (viewModel.ViewerTileCacheResidentBytesProvider == (Func<long?>)TileCacheResidentBytes)
+            viewModel.ViewerTileCacheResidentBytesProvider = null;
+    }
+
+    private long? TileCacheResidentBytes() => _pdfViewerControl?.ContinuousTileCacheResidentBytes;
 
     private void ConfigurePlatformMenu(MainWindowViewModel viewModel)
     {
@@ -394,11 +498,12 @@ public partial class MainWindow : Window
         }
 
         _nativeMenuAttachAttempts = 0;
-        if (!ReferenceEquals(_nativeMenuDataContext, viewModel) || _nativeMenu is null)
+        if (!_nativeMenus.TryGetValue(viewModel, out var menu))
         {
-            _nativeMenu = MacNativeMenuBuilder.Create(viewModel);
-            _nativeMenuDataContext = viewModel;
+            menu = MacNativeMenuBuilder.Create(viewModel);
+            _nativeMenus.Add(viewModel, menu);
         }
+        _nativeMenu = menu;
 
         // The application (app-name) menu is owned by App and set on the
         // Application before the first window exists (#834) — it must precede
@@ -1179,6 +1284,14 @@ public partial class MainWindow : Window
         {
             System.Console.WriteLine($"Error displaying toast: {ex.Message}");
         }
+    }
+
+    /// <summary>Close the toast now (it belonged to the session shown before).</summary>
+    private void CloseToast()
+    {
+        _toastTimer?.Stop();
+        if (this.FindControl<FluentAvalonia.UI.Controls.FAInfoBar>("ToastInfoBar") is { } infoBar)
+            infoBar.IsOpen = false;
     }
 
     /// <summary>

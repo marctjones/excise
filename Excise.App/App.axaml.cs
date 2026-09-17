@@ -38,8 +38,13 @@ public partial class App : Application
             NativeMenu.SetMenu(this, Views.MacApplicationMenu.Build(() => CurrentMainViewModel));
     }
 
+    private Workspace.DocumentWorkspace? _workspace;
+
+    // #1551: the app menu acts on the document in the ACTIVE window, not on
+    // whichever window the lifetime calls "main".
     private MainWindowViewModel? CurrentMainViewModel =>
-        (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.DataContext
+        _workspace?.ActiveSession?.ViewModel
+        ?? (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.DataContext
             as MainWindowViewModel;
 
     public override void OnFrameworkInitializationCompleted()
@@ -71,18 +76,18 @@ public partial class App : Application
         _metricsSink = MetricsJsonlSink.TryStartFromEnvironment(logger);
 
         MainWindowViewModel? mainViewModel = null;
-        string? pendingActivationPath = null;
+        var pendingActivationPaths = new List<string>();
 
-        void OpenOrQueueActivatedPath(string path)
+        void OpenOrQueueActivatedPaths(IReadOnlyList<string> paths)
         {
             if (mainViewModel != null)
             {
-                OpenPathOnUiThread(mainViewModel, path, logger);
+                OpenPathsOnUiThread(mainViewModel, paths, logger);
                 return;
             }
 
-            logger.LogInformation("Queued activated PDF until main window is ready: {Path}", path);
-            pendingActivationPath = path;
+            logger.LogInformation("Queued {Count} activated PDF(s) until the main window is ready", paths.Count);
+            pendingActivationPaths.AddRange(paths);
         }
 
         // Register this before building the main window. macOS Launch Services
@@ -95,9 +100,10 @@ public partial class App : Application
                 if (e is not FileActivatedEventArgs fileArgs)
                     return;
 
-                var path = ResolveActivatedPdfPath(fileArgs.Files);
-                if (path != null)
-                    OpenOrQueueActivatedPath(path);
+                // #1463: every PDF Finder hands over, each in its own session.
+                var paths = ResolveActivatedPdfPaths(fileArgs.Files);
+                if (paths.Count > 0)
+                    OpenOrQueueActivatedPaths(paths);
             };
         }
 
@@ -108,42 +114,52 @@ public partial class App : Application
             if (_metricsSink != null)
                 desktop.Exit += (_, _) => _metricsSink.Dispose();
 
-            var vm = _serviceProvider.GetRequiredService<MainWindowViewModel>();
-            mainViewModel = vm;
-            // #1500 step 2: the window reads and writes window.json through the
-            // container's store, the same instance the view model uses.
-            var mainWindow = new MainWindow(
-                _serviceProvider.GetRequiredService<Services.Host.ISettingsStore>())
+            // #1551: every document window, the first included, comes from the
+            // workspace: one DI scope and one view model per document.
+            var workspace = _serviceProvider.GetRequiredService<Workspace.DocumentWorkspace>();
+            _workspace = workspace;
+            var reclaimer = _serviceProvider.GetRequiredService<ReleasedMemoryReclaimer>();
+            var cacheTrims = new Dictionary<MainWindow, ViewerCacheTrimCoordinator>();
+            workspace.WindowCreated += window =>
             {
-                DataContext = vm,
+                var coordinator = AttachCacheTrim(window, workspace, reclaimer, logger);
+                if (coordinator != null)
+                {
+                    cacheTrims[window] = coordinator;
+                    window.Closed += (_, _) => cacheTrims.Remove(window);
+                }
             };
+            desktop.Exit += (_, _) =>
+            {
+                foreach (var coordinator in cacheTrims.Values.ToArray())
+                    coordinator.Dispose();
+                cacheTrims.Clear();
+            };
+
+            // #1463: Cmd+Q and every other platform quit review ALL open
+            // documents first. An approved quit (File > Exit, or this handler's
+            // own retry) passes straight through.
+            desktop.ShutdownRequested += (_, e) =>
+            {
+                if (workspace.QuitApproved || !workspace.HasUnsavedChanges)
+                    return;
+                e.Cancel = true;
+                _ = workspace.RequestQuitAsync();
+            };
+
+            var session = workspace.CreateSession();
+            var vm = session.ViewModel;
+            mainViewModel = vm;
+            var mainWindow = workspace.ShowInNewWindow(session);
             desktop.MainWindow = mainWindow;
 
             logger.LogInformation("Main window created successfully");
 
-            // #1478: release viewer and thumbnail caches under OS memory
-            // pressure, and (opt-in) in the background or idle. Wired here, in
-            // the real application only: headless tests build their windows
-            // under TestApp, so no test installs a live OS pressure source.
-            var (trimViewer, trimPolicy) = mainWindow.CacheTrimTarget();
-            ViewerCacheTrimCoordinator? scenarioCacheTrim = null;
-            if (trimViewer != null)
-            {
-                // #1481: the same reclaimer the view model uses for
-                // close/replace, so a trim and a close coalesce into one GC.
-                var cacheTrim = ViewerCacheTrimCoordinator.Attach(
-                    mainWindow, trimViewer, trimPolicy, logger, vm.TrimThumbnailCaches,
-                    _serviceProvider.GetRequiredService<ReleasedMemoryReclaimer>());
-                // #1497: the performance-scenario runner drives a trim in
-                // process instead of asking a human for `sudo memory_pressure`,
-                // so it needs the live coordinator — this local was previously
-                // unreachable from anywhere else.
-                scenarioCacheTrim = cacheTrim;
-                // Preferences → Performance changes soft trims live (#1478).
-                mainWindow.CacheTrimPolicyChanged += cacheTrim.UpdatePolicy;
-                mainWindow.Closed += (_, _) => cacheTrim.Dispose();
-                desktop.Exit += (_, _) => cacheTrim.Dispose();
-            }
+            // #1497: the performance-scenario runner drives a trim in process
+            // instead of asking a human for `sudo memory_pressure`, so it needs
+            // the first window's live coordinator.
+            cacheTrims.TryGetValue(mainWindow, out var scenarioCacheTrim);
+            var (_, trimPolicy) = mainWindow.CacheTrimTarget();
 
             // Open a PDF that was passed on the command line (Windows/Linux
             // "Open With", `excise file.pdf`, demos). Avalonia's Window.Opened
@@ -166,17 +182,20 @@ public partial class App : Application
                     responsivenessReportPath);
             }
 
-            var path = StartupDocumentResolver.Resolve(
+            // #1463: every PDF on the command line opens; the first in the
+            // initial window, the rest by the open-mode preference.
+            var startupPaths = StartupDocumentResolver.ResolveAll(
                 desktop.Args,
                 processArgs);
+            var path = startupPaths.Count > 0 ? startupPaths[0] : null;
 
             if (path != null)
             {
-                logger.LogInformation("Opening startup PDF: {Path}", path);
+                logger.LogInformation("Opening {Count} startup PDF(s), first: {Path}", startupPaths.Count, path);
                 desktop.Startup += (_, _) =>
                 {
                     DispatcherTimer.RunOnce(
-                        () => OpenPathOnUiThread(vm, path, logger),
+                        () => OpenPathsOnUiThread(vm, startupPaths, logger),
                         TimeSpan.FromMilliseconds(250),
                         DispatcherPriority.Background);
                 };
@@ -220,15 +239,15 @@ public partial class App : Application
                 };
             }
 
-            if (pendingActivationPath != null)
+            if (pendingActivationPaths.Count > 0)
             {
-                var pathToOpen = pendingActivationPath;
-                pendingActivationPath = null;
-                logger.LogInformation("Opening queued activated PDF: {Path}", pathToOpen);
+                var pathsToOpen = pendingActivationPaths.ToArray();
+                pendingActivationPaths.Clear();
+                logger.LogInformation("Opening {Count} queued activated PDF(s)", pathsToOpen.Length);
                 desktop.Startup += (_, _) =>
                 {
                     DispatcherTimer.RunOnce(
-                        () => OpenPathOnUiThread(vm, pathToOpen, logger),
+                        () => OpenPathsOnUiThread(vm, pathsToOpen, logger),
                         TimeSpan.FromMilliseconds(250),
                         DispatcherPriority.Background);
                 };
@@ -239,18 +258,85 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Load a PDF on the UI thread, logging (not throwing) on failure. Shared by
-    /// the command-line and OS file-activation open paths.
+    /// The session an OS-delivered open should start from: the active one, or
+    /// <paramref name="fallback"/> before the workspace exists.
     /// </summary>
-    private static void OpenPathOnUiThread(MainWindowViewModel vm, string path, ILogger logger)
+    private MainWindowViewModel ActiveViewModel(MainWindowViewModel fallback) =>
+        _workspace?.ActiveSession?.ViewModel ?? fallback;
+
+    /// <summary>
+    /// #1478: release a document window's viewer and thumbnail caches under OS
+    /// memory pressure, and (opt-in) in the background or idle. Wired here, in
+    /// the real application only: headless tests build their windows under
+    /// TestApp, so no test installs a live OS pressure source. One coordinator
+    /// per window, because each window has its own viewer (#1551).
+    /// </summary>
+    private static ViewerCacheTrimCoordinator? AttachCacheTrim(
+        MainWindow window,
+        Workspace.DocumentWorkspace workspace,
+        ReleasedMemoryReclaimer reclaimer,
+        ILogger logger)
     {
+        var (trimViewer, trimPolicy) = window.CacheTrimTarget();
+        if (trimViewer == null)
+            return null;
+
+        // #1481: the reclaimer every session uses for close/replace, so a trim
+        // and a close coalesce into one GC. The thumbnail tier trimmed is that
+        // of every session this window hosts.
+        var cacheTrim = ViewerCacheTrimCoordinator.Attach(
+            window, trimViewer, trimPolicy, logger,
+            level =>
+            {
+                foreach (var session in workspace.SessionsIn(window))
+                    session.ViewModel.TrimThumbnailCaches(level);
+            },
+            reclaimer);
+        // Preferences → Performance changes soft trims live (#1478).
+        window.CacheTrimPolicyChanged += cacheTrim.UpdatePolicy;
+        window.Closed += (_, _) => cacheTrim.Dispose();
+        return cacheTrim;
+    }
+
+    /// <summary>
+    /// Open PDFs on the UI thread, logging (not throwing) on failure. Shared by
+    /// the command-line and OS file-activation open paths. The list goes to the
+    /// workspace as ONE request, so the files are routed in order rather than
+    /// racing each other for the same empty window.
+    /// </summary>
+    private void OpenPathsOnUiThread(MainWindowViewModel fallback, IReadOnlyList<string> paths, ILogger logger)
+    {
+        if (paths.Count == 0)
+            return;
+
+        void Open() => _ = OpenPathsAsync(ActiveViewModel(fallback), paths, logger);
+
         if (Dispatcher.UIThread.CheckAccess())
         {
-            _ = OpenPathAsync(vm, path, logger);
+            Open();
             return;
         }
 
-        Dispatcher.UIThread.Post(() => _ = OpenPathAsync(vm, path, logger));
+        Dispatcher.UIThread.Post(Open);
+    }
+
+    private static async Task OpenPathsAsync(MainWindowViewModel vm, IReadOnlyList<string> paths, ILogger logger)
+    {
+        if (vm.SessionHost is not { } host)
+        {
+            await OpenPathAsync(vm, paths[0], logger);
+            return;
+        }
+
+        try
+        {
+            logger.LogInformation("Opening {Count} PDF(s) from a startup/open event", paths.Count);
+            await host.OpenDocumentsAsync(paths, replaceConfirmed: false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to open {Count} PDF(s) from a startup/open event", paths.Count);
+        }
     }
 
     // internal (not private): #979 — this is the "resolved path actually gets
@@ -264,6 +350,15 @@ public partial class App : Application
         try
         {
             logger.LogInformation("Loading PDF from startup/open event: {Path}", path);
+
+            // #1463: in a workspace the file may open elsewhere, an already
+            // open file is brought forward, and the unsaved-changes question is
+            // asked only when this session's document would be replaced.
+            if (vm.SessionHost is { } host)
+            {
+                await host.OpenDocumentsAsync([path], replaceConfirmed: false);
+                return;
+            }
 
             // #1233: at STARTUP nothing is open and this is a no-op, but the
             // same method serves macOS Launch Services file activation, which
@@ -295,6 +390,10 @@ public partial class App : Application
         // file activation cannot drift apart. Behaviour is unchanged.
         return Excise.App.Services.DroppedPdfResolver.ResolveFirstPdf(files);
     }
+
+    // #1463: every PDF in the activation, same per-item rule.
+    internal static IReadOnlyList<string> ResolveActivatedPdfPaths(IReadOnlyList<IStorageItem> files) =>
+        Excise.App.Services.DroppedPdfResolver.ResolveAllPdfs(files);
 
     private void ConfigureServices(IServiceCollection services)
     {

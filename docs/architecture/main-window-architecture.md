@@ -1504,3 +1504,148 @@ last and separate.
     `ApplicationComposition`, forward from the shell only if XAML binds it".
     Update in the same change as step 6, not before.
 
+
+## 7. Multi-document: sessions, windows and tabs (#1551–#1554)
+
+Written 2026-09-17 for the umbrella #1463. This section changes one premise of
+§3 and §5, so it is stated first.
+
+### 7.1 The session unit is the window view model
+
+§3.2 and step 6 describe a `DocumentSessionViewModel` extracted *out of*
+`MainWindowViewModel`, and #1551 inherited that as its prerequisite. Multi-
+document support does not need it. Measured against §1.2–§1.3, about nine
+tenths of `MainWindowViewModel`'s state is already per document, and every
+name-addressed consumer in §1.6 (compiled bindings, the GUI interaction
+registry, `MacNativeMenuBuilder`, scripting globals, the API baseline, 353
+test-factory calls) addresses that type. So:
+
+- **One `MainWindowViewModel` instance is one document session.** Two
+  sessions are two instances, each with its own services.
+- What is *app-wide* moves out of the instance, not the other way round.
+- Step 6 is not a prerequisite. It remains an internal refactor of the
+  per-session view model (shell plus children), and nothing below blocks it.
+
+### 7.2 What is per session and what is app-wide
+
+Per session, one Microsoft.Extensions.DependencyInjection **scope** per
+session (`DocumentSessionFactory`; `ValidateScopes` already rejects a
+scoped service resolved from the root):
+
+| Per session (scoped) | Why |
+|---|---|
+| `PdfDocumentService` | the open document, path and password |
+| `DocumentSearchSession`, `DocumentTextIndexSession` | cancellation and index of *this* document |
+| `PageOrganizationWorkflowService`, `AnnotationWorkflowService` | take `PdfDocumentService` |
+| `SignatureVerificationWorkflowService` | takes the dialog service |
+| `ToastService` | a toast belongs to the window that shows the document |
+| `IWindowHost`, `IFilePicker`, `IUserDialogService` | dialogs and pickers are owned by the session's window, not by `desktop.MainWindow` |
+| `MainWindowViewModel` | and with it everything it already owns per instance: `FileState`, `RedactionWorkflow`, `EditHistoryService`, `ThumbnailSidebarSession`, viewport, outline, attachments, search results, selection, typewriter/forms state, XFA notice, signed-document warning, clipboard history (it is cleared on every open and close, so it was already per document) |
+
+App-wide (singletons): `ISettingsStore` (preferences, window geometry,
+per-file document state, zoom), `IRecentFilesStore` plus **one shared
+recent-files collection** that every session's `RecentFiles` points at,
+`ReleasedMemoryReclaimer`, the stateless redaction/extraction/search/
+signature/export services, the printer and print workflow, the clipboard
+adapter, and `DocumentWorkspace`.
+
+Preferences are app-wide values held on each session (bindings need them
+there). A Preferences save applies the dialog's values to **every** session,
+not only the one that opened the dialog. This is a security property, not
+tidiness: the redaction carrier policy and whole-word rule (#1052/#1169/#1189)
+must not differ between two open windows.
+
+### 7.3 Ownership
+
+`DocumentWorkspace` (app singleton, `Excise.App/Workspace/`) owns the list of
+sessions, knows which window hosts each one, routes opens, and runs the quit
+review. A `DocumentSession` owns its scope and its view model and implements
+`IDocumentSessionHost`, the narrow interface the view model calls back
+through (`MainWindowViewModel.SessionHost`, internal, null in tests that build
+a view model on its own, in which case every path behaves exactly as before).
+
+- **Windows (#1553, #1552).** One `MainWindow` per session. Each window has its
+  own `PdfViewerControl`, its own native menu (macOS) and its own
+  `ViewerCacheTrimCoordinator`.
+- **macOS native tabs (#1552).** Avalonia 12.1.2 sets
+  `tabbingMode = NSWindowTabbingModeDisallowed` in
+  `WindowImpl::OnInitialiseNSWindow` (read from the disassembly of
+  `libAvaloniaNative.dylib`). `MacWindowTabbing` sets it back to
+  `Automatic` with one `tabbingIdentifier` for all document windows, and a new
+  document window joins the origin window's tab group with
+  `addTabbedWindow:ordered:` when `NSWindow.userTabbingPreference` says so
+  (System Settings ▸ Desktop & Dock ▸ "Prefer tabs when opening documents").
+  Merge All Windows, Move Tab to New Window, Show Tab Bar and the tab
+  next/previous actions are sent to the key window from the native Window menu.
+- **In-app tabs (#1554).** A window hosts a `DocumentTabsViewModel`; its
+  `DataContext` is the selected session. One viewer per window, so an
+  inactive tab holds no tile cache at all; switching re-renders the visible
+  page and restores the tab's scroll position. That trade (no per-tab tile
+  cache, one page render per switch) is deliberate: a viewer per tab needs the
+  document region as its own `UserControl`, which is §5 step 15.
+
+### 7.4 Opening a document
+
+Preference `DocumentOpenMode` (Preferences ▸ Documents, persisted in
+`window.json`): `Automatic`, `NewWindow`, `NewTab`, `ReplaceCurrent`.
+`Automatic` means a new window on every platform; on macOS the system tabbing
+preference then decides whether it appears as a tab.
+
+For every entry point (File ▸ Open, Open Recent, drop, macOS file activation,
+command-line arguments, a second instance):
+
+1. If a session already has that file open, activate it (no second copy).
+2. Else, if the requesting session has no document, open there.
+3. Else apply the mode. `ReplaceCurrent` is today's behaviour, including the
+   unsaved-changes prompt. The other modes never prompt, because nothing is
+   discarded.
+
+File ▸ Open allows multi-select and a drop opens every PDF it carries
+(`DroppedPdfResolver.ResolveAllPdfs`) when the mode opens elsewhere. With
+`ReplaceCurrent` only the first is used, as before.
+
+Second instance (Windows and Linux): a per-user named pipe
+(`PipeOptions.CurrentUserOnly`; .NET implements it with a Unix domain socket on
+Linux). A launch that finds a running instance sends it the resolved paths and
+exits. macOS does not need this: Launch Services already routes documents to
+the running app as activation events.
+
+### 7.5 Closing and quitting
+
+- Closing a window runs the existing unsaved-changes guard for the sessions it
+  hosts, then disposes them.
+- Close Document (Cmd/Ctrl+W) closes the session's window or tab when another
+  session exists. With a single session it keeps today's behaviour: the
+  document closes and the empty window stays.
+- Quit (File ▸ Exit, and Cmd+Q through
+  `IClassicDesktopStyleApplicationLifetime.ShutdownRequested`) reviews each
+  session with unsaved changes in turn, activating its window first. Any
+  Cancel, or a save that did not happen, aborts the quit. "Discard" already
+  marks the state clean (#1233), so the per-window guards that run during
+  shutdown do not ask a second time.
+
+### 7.6 Memory
+
+Closing a session releases it: the document closes
+(`DocumentReleaseReason.Closed`, so the shared reclaimer runs), the thumbnail
+session is disposed, the DI scope disposes the search and index sessions, the
+window drops its view-model subscriptions and its cached native menu. A
+headless test holds only a `WeakReference` to a closed session and asserts it
+is collected.
+
+Each window's coordinator trims its own viewer and the thumbnails of the
+sessions it hosts. With in-app tabs, the Warn and Critical levels trim inactive
+tabs' thumbnails to nothing first. The reclaimer is shared, so N windows'
+requests still coalesce into one collection. The tile budget
+(`TileCacheBudgetMb`, default 200 MB) is per viewer, so N windows can hold N
+budgets. That is the documented cost of real windows (#1463's point 4) and the
+reason in-app tabs share one viewer.
+
+### 7.7 Consumers that address the view model by name
+
+Unchanged, because the view model type is unchanged: compiled bindings, the
+GUI interaction registry, coverage ids, `MacNativeMenuBuilder` (one menu per
+window, built for that window's session) and the scripting surface (a script
+drives the session it was created for). `MacApplicationMenu` and the
+activation paths resolve the *active* session from the workspace instead of
+`desktop.MainWindow`.

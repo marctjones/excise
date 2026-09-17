@@ -10,10 +10,23 @@ namespace Excise.App.Services;
 public sealed class AvaloniaUserDialogService : IUserDialogService
 {
     private readonly ILogger<AvaloniaUserDialogService> _logger;
+    private readonly System.Func<Window?>? _ownerResolver;
 
     public AvaloniaUserDialogService(ILogger<AvaloniaUserDialogService> logger)
     {
         _logger = logger;
+    }
+
+    /// <summary>
+    /// #1551: a document session's dialogs are owned by that session's window.
+    /// <paramref name="ownerResolver"/> is the session's
+    /// <see cref="Host.IWindowHost"/>; null falls back to the desktop main window.
+    /// </summary>
+    internal AvaloniaUserDialogService(ILogger<AvaloniaUserDialogService> logger, Host.IWindowHost? windowHost)
+        : this(logger)
+    {
+        if (windowHost != null)
+            _ownerResolver = () => windowHost.MainWindow;
     }
 
     public async Task ShowMessageAsync(string title, string message)
@@ -403,8 +416,11 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
         return await dialog.ShowDialog<UnsavedChangesDecision>(mainWindow);
     }
 
-    private static Window? GetMainWindow()
+    private Window? GetMainWindow()
     {
+        if (_ownerResolver?.Invoke() is { } owner)
+            return owner;
+
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             return desktop.MainWindow;

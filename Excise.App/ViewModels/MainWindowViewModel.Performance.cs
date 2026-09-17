@@ -58,6 +58,8 @@ public partial class MainWindowViewModel
     {
         ArgumentNullException.ThrowIfNull(preferences);
         preferences.SaveToMainViewModel(this);
+        // #1551: preferences are app-wide; every other open document gets them.
+        SessionHost?.ApplyPreferencesToOtherSessions(preferences);
         _settingsStore.Update(WritePreferencesTo);
         _logger.LogInformation("Preferences saved: performance preset {Preset}", _performanceSettings.DetectPreset());
     }

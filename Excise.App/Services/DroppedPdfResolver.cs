@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Platform.Storage;
 
 namespace Excise.App.Services;
@@ -34,6 +35,31 @@ internal static class DroppedPdfResolver
     /// </remarks>
     internal static string? ResolveFirstPdf(IReadOnlyList<IStorageItem> files)
     {
+        foreach (var path in EnumeratePdfs(files))
+            return path;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Every local, existing <c>.pdf</c>, as full paths in payload order
+    /// (#1463: a multi-document workspace opens them all). Same per-item rule
+    /// as <see cref="ResolveFirstPdf"/>.
+    /// </summary>
+    internal static IReadOnlyList<string> ResolveAllPdfs(IReadOnlyList<IStorageItem> files)
+    {
+        var result = new List<string>();
+        foreach (var path in EnumeratePdfs(files))
+        {
+            if (!result.Contains(path, StringComparer.Ordinal))
+                result.Add(path);
+        }
+
+        return result;
+    }
+
+    private static IEnumerable<string> EnumeratePdfs(IReadOnlyList<IStorageItem> files)
+    {
         foreach (var file in files)
         {
             var path = file.TryGetLocalPath();
@@ -44,9 +70,7 @@ internal static class DroppedPdfResolver
                 continue;
 
             if (System.IO.File.Exists(path))
-                return System.IO.Path.GetFullPath(path);
+                yield return System.IO.Path.GetFullPath(path);
         }
-
-        return null;
     }
 }
