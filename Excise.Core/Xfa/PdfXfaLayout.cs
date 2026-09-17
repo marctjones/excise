@@ -151,8 +151,10 @@ public static class PdfXfaLayout
     }
 
     /// <summary>
-    /// True when every page was generated from the document's XFA form by
-    /// excise and the XFA form is still present.
+    /// True when excise generated pages of this document from its XFA form
+    /// (at least one page carries the marker) and the XFA form is still
+    /// present. Such a document is never laid out again: pages the user added
+    /// after the layout would otherwise be replaced on the next open.
     /// </summary>
     public static bool HasXfaLayoutPages(this PdfDocument document)
     {
@@ -160,16 +162,12 @@ public static class PdfXfaLayout
         if (document.PageCount == 0 || !HasXfaEntry(document))
             return false;
 
-        // A broken page tree can report a count and enumerate nothing; an
-        // empty loop must not read as "every page is marked".
-        bool any = false;
         foreach (var page in document.Pages)
         {
-            if (!IsMarked(document, page))
-                return false;
-            any = true;
+            if (IsMarked(document, page))
+                return true;
         }
-        return any;
+        return false;
     }
 
     /// <summary>

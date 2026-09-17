@@ -232,6 +232,9 @@ public class PdfDocumentService
             ? PdfDocument.Open(File.ReadAllBytes(savePath))
             : PdfDocument.Open(File.ReadAllBytes(savePath), _currentUserPassword);
         _currentFilePath = savePath;
+        // #1547: the saved copy is marked (so this is a no-op re-check), or a
+        // redaction removed its XFA form (so the result goes back to null).
+        XfaLayout = LayOutDynamicXfa(_currentDocument);
         DocumentReleased?.Invoke(DocumentReleaseReason.SaveReload);
     }
 

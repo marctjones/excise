@@ -29,10 +29,11 @@ named below), not to this page.
 4. **Generated pages carry a marker.** Each generated page has
    `/PieceInfo << /Excise << /LastModified (date) /Private << /XfaLayout true >> >> >>`
    (ISO 32000-1 §14.5, the standard place for application-private page data).
-   When a document is opened whose pages all carry the marker, excise does not
-   lay the form out again: the pages are already a rendition (possibly with
-   the user's annotations or redactions on them). A tool that rewrites the pages,
-   Acrobat included, drops the marker, so its output is laid out afresh.
+   When a document is opened and any page carries the marker, excise does not
+   lay the form out again. The pages are already a rendition, possibly with the
+   user's annotations, redactions or added pages, and a second layout would
+   replace them. A tool that rewrites all the pages, Acrobat included, drops
+   the marker, so its output is laid out afresh.
 5. **Any redaction of a document with generated pages removes `/XFA` and
    `/NeedsRendering` whole.** The generated pages ARE the form, so the XFA
    packet is a positionless copy of everything on them. Area redaction never

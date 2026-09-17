@@ -95,13 +95,22 @@ public class XfaLayoutTests
     }
 
     [Fact]
-    public void AddingAPage_ClearsTheLaidOutMark()
+    public void APageAddedAfterLayout_SurvivesSaveAndReopen()
     {
-        using var document = Open(XfaTestForms.BuildPdf(XfaTestForms.PositionedTemplate()));
-        document.ApplyXfaLayout(cancellationToken: TestContext.Current.CancellationToken);
-        document.Pages.AddBlank();
+        byte[] saved;
+        using (var document = Open(XfaTestForms.BuildPdf(XfaTestForms.PositionedTemplate())))
+        {
+            document.ApplyXfaLayout(cancellationToken: TestContext.Current.CancellationToken);
+            document.Pages.AddBlank(300, 300);
+            saved = document.SaveToBytes();
+        }
 
-        document.HasXfaLayoutPages().Should().BeFalse("only pages excise generated are a rendition of the form");
+        using var reopened = Open(saved);
+        reopened.HasXfaLayoutPages().Should().BeTrue("one generated page is enough to say excise laid this form out");
+        reopened.ApplyXfaLayout(cancellationToken: TestContext.Current.CancellationToken)
+            .Status.Should().Be(XfaLayoutStatus.AlreadyLaidOut);
+        reopened.PageCount.Should().Be(2, "a second layout would have replaced the user's page");
+        reopened.Pages[1].Width.Should().Be(300);
     }
 
     [Fact]
