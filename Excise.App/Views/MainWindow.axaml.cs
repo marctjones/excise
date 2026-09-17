@@ -26,11 +26,11 @@ public partial class MainWindow : Window
     private PdfViewerControl? _pdfViewerControl;
     private readonly ISettingsStore _settingsStore;
     private readonly WindowSettings _windowSettings;
-    // #1551: one native menu per document session, built on first show and
-    // reused when the same session is shown again. Weak keys, so a closed
-    // session's menu goes with it.
-    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<MainWindowViewModel, NativeMenu> _nativeMenus = new();
-    private NativeMenu? _nativeMenu;
+    // #1584: ONE native menu for the window's life. Avalonia.Native throws if
+    // a window is given a second NativeMenu instance, so a tab switch swaps
+    // the menu's items, never the menu (see WindowNativeMenu). #1551: the
+    // per-session items are weakly keyed, so a closed session goes with them.
+    private WindowNativeMenu? _windowNativeMenu;
     private bool _isNativeWindowOpened;
     private bool _nativeMenuAttachScheduled;
     private int _nativeMenuAttachAttempts;
@@ -665,37 +665,47 @@ public partial class MainWindow : Window
         // native window/exporter exists can cache a null exporter and leave
         // macOS with only its default app menu, so wait until the exporter is
         // actually available before setting the attached menu property.
-        if (!OperatingSystem.IsMacOS() || !_isNativeWindowOpened)
+        if (!AttachesNativeMenuWithoutExporterForTesting)
         {
-            return;
-        }
+            if (!OperatingSystem.IsMacOS() || !_isNativeWindowOpened)
+            {
+                return;
+            }
 
-        if (PlatformImpl?.TryGetFeature<ITopLevelNativeMenuExporter>() is null)
-        {
-            if (_nativeMenuAttachAttempts++ < MaxNativeMenuAttachAttempts)
-                SchedulePlatformMenuConfigure(NativeMenuAttachRetryDelay);
-            return;
+            if (PlatformImpl?.TryGetFeature<ITopLevelNativeMenuExporter>() is null)
+            {
+                if (_nativeMenuAttachAttempts++ < MaxNativeMenuAttachAttempts)
+                    SchedulePlatformMenuConfigure(NativeMenuAttachRetryDelay);
+                return;
+            }
         }
 
         _nativeMenuAttachAttempts = 0;
-        if (!_nativeMenus.TryGetValue(viewModel, out var menu))
-        {
-            menu = MacNativeMenuBuilder.Create(viewModel);
-            _nativeMenus.Add(viewModel, menu);
-        }
-        _nativeMenu = menu;
+        _windowNativeMenu ??= new WindowNativeMenu();
+        _windowNativeMenu.Show(viewModel);
 
         // The application (app-name) menu is owned by App and set on the
         // Application before the first window exists (#834) — it must precede
         // Avalonia's one-shot app-menu exporter, which a window-side set cannot.
         // Here we only attach the window (menu-bar) menu; the TopLevel exporter
         // does subscribe to changes, so setting it after the window opens works.
-        NativeMenu.SetMenu(this, _nativeMenu);
+        // Always the same instance, so after the first call this is a no-op
+        // for the exporter; the item swap above is what it re-exports.
+        NativeMenu.SetMenu(this, _windowNativeMenu.Menu);
     }
+
+    /// <summary>
+    /// #1584: the headless platform has no native-menu exporter, so the window
+    /// never attaches its menu there. Tests set this to run the attach path
+    /// anyway (NativeMenu.SetMenu is a no-op without an exporter) and observe
+    /// the menu a tab switch leaves on the window.
+    /// </summary>
+    internal bool AttachesNativeMenuWithoutExporterForTesting { get; set; }
 
     private void SchedulePlatformMenuConfigure(TimeSpan? delay = null)
     {
-        if (!OperatingSystem.IsMacOS() || _nativeMenuAttachScheduled)
+        if ((!OperatingSystem.IsMacOS() && !AttachesNativeMenuWithoutExporterForTesting)
+            || _nativeMenuAttachScheduled)
             return;
 
         _nativeMenuAttachScheduled = true;

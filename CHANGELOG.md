@@ -10,6 +10,14 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Fixed
+- **Opening a second document as a tab crashed excise on macOS** (#1584).
+  Each tab had its own native menu, and switching tabs gave the window a
+  different menu object. Avalonia's macOS menu code only accepts the first menu
+  a window is given, so it threw "The menu being updated does not match" and
+  the app quit. Each window now keeps one menu for its whole life. A tab
+  switch replaces the entries in that menu with the new tab's entries, so
+  every menu item acts on the tab you are looking at. A closed tab's entries
+  are still released with it (#1551).
 - **A failed open left the previous document's attachments listed** (#1563),
   and opening another document kept the old list on screen until the new one
   finished loading. Both now clear.

@@ -45,6 +45,36 @@ internal static class MacNativeMenuBuilder
         return state.Create();
     }
 
+    /// <summary>
+    /// #1584: one session's menu-bar entries, detached from any menu so a
+    /// window's single <see cref="NativeMenu"/> can show them. Avalonia.Native
+    /// binds a window's native menu to the first managed menu it is given and
+    /// throws if handed another, so a window never swaps menus: it swaps the
+    /// top-level items of its one menu instead (<see cref="WindowNativeMenu"/>).
+    /// </summary>
+    public static SessionMenu CreateSession(MainWindowViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+
+        var state = new MenuState(viewModel);
+        var holder = state.Create();
+        var items = holder.Items.ToArray();
+        // Remove one at a time: Clear() raises Reset without the old items,
+        // so NativeMenu would leave each item's Parent set and the window's
+        // menu would refuse to adopt it.
+        while (holder.Items.Count > 0)
+            holder.Items.RemoveAt(holder.Items.Count - 1);
+        return new SessionMenu(items, state.Refresh);
+    }
+
+    /// <summary>A session's top-level menu items and the refresh that keeps them current.</summary>
+    internal sealed class SessionMenu(IReadOnlyList<NativeMenuItemBase> items, Action refresh)
+    {
+        public IReadOnlyList<NativeMenuItemBase> Items { get; } = items;
+
+        public void Refresh() => refresh();
+    }
+
     private sealed class MenuState
     {
         private readonly MainWindowViewModel _viewModel;
@@ -294,7 +324,7 @@ internal static class MacNativeMenuBuilder
             or nameof(MainWindowViewModel.RecentFiles)
             or nameof(MainWindowViewModel.RecentFileMenuItems);
 
-        private void Refresh()
+        public void Refresh()
         {
             _saveItem.Header = _viewModel.SaveButtonText;
             _undoItem.Header = _viewModel.UndoMenuHeader.TrimStart('_');
