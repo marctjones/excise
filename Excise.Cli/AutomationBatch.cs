@@ -395,7 +395,8 @@ partial class Program
             step.CaseSensitive ?? false,
             step.AllowDecrypt ?? false,
             Password: step.Password,
-            KeepAttachments: step.KeepAttachments ?? false));   // #1572
+            KeepAttachments: step.KeepAttachments ?? false,   // #1572
+            Profile: ParseProfile(step.Profile)));   // #1586
         foreach (var diagnostic in result.Diagnostics)
             Console.Error.WriteLine(diagnostic);
         return new RedactionStepResult(
@@ -410,8 +411,29 @@ partial class Program
             result.CarrierNotes,
             // #1572: every attachment removed or kept, by name and size.
             result.Attachments.Select(a => new RedactionAttachmentResult(
-                a.Name, a.SizeBytes, a.Location, a.Disposition.ToString(), a.Detail)).ToArray());
+                a.Name, a.SizeBytes, a.Location, a.Disposition.ToString(), a.Detail)).ToArray(),
+            // #1586: what the output profile removed WHOLE, and whether the
+            // output is still accessible. Unattended runs have no other route
+            // to a human.
+            ParseProfile(step.Profile).ToString(),
+            result.Removals.Select(r => r.ToString()).ToArray(),
+            result.AccessibilityRemoved);
     }
+
+    /// <summary>
+    /// The batch step's <c>profile</c> (#1586). An unrecognised value is a
+    /// contract error, never a silent fall back to the weaker profile: a
+    /// typo that quietly gave you less redaction than you asked for is the
+    /// failure mode this project keeps finding.
+    /// </summary>
+    private static Excise.Core.Text.Segmentation.RedactionProfile ParseProfile(string? name) => name switch
+    {
+        null or "" or "standard" => Excise.Core.Text.Segmentation.RedactionProfile.Standard,
+        "maximum" => Excise.Core.Text.Segmentation.RedactionProfile.Maximum,
+        _ => throw new AutomationContractException(
+            "INVALID_PROFILE",
+            $"redaction.apply profile '{name}' is not recognised. Use 'standard' or 'maximum'."),
+    };
 
     private static AuditStepResult ExecuteAuditStep(AutomationBatchStep step, string baseDirectory)
     {
@@ -587,7 +609,10 @@ partial class Program
         bool? AllowFindings,
         bool? IgnorePermissions,
         bool? ForAccessibility,
-        bool? KeepAttachments = null);   // #1572 — redaction.apply opt-out of attachment removal
+        bool? KeepAttachments = null,   // #1572 — redaction.apply opt-out of attachment removal
+        // #1586 — "standard" (the default) or "maximum". A batch run is
+        // unattended, so the profile it ran under has to be in the report.
+        string? Profile = null);
 
     internal sealed record AutomationBatchReport(
         int SchemaVersion,
@@ -646,7 +671,12 @@ partial class Program
     internal sealed record RedactionStepResult(
         string InputPath, string OutputPath, int RedactedOccurrenceCount, bool CaseSensitive,
         IReadOnlyList<string> CarrierNotes,
-        IReadOnlyList<RedactionAttachmentResult> Attachments);
+        IReadOnlyList<RedactionAttachmentResult> Attachments,
+        // #1586 — the profile that ran, what it removed whole, and whether the
+        // output is still accessible and interactive.
+        string Profile = "Standard",
+        IReadOnlyList<string>? ProfileRemovals = null,
+        bool AccessibilityRemoved = false);
 
     /// <summary>
     /// One attachment a redaction step removed or kept (#1572).

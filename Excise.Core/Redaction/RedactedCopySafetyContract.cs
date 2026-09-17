@@ -139,6 +139,19 @@ public sealed record RedactedCopySafetyOptions
     /// </summary>
     public bool WholeWord { get; init; }
 
+    /// <summary>
+    /// The output profile this copy is produced under (#1586). Default
+    /// <see cref="RedactionProfile.Standard"/>.
+    /// </summary>
+    /// <remarks>
+    /// The engine already applied the profile on the <c>RedactArea</c> /
+    /// <c>RedactText</c> pass; this pass applies it again — idempotently, since
+    /// every step is a removal — so the SAFETY REPORT can account for what went.
+    /// A copy the dialog calls safe has to be able to say what it removed, and
+    /// before #1586 the area path had no return channel at all.
+    /// </remarks>
+    public RedactionProfile Profile { get; init; } = RedactionProfile.Standard;
+
     public static RedactedCopySafetyOptions Default { get; } = new();
 }
 
@@ -208,11 +221,21 @@ public sealed record RedactedCopySafetyReport(
     // #1572 — every attachment removed or kept, with name and size.
     IReadOnlyList<AttachmentRedactionResult>? Attachments = null,
     // #1574 — the XFA form(s) the redaction removed whole, as carrier rows.
-    IReadOnlyList<string>? XfaRemovals = null)
+    IReadOnlyList<string>? XfaRemovals = null,
+    // #1586 — the output profile that ran, what it removed WHOLE, and whether
+    // the copy is still accessible and interactive. A dialog that calls a copy
+    // safe has to be able to say what is no longer in it.
+    RedactionProfile Profile = RedactionProfile.Standard,
+    IReadOnlyList<RedactedFeatureRemoval>? ProfileRemovals = null,
+    bool AccessibilityAndInteractivityRemoved = false)
 {
     /// <summary>Attachments removed or kept (#1572); never null.</summary>
     public IReadOnlyList<AttachmentRedactionResult> AttachmentResults =>
         Attachments ?? System.Array.Empty<AttachmentRedactionResult>();
+
+    /// <summary>What the output profile removed whole (#1586); never null.</summary>
+    public IReadOnlyList<RedactedFeatureRemoval> Removals =>
+        ProfileRemovals ?? System.Array.Empty<RedactedFeatureRemoval>();
 
     public bool HasWarnings =>
         Warnings.Count > 0 ||

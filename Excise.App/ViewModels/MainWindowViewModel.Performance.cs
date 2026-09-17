@@ -79,6 +79,7 @@ public partial class MainWindowViewModel
         settings.RedactionWholeWord = RedactionWholeWord;
         settings.RedactionKeepAttachments = RedactionKeepAttachments;   // #1572
         settings.RedactionWidthPolicy = RedactionWidthPolicy.ToString();
+        settings.RedactionProfile = RedactionProfile.ToString();   // #1586
         settings.LinkUriCarrierPolicy = LinkUriCarrierPolicy.ToString();
         settings.MetadataCarrierPolicy = MetadataCarrierPolicy.ToString();
         settings.PrintScaling = PrintScaling.ToString();
