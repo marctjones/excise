@@ -849,11 +849,20 @@ public class AttachmentsPanelTests : IDisposable
                 RedirectStandardError = true,
                 UseShellExecute = false,
             })!;
-            var output = p.StandardOutput.ReadToEnd();
-            p.WaitForExit(10000);
+            // #925/#1516: drain both pipes concurrently and bound the wait.
+            var stdoutTask = p.StandardOutput.ReadToEndAsync();
+            var stderrTask = p.StandardError.ReadToEndAsync();
+            if (!p.WaitForExit(30000))
+            {
+                try { p.Kill(entireProcessTree: true); } catch { /* gone */ }
+                throw new TimeoutException(
+                    "pdfdetach -list did not exit within 30s; killed it rather than hanging the suite (#1516).");
+            }
+            _ = stderrTask.GetAwaiter().GetResult();
+            var output = stdoutTask.GetAwaiter().GetResult();
             return p.ExitCode == 0 ? output : null;
         }
-        catch { return null; }
+        catch (System.ComponentModel.Win32Exception) { return null; }
     }
 
     /// <summary>
