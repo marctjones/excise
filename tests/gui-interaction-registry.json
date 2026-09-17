@@ -4,15 +4,15 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "39b6db658ac881166581def287a048c7dd8206c7",
+  "sourceRevision": "beed1e8b4c11e286a610717dc4f52a2dab3935f8",
   "summary": {
-    "interactions": 160,
-    "menuItems": 106,
-    "buttons": 45,
+    "interactions": 164,
+    "menuItems": 107,
+    "buttons": 48,
     "mouseGestures": 9,
     "keyboardShortcuts": 28,
-    "declaredCommandIds": 108,
-    "commandIdsReachableFromTheGui": 99,
+    "declaredCommandIds": 112,
+    "commandIdsReachableFromTheGui": 103,
     "commandIdsWithNoGuiPath": 0,
     "cliOnlyCommandIds": 9,
     "controlsWithNoCommandId": 0,
@@ -325,6 +325,33 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "search.close"
+    },
+    {
+      "kind": "button",
+      "path": "RemoveAllAttachmentsButton",
+      "label": "Strip the document's embedded files. Undoable; save afterwards to keep the change.",
+      "command": "RemoveAllAttachmentsCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "document.removeAllAttachments"
+    },
+    {
+      "kind": "button",
+      "path": "SaveAllAttachmentsButton",
+      "label": "Save every attachment into a folder you choose. Existing files are never overwritten.",
+      "command": "SaveAllAttachmentsCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "document.saveAllAttachments"
+    },
+    {
+      "kind": "button",
+      "path": "SaveAttachmentButton",
+      "label": "Save the selected attachment to a location you choose. excise never opens or runs attachments.",
+      "command": "SaveSelectedAttachmentCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "document.saveAttachment"
     },
     {
       "kind": "button",
@@ -706,8 +733,8 @@
     },
     {
       "kind": "menu",
-      "path": "Document > Attachments...",
-      "label": "Attachments...",
+      "path": "Document > Attachments",
+      "label": "Attachments",
       "command": "AttachmentsCommand",
       "commandParameter": null,
       "shortcut": null,
@@ -1315,6 +1342,15 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "view.toggleAnnotations"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Show Attachments",
+      "label": "Show Attachments",
+      "command": "ToggleAttachmentsCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "view.toggleAttachments"
     },
     {
       "kind": "menu",

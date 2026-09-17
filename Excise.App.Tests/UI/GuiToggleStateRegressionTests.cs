@@ -28,6 +28,7 @@ public class GuiToggleStateRegressionTests
         var continuous = Required<MenuItem>(window, "ViewContinuousMenuItem");
         var outline = Required<MenuItem>(window, "ViewOutlineMenuItem");
         var thumbnails = Required<MenuItem>(window, "ViewThumbnailsMenuItem");
+        var attachments = Required<MenuItem>(window, "ViewAttachmentsMenuItem");
         var viewClipboard = Required<MenuItem>(window, "ViewClipboardMenuItem");
         var redactionClipboard = Required<MenuItem>(window, "RedactionClipboardMenuItem");
 
@@ -37,9 +38,10 @@ public class GuiToggleStateRegressionTests
         var leftSidebar = Required<Border>(window, "LeftSidebarHost");
         var outlinePanel = Required<Grid>(window, "OutlinePanel");
         var thumbnailsPanel = Required<Grid>(window, "ThumbnailsPanel");
+        var attachmentsPanel = Required<Grid>(window, "AttachmentsPanel");
         var clipboardSidebar = Required<Border>(window, "ClipboardSidebarHost");
 
-        foreach (var item in new[] { continuous, outline, thumbnails, viewClipboard, redactionClipboard })
+        foreach (var item in new[] { continuous, outline, thumbnails, attachments, viewClipboard, redactionClipboard })
         {
             item.ToggleType.Should().Be(MenuItemToggleType.CheckBox,
                 "toggle menu items must keep ToggleType so screen readers get the UIA Toggle pattern; " +
@@ -51,6 +53,7 @@ public class GuiToggleStateRegressionTests
 
         outline.IsChecked.Should().BeTrue();
         thumbnails.IsChecked.Should().BeTrue();
+        attachments.IsChecked.Should().BeTrue("#1563: the Attachments pane is visible by default");
         viewClipboard.IsChecked.Should().BeTrue();
         redactionClipboard.IsChecked.Should().BeTrue();
         continuous.IsChecked.Should().BeTrue();
@@ -60,6 +63,7 @@ public class GuiToggleStateRegressionTests
         leftSidebar.IsVisible.Should().BeTrue();
         outlinePanel.IsVisible.Should().BeTrue();
         thumbnailsPanel.IsVisible.Should().BeTrue();
+        attachmentsPanel.IsVisible.Should().BeTrue();
         clipboardSidebar.IsVisible.Should().BeTrue();
 
         Click(outline);
@@ -85,8 +89,15 @@ public class GuiToggleStateRegressionTests
         vm.IsThumbnailsSidebarVisible.Should().BeFalse();
         thumbnails.IsChecked.Should().BeFalse();
         thumbnailsButton.Classes.Should().NotContain("active");
-        leftSidebar.IsVisible.Should().BeFalse("both left-sidebar sections are hidden");
+        leftSidebar.IsVisible.Should().BeTrue("the Attachments pane is still visible");
         thumbnailsPanel.IsVisible.Should().BeFalse();
+
+        Click(attachments);
+        await PumpAsync(window);
+        vm.IsAttachmentsSidebarVisible.Should().BeFalse();
+        attachments.IsChecked.Should().BeFalse();
+        attachmentsPanel.IsVisible.Should().BeFalse();
+        leftSidebar.IsVisible.Should().BeFalse("every left-sidebar pane is hidden");
 
         Click(viewClipboard);
         await PumpAsync(window);
@@ -112,12 +123,13 @@ public class GuiToggleStateRegressionTests
 
         var outline = RequiredNative(menu, "Show Outline");
         var thumbnails = RequiredNative(menu, "Show Thumbnails");
+        var attachments = RequiredNative(menu, "Show Attachments");
         var continuous = RequiredNative(menu, "Continuous Scroll");
         var clipboardItems = NativeItems(menu, "Show Clipboard History").ToList();
         var revealHidden = RequiredNative(menu, "Reveal Hidden Text");
         var revealRasterized = RequiredNative(menu, "Reveal Rasterized Hidden Text");
 
-        foreach (var item in new[] { outline, thumbnails, continuous, revealHidden, revealRasterized }.Concat(clipboardItems))
+        foreach (var item in new[] { outline, thumbnails, attachments, continuous, revealHidden, revealRasterized }.Concat(clipboardItems))
         {
             item.ToggleType.Should().Be(MenuItemToggleType.CheckBox);
             item.Command.Should().NotBeNull($"{item.Header} should execute a VM toggle command");
@@ -125,6 +137,7 @@ public class GuiToggleStateRegressionTests
 
         outline.IsChecked.Should().BeTrue();
         thumbnails.IsChecked.Should().BeTrue();
+        attachments.IsChecked.Should().BeTrue();
         clipboardItems.Should().OnlyContain(item => item.IsChecked);
         continuous.IsChecked.Should().BeTrue();
         revealHidden.IsChecked.Should().BeFalse();
@@ -137,6 +150,10 @@ public class GuiToggleStateRegressionTests
         thumbnails.Command!.Execute(null);
         vm.IsThumbnailsSidebarVisible.Should().BeFalse();
         thumbnails.IsChecked.Should().BeFalse();
+
+        attachments.Command!.Execute(null);
+        vm.IsAttachmentsSidebarVisible.Should().BeFalse();
+        attachments.IsChecked.Should().BeFalse();
 
         clipboardItems[0].Command!.Execute(null);
         vm.IsClipboardSidebarVisible.Should().BeFalse();

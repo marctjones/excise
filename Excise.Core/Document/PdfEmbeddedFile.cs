@@ -56,6 +56,14 @@ public sealed record PdfEmbeddedFile
     public PdfDictionary RawDictionary { get; init; }
 
     /// <summary>
+    /// The 1-based page whose <c>/FileAttachment</c> annotation carries this file
+    /// (§12.5.6.15), or <c>null</c> for a document-level attachment
+    /// (<c>/Names/EmbeddedFiles</c> or <c>/AF</c>). An annotation attachment has
+    /// a place on a page; a document-level one does not (#1563).
+    /// </summary>
+    public int? PageNumber { get; init; }
+
+    /// <summary>
     /// Create a new embedded file record.
     /// </summary>
     public PdfEmbeddedFile(

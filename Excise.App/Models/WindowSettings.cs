@@ -27,6 +27,12 @@ public class WindowSettings
     public bool ContinuousScrollEnabled { get; set; } = true;
 
     /// <summary>
+    /// Whether the sidebar's Attachments pane is shown (#1563). Visible by
+    /// default, so a window.json written before this field existed shows it.
+    /// </summary>
+    public bool AttachmentsSidebarVisible { get; set; } = true;
+
+    /// <summary>
     /// Text-selection reading-order strategy (#774). Persisted as a string so
     /// the source-generated JSON stays simple; parsed back to
     /// <see cref="Excise.Core.Text.ReadingOrderStrategy"/> on load.

@@ -34,14 +34,21 @@ namespace Excise.App.Models
 {
     public sealed class AttachmentEntry : System.IEquatable<Excise.App.Models.AttachmentEntry>
     {
-        public AttachmentEntry(string Name, string FileName, string? Description, string? MimeType, int? SizeInBytes) { }
+        public AttachmentEntry(string Name, string FileName, string? Description, string? MimeType, int? SizeInBytes, System.DateTimeOffset? ModifiedDate = default, int? PageNumber = default) { }
+        public string AutomationName { get; }
         public string? Description { get; init; }
-        public string DisplayText { get; }
+        public string DetailText { get; }
+        public string DisplayName { get; }
         public string FileName { get; init; }
+        public bool HasDetail { get; }
+        public string LocationDisplay { get; }
         public string? MimeType { get; init; }
+        public System.DateTimeOffset? ModifiedDate { get; init; }
         public string Name { get; init; }
+        public int? PageNumber { get; init; }
         public string SizeDisplay { get; }
         public int? SizeInBytes { get; init; }
+        public string ToolTipText { get; }
     }
     public class ClipboardEntry : ReactiveUI.ReactiveObject
     {
@@ -148,6 +155,7 @@ namespace Excise.App.Models
     public class WindowSettings
     {
         public WindowSettings() { }
+        public bool AttachmentsSidebarVisible { get; set; }
         public int CacheTrimIdleSeconds { get; set; }
         public bool CacheTrimOnMemoryPressure { get; set; }
         public bool CacheTrimSoftTriggers { get; set; }
@@ -689,6 +697,8 @@ namespace Excise.App.ViewModels
         public bool AreFormFieldsHighlighted { get; set; }
         public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.AttachmentEntry> Attachments { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AttachmentsCommand { get; }
+        public string AttachmentsCountText { get; }
+        public string AttachmentsEmptyText { get; }
         public string AttachmentsSummary { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, int> AutoDetectFieldsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> BatesNumberingCommand { get; }
@@ -748,6 +758,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesBeforeCurrentCommand { get; }
         public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; }
         public bool IsAnnotationAuditModeEnabled { get; set; }
+        public bool IsAttachmentsSidebarVisible { get; set; }
         public bool IsClipboardSidebarVisible { get; set; }
         public bool IsContinuousView { get; }
         public bool IsDocumentLoaded { get; }
@@ -802,6 +813,7 @@ namespace Excise.App.ViewModels
         public Excise.App.ViewModels.RedactionWorkflowManager RedactionWorkflow { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RedoCommand { get; }
         public string RedoMenuHeader { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RemoveAllAttachmentsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RemoveCurrentPageCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Guid, System.Reactive.Unit> RemovePendingRedactionCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RemoveSelectedPagesCommand { get; }
@@ -811,10 +823,12 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RotatePage180Command { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RotatePageLeftCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RotatePageRightCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, int> SaveAllAttachmentsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveAsCommand { get; }
         public string SaveButtonText { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveFileCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveFlattenedFormCopyCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveSelectedAttachmentCommand { get; }
         public bool SearchCaseSensitive { get; set; }
         public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.SearchMatch> SearchMatches { get; set; }
         public string SearchProgressText { get; }
@@ -843,6 +857,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationAuditModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleArrowModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAttachmentsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleClipboardSidebarCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleCommentAnnotationsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleContinuousViewCommand { get; }
@@ -886,6 +901,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ZoomOutCommand { get; }
         public static System.Collections.Generic.IReadOnlyList<string> StandardStampNames { get; }
         public event System.EventHandler? AnnotationsChanged;
+        public event System.EventHandler? AttachmentsPaneFocusRequested;
         public event System.EventHandler? DocumentStructureChanged;
         public event System.EventHandler? PreserveReadingPositionRequested;
         public System.Threading.Tasks.Task AddCircleAnnotationFromDragAsync() { }
@@ -937,6 +953,7 @@ namespace Excise.App.ViewModels
         public void OnTypewriterTextEdited(System.Guid operationId, string text, int pageNumber) { }
         public System.Threading.Tasks.Task<bool> OpenDroppedFilesAsync(System.Collections.Generic.IReadOnlyList<Avalonia.Platform.Storage.IStorageItem> files) { }
         public System.Threading.Tasks.Task RedactTextCommand(string text) { }
+        public System.Threading.Tasks.Task<int> SaveAllAttachmentsAsync() { }
         public System.Threading.Tasks.Task<bool> SaveAttachmentAsync(Excise.App.Models.AttachmentEntry entry, string outputPath) { }
         public System.Threading.Tasks.Task SaveDocumentCommand(string filePath) { }
         public System.Threading.Tasks.Task SaveFileAsAsync(string filePath) { }
@@ -951,6 +968,7 @@ namespace Excise.App.ViewModels
         public void StripAllAttachments() { }
         public void ToggleAnnotationAuditMode() { }
         public void ToggleAnnotationsVisible() { }
+        public void ToggleAttachmentsSidebar() { }
         public void ToggleClipboardSidebar() { }
         public void ToggleCommentAnnotationsVisible() { }
         public void ToggleFieldAndLinkAnnotationsVisible() { }
@@ -1146,12 +1164,6 @@ namespace Excise.App.Views
     public class AboutWindow : Avalonia.Controls.Window
     {
         public AboutWindow() { }
-        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-        public void InitializeComponent(bool loadXaml = true) { }
-    }
-    public class AttachmentsDialog : Avalonia.Controls.Window
-    {
-        public AttachmentsDialog() { }
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public void InitializeComponent(bool loadXaml = true) { }
     }

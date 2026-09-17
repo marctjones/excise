@@ -35,6 +35,7 @@ Excise.App	tests-only	ExecuteFileAsync	triage:test-covered app service/helper su
 Excise.App	tests-only	GetCurrentDocumentAsStream	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	GetPageHeight	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	GetPageWidth	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	HasOutline	triage:#1563 removed a stale XAML comment that was its only non-nameof mention; no XAML binding or production code reads it (only nameof raises), so it was already tests-only in practice
 Excise.App	tests-only	HasRecentFiles	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	JumpToOutlineCommand	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	PreferencesPath	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability

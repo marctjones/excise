@@ -70,6 +70,7 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _continuousScrollItem;
         private readonly NativeMenuItem _outlineItem;
         private readonly NativeMenuItem _thumbnailsItem;
+        private readonly NativeMenuItem _attachmentsItem;
         private readonly NativeMenuItem _revealHiddenTextItem;
         private readonly NativeMenuItem _revealRasterizedHiddenItem;
         private readonly NativeMenuItem _formAuthoringItem;
@@ -96,6 +97,9 @@ internal static class MacNativeMenuBuilder
             _continuousScrollItem = CommandItem("Continuous Scroll", _viewModel.ToggleContinuousViewCommand, Key.C, KeyModifiers.Meta | KeyModifiers.Shift);
             _outlineItem = ToggleItem("Show Outline", _viewModel.ToggleOutlineCommand, Key.O, KeyModifiers.Meta | KeyModifiers.Shift);
             _thumbnailsItem = ToggleItem("Show Thumbnails", _viewModel.ToggleThumbnailsCommand, Key.T, KeyModifiers.Meta | KeyModifiers.Shift);
+            // #1563: the in-window menu is hidden on macOS, so the pane toggle
+            // must exist here too or it is unreachable on the primary platform.
+            _attachmentsItem = ToggleItem("Show Attachments", _viewModel.ToggleAttachmentsCommand);
             _revealHiddenTextItem = ToggleItem("Reveal Hidden Text", _viewModel.ToggleRevealHiddenTextCommand);
             _revealRasterizedHiddenItem = ToggleItem("Reveal Rasterized Hidden Text", _viewModel.ToggleRevealRasterizedHiddenCommand);
             // #1476: the main toolbar hides low-priority actions when narrow, so
@@ -157,6 +161,7 @@ internal static class MacNativeMenuBuilder
                     Separator(),
                     _outlineItem,
                     _thumbnailsItem,
+                    _attachmentsItem,
                     _viewClipboardItem));
 
             Add(menu,
@@ -207,7 +212,7 @@ internal static class MacNativeMenuBuilder
                     // exists only in MainWindow.axaml is unreachable on this
                     // project's primary platform — which is exactly the
                     // "wired to nothing" failure this work is about.
-                    TrackDocumentItem(CommandItem("Attachments...", _viewModel.AttachmentsCommand)),
+                    TrackDocumentItem(CommandItem("Attachments", _viewModel.AttachmentsCommand)),
                     TrackDocumentItem(CommandItem("Bates Numbering...", _viewModel.BatesNumberingCommand)),
                     TrackDocumentItem(_revealHiddenTextItem),
                     TrackDocumentItem(_revealRasterizedHiddenItem),
@@ -262,6 +267,7 @@ internal static class MacNativeMenuBuilder
             or nameof(MainWindowViewModel.IsContinuousView)
             or nameof(MainWindowViewModel.IsOutlineSidebarVisible)
             or nameof(MainWindowViewModel.IsThumbnailsSidebarVisible)
+            or nameof(MainWindowViewModel.IsAttachmentsSidebarVisible)
             or nameof(MainWindowViewModel.IsClipboardSidebarVisible)
             or nameof(MainWindowViewModel.RevealHiddenText)
             or nameof(MainWindowViewModel.RevealRasterizedHidden);
@@ -307,6 +313,7 @@ internal static class MacNativeMenuBuilder
             _continuousScrollItem.IsChecked = _viewModel.IsContinuousView;
             _outlineItem.IsChecked = _viewModel.IsOutlineSidebarVisible;
             _thumbnailsItem.IsChecked = _viewModel.IsThumbnailsSidebarVisible;
+            _attachmentsItem.IsChecked = _viewModel.IsAttachmentsSidebarVisible;
             _viewClipboardItem.IsChecked = _viewModel.IsClipboardSidebarVisible;
             _redactionClipboardItem.IsChecked = _viewModel.IsClipboardSidebarVisible;
             _revealHiddenTextItem.IsChecked = _viewModel.RevealHiddenText;

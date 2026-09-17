@@ -30,8 +30,8 @@ namespace Excise.App.Tests.UI;
 /// byte-level baselines brittle, as the existing visual-baseline tests already show).
 ///
 /// The window has one content region — the page surface (<c>PdfViewerControl</c>) —
-/// and four independently toggle-able panels (Outline, Thumbnails, Clipboard,
-/// Search), each <c>IsVisible</c>-bound to a VM flag. The contract for every
+/// and five independently toggle-able panels (Outline, Thumbnails, Clipboard,
+/// Search, Attachments), each <c>IsVisible</c>-bound to a VM flag. The contract for every
 /// command in <see cref="Registry"/>:
 ///
 ///   • the page surface keeps comparable ink (no command here may blank the page);
@@ -68,7 +68,7 @@ public class GuiExpectedEffectTests
     private readonly ITestOutputHelper _out;
     public GuiExpectedEffectTests(ITestOutputHelper o) { _out = o; }
 
-    private enum Panel { Outline, Thumbnails, Clipboard, Search }
+    private enum Panel { Outline, Thumbnails, Clipboard, Search, Attachments }
 
     /// <summary>A command and the one panel it is expected to toggle (null = pure
     /// page-surface command that must leave every panel alone).</summary>
@@ -149,6 +149,11 @@ public class GuiExpectedEffectTests
         new("SaveFlattenedFormCopyCommand", null),
         new("MakeSearchableCommand", null),
         new("SecurityCommand", null),
+        // #1563: the fixture carries no attachments, so these no-op (and the
+        // folder picker is inert headlessly).
+        new("SaveSelectedAttachmentCommand", null),
+        new("SaveAllAttachmentsCommand", null),
+        new("RemoveAllAttachmentsCommand", null),
         new("PrintCommand", null),
         new("VerifySignaturesCommand", null),
         new("ShowPreferencesCommand", null),
@@ -193,6 +198,7 @@ public class GuiExpectedEffectTests
         new("ToggleThumbnailsCommand", Panel.Thumbnails),
         new("ToggleOutlineCommand", Panel.Outline),
         new("ToggleClipboardSidebarCommand", Panel.Clipboard),
+        new("ToggleAttachmentsCommand", Panel.Attachments),
         new("ToggleSearchCommand", Panel.Search),
 
         // NOT in this registry, with a live reason each:
@@ -245,6 +251,7 @@ public class GuiExpectedEffectTests
                 [Panel.Thumbnails] = window.FindControl<Control>("ThumbnailsPanel")!,
                 [Panel.Clipboard] = window.FindControl<Control>("ClipboardSidebarHost")!,
                 [Panel.Search] = window.FindControl<Control>("SearchTextBox")!,
+                [Panel.Attachments] = window.FindControl<Control>("AttachmentsPanel")!,
             };
             panels.Values.Should().OnlyContain(c => c != null, "every tracked region control must exist by name");
 
@@ -357,6 +364,7 @@ public class GuiExpectedEffectTests
                 [Panel.Thumbnails] = window.FindControl<Control>("ThumbnailsPanel")!,
                 [Panel.Clipboard] = window.FindControl<Control>("ClipboardSidebarHost")!,
                 [Panel.Search] = window.FindControl<Control>("SearchTextBox")!,
+                [Panel.Attachments] = window.FindControl<Control>("AttachmentsPanel")!,
             };
 
             var nameToCommand = BuildCommandMap(vm);
