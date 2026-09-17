@@ -381,7 +381,7 @@ internal static class AttachmentCarrierScrubber
 
                 default:
                     results.Add((file, Result(AttachmentDisposition.KeptNotChecked,
-                        $"excise does not inspect {DescribeType(file)} files; it may contain the redacted text")));
+                        $"excise does not inspect {DescribeType(file)}; it may contain the redacted text")));
                     break;
             }
         }
@@ -449,8 +449,8 @@ internal static class AttachmentCarrierScrubber
     private static string DescribeType(Found file)
     {
         var extension = Path.GetExtension(file.Name);
-        if (extension.Length > 0) return extension;
-        return file.Payload?.GetNameOrNull("Subtype") ?? "this kind of";
+        if (extension.Length > 0) return $"{extension} files";
+        return file.Payload?.GetNameOrNull("Subtype") is { } mime ? $"{mime} files" : "files of this type";
     }
 
     private static bool StartsWithPdfHeader(byte[] bytes)
