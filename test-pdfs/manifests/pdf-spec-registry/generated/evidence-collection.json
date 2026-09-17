@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1278,
-  "indexedContentSha256": "43dc43e14884ebfcfa1dc65272ceff5e6cbb9a2362d8cab9376230a2fc521144",
+  "indexedContentSha256": "1d0bd23c35dc5677ea6e11994fb30cf217f0228b28a84230d826888fd74602f1",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -14378,6 +14378,14 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/UnredactExitStatusTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "marked",
+            "property"
+          ]
+        },
+        {
           "path": "tests/unredaction-failure-modes.json",
           "kind": "test",
           "matchedTerms": [
@@ -14421,7 +14429,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 54
+      "candidateReferenceCount": 55
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -38500,6 +38508,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/RedactionReport.cs",
           "kind": "source",
           "matchedTerms": [
@@ -39088,18 +39105,9 @@
             "lab",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/SharedImageRegionRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 117
+      "candidateReferenceCount": 118
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -67735,6 +67743,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "redaction",
+            "visibility",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/Recovery/ResidualArtefactRecovery.cs",
           "kind": "source",
           "matchedTerms": [
@@ -68387,18 +68405,9 @@
             "visibility",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/OperandSplitImprovementTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "redaction",
-            "review",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 142
+      "candidateReferenceCount": 143
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -68695,7 +68704,6 @@
           "kind": "source",
           "matchedTerms": [
             "attachment",
-            "copy",
             "metadata",
             "redaction"
           ]
