@@ -549,6 +549,10 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
             keystroke(pid, "w")                         # close the document
             wait_settled(tracker, cfg["settle"])
             time.sleep(20); boundary("closed-idle-20s")
+            # A second, later after-close sample: Altona's 20 s figure caught the
+            # idle trim mid-flight on 2026-09-17 (render-ahead lane), so 20 s alone
+            # can read a still-falling footprint as the settled one (#1496).
+            time.sleep(25); boundary("closed-idle-45s")
     except (RunFailed, RuntimeError, subprocess.TimeoutExpired) as e:
         failures.append(f"aborted: {e}")
     finally:
@@ -653,7 +657,7 @@ def summarize(out):
              "(main + children + per-app helper services that exit with it). Medians over "
              "successful repeats; ± is the min–max spread. MB.", ""]
     order = ["empty", "w9", "irs", "altona", "scan"]
-    labels = ["opened", "paged-30", "idle-20s-after-paging", "idle-30s", "closed-idle-20s"]
+    labels = ["opened", "paged-30", "idle-20s-after-paging", "idle-30s", "closed-idle-20s", "closed-idle-45s"]
     for doc in order:
         present = [(a, d) for (a, d) in rows if d == doc]
         if not present:
