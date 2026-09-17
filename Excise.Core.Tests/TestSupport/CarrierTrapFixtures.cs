@@ -258,7 +258,7 @@ internal static class CarrierTrapFixtures
                     "<< /Type /StructTreeRoot /K 7 0 R >>",
                     $"<< /Type /StructElem /S /Figure /P 6 0 R /Alt (Scan of the letter naming {t}) >>",
                     Stream("/Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceGray /BitsPerComponent 8",
-                        "ÿ  ÿ", compress: false),
+                        "\u00ff\u0000\u0000\u00ff", compress: false),
                 }));
         // #1586: a redaction of ONE OR TWO characters in a structure element
         // with no structural link. Below StructureTreeRedactionScrubber's
