@@ -110,6 +110,40 @@ public class RedactionCarrierPolicyPreferenceTests
     }
 
     [Fact]
+    public void KeepAttachments_DefaultsOff_AndRoundTripsThroughPreferencesAndRestart()
+    {
+        // #1572, decided 2026-09-17: a redacted copy carries no attachments
+        // unless the user keeps them, and the choice reaches the engine.
+        var main = MainWindowViewModelTestFactory.Create();
+        main.RedactionKeepAttachments.Should().BeFalse();
+        main.BuildRedactedCopySafetyOptions().ScrubAttachments.Should().BeTrue();
+        new Excise.App.Models.WindowSettings().RedactionKeepAttachments.Should().BeFalse();
+
+        var prefs = new PreferencesViewModel();
+        prefs.LoadFromMainViewModel(main);
+        prefs.RedactionKeepAttachments = true;
+        prefs.SaveToMainViewModel(main);
+
+        main.RedactionKeepAttachments.Should().BeTrue();
+        main.BuildRedactedCopySafetyOptions().ScrubAttachments.Should().BeFalse(
+            "keeping attachments must turn the safe-copy strip off, or the toggle does nothing");
+
+        var settings = new Excise.App.Models.WindowSettings();
+        main.WritePreferencesTo(settings);
+        settings.RedactionKeepAttachments.Should().BeTrue();
+
+        var restarted = MainWindowViewModelTestFactory.Create();
+        restarted.ApplyRedactionPolicyPreferences(
+            settings.RedactionWholeWord, settings.RedactionWidthPolicy,
+            settings.LinkUriCarrierPolicy, settings.MetadataCarrierPolicy,
+            settings.RedactionKeepAttachments);
+        restarted.RedactionKeepAttachments.Should().BeTrue();
+
+        prefs.ResetToDefaultsCommand.Execute().Subscribe();
+        prefs.RedactionKeepAttachments.Should().BeFalse();
+    }
+
+    [Fact]
     public void WidthPolicy_DefaultsToCollapse_AndRoundTripsThroughPreferences()
     {
         // #1189. The default keeps today's behaviour: an exact-width box that

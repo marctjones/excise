@@ -18,21 +18,35 @@
     "A row may NAME a channel and still be a gap: the channel constant exists so",
     "the report can say the channel did not run and why, which is the honest",
     "output for an unimplemented one. STATUS is the authority on coverage, never",
-    "the presence of a channel name."
+    "the presence of a channel name.",
+    "",
+    "WARNING (#1617): `covered` means a named test passes, and a test can only",
+    "exercise the shapes someone thought to write. The first row here said",
+    "`covered`, named Manafort in its producers, and excise was totally blind to",
+    "the actual Manafort filing: every fixture set the fill colour explicitly and",
+    "the real document relies on the spec default. When you add a row, ask which",
+    "shapes of the mode the evidence does NOT reach, and prefer a real document",
+    "over one more fixture you wrote yourself."
   ],
   "modes": [
     {
       "id": "box-over-intact-text",
       "description": "An opaque box drawn over text in the page content stream; the glyphs are untouched.",
-      "producers": ["the most common real-world failure (Manafort, TSA, NYT/NSA, Meta/FTC, DOJ 2025)"],
+      "producers": [
+        "the most common real-world failure (Manafort, TSA, NYT/NSA, Meta/FTC, DOJ 2025)"
+      ],
       "channel": "hidden-text",
       "status": "covered",
-      "evidence": "RecoveryChannelTests.HiddenText_UnderABlackBox_IsCertainLocatedAndLinked"
+      "evidence": "RecoveryChannelTests.HiddenText_UnderABlackBox_IsCertainLocatedAndLinked; DefaultFillColourMarkTests (the sub-shape that draws the box with NO colour operator, relying on PDF 32000-1 8.6.8's initial black)",
+      "note": "This row read `covered`, with a passing test and Manafort named right there in `producers`, while excise found ZERO marks and ZERO findings on the actual Manafort filing (D.D.C. 1:17-cr-00201 #471) — see #1617. The mode was covered; one of its SHAPES was not, because every fixture wrote `0 0 0 rg` before the box and the real document omits it. A status of `covered` is a claim about the fixtures that exist, not about the mode."
     },
     {
       "id": "box-drawn-by-annotation",
       "description": "The covering box is a /Square or /Highlight ANNOTATION, not page content. The mark is detected; the text under it is not reported, because the hidden-text detector walks the page content stream and an annotation is not in it.",
-      "producers": ["hand annotation in a viewer", "markup tools"],
+      "producers": [
+        "hand annotation in a viewer",
+        "markup tools"
+      ],
       "channel": "mark-region",
       "status": "covered",
       "evidence": "FailureModeChannelTests.AnnotationDrawnBox_TextInsideTheMarkIsRecovered",
@@ -41,7 +55,11 @@
     {
       "id": "box-inside-form-xobject",
       "description": "Text and/or the covering box live inside a Form XObject the page invokes with Do.",
-      "producers": ["LaTeX", "InDesign", "form flatteners"],
+      "producers": [
+        "LaTeX",
+        "InDesign",
+        "form flatteners"
+      ],
       "channel": "mark-region",
       "status": "covered",
       "evidence": "FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
@@ -50,7 +68,10 @@
     {
       "id": "box-light-or-low-contrast",
       "description": "The covering fill is light, or the text is drawn in a colour close to the fill, so it is invisible without being covered.",
-      "producers": ["white-on-white", "grey-on-grey"],
+      "producers": [
+        "white-on-white",
+        "grey-on-grey"
+      ],
       "channel": "hidden-text",
       "status": "partial",
       "evidence": "LowContrastHiddenTextTests",
@@ -59,7 +80,12 @@
     {
       "id": "text-render-mode-3",
       "description": "Text drawn with Tr 3 (invisible). Fully extractable, never painted. This is how every OCR layer is written.",
-      "producers": ["ocrmypdf", "Acrobat OCR", "scanner software", "any searchable-image PDF"],
+      "producers": [
+        "ocrmypdf",
+        "Acrobat OCR",
+        "scanner software",
+        "any searchable-image PDF"
+      ],
       "channel": "hidden-text",
       "status": "covered",
       "evidence": "FailureModeChannelTests.InvisibleTextRenderMode3_IsRecovered",
@@ -68,7 +94,9 @@
     {
       "id": "redact-annotation-unapplied",
       "description": "A /Redact annotation marks an intention that was never applied; the text is untouched and the annotation says where to look.",
-      "producers": ["Acrobat 'mark for redaction' without 'apply'"],
+      "producers": [
+        "Acrobat 'mark for redaction' without 'apply'"
+      ],
       "channel": "mark-region",
       "status": "covered",
       "evidence": "FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
@@ -77,7 +105,10 @@
     {
       "id": "ocr-layer-left-in-place",
       "description": "A page rasterised to an image, with the original OCR text layer left behind it.",
-      "producers": ["print-to-PDF then OCR", "scanner workflows"],
+      "producers": [
+        "print-to-PDF then OCR",
+        "scanner workflows"
+      ],
       "channel": "ocr-differential",
       "status": "partial",
       "evidence": "UnredactOcrChannelTests",
@@ -86,7 +117,9 @@
     {
       "id": "partial-glyph-removal-kerning",
       "description": "Glyphs removed from a TJ array while the kerning numbers stay, so the surviving glyphs' positions encode what was between them (Bland et al., PETS 2023).",
-      "producers": ["width-preserving redactors"],
+      "producers": [
+        "width-preserving redactors"
+      ],
       "channel": "residue",
       "status": "partial",
       "evidence": "ResidueRecoveryRecallTests",
@@ -95,7 +128,9 @@
     {
       "id": "image-covered-only",
       "description": "A box drawn over an image; the image XObject is intact underneath.",
-      "producers": ["every viewer-based redaction"],
+      "producers": [
+        "every viewer-based redaction"
+      ],
       "channel": "covered-image",
       "status": "covered",
       "evidence": "RecoveryChannelTests.ImageUnderABox_IsPresentOnlyNotCertain"
@@ -103,7 +138,9 @@
     {
       "id": "vector-covered-only",
       "description": "A box over vector artwork — a signature, a chart, a map. No text is involved, so a text-only audit reports the page clean.",
-      "producers": ["every viewer-based redaction"],
+      "producers": [
+        "every viewer-based redaction"
+      ],
       "channel": "covered-vector",
       "status": "covered",
       "evidence": "RecoveryChannelTests.VectorContentUnderABox_IsPresentOnly"
@@ -111,7 +148,9 @@
     {
       "id": "image-original-object-retained",
       "description": "The page is repointed at a redacted image while the ORIGINAL image object stays in the file, unreferenced but present.",
-      "producers": ["editors that add rather than replace"],
+      "producers": [
+        "editors that add rather than replace"
+      ],
       "channel": "image-layer",
       "status": "covered",
       "evidence": "FailureModeChannelTests.OrphanedOriginalImage_IsReportedAsAPresentOnlyLeak",
@@ -120,7 +159,9 @@
     {
       "id": "image-smask-trick",
       "description": "The original image is retained and hidden via a soft mask (/SMask) that makes it transparent, rather than being removed.",
-      "producers": ["compositing editors"],
+      "producers": [
+        "compositing editors"
+      ],
       "channel": "image-layer",
       "status": "partial",
       "evidence": "FailureModeChannelTests.FullyMaskedImage_IsReportedAsAPresentOnlyLeak",
@@ -129,7 +170,11 @@
     {
       "id": "incremental-update-prior-revision",
       "description": "The redaction is an incremental update; the unredacted revision is still at the front of the file and a truncation at an earlier %%EOF yields it whole.",
-      "producers": ["any editor saving incrementally", "form fillers", "signature tools"],
+      "producers": [
+        "any editor saving incrementally",
+        "form fillers",
+        "signature tools"
+      ],
       "channel": "prior-revision",
       "status": "covered",
       "evidence": "PriorRevisionRecoveryTests",
@@ -138,7 +183,9 @@
     {
       "id": "leftover-page-thumbnail",
       "description": "/Thumb holds a pre-rendered picture of the page from before the redaction.",
-      "producers": ["editors that do not regenerate thumbnails"],
+      "producers": [
+        "editors that do not regenerate thumbnails"
+      ],
       "channel": "thumbnail",
       "status": "covered",
       "evidence": "ResidualArtefactRecoveryTests.Thumbnail_IsReportedAsAPresentOnlyLeak"
@@ -146,7 +193,9 @@
     {
       "id": "leftover-embedded-file",
       "description": "An attachment carried inside the document, untouched by a page redaction.",
-      "producers": ["any producer; attachments are orthogonal to page content"],
+      "producers": [
+        "any producer; attachments are orthogonal to page content"
+      ],
       "channel": "attachment",
       "status": "covered",
       "evidence": "ResidualArtefactRecoveryTests.Attachment_IsReportedAsAPresentOnlyLeak"
@@ -154,7 +203,9 @@
     {
       "id": "leftover-form-value",
       "description": "An AcroForm field's /V survives behind a blanked appearance and is re-painted by any reader honouring /NeedAppearances.",
-      "producers": ["form flatteners that blank the appearance only"],
+      "producers": [
+        "form flatteners that blank the appearance only"
+      ],
       "channel": "form-field",
       "status": "covered",
       "evidence": "RecoveryOracleTests.FormFieldRecovery_ReportsAValueAReaderWillRePaintOntoThePage"
@@ -162,7 +213,9 @@
     {
       "id": "leftover-xfa",
       "description": "An XFA form's XML data packet still holds the field values a page redaction removed.",
-      "producers": ["XFA form producers"],
+      "producers": [
+        "XFA form producers"
+      ],
       "channel": "xfa",
       "status": "covered",
       "evidence": "FailureModeChannelTests.XfaFieldValue_IsRecoveredFromTheDatasetsPacket",
@@ -171,7 +224,9 @@
     {
       "id": "structure-tree-carrier",
       "description": "/ActualText, /Alt or /E on a StructElem restates the removed text.",
-      "producers": ["accessible-PDF producers"],
+      "producers": [
+        "accessible-PDF producers"
+      ],
       "channel": "carrier",
       "status": "covered",
       "evidence": "CarrierTextRecoveryTests"
@@ -179,7 +234,9 @@
     {
       "id": "marked-content-carrier",
       "description": "The same carriers, inline in the content stream as a BDC property list — a different carrier the structure-tree walk never reaches.",
-      "producers": ["accessible-PDF producers"],
+      "producers": [
+        "accessible-PDF producers"
+      ],
       "channel": "marked-content",
       "status": "covered",
       "evidence": "RecoveryChannelTests.MarkedContentActualText_IsRecoveredWithTheEnclosedGlyphBox",
@@ -188,7 +245,9 @@
     {
       "id": "leftover-document-metadata",
       "description": "/Info, XMP /Metadata and outline titles restating a removed term.",
-      "producers": ["every producer"],
+      "producers": [
+        "every producer"
+      ],
       "channel": "carrier",
       "status": "partial",
       "note": "DELIBERATE: CarrierTextRecovery covers the hidden-readable carriers and excludes bulk /Info + XMP, because dumping them would bury a real leak in ordinary document metadata. PdfDocumentSanitizer scrubs them (#608); the audit does not enumerate them."

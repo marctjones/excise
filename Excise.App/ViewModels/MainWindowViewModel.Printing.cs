@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 using Excise.App.Services.Printing;
 using Excise.Core.Security;
@@ -13,8 +14,9 @@ namespace Excise.App.ViewModels;
 /// edited is written to a temporary copy with pending redactions and type-over
 /// edits applied, printed through the platform <see cref="IDocumentPrinter"/>,
 /// and deleted afterwards (<see cref="DocumentPrintWorkflowService"/>). macOS
-/// prints through PDFKit and the system print sheet; other platforms show an
-/// honest explanation (Windows is #1546; Linux printing is out of scope).
+/// prints through PDFKit and the system print sheet; Windows through the
+/// system print dialog and excise's own rendering (#1546); other platforms
+/// show an honest explanation (Linux printing is out of scope).
 /// </summary>
 public partial class MainWindowViewModel
 {
@@ -27,6 +29,14 @@ public partial class MainWindowViewModel
         "quality and cannot produce the degraded output this document allows";
 
     private PrintScalingMode _printScaling = PrintScalingMode.ShrinkOversized;
+
+    /// <summary>
+    /// Cancels the print job being sent, if any. Windows rasterises and
+    /// spools in the background after its dialog closes; closing the window
+    /// aborts that job (best effort: the process may exit first, and the
+    /// Windows spooler then discards the unfinished job itself).
+    /// </summary>
+    private CancellationTokenSource? _printCancellation;
 
     /// <summary>
     /// How printed pages are scaled onto the paper (#1545). Defaults to
@@ -61,6 +71,9 @@ public partial class MainWindowViewModel
         !IsDocumentLoaded ? PrintNeedsDocumentMessage
         : CanPrint ? null
         : "This document's security settings do not allow printing.";
+
+    /// <summary>Abort a print job still being sent. A no-op when none is.</summary>
+    internal void CancelPrintInProgress() => _printCancellation?.Cancel();
 
     private static bool IsPrintPermitted(PdfPermissions permissions) =>
         permissions.CanPrint && permissions.CanPrintHighQuality;
@@ -104,6 +117,8 @@ public partial class MainWindowViewModel
         SyncAllFormFieldValuesToServiceDocument();
 
         DocumentPrintWorkflowResult result;
+        using var cancellation = new CancellationTokenSource();
+        _printCancellation = cancellation;
         try
         {
             result = await _printWorkflow.PrintAsync(DocumentPrintJob.Capture(
@@ -113,13 +128,18 @@ public partial class MainWindowViewModel
                 BuildRedactedCopySafetyOptions(),
                 string.IsNullOrWhiteSpace(DocumentName) ? "excise document" : DocumentName,
                 PrintScaling,
-                _windowHost.MainWindow));
+                _windowHost.MainWindow),
+                cancellation.Token);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Printing failed while preparing the print copy");
             await _dialogService.ShowMessageAsync(PrintDialogTitle, $"Printing failed: {ex.Message}");
             return;
+        }
+        finally
+        {
+            _printCancellation = null;
         }
 
         if (result.RedactionSafety is { HasWarnings: true })

@@ -160,6 +160,55 @@ public class PdfEmbeddedFileTests
     }
 
     [Fact]
+    public void ScrubEmbeddedFilesReversibly_RestoreBringsBackTheSameFile()
+    {
+        // #1563: the GUI's undo for Remove All Attachments.
+        var pdf = BuildPdfWithEmbeddedFile("secret.xml", "<secret/>");
+        using var doc = PdfDocument.Open(pdf);
+        doc.GetEmbeddedFiles().Should().ContainSingle();
+
+        var (removed, restore) = doc.ScrubEmbeddedFilesReversibly();
+        doc.GetEmbeddedFiles().Should().BeEmpty("the scrub itself is unchanged");
+        removed.Should().ContainSingle().Which.Name.Should().Be("secret.xml");
+
+        restore();
+        var files = doc.GetEmbeddedFiles();
+        files.Should().ContainSingle().Which.Name.Should().Be("secret.xml");
+        Encoding.ASCII.GetString(files[0].Bytes!).Should().Be("<secret/>");
+
+        using var reloaded = PdfDocument.Open(doc.SaveToBytes());
+        reloaded.GetEmbeddedFiles().Should().ContainSingle(
+            "a restored attachment is referenced again, so the writer keeps it");
+    }
+
+    [Fact]
+    public void GetEmbeddedFiles_ReportsThePageOfAnAnnotationAttachment_AndNoPageForADocumentOne()
+    {
+        // #1563: the pane shows which page carries an annotation attachment.
+        var pdf = BuildPdfWithEmbeddedFile("doc-level.txt", "data");
+        using var doc = PdfDocument.Open(pdf);
+        var fsRef = doc.AddIndirectObject(new PdfDictionary
+        {
+            ["Type"] = new PdfName("Filespec"),
+            ["F"] = new PdfString("on-page.txt"),
+        });
+        var annotRef = doc.AddIndirectObject(new PdfDictionary
+        {
+            ["Type"] = new PdfName("Annot"),
+            ["Subtype"] = new PdfName("FileAttachment"),
+            ["Rect"] = new PdfArray(new PdfReal(0), new PdfReal(0), new PdfReal(10), new PdfReal(10)),
+            ["FS"] = fsRef,
+        });
+        doc.GetPage(doc.PageCount).Dictionary["Annots"] = new PdfArray(annotRef);
+
+        using var reloaded = PdfDocument.Open(doc.SaveToBytes());
+        var files = reloaded.GetEmbeddedFiles();
+
+        files.Single(f => f.FileName == "doc-level.txt").PageNumber.Should().BeNull();
+        files.Single(f => f.FileName == "on-page.txt").PageNumber.Should().Be(reloaded.PageCount);
+    }
+
+    [Fact]
     public void ScrubEmbeddedFiles_IsIdempotent()
     {
         var pdf = BuildPdfWithEmbeddedFile("file.txt", "data");

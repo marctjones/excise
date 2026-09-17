@@ -73,7 +73,9 @@ second implementation-status list.
    component: [Main-window architecture](main-window-architecture.md) — the
    member-level target structure for `app-main-window` (owners, contracts,
    view/behaviour split) and the sequencing constraints its refactor must
-   respect (#1500).
+   respect (#1500). [Dynamic XFA display](xfa-rendering.md) — how excise
+   lays out dynamic XFA forms into ordinary pages, and the redaction rule that
+   comes with it (#1547).
 
 `sourceRevision` records the commit used as the generation base. It is
 provenance, not the freshness key: committing regenerated output necessarily

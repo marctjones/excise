@@ -61,10 +61,10 @@ public static class RecoveryScanner
 
         AddHiddenText(document, builder, cancellationToken);
         AddMarkRegionText(document, marks, builder, cancellationToken);
-        AddCarriers(document, builder, cancellationToken);
+        var visibleCarrierText = AddCarriers(document, builder, cancellationToken);
         AddMarkedContent(document, builder, cancellationToken);
         AddCoveredContent(document, builder, cancellationToken);
-        AddFormFields(document, builder, cancellationToken);
+        AddFormFields(document, builder, visibleCarrierText, cancellationToken);
         AddResidualArtefacts(document, builder, cancellationToken);
         AddXfaValues(document, builder, cancellationToken);
         AddImageLayerLeaks(document, builder, cancellationToken);
@@ -116,25 +116,56 @@ public static class RecoveryScanner
         }
     }
 
-    private static void AddCarriers(
+    /// <summary>
+    /// Runs the carrier scan and returns the values it judged ALREADY VISIBLE to
+    /// a reader, so a later channel does not report the same string as hidden.
+    /// </summary>
+    private static HashSet<string> AddCarriers(
         PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken)
     {
+        var visible = new HashSet<string>(StringComparer.Ordinal);
         builder.ChannelRan(Channels.Carrier);
         foreach (var carrier in CarrierTextRecovery.Scan(document))
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            // The carrier scan classifies what it finds, and the recovery model
+            // has a confidence class for each. Collapsing them all to Certain
+            // would report a document TITLE and an unopened attachment as
+            // recovered text, and set the "text was recovered" exit code on a
+            // document with no leak at all.
+            if (carrier.VisibleElsewhere)
+            {
+                // The reader can already see it. Remember the string: the
+                // form-field channel looks at the same values from the other
+                // side and has no visibility model of its own.
+                visible.Add(carrier.Text);
+                continue;
+            }
+
             // Page 0 means the carrier could not be placed. It keeps no
             // location, so the report files it document-level -- an honest
             // "this text is in the file somewhere" rather than a position the
             // channel does not have.
-            var location = carrier.PageNumber > 0 && carrier.Rect is { } rect
+            var location = carrier.PageNumber > 0 && carrier.Area is { } rect
                 ? new RecoveryLocation(carrier.PageNumber, rect,
                     carrier.Carrier.StartsWith("annotation", StringComparison.Ordinal)
                         ? "annotation /Rect" : "MCID content")
                 : null;
-            builder.AddFinding(RecoveredFinding.Certain(
-                Channels.Carrier, carrier.Carrier, carrier.Text, location));
+
+            // Presence is "something is there", never a decoded value — which is
+            // exactly what PresentOnly means here.
+            builder.AddFinding(carrier.Kind == CarrierTextRecovery.CarrierFindingKind.Presence
+                // PresentOnly deliberately has no Text: a description of what is
+                // there is not a recovered value, and putting it in the text slot
+                // is how a description becomes an "answer". It rides in the
+                // carrier label instead.
+                ? RecoveredFinding.PresentOnly(
+                    Channels.Carrier, $"{carrier.Carrier}: {carrier.Text}", location)
+                : RecoveredFinding.Certain(Channels.Carrier, carrier.Carrier, carrier.Text, location));
         }
+
+        return visible;
     }
 
     private static void AddMarkedContent(
@@ -410,12 +441,20 @@ public static class RecoveryScanner
     }
 
     private static void AddFormFields(
-        PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken)
+        PdfDocument document, RecoveryReportBuilder builder,
+        IReadOnlySet<string> visibleCarrierText, CancellationToken cancellationToken)
     {
         builder.ChannelRan(Channels.FormField);
         foreach (var field in FormFieldValueRecovery.Scan(document))
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            // A field whose value its own widget paints is not hidden — it is a
+            // filled form. The carrier scan already decided that (it compares the
+            // value against what the widget draws); this channel reads /V
+            // directly and would otherwise call every filled field a leak.
+            if (visibleCarrierText.Contains(field.Value)) continue;
+
             var location = field.PageNumber > 0 && field.Rect is { } rect
                 ? new RecoveryLocation(field.PageNumber, rect, "widget /Rect")
                 : null;

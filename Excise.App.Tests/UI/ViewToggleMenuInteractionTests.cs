@@ -43,6 +43,7 @@ public class ViewToggleMenuInteractionTests
     [InlineData("RevealHiddenTextMenuItem", "ToggleRevealHiddenTextCommand", "RevealHiddenText")]
     [InlineData("RevealRasterizedHiddenMenuItem", "ToggleRevealRasterizedHiddenCommand", "RevealRasterizedHidden")]
     [InlineData("ViewClipboardMenuItem", "ToggleClipboardSidebarCommand", "IsClipboardSidebarVisible")]
+    [InlineData("ViewAttachmentsMenuItem", "ToggleAttachmentsCommand", "IsAttachmentsSidebarVisible")]
     [FixedAvaloniaTheory]
     public async Task PointerAndClick_OnToggleMenuItem_FlipsBoundViewModelState(
         string menuItemName, string commandProperty, string stateProperty)

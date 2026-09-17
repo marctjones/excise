@@ -73,9 +73,12 @@ internal sealed class RedactionWorkflowService
                 continue;
             }
 
+            // #1572: the area pass removes attachments unless the copy keeps
+            // them — the same choice the safety policy below applies.
             _redactionService.RedactArea(
                 request.Document.Pages[redaction.PageNumber - 1],
-                redaction.PageArea);
+                redaction.PageArea,
+                keepAttachments: !request.SafetyOptions.ScrubAttachments);
         }
 
         var appliedTypewriterOperations = PdfTypewriterTextApplier.Apply(

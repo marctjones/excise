@@ -179,6 +179,8 @@ namespace Excise.Core.Automation
         public const string PreviousPage = "view.previousPage";
         public const string Print = "document.print";
         public const string Redo = "edit.redo";
+        public const string ReduceFileSize = "document.reduceFileSize";
+        public const string RemoveAllAttachments = "document.removeAllAttachments";
         public const string RemoveCurrentPage = "document.removeCurrentPage";
         public const string RemovePendingRedaction = "redaction.removePending";
         public const string RemoveSelectedPages = "document.removeSelectedPages";
@@ -189,7 +191,9 @@ namespace Excise.Core.Automation
         public const string RotateLeft = "document.rotateLeft";
         public const string RotateRight = "document.rotateRight";
         public const string Save = "app.save";
+        public const string SaveAllAttachments = "document.saveAllAttachments";
         public const string SaveAs = "app.saveAs";
+        public const string SaveAttachment = "document.saveAttachment";
         public const string SaveFlattenedFormCopy = "form.saveFlattenedCopy";
         public const string SearchClose = "search.close";
         public const string SearchFind = "search.find";
@@ -204,6 +208,7 @@ namespace Excise.Core.Automation
         public const string ToggleAnnotationAuditMode = "view.toggleAnnotationAuditMode";
         public const string ToggleAnnotations = "view.toggleAnnotations";
         public const string ToggleArrowMode = "annotation.toggleArrowMode";
+        public const string ToggleAttachments = "view.toggleAttachments";
         public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
         public const string ToggleCommentAnnotations = "view.toggleCommentAnnotations";
         public const string ToggleContinuousView = "view.toggleContinuous";
@@ -450,6 +455,30 @@ namespace Excise.Core.Document
             Structure = 2,
         }
     }
+    public enum AttachmentDisposition
+    {
+        Removed = 0,
+        KeptTermNotFound = 1,
+        KeptTermRemoved = 2,
+        KeptNotClean = 3,
+        KeptNotChecked = 4,
+    }
+    public sealed class AttachmentRedactionRefusedException : System.InvalidOperationException
+    {
+        public AttachmentRedactionRefusedException(string attachmentName, string reason) { }
+        public string AttachmentName { get; }
+    }
+    public sealed class AttachmentRedactionResult : System.IEquatable<Excise.Core.Document.AttachmentRedactionResult>
+    {
+        public AttachmentRedactionResult(string Name, long? SizeBytes, string Location, Excise.Core.Document.AttachmentDisposition Disposition, string? Detail = null) { }
+        public string? Detail { get; init; }
+        public Excise.Core.Document.AttachmentDisposition Disposition { get; init; }
+        public bool IsClean { get; }
+        public string Location { get; init; }
+        public string Name { get; init; }
+        public long? SizeBytes { get; init; }
+        public override string ToString() { }
+    }
     public sealed class NamedDestination : System.IEquatable<Excise.Core.Document.NamedDestination>
     {
         public NamedDestination(string Name, int? PageNumber, double? X = default, double? Y = default, double? Zoom = default, string FitMode = "XYZ") { }
@@ -682,6 +711,7 @@ namespace Excise.Core.Document
         public Excise.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions(string? userPassword) { }
         public Excise.Core.Document.PdfStructElement? GetStructureTree() { }
         public byte[]? GetXmpMetadata() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> RemoveAllAttachments() { }
         public Excise.Core.Primitives.PdfObject Resolve(Excise.Core.Primitives.PdfObject obj) { }
         public string ResolveStructElementText(Excise.Core.Document.PdfStructElement element, int? inheritedPageNumber = default) { }
         public void Save(System.IO.Stream outputStream) { }
@@ -718,6 +748,7 @@ namespace Excise.Core.Document
         public string? MimeType { get; init; }
         public System.DateTimeOffset? ModDate { get; init; }
         public string Name { get; init; }
+        public int? PageNumber { get; init; }
         public Excise.Core.Primitives.PdfDictionary RawDictionary { get; init; }
     }
     public static class PdfEmbeddedFileAuthoring
@@ -935,6 +966,10 @@ namespace Excise.Core.Document
         public double X { get; init; }
         public double Y { get; init; }
         public override string ToString() { }
+    }
+    public sealed class PdfPortfolioRedactionException : System.InvalidOperationException
+    {
+        public PdfPortfolioRedactionException() { }
     }
     public static class PdfRasterPageAuthoring
     {
@@ -2202,13 +2237,30 @@ namespace Excise.Core.Text.Segmentation
     public static class CarrierTextRecovery
     {
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierText> Scan(Excise.Core.Document.PdfDocument doc) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierText> Scan(Excise.Core.Document.PdfDocument doc, System.Threading.CancellationToken cancellationToken) { }
+        public enum CarrierFindingKind
+        {
+            Text = 0,
+            Presence = 1,
+        }
+        public enum CarrierRedactionProximity
+        {
+            None = 0,
+            SamePage = 1,
+            Overlapping = 2,
+        }
         public readonly struct CarrierText : System.IEquatable<Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierText>
         {
-            public CarrierText(string Carrier, string Text, int PageNumber, Excise.Core.Document.PdfRectangle? Rect = default) { }
+            public CarrierText(string Carrier, string Text, int PageNumber, int ObjectNumber = 0) { }
+            public Excise.Core.Document.PdfRectangle? Area { get; init; }
             public string Carrier { get; init; }
+            public Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierFindingKind Kind { get; init; }
+            public string? Location { get; init; }
+            public Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierRedactionProximity NearRedaction { get; init; }
+            public int ObjectNumber { get; init; }
             public int PageNumber { get; init; }
-            public Excise.Core.Document.PdfRectangle? Rect { get; init; }
             public string Text { get; init; }
+            public bool VisibleElsewhere { get; init; }
         }
     }
     public enum GlyphOverlapType
@@ -2340,6 +2392,7 @@ namespace Excise.Core.Text.Segmentation
         public RedactedCopySafetyOptions() { }
         public Excise.Core.Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
         public Excise.Core.Operations.RedactionCarriers Carriers { get; init; }
+        public bool InspectKeptAttachments { get; init; }
         public bool RefuseOnUnresolvedRedactAnnotations { get; init; }
         public bool RunCarrierAudit { get; init; }
         public bool RunHiddenTextAudit { get; init; }
@@ -2377,7 +2430,11 @@ namespace Excise.Core.Text.Segmentation
                     System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyFailureStage> FailedStages,
                     System.Collections.Generic.IReadOnlyList<string> Warnings,
                     int UnresolvedRedactAnnotationCount = 0,
-                    bool PdfAIdentificationPreserved = false) { }
+                    bool PdfAIdentificationPreserved = false,
+                    System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? Attachments = null,
+                    System.Collections.Generic.IReadOnlyList<string>? XfaRemovals = null) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> AttachmentResults { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? Attachments { get; init; }
         public bool AttachmentsScrubbed { get; init; }
         public int CheckedTermCount { get; init; }
         public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus ContentVerificationStatus { get; init; }
@@ -2399,6 +2456,7 @@ namespace Excise.Core.Text.Segmentation
         public int SkippedShortTermCount { get; init; }
         public int UnresolvedRedactAnnotationCount { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string>? XfaRemovals { get; init; }
     }
     public sealed class RedactedCopySafetyRequest : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyRequest>
     {
@@ -2435,6 +2493,7 @@ namespace Excise.Core.Text.Segmentation
         public bool CaseSensitive { get; init; }
         public bool DrawBox { get; init; }
         public bool IncludeHiddenLayers { get; init; }
+        public bool KeepAttachments { get; init; }
         public bool ScrubDocumentCarriers { get; init; }
         public Excise.Core.Text.Segmentation.GlyphRemovalStrategy Strategy { get; init; }
         public bool WholeWord { get; init; }
@@ -2450,6 +2509,7 @@ namespace Excise.Core.Text.Segmentation
     public sealed class RedactionReport
     {
         public RedactionReport() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> Attachments { get; init; }
         public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierResult> Carriers { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HyphenatedTermCandidate> HyphenatedCandidates { get; init; }
         public int ImageRegionsRedacted { get; init; }
@@ -2556,6 +2616,16 @@ namespace Excise.Core.Validation
 }
 namespace Excise.Core.Writing
 {
+    public interface IPdfJpegCodec
+    {
+        byte[]? Decode(byte[] jpeg, int width, int height, int components, int? colorTransform);
+        byte[]? Encode(byte[] samples, int width, int height, int components, int quality);
+    }
+    public static class PdfDocumentOptimizer
+    {
+        public static Excise.Core.Writing.PdfOptimizationResult Optimize(Excise.Core.Document.PdfDocument document, Excise.Core.Writing.PdfOptimizationOptions options, System.Threading.CancellationToken cancellationToken = default) { }
+        public static Excise.Core.Writing.PdfOptimizationResult SaveOptimizedCopy(byte[] savedPdf, string outputPath, Excise.Core.Writing.PdfOptimizationOptions options, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions = null, System.Threading.CancellationToken cancellationToken = default) { }
+    }
     public class PdfDocumentWriter
     {
         public PdfDocumentWriter(Excise.Core.Document.PdfDocument document, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions = null) { }
@@ -2566,5 +2636,71 @@ namespace Excise.Core.Writing
         public static string Serialize(Excise.Core.Primitives.PdfObject obj) { }
         public static void SerializeObject(Excise.Core.Primitives.PdfObject obj, System.Text.StringBuilder sb) { }
         public static void SerializeStreamDictionary(Excise.Core.Primitives.PdfStream stream, System.Text.StringBuilder sb) { }
+    }
+    public sealed class PdfOptimizationOptions : System.IEquatable<Excise.Core.Writing.PdfOptimizationOptions>
+    {
+        public PdfOptimizationOptions() { }
+        public bool DeduplicateStreams { get; init; }
+        public int ImageDpiThreshold { get; init; }
+        public Excise.Core.Writing.IPdfJpegCodec? JpegCodec { get; init; }
+        public int JpegQuality { get; init; }
+        public Excise.Core.Writing.PdfOptimizationPreset Preset { get; init; }
+        public bool RecompressStreams { get; init; }
+        public bool RemovePrivateApplicationData { get; init; }
+        public bool RemoveThumbnails { get; init; }
+        public int? TargetImageDpi { get; init; }
+        public static Excise.Core.Writing.PdfOptimizationOptions ForPreset(Excise.Core.Writing.PdfOptimizationPreset preset, Excise.Core.Writing.IPdfJpegCodec? jpegCodec = null) { }
+        public static bool TryParsePreset(string? text, out Excise.Core.Writing.PdfOptimizationPreset preset) { }
+    }
+    public enum PdfOptimizationPreset
+    {
+        Lossless = 0,
+        High = 1,
+        Standard = 2,
+        Screen = 3,
+    }
+    public sealed class PdfOptimizationResult : System.IEquatable<Excise.Core.Writing.PdfOptimizationResult>
+    {
+        public PdfOptimizationResult() { }
+        public int ImagesDownsampled { get; init; }
+        public System.Collections.Generic.IReadOnlyDictionary<string, int> ImagesSkipped { get; init; }
+        public long OutputSizeBytes { get; init; }
+        public Excise.Core.Writing.PdfOptimizationPreset Preset { get; init; }
+        public int PrivateDataEntriesRemoved { get; init; }
+        public int StreamsDeduplicated { get; init; }
+        public int StreamsRecompressed { get; init; }
+        public int ThumbnailsRemoved { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
+    }
+}
+namespace Excise.Core.Xfa
+{
+    public static class PdfXfaLayout
+    {
+        public static Excise.Core.Xfa.XfaLayoutResult ApplyXfaLayout(this Excise.Core.Document.PdfDocument document, Excise.Core.Xfa.XfaLayoutOptions? options = null, System.Threading.CancellationToken cancellationToken = default) { }
+        public static bool HasXfaLayoutPages(this Excise.Core.Document.PdfDocument document) { }
+        public static bool RemoveXfaForm(this Excise.Core.Document.PdfDocument document) { }
+    }
+    public sealed class XfaLayoutOptions
+    {
+        public XfaLayoutOptions() { }
+        public System.TimeSpan TimeLimit { get; init; }
+    }
+    public sealed class XfaLayoutResult
+    {
+        public XfaLayoutResult() { }
+        public string? FailureReason { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> Omissions { get; init; }
+        public int PageCount { get; init; }
+        public System.Collections.Generic.IReadOnlyDictionary<string, int> ScriptsNotRun { get; init; }
+        public bool ShowsForm { get; }
+        public Excise.Core.Xfa.XfaLayoutStatus Status { get; init; }
+    }
+    public enum XfaLayoutStatus
+    {
+        NotDynamicXfa = 0,
+        AlreadyLaidOut = 1,
+        LaidOut = 2,
+        Failed = 3,
     }
 }

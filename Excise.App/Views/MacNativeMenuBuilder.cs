@@ -45,6 +45,36 @@ internal static class MacNativeMenuBuilder
         return state.Create();
     }
 
+    /// <summary>
+    /// #1584: one session's menu-bar entries, detached from any menu so a
+    /// window's single <see cref="NativeMenu"/> can show them. Avalonia.Native
+    /// binds a window's native menu to the first managed menu it is given and
+    /// throws if handed another, so a window never swaps menus: it swaps the
+    /// top-level items of its one menu instead (<see cref="WindowNativeMenu"/>).
+    /// </summary>
+    public static SessionMenu CreateSession(MainWindowViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+
+        var state = new MenuState(viewModel);
+        var holder = state.Create();
+        var items = holder.Items.ToArray();
+        // Remove one at a time: Clear() raises Reset without the old items,
+        // so NativeMenu would leave each item's Parent set and the window's
+        // menu would refuse to adopt it.
+        while (holder.Items.Count > 0)
+            holder.Items.RemoveAt(holder.Items.Count - 1);
+        return new SessionMenu(items, state.Refresh);
+    }
+
+    /// <summary>A session's top-level menu items and the refresh that keeps them current.</summary>
+    internal sealed class SessionMenu(IReadOnlyList<NativeMenuItemBase> items, Action refresh)
+    {
+        public IReadOnlyList<NativeMenuItemBase> Items { get; } = items;
+
+        public void Refresh() => refresh();
+    }
+
     private sealed class MenuState
     {
         private readonly MainWindowViewModel _viewModel;
@@ -70,11 +100,15 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _continuousScrollItem;
         private readonly NativeMenuItem _outlineItem;
         private readonly NativeMenuItem _thumbnailsItem;
+        private readonly NativeMenuItem _attachmentsItem;
         private readonly NativeMenuItem _revealHiddenTextItem;
         private readonly NativeMenuItem _revealRasterizedHiddenItem;
         private readonly NativeMenuItem _formAuthoringItem;
         private readonly NativeMenuItem _printItem;
+        private readonly NativeMenuItem _windowItem;
+        private readonly List<NativeMenuItem> _tabActionItems = new();
         private IReadOnlyList<string>? _recentFilesSnapshot;
+        private string? _openDocumentsSnapshot;
 
         public MenuState(MainWindowViewModel viewModel)
         {
@@ -96,6 +130,9 @@ internal static class MacNativeMenuBuilder
             _continuousScrollItem = CommandItem("Continuous Scroll", _viewModel.ToggleContinuousViewCommand, Key.C, KeyModifiers.Meta | KeyModifiers.Shift);
             _outlineItem = ToggleItem("Show Outline", _viewModel.ToggleOutlineCommand, Key.O, KeyModifiers.Meta | KeyModifiers.Shift);
             _thumbnailsItem = ToggleItem("Show Thumbnails", _viewModel.ToggleThumbnailsCommand, Key.T, KeyModifiers.Meta | KeyModifiers.Shift);
+            // #1563: the in-window menu is hidden on macOS, so the pane toggle
+            // must exist here too or it is unreachable on the primary platform.
+            _attachmentsItem = ToggleItem("Show Attachments", _viewModel.ToggleAttachmentsCommand);
             _revealHiddenTextItem = ToggleItem("Reveal Hidden Text", _viewModel.ToggleRevealHiddenTextCommand);
             _revealRasterizedHiddenItem = ToggleItem("Reveal Rasterized Hidden Text", _viewModel.ToggleRevealRasterizedHiddenCommand);
             // #1476: the main toolbar hides low-priority actions when narrow, so
@@ -105,6 +142,14 @@ internal static class MacNativeMenuBuilder
             // #1545: enabled only when a document is open AND its /P flags allow
             // printing, so it is not a document item; Refresh sets it.
             _printItem = CommandItem("Print...", _viewModel.PrintCommand, Key.P);
+            // #1552/#1553: macOS's own tab actions plus the open documents.
+            _windowItem = Submenu("Window",
+                TabActionItem("Show Previous Tab", Workspace.MacWindowTabbing.TabAction.SelectPreviousTab),
+                TabActionItem("Show Next Tab", Workspace.MacWindowTabbing.TabAction.SelectNextTab),
+                TabActionItem("Move Tab to New Window", Workspace.MacWindowTabbing.TabAction.MoveTabToNewWindow),
+                TabActionItem("Merge All Windows", Workspace.MacWindowTabbing.TabAction.MergeAllWindows),
+                Separator(),
+                TabActionItem("Show or Hide Tab Bar", Workspace.MacWindowTabbing.TabAction.ToggleTabBar));
         }
 
         public NativeMenu Create()
@@ -157,6 +202,7 @@ internal static class MacNativeMenuBuilder
                     Separator(),
                     _outlineItem,
                     _thumbnailsItem,
+                    _attachmentsItem,
                     _viewClipboardItem));
 
             Add(menu,
@@ -190,7 +236,9 @@ internal static class MacNativeMenuBuilder
                     // MainWindow.axaml is unreachable on this project's
                     // primary platform. Without this, setting/changing/
                     // removing a document password is unreachable on macOS.
-                    TrackDocumentItem(CommandItem("Security...", _viewModel.SecurityCommand))));
+                    TrackDocumentItem(CommandItem("Security...", _viewModel.SecurityCommand)),
+                    // #1550. Same reasoning: the in-window menu is hidden on macOS.
+                    TrackDocumentItem(CommandItem("Reduce File Size...", _viewModel.ReduceFileSizeCommand))));
 
             Add(menu,
                 Submenu("Redaction",
@@ -207,12 +255,14 @@ internal static class MacNativeMenuBuilder
                     // exists only in MainWindow.axaml is unreachable on this
                     // project's primary platform — which is exactly the
                     // "wired to nothing" failure this work is about.
-                    TrackDocumentItem(CommandItem("Attachments...", _viewModel.AttachmentsCommand)),
+                    TrackDocumentItem(CommandItem("Attachments", _viewModel.AttachmentsCommand)),
                     TrackDocumentItem(CommandItem("Bates Numbering...", _viewModel.BatesNumberingCommand)),
                     TrackDocumentItem(_revealHiddenTextItem),
                     TrackDocumentItem(_revealRasterizedHiddenItem),
                     // #1476: hidden early on a narrow toolbar.
                     TrackDocumentItem(CommandItem("Auto-detect Form Fields", _viewModel.AutoDetectFieldsCommand))));
+
+            Add(menu, _windowItem);
 
             Add(menu,
                 Submenu("Help",
@@ -220,8 +270,12 @@ internal static class MacNativeMenuBuilder
                     CommandItem("Documentation", _viewModel.ShowDocumentationCommand)));
 
             menu.NeedsUpdate += (_, _) => Refresh();
+            // #1551: RecentFiles is one collection shared by every session, so
+            // subscribing to it here would root this menu — and its view model —
+            // for the life of the process. The view model relays collection
+            // changes as RecentFileMenuItems and drops that subscription when
+            // its session ends; the menu listens to the view model alone.
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
-            _viewModel.RecentFiles.CollectionChanged += (_, _) => QueueRefresh();
             Refresh();
             return menu;
         }
@@ -262,11 +316,15 @@ internal static class MacNativeMenuBuilder
             or nameof(MainWindowViewModel.IsContinuousView)
             or nameof(MainWindowViewModel.IsOutlineSidebarVisible)
             or nameof(MainWindowViewModel.IsThumbnailsSidebarVisible)
+            or nameof(MainWindowViewModel.IsAttachmentsSidebarVisible)
             or nameof(MainWindowViewModel.IsClipboardSidebarVisible)
             or nameof(MainWindowViewModel.RevealHiddenText)
-            or nameof(MainWindowViewModel.RevealRasterizedHidden);
+            or nameof(MainWindowViewModel.RevealRasterizedHidden)
+            or nameof(MainWindowViewModel.OpenDocuments)
+            or nameof(MainWindowViewModel.RecentFiles)
+            or nameof(MainWindowViewModel.RecentFileMenuItems);
 
-        private void Refresh()
+        public void Refresh()
         {
             _saveItem.Header = _viewModel.SaveButtonText;
             _undoItem.Header = _viewModel.UndoMenuHeader.TrimStart('_');
@@ -307,12 +365,79 @@ internal static class MacNativeMenuBuilder
             _continuousScrollItem.IsChecked = _viewModel.IsContinuousView;
             _outlineItem.IsChecked = _viewModel.IsOutlineSidebarVisible;
             _thumbnailsItem.IsChecked = _viewModel.IsThumbnailsSidebarVisible;
+            _attachmentsItem.IsChecked = _viewModel.IsAttachmentsSidebarVisible;
             _viewClipboardItem.IsChecked = _viewModel.IsClipboardSidebarVisible;
             _redactionClipboardItem.IsChecked = _viewModel.IsClipboardSidebarVisible;
             _revealHiddenTextItem.IsChecked = _viewModel.RevealHiddenText;
             _revealRasterizedHiddenItem.IsChecked = _viewModel.RevealRasterizedHidden;
 
             RefreshRecentFiles();
+            RefreshWindowMenu();
+        }
+
+        /// <summary>
+        /// #1553: the Window menu's document list, rebuilt only when the list,
+        /// a name or an unsaved marker changed.
+        /// </summary>
+        private void RefreshWindowMenu()
+        {
+            var documents = _viewModel.OpenDocuments;
+            foreach (var item in _tabActionItems)
+                item.IsEnabled = documents.Count > 1;
+
+            var snapshot = string.Join('\n', documents.Select(d =>
+                $"{d.Title}|{d.FilePath}|{d.IsCurrent}|{d.HasUnsavedChanges}"));
+            if (snapshot == _openDocumentsSnapshot)
+                return;
+            _openDocumentsSnapshot = snapshot;
+
+            var windowMenu = _windowItem.Menu ??= new NativeMenu();
+            // The tab actions and their separators stay; the document entries
+            // after them are replaced.
+            var fixedCount = _tabActionItems.Count + 1;
+            while (windowMenu.Items.Count > fixedCount)
+                windowMenu.Items.RemoveAt(windowMenu.Items.Count - 1);
+
+            if (documents.Count == 0)
+                return;
+
+            Add(windowMenu, Separator());
+            foreach (var document in documents)
+            {
+                Add(windowMenu, new NativeMenuItem(MainWindowViewModel.OpenDocumentMenuHeader(document))
+                {
+                    ToolTip = document.FilePath,
+                    Command = _viewModel.ActivateOpenDocumentCommand,
+                    CommandParameter = document,
+                    ToggleType = MenuItemToggleType.CheckBox,
+                    IsChecked = document.IsCurrent,
+                });
+            }
+        }
+
+        private NativeMenuItem TabActionItem(string header, Workspace.MacWindowTabbing.TabAction action)
+        {
+            var item = new NativeMenuItem(header) { Command = new TabActionCommand(action) };
+            _tabActionItems.Add(item);
+            return item;
+        }
+
+        /// <summary>
+        /// An AppKit tab action as a command, so the native menu keeps its
+        /// "every leaf has a command" contract (CommandBindingSweepTests).
+        /// </summary>
+        private sealed class TabActionCommand(Workspace.MacWindowTabbing.TabAction action) : ICommand
+        {
+            public event System.EventHandler? CanExecuteChanged
+            {
+                add { }
+                remove { }
+            }
+
+            public bool CanExecute(object? parameter) => true;
+
+            public void Execute(object? parameter) =>
+                Workspace.MacWindowTabbing.Perform(action, logger: null);
         }
 
         private void RefreshRecentFiles()

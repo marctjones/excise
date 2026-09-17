@@ -242,6 +242,11 @@ internal static class XfaXmlCarrier
         return true;
     }
 
+    /// <summary>
+    /// The one XFA XML loader (#1547 reuses it for layout): DTDs prohibited, no
+    /// resolver (so no external entity and no network access), and a character
+    /// cap. XFA is untrusted input wherever it is read.
+    /// </summary>
     internal static bool TryLoadXml(byte[] bytes, out XDocument document, out Encoding encoding)
     {
         document = null!;

@@ -48,9 +48,9 @@ Two concurrent facts a reader must know:
 | File | Lines | Role today |
 |---|---:|---|
 | `Excise.App/ViewModels/MainWindowViewModel.cs` | 3,223 | services, all cross-cutting state, document lifecycle, page organisation, zoom/fit, clipboard, pickers, recent files, links, help, preferences |
-| `MainWindowViewModel.Commands.cs` | 298 | declares 95 `ReactiveCommand` properties and wires them; `CurrentModeText` |
+| `MainWindowViewModel.Commands.cs` | 303 | declares 96 `ReactiveCommand` properties and wires them; `CurrentModeText` |
 | `MainWindowViewModel.Annotations.cs` | 603 | annotation authoring from selection/drag; `ClearCurrentTextSelection` |
-| `MainWindowViewModel.Attachments.cs` | 262 | embedded-file list, save, strip; owns the `AttachmentsDialog` DataContext |
+| `MainWindowViewModel.Attachments.cs` | 460 | Attachments pane (#1563): embedded-file list, pane visibility, save / save-all, undoable strip; the pane binds to the main VM |
 | `MainWindowViewModel.Bates.cs` | 128 | Bates stamping via a dialog |
 | `MainWindowViewModel.DocumentOpen.cs` | 372 | the staged open pipeline and its failure path |
 | `MainWindowViewModel.DragDrop.cs` | 58 | drop-to-open |
@@ -60,6 +60,7 @@ Two concurrent facts a reader must know:
 | `MainWindowViewModel.Performance.cs` | 83 | performance settings, preference persistence |
 | `MainWindowViewModel.Permissions.cs` | 85 | `/P` permission gate |
 | `MainWindowViewModel.Redaction.cs` | 231 | mark/remove/clear/apply-all redactions |
+| `MainWindowViewModel.ReduceFileSize.cs` | 193 | Reduce File Size (#1550): preset dialog, save-copy picker, background optimize, before/after message |
 | `MainWindowViewModel.Scripting.cs` | 550 | script-facing surface and a second load/save path |
 | `MainWindowViewModel.Search.cs` | 536 | search state, commands, debounce, result publishing |
 | `MainWindowViewModel.Searchable.cs` | 139 | OCR "make searchable" dialog and run |
@@ -250,7 +251,7 @@ this file, `Forms.cs` and `Typewriter.cs`; see §1.7)
 | Member (line) | What it does | State | Services | Callers |
 |---|---|---|---|---|
 | `ExportCurrentPageAsync` (2380–2432), `ExportCurrentPageToImageAsync` (2434–2464), `ExportPagesAsync` (2466–2509), `ExportPagesToImagesAsync` (2511–2547) | raster export gated on bit 5; the two `*Async` pickers inline `FilePickerSaveOptions`/`FolderPickerOpenOptions` | — | `_imageExportWorkflow`, `GetStorageProvider()` | commands, S |
-| `PrintAsync`, `CanPrint`, `PrintScaling` (`MainWindowViewModel.Printing.cs`) | #1545: /P bits 3+12 gate, then a print copy of the current state (pending redactions applied) through `IDocumentPrinter` (PDFKit on macOS; honest refusal elsewhere) | `_printScaling` | `_printWorkflow` (`DocumentPrintWorkflowService`), `_dialogService`, `_toastService` | command, V (Ctrl+P), M (native menu enablement) |
+| `PrintAsync`, `CanPrint`, `PrintScaling` (`MainWindowViewModel.Printing.cs`) | #1545: /P bits 3+12 gate, then a print copy of the current state (pending redactions applied) through `IDocumentPrinter` (PDFKit on macOS; on Windows `PrintDlgExW` + excise's raster through `PrintDocument`, #1546; honest refusal elsewhere) | `_printScaling` | `_printWorkflow` (`DocumentPrintWorkflowService`), `_dialogService`, `_toastService` | command, V (Ctrl+P), M (native menu enablement) |
 | `AllowedExternalLinkSchemes` (2581), `OpenExternalLinkAsync` (2593–2628), `ShowDangerousLinkRefusalAsync` (2638–2657) | #625 link policy with confirmation | — | `_dialogService`, `UrlOpener` | commands ← V (`:981`, `:988`) |
 | `VerifySignaturesAsync` (3122–3125) | delegates to the workflow service | — | `_signatureWorkflowService` | command |
 | `ShowAbout` (2689–2699), `ShowKeyboardShortcuts` (2716–2748), `KeyboardShortcutsDialogRequested` (2713), `ShowDocumentation` (2761–2777), `DocumentationOpener` (2759) | help; the shortcut text is a **hard-coded string that duplicates the key map in `MainWindow_KeyDown`** | — | `GetMainWindow()`, `FAContentDialog`, `UrlOpener` | commands, M |
@@ -268,7 +269,7 @@ this file, `Forms.cs` and `Typewriter.cs`; see §1.7)
 
 Line numbers are within the named partial. "cs" means `MainWindowViewModel.cs`.
 
-**`Commands.cs`** — declares 95 `ReactiveCommand` properties (35–133, all
+**`Commands.cs`** — declares 96 `ReactiveCommand` properties (35–133, all
 `{ get; private set; } = null!`), creates them in `InitializeCommands`
 (135–150) via seven `Initialize*Commands` methods plus `InitializeSearchCommands`
 (`Search.cs:209`), `InitializeScriptingCommands` (`Scripting.cs:100`, empty)
@@ -284,7 +285,7 @@ reads mode flags from cs, `Forms.cs` and `Typewriter.cs`.
 | Editing modes (189–215) | `ToggleTextSelectionMode`→cs:1731; `ToggleFormAuthoringMode`→inline lambda with a bit-4 check (192–203); `ToggleTypewriterMode`→`Typewriter.cs:53`; `ToggleFreehand/Line/Arrow/Polygon/PolyLineMode`→`Forms.cs:103`; `DiscardPendingTypewriterEdits`→`Typewriter.cs:219`; `GoToNextPendingTypewriterEdit`→`:236`; `SetTypewriterColor`→`TypewriterStyle.cs:80` |
 | Annotations (217–231) | ten `Add*Annotation*` commands → `Annotations.cs` |
 | View/navigation (233–260) | `ToggleOutline/Thumbnails/ClipboardSidebar`, five annotation-display toggles, `ToggleContinuousView`, `CopyText`, `ZoomIn/Out/ActualSize/FitWidth/FitPage`, `Next/PreviousPage`, `GoToPage`, `RotatePageLeft/Right/180` → cs; `ToggleRevealHiddenText`/`ToggleRevealRasterizedHidden` → inline lambdas (244–245) over `HiddenText.cs` |
-| Document utility (262–290) | `MakeSearchable`→`Searchable.cs:30`; `Security`→`Security.cs:38`; `Attachments`→`Attachments.cs:171`; `BatesNumbering`→`Bates.cs:47`; `AutoDetectFields`→`Forms.cs:265`; `SaveFlattenedFormCopy`→`Forms.cs:360`; `SignDocument`→`Signing.cs:35`; `SaveAs`, `CloseDocument`, `Exit`, `LoadRecentFile`, `ExportCurrentPage`, `ExportPages`, `Print`, `OpenExternalLink`, `ShowDangerousLinkRefusal`, `VerifySignatures`, `ShowPreferences` → cs |
+| Document utility (262–290) | `MakeSearchable`→`Searchable.cs:30`; `Security`→`Security.cs:38`; `Attachments`→`Attachments.cs:171`; `BatesNumbering`→`Bates.cs:47`; `ReduceFileSize`→`ReduceFileSize.cs:37`; `AutoDetectFields`→`Forms.cs:265`; `SaveFlattenedFormCopy`→`Forms.cs:360`; `SignDocument`→`Signing.cs:35`; `SaveAs`, `CloseDocument`, `Exit`, `LoadRecentFile`, `ExportCurrentPage`, `ExportPages`, `Print`, `OpenExternalLink`, `ShowDangerousLinkRefusal`, `VerifySignatures`, `ShowPreferences` → cs |
 | Help (292–297) | `About`, `ShowShortcuts`, `ShowDocumentation` → cs |
 | Elsewhere | `UndoCommand`/`RedoCommand` created in `History.cs:55-56`; six search commands in `Search.cs:211-221`; `JumpToOutlineCommand` lazy in `Commands.cs:106-107` |
 
@@ -307,12 +308,13 @@ reads mode flags from cs, `Forms.cs` and `Typewriter.cs`.
 
 | Member (line) | Kind | Does | State | Services | Callers |
 |---|---|---|---|---|---|
-| `Attachments` (36), `HasAttachments` (39), `AttachmentsSummary` (42–47), `SelectedAttachment` (52–56) | props | embedded-file list for the dialog; **the dialog's DataContext is the main VM** (`AttachmentsDialog.axaml:6`) | own | — | `AttachmentsDialog` XAML |
-| `PickAttachmentSavePathOverride` (63), `ShowAttachmentsDialogOverride` (166) | seams | — | — | — | T |
-| `RefreshAttachments` (68–98) | internal | re-read `GetEmbeddedFiles()`; not reset on open/failed open | `Attachments` | doc service | `DocumentOpen.cs:269` |
-| `SaveAttachmentAsync` (112–141), `SaveSelectedAttachmentAsync` (146–160), `PickAttachmentSavePathAsync` (207–227) | async | write bytes to a picked path | — | doc service, toast, `GetStorageProvider()` | `AttachmentsDialog.axaml.cs:35` |
-| `ShowAttachmentsDialogAsync` (171–198) | private | `new Views.AttachmentsDialog { DataContext = this }.ShowDialog(owner)` | — | `GetMainWindow()`, dialog service | `AttachmentsCommand` |
-| `StripAllAttachments` (239–261) | public | `ScrubEmbeddedFiles()` counted as a page edit | `FileState.PageEditsCount` | doc service, toast | `AttachmentsDialog.axaml.cs:47` |
+| `Attachments`, `HasAttachments`, `AttachmentsSummary`, `AttachmentsEmptyText`, `AttachmentsCountText`, `SelectedAttachment` (selecting a page attachment sets `CurrentPageIndex`) | props | the pane's list and empty state; **the pane's DataContext is the main VM** (`MainWindow.axaml` `AttachmentsPanel`) | own | — | `MainWindow.axaml` |
+| `IsAttachmentsSidebarVisible`, `ToggleAttachmentsSidebar`, `ApplyAttachmentsPanePreference`, `AttachmentsPaneFocusRequested` | props/event | pane visibility (part of `IsLeftSidebarVisible`), restored from and written to `window.json` by `MainWindow.axaml.cs` | own | — | XAML, `MacNativeMenuBuilder`, code-behind |
+| `PickAttachmentSavePathOverride`, `ShowAttachmentsPaneOverride` | seams | — | — | — | T |
+| `RefreshAttachments`, `ClearAttachments` | internal/private | re-read `GetEmbeddedFiles()` / empty the list; refreshed on open, close and failed open, cleared at the start of an open | `Attachments` | doc service | `DocumentOpen.cs`, cs close path |
+| `SaveAttachmentAsync`, `SaveSelectedAttachmentAsync`, `SaveAllAttachmentsAsync`, `PickAttachmentSavePathAsync` | async | /P bit 5 gate, then write decoded bytes to a picked path or folder (`AttachmentFileNames`) | — | doc service, toast, picker | `SaveSelectedAttachmentCommand`, `SaveAllAttachmentsCommand` |
+| `ShowAttachmentsPaneAsync` | private | refresh, show the pane, request focus | — | dialog service | `AttachmentsCommand` |
+| `StripAllAttachments` | public | `ScrubEmbeddedFilesReversibly()` counted as a page edit and pushed to `_history` | `FileState.PageEditsCount` | doc service, toast | `RemoveAllAttachmentsCommand` |
 
 **`Bates.cs`**
 
@@ -400,6 +402,15 @@ instead.
 | `ApplyAllRedactionsAsync` (89–142) | private | save-path, `RedactedCopyRequest` with `BuildRedactedCopySafetyOptions()`, `CreateRedactedCopy`, publish | typewriter ops, path | `_redactionWorkflowService`, `_filenameSuggestionService`, doc service, dialog | command, `SaveFileAsync` |
 | `PublishRedactedCopySuccessAsync` (144–164) | private | move to applied, clear typewriter + history, exit mode, **`LoadDocumentAsync` of the output**, formatted dialog | many | `_redactedCopyDialogFormatter`, dialog | above |
 | `_redactedSavePathProviderForTests` (187), `SetRedactedSavePathProviderForTests` (189), `ResolveRedactedSavePathAsync` (192–206) | seam/private | picker via `ShowSaveRedactedFileDialog(Window, …)` (cs:2935) | — | `GetMainWindow()` | above, T |
+
+**`ReduceFileSize.cs`** (#1550)
+
+| Member (line) | Kind | Does | State | Services | Callers |
+|---|---|---|---|---|---|
+| `ReduceFileSizePresetOverride` (35) | seam | — | — | — | T |
+| `ReduceFileSizeAsync` (37–89), `PromptForReduceFileSizePresetAsync` (91–104) | async | refuse unsaved edits → preset dialog (`new Views.ReduceFileSizeDialog`) → save picker → refuse the open file's own path | `FileState` (read) | doc service, `_filePicker`, dialog service, `GetMainWindow()` | `ReduceFileSizeCommand` |
+| `ReduceFileSizeToAsync` (111–150) | internal | `SaveToBytes()` on the UI thread, then `PdfDocumentOptimizer.SaveOptimizedCopy` on the thread pool with the document's re-encryption options; never opens the copy | `OperationStatus` | doc service, dialog service | above, T |
+| `DescribeReduceFileSizeResult` (152–175) | internal static | before → after sizes, skipped images, warnings | — | — | above, T |
 
 **`Scripting.cs`** — the script contract (script globals are the whole VM
 type, `Services/ScriptingService.cs:79,97`):
@@ -558,7 +569,7 @@ These are the constraints on any rename or move (from
 | Named controls | `FindControl("PdfViewerControl")` in code-behind and **63 test lookups**; `SearchTextBox` 6; `OutlineTree`, `ThumbnailsItemsControl`, `ToastInfoBar` and the toggle menu items in tests | a control moved into a `UserControl` is in another name scope |
 | `VisualPolishAuditTests.cs:28-72` | reads the **source text** of `MainWindow.axaml` for icon resource usage | moving the toolbar or menu into another file breaks its `Contains` checks |
 | `ResetPersistedSettingsBeforeEachTest` | deletes `window.json`, zoom and preferences files before every test | any new persisted file must go through `AppPaths` and be added to the delete list |
-| `AttachmentsDialog.axaml:6` | `x:DataType` = the main VM | the attachments feature cannot leave the shell until the dialog gets its own DataContext |
+| `MainWindow.axaml` `AttachmentsPanel` | binds straight to the main VM (#1563) | the attachments feature cannot leave the shell until the pane gets its own DataContext |
 
 ### 1.7 Hidden couplings between groups
 
@@ -667,7 +678,7 @@ why the UI test suite constructs one 260 times.
 `Avalonia.Controls.MenuItem`s (cs:988–1020). `ShowErrorDialogAsync` builds a
 `Window` from controls (cs:1119–1175). `TypewriterColor` is
 `Avalonia.Media.Color` and `TypewriterColorBrush` allocates a brush per read
-(`TypewriterStyle.cs:47-61`). `Views.AttachmentsDialog`, `BatesNumberingDialog`,
+(`TypewriterStyle.cs:47-61`). `BatesNumberingDialog`,
 `SecurityDialog`, `MakeSearchableDialog`, `PreferencesWindow`, `AboutWindow`
 are `new`ed inside the VM and shown against a `Window` obtained from
 `Application.Current.ApplicationLifetime`. `OpenDroppedFilesAsync` takes
@@ -695,9 +706,9 @@ defaults, which is why it has 353 call sites.
 **Dialog handling uses four mechanisms.** `IUserDialogService` (fail-closed,
 fakeable), direct `Window` construction with `ShowDialog(owner)`, storage
 pickers via `GetStorageProvider()` with five per-feature `*Override` seams,
-and toasts. Two dialogs (`AttachmentsDialog`, `PreferencesWindow`) are handed
-the main VM or read from it. The test seams (`MainWindowResolver`,
-`StorageProviderOverride`, `Pick*Override`, `ShowAttachmentsDialogOverride`,
+and toasts. `PreferencesWindow` is handed the main VM or reads from it, as
+does the Attachments pane (#1563, which replaced `AttachmentsDialog`). The test seams (`MainWindowResolver`,
+`StorageProviderOverride`, `Pick*Override`, `ShowAttachmentsPaneOverride`,
 `BatesOptionsOverride`, `_imageStampPathProviderForTests`,
 `_redactedSavePathProviderForTests`, `KeyboardShortcutsDialogRequested`,
 `DocumentationOpener`) are nine ways of saying "the VM should not own the
@@ -1177,7 +1188,7 @@ void Push(string description, Func<Task> undo, Func<Task> redo);   void Clear();
 
 #### `DocumentToolsViewModel` (or one small VM per tool)
 
-Attachments (with its own `AttachmentsViewModel` as the dialog's DataContext),
+Attachments (with its own `AttachmentsViewModel` as the pane's DataContext),
 Bates, Security, Signing, MakeSearchable, page-image export, print (#1545),
 external/dangerous links, help (About, shortcuts, documentation), verify
 signatures. Each tool: guard → prompt → service → toast, ≤ 40 lines, with its
@@ -1185,7 +1196,7 @@ service injected (`BatesNumberingService`, `SignatureApplicationService`,
 `IOcrServiceFactory` *new*) and dialogs opened through `IWindowHost`.
 
 ```csharp
-// AttachmentsViewModel — becomes AttachmentsDialog's DataContext
+// AttachmentsViewModel — becomes the Attachments pane's DataContext
 ObservableCollection<AttachmentEntry> Attachments { get; }   bool HasAttachments { get; }
 string AttachmentsSummary { get; }   AttachmentEntry? SelectedAttachment { get; set; }
 RC<Unit> SaveSelectedAttachmentCommand, StripAllAttachmentsCommand;
@@ -1437,7 +1448,7 @@ Sizes: S ≤ half a day, M ≤ two days, L ≤ a week.
 | 9 | `TextSelectionViewModel` + `IClipboard` (from step 1); `SetSelection` absorbs `OnTextSelected`'s `ViewerDips` construction; `ClearCurrentTextSelection` moves out of `Annotations.cs` | cs:86–88, 207, 921–972, 1748–1848; `Annotations.cs:597–602`; `MainWindow.axaml.cs:1010–1039` (calls the new method) | selection + clipboard have one owner | `TextSelectionDragTests`, `TextSelectionAlignmentTests`, `CharacterLevelSelectionTests`, `CopyReadingOrderTests`, `CopyWhitespaceModeTests`, `ClipboardEntryUnicodeSafetyTests`, `KeyboardShortcutTests` (Ctrl+C) | none | S |
 | 10 | `RedactionViewModel`: `Redaction.cs`, the drag rectangle, the four policies, `BuildRedactedCopySafetyOptions`, `RedactAnnotationNotice`; `OnAreaDrawn` absorbs the 5×5 rule; annotations receive the rect through the coordinator instead of reading `CurrentRedactionPageArea` | `Redaction.cs`, cs:64–76, 290–381, 481–525, 815–895, `Annotations.cs:127–390` (rect source), `MainWindow.axaml.cs:949–963` | redaction workflow has one owner; the shared drag rectangle coupling is gone | `RedactionInteractionTests`, `RedactionWorkflowManagerTests`, `RedactionWorkflowServiceTests`, `RedactionMouseWorkflowTests`, `RedactionMouseDragBroadeningTests`, `RedactionCopyRecoveryTests`, `SecondRedactionSaveScrubTests`, `RedactionCarrierPolicyPreferenceTests`, `UserFlowAutomationTests`, `redaction-suites`, `redaction-architecture`, `redaction-oracles` | security-critical path: the `RedactedCopyRequest` construction (`Redaction.cs:89–142`) moves verbatim; verify with the independent oracles in `Excise.Rendering.Tests/Differential`, not with excise's own extraction | M |
 | 11 | `AnnotationsViewModel` (+ `IImageDecoder`), `FormsViewModel`, `TypewriterViewModel` (+ colour converter), `HiddenTextViewModel` (+ `IHiddenTextScanner`) — one step each, any order | the four partial pairs, `Commands.cs` groups, composition, factory, `MainWindow.axaml` converter for `TypewriterColorBrush` | each feature has one owner; inline OCR/Skia construction leaves the VM | `AnnotationAuthoringWorkflowTests`, `TextMarkupAnnotationCommandTests`, `AnnotationDisplayControlTests`, `AnnotationHoverReadingTests`, `FormAuthoringTests`, `FormFieldsOverlayTests`, `FormWorkflowTests`, `TypewriterWorkflowTests`, `RevealHiddenTextTests`, `redaction-suites` for annotations (structure-tree carriers) | `TypewriterColor`'s public type changes only in Phase B; Phase A keeps the Avalonia `Color` forward on the shell | 4 × M |
-| 12 | Tools: `AttachmentsViewModel` becomes `AttachmentsDialog`'s DataContext (`x:DataType` change in that dialog only), Bates/Security/Signing/MakeSearchable/export/links/help through `IWindowHost` with their services injected | `Attachments.cs`, `Bates.cs`, `Security.cs`, `Signing.cs`, `Searchable.cs`, cs:2380–2777, 3122–3157, `Views/AttachmentsDialog.axaml(.cs)`, composition, factory | dialog opening has one mechanism; inline services leave the VM | `AttachmentsPanelTests`, `BatesNumberingWorkflowTests`, `SecurityDialogUiTests`, `MakeSearchableDialogUiTests`, `MakeSearchableWiringTests`, `SignatureApplicationServiceTests`, `HiddenDialogCoverageTests`, `AboutDialogTests`, `DialogInputInteractionTests` | `ShowAttachmentsDialogOverride`/`BatesOptionsOverride` seams become `IWindowHost` fakes; tests that inspect owned windows keep working because the production adapter still calls `ShowDialog(owner)` | M |
+| 12 | Tools: `AttachmentsViewModel` becomes the Attachments pane's DataContext (`x:DataType` change on `AttachmentsPanel` only), Bates/Security/Signing/MakeSearchable/export/links/help through `IWindowHost` with their services injected | `Attachments.cs`, `Bates.cs`, `Security.cs`, `Signing.cs`, `Searchable.cs`, cs:2380–2777, 3122–3157, `MainWindow.axaml` (`AttachmentsPanel`), composition, factory | dialog opening has one mechanism; inline services leave the VM | `AttachmentsPanelTests`, `BatesNumberingWorkflowTests`, `SecurityDialogUiTests`, `MakeSearchableDialogUiTests`, `MakeSearchableWiringTests`, `SignatureApplicationServiceTests`, `HiddenDialogCoverageTests`, `AboutDialogTests`, `DialogInputInteractionTests` | `ShowAttachmentsPaneOverride`/`BatesOptionsOverride` seams become `IWindowHost` fakes; tests that inspect owned windows keep working because the production adapter still calls `ShowDialog(owner)` | M |
 | 13 | View-side binders: `ViewerOverlayBinder`, `ViewerLayoutSignals`, `ViewerPerformanceBinder`, `ViewerEventsBinder`, `ToastHost`, `DropToOpenBehavior`, thumbnail/outline behaviours; delete the corresponding code-behind; `PerformanceSettingsApplied` and `ViewerTileCacheResidentBytesProvider` retire | `MainWindow.axaml.cs`, `MainWindow.axaml` (attached properties on existing controls — no control moves, no `x:Name` changes), `Behaviors/*`, `Performance.cs` | code-behind holds only settings/closing/native menu/cache-trim | `SearchHighlightOverlayTests`, `PointerInteractionTests`, `MouseInputTests`, `InPageLinkClickTests`, `DragDropOpenTests`, `PerformancePreferencesLiveApplyTests`, `ToastServiceTests`, `StatusMessageAuditTests`, `IdleAnimationQuiescenceTests`, `GuiClickSafetySweepTests`, `CommandBindingSweepTests`, `gui-interaction-registry` (attached properties are not parsed, so the JSON is unchanged) | headless tests that wait on the old `DispatcherTimer` toast (`KeyboardShortcutTests` history, comment at `MainWindow.axaml.cs:35–42`) must see the same dismiss timing through the scheduler | L |
 | 14 | `MainWindowShortcuts` + `ShortcutRouter`; `MainWindow_KeyDown` → one call; `ShowKeyboardShortcuts` text and menu `InputGesture`s generated from the table; `build-gui-interaction-registry.py` reads the table for shortcuts (a deliberate, reviewed registry change) | `Behaviors/Shortcuts/*`, `MainWindow.axaml.cs:611–943`, cs:2716–2748, `MainWindow.axaml` gestures, the generator, `tests/gui-interaction-registry.json` (`--update`) | one keyboard map; the "advertised but unwired" class (#827, #1170) cannot recur | `KeyboardShortcutTests` (31 windows), `KeyboardShortcutEffectTests`, `AccessibilityRegressionTests`, `gui-interaction-registry` | the registry diff is intended and must be reviewed line by line; `duplicateShortcuts` output must stay empty | M |
 | 15 | Phase B, view split: one `UserControl` per region (toolbar last, after `fix/quick-wins-and-bugs` lands); extend the registry generator to glob `Views/MainWindow/*.axaml`; move `VisualPolishAuditTests`' source read to the new files; keep `x:Name`s and give each region's tests the right name scope (`FindControl` on the region, or `x:Name` re-exported by the window) | `Views/MainWindow/*`, `MainWindow.axaml`, generator, `VisualPolishAuditTests`, the 63 `PdfViewerControl` lookups (one helper) | discoverability: a region is a file | `gui-interaction-registry`, `gui-interaction-coverage`, `VisualPolishAuditTests`, `AccessibilityRegressionTests`, full `app-tests-unchunked-evidence` | coverage ids use the root `TopLevel` name (`GuiInteractiveElement.cs:51`), so `MainWindow/...` ids survive; ordinal ids of unnamed controls shift if regions reorder — name them first | L |
@@ -1504,3 +1515,157 @@ last and separate.
     `ApplicationComposition`, forward from the shell only if XAML binds it".
     Update in the same change as step 6, not before.
 
+
+## 7. Multi-document: sessions, windows and tabs (#1551–#1554)
+
+Written 2026-09-17 for the umbrella #1463. This section changes one premise of
+§3 and §5, so it is stated first.
+
+### 7.1 The session unit is the window view model
+
+§3.2 and step 6 describe a `DocumentSessionViewModel` extracted *out of*
+`MainWindowViewModel`, and #1551 inherited that as its prerequisite. Multi-
+document support does not need it. Measured against §1.2–§1.3, about nine
+tenths of `MainWindowViewModel`'s state is already per document, and every
+name-addressed consumer in §1.6 (compiled bindings, the GUI interaction
+registry, `MacNativeMenuBuilder`, scripting globals, the API baseline, 353
+test-factory calls) addresses that type. So:
+
+- **One `MainWindowViewModel` instance is one document session.** Two
+  sessions are two instances, each with its own services.
+- What is *app-wide* moves out of the instance, not the other way round.
+- Step 6 is not a prerequisite. It remains an internal refactor of the
+  per-session view model (shell plus children), and nothing below blocks it.
+
+### 7.2 What is per session and what is app-wide
+
+Per session, one Microsoft.Extensions.DependencyInjection **scope** per
+session (`DocumentSessionFactory`; `ValidateScopes` already rejects a
+scoped service resolved from the root):
+
+| Per session (scoped) | Why |
+|---|---|
+| `PdfDocumentService` | the open document, path and password |
+| `DocumentSearchSession`, `DocumentTextIndexSession` | cancellation and index of *this* document |
+| `PageOrganizationWorkflowService`, `AnnotationWorkflowService` | take `PdfDocumentService` |
+| `SignatureVerificationWorkflowService` | takes the dialog service |
+| `ToastService` | a toast belongs to the window that shows the document |
+| `IWindowHost`, `IFilePicker`, `IUserDialogService` | dialogs and pickers are owned by the session's window, not by `desktop.MainWindow` |
+| `MainWindowViewModel` | and with it everything it already owns per instance: `FileState`, `RedactionWorkflow`, `EditHistoryService`, `ThumbnailSidebarSession`, viewport, outline, attachments, search results, selection, typewriter/forms state, XFA notice, signed-document warning, clipboard history (it is cleared on every open and close, so it was already per document) |
+
+App-wide (singletons): `ISettingsStore` (preferences, window geometry,
+per-file document state, zoom), `IRecentFilesStore` plus **one shared
+recent-files collection** that every session's `RecentFiles` points at,
+`ReleasedMemoryReclaimer`, the stateless redaction/extraction/search/
+signature/export services, the printer and print workflow, the clipboard
+adapter, and `DocumentWorkspace`.
+
+Preferences are app-wide values held on each session (bindings need them
+there). A Preferences save applies the dialog's values to **every** session,
+not only the one that opened the dialog. This is a security property, not
+tidiness: the redaction carrier policy and whole-word rule (#1052/#1169/#1189)
+must not differ between two open windows.
+
+### 7.3 Ownership
+
+`DocumentWorkspace` (app singleton, `Excise.App/Workspace/`) owns the list of
+sessions, knows which window hosts each one, routes opens, and runs the quit
+review. A `DocumentSession` owns its scope and its view model and implements
+`IDocumentSessionHost`, the narrow interface the view model calls back
+through (`MainWindowViewModel.SessionHost`, internal, null in tests that build
+a view model on its own, in which case every path behaves exactly as before).
+
+- **Windows (#1553, #1552).** One `MainWindow` per session. Each window has its
+  own `PdfViewerControl`, its own native menu (macOS) and its own
+  `ViewerCacheTrimCoordinator`.
+- **macOS native tabs (#1552).** Avalonia 12.1.2 sets
+  `tabbingMode = NSWindowTabbingModeDisallowed` in
+  `WindowImpl::OnInitialiseNSWindow` (read from the disassembly of
+  `libAvaloniaNative.dylib`). `MacWindowTabbing` sets it back to
+  `Automatic` with one `tabbingIdentifier` for all document windows, and a new
+  document window joins the origin window's tab group with
+  `addTabbedWindow:ordered:` when `NSWindow.userTabbingPreference` says so
+  (System Settings ▸ Desktop & Dock ▸ "Prefer tabs when opening documents").
+  Merge All Windows, Move Tab to New Window, Show Tab Bar and the tab
+  next/previous actions are sent to the key window from the native Window menu.
+- **In-app tabs (#1554).** A window hosts a `DocumentTabsViewModel`; its
+  `DataContext` is the selected session. One viewer per window, so an
+  inactive tab holds no tile cache at all; switching re-renders the visible
+  page and restores the tab's scroll position. That trade (no per-tab tile
+  cache, one page render per switch) is deliberate: a viewer per tab needs the
+  document region as its own `UserControl`, which is §5 step 15.
+
+### 7.4 Opening a document
+
+Preference `DocumentOpenMode` (Preferences ▸ Documents, persisted in
+`window.json`): `Automatic`, `NewWindow`, `NewTab`, `ReplaceCurrent`.
+`Automatic` means a new window on every platform; on macOS the system tabbing
+preference then decides whether it appears as a tab.
+
+For every entry point (File ▸ Open, Open Recent, drop, macOS file activation,
+command-line arguments, a second instance):
+
+1. If a session already has that file open, activate it (no second copy).
+2. Else, if the requesting session has no document, open there.
+3. Else apply the mode. `ReplaceCurrent` is today's behaviour, including the
+   unsaved-changes prompt. The other modes never prompt, because nothing is
+   discarded.
+
+File ▸ Open allows multi-select and a drop opens every PDF it carries
+(`DroppedPdfResolver.ResolveAllPdfs`) when the mode opens elsewhere. With
+`ReplaceCurrent` only the first is used, as before.
+
+Second instance (Windows and Linux): a per-user named pipe
+(`PipeOptions.CurrentUserOnly`; .NET implements it with a Unix domain socket on
+Linux). A launch that finds a running instance sends it the resolved paths and
+exits. macOS does not need this: Launch Services already routes documents to
+the running app as activation events.
+
+### 7.5 Closing and quitting
+
+- Closing a window runs the existing unsaved-changes guard for the sessions it
+  hosts, then disposes them.
+- Close Document (Cmd/Ctrl+W) closes the session's window or tab when another
+  session exists. With a single session it keeps today's behaviour: the
+  document closes and the empty window stays.
+- Quit (File ▸ Exit, and Cmd+Q through
+  `IClassicDesktopStyleApplicationLifetime.ShutdownRequested`) reviews each
+  session with unsaved changes in turn, activating its window first. Any
+  Cancel, or a save that did not happen, aborts the quit. "Discard" already
+  marks the state clean (#1233), so the per-window guards that run during
+  shutdown do not ask a second time.
+
+### 7.6 Memory
+
+Closing a session releases it: the document closes
+(`DocumentReleaseReason.Closed`, so the shared reclaimer runs), the thumbnail
+session is disposed, the DI scope disposes the search and index sessions, the
+window drops its view-model subscriptions and its cached native menu. A
+headless test holds only a `WeakReference` to a closed session and asserts it
+is collected.
+
+Each window's coordinator trims its own viewer and the thumbnails of the
+sessions it hosts. With in-app tabs, the Warn and Critical levels trim inactive
+tabs' thumbnails to nothing first. The reclaimer is shared, so N windows'
+requests still coalesce into one collection, and every coordinator shares one
+`IdleReclaimGate`, so an idle app runs one idle reclaim (#1496) per idle
+period rather than one per window; activity in any window starts a new
+period. The tile budget (`TileCacheBudgetMb`, default 200 MB) is app-wide:
+App attaches every window's viewer to one `PdfViewerTileBudget` and makes the
+focused window's viewer its `Foreground`. Each viewer keeps its own LRU and
+its own cap; when the viewers together exceed the budget, the shared budget
+takes background viewers' render-ahead tiles first, then their scroll-back
+tiles, and, only for the foreground viewer, their band tiles (already baked
+into their composites). A background viewer never takes the foreground's
+tiles and keeps at least its own bands. With one window the shared budget
+changes nothing (`SharedTileBudgetTests`). In-app tabs still share one viewer,
+so an inactive tab holds no tiles at all.
+
+### 7.7 Consumers that address the view model by name
+
+Unchanged, because the view model type is unchanged: compiled bindings, the
+GUI interaction registry, coverage ids, `MacNativeMenuBuilder` (one menu per
+window, built for that window's session) and the scripting surface (a script
+drives the session it was created for). `MacApplicationMenu` and the
+activation paths resolve the *active* session from the workspace instead of
+`desktop.MainWindow`.

@@ -93,7 +93,7 @@ internal static class PdfEmbeddedFileParser
                 var name = $"_Annotation_{pageIndex}_{result.Count}";
                 var file = ParseFileSpecification(doc, fsDict, name);
                 if (file != null)
-                    result.Add(file);
+                    result.Add(file with { PageNumber = pageIndex });
             }
         }
     }
@@ -152,7 +152,7 @@ internal static class PdfEmbeddedFileParser
     /// /Desc (description), and other metadata.
     /// Returns null if the file specification cannot be parsed.
     /// </summary>
-    private static PdfEmbeddedFile? ParseFileSpecification(
+    internal static PdfEmbeddedFile? ParseFileSpecification(
         PdfDocument doc,
         PdfDictionary fsDict,
         string name)

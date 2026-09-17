@@ -603,13 +603,32 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public void LeftSidebar_HiddenWhenBothOutlineAndThumbnailsOff()
+    public void LeftSidebar_HiddenWhenEveryPaneIsOff()
     {
         _viewModel.IsOutlineSidebarVisible = false;
         _viewModel.IsThumbnailsSidebarVisible = false;
 
+        _viewModel.IsLeftSidebarVisible.Should().BeTrue(
+            "#1563: the Attachments pane is on by default and keeps the sidebar open");
+
+        _viewModel.IsAttachmentsSidebarVisible = false;
         _viewModel.IsLeftSidebarVisible.Should().BeFalse(
-            "with neither panel enabled the whole left sidebar collapses");
+            "with no pane enabled the whole left sidebar collapses");
+    }
+
+    [Fact]
+    public void AttachmentsSidebar_IsVisibleByDefault_AndRaisesTheSidebarFlag()
+    {
+        _viewModel.IsAttachmentsSidebarVisible.Should().BeTrue();
+
+        var raised = new List<string?>();
+        _viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+        _viewModel.ToggleAttachmentsSidebar();
+
+        _viewModel.IsAttachmentsSidebarVisible.Should().BeFalse();
+        raised.Should().Contain(nameof(MainWindowViewModel.IsAttachmentsSidebarVisible));
+        raised.Should().Contain(nameof(MainWindowViewModel.IsLeftSidebarVisible),
+            "the sidebar host's visibility is computed from this flag");
     }
 
     [Fact]

@@ -24,6 +24,29 @@ than two 60 Hz frames while input is still arriving), and the settle tail.
     scripts/reader_speed_bench.py                  # all apps, bench.json docs
     scripts/reader_speed_bench.py --calibrate      # probe cost + probe/internal agreement
     scripts/reader_speed_bench.py --analyze logs/reader-speed_<stamp>
+
+MULTI-DOCUMENT SET (#1551-#1554), OPTIONAL: `--multi` runs it INSTEAD of the
+single-document runs. Per config in bench.json `multiDocument.configs`, the
+app opens scan, then irs (the second into the running instance), every
+document window is put on the bench frame, and then:
+  switch   Cmd+` (windows) or Ctrl+Tab (tabs), `switches` times, `switchGapSeconds`
+           apart; input -> first change / drawn of the page area. One switch
+           there and back is made and verified by window title BEFORE recording,
+           so both documents have been shown once.
+  turn2    page turns in the SECOND document while the first stays open,
+           verified by the page indicator afterwards.
+A window switch changes which window is in front, not any window's content, so
+these runs record a fixed screen region (the bench frame) through
+`screen-probe --region` instead of one window.
+
+    scripts/reader_speed_bench.py --multi --list
+    scripts/reader_speed_bench.py --multi --repeats 1              # 4 runs, ~8 min (estimate)
+    scripts/reader_speed_bench.py --multi --configs excise-tabs --repeats 1
+
+Estimate ~2 min per run: launch and two settles, a verified switch pair,
+10 switches x 2 s, 20 turns x 1.5 s, quit. excise's tab strip moves its page
+area down; EXCISE_TAB_STRIP_PT is an estimate until measured from a run's
+start-b.png.
 """
 import argparse, ctypes, json, os, pathlib, statistics, struct, subprocess, sys, threading, time
 
@@ -50,6 +73,21 @@ PAGE_REGION = {
     "preview": (215, 52, 1195, 795),
     "acrobat": (352, 120, 752, 795),
 }
+
+# excise-tabs only: the tab strip (#1554) sits above the viewer once a window
+# holds two documents, pushing the page area down. ESTIMATED from
+# DocumentTabStrip.axaml (5 pt padding each side of one text line plus a 1 pt
+# border), NOT measured: measure it from a multi run's start-b.png before
+# quoting an excise-tabs switch number.
+EXCISE_TAB_STRIP_PT = 32
+
+
+def page_box(app_id, layout=None):
+    x0, y0, x1, y1 = PAGE_REGION[app_id]
+    if app_id == "excise" and layout == "tabs":
+        y0 += EXCISE_TAB_STRIP_PT
+    return (x0, y0, x1, y1)
+
 
 _libc = ctypes.CDLL(None)
 _libc.mach_absolute_time.restype = ctypes.c_uint64
@@ -87,6 +125,10 @@ def post_key(code, mods=()):
         flags |= Quartz.kCGEventFlagMaskAlternate
     if "command" in mods:
         flags |= Quartz.kCGEventFlagMaskCommand
+    if "control" in mods:
+        flags |= Quartz.kCGEventFlagMaskControl
+    if "shift" in mods:
+        flags |= Quartz.kCGEventFlagMaskShift
     down = Quartz.CGEventCreateKeyboardEvent(None, code, True)
     up = Quartz.CGEventCreateKeyboardEvent(None, code, False)
     if flags:
@@ -115,11 +157,16 @@ def post_scroll(px):
 # ------------------------------------------------------------------ probe
 
 class Probe:
-    def __init__(self, pid, out):
+    def __init__(self, pid, out, region=None):
+        """`region`: a window dict (x, y, width, height) to record as a fixed
+        screen rectangle instead of the app's largest window."""
         if not PROBE.exists():
             raise rb.RunFailed(f"no probe at {PROBE}; run scripts/build-screen-probe.sh")
         self.out = out
-        self.proc = subprocess.Popen([str(PROBE), "--pid", str(pid), "--out", str(out)],
+        args = [str(PROBE), "--pid", str(pid), "--out", str(out)]
+        if region:
+            args += ["--region", f"{region['x']},{region['y']},{region['width']},{region['height']}"]
+        self.proc = subprocess.Popen(args,
                                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         self.events = []
         self.ready = threading.Event()
@@ -260,12 +307,125 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
     return log
 
 
+# ------------------------------------------------------- multi-document run
+
+MULTI_DOC_KEY = "switch"
+
+
+def verify_front(app_id, pid, copy, previous, what):
+    """Wait briefly for the front window to name `copy`; raise if it does not."""
+    deadline = time.time() + 10
+    title = ""
+    while time.time() < deadline:
+        rb.park_pointer()
+        title = rb.front_title(pid)
+        if rb.title_shows(app_id, title, copy.stem, previous):
+            return title
+        time.sleep(0.25)
+    raise rb.RunFailed(f"{what}: front window shows {title[:60]!r}, not {copy.name}")
+
+
+def multi_run(config, app, docs, repeat, out, cfg, excise_app, tabbing, probe_on=True):
+    mcfg = cfg["multiDocument"]
+    app_id = config["app"]
+    layout = rb.expected_layout(config, tabbing)
+    run_dir = out / config["id"] / MULTI_DOC_KEY / f"r{repeat}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    stamp = int(time.time())
+    copies = []
+    for d in docs:
+        c = rb.app_area(run_dir) / f"{d['id']}-{config['id']}-r{repeat}-{stamp}.pdf"
+        c.write_bytes((ROOT / d["path"]).read_bytes())
+        copies.append(c)
+    first, second = docs
+    log = {"kind": "multi", "app": config["id"], "appId": app_id, "doc": MULTI_DOC_KEY,
+           "docs": [d["id"] for d in docs], "repeat": repeat, "probe": probe_on,
+           "layout": layout, "systemTabbing": tabbing, "failures": [], "events": [], "phases": {}}
+    rb.park_pointer()
+    pid, before, t0 = rb.launch(app_id, app, copies[0], run_dir, cfg, excise_app,
+                                settings=rb.multi_settings(config))
+    tracker = rb.Tracker(app, pid, before, t0)
+    probe = None
+    try:
+        if not rb.wait_window(pid):
+            raise rb.RunFailed("no window within 60 s")
+        rb.set_window(pid, cfg["window"])
+        titles = []
+        title = ""
+        for k, copy in enumerate(copies, start=1):
+            ok, title, windows, note = rb.open_and_verify(
+                app_id, app, pid, copy, k, layout, title, excise_app, cfg, first=(k == 1))
+            if not ok:
+                raise rb.RunFailed(note)
+            titles.append(title)
+            rb.wait_settled(tracker, cfg["settle"])
+
+        page, evidence = rb.read_page(app_id, pid, run_dir, "start-b", cfg["window"])
+        if page != 1 and not (app_id == "preview" and page == 2):
+            raise rb.RunFailed(f"second document not at page 1 before the test: {evidence!r}")
+
+        # One verified switch there and back, outside the recording: proves the
+        # key really switches documents in this app and layout, and shows each
+        # document once before anything is timed.
+        sk = mcfg["switchKeys"][layout]
+        rb.front(pid)
+        post_key(sk["keyCode"], sk["modifiers"])
+        verify_front(app_id, pid, copies[0], titles[1], "after the first switch")
+        rb.wait_settled(tracker, cfg["settle"])
+        post_key(sk["keyCode"], sk["modifiers"])
+        verify_front(app_id, pid, copies[1], titles[0], "after switching back")
+        rb.wait_settled(tracker, cfg["settle"])
+        rb.park_pointer()
+        time.sleep(1.0)
+
+        if probe_on:
+            probe = Probe(pid, run_dir / "interact.bin", region=cfg["window"])
+        time.sleep(1.0)
+        switches = mcfg["switches"] + (mcfg["switches"] % 2)     # even: end on the second document
+        for i in range(switches):
+            log["events"].append({"kind": "switch", "i": i,
+                                  "tick": post_key(sk["keyCode"], sk["modifiers"])})
+            time.sleep(mcfg["switchGapSeconds"])
+        log["events"].append({"kind": "marker", "what": "title-check", "tick": mach_now()})
+        verify_front(app_id, pid, copies[1], titles[0], "after the timed switches")
+
+        nk = app["nextPage"]
+        turns = min(PAGE_TURNS, second["pages"] - 1)
+        rb.front(pid)
+        rb.park_pointer()
+        time.sleep(0.5)
+        for i in range(turns):
+            log["events"].append({"kind": "turn2", "i": i, "tick": post_key(nk["keyCode"], nk["modifiers"])})
+            time.sleep(TURN_GAP_S)
+        log["events"].append({"kind": "marker", "what": "end", "tick": mach_now()})
+        page, evidence = rb.read_page(app_id, pid, run_dir, "after-turns", cfg["window"])
+        if page != 1 + turns:
+            log["failures"].append(f"after turns: expected page {1 + turns}, read {page!r}")
+    except (rb.RunFailed, RuntimeError, subprocess.TimeoutExpired) as e:
+        log["failures"].append(f"aborted: {e}")
+    finally:
+        if probe:
+            log["probeEvents"] = probe.stop()
+        if not rb.quit_app(app, pid):
+            log["failures"].append("did not quit; killed")
+            try:
+                os.kill(pid, 9)
+            except ProcessLookupError:
+                pass
+        time.sleep(3)
+        rb.collect_app_area(run_dir)
+    (run_dir / "run.json").write_text(json.dumps(log, indent=1))
+    print(f"  {config['id']:15} {MULTI_DOC_KEY} r{repeat}  "
+          f"{'OK' if not log['failures'] else 'FAIL ' + '; '.join(log['failures'])}", flush=True)
+    return log
+
+
 # ------------------------------------------------------------------ analysis
 
 class Region:
-    def __init__(self, app_id, w, h, win):
+    def __init__(self, app_id, w, h, win, layout=None):
         sx, sy = w / win["width"], h / win["height"]
-        x0, y0, x1, y1 = PAGE_REGION[app_id]
+        x0, y0, x1, y1 = page_box(app_id, layout)
         self.box = (int(x0 * sx), int(y0 * sy), int(x1 * sx), int(y1 * sy))
         self.w, self.h = w, h
 
@@ -352,7 +512,8 @@ def analyze_scroll(frames, region, t_start, t_last_input, t_end):
 
 def analyze_run(run_dir, cfg):
     log = json.loads((run_dir / "run.json").read_text())
-    res = {"app": log["app"], "doc": log["doc"], "repeat": log["repeat"], "failures": log["failures"]}
+    res = {"app": log["app"], "doc": log["doc"], "repeat": log["repeat"], "failures": log["failures"],
+           "kind": log.get("kind"), "layout": log.get("layout"), "systemTabbing": log.get("systemTabbing")}
     launch = log["phases"].get("launch", {})
     if "windowMs" in launch:
         res["launchWindowMs"] = round(launch["windowMs"], 1)
@@ -370,7 +531,7 @@ def analyze_run(run_dir, cfg):
     if not frames:
         res["failures"] = res["failures"] + ["no interaction frames"]
         return res
-    region = Region(log["app"], frames[0][1], frames[0][2], cfg["window"])
+    region = Region(log.get("appId", log["app"]), frames[0][1], frames[0][2], cfg["window"], log.get("layout"))
     evs = log["events"]
     per = {}
     for i, e in enumerate(evs):
@@ -426,7 +587,7 @@ def summarize(out):
             continue
         notes += [f"- {r['app']} {r['doc']} r{r['repeat']}: {f}" for f in r["failures"]]
         keyed.setdefault((r["doc"], r["app"]), []).append(r)
-    for doc in SPEED_DOCS:
+    for doc in [d for d in SPEED_DOCS if any(k[0] == d for k in keyed)]:
         present = [a for a in ("excise", "preview", "acrobat") if (doc, a) in keyed]
         if not present:
             continue
@@ -449,6 +610,9 @@ def summarize(out):
                 f"{f(ev('burst', 'drawnMs'))} | {f(ev('end', 'drawnMs'))} | {f(ev('revisit', 'drawnMs'))} | "
                 f"{f(ev('scroll', 'fps'))} | {f(ev('scroll', 'gapP95Ms'))} | {f(ev('scroll', 'hitches'))} | {f(ev('scroll', 'settleTailMs'))} |")
         lines.append("")
+    multi_keys = sorted(k for k in keyed if k[0] == MULTI_DOC_KEY)
+    if multi_keys:
+        lines += multi_summary_lines(keyed, multi_keys)
     if notes:
         lines += ["## Kept with a note (see the soft-check comment in summarize)", ""] + notes + [""]
     fails = [r for r in runs if any(not soft(f) for f in r["failures"])]
@@ -456,6 +620,36 @@ def summarize(out):
         lines += ["## Failed runs (excluded)", ""] + [f"- {r['app']} {r['doc']} r{r['repeat']}: {'; '.join(r['failures'])}" for r in fails]
     (out / "summary.md").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
+
+
+def multi_summary_lines(keyed, keys):
+    f = lambda v: "—" if v is None else f"{v:.0f}"
+    lines = ["## Multi-document: switching and turning pages in the second document", "",
+             "`switch` = Cmd+` between windows or Ctrl+Tab between tabs, over a fixed screen region "
+             "(the bench frame, every document window stacked on it). `turn2` = next-page in the second "
+             "document while the first stays open. Median and p95 across every event of every run.", "",
+             "| config | layout (system tabbing) | runs | switch first change p50 / p95 | switch drawn p50 / p95 | "
+             "switch speed index p50 | no-response switches | turn2 first change p50 / p95 | turn2 drawn p50 / p95 | "
+             "no-response turns |",
+             "|---|---|---:|---|---|---:|---:|---|---|---:|"]
+    for key in keys:
+        rs = keyed[key]
+        cells = []
+        for kind in ("switch", "turn2"):
+            evs = [e for r in rs for e in r.get("events", {}).get(kind, [])]
+            ok = [e for e in evs if e.get("responded")]
+            fc = [e["firstChangeMs"] for e in ok]
+            dr = [e["drawnMs"] for e in ok]
+            cells.append((f"{f(median(fc))} / {f(p95(fc))}", f"{f(median(dr))} / {f(p95(dr))}",
+                          f(median([e["speedIndexMs"] for e in ok])), f"{len(evs) - len(ok)}/{len(evs)}"))
+        sw, tu = cells
+        layout = sorted({f"{r.get('layout')} ({r.get('systemTabbing')})" for r in rs})
+        lines.append(f"| {key[1]} | {', '.join(layout)} | {len(rs)} | {sw[0]} | {sw[1]} | {sw[2]} | {sw[3]} | "
+                     f"{tu[0]} | {tu[1]} | {tu[3]} |")
+    lines += ["", "A no-response switch means the page area did not change after the key: the key did "
+              "not switch documents, or both documents look the same in that region. The verified "
+              "switch pair before recording rules out the first for the run as a whole.", ""]
+    return lines
 
 
 # ------------------------------------------------------------------ calibration
@@ -514,6 +708,9 @@ def main():
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--calibrate", action="store_true")
     ap.add_argument("--analyze")
+    ap.add_argument("--multi", action="store_true",
+                    help="run the multi-document set (bench.json multiDocument) instead of the single-document runs")
+    ap.add_argument("--configs", help="multi-document configs to run (default: all in bench.json)")
     a = ap.parse_args()
 
     if a.analyze:
@@ -521,6 +718,8 @@ def main():
 
     cfg = json.loads(rb.CONFIG.read_text())
     apps = {k: v for k, v in cfg["apps"].items() if k in a.apps.split(",")}
+    if a.multi:
+        return main_multi(a, cfg, apps)
     docs = {d["id"]: d for d in cfg["documents"] if d["id"] in a.docs.split(",") or a.calibrate}
     for d in docs.values():
         d["pages"] = int(rb.sh(["qpdf", "--show-npages", str(ROOT / d["path"])], check=True).stdout)
@@ -543,6 +742,36 @@ def main():
     print(f"==> {len(runs)} runs -> {out}", flush=True)
     for r, d, app in runs:
         one_run(app, apps[app], docs[d], r, out, cfg, a.excise_app)
+    summarize(out)
+
+
+def main_multi(a, cfg, apps):
+    configs = rb.select_multi_configs(cfg, apps, a.configs)
+    tabbing = rb.system_tabbing()
+    mcfg = cfg["multiDocument"]
+    runs = [(r, c) for r in range(1, a.repeats + 1) for c in configs]
+    if a.list:
+        for r, c in runs:
+            print(f"r{r} {c['id']:15} {'+'.join(mcfg['speedDocuments'])}  "
+                  f"layout {rb.expected_layout(c, tabbing)} (system tabbing: {tabbing}), "
+                  f"switch key {mcfg['switchKeys'][rb.expected_layout(c, tabbing)]['modifiers']}"
+                  f"+{mcfg['switchKeys'][rb.expected_layout(c, tabbing)]['keyCode']}")
+        print(f"{len(runs)} runs (~{len(runs) * 2:.0f} min, estimated at ~2 min per run)")
+        return
+    docs = rb.resolve_multi_docs(cfg, mcfg["speedDocuments"])
+    if len(docs) != 2:
+        sys.exit("multiDocument.speedDocuments must name exactly two documents")
+    rb.preflight({c["app"]: apps[c["app"]] for c in configs}, multi=True)
+    out = pathlib.Path(a.out or ROOT / f"logs/reader-speed-multi_{time.strftime('%Y%m%d_%H%M%S')}").resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "run-meta.json").write_text(json.dumps({
+        "sha": rb.sh(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"]).stdout.strip(),
+        "started": time.strftime("%Y-%m-%dT%H:%M:%S"), "multi": True, "systemTabbing": tabbing,
+        "pageRegion": PAGE_REGION, "exciseTabStripPt": EXCISE_TAB_STRIP_PT,
+        "pageTurns": PAGE_TURNS, "turnGapS": TURN_GAP_S}, indent=1))
+    print(f"==> {len(runs)} multi-document runs -> {out} (system tabbing: {tabbing})", flush=True)
+    for r, c in runs:
+        multi_run(c, apps[c["app"]], docs, r, out, cfg, a.excise_app, tabbing)
     summarize(out)
 
 

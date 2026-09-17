@@ -757,6 +757,23 @@
       "version": "10.0.12"
     },
     {
+      "authors": "Microsoft",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "description": "Provides access to Windows system event notifications.\n\nCommonly Used Types:\nMicrosoft.Win32.SystemEvents",
+      "id": "Microsoft.Win32.SystemEvents",
+      "licenseKind": "expression",
+      "licenseName": "MIT License",
+      "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html",
+      "licenseUrl": "https://licenses.nuget.org/MIT",
+      "licenseValue": "MIT",
+      "nugetId": "Microsoft.Win32.SystemEvents",
+      "nugetVersion": "10.0.12",
+      "projectUrl": "https://dot.net/",
+      "repositoryUrl": "https://github.com/dotnet/dotnet",
+      "spdx": "MIT",
+      "version": "10.0.12"
+    },
+    {
       "authors": ".NET Foundation and Contributors",
       "copyright": "Copyright (c) .NET Foundation and Contributors",
       "description": "A MVVM framework that integrates with the Reactive Extensions for .NET to create elegant, testable User Interfaces that run on any mobile or desktop platform. This is the base package with the base platform implementations",
@@ -960,6 +977,26 @@
       "repositoryUrl": "https://github.com/reactiveui/splat",
       "spdx": "MIT",
       "version": "19.4.1"
+    },
+    {
+      "authors": "Microsoft",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "description": "Provides access to GDI+ graphics functionality.\n\n      Commonly Used Types:\n      System.Drawing.Bitmap\n      System.Drawing.BitmapData\n      System.Drawing.Brush\n      System.Drawing.Font\n      System.Drawing.Graphics\n      System.Drawing.Icon\n\n      Since .NET 7, non-Windows platforms are not supported, even with the runtime configuration switch. See https://aka.ms/systemdrawingnonwindows for more information.",
+      "id": "System.Drawing.Common",
+      "licenseFileName": "license.txt",
+      "licenseFileSha1": "af4e5d969c44e3d442c20fdf0b471b363ceb7c83",
+      "licenseKind": "expression",
+      "licenseName": "MIT License",
+      "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html",
+      "licenseText": "The MIT License (MIT)\n\nCopyright (c) .NET Foundation and Contributors\n\nAll rights reserved.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.",
+      "licenseUrl": "https://licenses.nuget.org/MIT",
+      "licenseValue": "MIT",
+      "nugetId": "System.Drawing.Common",
+      "nugetVersion": "10.0.12",
+      "projectUrl": "https://github.com/dotnet/winforms",
+      "repositoryUrl": "https://github.com/dotnet/dotnet",
+      "spdx": "MIT",
+      "version": "10.0.12"
     },
     {
       "authors": ".NET Foundation and Contributors",

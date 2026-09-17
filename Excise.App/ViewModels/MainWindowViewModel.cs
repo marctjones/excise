@@ -82,6 +82,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
         Excise.Core.Operations.CarrierScrubMode.Strip;
     private bool _redactionWholeWord;
+    private bool _redactionKeepAttachments;
     private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
         Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
     private bool _isRedactionMode;
@@ -174,6 +175,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void InitializeSessionState()
     {
+        ObserveRecentFiles(_recentFiles);
         LoadRecentFiles();
         LoadZoomPreference(); // Issue #32: Persist zoom level
     }
@@ -348,6 +350,21 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Keep the document's attachments in a redacted copy (#1572). Default
+    /// false: since 2026-09-17 every redacted copy is written without them.
+    /// </summary>
+    /// <remarks>
+    /// When on, kept text attachments have the redacted text cut out, nested
+    /// PDFs are redacted too, and anything else is listed in the redacted-copy
+    /// report as not checked. A PDF portfolio is refused when this is off.
+    /// </remarks>
+    public bool RedactionKeepAttachments
+    {
+        get => _redactionKeepAttachments;
+        set => this.RaiseAndSetIfChanged(ref _redactionKeepAttachments, value);
+    }
+
+    /// <summary>
     /// How the removed run's WIDTH is handled (#1189). Default
     /// <see cref="Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout"/>.
     /// </summary>
@@ -372,9 +389,11 @@ public partial class MainWindowViewModel : ViewModelBase
     /// user did not choose.
     /// </summary>
     public void ApplyRedactionPolicyPreferences(
-        bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy)
+        bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy,
+        bool keepAttachments = false)
     {
         RedactionWholeWord = wholeWord;
+        RedactionKeepAttachments = keepAttachments;   // #1572
 
         if (Enum.TryParse<Excise.Core.Text.Segmentation.WidthPolicy>(widthPolicy, out var width))
             RedactionWidthPolicy = width;
@@ -402,6 +421,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             CarrierPolicy = policy,
             WholeWord = RedactionWholeWord,   // #1052
+            ScrubAttachments = !RedactionKeepAttachments,   // #1572
         };
     }
 
@@ -633,11 +653,13 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// The left sidebar host is shown when *either* the outline or the
-    /// thumbnails panel is enabled — so the two can be toggled independently
-    /// (previously the whole sidebar was gated on thumbnails alone). (#369)
+    /// The left sidebar host is shown when *any* of its panes — outline,
+    /// thumbnails, attachments (#1563) — is enabled, so each can be toggled
+    /// independently (previously the whole sidebar was gated on thumbnails
+    /// alone). (#369)
     /// </summary>
-    public bool IsLeftSidebarVisible => IsOutlineSidebarVisible || IsThumbnailsSidebarVisible;
+    public bool IsLeftSidebarVisible =>
+        IsOutlineSidebarVisible || IsThumbnailsSidebarVisible || IsAttachmentsSidebarVisible;
 
     /// <summary>The outline/thumbnails splitter only makes sense when both panels show. (#369)</summary>
     public bool IsSidebarSplitterVisible => IsOutlineSidebarVisible && IsThumbnailsSidebarVisible;
@@ -1005,7 +1027,14 @@ public partial class MainWindowViewModel : ViewModelBase
     public ObservableCollection<string> RecentFiles
     {
         get => _recentFiles;
-        set => this.RaiseAndSetIfChanged(ref _recentFiles, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _recentFiles, value);
+            // #1551: one list per application, observed by every session.
+            ObserveRecentFiles(value);
+            this.RaisePropertyChanged(nameof(HasRecentFiles));
+            this.RaisePropertyChanged(nameof(RecentFileMenuItems));
+        }
     }
 
     public bool HasRecentFiles => RecentFiles.Count > 0;
@@ -1143,6 +1172,16 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task ShowErrorDialogAsync(string title, string message)
     {
+        // #1551: a workspace session reports through its own dialog service,
+        // whose owner is the session's window rather than the desktop's first
+        // window. A stand-alone view model keeps the desktop lookup below:
+        // headless tests steer MainWindowResolver and must not get a modal.
+        if (SessionHost != null)
+        {
+            await _dialogService.ShowMessageAsync(title, message);
+            return;
+        }
+
         try
         {
             var mainWindow = global::Avalonia.Application.Current?.ApplicationLifetime is
@@ -2274,6 +2313,11 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!await ConfirmDiscardUnsavedChangesAsync("close this document"))
             return;
 
+        // #1463: with other documents open, closing this one closes its
+        // window or tab. The last one keeps the empty window, as before.
+        if (SessionHost?.TryCloseSession() == true)
+            return;
+
         CloseDocument();
     }
 
@@ -2374,6 +2418,13 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _logger.LogInformation("Exit command triggered");
 
+        // #1463: every open document is reviewed, not only this one.
+        if (SessionHost is { } host)
+        {
+            await host.RequestQuitAsync();
+            return;
+        }
+
         if (!await ConfirmDiscardUnsavedChangesAsync("quit excise"))
             return;
 
@@ -2393,6 +2444,14 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogWarning("Recent file not found: {FilePath}", filePath);
             // Issue #25: Remove deleted file from recent files list
             RemoveFromRecentFiles(filePath);
+            return;
+        }
+
+        // #1463: the workspace decides where the file goes, and asks about
+        // unsaved changes only when it replaces this session's document.
+        if (SessionHost is { } host)
+        {
+            await host.OpenDocumentsAsync([filePath], replaceConfirmed: false);
             return;
         }
 
@@ -2707,7 +2766,10 @@ public partial class MainWindowViewModel : ViewModelBase
                       "  Ctrl+- - Zoom Out\n" +
                       "  Ctrl+0 - Actual Size\n\n" +
                       "Navigation:\n" +
-                      "  PgUp/PgDn - Previous/Next Page",
+                      "  PgUp/PgDn - Previous/Next Page\n\n" +
+                      "Tabs:\n" +
+                      "  Ctrl+Tab / Ctrl+Shift+Tab - Next/Previous Document Tab\n" +
+                      "  Ctrl+PgDn / Ctrl+PgUp - Next/Previous Document Tab",
             CloseButtonText = "Close",
             DefaultButton = FluentAvalonia.UI.Controls.FAContentDialogButton.Close
         };

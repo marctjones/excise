@@ -154,7 +154,8 @@ SavedPdfLeakScanner.FindTerm(saved, "REDACTED_TEXT").Should().BeEmpty();
 //    presence: /T, /TU, /BaseFont, /FontName, with /FT, /Subtype /Widget and
 //    /Type /Font|/FontDescriptor as extra structural catches
 //    (ContainsFormFieldOrFontCarrierText, #1431/#1432/#1434) — OUT of object
-//    streams so they stay greppable. Key presence, not type markers: a
+//    streams so they stay greppable. A Reduce File Size copy does NOT
+//    (PdfDocumentWriter.OptimizeForSize, #1550): it packs all of them. Key presence, not type markers: a
 //    NON-TERMINAL field node (§12.7.3.2 — /T+/TU+/Kids, no /FT, no
 //    /Subtype /Widget; 6 of them in irs-w4, 30 in irs-1040) and a font dict
 //    with no /Type both slip a type-marker test. But that list is not the
@@ -457,6 +458,7 @@ Located in `Excise.App/Excise.App.csproj`:
 - SkiaSharp 3.119.4 (MIT) - 2D graphics / rasterization
 - SkiaSharp.HarfBuzz 3.119.4 (MIT) - OpenType shaping for synthesised annotation text in Excise.Rendering (#1363); brings native HarfBuzzSharp 8.3.1.5 (MIT)
 - BouncyCastle.Cryptography 2.7.0 (MIT) - crypto primitives for encryption and CMS signatures
+- System.Drawing.Common 10.0.12 (MIT) - Windows printing only (`PrintDocument`, #1546); managed, never loaded on macOS/Linux
 
 The legacy PdfPig / PDFsharp / PDFtoImage dependencies were removed in v2.0.
 All remaining licenses are permissive (MIT/Apache 2.0/BSD-3), no copyleft restrictions.
@@ -1097,9 +1099,13 @@ and cost real planning time.
    assembly (bit 11) is now gated on the CLI `merge`/`split` commands (#677,
    `DocumentAction.AssembleDocument` → `CanAssemble`); still NOT gated: bit 11
    in the GUI page-organization surface (reorder/rotate/delete in the app).
-   GUI printing (macOS, #1545) is gated on bit 3 AND bit 12: excise prints
-   full-quality through PDFKit and cannot produce the degraded output a
-   bit-12-clear document allows, so such a document does not print either.
+   GUI printing (macOS #1545, Windows #1546) is gated on bit 3 AND bit 12:
+   excise prints full-quality (PDFKit on macOS, its own 600 DPI-capped raster
+   through `System.Drawing.Printing` on Windows) and cannot produce the
+   degraded output a bit-12-clear document allows, so such a document does
+   not print either. ⚠️ The Windows printer was written and tested on macOS
+   only (fake dialog and spooler); `PrintDlgExW`, `PrintDocument` and a real
+   driver have not been exercised on Windows.
 
 **Previously listed here and now FIXED — do not re-add:**
 - ~~Inline images `BI...ID...EI` not handled~~ → **parsed and re-serialised**
@@ -1166,9 +1172,9 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── MutoolReferenceRenderer.cs        # 338 uses in Differential tests
+    ├── MutoolReferenceRenderer.cs        # 358 uses in Differential tests
     ├── GhostscriptReferenceRenderer.cs   #  113
-    ├── PdftocairoReferenceRenderer.cs    #  81
+    ├── PdftocairoReferenceRenderer.cs    #  83
     ├── PdftoppmReferenceRenderer.cs      #  18
     ├── MutoolTextExtractor.cs            # independent TEXT oracle (MuPDF)
     ├── PdftotextTextExtractor.cs         # SECOND text oracle (Poppler) — #1372
@@ -1403,14 +1409,35 @@ This redaction implementation:
   requires a `dc:title` the strip deletes, so keeping the claim would assert
   something the file no longer satisfies. Verdicts are veraPDF's
   (`PdfATests`, `PdfAConformanceConservationTests`), never our writer's.
-- ✅ Scrubs embedded files/attachments **by default** in the GUI redaction-copy
-  flow — `RedactedCopySafetyService` (`ScrubAttachments = true`) →
-  `PdfDocument.ScrubMetadataPreservingPdfAIdentity(true)` (#1507; the same
-  wholesale strip, plus the `pdfaid` exception in the bullet below) /
-  `ScrubEmbeddedFiles()` removes `/Catalog/Names/EmbeddedFiles` and the `/AF`
-  associated-files arrays (#467). At the lower `RedactionService` level the
-  same wholesale strip is under `RemoveAllMetadata`; the default there is the
-  targeted `SanitizeMetadata` term scrub.
+- ✅ **Removes every attachment from redacted output by default, on every entry
+  point** (#1572). ⚠️ **This default WAS flipped, by Marc's decision on
+  2026-09-17** — the one deliberate exception to #1187's "defaults reproduce
+  prior behaviour" rule (the #1169 carrier-mode default above was NOT flipped).
+  Before, only the GUI redacted-copy flow stripped attachments and the CLI,
+  batch, scripting and library `RedactText` removed only files matching the
+  term, so an attachment excise could not read always shipped. Now
+  `RedactText`, `RedactArea(s)` and `RedactedCopySafetyPolicy` all remove
+  every embedded file via `AttachmentCarrierScrubber` — the catalog name tree,
+  catalog/page/annotation `/AF`, FileAttachment/RichMedia/Sound annotations,
+  Screen/Movie annotations with embedded media, and any other `/EF` file
+  specification found by walking the reachable graph (an annotation a structure
+  element still references is reduced to a stub). Until #1572,
+  `ScrubEmbeddedFiles()` removed only `/Names/EmbeddedFiles` and catalog `/AF`
+  while the dialog said "attachments scrubbed". Every removed file is named
+  with its size (`RedactionReport.Attachments`, the safety report, CLI notes,
+  batch `attachments`); area passes record theirs on the document's redaction
+  ledger because they run before the report. Opt-out:
+  `RedactionOptions.KeepAttachments` / `--keep-attachments` / batch
+  `keepAttachments` / Preferences → Redaction. Kept files are examined: text
+  files have the term cut, nested PDFs are redacted with the same options
+  (unreadable or password-protected → `AttachmentRedactionRefusedException`),
+  anything else is "not checked" and `IsCleanSuccess` is false. A PDF portfolio
+  (`/Collection`) is refused, before any change, unless attachments are kept
+  (`PdfPortfolioRedactionException`).
+- ✅ **Removes the XFA form whole on any redaction** (#1547 decision 5, widened
+  by #1574). A static XFA form's `datasets` restate each field value and
+  Acrobat merges them back; area redaction has no term to scrub them by. The
+  AcroForm fields stay. Reported as an `/XFA` carrier row and a dialog line.
 - ✅ Leaves no recoverable prior revisions in the redacted **output** — it is a
   fresh, fully-rewritten file (not an incremental update), so incremental-update
   prior-revision recovery does not apply to a excise-redacted copy. Verified by

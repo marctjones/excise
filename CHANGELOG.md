@@ -9,6 +9,41 @@ semantic versioning.
 Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
+### Changed
+- **Redacted output carries no attachments by default** (#1572). Product
+  decision by Marc Jones, 2026-09-17. Before, only the GUI's redacted-copy flow
+  removed attachments; `excise redact`, batch `redaction.apply`, scripting and
+  the library's `RedactText`/`RedactArea` removed only files whose name,
+  description or content matched the term, so an attachment excise could not
+  read (an image, a spreadsheet) always shipped. Every redaction entry point now
+  removes every embedded file and names each one with its size: the CLI prints
+  `ATTACHMENT REMOVED:` notes, batch results carry an `attachments` array,
+  `RedactionReport.Attachments` and `RedactedCopySafetyReport.Attachments` list
+  them, and the redacted-copy dialog names them. Opt out with
+  `--keep-attachments`, batch `keepAttachments: true`,
+  `RedactionOptions.KeepAttachments` or Preferences › Redaction › Attachments.
+  Kept attachments are still examined: text files (txt, csv, xml, html, json,
+  md, or a `text/*` type) have the term cut out and their `/CheckSum` dropped;
+  nested PDFs are redacted with the same options, and an unreadable or
+  password-protected one refuses the whole redaction
+  (`AttachmentRedactionRefusedException`, batch `ATTACHMENT_REFUSED`); anything
+  else is reported as not checked and the redaction is not a clean success.
+  A kept file listed in the attachment name tree under a key holding the term
+  is removed, as one whose `/F` or `/UF` holds it already was; files attached
+  only through a page `/AF` are examined too (#1582's attachment carriers). A
+  PDF portfolio (`/Collection`) is refused rather than stripped unless
+  attachments are kept (`PdfPortfolioRedactionException`, batch
+  `PORTFOLIO_REFUSED`). This reverses the "defaults reproduce prior behaviour"
+  rule of #1187 for this one option, deliberately.
+- **Any redaction of a document with an XFA form removes the XFA packet**
+  (#1574). #1547 phase 2 did this for forms excise laid out itself; a STATIC
+  XFA form (the IRS W-4, W-9 and 1040 shape) kept its `datasets` packet through
+  area redaction, which has no term to scrub it by, and Acrobat merges those
+  values back onto the page. `RedactArea`, `RedactAreas` and `RedactText` now
+  remove `/AcroForm /XFA` (and `/NeedsRendering`) from any document, report it
+  as an `/XFA` carrier row (and a "XFA form" line in the redacted-copy dialog),
+  and keep the AcroForm fields, which every non-XFA viewer already uses.
+
 ### Fixed
 - **`unredact` saw NOTHING on the Manafort filing: both detectors treated an
   unset fill colour as white rather than §8.6.8 black** (#1617). The first
@@ -40,6 +75,54 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   the bench scored 100% on the same day this document scored zero. A gate built
   from fixtures its authors wrote cannot see an assumption those authors share —
   it took one real document, which is the entire argument for tier B.
+- **Closing a document after an idle trim kept the whole document in memory**
+  (#1564, #1543). A cache trim — the idle trim, a window switch or OS
+  pressure — recorded the open document in render-ahead's single-page plan,
+  in either view, and nothing cleared that plan when the document closed. The
+  closed document, with every image it had decoded, stayed reachable, so the
+  close-time heap reclaim freed nothing: the #1543 bench on develop beed1e8b
+  held Altona at 705–713 MB 20 s and 45 s after Close Document, against
+  322–332 MB before render-ahead. Document changes now forget the plan, and
+  the close test covers both views with and without a trim first. Page-turn
+  render-ahead is unchanged.
+- **Opening a second document as a tab crashed excise on macOS** (#1584).
+  Each tab had its own native menu, and switching tabs gave the window a
+  different menu object. Avalonia's macOS menu code only accepts the first menu
+  a window is given, so it threw "The menu being updated does not match" and
+  the app quit. Each window now keeps one menu for its whole life. A tab
+  switch replaces the entries in that menu with the new tab's entries, so
+  every menu item acts on the tab you are looking at. A closed tab's entries
+  are still released with it (#1551).
+- **On macOS, excise ignored PDFs opened from Finder** (#1585). Double-click,
+  "Open With" and `open -a` did nothing, whether excise was already running or
+  was started by the open. Avalonia delivers those requests through an
+  application feature, but excise only looked for them on the desktop
+  lifetime, which never carries them. So excise never received them. It now
+  gets them from the application feature, and each PDF opens the way the Open
+  Documents In preference says.
+- **Attachments on page annotations survived "attachments scrubbed"**
+  (#1572). `PdfDocument.ScrubEmbeddedFiles()` removed only
+  `/Catalog/Names/EmbeddedFiles` and `/Catalog/AF`, so a file attached through
+  a `/FileAttachment` annotation — its payload, `/Desc` and the annotation's
+  `/Contents` — was still in the redacted copy the dialog called scrubbed. It
+  now removes page and annotation `/AF` arrays, FileAttachment, RichMedia and
+  Sound annotations, Screen and Movie annotations with embedded media, and
+  detaches any other embedded file specification (actions, form XObjects,
+  structure elements); an annotation a structure element still references is
+  reduced to a stub. New `PdfDocument.RemoveAllAttachments()` returns what it
+  removed. Verified with poppler's `pdfdetach`, qpdf's object graph and the
+  decompressing saved-byte scanner. The redacted-copy dialog used to print
+  "none found" for attachments the area pass had already removed; it now names
+  them. The Attachments pane's Remove All now removes page attachments too, and
+  undo restores them.
+- **A failed open left the previous document's attachments listed** (#1563),
+  and opening another document kept the old list on screen until the new one
+  finished loading. Both now clear.
+- **Remove All Attachments claimed removals it had not made** (#1563). It
+  strips the document-level tree, which does not include files carried by page
+  annotations, yet reported every listed attachment as removed. The count and
+  the toast now come from the list as re-read after the strip, and say how many
+  page attachments remain. Removing those is #1572.
 - **Area redaction deleted the `pdfaid` XMP, so it could never produce a
   PDF/A-conformant file** (#1507). `RedactArea` — the click-to-redact path, and
   the default for `page.RedactArea(rect)` — strips the positionless document
@@ -216,6 +299,219 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   is still scanned.
 
 ### Added
+- **`excise unredact` reads every carrier a redaction can leave behind.** The
+  certain channel used to read only structure-tree `/ActualText`/`/Alt`/`/E` and
+  annotation `/Contents`/`/RC`. It now also reports, each finding labelled with
+  its carrier, page, object number and location:
+  - AcroForm `/V`, `/DV`, `/RV`, `/TU`, both halves of `/Opt` export/display
+    pairs, widget `/MK` captions (`/CA`, `/RC`, `/AC`), and the text every
+    annotation's appearance streams paint (decoded through the one content
+    walker);
+  - JavaScript (string or stream) and `/URI`, `/Launch`, `/GoToR`,
+    `/SubmitForm` targets from every action location — document name tree,
+    `/OpenAction`, `/AA` on the catalog, pages, annotations, non-terminal
+    fields, and outline items;
+  - XFA datasets values and template default values, captions, list items,
+    tooltips and scripts (safe XML loading, datasets-only forms included);
+  - attachments from the name tree, `/FileAttachment` annotations, and `/AF`
+    on the catalog, pages and annotations: name, `/F`, `/UF`, `/Desc`,
+    text-like payloads, and attached PDFs scanned recursively (page text and
+    every carrier, three levels deep);
+  - `/Info` and XMP content properties (tool-written producer, dates, ids and
+    history are filtered out), outline titles, markup-annotation authors,
+    `/Subj`, `/OverlayText`, structure-element `/T`, `/PieceInfo` private data,
+    and text in optional content that is hidden by default;
+  - unreferenced (orphan) objects, including a dropped content stream, and
+    text an incremental update superseded: each earlier revision is opened
+    from the file prefix and only what the current revision no longer shows is
+    reported.
+
+  **Only hidden text is a finding by default.** A carrier that restates text
+  the reader already sees is a *visible duplicate*. The visible text is: each
+  page's drawn text (not counting hidden layers or text under a dark box), the
+  painted appearance of every annotation and widget not flagged hidden, and the
+  title and bookmark titles. Comparison ignores case and whitespace. So a filled
+  form whose widgets show their values, or a titled document, reports nothing.
+  A field whose appearance was redacted while `/V` still holds the value is a
+  hidden finding. For a carrier its own widget owns (`/V`, `/DV`, `/RV`,
+  `/Opt` export values, `/MK` captions), "visible" means *that widget's*
+  appearance shows it, not that the text appears somewhere in the document: a
+  redacted field whose value also occurs in a page header is still reported.
+  An annotation's normal appearance is visible exactly when the annotation is
+  not flagged hidden. Hidden findings are ranked by how close they sit to a
+  redaction mark (a dark filled box, a `/Redact` annotation, covered text), and
+  the output says "overlaps redaction mark" or "page has redaction marks".
+  Duplicates do not set exit code 3 and are listed only with `--carriers all`
+  (or `--verbose`), under a `visibleDuplicates` JSON array and a "VISIBLE
+  DUPLICATES" section. Known gap: the walker does not tag render mode, so text
+  drawn invisibly (render mode 3) counts as visible.
+
+  Content that is present but not decoded — an opaque attachment, a page
+  `/Thumb`, an unreadable packet, a nested PDF past the depth limit — is listed
+  under a new `present` JSON array and a "PRESENT" section, and does not set the
+  certain exit code. The scan is bounded (findings, text length, payload size,
+  revisions, nesting) and cancellable, and runs only in `unredact`.
+  `CarrierTextRecovery.CarrierText` gains `ObjectNumber`, `Kind`, `Location`,
+  `VisibleElsewhere`, `NearRedaction` and `Area`; `Scan` gains a cancellable
+  overload.
+- **Carrier traps for the unredaction scorecard and the redaction bench.**
+  `CarrierTrapFixtures` generates one synthetic PDF per carrier above in
+  memory. Each finding is corroborated by qpdf (`--json` object dump, `--check`,
+  `--show-attachment`) and mutool (`show -b` of the object excise names, page
+  text of an earlier revision) — excise does not vouch for itself. The
+  unredaction scorecard grades a new `carrier` channel against qpdf's object
+  dump, and `RedactionBenchmarkRunner` redacts every trap with each tool
+  (`redaction-carrier-traps` corpus) and records which carriers the unredact
+  channel still reads in the output (`unredactCarriers`, `carrier-recovery`).
+  An opt-in excise-only survey (`CARRIER_TRAP_SURVEY=1`,
+  `CarrierTrapExciseRedactionSurveyTests`) found `RedactText` leaving the term
+  in 12 of 47 traps, each confirmed with qpdf and mutool: field/annotation
+  JavaScript, `/RV`, hidden-widget appearances and `/Launch` targets (#1581);
+  attachment name-tree keys, page `/AF` files and PDFs nested in attachments
+  (#1582); custom `/Info` keys, structure-element `/T` and `/PieceInfo` (#1583).
+- **Several documents at once, in separate windows** (#1463, #1551–#1553).
+  Opening a PDF while a window already shows one now opens it in a new
+  window (File → Open, Open Recent, drag and drop, Finder or Explorer, and the
+  command line). File → Open accepts several files, and a drop opens every
+  PDF it carries. A window with no document takes the file itself, and a file
+  that is already open is brought to the front instead of being opened twice.
+  Preferences → Documents → "Open Documents In" chooses Automatic (the
+  default), NewWindow, NewTab, or ReplaceCurrent (the old single-document
+  behaviour, with its unsaved-changes prompt).
+  - **In-app tabs** (#1554, NewTab): a tab strip above the document, shown
+    once a window holds two documents. Each tab has a close button (middle
+    click also closes), drags to reorder, and a context menu (Close Tab,
+    Close Other Tabs, Move Tab to New Window, Copy Path, Reveal in
+    Finder/Explorer); a button at the right lists every tab, so the strip
+    never scrolls or wraps. Ctrl+Tab / Ctrl+Shift+Tab and Ctrl+PgDn /
+    Ctrl+PgUp switch tabs (also ⌘⇧] / ⌘⇧[ on macOS). Window → Merge All
+    Windows gathers every window's documents as tabs, and Move Tab to New
+    Window splits one out, with its undo history and unsaved edits. A window
+    has one viewer, so an inactive tab holds no page tiles; switching
+    re-renders the visible page and restores that tab's scroll position.
+    Under memory pressure an inactive tab's thumbnails are released first.
+    Tabs are announced with their position and unsaved state.
+  - **macOS:** document windows use native window tabbing. With System
+    Settings → Desktop & Dock → "Prefer tabs when opening documents" set to
+    Always, a new document opens as a tab of the current window. The Window
+    menu has Show Previous/Next Tab, Move Tab to New Window, Merge All
+    Windows, Show or Hide Tab Bar, and the list of open documents.
+  - **Windows and Linux:** a Window menu lists the open documents, and
+    opening a PDF from Explorer or a file manager while excise runs hands it to
+    the running process instead of starting a second one
+    (`EXCISE_SINGLE_INSTANCE=0` turns that off).
+  - Each window is one document session with its own undo history, search,
+    selection, redaction marks, unsaved-changes state, toasts and dialogs.
+    Close Document (⌘W / Ctrl+W) closes the window when another document is
+    open; the last window stays open and empty, as before. Quit asks about
+    every document with unsaved changes, in turn, and a Cancel keeps all of
+    them open. The window title names the document and says when it has
+    unsaved edits.
+  - Preferences are app-wide: a Preferences save applies to every open
+    window, so the redaction carrier policies and whole-word rule can never
+    differ between two windows. Recent files are one list for the whole
+    application.
+  - Memory: closing a window releases its document, its caches and its view
+    model. All windows share ONE tile-cache budget (Preferences →
+    Performance) rather than one each (`PdfViewerTileBudget`): when it is
+    exceeded, background windows give up render-ahead tiles first, then
+    scroll-back tiles, and only for the focused window their band tiles
+    (already composited, so nothing on screen changes). The focused window
+    never gives tiles to a background one, and a lone window evicts exactly
+    as before. The idle heap reclaim (#1496) runs once per app idle period,
+    not once per window.
+- **Attachments pane in the sidebar, visible by default** (#1563). Embedded
+  files used to be reachable only through a Document ▸ Attachments… dialog.
+  They are now listed under Outline and Thumbnails as soon as a document opens:
+  file name, decoded size, description, modified date, and — for a file carried
+  by a page's `/FileAttachment` annotation — the page, which selecting the row
+  jumps to. Both carriers are listed (`/Names/EmbeddedFiles` and page
+  annotations; catalog `/AF` too). The pane has Save…, Save All… (into a chosen
+  folder, never overwriting; names are cut to one portable file name, so a
+  declared `../../x` or `C:\x` cannot write outside the folder) and Remove All,
+  which is now undoable. Rows are announced as "name, size", and file names
+  show invisible format controls as `[U+XXXX]` so a right-to-left override
+  cannot disguise an executable. When a document has none the pane says "No
+  attachments" and stays visible. View ▸ Show Attachments (also in the macOS
+  menu) hides it, and the choice is remembered in `window.json`. Document ▸
+  Attachments now reveals and focuses the pane; the dialog is gone. Saving is
+  refused with a toast when the document's `/P` flags forbid extraction
+  (bit 5). excise still never opens or runs an attachment.
+  `PdfEmbeddedFile.PageNumber` is new public API.
+- **Dynamic XFA forms are displayed** (#1547, phase 2). A dynamic XFA form
+  used to open as its "Please wait..." placeholder page. excise now lays the
+  form out when it opens and shows the result as ordinary pages, so page view,
+  thumbnails, search, text selection, printing and redaction all work on it.
+  The layout covers subforms (positioned, top-to-bottom, left-to-right and
+  table layouts), draws and fields with captions, borders and fills, fonts
+  mapped to the base-14 families, page areas and content areas with
+  pagination and page breaks, repeating subforms (`occur`), and data from the
+  form's datasets (normal, global and `dataRef` binding). Scripts do not run
+  (#1570, #1571), so the banner now says excise shows the form's initial
+  layout and still points to Acrobat Reader or Firefox for filling it in. When
+  a form cannot be laid out, the placeholder and the phase-1 warning stay.
+  Images (#1575), barcodes (#1576) and text outside WinAnsi (#1577) are not
+  drawn yet, and gradient and pattern fills are drawn as their base colour
+  (#1578). Myriad Pro, the Designer default, is drawn as Helvetica at 90% width
+  to match its metrics. The layout runs only for documents that
+  `DetectXfaForm()` classifies as dynamic and that set `/NeedsRendering true`
+  (a document with real page content keeps its pages), and it is bounded in size, depth,
+  pages and time. The XML parser prohibits DTDs and never resolves external
+  references. Saving keeps the XFA form, and the saved pages are marked, so
+  reopening the file shows the same pages. **Any redaction of a laid-out form
+  removes the XFA form whole**, because it restates every value on the pages
+  and XFA viewers would regenerate the redacted values from it. Library API:
+  `PdfDocument.ApplyXfaLayout()`, `HasXfaLayoutPages()` and `RemoveXfaForm()`
+  in `Excise.Core.Xfa`. Design: `docs/architecture/xfa-rendering.md`.
+- **Reduce File Size** (#1550). Document ▸ Reduce File Size… (also in the
+  macOS menu bar) and `excise optimize <in> <out> --preset
+  lossless|high|standard|screen [--password] [--allow-decrypt] [--json]` write
+  a smaller **copy**. The command never overwrites the input, and the GUI
+  refuses while there are unsaved edits. Both show the size before and after.
+  - **Lossless** (the default): re-encodes uncompressed and weakly compressed
+    streams with the strongest Flate level and keeps the result only when it
+    is smaller; points byte-identical images, form XObjects and font programs
+    at one copy; and drops page thumbnails and `/PieceInfo`. The copy is also
+    written for size: form-field, font and Info dictionaries go into object
+    streams (an ordinary save keeps them greppable, #1431), object streams
+    hold 200 objects, and the xref stream uses minimal widths and a PNG
+    predictor. Pages render pixel-identically (mutool).
+  - **High / Standard / Screen**: also downsample images above 375 / 188 /
+    120 dpi, measured at their largest placed size, to 300 / 150 / 96 dpi
+    (JPEG quality 85 / 75 / 60).
+  - **What is skipped, and reported with the reason**: images the optimizer
+    cannot measure (drawn inside a form XObject) or that it cannot re-encode
+    faithfully (masks, `/Decode`, colour spaces other than gray/RGB/ICC 1-3,
+    not 8 bpc, CCITT/JBIG2/JPX).
+  - **Redaction**: the optimizer works on a copy reopened from an ordinary
+    save, so a redacted document stays redacted (saved-bytes leak scanner and
+    mutool, every preset). Encrypted inputs stay encrypted with the same
+    settings. Signed inputs get a warning that their signatures will no longer
+    validate. Already-embedded fonts are not subset.
+  - **Measured on the smoke corpus, Lossless** (input → output):
+    - irs-w4 208,845 → 181,149 (−13%)
+    - irs-1040 220,237 → 190,241 (−14%); qpdf's own optimizer gets 199,086
+    - irs-1040-instructions 4,434,643 → 4,383,765 (−1%)
+    - state-ds11 2,568,395 → 2,223,367 (−13%)
+    - irs-pub509 1,195,405 → 1,189,086 (−0.5%)
+    - every output passes `qpdf --check`
+  - **Measured on the 20-page 200 dpi scan** (`reader-bench/scan-irs-20p-200dpi.pdf`,
+    10,392,181 bytes):
+    - Standard → 5,551,763 (−47%)
+    - Screen → 2,295,485 (−78%)
+    - Lossless and High leave it as it is: its JPEGs are already compact and
+      below High's threshold
+  - **Measured with the lossy presets on the two heavy fixtures** (each run
+    under 3 s; every output passes `qpdf --check`, keeps its page count, and
+    renders page 1 pixel-identically in mutool):
+    - irs-1040-instructions: High, Standard and Screen all give 4,383,765
+      (−1%, the same as Lossless). Its two images, both large CMYK JPEGs, are
+      drawn inside form XObjects, so they are reported as skipped.
+    - Altona (17 pages, 127,724,771 bytes): High → 124,590,100, Standard →
+      124,558,758, Screen → 124,553,723 (−2.5%), 0.6 s. One image is
+      downsampled (Screen changes only page 2: mean difference 0.7 of 255 in
+      mutool); 86 images are inside forms and 3–6 are in colour spaces the
+      optimizer does not re-encode, and all of those are reported.
 - **XFA forms are detected and explained on open** (#1547, phase 1). A
   dynamic XFA form (catalog `/NeedsRendering true`, or no AcroForm field with a
   widget) now opens with a warning banner saying excise cannot display it yet
@@ -224,7 +520,32 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   banner stays until closed or the document changes. `excise info` prints the
   classification and `info --json` adds `"xfaForm": "none" | "static" |
   "dynamic"`. Detection is `PdfDocument.DetectXfaForm()` in Excise.Core.
-  excise still does not render or fill XFA.
+  (Phase 1 did not render XFA; phase 2 above does.)
+- **Printing on Windows** (#1546). File → Print… and Ctrl+P open the
+  Windows common print dialog (`PrintDlgExW`, owned by the excise window):
+  printer, page ranges, copies and collation, and the driver's Preferences.
+  Each chosen page is rasterised by excise's own renderer at the printer's
+  resolution (capped at 600 DPI and 48 million pixels a page) and sent through
+  .NET's `System.Drawing.Printing.PrintDocument`, placed from the page DC's
+  own geometry with the Preferences → Printing scaling, and turned to the
+  paper orientation that fits it (the equivalent of PDFKit's auto-rotate).
+  Copies the driver cannot make are produced by excise, collated or not.
+  Rasterising and spooling run off the UI thread; closing the window aborts a
+  job still being sent. It uses the same platform-neutral print copy as macOS
+  — pending redactions applied, owner-only, deleted afterwards — and the same
+  /P bits 3 + 12 gate. The WinForms `PrintDialog` was not used because it
+  would bring WinForms into an Avalonia app for a wrapper around the same
+  call; the WinRT print manager would need a separate Windows target
+  framework. New dependency: System.Drawing.Common 10.0.12 (MIT, managed),
+  referenced for every RID but only ever loaded on Windows. To make that
+  guard checkable, Excise.App no longer suppresses the platform-compatibility
+  analyzer (CA1416) project-wide: the suppression hid nothing (0 warnings
+  without it), and a planted unguarded `PrinterSettings` call now warns. What prints is
+  what the viewer shows: the per-annotation `/Print` flag is not consulted
+  yet (#1573). ⚠️ Built and tested on macOS only — the page geometry, sheet order,
+  scaling, rasterising and the view-model path run against a fake dialog and
+  spooler; the Win32 dialog, `PrintDocument` and real drivers still need a
+  check on Windows. Linux printing remains out of scope.
 - **Printing on macOS** (#1545, superseding #621's won't-fix). File → Print…
   and ⌘P open the standard macOS print sheet, attached to the excise window,
   through PDFKit (`PDFDocument printOperationForPrintInfo:scalingMode:autoRotate:`

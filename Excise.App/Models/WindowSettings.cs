@@ -27,6 +27,12 @@ public class WindowSettings
     public bool ContinuousScrollEnabled { get; set; } = true;
 
     /// <summary>
+    /// Whether the sidebar's Attachments pane is shown (#1563). Visible by
+    /// default, so a window.json written before this field existed shows it.
+    /// </summary>
+    public bool AttachmentsSidebarVisible { get; set; } = true;
+
+    /// <summary>
     /// Text-selection reading-order strategy (#774). Persisted as a string so
     /// the source-generated JSON stays simple; parsed back to
     /// <see cref="Excise.Core.Text.ReadingOrderStrategy"/> on load.
@@ -48,6 +54,12 @@ public class WindowSettings
     public bool RedactionWholeWord { get; set; }
 
     /// <summary>
+    /// Keep attachments in redacted copies (#1572). Default false — since
+    /// 2026-09-17 redacted output carries no attachments.
+    /// </summary>
+    public bool RedactionKeepAttachments { get; set; }
+
+    /// <summary>
     /// Redaction width / covering-box policy (#1189). Persisted as a string;
     /// parsed back to <see cref="Excise.Core.Text.Segmentation.WidthPolicy"/>.
     /// </summary>
@@ -67,6 +79,13 @@ public class WindowSettings
     /// <see cref="Excise.App.Services.Printing.PrintScalingMode"/>.
     /// </summary>
     public string PrintScaling { get; set; } = "ShrinkOversized";
+
+    /// <summary>
+    /// Where a document opens when the window already shows one (#1463).
+    /// Persisted as a string; parsed back to
+    /// <see cref="Excise.App.Models.DocumentOpenMode"/>.
+    /// </summary>
+    public string DocumentOpenMode { get; set; } = "Automatic";
 
     /// <summary>
     /// Trim the viewer's caches when the OS reports memory pressure (#1478).

@@ -149,6 +149,7 @@ namespace Excise.Avalonia.Controls
         public Excise.Core.Text.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
         public long RenderVersion { get; set; }
         public bool RevealHiddenAnnotations { get; set; }
+        public Excise.Avalonia.Controls.PdfViewerTileBudget? SharedTileBudget { get; set; }
         public bool ShowAnnotations { get; set; }
         public bool ShowCommentAnnotations { get; set; }
         public bool ShowFieldAndLinkAnnotations { get; set; }
@@ -216,6 +217,14 @@ namespace Excise.Avalonia.Controls
         public long SinglePageHits { get; }
         public long SinglePageMisses { get; }
         public Excise.Avalonia.Controls.PdfViewMode ViewMode { get; }
+    }
+    public sealed class PdfViewerTileBudget
+    {
+        public PdfViewerTileBudget(long byteBudget) { }
+        public long ByteBudget { get; set; }
+        public Excise.Avalonia.Controls.PdfViewerControl? Foreground { get; set; }
+        public long ResidentBytes { get; }
+        public int ViewerCount { get; }
     }
     public readonly struct PdfViewerViewportDiagnostics
     {

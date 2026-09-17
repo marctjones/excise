@@ -109,10 +109,21 @@ public static class PdfPageRedactionExtensions
     /// only annotations on THIS page overlapping THIS box.
     /// </para>
     /// <para>
-    /// Embedded files are NOT dropped: <c>ScrubMetadata(scrubAttachments:
-    /// false)</c>. Attachment removal is a wider promise than this parameter
-    /// makes, and it already has its own home in the shared safe-copy policy
-    /// (<see cref="RedactedCopySafetyPolicy"/>) and under <c>RemoveAllMetadata</c>.
+    /// <b>Embedded files are removed too</b>, every one of them (#1572, the
+    /// 2026-09-17 decision that redacted output carries no attachments). An
+    /// area has no term to test an attachment against, so removal is the only
+    /// safe default. <see cref="RedactionOptions.KeepAttachments"/> keeps them;
+    /// the caller's safety report (<see cref="RedactedCopySafetyPolicy"/>)
+    /// then lists each kept file as not checked unless it has a term to check
+    /// it with. A PDF portfolio is refused rather than stripped
+    /// (<see cref="PdfPortfolioRedactionException"/>), before anything is
+    /// changed. With the bool overload, <paramref name="scrubDocumentCarriers"/>
+    /// also decides whether attachments are removed.
+    /// </para>
+    /// <para>
+    /// <b>XFA.</b> A document with an XFA form loses the whole XFA packet
+    /// (#1547, #1574): its datasets restate the field values and a viewer
+    /// merges them back. The AcroForm fields stay.
     /// </para>
     /// </remarks>
     /// <summary>
@@ -121,13 +132,15 @@ public static class PdfPageRedactionExtensions
     /// concept, so only the geometry-relevant fields
     /// (<see cref="RedactionOptions.Strategy"/>,
     /// <see cref="RedactionOptions.ScrubDocumentCarriers"/>,
-    /// <see cref="RedactionOptions.Width"/>) apply; the rest are RedactText-only.
+    /// <see cref="RedactionOptions.Width"/>,
+    /// <see cref="RedactionOptions.KeepAttachments"/>) apply; the rest are RedactText-only.
     /// </summary>
     public static void RedactArea(this PdfPage page, PdfRectangle area, RedactionOptions options)
     {
         if (options == null) throw new System.ArgumentNullException(nameof(options));
         page.RedactAreaInternal(area, area, options.Strategy,
-            options.ScrubDocumentCarriers, options.CloseWidth);
+            options.ScrubDocumentCarriers, options.CloseWidth,
+            removeAttachments: !options.KeepAttachments);
     }
 
     public static void RedactArea(
@@ -137,7 +150,8 @@ public static class PdfPageRedactionExtensions
         bool scrubDocumentCarriers = true,
         bool closeWidth = false)   // #1145 — opt-in width-closing
     {
-        page.RedactAreaInternal(area, area, strategy, scrubDocumentCarriers, closeWidth);
+        page.RedactAreaInternal(area, area, strategy, scrubDocumentCarriers, closeWidth,
+            removeAttachments: scrubDocumentCarriers);
     }
 
     /// <summary>
@@ -154,12 +168,29 @@ public static class PdfPageRedactionExtensions
         PdfRectangle imageArea,
         GlyphRemovalStrategy strategy,
         bool scrubDocumentCarriers,
-        bool closeWidth)
+        bool closeWidth,
+        bool removeAttachments)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
         area = area.Normalize();
         imageArea = imageArea.Normalize();
+
+        // #1572: refuse a portfolio BEFORE anything changes.
+        if (removeAttachments)
+            Excise.Core.Document.PdfAttachmentGraph.ThrowIfPortfolio(page.Document);
+
+        // #1547/#1574: an XFA packet restates the form's values — every page
+        // of a form excise laid out, and every field of a static form — and
+        // XFA viewers put them back on the page. Redacting the page while that
+        // packet survives would be undone by the next viewer, so it goes
+        // whatever the carrier scope.
+        Excise.Core.Xfa.PdfXfaLayout.RemoveXfaFormForRedaction(page.Document);
+
+        // #1572: an area has no term to test an attachment with, so every
+        // attachment goes (idempotent across the areas of one redaction).
+        if (removeAttachments)
+            RemoveAttachmentsForRedaction(page.Document);
 
         // Positionless document-level carriers (#897). Idempotent — RedactAreas
         // applies it once per rectangle — because the underlying operations are
@@ -258,7 +289,8 @@ public static class PdfPageRedactionExtensions
         if (options == null) throw new System.ArgumentNullException(nameof(options));
         var list = areas.Select(a => a.Normalize()).ToList();
         page.RedactAreasInternal(list, list, options.Strategy,
-            options.ScrubDocumentCarriers, options.CloseWidth);
+            options.ScrubDocumentCarriers, options.CloseWidth,
+            removeAttachments: !options.KeepAttachments);
     }
 
     public static void RedactAreas(
@@ -269,7 +301,8 @@ public static class PdfPageRedactionExtensions
         bool closeWidth = false)   // #1145 — opt-in width-closing
     {
         var list = areas.Select(a => a.Normalize()).ToList();
-        page.RedactAreasInternal(list, list, strategy, scrubDocumentCarriers, closeWidth);
+        page.RedactAreasInternal(list, list, strategy, scrubDocumentCarriers, closeWidth,
+            removeAttachments: scrubDocumentCarriers);
     }
 
     /// <summary>
@@ -285,7 +318,8 @@ public static class PdfPageRedactionExtensions
         System.Collections.Generic.IReadOnlyList<PdfRectangle> imageAreas,
         GlyphRemovalStrategy strategy,
         bool scrubDocumentCarriers,
-        bool closeWidth)
+        bool closeWidth,
+        bool removeAttachments)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
@@ -296,9 +330,15 @@ public static class PdfPageRedactionExtensions
         {
             return page.RedactAreaInternal(
                 list[0], imageList.Count > 0 ? imageList[0] : list[0],
-                strategy, scrubDocumentCarriers, closeWidth);
+                strategy, scrubDocumentCarriers, closeWidth, removeAttachments);
         }
 
+        // #1572/#1547/#1574 — see RedactAreaInternal.
+        if (removeAttachments)
+            Excise.Core.Document.PdfAttachmentGraph.ThrowIfPortfolio(page.Document);
+        Excise.Core.Xfa.PdfXfaLayout.RemoveXfaFormForRedaction(page.Document);
+        if (removeAttachments)
+            RemoveAttachmentsForRedaction(page.Document);
         if (scrubDocumentCarriers)
             page.Document.ScrubMetadataPreservingPdfAIdentity(scrubAttachments: false);   // #1507
         foreach (var area in list)
@@ -349,5 +389,16 @@ public static class PdfPageRedactionExtensions
         ImageRedactor.PruneUnusedImageXObjects(page, working);
         page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
         return imageCounts;
+    }
+
+    /// <summary>
+    /// Remove every attachment and record what went on the document's
+    /// redaction ledger, for the safety report that runs after the areas.
+    /// </summary>
+    internal static void RemoveAttachmentsForRedaction(PdfDocument document)
+    {
+        var removed = Excise.Core.Document.PdfAttachmentGraph.RemoveAll(document);
+        if (removed.Count > 0)
+            document.RedactionLedger.RecordRemovedAttachments(removed);
     }
 }

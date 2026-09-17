@@ -26,9 +26,15 @@ internal sealed class RedactedCopyDialogFormatter
             $"- Embedded files: {FormatEmbeddedFiles(report)}",
             $"- Hidden text audit: {FormatHiddenTextAudit(report)}",
             $"- Raster redaction audit: {FormatRasterRedactionAudit(report)}",
-            string.Empty,
-            "Removed text is not repeated in this report. Open Clipboard History only if you need to review captured selection previews."
         };
+
+        // #1574: the XFA form is removed whole; say so, the form behaves
+        // differently in Acrobat afterwards.
+        foreach (var xfa in report.XfaRemovals ?? Array.Empty<string>())
+            lines.Add($"- XFA form: {xfa}");
+
+        lines.Add(string.Empty);
+        lines.Add("Removed text is not repeated in this report. Open Clipboard History only if you need to review captured selection previews.");
 
         if (report.Warnings.Count > 0)
         {
@@ -80,20 +86,34 @@ internal sealed class RedactedCopyDialogFormatter
         return $"{report.InfoFieldsScrubbed} Info field(s) removed; {xmp}";
     }
 
+    /// <summary>
+    /// #1572: name every file. The count alone used to read "none found" for
+    /// attachments the area pass had already removed, and "1 removed" for a
+    /// document whose page annotation still carried a second one.
+    /// </summary>
     private static string FormatEmbeddedFiles(RedactedCopySafetyReport report)
     {
         if (report.FailedStages.Contains(RedactedCopySafetyFailureStage.AttachmentInspection) ||
-            report.FailedStages.Contains(RedactedCopySafetyFailureStage.AttachmentScrub) ||
-            report.FailedStages.Contains(RedactedCopySafetyFailureStage.MetadataScrub))
+            report.FailedStages.Contains(RedactedCopySafetyFailureStage.AttachmentScrub))
         {
             return "not fully verified; see warnings";
         }
-        if (!report.AttachmentsScrubbed)
-            return "not requested";
 
-        return report.EmbeddedFileCountBefore == 0
+        var files = report.AttachmentResults;
+        if (!report.AttachmentsScrubbed)
+        {
+            if (files.Count == 0)
+                return "kept (the document has none)";
+            var notClean = files.Count(f => !f.IsClean);
+            return $"{files.Count} kept" +
+                   (notClean > 0 ? $", {notClean} NOT checked or not clean — see warnings" : "") +
+                   ": " + string.Join("; ", files);
+        }
+
+        return files.Count == 0
             ? "none found"
-            : $"{report.EmbeddedFileCountBefore} removed";
+            : $"{files.Count} removed: " + string.Join("; ", files.Select(f =>
+                f.SizeBytes is { } size ? $"{f.Name} ({size:N0} bytes)" : f.Name));
     }
 
     private static string FormatHiddenTextAudit(RedactedCopySafetyReport report) =>

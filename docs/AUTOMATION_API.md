@@ -175,6 +175,17 @@ Rules enforced by the batch contract:
   `DECRYPT_CONFIRMATION_REQUIRED` unless `allowDecrypt: true` was supplied,
   because excise could not write encrypted output; that error code no longer
   occurs.)
+- `redaction.apply` removes every attachment from its output by default
+  (#1572, decided 2026-09-17) and lists each one in the step result's
+  `attachments` array (`name`, `sizeBytes`, `location`, `disposition`,
+  `detail`). `keepAttachments: true` keeps them: text attachments have the
+  term cut out (`KeptTermRemoved` / `KeptTermNotFound`), attached PDFs are
+  redacted with the same options, and anything else is `KeptNotChecked` — it
+  may still contain the term, and a `carrierNotes` line says the redaction was
+  not clean. An attached PDF excise cannot open (or one with a password) fails
+  the step with `ATTACHMENT_REFUSED`; a PDF portfolio fails with
+  `PORTFOLIO_REFUSED` unless `keepAttachments: true` (both category
+  `SECURITY`, nothing written).
 - Document `/P` permissions are enforced (#642): `text.extract` and
   `render.page` require the document's copy/extract permission, `form.fillForm`
   requires the form fill-in permission, and `form.addField` requires the modify
@@ -343,6 +354,68 @@ blank tiles are proxies), and driving through the view model is not a user's
 input path — it skips input dispatch and hit testing, and the driving-fidelity
 calibration bounds that residual rather than removing it. There is no gate on
 these numbers: they are absolute footprint on one machine under one load.
+
+### Multi-document scenarios (#1551–#1554)
+
+An optional set, never part of the default run:
+
+```bash
+scripts/run-gui-perf-scenarios.sh --set multi-document --list
+scripts/run-gui-perf-scenarios.sh --set multi-document --repeats 5
+scripts/run-gui-perf-scenarios.sh --scenario multi-tabs-switch
+```
+
+A scenario with a `"set"` runs only under `--set` or when named with
+`--scenario`. Its `"settings"` object is written into that launch's own
+`window.json`, in an isolated `HOME` under `/private/tmp/excise-gui-perf/`
+(never the user's settings, and never under `~/Documents`). That is how
+`multi-tabs-*` get Preferences ▸ Documents ▸ Open Documents In = `NewTab`.
+
+| Scenario | What it checks | Estimated time per launch |
+| --- | --- | --- |
+| `multi-windows-open3` | Three documents in three windows: footprint after each open (marginal cost), 30 s idle with three open, then close one and read the footprint 20 s and 45 s later | ~1.5 min |
+| `multi-tabs-open3` | The same three documents as tabs of one window | ~1.5 min |
+| `multi-tabs-switch` | Page and scroll position must survive each tab switch | ~1.5 min |
+| `multi-quit-dirty` | Quit with two unsaved documents and one clean one: the quit review must ask exactly twice | ~1 min |
+
+The times are estimates (the idle steps plus opens and settles), not
+measurements. Add the Release build on top.
+
+The set adds four steps to the ones above. Every step acts on the active
+document and on the viewer of the window that shows it:
+
+- `openAnother` (`document`, `level`: `window` | `tab`) opens a file from the
+  active document the way File ▸ Open does, so the file lands where the seeded
+  preference sends it. The step fails if the file does not open in a new
+  window or a new tab, as `level` says.
+- `switchDocument` (`count`, default +1) shows the next or previous document.
+  When the window holds several tabs, it runs the Ctrl+Tab command; otherwise
+  it activates the window, as the Window menu does. A document shown before
+  must come back on the same page and scroll offset (within 4 DIP). Its wall
+  time runs until that position is restored.
+- `expectDocuments` (`documents`, `windows`) fails unless that many documents
+  are open in that many windows.
+- `quitReview` (`level`: `discard`, `count`) runs the review that File ▸ Exit
+  runs before quitting. Each unsaved-changes prompt is answered in process,
+  through a view-model hook that only this runner sets, so no dialog appears
+  and nothing is clicked. The step fails unless exactly `count` prompts were
+  answered. It must be the last step, because the harness quits right after it.
+
+Journal rows also record `openDocuments` and `documentWindows`. A scenario can
+declare `"checks"`. A `drop` check compares `metric` between two labelled
+boundaries. The summary prints `DROPPED` when the metric fell by more than the
+floor, and `DID-NOT-DROP` when it did not fall at all. That is how "closing a
+document gives its memory back" is read.
+
+The same comparison against Preview and Acrobat is driven by keystrokes from
+outside the apps, with the same `--multi` flag on both reader benches (#1543,
+#1544). Each bench's docstring describes its set.
+
+```bash
+scripts/reader_bench.py --multi --list          # 4 configs: excise windows/tabs, Preview, Acrobat
+scripts/reader_bench.py --multi --repeats 1     # estimated ~3 min per config
+scripts/reader_speed_bench.py --multi --repeats 1   # estimated ~2 min per config
+```
 
 ## Platform Examples
 

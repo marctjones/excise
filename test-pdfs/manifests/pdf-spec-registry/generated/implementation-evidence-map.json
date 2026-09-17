@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "0f095c341559a111101c33f1483dd7d3eb3fd08179d856ac78068e403fca8f7e",
+  "sourceFingerprint": "ddee153bf0adbd5f2c80738f066e721cc06a19c9292657d96c6bf1a5576ac3aa",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -652,6 +652,29 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Document/AttachmentRedactionResult.cs",
+      "path": "Excise.Core/Document/AttachmentRedactionResult.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Document/NamedDestination.cs",
       "path": "Excise.Core/Document/NamedDestination.cs",
       "kind": "source-file",
@@ -955,6 +978,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Document/PdfAttachmentGraph.cs",
+      "path": "Excise.Core/Document/PdfAttachmentGraph.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Document/PdfDictionaryResolveExtensions.cs",
       "path": "Excise.Core/Document/PdfDictionaryResolveExtensions.cs",
       "kind": "source-file",
@@ -1141,6 +1174,63 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Document/PdfDocumentRedactionLedger.cs",
+      "path": "Excise.Core/Document/PdfDocumentRedactionLedger.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction",
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Document/PdfEmbeddedFile.cs",
       "path": "Excise.Core/Document/PdfEmbeddedFile.cs",
       "kind": "source-file",
@@ -1199,6 +1289,18 @@
           ],
           "mappingSources": [
             "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.attachments",
+          "modes": [
+            "extract",
+            "mutate",
+            "parse",
+            "preserve"
+          ],
+          "mappingSources": [
+            "registry-implementation-owner"
           ]
         }
       ],
@@ -3606,8 +3708,146 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Redaction/AttachmentCarrierScrubber.cs",
+      "path": "Excise.Core/Redaction/AttachmentCarrierScrubber.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Redaction/CarrierScrubPolicy.cs",
       "path": "Excise.Core/Redaction/CarrierScrubPolicy.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/CarrierTextRecovery.Attachments.cs",
+      "path": "Excise.Core/Redaction/CarrierTextRecovery.Attachments.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/CarrierTextRecovery.Forms.cs",
+      "path": "Excise.Core/Redaction/CarrierTextRecovery.Forms.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/CarrierTextRecovery.Leftovers.cs",
+      "path": "Excise.Core/Redaction/CarrierTextRecovery.Leftovers.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/CarrierTextRecovery.Visibility.cs",
+      "path": "Excise.Core/Redaction/CarrierTextRecovery.Visibility.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/CarrierTextRecovery.Xfa.cs",
+      "path": "Excise.Core/Redaction/CarrierTextRecovery.Xfa.cs",
       "kind": "source-file",
       "facets": [
         "redaction"
@@ -5053,6 +5293,72 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Writing/ImageResampler.cs",
+      "path": "Excise.Core/Writing/ImageResampler.cs",
+      "kind": "source-file",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
+      "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
+      "kind": "source-file",
+      "facets": [
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Writing/PdfDocumentSaveLifecycle.cs",
       "path": "Excise.Core/Writing/PdfDocumentSaveLifecycle.cs",
       "kind": "source-file",
@@ -5274,6 +5580,200 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Writing/PdfOptimizationOptions.cs",
+      "path": "Excise.Core/Writing/PdfOptimizationOptions.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/PdfXfaLayout.cs",
+      "path": "Excise.Core/Xfa/PdfXfaLayout.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaBudget.cs",
+      "path": "Excise.Core/Xfa/XfaBudget.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaLayout.cs",
+      "path": "Excise.Core/Xfa/XfaLayout.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaLeaf.cs",
+      "path": "Excise.Core/Xfa/XfaLeaf.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaMeasure.cs",
+      "path": "Excise.Core/Xfa/XfaMeasure.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaMerge.cs",
+      "path": "Excise.Core/Xfa/XfaMerge.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaPackets.cs",
+      "path": "Excise.Core/Xfa/XfaPackets.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaPaginator.cs",
+      "path": "Excise.Core/Xfa/XfaPaginator.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaPdfWriter.cs",
+      "path": "Excise.Core/Xfa/XfaPdfWriter.cs",
+      "kind": "source-file",
+      "facets": [
+        "safe-save-and-metadata"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaReport.cs",
+      "path": "Excise.Core/Xfa/XfaReport.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaRichText.cs",
+      "path": "Excise.Core/Xfa/XfaRichText.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaSom.cs",
+      "path": "Excise.Core/Xfa/XfaSom.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaStyle.cs",
+      "path": "Excise.Core/Xfa/XfaStyle.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaTemplate.cs",
+      "path": "Excise.Core/Xfa/XfaTemplate.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaText.cs",
+      "path": "Excise.Core/Xfa/XfaText.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -6072,6 +6572,28 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering/PdfImageCodecs.cs",
+      "path": "Excise.Rendering/PdfImageCodecs.cs",
+      "kind": "source-file",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering/RawSampleImageDecoder.cs",
       "path": "Excise.Rendering/RawSampleImageDecoder.cs",
       "kind": "source-file",
@@ -6579,6 +7101,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Models/DocumentOpenMode.cs",
+      "path": "Excise.App/Models/DocumentOpenMode.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Models/OutlineNode.cs",
       "path": "Excise.App/Models/OutlineNode.cs",
       "kind": "source-file",
@@ -6771,6 +7303,29 @@
           ],
           "mappingSources": [
             "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/AttachmentFileNames.cs",
+      "path": "Excise.App/Services/AttachmentFileNames.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdfe.product.security.attachments",
+          "modes": [
+            "extract",
+            "mutate",
+            "parse",
+            "preserve"
+          ],
+          "mappingSources": [
+            "registry-implementation-owner"
           ]
         }
       ],
@@ -7164,6 +7719,36 @@
     {
       "id": "Excise.App/Services/Printing/MacPdfKitDocumentPrinter.cs",
       "path": "Excise.App/Services/Printing/MacPdfKitDocumentPrinter.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Printing/PrintPageLayout.cs",
+      "path": "Excise.App/Services/Printing/PrintPageLayout.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Printing/WindowsDocumentPrinter.cs",
+      "path": "Excise.App/Services/Printing/WindowsDocumentPrinter.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Printing/WindowsPrintInterop.cs",
+      "path": "Excise.App/Services/Printing/WindowsPrintInterop.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -7680,6 +8265,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/ViewModels/DocumentTabsViewModel.cs",
+      "path": "Excise.App/ViewModels/DocumentTabsViewModel.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/ViewModels/DocumentViewportSession.cs",
       "path": "Excise.App/ViewModels/DocumentViewportSession.cs",
       "kind": "source-file",
@@ -7896,6 +8491,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/ViewModels/MainWindowViewModel.ReduceFileSize.cs",
+      "path": "Excise.App/ViewModels/MainWindowViewModel.ReduceFileSize.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/ViewModels/MainWindowViewModel.Scripting.cs",
       "path": "Excise.App/ViewModels/MainWindowViewModel.Scripting.cs",
       "kind": "source-file",
@@ -7958,6 +8563,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/ViewModels/MainWindowViewModel.Session.cs",
+      "path": "Excise.App/ViewModels/MainWindowViewModel.Session.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -8248,6 +8863,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/ViewModels/ReduceFileSizeDialogViewModel.cs",
+      "path": "Excise.App/ViewModels/ReduceFileSizeDialogViewModel.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/ViewModels/SaveRedactedVersionDialogViewModel.cs",
       "path": "Excise.App/ViewModels/SaveRedactedVersionDialogViewModel.cs",
       "kind": "source-file",
@@ -8380,31 +9005,18 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.App/Views/AttachmentsDialog.axaml.cs",
-      "path": "Excise.App/Views/AttachmentsDialog.axaml.cs",
+      "id": "Excise.App/Views/BatesNumberingDialog.axaml.cs",
+      "path": "Excise.App/Views/BatesNumberingDialog.axaml.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
       ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdfe.product.security.attachments",
-          "modes": [
-            "extract",
-            "mutate",
-            "parse",
-            "preserve"
-          ],
-          "mappingSources": [
-            "registry-implementation-owner"
-          ]
-        }
-      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
-      "id": "Excise.App/Views/BatesNumberingDialog.axaml.cs",
-      "path": "Excise.App/Views/BatesNumberingDialog.axaml.cs",
+      "id": "Excise.App/Views/DocumentTabStrip.axaml.cs",
+      "path": "Excise.App/Views/DocumentTabStrip.axaml.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -8455,6 +9067,16 @@
     {
       "id": "Excise.App/Views/PreferencesWindow.axaml.cs",
       "path": "Excise.App/Views/PreferencesWindow.axaml.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Views/ReduceFileSizeDialog.axaml.cs",
+      "path": "Excise.App/Views/ReduceFileSizeDialog.axaml.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -8552,6 +9174,96 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Views/WindowNativeMenu.cs",
+      "path": "Excise.App/Views/WindowNativeMenu.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Workspace/DocumentSession.cs",
+      "path": "Excise.App/Workspace/DocumentSession.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Workspace/DocumentSessionFactory.cs",
+      "path": "Excise.App/Workspace/DocumentSessionFactory.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Workspace/DocumentWindowTitle.cs",
+      "path": "Excise.App/Workspace/DocumentWindowTitle.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Workspace/DocumentWorkspace.cs",
+      "path": "Excise.App/Workspace/DocumentWorkspace.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Workspace/FileManagerReveal.cs",
+      "path": "Excise.App/Workspace/FileManagerReveal.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Workspace/IDocumentSessionHost.cs",
+      "path": "Excise.App/Workspace/IDocumentSessionHost.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Workspace/MacWindowTabbing.cs",
+      "path": "Excise.App/Workspace/MacWindowTabbing.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Workspace/SingleInstanceChannel.cs",
+      "path": "Excise.App/Workspace/SingleInstanceChannel.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -8884,6 +9596,26 @@
     {
       "id": "Excise.Cli/Commands/OcrInspectionHandler.cs",
       "path": "Excise.Cli/Commands/OcrInspectionHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/OptimizeCommand.cs",
+      "path": "Excise.Cli/Commands/OptimizeCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/OptimizeCommandHandler.cs",
+      "path": "Excise.Cli/Commands/OptimizeCommandHandler.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -9588,6 +10320,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Avalonia/Controls/PdfViewerTileBudget.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerTileBudget.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Avalonia/Controls/SinglePageRenderLifetime.cs",
       "path": "Excise.Avalonia/Controls/SinglePageRenderLifetime.cs",
       "kind": "source-file",
@@ -9619,17 +10361,17 @@
     }
   ],
   "summary": {
-    "records": 463,
+    "records": 513,
     "facets": {
       "annotations": 11,
       "content-and-graphics": 19,
-      "document-structure": 32,
+      "document-structure": 34,
       "fonts": 30,
       "forms": 9,
-      "images": 30,
-      "product-integration-general": 254,
-      "redaction": 67,
-      "safe-save-and-metadata": 19,
+      "images": 32,
+      "product-integration-general": 292,
+      "redaction": 75,
+      "safe-save-and-metadata": 20,
       "security-and-encryption": 20,
       "transparency": 2
     },
@@ -9638,12 +10380,12 @@
       "pdf.17.content.streams:parse": 19,
       "pdf.17.content.streams:render": 19,
       "pdf.17.content.streams:write": 19,
-      "pdf.17.document.catalog-pages:parse": 32,
-      "pdf.17.document.catalog-pages:preserve": 32,
-      "pdf.17.document.catalog-pages:write": 32,
-      "pdf.17.document.metadata:mutate": 19,
-      "pdf.17.document.metadata:preserve": 19,
-      "pdf.17.document.metadata:write": 19,
+      "pdf.17.document.catalog-pages:parse": 34,
+      "pdf.17.document.catalog-pages:preserve": 34,
+      "pdf.17.document.catalog-pages:write": 34,
+      "pdf.17.document.metadata:mutate": 20,
+      "pdf.17.document.metadata:preserve": 20,
+      "pdf.17.document.metadata:write": 20,
       "pdf.17.graphics.color:parse": 1,
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
@@ -9651,9 +10393,9 @@
       "pdf.17.graphics.fonts:extract": 30,
       "pdf.17.graphics.fonts:parse": 30,
       "pdf.17.graphics.fonts:render": 30,
-      "pdf.17.graphics.images:extract": 30,
-      "pdf.17.graphics.images:parse": 30,
-      "pdf.17.graphics.images:render": 30,
+      "pdf.17.graphics.images:extract": 32,
+      "pdf.17.graphics.images:parse": 32,
+      "pdf.17.graphics.images:render": 32,
       "pdf.17.graphics.paths-painting:author": 2,
       "pdf.17.graphics.paths-painting:mutate": 19,
       "pdf.17.graphics.paths-painting:parse": 19,
@@ -9677,36 +10419,36 @@
       "pdf.17.interactive.redaction-annotations:parse": 11,
       "pdf.17.interactive.redaction-annotations:preserve": 11,
       "pdf.17.interactive.redaction-annotations:render": 11,
-      "pdf.17.security.redaction-content-removal:extract": 67,
-      "pdf.17.security.redaction-content-removal:mutate": 67,
-      "pdf.17.security.redaction-content-removal:render": 67,
-      "pdf.17.security.redaction-content-removal:write": 67,
+      "pdf.17.security.redaction-content-removal:extract": 75,
+      "pdf.17.security.redaction-content-removal:mutate": 75,
+      "pdf.17.security.redaction-content-removal:render": 75,
+      "pdf.17.security.redaction-content-removal:write": 75,
       "pdf.17.syntax.encryption:mutate": 20,
       "pdf.17.syntax.encryption:parse": 20,
       "pdf.17.syntax.encryption:preserve": 20,
       "pdf.17.syntax.encryption:write": 20,
-      "pdf.17.syntax.file:parse": 32,
-      "pdf.17.syntax.file:preserve": 32,
-      "pdf.17.syntax.file:write": 32,
-      "pdf.17.syntax.objects:mutate": 19,
-      "pdf.17.syntax.objects:parse": 32,
-      "pdf.17.syntax.objects:preserve": 48,
-      "pdf.17.syntax.objects:write": 48,
+      "pdf.17.syntax.file:parse": 34,
+      "pdf.17.syntax.file:preserve": 34,
+      "pdf.17.syntax.file:write": 34,
+      "pdf.17.syntax.objects:mutate": 20,
+      "pdf.17.syntax.objects:parse": 34,
+      "pdf.17.syntax.objects:preserve": 51,
+      "pdf.17.syntax.objects:write": 51,
       "pdf.17.transparency.model:parse": 2,
       "pdf.17.transparency.model:render": 2,
-      "pdfe.product.security.attachments:extract": 3,
-      "pdfe.product.security.attachments:mutate": 3,
-      "pdfe.product.security.attachments:parse": 3,
-      "pdfe.product.security.attachments:preserve": 3,
-      "pdfe.product.security.privacy-clean-copy:mutate": 19,
-      "pdfe.product.security.privacy-clean-copy:preserve": 19,
-      "pdfe.product.security.privacy-clean-copy:write": 19,
+      "pdfe.product.security.attachments:extract": 4,
+      "pdfe.product.security.attachments:mutate": 4,
+      "pdfe.product.security.attachments:parse": 4,
+      "pdfe.product.security.attachments:preserve": 4,
+      "pdfe.product.security.privacy-clean-copy:mutate": 20,
+      "pdfe.product.security.privacy-clean-copy:preserve": 20,
+      "pdfe.product.security.privacy-clean-copy:write": 20,
       "pdfe.product.security.signature-and-permission-warning:mutate": 20,
       "pdfe.product.security.signature-and-permission-warning:parse": 20,
       "pdfe.product.security.signature-and-permission-warning:preserve": 20,
       "pdfe.product.security.signature-and-permission-warning:write": 20
     },
-    "fallbackRecords": 254,
+    "fallbackRecords": 292,
     "allRecordsMapped": true
   }
 }

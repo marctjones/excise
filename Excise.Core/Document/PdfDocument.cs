@@ -119,6 +119,15 @@ public partial class PdfDocument : IDisposable
     internal HashSet<int> ComputeReachableObjects()
         => _objectStore.ComputeReachableObjects(Trailer.Values);
 
+    /// <summary>Object numbers the cross-reference table marks in use (snapshot).</summary>
+    internal int[] SnapshotInUseObjectNumbers() => _objectStore.SnapshotInUseObjectNumbers();
+
+    /// <summary>
+    /// The bytes this document was opened from, or null (not seekable, created
+    /// in memory, or larger than <paramref name="maxBytes"/>).
+    /// </summary>
+    internal byte[]? TryReadSourceBytes(long maxBytes) => _objectStore.TryReadSourceBytes(maxBytes);
+
     /// <summary>
     /// Every indirect object in the file, whether or not anything references
     /// it. Used by the de-redaction audit (#1608): an editor that "redacts" an
@@ -719,30 +728,53 @@ public partial class PdfDocument : IDisposable
     }
 
     /// <summary>
-    /// Remove all embedded files from this document.
-    /// Removes the /Catalog/Names/EmbeddedFiles entry and /Catalog/AF arrays if present.
-    /// The embedded-file stream objects remain in the file until the next save rewrites
-    /// the xref; they become unreferenced and the writer drops them.
-    /// This operation is idempotent (safe to call multiple times).
-    ///
-    /// This is critical for redaction security when dealing with hybrid documents like
-    /// ZUGFeRD e-invoices (bundled XML) or legal exhibit packages (source documents).
-    /// After content-level redaction removes glyphs from the visible pages, ScrubEmbeddedFiles
-    /// ensures the data is not also present in the attachment tree.
-    ///
-    /// The change is applied to the in-memory document; call Save afterwards to persist.
+    /// Remove every embedded file from this document (#467, #1572). Idempotent.
     /// </summary>
-    public void ScrubEmbeddedFiles()
+    /// <remarks>
+    /// <para>Covers every route an embedded file reaches a reader by: the
+    /// <c>/Catalog/Names/EmbeddedFiles</c> name tree, the catalog's and each
+    /// page's and annotation's <c>/AF</c> arrays, <c>/FileAttachment</c>,
+    /// RichMedia and Sound annotations (removed from the page), Screen and
+    /// Movie annotations whose media is embedded, and any other file
+    /// specification with an <c>/EF</c> entry (actions, form XObjects,
+    /// structure elements), whose embedded stream is detached in place.</para>
+    /// <para>Until #1572 this removed only the two catalog entries, so a file
+    /// attached through a page annotation survived a redacted copy that
+    /// reported "attachments scrubbed".</para>
+    /// <para>The change is applied to the in-memory document; call Save
+    /// afterwards to persist. The writer saves only objects reachable from the
+    /// catalog, so the detached streams are not written.</para>
+    /// </remarks>
+    public void ScrubEmbeddedFiles() => RemoveAllAttachments();
+
+    /// <summary>
+    /// <see cref="ScrubEmbeddedFiles"/>, returning each file it removed with
+    /// its name, size and where it was attached (#1572).
+    /// </summary>
+    public IReadOnlyList<AttachmentRedactionResult> RemoveAllAttachments()
+        => PdfAttachmentGraph.RemoveAll(this);
+
+    /// <summary>
+    /// <see cref="ScrubEmbeddedFiles"/>, returning what it removed and an
+    /// action that puts back exactly what it changed — the GUI's undo for
+    /// "Remove All Attachments" (#1563).
+    /// </summary>
+    /// <remarks>
+    /// The restore re-attaches the same in-memory objects the scrub detached,
+    /// so it is only valid on this document instance and before anything else
+    /// rewrites the dictionaries and arrays it touched; the GUI clears its undo
+    /// history on every save, open and close, which keeps it inside that window.
+    /// </remarks>
+    internal (IReadOnlyList<AttachmentRedactionResult> Removed, Action Restore) ScrubEmbeddedFilesReversibly()
     {
-        // Remove modern PDF 2.0: /Catalog/Names/EmbeddedFiles
-        var namesObj = Catalog.GetOptional("Names");
-        if (namesObj != null && Resolve(namesObj) is PdfDictionary namesDict)
-            namesDict.Remove("EmbeddedFiles");
-
-        // Remove legacy: /Catalog/AF
-        Catalog.Remove("AF");
-
-        InvalidateDerivedState(PdfDocumentDerivedStateScope.Attachments);
+        var undo = new List<Action>();
+        var removed = PdfAttachmentGraph.RemoveAll(this, undo);
+        return (removed, () =>
+        {
+            for (var i = undo.Count - 1; i >= 0; i--)
+                undo[i]();
+            InvalidateDerivedState(PdfDocumentDerivedStateScope.Attachments);
+        });
     }
 
     /// <summary>
@@ -774,7 +806,7 @@ public partial class PdfDocument : IDisposable
     /// to persist.
     ///
     /// <param name="scrubAttachments">If true (default), also calls ScrubEmbeddedFiles
-    /// to remove embedded files. For backwards compatibility, defaults to true.</param>
+    /// to remove every embedded file (#1572). For backwards compatibility, defaults to true.</param>
     /// </summary>
     public void ScrubMetadata(bool scrubAttachments = true)
     {

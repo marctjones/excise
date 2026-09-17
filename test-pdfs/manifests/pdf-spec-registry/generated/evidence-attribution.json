@@ -11094,6 +11094,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11113,6 +11120,20 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -11362,6 +11383,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.Save_IsAllowed_WhenOnlyOtherPermissionsAreRestricted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DialogInputInteractionTests.cs::DialogInputInteractionTests.SecurityDialog_TypedPasswordsAndChosenAlgorithm_AreCarriedToTheApplyDelegate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11541,42 +11569,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.BlankFieldsThenApplyClick_OnEncryptedDocument_ReEncrypts_DoesNotStripProtection",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionClick_OnEncryptedDocument_InvokesOnlyTheRemovalDelegate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.WrongCurrentPasswordThenApplyClick_ShowsErrorInTheWindow",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -12572,6 +12564,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12591,6 +12590,20 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -12840,6 +12853,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.Save_IsAllowed_WhenOnlyOtherPermissionsAreRestricted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DialogInputInteractionTests.cs::DialogInputInteractionTests.SecurityDialog_TypedPasswordsAndChosenAlgorithm_AreCarriedToTheApplyDelegate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -13019,42 +13039,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.BlankFieldsThenApplyClick_OnEncryptedDocument_ReEncrypts_DoesNotStripProtection",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionClick_OnEncryptedDocument_InvokesOnlyTheRemovalDelegate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.WrongCurrentPasswordThenApplyClick_ShowsErrorInTheWindow",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -14043,6 +14027,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14062,6 +14053,20 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -14311,6 +14316,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.Save_IsAllowed_WhenOnlyOtherPermissionsAreRestricted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DialogInputInteractionTests.cs::DialogInputInteractionTests.SecurityDialog_TypedPasswordsAndChosenAlgorithm_AreCarriedToTheApplyDelegate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14490,42 +14502,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.BlankFieldsThenApplyClick_OnEncryptedDocument_ReEncrypts_DoesNotStripProtection",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionClick_OnEncryptedDocument_InvokesOnlyTheRemovalDelegate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.WrongCurrentPasswordThenApplyClick_ShowsErrorInTheWindow",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -15515,6 +15491,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15534,6 +15517,20 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -15783,6 +15780,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.Save_IsAllowed_WhenOnlyOtherPermissionsAreRestricted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DialogInputInteractionTests.cs::DialogInputInteractionTests.SecurityDialog_TypedPasswordsAndChosenAlgorithm_AreCarriedToTheApplyDelegate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15962,42 +15966,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.BlankFieldsThenApplyClick_OnEncryptedDocument_ReEncrypts_DoesNotStripProtection",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionClick_OnEncryptedDocument_InvokesOnlyTheRemovalDelegate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.WrongCurrentPasswordThenApplyClick_ShowsErrorInTheWindow",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81503,6 +81471,20 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/AttachmentRemovalOracleTests.cs::AttachmentRemovalOracleTests.EveryRedactionFlow_RemovesPageAndDocumentAttachments_AsPopplerAndQpdfSeeIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AttachmentRemovalOracleTests.cs::AttachmentRemovalOracleTests.Issue1582_NameTreeKey_PageAf_AndNestedPdf_AreClean_AsQpdfAndMutoolSeeIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs::BlankPageRecoveryTests.PageThatRenderedBlank_NowInksWithinBandOfTheOracles",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81528,6 +81510,27 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CarrierTrapExciseRedactionSurveyTests.cs::CarrierTrapExciseRedactionSurveyTests.Survey_ExciseRedactText_OverEveryCarrierTrap",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CarrierTrapIndependentCorroborationTests.cs::CarrierTrapIndependentCorroborationTests.ExciseFinding_IsCorroboratedByQpdfAndMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CarrierTrapIndependentCorroborationTests.cs::CarrierTrapIndependentCorroborationTests.CleanControl_IsValidAndHasTheRevisionTheScanMustIgnore",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Rendering.Tests/Differential/CcittEndOfBlockTests.cs::CcittEndOfBlockTests.TheOnlyCorpusFileSettingEndOfBlock_RendersAtOracleParity",
@@ -82158,51 +82161,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Pdftoppm_UserPasswordOnly_NoPasswordProducesNoRendering",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_PermissionsMask_ReportedSemanticallyExactlyAsSet",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Ghostscript_CorrectUserPassword_RendersIdenticallyToPlainBaseline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Ghostscript_WrongPassword_ProducesNoRendering",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::doc.Ghostscript_NoPassword_ProducesNoRendering",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::doc.Pdftoppm_CorrectUserPassword_RendersIdenticallyToPlainBaseline",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -83471,6 +83429,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.GetEmbeddedFiles_ReportsThePageOfAnAnnotationAttachment_AndNoPageForADocumentOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfLinkTests.cs::PdfLinkTests.Parse_PageWithNoAnnots_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -83670,15 +83635,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -84941,6 +84897,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.GetEmbeddedFiles_ReportsThePageOfAnAnnotationAttachment_AndNoPageForADocumentOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfLinkTests.cs::PdfLinkTests.Parse_PageWithNoAnnots_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -85140,15 +85103,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -86411,6 +86365,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.GetEmbeddedFiles_ReportsThePageOfAnAnnotationAttachment_AndNoPageForADocumentOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfLinkTests.cs::PdfLinkTests.Parse_PageWithNoAnnots_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -86610,15 +86571,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -87897,6 +87849,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.GetEmbeddedFiles_ReportsThePageOfAnAnnotationAttachment_AndNoPageForADocumentOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfLinkTests.cs::PdfLinkTests.Parse_PageWithNoAnnots_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -88096,15 +88055,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -89504,6 +89454,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.GetEmbeddedFiles_ReportsThePageOfAnAnnotationAttachment_AndNoPageForADocumentOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfLinkTests.cs::PdfLinkTests.Parse_PageWithNoAnnots_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -89701,15 +89658,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -90965,6 +90913,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.GetEmbeddedFiles_ReportsThePageOfAnAnnotationAttachment_AndNoPageForADocumentOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfLinkTests.cs::PdfLinkTests.Parse_PageWithNoAnnots_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -91162,15 +91117,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -92419,6 +92365,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.GetEmbeddedFiles_ReportsThePageOfAnAnnotationAttachment_AndNoPageForADocumentOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfLinkTests.cs::PdfLinkTests.Parse_PageWithNoAnnots_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -92616,15 +92569,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -93873,6 +93817,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.GetEmbeddedFiles_ReportsThePageOfAnAnnotationAttachment_AndNoPageForADocumentOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfLinkTests.cs::PdfLinkTests.Parse_PageWithNoAnnots_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94070,15 +94021,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [],
@@ -94896,6 +94838,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFilesReversibly_RestoreBringsBackTheSameFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_IsIdempotent",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95181,13 +95130,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesFormFromXfaCarrierValues",
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
@@ -95245,6 +95192,41 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.ABarDrawnWithNoColourOperator_IsAMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.TextUnderABarDrawnWithNoColourOperator_IsReportedHidden",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.TheWholeScan_RecoversIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.AnExplicitlyWhiteBar_IsStillNotAMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.NoBarAtAll_IsStillNoMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.PriorRevision_RecoversTextTheCurrentRevisionRemoved",
@@ -95577,48 +95559,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheMarkRectangle_ContainsWhereMuPdfSeesTheGlyphs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.FormFieldRecovery_ReportsAValueAReaderWillRePaintOntoThePage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.MarkWithNoFinding_IsReportedAsNotRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CertainFindingCoveringTheMark_GradesRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CertainFindingCoveringPartOfTheMark_GradesPartial",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CandidateOnly_NeverGradesRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96246,6 +96186,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFilesReversibly_RestoreBringsBackTheSameFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_IsIdempotent",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96531,13 +96478,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesFormFromXfaCarrierValues",
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
@@ -96595,6 +96540,41 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.ABarDrawnWithNoColourOperator_IsAMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.TextUnderABarDrawnWithNoColourOperator_IsReportedHidden",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.TheWholeScan_RecoversIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.AnExplicitlyWhiteBar_IsStillNotAMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.NoBarAtAll_IsStillNoMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.PriorRevision_RecoversTextTheCurrentRevisionRemoved",
@@ -96927,48 +96907,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheMarkRectangle_ContainsWhereMuPdfSeesTheGlyphs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.FormFieldRecovery_ReportsAValueAReaderWillRePaintOntoThePage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.MarkWithNoFinding_IsReportedAsNotRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CertainFindingCoveringTheMark_GradesRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CertainFindingCoveringPartOfTheMark_GradesPartial",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CandidateOnly_NeverGradesRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97610,6 +97548,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFilesReversibly_RestoreBringsBackTheSameFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_IsIdempotent",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97895,13 +97840,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesFormFromXfaCarrierValues",
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
@@ -97959,6 +97902,41 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.ABarDrawnWithNoColourOperator_IsAMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.TextUnderABarDrawnWithNoColourOperator_IsReportedHidden",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.TheWholeScan_RecoversIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.AnExplicitlyWhiteBar_IsStillNotAMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.NoBarAtAll_IsStillNoMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.PriorRevision_RecoversTextTheCurrentRevisionRemoved",
@@ -98291,48 +98269,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheMarkRectangle_ContainsWhereMuPdfSeesTheGlyphs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.FormFieldRecovery_ReportsAValueAReaderWillRePaintOntoThePage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.MarkWithNoFinding_IsReportedAsNotRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CertainFindingCoveringTheMark_GradesRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CertainFindingCoveringPartOfTheMark_GradesPartial",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CandidateOnly_NeverGradesRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99000,6 +98936,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFilesReversibly_RestoreBringsBackTheSameFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_IsIdempotent",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -99285,13 +99228,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesFormFromXfaCarrierValues",
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
@@ -99349,6 +99290,41 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.ABarDrawnWithNoColourOperator_IsAMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.TextUnderABarDrawnWithNoColourOperator_IsReportedHidden",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.TheWholeScan_RecoversIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.AnExplicitlyWhiteBar_IsStillNotAMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.NoBarAtAll_IsStillNoMark",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.PriorRevision_RecoversTextTheCurrentRevisionRemoved",
@@ -99681,48 +99657,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheMarkRectangle_ContainsWhereMuPdfSeesTheGlyphs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.FormFieldRecovery_ReportsAValueAReaderWillRePaintOntoThePage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.MarkWithNoFinding_IsReportedAsNotRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CertainFindingCoveringTheMark_GradesRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CertainFindingCoveringPartOfTheMark_GradesPartial",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryReportBuilderTests.cs::RecoveryReportBuilderTests.CandidateOnly_NeverGradesRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -101140,6 +101074,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -101203,15 +101144,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.ParentFieldNameAndTooltip_AreScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -102616,6 +102548,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -102679,15 +102618,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.ParentFieldNameAndTooltip_AreScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104113,6 +104043,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104176,15 +104113,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.ParentFieldNameAndTooltip_AreScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -105550,6 +105478,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithFormFields_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -105613,15 +105548,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.ParentFieldNameAndTooltip_AreScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -109345,13 +109271,11 @@
           ]
         },
         {
-          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.SaveAttachment_WritesTheOriginalBytesToDisk",
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.SaveAttachment_WritesTheExactDecodedBytes_ForBothCarriers",
           "mappingSources": [
             "registry-verification-contract"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -109364,14 +109288,12 @@
         },
         {
           "kind": "unit",
-          "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::SaveAttachment_WritesTheOriginalBytesToDisk",
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::SaveAttachment_WritesTheExactDecodedBytes_ForBothCarriers",
+          "recordedOutcomes": []
         }
       ],
-      "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "explicitContractStatus": "partial-or-failing",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -110384,6 +110306,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -110403,6 +110332,20 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -110652,6 +110595,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.Save_IsAllowed_WhenOnlyOtherPermissionsAreRestricted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DialogInputInteractionTests.cs::DialogInputInteractionTests.SecurityDialog_TypedPasswordsAndChosenAlgorithm_AreCarriedToTheApplyDelegate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -110831,42 +110781,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.BlankFieldsThenApplyClick_OnEncryptedDocument_ReEncrypts_DoesNotStripProtection",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionClick_OnEncryptedDocument_InvokesOnlyTheRemovalDelegate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.WrongCurrentPasswordThenApplyClick_ShowsErrorInTheWindow",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -111870,6 +111784,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -111889,6 +111810,20 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112138,6 +112073,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.Save_IsAllowed_WhenOnlyOtherPermissionsAreRestricted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DialogInputInteractionTests.cs::DialogInputInteractionTests.SecurityDialog_TypedPasswordsAndChosenAlgorithm_AreCarriedToTheApplyDelegate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -112317,42 +112259,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.BlankFieldsThenApplyClick_OnEncryptedDocument_ReEncrypts_DoesNotStripProtection",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionClick_OnEncryptedDocument_InvokesOnlyTheRemovalDelegate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.WrongCurrentPasswordThenApplyClick_ShowsErrorInTheWindow",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113333,6 +113239,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_APasswordProtectedNestedPdf_IsRefused_AndNothingChanges",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -113352,6 +113265,20 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113601,6 +113528,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.Save_IsAllowed_WhenOnlyOtherPermissionsAreRestricted",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DialogInputInteractionTests.cs::DialogInputInteractionTests.SecurityDialog_TypedPasswordsAndChosenAlgorithm_AreCarriedToTheApplyDelegate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -113786,42 +113720,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionButton_IsHiddenOnUnencryptedDocuments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.BlankFieldsThenApplyClick_OnEncryptedDocument_ReEncrypts_DoesNotStripProtection",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.RemoveProtectionClick_OnEncryptedDocument_InvokesOnlyTheRemovalDelegate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.WrongCurrentPasswordThenApplyClick_ShowsErrorInTheWindow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [],
@@ -113883,13 +113781,13 @@
     "targetModes": 899,
     "modesWithTestCandidates": 647,
     "modesWithExplicitContracts": 882,
-    "modesWithPassingExplicitContracts": 877,
+    "modesWithPassingExplicitContracts": 876,
     "modesWithRecordedPassingCandidate": 646,
-    "gradeImplemented": 199,
+    "gradeImplemented": 198,
     "gradeVerified": 681,
-    "gradeUnknown": 19,
-    "testMethods": 7195,
-    "testMethodsWithCapabilityCandidate": 4503,
+    "gradeUnknown": 20,
+    "testMethods": 7472,
+    "testMethodsWithCapabilityCandidate": 4619,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

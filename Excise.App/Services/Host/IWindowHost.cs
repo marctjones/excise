@@ -38,7 +38,7 @@ namespace Excise.App.Services.Host;
 /// behaviour.
 /// </description></item>
 /// <item><description>
-/// <c>ShowDialogAsync</c>. The Attachments/Bates/Security/Searchable/
+/// <c>ShowDialogAsync</c>. The Bates/Security/Searchable/
 /// Preferences/About dialogs still call <c>GetMainWindow()</c> and
 /// <c>ShowDialog(owner)</c> themselves; folding those into this interface is
 /// the design's step 12, and adding an unused member now would be

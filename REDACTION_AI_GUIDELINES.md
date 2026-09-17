@@ -55,6 +55,8 @@ Removal applies to **every** way content can land in the redaction area, not jus
 | Named image XObjects (`Do` → `/Image`) | Drop the `Do` | `ImageRedactor` |
 | **Inline images (`BI…ID…EI`)** | Drop the whole operator incl. embedded bytes (#354) | `ImageRedactor` |
 | **Form XObjects (`Do` → `/Form`)** | Flatten-then-redact (#355) | `FormXObjectFlattener` |
+| **Embedded files, every route** | Removed by default on every entry point; kept only on request, then redacted or reported (#1572) | `AttachmentCarrierScrubber` |
+| **XFA form (`/AcroForm /XFA`)** | Removed whole on any redaction (#1547, #1574) | `PdfXfaLayout.RemoveXfaFormForRedaction` |
 
 **Inline images (#354):** the parser now retains the binary data on
 `ContentOperator.InlineImageData` and `ContentStreamWriter` re-emits valid

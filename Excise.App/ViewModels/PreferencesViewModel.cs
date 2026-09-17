@@ -23,6 +23,7 @@ public class PreferencesViewModel : ViewModelBase
     private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
         Excise.Core.Operations.CarrierScrubMode.Strip;
     private bool _redactionWholeWord;
+    private bool _redactionKeepAttachments;
     private Excise.App.Services.Printing.PrintScalingMode _printScaling =
         Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
     private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
@@ -48,6 +49,25 @@ public class PreferencesViewModel : ViewModelBase
         CancelCommand = ReactiveCommand.Create(Cancel);
         ResetToDefaultsCommand = ReactiveCommand.Create(ResetToDefaults);
         SetPerformanceFields(PerformanceSettings.Balanced);
+    }
+
+    // ── Documents (#1463) ────────────────────────────────────────────────────
+
+    private DocumentOpenMode _documentOpenMode = DocumentOpenMode.Automatic;
+
+    /// <summary>Where a document opens when the window already shows one.</summary>
+    public DocumentOpenMode[] DocumentOpenModeOptions { get; } =
+    [
+        DocumentOpenMode.Automatic,
+        DocumentOpenMode.NewWindow,
+        DocumentOpenMode.NewTab,
+        DocumentOpenMode.ReplaceCurrent,
+    ];
+
+    public DocumentOpenMode SelectedDocumentOpenMode
+    {
+        get => _documentOpenMode;
+        set => this.RaiseAndSetIfChanged(ref _documentOpenMode, value);
     }
 
     // ── Performance ──────────────────────────────────────────────────────────
@@ -296,6 +316,13 @@ public class PreferencesViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _redactionWholeWord, value);
     }
 
+    /// <summary>Keep attachments in redacted copies (#1572).</summary>
+    public bool RedactionKeepAttachments
+    {
+        get => _redactionKeepAttachments;
+        set => this.RaiseAndSetIfChanged(ref _redactionKeepAttachments, value);
+    }
+
     // Redaction width / box policy (#1189). AOT-safe Enum.GetValues<T>().
     public Excise.Core.Text.Segmentation.WidthPolicy[] WidthPolicyOptions { get; } =
         System.Enum.GetValues<Excise.Core.Text.Segmentation.WidthPolicy>();
@@ -356,9 +383,11 @@ public class PreferencesViewModel : ViewModelBase
         SelectedLinkUriCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
         SelectedMetadataCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
         RedactionWholeWord = false;
+        RedactionKeepAttachments = false;
         SelectedRedactionWidthPolicy = Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
         SelectedPrintScaling = Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
         SetPerformanceFields(PerformanceSettings.Balanced);
+        SelectedDocumentOpenMode = DocumentOpenMode.Automatic;
     }
 
     private void CloseWindow()
@@ -373,10 +402,12 @@ public class PreferencesViewModel : ViewModelBase
         SelectedLinkUriCarrierPolicy = mainViewModel.LinkUriCarrierPolicy;
         SelectedMetadataCarrierPolicy = mainViewModel.MetadataCarrierPolicy;
         RedactionWholeWord = mainViewModel.RedactionWholeWord;
+        RedactionKeepAttachments = mainViewModel.RedactionKeepAttachments;
         SelectedRedactionWidthPolicy = mainViewModel.RedactionWidthPolicy;
         SelectedPrintScaling = mainViewModel.PrintScaling;
         SetPerformanceFields(mainViewModel.PerformanceSettings);
         TileCacheBytesSource = mainViewModel.ViewerTileCacheResidentBytesProvider;
+        SelectedDocumentOpenMode = mainViewModel.DocumentOpenMode;
     }
 
     public void SaveToMainViewModel(MainWindowViewModel mainViewModel)
@@ -386,8 +417,10 @@ public class PreferencesViewModel : ViewModelBase
         mainViewModel.LinkUriCarrierPolicy = SelectedLinkUriCarrierPolicy;
         mainViewModel.MetadataCarrierPolicy = SelectedMetadataCarrierPolicy;
         mainViewModel.RedactionWholeWord = RedactionWholeWord;
+        mainViewModel.RedactionKeepAttachments = RedactionKeepAttachments;
         mainViewModel.RedactionWidthPolicy = SelectedRedactionWidthPolicy;
         mainViewModel.PrintScaling = SelectedPrintScaling;
         mainViewModel.ApplyPerformanceSettings(BuildPerformanceSettings());
+        mainViewModel.DocumentOpenMode = SelectedDocumentOpenMode;
     }
 }

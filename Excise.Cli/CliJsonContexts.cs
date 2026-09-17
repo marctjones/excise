@@ -35,6 +35,7 @@ namespace Excise.Cli;
 [JsonSerializable(typeof(RenderCommand.RenderPageJsonReport))]
 [JsonSerializable(typeof(TextCommand.TextInspectionJsonReport))]
 [JsonSerializable(typeof(UnredactReport))]
+[JsonSerializable(typeof(OptimizeCommand.OptimizeJsonReport))]
 [JsonSerializable(typeof(Program.AutomationBatchReport))]
 [JsonSerializable(typeof(Program.AutomationBatchWorkflow))]
 [JsonSerializable(typeof(Program.InfoStepResult))]

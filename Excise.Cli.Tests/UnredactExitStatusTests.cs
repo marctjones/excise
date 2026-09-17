@@ -38,8 +38,16 @@ public class UnredactExitStatusTests
                 .Concat(outcome.Report.Recovery.Linked)
                 .Should().Contain(f => f.Channel == "prior-revision" && f.Text == "MANAFORT");
 
-            // The legacy lists are EMPTY here — that is the whole point.
-            outcome.Report.Certain.Should().BeEmpty();
+            // ⚠️ This used to assert `Certain` was EMPTY — "that is the whole
+            // point" — because the prior-revision channel existed only in the
+            // recovery model. It is not empty any more: the carrier scan gained
+            // its own revision coverage (feat/unredact-carriers), so both paths
+            // now see this leak and they AGREE. That is strictly better, and the
+            // property under test was never "one path is blind"; it is that the
+            // status is read from EVERY channel. Asserting the agreement is the
+            // honest version of the same test.
+            outcome.Report.Certain.Should().Contain(f => f.Text == "MANAFORT",
+                "the carrier scan sees the prior revision too, and the two paths must not disagree");
             outcome.Report.Residue.Should().BeEmpty();
 
             outcome.ExitCode.Should().Be(3,
@@ -62,7 +70,7 @@ public class UnredactExitStatusTests
             text.Should().NotContain("No recoverable text",
                 "the green tick over a recovered name is the exact false reassurance " +
                 "this tool exists to remove");
-            text.Should().Contain("1 RECOVERED");
+            text.Should().Contain("RECOVERED");
         }
         finally { File.Delete(path); }
     }

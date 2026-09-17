@@ -100,6 +100,15 @@ public sealed record RedactedCopySafetyOptions
     public bool RefuseOnUnresolvedRedactAnnotations { get; init; } = true;
 
     /// <summary>
+    /// When <see cref="ScrubAttachments"/> is false, redact or report every
+    /// attachment the copy keeps (#1572): text files have the terms cut out,
+    /// nested PDFs are redacted, anything else — and everything when there is
+    /// no term — is reported as not checked. On by default; a caller that
+    /// already did this (the CLI, after <c>RedactText</c>) turns it off.
+    /// </summary>
+    public bool InspectKeptAttachments { get; init; } = true;
+
+    /// <summary>
     /// Per-carrier scrub MODE for the <see cref="ScrubRequestedTerms"/> pass
     /// (#1188/#1169). Default: <see cref="Operations.CarrierScrubMode.Strip"/>
     /// everywhere, unchanged from before the option existed.
@@ -176,6 +185,10 @@ public sealed record RedactedCopySafetyReport(
     int InfoFieldsScrubbed,
     bool HadXmpMetadata,
     bool AttachmentsScrubbed,
+    // Since #1572: the number of attachments this redaction REMOVED, including
+    // those the area pass removed before this report ran. (The name predates
+    // that; before, it counted what the scrub could see, which missed page
+    // annotation attachments and anything the area pass had already taken.)
     int EmbeddedFileCountBefore,
     RedactedContentVerificationStatus HiddenTextAuditStatus,
     int HiddenTextFindingCount,
@@ -191,10 +204,19 @@ public sealed record RedactedCopySafetyReport(
     // overstating what happened, since a small packet survives by design
     // because PDF/A conformance requires it. Overstating a scrub is the same
     // class of problem as a carrier that silently keeps a term.
-    bool PdfAIdentificationPreserved = false)
+    bool PdfAIdentificationPreserved = false,
+    // #1572 — every attachment removed or kept, with name and size.
+    IReadOnlyList<AttachmentRedactionResult>? Attachments = null,
+    // #1574 — the XFA form(s) the redaction removed whole, as carrier rows.
+    IReadOnlyList<string>? XfaRemovals = null)
 {
+    /// <summary>Attachments removed or kept (#1572); never null.</summary>
+    public IReadOnlyList<AttachmentRedactionResult> AttachmentResults =>
+        Attachments ?? System.Array.Empty<AttachmentRedactionResult>();
+
     public bool HasWarnings =>
         Warnings.Count > 0 ||
+        AttachmentResults.Any(a => !a.IsClean) ||
         FailedStages.Count > 0 ||
         ContentVerificationStatus == RedactedContentVerificationStatus.Warning ||
         HiddenTextAuditStatus == RedactedContentVerificationStatus.Warning ||

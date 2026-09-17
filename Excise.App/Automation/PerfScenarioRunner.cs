@@ -258,6 +258,27 @@ internal static class PerfScenarioRunner
                     ? null
                     : "trim request refused (pressure trims disabled in Preferences → Performance)";
 
+            case PerfStepOp.OpenAnother:
+                await target.OpenAnotherAsync(
+                        options.ResolveDocument(step.Document!), step.Level!.ToLowerInvariant(), cancellationToken)
+                    .ConfigureAwait(true);
+                return null;
+
+            case PerfStepOp.SwitchDocument:
+                await target.SwitchDocumentAsync(step.Count ?? 1, cancellationToken).ConfigureAwait(true);
+                return null;
+
+            case PerfStepOp.ExpectDocuments:
+                return target.DescribeDocumentMismatch(step.Documents, step.Windows);
+
+            case PerfStepOp.QuitReview:
+            {
+                var answered = await target.ReviewUnsavedChangesForQuitAsync(cancellationToken).ConfigureAwait(true);
+                return answered == step.Count
+                    ? null
+                    : $"answered {answered} unsaved-changes prompt(s), expected {step.Count}";
+            }
+
             default:
                 return $"unhandled op {step.Op}";
         }

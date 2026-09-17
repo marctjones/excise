@@ -8,6 +8,7 @@ using Excise.Core.Document;
 using Excise.Core.Redaction.Recovery;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 using Row = Excise.Rendering.Tests.Differential.UnredactionScorecard.Row;
 
@@ -219,5 +220,66 @@ public class UnredactionScorecardTests
                 if (!double.IsNaN(best))
                     ex.Should().BeGreaterThanOrEqualTo(best,
                         $"excise must recover at least what x-ray does on {ch}/{st}");
+    }
+
+    /// <summary>
+    /// The CARRIER channel: one stratum per <see cref="CarrierTrapFixtures"/>
+    /// trap, excise's certain channel against the strongest generic adversary
+    /// that is not excise — every string and decoded stream in qpdf's object
+    /// dump. excise must recover at least what the dump does on every stratum
+    /// where recovery means text; where it leads (a superseded revision, a PDF
+    /// inside an attachment) the dump cannot see the carrier at all.
+    /// </summary>
+    [Fact]
+    public void CarrierTraps_ExciseCertainChannel_LeadsTheQpdfObjectDump()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf is the carrier-channel reference (brew install qpdf)");
+
+        var dir = Path.Combine(Path.GetTempPath(), $"unredact-scorecard-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
+        var rows = new List<Row>();
+        var presenceOnly = new HashSet<string>(StringComparer.Ordinal);
+        try
+        {
+            foreach (var trap in CarrierTrapFixtures.All)
+            {
+                var bytes = trap.Build(false);
+                var path = Path.Combine(dir, trap.Id + ".pdf");
+                File.WriteAllBytes(path, bytes);
+
+                bool exciseGot;
+                using (var doc = PdfDocument.Open(bytes))
+                    exciseGot = CarrierTextRecovery.Scan(doc, TestContext.Current.CancellationToken)
+                        .Any(f => f.Kind == CarrierTextRecovery.CarrierFindingKind.Text
+                                  && f.Text.Contains(trap.Token, StringComparison.Ordinal));
+                var qpdfGot = CarrierTrapIndependentCorroborationTests.QpdfDump(path)
+                    .Contains(trap.Token, StringComparison.Ordinal);
+
+                if (trap.Oracle == CarrierTrapFixtures.Oracle.PresenceOnly) presenceOnly.Add(trap.Id);
+                rows.Add(new Row("carrier", trap.Id, "excise", exciseGot));
+                rows.Add(new Row("carrier", trap.Id, "qpdf-dump", qpdfGot));
+            }
+        }
+        finally
+        {
+            try { Directory.Delete(dir, recursive: true); } catch (IOException) { }
+        }
+
+        var grades = UnredactionScorecard.Score(rows);
+        _out.WriteLine(UnredactionScorecard.Render(grades, new UnredactionScorecard.Coverage(
+            Channels: new[] { "carrier" },
+            Tools: new[] { "excise", "qpdf-dump" },
+            MissingReferences: new[]
+            {
+                $"presence-only strata ({string.Join(", ", presenceOnly.OrderBy(x => x))}): excise REPORTS the content " +
+                "as present and does not decode it, so its text recall there is 0 by design",
+            })));
+
+        foreach (var (ch, st, ex, best, who) in UnredactionScorecard.ExciseVsBestReference(grades))
+        {
+            if (presenceOnly.Contains(st) || double.IsNaN(best)) continue;
+            ex.Should().BeGreaterThanOrEqualTo(best, $"excise must recover at least what {who} does on {ch}/{st}");
+            ex.Should().Be(100, $"every text trap is recoverable by construction ({ch}/{st})");
+        }
     }
 }

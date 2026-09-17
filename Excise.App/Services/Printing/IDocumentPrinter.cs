@@ -1,5 +1,8 @@
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Microsoft.Extensions.Logging;
 
 namespace Excise.App.Services.Printing;
 
@@ -45,20 +48,24 @@ internal readonly record struct DocumentPrintResult(DocumentPrintOutcome Outcome
 /// One print job. <paramref name="PdfPath"/> is a file excise wrote for this
 /// job (see <see cref="DocumentPrintWorkflowService"/>); the printer reads it
 /// and must not delete it. <paramref name="Owner"/> is the window the print
-/// sheet attaches to.
+/// dialog or sheet belongs to. <paramref name="CancellationToken"/> aborts a
+/// job still being sent (Windows checks it between pages; the macOS sheet is
+/// driven by the user and ignores it).
 /// </summary>
 internal sealed record DocumentPrintRequest(
     string PdfPath,
     string JobTitle,
     PrintScalingMode Scaling,
-    Window? Owner);
+    Window? Owner,
+    CancellationToken CancellationToken = default);
 
 /// <summary>
 /// The platform half of printing (#1545). The view model and
 /// <see cref="DocumentPrintWorkflowService"/> are platform-neutral; each OS
-/// supplies one of these. macOS is <see cref="MacPdfKitDocumentPrinter"/>;
-/// every other platform gets <see cref="UnsupportedDocumentPrinter"/> until
-/// its own issue lands (Windows is #1546; Linux printing is out of scope).
+/// supplies one of these. macOS is <see cref="MacPdfKitDocumentPrinter"/>,
+/// Windows is <see cref="WindowsDocumentPrinter"/> (#1546), and every other
+/// platform gets <see cref="UnsupportedDocumentPrinter"/> (Linux printing is
+/// out of scope).
 /// </summary>
 internal interface IDocumentPrinter
 {
@@ -70,8 +77,8 @@ internal interface IDocumentPrinter
 
     /// <summary>
     /// Show the platform print UI for <paramref name="request"/> and complete
-    /// when the whole operation has finished (sheet dismissed, job spooled or
-    /// cancelled). Called on the UI thread. The file must stay readable until
+    /// when the whole operation has finished (sheet or dialog dismissed, job
+    /// spooled, cancelled or aborted). Called on the UI thread. The file must stay readable until
     /// the returned task completes; the caller deletes it afterwards.
     /// </summary>
     Task<DocumentPrintResult> PrintAsync(DocumentPrintRequest request);
@@ -84,9 +91,8 @@ internal interface IDocumentPrinter
 internal sealed class UnsupportedDocumentPrinter : IDocumentPrinter
 {
     internal const string DefaultReason =
-        "Printing is available on macOS only in this build. Windows printing is tracked in #1546; " +
-        "Linux printing is not planned. Until then, use File > Save As and print the PDF from your " +
-        "system's PDF viewer.";
+        "Printing is available on macOS and Windows. Linux printing is not planned; use " +
+        "File > Save As and print the PDF from your system's PDF viewer.";
 
     public bool IsSupported => false;
 
@@ -99,9 +105,17 @@ internal sealed class UnsupportedDocumentPrinter : IDocumentPrinter
 /// <summary>Chooses the printer for the running OS.</summary>
 internal static class DocumentPrinterFactory
 {
-    internal static IDocumentPrinter CreateForCurrentPlatform(Microsoft.Extensions.Logging.ILoggerFactory loggerFactory) =>
-        System.OperatingSystem.IsMacOS()
-            ? new MacPdfKitDocumentPrinter(
-                Microsoft.Extensions.Logging.LoggerFactoryExtensions.CreateLogger<MacPdfKitDocumentPrinter>(loggerFactory))
-            : new UnsupportedDocumentPrinter();
+    internal static IDocumentPrinter CreateForCurrentPlatform(ILoggerFactory loggerFactory)
+    {
+        ArgumentNullException.ThrowIfNull(loggerFactory);
+
+        // Inline OperatingSystem checks, so the platform analyzer (CA1416)
+        // can see the Windows-only factory is reached only on Windows.
+        // Nothing from System.Drawing.Common is touched on any other OS.
+        if (OperatingSystem.IsMacOS())
+            return new MacPdfKitDocumentPrinter(loggerFactory.CreateLogger<MacPdfKitDocumentPrinter>());
+        if (OperatingSystem.IsWindows())
+            return WindowsDocumentPrinter.CreateNative(loggerFactory.CreateLogger<WindowsDocumentPrinter>());
+        return new UnsupportedDocumentPrinter();
+    }
 }

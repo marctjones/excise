@@ -36,6 +36,8 @@ internal static class RedactCommandHandler
                 request.AllowDecrypt,
                 guardedProgress);
             cancellationToken.ThrowIfCancellationRequested();
+            // A flattened copy is a fresh image-only PDF: no attachment of the
+            // source is carried into it.
             return new RedactCommandResult(
                 input.FullName,
                 outputPath,
@@ -110,6 +112,7 @@ internal static class RedactCommandHandler
             // #1188/#1169: per-carrier mode. Null keeps the all-Strip default.
             CarrierPolicy = request.CarrierPolicy
                 ?? Excise.Core.Operations.CarrierScrubPolicy.Default,
+            KeepAttachments = request.KeepAttachments,   // #1572
         }, guardedProgress);
 
         // #916/#905: collect carriers the surgical CLI term policy could not
@@ -156,6 +159,15 @@ internal static class RedactCommandHandler
             }
         }
 
+        // #1572: every attachment is named — removed ones so the user knows
+        // what the output no longer carries, kept ones with what was checked.
+        foreach (var attachment in redaction.Attachments)
+        {
+            carrierNotes.Add(attachment.Disposition == AttachmentDisposition.Removed
+                ? $"ATTACHMENT REMOVED: {attachment}"
+                : $"ATTACHMENT KEPT: {attachment}");
+        }
+
         // #1187/#1195: fail-closed whole-image removal is secure but destructive
         // collateral and therefore must be explicit in the typed outcome.
         if (redaction.ImagesDroppedWhole > 0)
@@ -181,7 +193,8 @@ internal static class RedactCommandHandler
             Flattened: false,
             carrierNotes,
             diagnostics,
-            redaction.WholeWord);
+            redaction.WholeWord,
+            redaction.Attachments);
     }
 
     private static void Validate(RedactCommandRequest request)
@@ -198,10 +211,10 @@ internal static class RedactCommandHandler
 
         if (request.FlattenOcr &&
             (request.OcrImageText || !request.DrawBox || request.BoxColor != null ||
-             request.CloseWidth || request.Strict || request.AllowLowConfidence))
+             request.CloseWidth || request.Strict || request.AllowLowConfidence || request.KeepAttachments))
         {
             throw new ArgumentException(
-                "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, or OCR-layer options.");
+                "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, or attachment options.");
         }
     }
 
@@ -236,7 +249,8 @@ internal readonly record struct RedactCommandRequest(
     bool FlattenOcr = false,
     Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null,   // #1188/#1169
     bool WholeWord = false,   // #1052
-    bool OvershootBox = false);   // #1189
+    bool OvershootBox = false,   // #1189
+    bool KeepAttachments = false);   // #1572 — opt out of removing every attachment
 
 internal sealed record RedactCommandResult(
     string InputPath,
@@ -246,7 +260,13 @@ internal sealed record RedactCommandResult(
     bool Flattened,
     IReadOnlyList<string> CarrierNotes,
     IReadOnlyList<string> Diagnostics,
-    bool WholeWord = false);   // #1052 — the match rule is part of the result
+    bool WholeWord = false,   // #1052 — the match rule is part of the result
+    IReadOnlyList<AttachmentRedactionResult>? AttachmentResults = null)   // #1572
+{
+    /// <summary>Every attachment removed or kept (#1572); never null.</summary>
+    public IReadOnlyList<AttachmentRedactionResult> Attachments =>
+        AttachmentResults ?? Array.Empty<AttachmentRedactionResult>();
+}
 
 /// <summary>
 /// A typed refusal lets automation translate confidence failures without

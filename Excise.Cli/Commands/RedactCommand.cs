@@ -102,6 +102,14 @@ internal static class RedactCommand
             Arity = ArgumentArity.ZeroOrMore,
             AllowMultipleArgumentsPerToken = true,
         };
+        var keepAttachmentsOption = new Option<bool>("--keep-attachments")
+        {
+            Description = "Keep the PDF's embedded files. By default every attachment is removed " +
+                "from the output (#1572). With this flag, text attachments (txt, csv, xml, html, " +
+                "json, md) have the term cut out, nested PDFs are redacted with the same options, " +
+                "and any other attachment is reported as NOT checked -- it may still contain the term.",
+            DefaultValueFactory = _ => false,
+        };
         var progressOption = new Option<bool>("--progress")
         {
             Description = "Write page-based overall completion to stderr (0% through 100%).",
@@ -128,6 +136,7 @@ internal static class RedactCommand
             overshootBoxOption,
             wholeWordOption,
             carrierPolicyOption,
+            keepAttachmentsOption,
             progressOption,
         };
 
@@ -182,11 +191,13 @@ internal static class RedactCommand
                 return 1;
             }
 
+            var keepAttachments = parseResult.GetValue(keepAttachmentsOption);
             if (flattenOcr &&
-                (ocrImageText || noBox || boxColorSpec != null || closeWidth || strict || allowLowConfidence))
+                (ocrImageText || noBox || boxColorSpec != null || closeWidth || strict || allowLowConfidence
+                 || keepAttachments))
             {
                 Console.Error.WriteLine(
-                    "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, or OCR-layer options.");
+                    "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, or attachment options.");
                 return 1;
             }
 
@@ -228,7 +239,8 @@ internal static class RedactCommand
                     flattenOcr,
                     carrierPolicy,
                     parseResult.GetValue(wholeWordOption),
-                    overshootBox),
+                    overshootBox,
+                    keepAttachments),
                     progress);
 
                 foreach (var diagnostic in result.Diagnostics)

@@ -41,12 +41,15 @@ namespace Excise.App.Services.Printing;
 /// copy would make the documented <c>IgnoreDocumentPermissions</c> override
 /// fail silently inside PDFKit, and a document with a user password would
 /// need the password handed across the Objective-C bridge.</item>
+/// <item>On Windows excise's own renderer rasterises the copy (#1546); a
+/// plaintext copy needs no password handed to the print job.</item>
 /// <item>The print system spools the job unencrypted anyway, so an encrypted
 /// temp file would not keep plaintext off the disk.</item>
 /// </list>
 /// The exposure is bounded instead: the file lives in a per-print directory
 /// under <see cref="AppPaths.CacheDir"/> (never <c>~/Documents</c>, #1543),
-/// is created owner-read/write only, is deleted on every exit path once the
+/// is created owner-read/write only (on Windows, the per-user ACL of
+/// <c>%LOCALAPPDATA%</c>), is deleted on every exit path once the
 /// print operation has finished (printed, cancelled, failed, or thrown),
 /// and a leftover from a crashed earlier print is swept on the next print.
 /// </para>
@@ -84,8 +87,12 @@ internal sealed class DocumentPrintWorkflowService
     /// Print the current state of <see cref="DocumentPrintJob.Document"/>.
     /// Must be called on the UI thread (the live document is serialised
     /// there, and the platform print UI needs it).
+    /// <paramref name="cancellationToken"/> is handed to the printer, which
+    /// aborts a job still being sent; the copy is deleted either way.
     /// </summary>
-    public async Task<DocumentPrintWorkflowResult> PrintAsync(DocumentPrintJob job)
+    public async Task<DocumentPrintWorkflowResult> PrintAsync(
+        DocumentPrintJob job,
+        System.Threading.CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(job);
         ArgumentNullException.ThrowIfNull(job.Document);
@@ -105,7 +112,7 @@ internal sealed class DocumentPrintWorkflowService
         {
             safetyReport = await Task.Run(() => WriteCopy(liveBytes, tempPath, job));
             var result = await _printer.PrintAsync(
-                new DocumentPrintRequest(tempPath, job.JobTitle, job.Scaling, job.Owner));
+                new DocumentPrintRequest(tempPath, job.JobTitle, job.Scaling, job.Owner, cancellationToken));
             _logger.LogInformation("Print finished: {Outcome} {Error}", result.Outcome, result.Error);
             return new DocumentPrintWorkflowResult(result, safetyReport);
         }

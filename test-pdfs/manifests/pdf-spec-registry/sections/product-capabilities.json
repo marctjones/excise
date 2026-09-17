@@ -380,7 +380,7 @@
         "mutate": "partial"
       },
       "evidence": [],
-      "notes": "Show attachments in a panel, permit explicit save to disk only, preserve by default, allow stripping on save, and warn when their presence is not otherwise obvious. #1414 shipped the GUI surface: Document > Attachments... lists every embedded file, saves one to a user-chosen path, and strips them all as a pending edit (so the original is preserved by the normal save routing). Presence is warned about with a toast on open. Removal is verified with qpdf, not with excise reading its own output.",
+      "notes": "Show attachments in a panel, permit explicit save to disk only, preserve by default, allow stripping on save, and warn when their presence is not otherwise obvious. #1414 shipped the GUI surface; #1563 moved it into a sidebar Attachments pane that is visible by default (toggle View > Show Attachments, persisted in window.json). It lists every embedded file from /Names/EmbeddedFiles, catalog /AF and page /FileAttachment annotations (with the page), saves one to a user-chosen path or all of them into a chosen folder (portable names, never overwriting), and strips the document-level ones as an undoable pending edit (so the original is preserved by the normal save routing). Saving is refused when /P bit 5 forbids extraction. Presence is warned about with a toast on open. Removal is verified with qpdf, not with excise reading its own output.",
       "documentation": [
         "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
       ],
@@ -389,9 +389,10 @@
         "reviewState": "migration-pending",
         "implementationRefs": [
           "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
-          "Excise.App/Views/AttachmentsDialog.axaml",
-          "Excise.App/Views/AttachmentsDialog.axaml.cs",
-          "Excise.App/Models/AttachmentEntry.cs"
+          "Excise.App/Views/MainWindow.axaml",
+          "Excise.App/Models/AttachmentEntry.cs",
+          "Excise.App/Services/AttachmentFileNames.cs",
+          "Excise.Core/Document/PdfEmbeddedFileParser.cs"
         ],
         "fixtureRefs": [],
         "corpusRefs": [],
@@ -400,11 +401,11 @@
         ],
         "architectureRefs": [],
         "issueRefs": [
-          1414
+          1414,
+          1563
         ],
         "knownLimitations": [
-          "The GUI surface is a modal Attachments dialog (Document > Attachments...), not a docked sidebar panel; both sidebar columns are already occupied by existing panels.",
-          "Stripping is all-or-nothing: there is no per-attachment remove.",
+          "Stripping is all-or-nothing: there is no per-attachment remove, and Remove All does not remove files carried by page /FileAttachment annotations (#1572; the pane reports how many remain).",
           "excise never opens or executes an attachment; explicit save-to-disk is the only egress."
         ],
         "processorRoles": [
@@ -424,7 +425,7 @@
         "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
         "positiveTestRefs": [
           "Excise.App.Tests/UI/AttachmentsPanelTests.cs::OpeningADocumentWithAttachments_ListsThem",
-          "Excise.App.Tests/UI/AttachmentsPanelTests.cs::SaveAttachment_WritesTheOriginalBytesToDisk"
+          "Excise.App.Tests/UI/AttachmentsPanelTests.cs::SaveAttachment_WritesTheExactDecodedBytes_ForBothCarriers"
         ],
         "negativeOrConservationTestRefs": [
           "Excise.App.Tests/UI/AttachmentsPanelTests.cs::StripThenSave_RemovesTheAttachment_VerifiedByQpdf",
@@ -466,7 +467,7 @@
           },
           {
             "kind": "unit",
-            "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::SaveAttachment_WritesTheOriginalBytesToDisk",
+            "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::SaveAttachment_WritesTheExactDecodedBytes_ForBothCarriers",
             "modes": [
               "extract"
             ]

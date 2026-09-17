@@ -1885,8 +1885,9 @@ public partial class PdfViewerControl
         // reads every remaining entry's PixelSize, which throws on a disposed
         // bitmap. See the _continuousCache field comment for why disposing a
         // tile here is safe.
+        long budget = ContinuousCacheBudgetNow();
         while (_continuousCache.Count > ContinuousCacheMinEntries &&
-               ContinuousCacheResidentBytes() > EffectiveContinuousCacheByteBudget)
+               ContinuousCacheResidentBytes() > budget)
         {
             var (evictedKey, evicted) = _continuousCache.Last!.Value;
             _continuousCache.RemoveLast();
@@ -1910,7 +1911,7 @@ public partial class PdfViewerControl
 
         _continuousCache.AddFirst((key, bmp));
         _continuousLookAheadTiles.Add(key);
-        long budget = EffectiveContinuousCacheByteBudget;
+        long budget = ContinuousCacheBudgetNow();
         long resident = ContinuousCacheResidentBytes();
         var node = _continuousCache.Last;
         while (node != null && resident > budget && _continuousCache.Count > ContinuousCacheMinEntries)

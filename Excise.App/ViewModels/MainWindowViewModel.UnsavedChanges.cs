@@ -43,6 +43,20 @@ public partial class MainWindowViewModel
         _documentService.IsDocumentLoaded && FileState.HasUnsavedChanges;
 
     /// <summary>
+    /// An in-process answer to the unsaved-changes prompt, used instead of the
+    /// dialog while it is set. Null (the only value outside the harness) shows
+    /// the dialog.
+    /// </summary>
+    /// <remarks>
+    /// Set only by the #1497 performance-scenario runner's quit-review step,
+    /// on every open session for the duration of that step and cleared after
+    /// it, so an unattended run can drive the multi-document quit review
+    /// (#1551) without anyone clicking a dialog. The runner itself runs only
+    /// when <c>EXCISE_PERF_SCENARIO</c> names a scenario file.
+    /// </remarks>
+    internal Func<UnsavedChangesDecision>? UnsavedChangesAnswer { get; set; }
+
+    /// <summary>
     /// Gate a destructive transition (window close, application quit, document
     /// close, opening a different file) on the user's decision about unsaved
     /// changes.
@@ -62,10 +76,21 @@ public partial class MainWindowViewModel
         if (!_documentService.IsDocumentLoaded || !FileState.HasUnsavedChanges)
             return true;
 
-        var decision = await _dialogService.ShowUnsavedChangesAsync(
-            "Unsaved Changes",
-            BuildUnsavedChangesMessage(actionDescription),
-            FileState.GetSaveButtonText());
+        UnsavedChangesDecision decision;
+        if (UnsavedChangesAnswer is { } automatedAnswer)
+        {
+            decision = automatedAnswer();
+            _logger.LogInformation(
+                "Unsaved-changes prompt before {Action} answered in process ({Decision}) by the performance-scenario runner",
+                actionDescription, decision);
+        }
+        else
+        {
+            decision = await _dialogService.ShowUnsavedChangesAsync(
+                "Unsaved Changes",
+                BuildUnsavedChangesMessage(actionDescription),
+                FileState.GetSaveButtonText());
+        }
 
         switch (decision)
         {

@@ -81,8 +81,16 @@ public static class PdfCommandIds
     public const string Security = "document.security";
     /// <summary>#1414 — view, save, or strip embedded files.</summary>
     public const string Attachments = "document.attachments";
+    /// <summary>#1563 — save the attachment selected in the Attachments pane.</summary>
+    public const string SaveAttachment = "document.saveAttachment";
+    /// <summary>#1563 — save every attachment into a chosen folder.</summary>
+    public const string SaveAllAttachments = "document.saveAllAttachments";
+    /// <summary>#1563 — strip every embedded file from the open document (a pending edit).</summary>
+    public const string RemoveAllAttachments = "document.removeAllAttachments";
     /// <summary>#1306 — stamp sequential Bates numbers on every page.</summary>
     public const string BatesNumbering = "document.batesNumbering";
+    /// <summary>#1550 — write a smaller copy of the document.</summary>
+    public const string ReduceFileSize = "document.reduceFileSize";
     public const string CombineDocuments = "document.combine";
     public const string SplitDocument = "document.split";
 
@@ -97,6 +105,8 @@ public static class PdfCommandIds
     public const string ToggleContinuousView = "view.toggleContinuous";
     public const string ToggleOutline = "view.toggleOutline";
     public const string ToggleThumbnails = "view.toggleThumbnails";
+    /// <summary>#1563 — show or hide the Attachments pane.</summary>
+    public const string ToggleAttachments = "view.toggleAttachments";
     public const string ToggleAnnotations = "view.toggleAnnotations";
 
     /// <summary>Show or hide COMMENT annotations (#1021).</summary>

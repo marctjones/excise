@@ -12,6 +12,13 @@
 // computed afterwards and thresholds can be tuned without re-recording.
 //
 //   screen-probe --pid 1234 --out frames.bin [--scale 0.125] [--fps 60]
+//   screen-probe --pid 1234 --out frames.bin --region X,Y,W,H
+//
+// --region (#1551-#1554) records a fixed screen rectangle (global points,
+// top-left origin) showing only the app's windows, instead of one window.
+// A window switch changes which window is in FRONT, not any window's content,
+// so a single-window capture cannot see it; the multi-document speed runs
+// stack every document window on one frame and record that frame.
 //
 // Output: a little-endian stream of records
 //   UInt64 displayTime (mach ticks) | UInt32 width | UInt32 height | width*height bytes (luma)
@@ -29,6 +36,7 @@ struct Options {
     var out = ""
     var scale = 0.125
     var fps = 60
+    var region: CGRect?
 }
 
 func parse() -> Options {
@@ -40,13 +48,20 @@ func parse() -> Options {
         case "--out": o.out = it.next() ?? ""
         case "--scale": o.scale = Double(it.next() ?? "") ?? o.scale
         case "--fps": o.fps = Int(it.next() ?? "") ?? o.fps
+        case "--region":
+            let parts = (it.next() ?? "").split(separator: ",").compactMap { Double($0) }
+            guard parts.count == 4, parts[2] > 0, parts[3] > 0 else {
+                FileHandle.standardError.write("--region needs X,Y,W,H\n".data(using: .utf8)!)
+                exit(2)
+            }
+            o.region = CGRect(x: parts[0], y: parts[1], width: parts[2], height: parts[3])
         default:
             FileHandle.standardError.write("unknown argument \(a)\n".data(using: .utf8)!)
             exit(2)
         }
     }
     if o.pid == 0 || o.out.isEmpty {
-        FileHandle.standardError.write("usage: screen-probe --pid N --out FILE [--scale S] [--fps N]\n".data(using: .utf8)!)
+        FileHandle.standardError.write("usage: screen-probe --pid N --out FILE [--scale S] [--fps N] [--region X,Y,W,H]\n".data(using: .utf8)!)
         exit(2)
     }
     return o
@@ -172,18 +187,41 @@ DispatchQueue.global().async {
 Task {
     do {
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-        // The app's LARGEST normal window: Acrobat's hover tooltip is a window too.
-        let candidates = content.windows.filter {
-            $0.owningApplication?.processID == opts.pid && $0.windowLayer == 0
-        }
-        guard let window = candidates.max(by: { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }) else {
-            emit(["event": "error", "message": "no on-screen window for pid \(opts.pid)"])
-            exit(1)
-        }
-        let filter = SCContentFilter(desktopIndependentWindow: window)
         let config = SCStreamConfiguration()
-        config.width = max(16, Int(window.frame.width * opts.scale * 2))
-        config.height = max(16, Int(window.frame.height * opts.scale * 2))
+        let filter: SCContentFilter
+        var started: [String: Any] = ["event": "started"]
+        if let region = opts.region {
+            guard let app = content.applications.first(where: { $0.processID == opts.pid }) else {
+                emit(["event": "error", "message": "no application with pid \(opts.pid)"])
+                exit(1)
+            }
+            let centre = CGPoint(x: region.midX, y: region.midY)
+            guard let display = content.displays.first(where: { $0.frame.contains(centre) }) else {
+                emit(["event": "error", "message": "no display contains the region centre"])
+                exit(1)
+            }
+            filter = SCContentFilter(display: display, including: [app], exceptingWindows: [])
+            config.sourceRect = CGRect(x: region.minX - display.frame.minX, y: region.minY - display.frame.minY,
+                                       width: region.width, height: region.height)
+            config.width = max(16, Int(region.width * opts.scale * 2))
+            config.height = max(16, Int(region.height * opts.scale * 2))
+            started["displayID"] = display.displayID
+            started["region"] = [region.origin.x, region.origin.y, region.width, region.height]
+        } else {
+            // The app's LARGEST normal window: Acrobat's hover tooltip is a window too.
+            let candidates = content.windows.filter {
+                $0.owningApplication?.processID == opts.pid && $0.windowLayer == 0
+            }
+            guard let window = candidates.max(by: { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }) else {
+                emit(["event": "error", "message": "no on-screen window for pid \(opts.pid)"])
+                exit(1)
+            }
+            filter = SCContentFilter(desktopIndependentWindow: window)
+            config.width = max(16, Int(window.frame.width * opts.scale * 2))
+            config.height = max(16, Int(window.frame.height * opts.scale * 2))
+            started["windowID"] = window.windowID
+            started["frame"] = [window.frame.origin.x, window.frame.origin.y, window.frame.width, window.frame.height]
+        }
         config.pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
         config.minimumFrameInterval = CMTime(value: 1, timescale: CMTimeScale(opts.fps))
         config.queueDepth = 5
@@ -193,9 +231,8 @@ Task {
                                    sampleHandlerQueue: DispatchQueue(label: "screen-probe.frames"))
         try await stream.startCapture()
         activeStream = stream
-        emit(["event": "started", "windowID": window.windowID,
-              "frame": [window.frame.origin.x, window.frame.origin.y, window.frame.width, window.frame.height],
-              "captureSize": [config.width, config.height]])
+        started["captureSize"] = [config.width, config.height]
+        emit(started)
     } catch {
         emit(["event": "error", "message": "\(error)"])
         exit(1)

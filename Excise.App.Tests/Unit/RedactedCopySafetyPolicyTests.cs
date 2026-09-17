@@ -114,16 +114,25 @@ public class RedactedCopySafetyPolicyTests : IDisposable
                        Encoding.BigEndianUnicode.GetString(File.ReadAllBytes(output));
 
         combined.Should().NotContain("CARRIERSECRET",
-            "captured selection text is an exact term, so matching bookmarks, remote comments, " +
-            "and XFA values can be scrubbed without guessing from geometry");
-        combined.Should().Contain("bookmark").And.Contain("comment").And.Contain("public XFA value",
+            "captured selection text is an exact term, so matching bookmarks and remote comments " +
+            "can be scrubbed without guessing from geometry");
+        combined.Should().Contain("bookmark").And.Contain("comment",
             "carrier cleanup must remove only the captured term, not destroy unrelated content");
+        // #1574: an area redaction removes the XFA form whole — its datasets
+        // restate the field values and a viewer merges them back — and says so.
+        combined.Should().NotContain("public XFA value");
+        report.XfaRemovals.Should().ContainSingle().Which.Should().Contain("removed whole");
         report.Warnings.Should().NotContain(line => line.Contains("not examined"),
             "successfully checked carriers must not leave a standing false warning");
     }
 
+    /// <summary>
+    /// Before #1574 an area redaction left this packet in place and the best
+    /// excise could do was warn that it had not been examined. The packet is
+    /// now removed whole, unparseable or not, and the dialog says so.
+    /// </summary>
     [Fact]
-    public void PrepareRedactedCopy_WithMalformedMatchingXfa_SurfacesTheUnexaminedPacket()
+    public void PrepareRedactedCopy_WithMalformedMatchingXfa_RemovesThePacketAndSaysSo()
     {
         var inputPath = Path.Combine(_tempDir, "malformed-xfa.pdf");
         TestPdfGenerator.CreateSimpleTextPdf(inputPath, "PUBLIC CARRIERSECRET");
@@ -145,10 +154,13 @@ public class RedactedCopySafetyPolicyTests : IDisposable
         });
         var dialog = _formatter.Format("out.pdf", report);
 
-        dialog.Should().Contain("XFA").And.Contain("not examined",
-            "unsafe XML must never disappear behind an unqualified success dialog");
+        dialog.Should().Contain("XFA form:").And.Contain("removed whole",
+            "the XFA packet's fate must be visible in the dialog");
+        dialog.Should().NotContain("not examined", "nothing was left to examine");
         dialog.Should().NotContain("CARRIERSECRET",
-            "the warning must identify the carrier without echoing removed sensitive text");
+            "the report must identify the carrier without echoing removed sensitive text");
+        SavedPdfLeakScanner.FindTerm(document.SaveToBytes(), "CARRIERSECRET").Should().BeEmpty(
+            "the unparseable packet is gone from the saved bytes, compressed streams included");
     }
 
     private static void WriteBookmarkedFixture(string path)

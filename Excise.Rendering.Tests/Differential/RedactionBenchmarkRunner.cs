@@ -10,6 +10,7 @@ using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Excise.Ocr;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using SkiaSharp;
 using Xunit;
 
@@ -146,6 +147,23 @@ public sealed class RedactionBenchmarkRunner
         public bool LeakOracleTextDisagree { get; init; }
         public int LeakBadRedactions { get; init; }   // -1 = x-ray unavailable
         public string[] LeakChannels { get; init; } = Array.Empty<string>();
+        /// <summary>
+        /// Carriers in which excise's unredact CERTAIN channel
+        /// (<see cref="CarrierTextRecovery"/>) still reads the term in the
+        /// tool's OUTPUT — the per-carrier attribution the byte scan cannot
+        /// give. Null = not measured (the output did not open).
+        /// </summary>
+        public string[]? UnredactCarriers { get; init; }
+        /// <summary>
+        /// Presence notes (opaque attachment, thumbnail, unreadable packet)
+        /// the unredact channel reports in the output. Not a leak by itself.
+        /// </summary>
+        public string[]? UnredactPresent { get; init; }
+        /// <summary>
+        /// The carrier trap id for the in-memory <c>redaction-carrier-traps</c>
+        /// corpus; "" elsewhere.
+        /// </summary>
+        public string CarrierTrap { get; init; } = "";
 
         // COLLATERAL — untargeted content the redaction took with it.
         public int AlnumBefore { get; init; }
@@ -456,6 +474,27 @@ public sealed class RedactionBenchmarkRunner
             }
         }
 
+        // Carrier TRAPS generated in memory (CarrierTrapFixtures): form values
+        // and appearances, XFA, attachments, actions, metadata, orphan objects,
+        // an earlier revision. Written as <id>--<TOKEN>.pdf so they take the same
+        // planted-canary path as the Python adversarial corpus, with the token
+        // ALSO on the page so every tool's find step fires.
+        if (onlyCorpora is null or { Length: 0 } || onlyCorpora.Contains(CarrierTrapCorpus))
+        {
+            var trapDir = Path.Combine(resultsDir, CarrierTrapCorpus);
+            if (Directory.Exists(trapDir)) Directory.Delete(trapDir, recursive: true);
+            Directory.CreateDirectory(trapDir);
+            foreach (var trap in CarrierTrapFixtures.All.Where(t => t.InBench).Take(takeCap))
+            {
+                var file = Path.Combine(trapDir, $"{trap.Id}--{trap.Token}.pdf");
+                File.WriteAllBytes(file, trap.Build(true));
+                docsSeen++;
+                foreach (var row in MeasureToolsInParallel(
+                    tool => MeasureDocument(file, CarrierTrapCorpus, tool).Select(r => r with { CarrierTrap = trap.Id }).ToArray()))
+                    Record(row);
+            }
+        }
+
         // #1185 — curated HARD / MEDIUM real-world cases. Unlike a corpus scan,
         // these are specific (file, term) pairs chosen so the term lives in a
         // structure that makes correct redaction hard: a tagged /ActualText, a
@@ -542,6 +581,43 @@ public sealed class RedactionBenchmarkRunner
         }
     }
 
+    /// <summary>The in-memory carrier-trap corpus (<see cref="CarrierTrapFixtures"/>).</summary>
+    private const string CarrierTrapCorpus = "redaction-carrier-traps";
+
+    /// <summary>
+    /// Corpora whose files name ONE planted secret (<c>&lt;carrier&gt;--&lt;TOKEN&gt;.pdf</c>):
+    /// the term is chosen, not sampled, and its presence in carriers the oracle
+    /// cannot see is the property under test.
+    /// </summary>
+    private static bool IsPlantedCanaryCorpus(string corpus) =>
+        corpus is "redaction-adversarial" or CarrierTrapCorpus;
+
+    /// <summary>
+    /// The unredact certain channel over a tool's output: which carriers still
+    /// hold <paramref name="term"/>, and what undecoded content is present.
+    /// (null, null) when the output does not open — unmeasured, never clean.
+    /// </summary>
+    private static (string[]? Carriers, string[]? Present) UnredactCarrierAxis(string output, string term)
+    {
+        try
+        {
+            using var doc = PdfDocument.Open(output);
+            var findings = CarrierTextRecovery.Scan(doc);
+            var carriers = findings
+                .Where(f => f.Kind == CarrierTextRecovery.CarrierFindingKind.Text
+                            && f.Text.Contains(term, StringComparison.OrdinalIgnoreCase))
+                .Select(f => f.Carrier).Distinct(StringComparer.Ordinal).OrderBy(c => c, StringComparer.Ordinal).ToArray();
+            var present = findings
+                .Where(f => f.Kind == CarrierTextRecovery.CarrierFindingKind.Presence)
+                .Select(f => f.Carrier).Distinct(StringComparer.Ordinal).OrderBy(c => c, StringComparer.Ordinal).ToArray();
+            return (carriers, present);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return (null, null);
+        }
+    }
+
     /// <summary>
     /// Measure ONE known term on ONE document (curated hard case), bypassing the
     /// oracle term-sampling and length floor — the term is chosen, not sampled.
@@ -604,7 +680,7 @@ public sealed class RedactionBenchmarkRunner
         // BOTH the oracle term-sampling AND the length floor -- these fixtures are
         // ~650 bytes with <200 oracle chars, so the floor would silently drop every
         // one (#1183). The point is a KNOWN term in a hard carrier, not a sampled one.
-        if (corpus == "redaction-adversarial")
+        if (IsPlantedCanaryCorpus(corpus))
         {
             var token = Path.GetFileNameWithoutExtension(name);
             var sep = token.IndexOf("--", StringComparison.Ordinal);
@@ -739,7 +815,7 @@ public sealed class RedactionBenchmarkRunner
             // TEST: the planted adversarial canaries, and HARD curated cases. A
             // blanket bypass would score irs-w4 'married' (27 hits, also in
             // embedded JavaScript) as a leak on every tool.
-            var probeUsable = corpus == "redaction-adversarial"
+            var probeUsable = IsPlantedCanaryCorpus(corpus)
                 || (corpus == "redaction-hard" && difficulty == "hard")
                 || (bytesBefore > 0 && bytesBefore <= textBefore);
             var leakBytes = rawLeak && probeUsable;
@@ -776,10 +852,17 @@ public sealed class RedactionBenchmarkRunner
                 ? -1                                                  // null = no oracle (unchanged)
                 : NewNonWhitespaceBadRedactions(_externalOracles.InspectWithXray(path), xrayOut);
 
+            // ── CARRIER RECOVERY: what the unredact certain channel reads back
+            //    out of this tool's output, per carrier. It reports leaks, never
+            //    cleanliness, so it can only ADD a recoverable verdict — the
+            //    independent axes above still decide "clean".
+            var (unredactCarriers, unredactPresent) = UnredactCarrierAxis(output, term);
+
             var channels = new List<string>();
             if (leakBytes) channels.Add("saved-bytes");
             if (leakText) channels.Add("oracle-text");
             if (badRedactions > 0) channels.Add("bad-redaction");
+            if (unredactCarriers is { Length: > 0 }) channels.Add("carrier-recovery");
 
             var alnumBefore = before.Count(char.IsLetterOrDigit);
             var alnumAfter = after.Count(char.IsLetterOrDigit);
@@ -865,6 +948,7 @@ public sealed class RedactionBenchmarkRunner
             // A term still LEGIBLE in the rendered pixels is recoverable too — the
             // visual leak the text oracles cannot see.
             var recoverable = leakText || badRedactions > 0 || leakBytes
+                || unredactCarriers is { Length: > 0 }
                 || visualReadable == 1 || imageBakedReadable == 1;
             var verdict =
                 recoverable ? Differential.RedactionBenchmarkRunner.Verdict.Recoverable
@@ -891,6 +975,8 @@ public sealed class RedactionBenchmarkRunner
                 LeakOracleTextDisagree = leakTextDisagree,
                 LeakBadRedactions = badRedactions,
                 LeakChannels = channels.ToArray(),
+                UnredactCarriers = unredactCarriers,
+                UnredactPresent = unredactPresent,
                 AlnumBefore = alnumBefore,
                 AlnumAfter = alnumAfter,
                 Collateral = collateral,

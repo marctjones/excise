@@ -72,10 +72,12 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - **Annotation authoring** — 15 annotation types from the Annotate menu, all written as real PDF annotations: highlight selected text or mark it up with Underline, StrikeOut and Squiggly, sticky notes, shapes from a drag (Square, Circle, FreeText), rubber stamps (all 15 standard names, plus an image stamp from a picked file for signatures and letterheads), and drawn paths (freehand Ink, Line, Arrow, Polygon, PolyLine). Drawn paths use one capture mode: drag for ink and lines, click-per-vertex for polygons with double-click or Enter to finish, Escape to abandon, Backspace to take back a point
 - Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
 - Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, validates the signer certificate chain against the OS trust store (distinguishing valid-and-trusted from valid-but-untrusted, modified, and unverifiable signatures), and clearly reports remaining OS trust-chain validation limitations (revocation is not checked)
-- **Attachments** — Document ▸ Attachments… lists files embedded in the PDF (name, size, description), saves one to a location you choose, and strips them all; a warning appears on open when a document carries attachments, because they are invisible on the page and can hold a full copy of the document's data (ZUGFeRD/Factur-X). excise never opens or runs an attachment
+- **Attachments pane** — a sidebar pane, shown by default, lists files embedded in the PDF (name, size, description, modified date, and the page for files attached to a page annotation); save one or all of them to a location you choose, or strip them (undoable). A warning appears on open when a document carries attachments, because they are invisible on the page and can hold a full copy of the document's data (ZUGFeRD/Factur-X). Hide it with View ▸ Show Attachments. excise never opens or runs an attachment
 - Open a PDF by dragging it onto the window
+- **Several documents at once** — each opens in its own window, with its own undo history and unsaved-changes state; on macOS the windows use native tabs when System Settings asks for them. Preferences ▸ Documents can instead open documents as tabs inside one window (close, reorder by dragging, move a tab to its own window, overflow list) or replace the current document as before
 - Prompts before closing, quitting, or opening another file with unsaved changes — and saves a **copy**, never overwriting your original
 - Bates numbering
+- **Reduce File Size** — Document ▸ Reduce File Size… writes a smaller copy to a location you choose and shows the size before and after. *Lossless* recompresses and deduplicates data and drops page thumbnails and other applications' private data, so pages look exactly the same; *High* (300 dpi), *Standard* (150 dpi) and *Screen* (96 dpi) also downsample images well above that resolution. The original file is never changed, and a redacted document stays redacted
 - CLI-first automation with stable JSON, batch workflows, progress NDJSON, and
   AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME examples
 - Roslyn-based GUI scripting for developer/test automation in Debug builds; Release builds exclude it by default unless `-p:EnableScripting=true` is set
@@ -91,6 +93,8 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Safe-to-share save path — `RedactedCopySafetyService` scrubs Info metadata, XMP metadata, and embedded files/attachments by default, then reports content-removal, metadata, attachment, and hidden-text audit status without repeating removed text
 - Archival documents stay archival — a redaction of a PDF/A file keeps the `pdfaid` identification PDF/A requires (and nothing else from the XMP packet), so the output still validates with veraPDF instead of silently ceasing to be PDF/A
 - `PdfDocument.ScrubMetadata(scrubAttachments: true)` strips Info dict, XMP, and embedded files in one call — important when redacted documents may carry the data they were redacted of in attachments (ZUGFeRD, Factur-X)
+- **No attachments in redacted output, by default** — every redaction (GUI, `excise redact`, batch `redaction.apply`, scripting, and the `RedactText`/`RedactArea` library calls) removes every embedded file, including files attached to page annotations and embedded media, and lists each removed file with its size. To keep them, use `--keep-attachments`, batch `keepAttachments: true`, `RedactionOptions.KeepAttachments`, or Preferences ▸ Redaction: kept text attachments (txt, csv, xml, html, json, md) have the term cut out, attached PDFs are redacted too, and any other attachment is reported as not checked. A PDF portfolio is refused unless attachments are kept
+- **XFA forms** — redacting a document with an XFA form removes the XFA packet (the AcroForm fields stay), because its form data repeats the field values and Acrobat would put them back on the page
 - OCG-aware — `RedactText` defaults to `includeHiddenLayers=true` so hidden optional content groups don't slip past
 - Verified against real-world fixtures (CT birth certificate, government forms) at the pixel and content-stream level
 
@@ -116,6 +120,7 @@ excise commands          [id]             [--json]
 excise batch             <workflow.json>  [--json] [--progress] [--output report.json]
 excise draw              <file>                                 # graphics-API demo
 excise redact            <input> <output> <text>  [--case-sensitive]
+excise optimize          <input> <output> [--preset lossless|high|standard|screen] [--password P] [--json]
 excise fill-form         <input> <output> --field Name=Value [...] [--flatten]
 excise add-field         <input> <output> --type T --name N --page P --rect "l,b,r,t" [--value v] [--option o]...
 excise autodetect-fields <input> [output] [--apply]
@@ -168,22 +173,34 @@ portfolio workflows, or certificate-authority trust decisions.
 Current release-quality limitations are tracked in GitHub Issues and surfaced in
 release notes:
 
-- **Printing — macOS only** (#1545, superseding #621). File → Print… (⌘P)
-  opens the standard macOS print sheet — printer, copies, page range, paper,
-  orientation, scale, duplex where the driver supports it, preview, and the
-  PDF menu (Save as PDF) — for the document **as currently edited**: unsaved
-  page changes, filled form fields, pending type-over text, and pending
-  redactions, which are *removed* from the printed copy rather than covered.
-  Page scaling (shrink oversized / fit to page / actual size) is in
-  Preferences → Printing. Print… is disabled when the document's permissions
-  deny printing (`/P` bit 3), and also when they allow only degraded printing
-  (bit 12 clear), because excise cannot produce degraded output. Pages are
-  drawn by macOS's own PDF renderer, not excise's, so small visual differences
-  from the viewer are possible. To print, excise writes a temporary plaintext
-  copy (owner-only, under the app's cache folder) and deletes it when the
-  print sheet closes. Windows printing is #1546; Linux printing is not
-  planned — on those platforms Print… explains this, and you can Save As and
-  print from another viewer.
+- **Printing — macOS and Windows** (#1545, superseding #621; #1546).
+  File → Print… (⌘P / Ctrl+P) prints the document **as currently edited**:
+  unsaved page changes, filled form fields, pending type-over text, and
+  pending redactions, which are *removed* from the printed copy rather than
+  covered. Page scaling (shrink oversized / fit to page / actual size) is in
+  Preferences → Printing, and each page is turned to the paper orientation
+  that fits it. Print… is disabled when the document's permissions deny
+  printing (`/P` bit 3), and also when they allow only degraded printing
+  (bit 12 clear), because excise cannot produce degraded output. To print,
+  excise writes a temporary plaintext copy (owner-only, under the app's cache
+  folder) and deletes it when the print operation ends.
+  - **macOS** opens the standard print sheet — printer, copies, page range,
+    paper, orientation, scale, duplex where the driver supports it, preview,
+    and the PDF menu (Save as PDF). Pages are drawn by macOS's own PDF
+    renderer, not excise's, so small visual differences from the viewer are
+    possible.
+  - **Windows** opens the standard Windows print dialog (printer, page ranges,
+    copies and collation, and the printer's own Preferences for paper,
+    orientation and duplex). There is no print preview. Pages are rasterised by
+    excise's own renderer at the printer's resolution, capped at 600 DPI, and
+    sent through the Windows print spooler, so the printout matches the viewer
+    and no Acrobat or other PDF handler is needed. "Print to file" is hidden;
+    choose *Microsoft Print to PDF* instead, or use Save As. The PDF's
+    per-annotation *print* flag is not consulted yet (#1573): what the viewer
+    shows is what prints. ⚠️ The Windows path was built and unit-tested on macOS and
+    has not yet been checked on a Windows machine.
+  - **Linux** printing is not planned — Print… explains this, and you can
+    Save As and print from another viewer.
 - **Digital signatures** — excise checks ByteRange structure, verifies the
   detached CMS signature/digest over the signed bytes, and evaluates the signer
   certificate chain against the OS trust store, reporting a consolidated state
@@ -357,6 +374,7 @@ Press **F1** to view all in-app.
 | Navigation | Next/Previous/First/Last Page | `Page Down/Up`, `Home`, `End` |
 | Modes | Redaction / Text Selection / Apply | `R` / `T` / `Enter` |
 | Pages | Rotate Left / Right | `Ctrl+L` / `Ctrl+R` |
+| Tabs | Next / Previous document tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` (or `Ctrl+PgDn` / `Ctrl+PgUp`) |
 
 ### CLI examples
 
@@ -366,6 +384,9 @@ excise render report.pdf -o report-p1.png --page 1 --dpi 200
 
 # Glyph-level redact a phrase
 excise redact report.pdf report-redacted.pdf "ACCOUNT 9876"
+
+# Write a smaller copy for email: downsample images above 188 dpi to 150 dpi
+excise optimize scan.pdf scan-small.pdf --preset standard
 
 # Audit a "redacted" PDF for hidden text leftovers — both structural and rasterized
 excise audit purportedly-redacted.pdf --deep --json

@@ -98,6 +98,7 @@
          whole TestSupport project for one class is not worth its weight.
          Precedent: the Inconsolata.cff link in Excise.Rendering.Tests. -->
     <Compile Include="../Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
+    <Compile Include="../Excise.Core.Tests/TestSupport/XfaTestForms.cs" Link="TestSupport/XfaTestForms.cs" />
     <!-- ONE fixture/corpus locator, same reasoning (#1527). -->
     <Compile Include="../Excise.Core.Tests/TestSupport/TestRepoLayout.cs" Link="TestSupport/TestRepoLayout.cs" />
   </ItemGroup>

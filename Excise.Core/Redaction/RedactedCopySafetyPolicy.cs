@@ -77,17 +77,38 @@ public static class RedactedCopySafetyPolicy
                 $"{request.SkippedRedactionAreaCount} redaction area(s) were skipped because their page no longer exists.");
         }
 
+        // #1572: the attachment decisions that can REFUSE run before anything
+        // below mutates the document, for the same reason as #1430 above.
+        // Removal refuses a portfolio; keeping redacts each kept file with
+        // the captured/requested terms, and refuses a nested PDF it cannot
+        // redact.
+        List<(Excise.Core.Document.PdfAttachmentGraph.Found File, AttachmentRedactionResult Result)>? keptAttachments = null;
+        if (options.ScrubAttachments)
+        {
+            Excise.Core.Document.PdfAttachmentGraph.ThrowIfPortfolio(document);
+        }
+        else if (options.InspectKeptAttachments)
+        {
+            keptAttachments = AttachmentCarrierScrubber.RedactKept(
+                document, terms, caseSensitive: false, options.WholeWord, depth: 0,
+                (nested, term) => nested.RedactText(term, new RedactionOptions
+                {
+                    WholeWord = options.WholeWord,
+                    Carriers = options.Carriers,
+                    CarrierPolicy = options.CarrierPolicy,
+                    KeepAttachments = true,
+                }));
+        }
+
         var infoFieldsBefore = options.ScrubMetadata
             ? CountScrubbableInfoFields(document)
             : 0;
         var hadXmpMetadata = options.ScrubMetadata &&
             HasXmpMetadata(document, warnings, failedStages);
-        var embeddedFileCountBefore = options.ScrubAttachments
-            ? CountEmbeddedFiles(document, warnings, failedStages)
-            : 0;
         var metadataScrubbed = false;
         var attachmentsScrubbed = false;
         var pdfAIdentificationPreserved = false;
+        var removedAttachments = new List<AttachmentRedactionResult>();
 
         if (options.ScrubMetadata)
         {
@@ -103,9 +124,8 @@ public static class RedactedCopySafetyPolicy
                 // so, because "XMP metadata removed" would then overstate what
                 // this pass did.
                 pdfAIdentificationPreserved =
-                    document.ScrubMetadataPreservingPdfAIdentity(options.ScrubAttachments);
+                    document.ScrubMetadataPreservingPdfAIdentity(scrubAttachments: false);
                 metadataScrubbed = true;
-                attachmentsScrubbed = options.ScrubAttachments;
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
@@ -116,11 +136,17 @@ public static class RedactedCopySafetyPolicy
                     failedStages);
             }
         }
-        else if (options.ScrubAttachments)
+
+        // #1572: whatever an earlier area pass removed is on the ledger, and is
+        // reported whatever this copy's own attachment choice is — a removal
+        // the caller did not expect must still be named.
+        removedAttachments.AddRange(document.RedactionLedger.RemovedAttachments);
+        if (options.ScrubAttachments)
         {
+            // Every attachment, by every route, each one named.
             try
             {
-                document.ScrubEmbeddedFiles();
+                removedAttachments.AddRange(Excise.Core.Document.PdfAttachmentGraph.RemoveAll(document));
                 attachmentsScrubbed = true;
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -164,6 +190,18 @@ public static class RedactedCopySafetyPolicy
                     warnings,
                     failedStages);
             }
+        }
+
+        // #1572: kept attachments — reconciled after the term scrub, which
+        // drops a file whose name or description holds a term. A kept file
+        // that is still there and unchecked or unclean must not pass silently.
+        IReadOnlyList<AttachmentRedactionResult> attachmentResults = removedAttachments;
+        if (keptAttachments != null)
+        {
+            var kept = AttachmentCarrierScrubber.Reconcile(document, keptAttachments);
+            attachmentResults = removedAttachments.Concat(kept).ToList();
+            foreach (var file in kept.Where(k => !k.IsClean))
+                warnings.Add($"Kept attachment {file}.");
         }
 
         if (options.RunCarrierAudit)
@@ -210,7 +248,7 @@ public static class RedactedCopySafetyPolicy
             InfoFieldsScrubbed: metadataScrubbed ? infoFieldsBefore : 0,
             HadXmpMetadata: hadXmpMetadata,
             AttachmentsScrubbed: attachmentsScrubbed,
-            EmbeddedFileCountBefore: embeddedFileCountBefore,
+            EmbeddedFileCountBefore: removedAttachments.Count,
             HiddenTextAuditStatus: hiddenTextStatus,
             HiddenTextFindingCount: hiddenTextFindingCount,
             RasterRedactionAuditStatus: rasterAuditStatus,
@@ -218,7 +256,9 @@ public static class RedactedCopySafetyPolicy
             FailedStages: failedStages,
             Warnings: warnings,
             UnresolvedRedactAnnotationCount: unresolvedRedactMarks,
-            PdfAIdentificationPreserved: pdfAIdentificationPreserved);   // #1507
+            PdfAIdentificationPreserved: pdfAIdentificationPreserved,   // #1507
+            Attachments: attachmentResults,                              // #1572
+            XfaRemovals: document.RedactionLedger.XfaRemovals.ToList()); // #1574
     }
 
     /// <summary>
@@ -470,26 +510,6 @@ public static class RedactedCopySafetyPolicy
                 warnings,
                 failedStages);
             return false;
-        }
-    }
-
-    private static int CountEmbeddedFiles(
-        PdfDocument document,
-        List<string> warnings,
-        List<RedactedCopySafetyFailureStage> failedStages)
-    {
-        try
-        {
-            return document.GetEmbeddedFiles().Count;
-        }
-        catch (Exception ex) when (ex is not OutOfMemoryException)
-        {
-            AddFailure(
-                RedactedCopySafetyFailureStage.AttachmentInspection,
-                "Embedded files could not be inspected before scrub.",
-                warnings,
-                failedStages);
-            return 0;
         }
     }
 

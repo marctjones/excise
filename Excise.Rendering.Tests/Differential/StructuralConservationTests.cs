@@ -61,27 +61,43 @@ public class StructuralConservationTests
     // ── redaction must not be collateral damage to structure ─────────────────
 
     [Fact]
-    public void RedactingATerm_ConservesEveryStructure()
+    public void RedactingATerm_WithKeepAttachments_ConservesEveryStructure()
     {
         var pdf = BuildRichPdf(bookmarks: 2, attach: true, field: true, link: true, body: "Body REDACTME text");
 
         var before = StructuralInventory.Of(PdfDocument.Open(pdf));
-
-        byte[] saved;
-        using (var doc = PdfDocument.Open(pdf))
-        {
-            doc.RedactText("REDACTME");
-            using var ms = new MemoryStream();
-            doc.Save(ms);
-            saved = ms.ToArray();
-        }
-        var after = StructuralInventory.Of(PdfDocument.Open(saved));
+        var after = StructuralInventory.Of(PdfDocument.Open(
+            RedactAndSave(pdf, new RedactionOptions { KeepAttachments = true })));
 
         // Redaction removes the TERM from carriers; it must not remove the
         // carriers themselves. A dropped bookmark or de-registered attachment
         // here is collateral no text-presence assertion would catch.
         after.Should().Be(before,
             $"redaction must conserve document structure — before {before}, after {after}");
+    }
+
+    [Fact]
+    public void RedactingATerm_ByDefault_RemovesAttachments_AndConservesEverythingElse()
+    {
+        var pdf = BuildRichPdf(bookmarks: 2, attach: true, field: true, link: true, body: "Body REDACTME text");
+
+        var before = StructuralInventory.Of(PdfDocument.Open(pdf));
+        before.Attachments.Should().Be(1, "the fixture must carry an attachment, or this proves nothing");
+        var after = StructuralInventory.Of(PdfDocument.Open(RedactAndSave(pdf, new RedactionOptions())));
+
+        // Marc, 2026-09-17 (#1572): every redacted output drops its attachments
+        // by default. That removal is the ONLY structural change allowed.
+        after.Should().Be(before with { Attachments = 0 },
+            $"default redaction removes attachments and nothing else — before {before}, after {after}");
+    }
+
+    private static byte[] RedactAndSave(byte[] pdf, RedactionOptions options)
+    {
+        using var doc = PdfDocument.Open(pdf);
+        doc.RedactText("REDACTME", options);
+        using var ms = new MemoryStream();
+        doc.Save(ms);
+        return ms.ToArray();
     }
 
     // ── fixture ──────────────────────────────────────────────────────────────

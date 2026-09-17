@@ -38,7 +38,10 @@ internal static class UnredactCommandHandler
             var builder = new RecoveryReportBuilder();
 
             cancellationToken.ThrowIfCancellationRequested();
-            var certain = CollectCertain(input, mode, builder, cancellationToken, out var certainError);
+            var present = new List<UnredactPresenceFinding>();
+            var duplicates = new List<UnredactCertainFinding>();
+            var certain = CollectCertain(
+                input, mode, builder, present, duplicates, cancellationToken, out var certainError);
             if (certainError != null)
                 return certainError;
 
@@ -57,7 +60,13 @@ internal static class UnredactCommandHandler
                 restore = restored;
             }
             var quantification = Quantify(mode, input.NoCorroboration, certain, residue, recovery);
-            var report = new UnredactReport(quantification, certain, residue, recovery, restore);
+            var report = new UnredactReport(
+                quantification, certain, residue, recovery, restore,
+                present.Count > 0 ? present : null,
+                input.IncludeVisibleCarriers ? duplicates : null);
+            // The exit code reads EVERY channel, not just the two lists: a
+            // model-only channel (a prior revision, an XFA value) is a recovery
+            // and must not exit 0. See ExitCodeFor.
             return new UnredactCommandOutcome(ExitCodeFor(certain, residue, recovery), report, null);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -74,6 +83,8 @@ internal static class UnredactCommandHandler
         UnredactCommandInput input,
         UnredactMode mode,
         RecoveryReportBuilder builder,
+        List<UnredactPresenceFinding> present,
+        List<UnredactCertainFinding> duplicates,
         CancellationToken cancellationToken,
         out UnredactCommandOutcome? error)
     {
@@ -107,12 +118,37 @@ internal static class UnredactCommandHandler
         AddPriorRevision(input, builder, cancellationToken);
 
         // These carriers are physically present and therefore CERTAIN, not a
-        // residue estimate (#1179).
-        foreach (var carrier in CarrierTextRecovery.Scan(document))
+        // residue estimate (#1179). Only text a reader cannot already see is a
+        // finding; a carrier restating visible text (a filled field's value, the
+        // title) is a duplicate, listed only with --carriers all. Presence notes
+        // (an opaque attachment, a thumbnail) are listed separately and never
+        // counted as recovered text. The scan ranks hidden findings next to a
+        // redaction mark first.
+        foreach (var carrier in CarrierTextRecovery.Scan(document, cancellationToken))
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            findings.Add(new UnredactCertainFinding(
-                carrier.PageNumber, carrier.Text, carrier.Carrier, 0, 0));
+            int? obj = carrier.ObjectNumber > 0 ? carrier.ObjectNumber : null;
+            var proximity = carrier.NearRedaction switch
+            {
+                CarrierTextRecovery.CarrierRedactionProximity.Overlapping => "overlaps redaction mark",
+                CarrierTextRecovery.CarrierRedactionProximity.SamePage => "page has redaction marks",
+                _ => null,
+            };
+            if (carrier.Kind == CarrierTextRecovery.CarrierFindingKind.Presence)
+            {
+                present.Add(new UnredactPresenceFinding(
+                    carrier.PageNumber, carrier.Carrier, carrier.Text, obj, carrier.Location));
+                continue;
+            }
+            var finding = new UnredactCertainFinding(
+                carrier.PageNumber, carrier.Text, carrier.Carrier, 0, 0,
+                Object: obj, Location: carrier.Location, Proximity: proximity)
+            {
+                FromCarrier = true,
+            };
+            if (carrier.VisibleElsewhere)
+                duplicates.Add(finding);
+            else
+                findings.Add(finding);
         }
 
         if (!input.UseOcr)
@@ -378,7 +414,13 @@ internal static class UnredactCommandHandler
     {
         var all = recovery.Linked.Concat(recovery.Unlinked).Concat(recovery.DocumentLevel).ToList();
         if (certain.Count > 0 || all.Any(f => f.Confidence == "certain")) return 3;
-        if (residue.Count > 0 || all.Count > 0) return 4;
+
+        // PRESENT-ONLY IS NOT A RECOVERY. It says material survives that this
+        // scan did not turn into text — an unopened attachment, a thumbnail,
+        // pixels under a box. Reporting it is right; giving it a "something was
+        // recovered" exit code is not, because a caller scripting on the exit
+        // code would treat every document with a thumbnail as a leak.
+        if (residue.Count > 0 || all.Any(f => f.Confidence != "present-only")) return 4;
         return 0;
     }
 

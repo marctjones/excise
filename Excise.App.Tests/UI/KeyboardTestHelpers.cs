@@ -130,6 +130,7 @@ public static class KeyboardTestHelpers
         Key.OemTilde => PhysicalKey.Backquote,
         Key.OemSemicolon => PhysicalKey.Semicolon,
         Key.OemQuotes => PhysicalKey.Quote,
+        Key.Tab => PhysicalKey.Tab,
         Key.PageDown => PhysicalKey.PageDown,
         Key.PageUp => PhysicalKey.PageUp,
         Key.Home => PhysicalKey.Home,
