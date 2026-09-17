@@ -33,6 +33,7 @@ public static class RecoveryScanner
         public const string MarkedContent = "marked-content";
         public const string CoveredImage = "covered-image";
         public const string CoveredVector = "covered-vector";
+        public const string ImageLayer = "image-layer";
         public const string FormField = "form-field";
         public const string Residue = "residue";
         public const string OcrDifferential = "ocr-differential";
@@ -65,6 +66,7 @@ public static class RecoveryScanner
         AddFormFields(document, builder, cancellationToken);
         AddResidualArtefacts(document, builder, cancellationToken);
         AddXfaValues(document, builder, cancellationToken);
+        AddImageLayerLeaks(document, builder, cancellationToken);
 
         return builder;
     }
@@ -230,6 +232,27 @@ public static class RecoveryScanner
             // than admitting there is none.
             builder.AddFinding(RecoveredFinding.Certain(
                 Channels.Xfa, $"XFA field {value.FieldPath}", value.Value, location: null));
+        }
+    }
+
+    /// <summary>
+    /// #1608 — image data still in the file but not shown: an orphaned
+    /// original left by a replace-rather-than-remove edit, or one hidden behind
+    /// a fully transparent soft mask. Neither is drawn, so the covered-image
+    /// channel cannot see them.
+    /// </summary>
+    private static void AddImageLayerLeaks(
+        PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken)
+    {
+        builder.ChannelRan(Channels.ImageLayer);
+        foreach (var leak in ImageLayerRecovery.Scan(document))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            // No page location: an orphan is referenced by no page, and a
+            // masked original's position tells you nothing useful about a leak
+            // whose subject is the object itself.
+            builder.AddFinding(RecoveredFinding.PresentOnly(
+                Channels.ImageLayer, leak.Description, location: null));
         }
     }
 

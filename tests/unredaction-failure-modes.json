@@ -112,18 +112,19 @@
       "id": "image-original-object-retained",
       "description": "The page is repointed at a redacted image while the ORIGINAL image object stays in the file, unreferenced but present.",
       "producers": ["editors that add rather than replace"],
-      "channel": null,
-      "status": "gap",
-      "issue": 1608,
-      "note": "Needs an orphaned-object sweep: image XObjects present in the file that no page references."
+      "channel": "image-layer",
+      "status": "covered",
+      "evidence": "FailureModeChannelTests.OrphanedOriginalImage_IsReportedAsAPresentOnlyLeak",
+      "note": "Closed by #1608. Gated on a same-dimensions image being REFERENCED — the signature of a swap. Without that, an orphan is ordinary incremental-update debris and belongs to the prior-revision channel."
     },
     {
       "id": "image-smask-trick",
       "description": "The original image is retained and hidden via a soft mask (/SMask) that makes it transparent, rather than being removed.",
       "producers": ["compositing editors"],
-      "channel": null,
-      "status": "gap",
-      "issue": 1608
+      "channel": "image-layer",
+      "status": "partial",
+      "evidence": "FailureModeChannelTests.FullyMaskedImage_IsReportedAsAPresentOnlyLeak",
+      "note": "An all-zero 8-bit /SMask is detected. NOT detected: an /ExtGState /ca 0 drawing the image transparently, and masks in other bit depths or colour spaces — those need alpha tracking in the walker, which the box-light-or-low-contrast row also wants."
     },
     {
       "id": "incremental-update-prior-revision",

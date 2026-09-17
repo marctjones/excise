@@ -171,6 +171,55 @@ internal static class RecoveryFixtureBuilder
     }
 
     /// <summary>
+    /// #1608 — a page drawing a REPLACEMENT image while the same-size original
+    /// stays in the file, referenced by nothing. The shape of an editor that
+    /// swaps an image rather than removing it.
+    /// </summary>
+    internal static byte[] OrphanedOriginalImage(int size = 32)
+    {
+        var original = new byte[size * size];
+        for (var i = 0; i < original.Length; i++) original[i] = (byte)(i % 251);
+        var replacement = new byte[size * size];   // all-black: the "redacted" one
+
+        var content = string.Create(CultureInfo.InvariantCulture,
+            $"q 120 0 0 120 72 600 cm /Im0 Do Q\n");
+        var extraObjects = new List<Obj>
+        {
+            // 7: the orphan — a complete image nothing points at.
+            new($"<< /Type /XObject /Subtype /Image /Width {size} /Height {size} " +
+                $"/ColorSpace /DeviceGray /BitsPerComponent 8 /Length {original.Length} >>", original),
+            // 8: the replacement the page actually draws.
+            new($"<< /Type /XObject /Subtype /Image /Width {size} /Height {size} " +
+                $"/ColorSpace /DeviceGray /BitsPerComponent 8 /Length {replacement.Length} >>", replacement),
+        };
+        return Build(content, extraObjects: extraObjects,
+            resourcesExtra: "/XObject << /Im0 8 0 R >>");
+    }
+
+    /// <summary>
+    /// #1608 — an image drawn under a fully transparent /SMask: present,
+    /// complete, and invisible.
+    /// </summary>
+    internal static byte[] FullyMaskedImage(int size = 32)
+    {
+        var pixels = new byte[size * size];
+        for (var i = 0; i < pixels.Length; i++) pixels[i] = (byte)(i % 251);
+        var mask = new byte[size * size];   // every sample zero = fully transparent
+
+        var content = "q 120 0 0 120 72 600 cm /Im0 Do Q\n";
+        var extraObjects = new List<Obj>
+        {
+            new($"<< /Type /XObject /Subtype /Image /Width {size} /Height {size} " +
+                $"/ColorSpace /DeviceGray /BitsPerComponent 8 /SMask 8 0 R " +
+                $"/Length {pixels.Length} >>", pixels),
+            new($"<< /Type /XObject /Subtype /Image /Width {size} /Height {size} " +
+                $"/ColorSpace /DeviceGray /BitsPerComponent 8 /Length {mask.Length} >>", mask),
+        };
+        return Build(content, extraObjects: extraObjects,
+            resourcesExtra: "/XObject << /Im0 7 0 R >>");
+    }
+
+    /// <summary>
     /// #1609 — an XFA form whose datasets packet still holds a field value the
     /// page no longer shows.
     /// </summary>

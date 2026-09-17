@@ -120,6 +120,17 @@ public partial class PdfDocument : IDisposable
         => _objectStore.ComputeReachableObjects(Trailer.Values);
 
     /// <summary>
+    /// Every indirect object in the file, whether or not anything references
+    /// it. Used by the de-redaction audit (#1608): an editor that "redacts" an
+    /// image by repointing the page at a new one leaves the ORIGINAL object in
+    /// the file, unreferenced and fully recoverable by any object walker.
+    /// Finding that requires seeing objects the reachable set excludes, which
+    /// is exactly what this exposes.
+    /// </summary>
+    internal IEnumerable<(int ObjectNumber, int Generation, PdfObject Object)> GetAllObjects()
+        => _objectStore.GetAllObjects();
+
+    /// <summary>
     /// Every XMP <c>/Metadata</c> stream reachable in the document, not just
     /// the catalog's. §14.3.2 permits a <c>/Metadata</c> stream on ANY object
     /// (pages, Form XObjects, images), and a redacted term can survive in a

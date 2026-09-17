@@ -100,6 +100,62 @@ public class FailureModeChannelTests
     }
 
     [Fact]
+    public void OrphanedOriginalImage_IsReportedAsAPresentOnlyLeak()
+    {
+        // #1608. The page draws a blacked-out replacement; the original is
+        // still in the file, referenced by nothing, and mutool extract or
+        // qpdf --qdf recovers it whole.
+        using var doc = PdfDocument.Open(RecoveryFixtureBuilder.OrphanedOriginalImage());
+
+        var finding = RecoveryScanner.Scan(doc).AllFindings
+            .Single(f => f.Channel == RecoveryScanner.Channels.ImageLayer);
+
+        finding.Confidence.Should().Be(RecoveryConfidence.PresentOnly);
+        finding.Carrier.Should().Contain("referenced by");
+        finding.Text.Should().BeNull("the channel names the leak, it does not decode pixels");
+    }
+
+    [Fact]
+    public void FullyMaskedImage_IsReportedAsAPresentOnlyLeak()
+    {
+        using var doc = PdfDocument.Open(RecoveryFixtureBuilder.FullyMaskedImage());
+
+        var finding = RecoveryScanner.Scan(doc).AllFindings
+            .Single(f => f.Channel == RecoveryScanner.Channels.ImageLayer);
+
+        finding.Confidence.Should().Be(RecoveryConfidence.PresentOnly);
+        finding.Carrier.Should().Contain("transparent");
+    }
+
+    [Fact]
+    public void AnOrdinaryImage_IsNotReportedAsAnImageLayerLeak()
+    {
+        // The negative control that matters most here: both shapes occur
+        // innocently, and a channel that fired on every document with an image
+        // would be worse than no channel.
+        using var doc = PdfDocument.Open(RecoveryFixtureBuilder.ImageUnderBox());
+
+        RecoveryScanner.Scan(doc).AllFindings
+            .Should().NotContain(f => f.Channel == RecoveryScanner.Channels.ImageLayer,
+                "an ordinary image under a box is the covered-image channel's subject");
+    }
+
+    [Fact]
+    public void AnUnreferencedImageWithNoMatchingReplacement_IsNotReported()
+    {
+        // Unreferenced objects accumulate benignly in incrementally-updated
+        // files. Without the same-dimensions replacement that signals a SWAP,
+        // an orphan belongs to the prior-revision channel, not this one.
+        var bytes = RecoveryFixtureBuilder.IncrementalUpdate(
+            RecoveryFixtureBuilder.PageWithThumbnail("BEFORE"),
+            "BT /F1 14 Tf 72 700 Td (AFTER) Tj ET\n");
+
+        using var doc = PdfDocument.Open(bytes);
+        RecoveryScanner.Scan(doc).AllFindings
+            .Should().NotContain(f => f.Channel == RecoveryScanner.Channels.ImageLayer);
+    }
+
+    [Fact]
     public void XfaFieldValue_IsRecoveredFromTheDatasetsPacket()
     {
         // #1609. The page shows a black box; the XFA datasets packet still
