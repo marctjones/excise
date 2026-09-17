@@ -443,23 +443,94 @@ public class RedactionProfileTests
     {
         var trap = CarrierTrapFixtures.Get("figure-alt-image-no-mcid");
 
-        // Standard, area path: the /Alt survives. Recorded as a fact, because
-        // this is the boundary of what the structure-tree scrubber can know.
-        using (var doc = PdfDocument.Open(trap.Build(true)))
+        // The image sits at 72,500 200x50, so this box covers it. The AREA
+        // blocks below build the trap WITHOUT the visible page text: an area
+        // redaction is asked to remove one region, and page text elsewhere
+        // surviving is correct, not a leak. That would mask the carrier.
+        var box = new PdfRectangle(70, 495, 275, 555);
+
+        // Standard, area path: the /Alt survives — AND THE REPORT SAYS SO.
+        // The survival alone is the boundary of what the structure-tree
+        // scrubber can know; the refusal row is what makes that boundary
+        // visible instead of a silent clean verdict.
+        using (var doc = PdfDocument.Open(trap.Build(false)))
         {
-            doc.GetPage(1).RedactAreaWithReport(
-                new PdfRectangle(70, 495, 275, 555), RedactionOptions.Default);
+            var report = doc.GetPage(1).RedactAreaWithReport(box, RedactionOptions.Default);
+
+            report.Carriers.Should().Contain(
+                c => c.Carrier == "structure-tree /Alt" && !c.Scrubbed
+                     && c.RefusedReason!.Contains("no content link"),
+                "an /Alt describing a blacked-out image that we could NOT check must be " +
+                "raised, not passed over");
+            report.IsCleanSuccess.Should().BeFalse(
+                "this is the whole point: a confirmed carrier leak may never read as a " +
+                "clean redaction (#1527 — a check that cannot fail is worse than none)");
             SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), trap.Token).Should().NotBeEmpty(
                 "no /MCID link and no removed text to content-match against — see this " +
                 "test's remarks for why the answer is a report rather than a guess");
         }
 
-        // Maximum: RemoveWhole on the structure tree takes it.
+        // Maximum, area path: RemoveWhole takes the value and reports the
+        // removal, so the same document comes out with nothing to raise.
+        using (var doc = PdfDocument.Open(trap.Build(false)))
+        {
+            var report = doc.GetPage(1).RedactAreaWithReport(box, RedactionOptions.Maximum);
+
+            report.Removals.Should().Contain(
+                r => r.Feature.Contains("unlinked alternate-text"),
+                "Maximum drops the value it cannot check, and says it did");
+            report.Carriers.Should().NotContain(c => c.Carrier == "structure-tree /Alt",
+                "nothing is left to refuse once the value is gone");
+            SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), trap.Token).Should().BeEmpty();
+        }
+
+        // Maximum, term path: the same value, reached by the RemoveWhole
+        // carrier scrub rather than by the image-triggered sweep.
         using (var doc = PdfDocument.Open(trap.Build(true)))
         {
             doc.RedactText(trap.Token, RedactionOptions.Maximum);
             SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), trap.Token).Should().BeEmpty(
                 "Maximum removes the whole /Alt value rather than cutting the term out");
+        }
+    }
+
+    /// <summary>
+    /// A hidden <c>/OC</c> span inside a VISIBLE form XObject (#1586).
+    /// </summary>
+    /// <remarks>
+    /// <para><b>What this settles.</b> The hidden-layer pass walked the PAGE
+    /// content stream and, for a <c>Do</c>, looked only at whether the XObJECT
+    /// itself carried a hidden <c>/OC</c>. A visible form holding
+    /// <c>/OC /MC0 BDC … EMC</c> was untouched — and the report still said
+    /// "hidden optional-content span(s) removed", which is the failure mode
+    /// this project treats as worse than removing nothing: a stated guarantee
+    /// that holds one level deep.</para>
+    /// <para>Two-sided: the knob off leaves it, which is also the #1170 rule
+    /// (a caller who asked NOT to reach into hidden layers must not have them
+    /// DELETED instead).</para>
+    /// </remarks>
+    [Fact]
+    public void AHiddenLayerInsideAVisibleForm_IsRemovedToo()
+    {
+        var trap = CarrierTrapFixtures.Get("ocg-hidden-in-form");
+
+        using (var doc = PdfDocument.Open(trap.Build(false)))
+        {
+            var report = doc.RedactText("UNRELATED", RedactionOptions.Default);
+            report.Removals.Should().Contain(
+                r => r.Feature.Contains("hidden optional-content span"),
+                "one level down is still inside the document");
+            SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), trap.Token).Should().BeEmpty(
+                "the span's text is gone from the form's stream, not just from the page's");
+        }
+
+        // Knob off: the layer stays. Nothing is deleted behind the back of a
+        // caller who said not to reach into hidden content.
+        using (var doc = PdfDocument.Open(trap.Build(false)))
+        {
+            doc.RedactText("UNRELATED",
+                RedactionOptions.Default with { RemoveHiddenLayerContent = false });
+            SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), trap.Token).Should().NotBeEmpty();
         }
     }
 

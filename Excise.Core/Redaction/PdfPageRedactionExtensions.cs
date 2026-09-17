@@ -167,11 +167,11 @@ public static class PdfPageRedactionExtensions
         // then walked for glyph removal, and the #1507 metadata strip runs
         // before #1499's per-widget appearance decision reads TargetsPdfA.
         var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
-        page.RedactAreaInternal(area, area, options.Strategy,
+        var imageCounts = page.RedactAreaInternal(area, area, options.Strategy,
             options.ScrubDocumentCarriers, options.CloseWidth,
             removeAttachments: !options.KeepAttachments);
         return AreaReport(page.Document, options, metadataRow,
-            RedactionFeatureStripper.Apply(page.Document, options));
+            RedactionFeatureStripper.Apply(page.Document, options), imageCounts);
     }
 
     public static void RedactArea(
@@ -333,11 +333,11 @@ public static class PdfPageRedactionExtensions
         if (options == null) throw new System.ArgumentNullException(nameof(options));
         var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
         var list = areas.Select(a => a.Normalize()).ToList();
-        page.RedactAreasInternal(list, list, options.Strategy,
+        var imageCounts = page.RedactAreasInternal(list, list, options.Strategy,
             options.ScrubDocumentCarriers, options.CloseWidth,
             removeAttachments: !options.KeepAttachments);
         return AreaReport(page.Document, options, metadataRow,
-            RedactionFeatureStripper.Apply(page.Document, options));
+            RedactionFeatureStripper.Apply(page.Document, options), imageCounts);
     }
 
     /// <summary>
@@ -349,21 +349,48 @@ public static class PdfPageRedactionExtensions
         Excise.Core.Document.PdfDocument document,
         RedactionOptions options,
         RedactedFeatureRemoval? metadataRow,
-        System.Collections.Generic.IReadOnlyList<RedactedFeatureRemoval> removals)
-        => new()
+        System.Collections.Generic.IReadOnlyList<RedactedFeatureRemoval> removals,
+        ImageRedactionCounts imageCounts)
+    {
+        var all = metadataRow == null
+            ? removals.ToList()
+            : new[] { metadataRow }.Concat(removals).ToList();
+        var carriers = new System.Collections.Generic.List<CarrierResult>();
+
+        // #1586 trap: an image was blacked out, and the structure tree
+        // describes an image in an /Alt with NO content link. Neither
+        // StructureTreeRedactionScrubber pass can reach it — pass 1 needs the
+        // structural link, pass 2 matches against removed TEXT and an image
+        // redaction removes none. So it is reported (Standard) or removed
+        // whole (Maximum), never silently left behind while IsCleanSuccess
+        // says the redaction was clean.
+        if (imageCounts.RegionEdited > 0 || imageCounts.RemovedWhole > 0)
+        {
+            var (refused, removed) =
+                RedactionFeatureStripper.ResolveUnlinkedAlternateText(document, options);
+            if (removed > 0)
+                all.Add(new RedactedFeatureRemoval("unlinked alternate-text value(s)", removed,
+                    "described content with no structural link, so it could not be checked"));
+            if (refused > 0)
+                carriers.Add(new CarrierResult("structure-tree /Alt", false,
+                    $"{refused} alternate-text element(s) have no content link, so they could "
+                    + "not be checked against the redacted image(s) — review them by hand, or "
+                    + "use the maximum profile to drop them"));
+        }
+
+        return new()
         {
             Term = "",
             Pages = System.Array.Empty<PageRedactionResult>(),
-            Carriers = System.Array.Empty<CarrierResult>(),
+            Carriers = carriers,
             Attachments = document.RedactionLedger.RemovedAttachments,
             Profile = options.Profile,
             // The metadata strip ran first and is reported first.
-            Removals = metadataRow == null
-                ? removals
-                : new[] { metadataRow }.Concat(removals).ToList(),
+            Removals = all,
             AccessibilityAndInteractivityRemoved =
                 RedactionFeatureStripper.DestroysAccessibility(options),
         };
+    }
 
     public static void RedactAreas(
         this PdfPage page,

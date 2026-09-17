@@ -112,7 +112,31 @@ Three rules that are load-bearing, each from a measured defect:
    deleting the layers a caller asked you not to touch is worse than either
    answer alone. And removing a `/GoToE` action orphans the embedded file it
    targets, so under `KeepAttachments` that filespec is re-anchored and
-   reported rather than silently lost.
+   reported rather than silently lost. The same is true of a `FileAttachment`,
+   `Sound` or `Movie` annotation, which Maximum removes as markup: the
+   annotation IS the only reference to the file, so the filespec is re-anchored
+   on the catalog `/AF`. A `Sound` clip is a bare stream with no filespec to
+   re-anchor, so that annotation is kept instead.
+4. **A removal pass must reach as deep as its report claims.** The hidden-layer
+   pass walked only the page content stream, so a hidden `/OC` span inside a
+   *visible* form XObject survived while the report said hidden spans were
+   removed. When a pass and its report disagree about scope, the report is the
+   defect. Recurse, or narrow what the row says — never leave the gap unstated.
+5. **When a carrier CANNOT be checked, say so — do not infer.** An `/Alt` that
+   describes an image an AREA redaction blacked out has no `/MCID` link to
+   match on and no removed TEXT to compare against, so neither structure-tree
+   pass can reach it. The answer is a `CarrierResult` refusal that turns
+   `IsCleanSuccess` false (Standard) and a reported whole-value removal
+   (Maximum) — not a guess in either direction. Stripping every `/Alt` near a
+   redaction would delete correct descriptions, and an `/Alt` is all a blind
+   reader gets.
+
+⚠️ **Our own enumerators are not evidence that a file was KEPT.** Measured
+while wiring the annotation salvage above: `RedactedCopySafetyPolicy` reported
+6 attachments whether or not the salvage ran, because the writer keeps every
+object and the evaluator finds the orphaned filespec by object scan. pdfdetach
+said the file was unreachable. Assert the ANCHOR, and check reachability with a
+tool that is not excise.
 
 ⚠️ **The engine reads the FLAGS, never `RedactionOptions.Profile`.** The enum is
 a label for the report. Anything that rebuilds `CarrierScrubPolicy` from

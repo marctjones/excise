@@ -96,11 +96,19 @@ internal static class RedactionFeatureStripper
             if (count > 0) rows.Add(new RedactedFeatureRemoval(feature, count, detail));
         }
 
+        // ONE object-graph walk per strip, shared by the two passes that need
+        // it (#1586). Both used to call ReachableDictionaries themselves, which
+        // on the GUI Apply-All path — one RedactArea per redaction — meant two
+        // whole-document walks PER REDACTION. Lazy, so a document with neither
+        // pass enabled pays nothing.
+        List<PdfDictionary>? reachableCache = null;
+        List<PdfDictionary> Reachable() => reachableCache ??= ReachableDictionaries(document);
+
         if (options.RemoveScripts || options.RemoveExternalActions)
         {
             var (scripts, external, reanchored) = RemoveActions(
                 document, options.RemoveScripts, options.RemoveExternalActions,
-                options.KeepAttachments);
+                options.KeepAttachments, Reachable());
             Row("JavaScript action(s)", scripts);
             Row("external-effect action(s)", external,
                 "Launch/SubmitForm/ImportData/GoToR/GoToE; internal navigation kept");
@@ -113,7 +121,7 @@ internal static class RedactionFeatureStripper
         }
 
         if (options.RemovePieceInfo)
-            Row("/PieceInfo private application data", RemovePieceInfo(document));
+            Row("/PieceInfo private application data", RemovePieceInfo(document, Reachable()));
 
         if (options.RemoveThumbnails)
             Row("page thumbnail image(s)", RemoveThumbnails(document));
@@ -146,10 +154,15 @@ internal static class RedactionFeatureStripper
 
         if (options.RemoveLinkAnnotations || options.RemoveMarkupAnnotations)
         {
-            var (links, markup) = RemoveAnnotations(
-                document, options.RemoveLinkAnnotations, options.RemoveMarkupAnnotations);
+            var (links, markup, reanchoredFromAnnots) = RemoveAnnotations(
+                document, options.RemoveLinkAnnotations, options.RemoveMarkupAnnotations,
+                options.KeepAttachments);
             Row("link annotation(s)", links);
             Row("comment/markup annotation(s)", markup);
+            Row("embedded file(s) re-anchored at document level", reanchoredFromAnnots,
+                "their FileAttachment/Sound/Movie annotation was removed and KeepAttachments "
+                + "was requested");
+            if (reanchoredFromAnnots > 0) invalidate |= PdfDocumentDerivedStateScope.Attachments;
         }
 
         if (options.RemoveFieldNames)
@@ -274,7 +287,8 @@ internal static class RedactionFeatureStripper
     /// a structural change the caller did not ask for.</para>
     /// </remarks>
     private static (int Scripts, int External, int ReanchoredFiles) RemoveActions(
-        PdfDocument document, bool removeScripts, bool removeExternal, bool keepAttachments)
+        PdfDocument document, bool removeScripts, bool removeExternal, bool keepAttachments,
+        List<PdfDictionary> reachable)
     {
         int scripts = 0, external = 0;
         // Filespecs reached only through an action we are about to remove.
@@ -363,7 +377,7 @@ internal static class RedactionFeatureStripper
             if (dict.Count == 0) owner.Remove(key);
         }
 
-        foreach (var dict in ReachableDictionaries(document))
+        foreach (var dict in reachable)
         {
             PruneSlot(dict, "A", isAdditionalActions: false);
             PruneSlot(dict, "AA", isAdditionalActions: true);
@@ -444,7 +458,7 @@ internal static class RedactionFeatureStripper
 
     // ───────────────────────── /PieceInfo, /Thumb ─────────────────────────
 
-    private static int RemovePieceInfo(PdfDocument document)
+    private static int RemovePieceInfo(PdfDocument document, List<PdfDictionary> reachable)
     {
         var removed = 0;
         if (document.Catalog.Remove("PieceInfo")) removed++;
@@ -453,7 +467,11 @@ internal static class RedactionFeatureStripper
 
         // A form XObject carries /PieceInfo too (§14.5 Table 95), and nothing
         // above reaches one.
-        foreach (var dict in ReachableDictionaries(document))
+        // ⚠️ The list predates the action strip above, so it can hold
+        // dictionaries that are now unreachable. Removing /PieceInfo from one
+        // of those is a no-op on the output, and re-walking to avoid it would
+        // cost the walk this sharing exists to save.
+        foreach (var dict in reachable)
             if (dict.GetNameOrNull("Subtype") == "Form" && dict.Remove("PieceInfo"))
                 removed++;
 
@@ -504,6 +522,116 @@ internal static class RedactionFeatureStripper
     /// balances the one that opened it — dropping at the first EMC would leak
     /// the tail of the layer back into the page.</para>
     /// </remarks>
+    /// <summary>
+    /// Drop every <c>/OC BDC … EMC</c> span whose group is OFF by default, and
+    /// every <c>Do</c> of an XObject with a hidden <c>/OC</c>. Shared by the
+    /// page pass and the form-XObject recursion, so the two cannot drift.
+    /// </summary>
+    private static (List<ContentOperator> Kept, int Spans) FilterHiddenSpans(
+        PdfDocument document,
+        IReadOnlyList<ContentOperator> operators,
+        PdfDictionary? properties,
+        PdfDictionary? xobjects,
+        HashSet<PdfDictionary> hiddenGroups)
+    {
+        var kept = new List<ContentOperator>(operators.Count);
+        var skipDepth = 0;          // >0 while inside a hidden span
+        var markedDepth = 0;        // BDC/BMC nesting while skipping
+        var count = 0;
+
+        foreach (var op in operators)
+        {
+            if (skipDepth > 0)
+            {
+                if (op.Name is "BDC" or "BMC") markedDepth++;
+                else if (op.Name == "EMC")
+                {
+                    markedDepth--;
+                    if (markedDepth == 0) skipDepth = 0;
+                }
+                continue;   // the opening BDC and closing EMC go too
+            }
+
+            if (op.Name == "BDC" && IsHiddenOcSpan(document, properties, op, hiddenGroups))
+            {
+                skipDepth = 1;
+                markedDepth = 1;
+                count++;
+                continue;
+            }
+
+            if (op.Name == "Do" && IsHiddenXObject(document, xobjects, op, hiddenGroups))
+            {
+                count++;
+                continue;
+            }
+
+            kept.Add(op);
+        }
+        return (kept, count);
+    }
+
+    /// <summary>
+    /// Recurse into the VISIBLE form XObjects of <paramref name="xobjects"/>
+    /// and filter their hidden spans in place. A form whose own <c>/OC</c> is
+    /// hidden is skipped — the <c>Do</c> that draws it is already dropped, and
+    /// it may be drawn from elsewhere too.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ Rewrites the form's stream, so it cannot preserve per-operator source
+    /// bytes the way <c>SetContentStream</c> does on a page. That is acceptable
+    /// only because the form is REACHED at all — a form with no hidden span is
+    /// never rewritten (<c>count == 0</c> returns early).
+    /// </remarks>
+    private static int RemoveHiddenSpansInForms(
+        PdfDocument document,
+        PdfDictionary? xobjects,
+        HashSet<PdfDictionary> hiddenGroups,
+        int depth)
+    {
+        if (xobjects == null || depth > 8) return 0;
+
+        var removed = 0;
+        foreach (var key in xobjects.Keys.Select(k => k.Value).ToList())
+        {
+            if (Resolve(document, xobjects.GetOptional(key) ?? PdfNull.Instance)
+                is not PdfStream form) continue;
+            if (form.GetNameOrNull("Subtype") != "Form") continue;
+            if (form.GetOptional("OC") is { } oc
+                && !OptionalContentVisibility.IsVisibleByDefault(document, oc)) continue;
+
+            var resources = Resolve(document, form.GetOptional("Resources") ?? PdfNull.Instance)
+                as PdfDictionary;
+            var properties = Resolve(document, resources?.GetOptional("Properties") ?? PdfNull.Instance)
+                as PdfDictionary;
+            var nested = Resolve(document, resources?.GetOptional("XObject") ?? PdfNull.Instance)
+                as PdfDictionary;
+
+            removed += RemoveHiddenSpansInForms(document, nested, hiddenGroups, depth + 1);
+
+            IReadOnlyList<ContentOperator> operators;
+            try
+            {
+                operators = new Excise.Core.Content.ContentStreamParser(form.DecodedData, null)
+                    .Parse().Operators;
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException) { continue; }
+
+            var (kept, count) =
+                FilterHiddenSpans(document, operators, properties, nested, hiddenGroups);
+            if (count == 0) continue;
+
+            try
+            {
+                form.DecodedData = new Excise.Core.Content.ContentStreamWriter()
+                    .Write(new ContentStream(kept));
+                removed += count;
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException) { /* leave as-is */ }
+        }
+        return removed;
+    }
+
     private static (int Spans, int Groups) RemoveHiddenOptionalContent(PdfDocument document)
     {
         // No /OCProperties means no optional content and nothing to do — and,
@@ -525,40 +653,16 @@ internal static class RedactionFeatureStripper
             catch (Exception ex) when (ex is not OutOfMemoryException) { continue; }
             if (content.Operators.Count == 0) continue;
 
-            var kept = new List<ContentOperator>(content.Operators.Count);
-            var skipDepth = 0;          // >0 while inside a hidden span
-            var markedDepth = 0;        // BDC/BMC nesting while skipping
-            var pageSpans = 0;
+            var (kept, pageSpans) =
+                FilterHiddenSpans(document, content.Operators, properties, xobjects, hiddenGroups);
 
-            foreach (var op in content.Operators)
-            {
-                if (skipDepth > 0)
-                {
-                    if (op.Name is "BDC" or "BMC") markedDepth++;
-                    else if (op.Name == "EMC")
-                    {
-                        markedDepth--;
-                        if (markedDepth == 0) skipDepth = 0;
-                    }
-                    continue;   // the opening BDC and closing EMC go too
-                }
-
-                if (op.Name == "BDC" && IsHiddenOcSpan(document, properties, op, hiddenGroups))
-                {
-                    skipDepth = 1;
-                    markedDepth = 1;
-                    pageSpans++;
-                    continue;
-                }
-
-                if (op.Name == "Do" && IsHiddenXObject(document, xobjects, op, hiddenGroups))
-                {
-                    pageSpans++;
-                    continue;
-                }
-
-                kept.Add(op);
-            }
+            // A VISIBLE form XObject can hold hidden /OC spans of its own, and
+            // its /Properties live in ITS resources (#1586). Without this, the
+            // report's "hidden optional-content span(s)" row would overstate:
+            // we would have removed the page-level spans and left the ones one
+            // level down, which is the kind of partial guarantee this project
+            // treats as worse than none.
+            spans += RemoveHiddenSpansInForms(document, xobjects, hiddenGroups, 0);
 
             if (pageSpans == 0) continue;
             spans += pageSpans;
@@ -706,10 +810,21 @@ internal static class RedactionFeatureStripper
 
     // ───────────────────────── Maximum removals ─────────────────────────
 
-    private static (int Links, int Markup) RemoveAnnotations(
-        PdfDocument document, bool removeLinks, bool removeMarkup)
+    /// <summary>
+    /// Remove Link and/or markup annotations (Maximum). An annotation that
+    /// CARRIES an embedded file has that file re-anchored when
+    /// <paramref name="keepAttachments"/> is set, for the same reason the
+    /// action strip does it: <see cref="MarkupSubtypes"/> includes
+    /// <c>FileAttachment</c>, <c>Sound</c> and <c>Movie</c>, so removing the
+    /// annotation is the only reference to the file — and a caller who
+    /// explicitly said to keep attachments losing one silently is the defect,
+    /// not the removal.
+    /// </summary>
+    private static (int Links, int Markup, int ReanchoredFiles) RemoveAnnotations(
+        PdfDocument document, bool removeLinks, bool removeMarkup, bool keepAttachments)
     {
         int links = 0, markup = 0;
+        var orphanedFileSpecs = new List<PdfObject>();
         foreach (var page in SafePages(document))
         {
             if (Resolve(document, page.Dictionary.GetOptional("Annots") ?? PdfNull.Instance)
@@ -721,9 +836,24 @@ internal static class RedactionFeatureStripper
                 if (Resolve(document, item) is PdfDictionary annot)
                 {
                     var subtype = annot.GetNameOrNull("Subtype");
-                    if (removeLinks && subtype == "Link") { links++; continue; }
+                    if (removeLinks && subtype == "Link")
+                    {
+                        if (keepAttachments) orphanedFileSpecs.AddRange(FileSpecsUnder(document, annot));
+                        links++;
+                        continue;
+                    }
                     if (removeMarkup && subtype != null && MarkupSubtypes.Contains(subtype))
                     {
+                        if (keepAttachments)
+                        {
+                            orphanedFileSpecs.AddRange(FileSpecsUnder(document, annot));
+                            // A Sound annotation's clip is a bare stream under
+                            // /Sound, not a file specification, so FileSpecsUnder
+                            // cannot see it. Nothing re-anchors a bare stream, so
+                            // such an annotation is KEPT rather than silently
+                            // stripped of its only carrier.
+                            if (annot.GetOptional("Sound") != null) { keep.Add(item); continue; }
+                        }
                         markup++;
                         continue;
                     }
@@ -732,7 +862,7 @@ internal static class RedactionFeatureStripper
             }
             if (keep.Count != annots.Count) page.Dictionary["Annots"] = new PdfArray(keep);
         }
-        return (links, markup);
+        return (links, markup, ReanchorOrphanedFiles(document, orphanedFileSpecs));
     }
 
     /// <summary>
@@ -796,6 +926,118 @@ internal static class RedactionFeatureStripper
         try { AcroFormFlattener.Flatten(document, form); }
         catch (Exception ex) when (ex is not OutOfMemoryException) { return 0; }
         return count;
+    }
+
+    /// <summary>
+    /// How many structure elements carry <c>/Alt</c> or <c>/ActualText</c> with
+    /// NO content link — no <c>/MCID</c> and no <c>/OBJR</c> anywhere under
+    /// <c>/K</c> (#1586).
+    /// </summary>
+    /// <remarks>
+    /// <para>The measured trap: a <c>/Figure</c> whose <c>/Alt</c> describes an
+    /// image an AREA redaction blacked out.
+    /// <c>StructureTreeRedactionScrubber</c> has two passes and both are blind
+    /// to it by construction — pass 1 needs a structural link to the redaction
+    /// area, pass 2 content-matches the carrier against text the glyph pass
+    /// REMOVED, and an image redaction removes no text.</para>
+    /// <para><b>Counted, not removed.</b> Deleting the <c>/Alt</c> of every
+    /// figure near a redaction would be a guess: an image can be blacked out in
+    /// one corner and correctly described everywhere else, and an <c>/Alt</c> is
+    /// all a blind reader gets. So Standard SURFACES it (a carrier row that
+    /// makes <c>IsCleanSuccess</c> false) and Maximum removes the whole value.
+    /// Same shape as <c>HyphenatedTermCandidate</c>: report the gap, do not
+    /// paper over it.</para>
+    /// </remarks>
+    internal static int CountUnlinkedAlternateText(PdfDocument document)
+        => UnlinkedAlternateTextElements(document).Count;
+
+    /// <summary>The elements <see cref="CountUnlinkedAlternateText"/> counts.</summary>
+    private static List<PdfDictionary> UnlinkedAlternateTextElements(PdfDocument document)
+    {
+        var found = new List<PdfDictionary>();
+        if (Resolve(document, document.Catalog.GetOptional("StructTreeRoot") ?? PdfNull.Instance)
+            is not PdfDictionary root) return found;
+
+        var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        var stack = new Stack<PdfObject>();
+        stack.Push(root);
+        while (stack.Count > 0)
+        {
+            if (Resolve(document, stack.Pop()) is not PdfDictionary node || !visited.Add(node))
+                continue;
+
+            var kids = node.GetOptional("K");
+            if (node.GetNameOrNull("Type") == "StructElem"
+                && (node.GetOptional("Alt") != null || node.GetOptional("ActualText") != null)
+                && !HasContentLink(document, kids, 0))
+            {
+                found.Add(node);
+            }
+
+            switch (Resolve(document, kids ?? PdfNull.Instance))
+            {
+                case PdfArray array: foreach (var k in array) stack.Push(k); break;
+                case PdfDictionary dict: stack.Push(dict); break;
+            }
+        }
+        return found;
+    }
+
+    /// <summary>
+    /// Deal with the unlinked alternate text <see
+    /// cref="CountUnlinkedAlternateText"/> found: REMOVE it when the
+    /// structure-tree carrier is in <see cref="CarrierScrubMode.RemoveWhole"/>
+    /// (Maximum), otherwise leave it and let the caller REPORT it.
+    /// </summary>
+    /// <returns>
+    /// <c>Refused</c> — elements left in place for the caller to raise as a
+    /// carrier refusal; <c>Removed</c> — elements whose alternate text was
+    /// dropped.
+    /// </returns>
+    internal static (int Refused, int Removed) ResolveUnlinkedAlternateText(
+        PdfDocument document, RedactionOptions options)
+    {
+        if ((options.Carriers & Excise.Core.Operations.RedactionCarriers.StructTree) == 0) return (0, 0);
+        var count = CountUnlinkedAlternateText(document);
+        if (count == 0) return (0, 0);
+        if (options.CarrierPolicy.ModeFor(Excise.Core.Operations.RedactionCarriers.StructTree)
+            != Excise.Core.Operations.CarrierScrubMode.RemoveWhole)
+        {
+            return (count, 0);
+        }
+
+        var removed = 0;
+        foreach (var element in UnlinkedAlternateTextElements(document))
+        {
+            var had = element.Remove("Alt") | element.Remove("ActualText");
+            if (had) removed++;
+        }
+        document.InvalidateDerivedState(PdfDocumentDerivedStateScope.StructureAndTagging);
+        return (0, removed);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="kids"/> reaches any marked-content id or object
+    /// reference — i.e. whether the element is tied to actual page content.
+    /// </summary>
+    private static bool HasContentLink(PdfDocument document, PdfObject? kids, int depth)
+    {
+        if (depth > 32 || kids == null) return false;
+        switch (Resolve(document, kids))
+        {
+            case PdfInteger: return true;                      // a bare MCID
+            case PdfArray array:
+                foreach (var item in array)
+                    if (HasContentLink(document, item, depth + 1)) return true;
+                return false;
+            case PdfDictionary dict:
+                var type = dict.GetNameOrNull("Type");
+                if (type is "MCR" or "OBJR") return true;
+                if (dict.GetOptional("MCID") != null) return true;
+                // A nested StructElem is a link only if ITS kids reach content.
+                return HasContentLink(document, dict.GetOptional("K"), depth + 1);
+            default: return false;
+        }
     }
 
     // ───────────────────────── shared helpers ─────────────────────────

@@ -25,8 +25,17 @@ namespace Excise.Rendering.Tests.Differential;
 ///     #1583;</item>
 ///   <item>after the #1582 attachment work: <b>9 of 47</b>;</item>
 ///   <item>after #1586 (the output profiles plus the #1581/#1583 fixes):
-///     <b>0 of 48</b> under Standard and under Maximum.</item>
+///     <b>0 of 48</b> under Standard and under Maximum;</item>
+///   <item>with the two later #1586 traps — a hidden <c>/OC</c> span inside a
+///     VISIBLE form XObject, and a <c>/Figure</c> <c>/Alt</c> over a redacted
+///     image with no MCID link — <b>0 of 49</b> under both profiles. Both
+///     leaked before their fixes; the form-XObject one was a report that
+///     OVERSTATED (page-level spans removed, the one level down left).</item>
 /// </list>
+/// <para>Corroborated on the same 98 outputs (49 traps × 2 profiles) by tools
+/// that are not excise: mutool, pdftotext and pdfdetach read the token 0
+/// times, and <c>qpdf --check</c> reported 0 structure failures. The check is
+/// not inert — the same tools read the token in <b>49 of 49 INPUTS</b>.</para>
 /// <para>⚠️ It is still a SURVEY: it prints the table and asserts only that it
 /// ran over the traps. The assertions live in <c>RedactionProfileTests</c> and
 /// <c>CarrierTrapIndependentCorroborationTests</c>, so a leak that reappears

@@ -231,6 +231,23 @@ internal static class CarrierTrapFixtures
                 resources: "/Properties << /MC0 6 0 R >>",
                 catalog: "/OCProperties << /OCGs [6 0 R] /D << /OFF [6 0 R] >> >>",
                 extra: new[] { "<< /Type /OCG /Name (Draft) >>" }));
+        // #1586: the SAME hidden layer, one level down — a hidden /OC span
+        // inside a VISIBLE form XObject, whose /Properties live in the form's
+        // own resources. The page-level pass cannot see it, and the report row
+        // ("hidden optional-content span(s)") would have overstated what was
+        // removed.
+        Add("ocg-hidden-in-form", "HIDDENFORMLAYERTRAP", "optional content (hidden",
+            Oracle.QpdfDump,
+            (t, v) => Doc(V(t, v), extraContent: "/Fm0 Do",
+                resources: "/XObject << /Fm0 7 0 R >>",
+                catalog: "/OCProperties << /OCGs [6 0 R] /D << /OFF [6 0 R] >> >>",
+                extra: new[]
+                {
+                    "<< /Type /OCG /Name (Draft) >>",
+                    Stream("/Type /XObject /Subtype /Form /BBox [0 0 612 792] "
+                        + "/Resources << /Font << /F1 5 0 R >> /Properties << /MC0 6 0 R >> >>",
+                        $"/OC /MC0 BDC BT /F1 12 Tf 72 460 Td ({t}) Tj ET EMC", compress: false),
+                }));
         Add("structure-actualtext", "STRUCTACTUALTRAP", "structure-tree /ActualText", Oracle.QpdfDump,
             (t, v) => Doc(V(t, v), catalog: "/StructTreeRoot 6 0 R", extra: new[]
             {

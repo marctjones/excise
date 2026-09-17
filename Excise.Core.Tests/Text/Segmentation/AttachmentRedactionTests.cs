@@ -399,6 +399,86 @@ public class AttachmentRedactionTests
         report.Warnings.Should().Contain(w => w.Contains("doc.txt") && w.Contains("NOT checked"));
     }
 
+    /// <summary>
+    /// The same fixture under the MAXIMUM profile with <c>KeepAttachments</c>:
+    /// all six files are still there (#1586).
+    /// </summary>
+    /// <remarks>
+    /// <para>Maximum strips markup annotations, and
+    /// <c>RedactionFeatureStripper.MarkupSubtypes</c> includes
+    /// <c>FileAttachment</c>, <c>Sound</c> and <c>Movie</c> — for such an
+    /// annotation the annotation IS the only reference to the file. So this is
+    /// the same defect the <c>/GoToE</c> action strip had, through a different
+    /// door: a caller who explicitly asked to keep attachments losing one
+    /// silently. The stripper salvages the filespec onto the catalog
+    /// <c>/AF</c> and reports the re-anchoring.</para>
+    /// <para>⚠️ Two-sided by construction: the count is what the other
+    /// KeepAttachments tests assert under Standard, so a regression that drops
+    /// a file shows as 5, not as a vague warning.</para>
+    /// </remarks>
+    [Fact]
+    public void KeepAttachments_UnderMaximum_StillKeepsEveryFile()
+    {
+        using var doc = PdfDocument.Open(BuildAllRoutesPdf());
+        var area = new PdfRectangle(60, 690, 300, 720);
+
+        var redaction = doc.GetPage(1).RedactAreaWithReport(
+            area, RedactionOptions.Maximum with { KeepAttachments = true });
+        var report = RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForAreas(
+            new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, area)) },
+            options: new RedactedCopySafetyOptions { ScrubAttachments = false }));
+
+        // ⚠️ The ANCHORING is what is asserted, not our own attachment count.
+        // Measured: RedactedCopySafetyPolicy reports 6 either way, because the
+        // writer keeps every object and the evaluator finds the orphaned
+        // filespec by object scan — so the count cannot tell a kept file from
+        // an unreachable one. pdfdetach agrees the annotation route is gone
+        // (poppler reads the name tree and annotations, not /AF), which is
+        // exactly why the file must be given a document-level anchor.
+        var af = doc.Catalog.GetOptional("AF");
+        var anchored = af == null
+            ? new System.Collections.Generic.List<string>()
+            : ((Excise.Core.Primitives.PdfArray)doc.Resolve(af)!)
+                .Select(o => doc.Resolve(o))
+                .OfType<Excise.Core.Primitives.PdfDictionary>()
+                .Select(d => (doc.Resolve(d.GetOptional("F") ?? d.GetOptional("UF")!)
+                    as Excise.Core.Primitives.PdfString)?.Value ?? "")
+                .ToList();
+        anchored.Should().Contain("annot.txt",
+            "the FileAttachment annotation was the ONLY reference to annot.txt, and Maximum " +
+            "removes markup annotations — so keeping the file means re-anchoring its " +
+            "filespec on the catalog /AF (§7.11.4), not hoping the orphan survives");
+        report.AttachmentResults.Should().HaveCount(6,
+            "and the safety evaluator still enumerates every file");
+        redaction.Removals.Should().Contain(
+            r => r.Feature.Contains("re-anchored") && r.Detail!.Contains("annotation"),
+            "and the re-anchoring is reported: a file that moved from an annotation to the " +
+            "catalog /AF is a change the reviewer can see. The Detail match matters — the " +
+            "action strip emits a re-anchored row too, and this test is about the " +
+            "ANNOTATION route");
+    }
+
+    /// <summary>
+    /// The other side: WITHOUT <c>KeepAttachments</c>, Maximum's annotation
+    /// strip is allowed to take the attached files with it.
+    /// </summary>
+    [Fact]
+    public void Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo()
+    {
+        using var doc = PdfDocument.Open(BuildAllRoutesPdf());
+        var redaction = doc.GetPage(1).RedactAreaWithReport(
+            new PdfRectangle(60, 690, 300, 720), RedactionOptions.Maximum);
+
+        redaction.Removals.Should().NotContain(
+            r => r.Feature.Contains("re-anchored") && r.Detail!.Contains("annotation"),
+            "nothing is salvaged when the caller did not ask for the files to be kept");
+        doc.Catalog.GetOptional("AF").Should().BeNull(
+            "the wholesale attachment scrub takes the /AF arrays with it (#467)");
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), DocSecret).Should().BeEmpty(
+            "the default IS removal (#1572); the salvage above is the KeepAttachments " +
+            "opt-out, not a weakening of it");
+    }
+
     // ── fixture plumbing ──────────────────────────────────────────────────
 
     internal static string Stream(string dictionary, string data)

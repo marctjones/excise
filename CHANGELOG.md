@@ -119,6 +119,35 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   and keep the AcroForm fields, which every non-XFA viewer already uses.
 
 ### Fixed
+- **The hidden-layer removal stopped at the page** (#1586). Standard removes
+  content in optional-content groups that are OFF by default — but the pass
+  walked only the PAGE content stream, and for a `Do` it asked whether the
+  XObject *itself* carried a hidden `/OC`. A hidden `/OC … BDC … EMC` span
+  inside a **visible** form XObject (whose `/Properties` live in the form's own
+  resources) was left in place, while the report still said hidden spans had
+  been removed. A guarantee that holds one level deep is the failure mode this
+  project treats as worse than promising nothing. The pass now recurses into
+  visible form XObjects (bounded at depth 8) and both levels share one span
+  filter so they cannot drift. Trap: `ocg-hidden-in-form`.
+- **An `/Alt` describing a redacted image could not be checked, and was not
+  reported** (#1586). `StructureTreeRedactionScrubber` has two passes and both
+  are blind to a `/Figure` whose `/Alt` describes an image an AREA redaction
+  blacked out: pass 1 needs an `/MCID`/`/OBJR` link to the area, and pass 2
+  content-matches the carrier against text the glyph pass removed — an image
+  redaction removes none. The area report now raises a `structure-tree /Alt`
+  carrier refusal naming the count (so `IsCleanSuccess` goes false), and
+  Maximum drops the whole value and reports the removal. It is deliberately
+  **not** stripped under Standard: an image can be blacked out in one corner
+  and correctly described everywhere else, and an `/Alt` is all a blind reader
+  gets.
+- **Maximum could take an attachment the caller asked to keep** (#1586).
+  `FileAttachment`, `Sound` and `Movie` are markup annotations, so Maximum's
+  annotation strip removed the only reference to a file the caller had kept
+  with `KeepAttachments` — the same defect the `/GoToE` action strip had, by a
+  different door. Such a file specification is now re-anchored on the catalog
+  `/AF` (§7.11.4) and the re-anchoring is reported; a `Sound` annotation, whose
+  clip is a bare stream rather than a file specification and so cannot be
+  re-anchored, is KEPT instead of silently emptied.
 - **The redaction covering box was untagged content** (#1586). A filled
   rectangle appended to a TAGGED page is neither tagged as real content nor
   marked as an artifact, so every excise redaction of a tagged PDF produced a

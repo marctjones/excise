@@ -2104,6 +2104,7 @@ namespace Excise.Core.Text.Segmentation
         public Excise.Core.Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
         public Excise.Core.Operations.RedactionCarriers Carriers { get; init; }
         public bool InspectKeptAttachments { get; init; }
+        public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; init; }
         public bool RefuseOnUnresolvedRedactAnnotations { get; init; }
         public bool RunCarrierAudit { get; init; }
         public bool RunHiddenTextAudit { get; init; }
@@ -2143,7 +2144,11 @@ namespace Excise.Core.Text.Segmentation
                     int UnresolvedRedactAnnotationCount = 0,
                     bool PdfAIdentificationPreserved = false,
                     System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? Attachments = null,
-                    System.Collections.Generic.IReadOnlyList<string>? XfaRemovals = null) { }
+                    System.Collections.Generic.IReadOnlyList<string>? XfaRemovals = null,
+                    Excise.Core.Text.Segmentation.RedactionProfile Profile = 0,
+                    System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals = null,
+                    bool AccessibilityAndInteractivityRemoved = false) { }
+        public bool AccessibilityAndInteractivityRemoved { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> AttachmentResults { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? Attachments { get; init; }
         public bool AttachmentsScrubbed { get; init; }
@@ -2158,10 +2163,13 @@ namespace Excise.Core.Text.Segmentation
         public int InfoFieldsScrubbed { get; init; }
         public bool MetadataScrubbed { get; init; }
         public bool PdfAIdentificationPreserved { get; init; }
+        public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals { get; init; }
         public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus RasterRedactionAuditStatus { get; init; }
         public int RedactionAreaCount { get; init; }
         public int RemainingRasterOverlapCount { get; init; }
         public int RemainingTermCount { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval> Removals { get; }
         public int RequestedTermCount { get; init; }
         public int SkippedRedactionAreaCount { get; init; }
         public int SkippedShortTermCount { get; init; }
