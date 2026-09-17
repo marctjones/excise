@@ -356,6 +356,12 @@ def ocr_acrobat_page_box(png, win):
     box = (W - 74, int(H * 0.65125), W - 22, int(H * 0.65125) + 50)
     im = Image.open(png).convert("L").crop(box)
     im = ImageOps.invert(im).point(lambda v: 255 if v > 150 else 0)
+    # The box is not always dark: with two tabs open (2026-09-17, multi-document
+    # speed run) Acrobat drew it light with a dark digit, and the inverted crop
+    # came out white-on-black, which tesseract reads as nothing. Tesseract wants
+    # dark text on a light field, so flip a mostly-dark crop back.
+    if sum(im.getdata()) / (255 * im.width * im.height) < 0.5:
+        im = ImageOps.invert(im)
     im = ImageOps.expand(im.resize((im.width * 4, im.height * 4)), border=40, fill=255)
     out = png.with_suffix(".pagebox.png")
     im.save(out)
