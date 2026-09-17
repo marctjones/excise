@@ -228,6 +228,22 @@ public static class PdfDocumentOptimizer
                 skipped[reason] = skipped.GetValueOrDefault(reason) + 1;
         }
 
+        // An image drawn only from inside a form XObject never reaches the
+        // page-level measurement above, so it would otherwise go unreported:
+        // irs-1040-instructions' two large CMYK images live in forms, and a
+        // Screen run said "0 downsampled, 0 skipped" while leaving them whole.
+        foreach (var (objectNumber, obj) in graph.Objects)
+        {
+            if (placements.ContainsKey(objectNumber)
+                || obj is not PdfStream stream
+                || stream.GetNameOrNull("Subtype") != "Image"
+                || !graph.IsReferencedFromAny(objectNumber, graph.XObjectDictionaries))
+                continue;
+
+            const string insideForm = "drawn inside a form XObject";
+            skipped[insideForm] = skipped.GetValueOrDefault(insideForm) + 1;
+        }
+
         return downsampled;
     }
 
@@ -760,6 +776,10 @@ public static class PdfDocumentOptimizer
             => _referrers.TryGetValue(objectNumber, out var list)
                && list.Count > 0
                && list.All(r => r.Container is PdfDictionary dictionary && containers.Contains(dictionary));
+
+        public bool IsReferencedFromAny(int objectNumber, HashSet<PdfDictionary> containers)
+            => _referrers.TryGetValue(objectNumber, out var list)
+               && list.Any(r => r.Container is PdfDictionary dictionary && containers.Contains(dictionary));
 
         public bool AllReferrerKeysAreIn(int objectNumber, HashSet<string> keys)
             => _referrers.TryGetValue(objectNumber, out var list)

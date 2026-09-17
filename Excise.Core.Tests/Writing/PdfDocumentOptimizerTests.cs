@@ -204,6 +204,8 @@ public sealed class PdfDocumentOptimizerTests : IDisposable
         // The form's /Matrix and the CTM at its Do are not composed by this
         // pass, so the image's displayed size is unknown and it is not touched.
         result.ImagesDownsampled.Should().Be(0);
+        result.ImagesSkipped.Should().ContainKey("drawn inside a form XObject")
+            .WhoseValue.Should().Be(1, "an untouched image must be reported, not silently left whole");
         System.Text.Encoding.Latin1.GetString(optimized).Should().Contain("/Width 600");
     }
 

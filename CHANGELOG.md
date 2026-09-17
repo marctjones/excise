@@ -224,6 +224,17 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
     - Screen → 2,295,485 (−78%)
     - Lossless and High leave it as it is: its JPEGs are already compact and
       below High's threshold
+  - **Measured with the lossy presets on the two heavy fixtures** (each run
+    under 3 s; every output passes `qpdf --check`, keeps its page count, and
+    renders page 1 pixel-identically in mutool):
+    - irs-1040-instructions: High, Standard and Screen all give 4,383,765
+      (−1%, the same as Lossless). Its two images, both large CMYK JPEGs, are
+      drawn inside form XObjects, so they are reported as skipped.
+    - Altona (17 pages, 127,724,771 bytes): High → 124,590,100, Standard →
+      124,558,758, Screen → 124,553,723 (−2.5%), 0.6 s. One image is
+      downsampled (Screen changes only page 2: mean difference 0.7 of 255 in
+      mutool); 86 images are inside forms and 3–6 are in colour spaces the
+      optimizer does not re-encode, and all of those are reported.
 - **XFA forms are detected and explained on open** (#1547, phase 1). A
   dynamic XFA form (catalog `/NeedsRendering true`, or no AcroForm field with a
   widget) now opens with a warning banner saying excise cannot display it yet
