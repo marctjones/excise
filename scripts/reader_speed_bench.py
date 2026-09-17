@@ -412,10 +412,18 @@ def summarize(out):
              "Launch `drawn` covers the WHOLE window (sidebars and thumbnails filling in), "
              "because it is taken before the window is resized. "
              "Timing floor: one 60 Hz frame (~17 ms).", ""]
-    keyed = {}
+    # The after-turns page check is SOFT. On Altona the last two short pages are
+    # on screen before the final turn, so that turn has nothing to scroll in
+    # excise or Preview; excise's indicator then says 16 of 17 where Preview
+    # names the fully visible 17. Every turn's timing is still valid, and turns
+    # that changed nothing are counted in their own column, so such a run is
+    # kept and noted rather than excluded.
+    soft = lambda f: f.startswith("after turns:")
+    keyed, notes = {}, []
     for r in runs:
-        if r["failures"]:
+        if any(not soft(f) for f in r["failures"]):
             continue
+        notes += [f"- {r['app']} {r['doc']} r{r['repeat']}: {f}" for f in r["failures"]]
         keyed.setdefault((r["doc"], r["app"]), []).append(r)
     for doc in SPEED_DOCS:
         present = [a for a in ("excise", "preview", "acrobat") if (doc, a) in keyed]
@@ -440,7 +448,9 @@ def summarize(out):
                 f"{f(ev('burst', 'drawnMs'))} | {f(ev('end', 'drawnMs'))} | {f(ev('revisit', 'drawnMs'))} | "
                 f"{f(ev('scroll', 'fps'))} | {f(ev('scroll', 'gapP95Ms'))} | {f(ev('scroll', 'hitches'))} | {f(ev('scroll', 'settleTailMs'))} |")
         lines.append("")
-    fails = [r for r in runs if r["failures"]]
+    if notes:
+        lines += ["## Kept with a note (see the soft-check comment in summarize)", ""] + notes + [""]
+    fails = [r for r in runs if any(not soft(f) for f in r["failures"])]
     if fails:
         lines += ["## Failed runs (excluded)", ""] + [f"- {r['app']} {r['doc']} r{r['repeat']}: {'; '.join(r['failures'])}" for r in fails]
     (out / "summary.md").write_text("\n".join(lines) + "\n")
