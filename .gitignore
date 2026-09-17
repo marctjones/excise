@@ -95,6 +95,9 @@ run_output.txt
 
 # Claude Code runtime state
 .claude/scheduled_tasks.lock
+# Personal per-machine Claude Code overrides (permissions etc). Never committed:
+# .claude/ is not wholly ignored here, and an `add -A` would otherwise sweep it in.
+.claude/settings.local.json
 
 # ⚠️ Output-directory patterns below are ANCHORED with a leading slash, on
 # purpose. Unanchored, `coverage/` matches a directory of that name at ANY
