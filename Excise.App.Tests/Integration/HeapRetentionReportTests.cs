@@ -165,7 +165,12 @@ public sealed class HeapRetentionReportTests
         var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
         using var indexSession = new DocumentTextIndexSession(
             NullLogger<DocumentTextIndexSession>.Instance, TimeSpan.Zero);
-        using var thumbnails = new ThumbnailSidebarSession(NullLogger.Instance);
+        // #1565: the shipped pre-warm waits for a quiet period; this report
+        // measures what the pre-warm costs, not when it starts.
+        using var thumbnails = new ThumbnailSidebarSession(NullLogger.Instance)
+        {
+            PrewarmIdleDelay = TimeSpan.Zero,
+        };
         string? thumbnailDir = null;
 
         try

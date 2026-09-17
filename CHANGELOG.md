@@ -43,6 +43,30 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   remove `/AcroForm /XFA` (and `/NeedsRendering`) from any document, report it
   as an `/XFA` carrier row (and a "XFA form" line in the redacted-copy dialog),
   and keep the AcroForm fields, which every non-XFA viewer already uses.
+- **The thumbnail sidebar no longer pre-renders the whole document while you
+  are waiting for the first page** (#1565). The background pre-warm used to
+  start with the document: on the 126-page IRS instructions it held a CPU busy
+  for 5.0 s from the moment the file opened (measured from the app's own log in
+  the 2026-09-17 release-baseline run: open complete at +0.1 s, search index at
+  +2.0 s, "pre-warm complete" at +5.0 s), which is what #1544 saw as a window
+  still changing 5.6 s after launch where Preview settles in 1.4 s. It now
+  waits for a quiet period — 3 s in which nothing has opened a document, turned
+  a page, changed the zoom, scrolled the sidebar or reported search-index
+  progress — and any of those starts the wait again, so a reader who keeps
+  working never has 126 background page renders started underneath them. The
+  `ThumbnailPrewarm` preference is unchanged and now means "warm when idle",
+  as it always said.
+- **Pre-warming a thumbnail no longer builds three bitmaps to throw them all
+  away** (#1565). The pre-warm wants the WebP on disk and nothing else, but it
+  went through the on-demand path, which produced the rendered master, a copy
+  for the caller and a second copy for the cache write — and on a re-open
+  decoded every cached WebP only to dispose the pixels. It now renders straight
+  to the cache file (`ThumbnailCacheService.WarmAsync`) and skips any page
+  already on disk without decoding it.
+- **The search-index status no longer redraws the status bar once per page**
+  (#1565). A 126-page document reported progress 126 times in ~2 s; reports are
+  now throttled to 250 ms, and the final one (which clears the text) is never
+  throttled.
 
 ### Fixed
 - **Closing a document after an idle trim kept the whole document in memory**

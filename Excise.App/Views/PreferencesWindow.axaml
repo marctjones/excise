@@ -136,7 +136,7 @@
                                           Content="Render thumbnails in the background"
                                           IsChecked="{Binding ThumbnailPrewarm}"
                                           AutomationProperties.Name="Thumbnail Background Rendering"
-                                          AutomationProperties.HelpText="Pre-render every page thumbnail after a document opens."/>
+                                          AutomationProperties.HelpText="Pre-render every page thumbnail once the document has been idle for a few seconds (#1565)."/>
 
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="Thumbnails kept around the visible ones" FontWeight="Medium"/>

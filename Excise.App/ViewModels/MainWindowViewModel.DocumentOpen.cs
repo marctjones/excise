@@ -237,19 +237,42 @@ public partial class MainWindowViewModel
         }
     }
 
+    /// <summary>
+    /// Minimum gap between two "Indexing for search…" status updates (#1565).
+    /// </summary>
+    /// <remarks>
+    /// The build reports once per page, so a 126-page document redrew the
+    /// status bar 126 times over ~2 s — every one of them a frame the launch
+    /// measurement counts as the window still changing. The final report
+    /// (which clears the text) is never throttled.
+    /// </remarks>
+    private static readonly TimeSpan TextIndexProgressInterval = TimeSpan.FromMilliseconds(250);
+
     private void StartDocumentTextIndex()
     {
         Services.DocumentTextIndex? indexGeneration = null;
+        var lastReport = System.Diagnostics.Stopwatch.StartNew();
+        var firstReport = true;
         var indexProgress = new Progress<(int Done, int Total)>(progress =>
         {
             if (!ReferenceEquals(TextIndex, indexGeneration))
                 return;
 
+            // #1565: indexing is work on this document, so the thumbnail
+            // pre-warm's quiet period starts again and the two never overlap.
+            _thumbnailSession.NotifyActivity();
+
+            var isFinal = progress.Done >= progress.Total;
+            if (!isFinal && !firstReport && lastReport.Elapsed < TextIndexProgressInterval)
+                return;
+            firstReport = false;
+            lastReport.Restart();
+
             if (string.IsNullOrEmpty(OperationStatus) || OperationStatus.StartsWith("Indexing"))
             {
-                OperationStatus = progress.Done < progress.Total
-                    ? $"Indexing for search… {progress.Done}/{progress.Total}"
-                    : string.Empty;
+                OperationStatus = isFinal
+                    ? string.Empty
+                    : $"Indexing for search… {progress.Done}/{progress.Total}";
             }
         });
         indexGeneration = _textIndexSession.Start(PdfCoreDocument!, indexProgress);
