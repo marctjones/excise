@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1280,
-  "indexedContentSha256": "3e17ccad5151f119ebd1f9ecd76c90fc000c0584dd19a21bacc3dff905370e16",
+  "indexedFileCount": 1282,
+  "indexedContentSha256": "11cf1f1c48450618acb16629cb5aaff325045cb0bf146df1be3eac0dd6931294",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -57440,6 +57440,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/FillColourState.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/Recovery/MarkRegionTextRecovery.cs",
           "kind": "source",
           "matchedTerms": [
@@ -57774,6 +57784,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58104,30 +58124,9 @@
             "action",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/WindowsDocumentPrinterTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "applied",
-            "redaction",
-            "action",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "applied",
-            "redaction",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 87
+      "candidateReferenceCount": 89
     },
     {
       "id": "pdf.17.interactive.forms",
