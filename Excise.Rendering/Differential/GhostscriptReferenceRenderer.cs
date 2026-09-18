@@ -18,6 +18,21 @@ namespace Excise.Rendering.Differential;
 ///
 /// Returns null on missing tool, timeout, non-zero exit, or decode
 /// failure.
+///
+/// <para>⚠️ <b>Ghostscript renders for PAPER by default here, not for a
+/// screen</b> (#1573). With a file output device (<c>png16m</c>) gs behaves as
+/// <c>-dPrinted=true</c>, so an annotation's <c>/F</c> flags are judged by
+/// §12.5.3's PRINT rule: nothing without the Print flag is drawn, and a
+/// NoView+Print annotation IS. Measured 2026-09-17 on a four-annotation fixture
+/// (no <c>/F</c>, NoView|Print, Print, Hidden|Print): gs default and
+/// <c>-dPrinted=true</c> agree pixel-for-pixel, and <c>-dPrinted=false</c>
+/// inverts the first two. Use <see cref="TryRenderPageForViewIntent"/> when the
+/// excise side of a comparison is a VIEWER raster — ⚠️ the existing gs
+/// differentials and the corpus scan's gs escalation do NOT do that yet, so
+/// they compare a view raster against a print one on any annotated page whose
+/// flags differ between the rules. #1611 tracks that sweep; changing the
+/// DEFAULT instead of the callers would invalidate every cached oracle render
+/// (<see cref="InvocationSignature"/> is the cache key).</para>
 /// </summary>
 public static class GhostscriptReferenceRenderer
 {
@@ -61,10 +76,11 @@ public static class GhostscriptReferenceRenderer
     /// ArgumentList.Add calls below. Parameterized on the one flag that
     /// actually varies per call.
     /// </summary>
-    public static string InvocationSignature(bool overprintSimulate) =>
+    public static string InvocationSignature(bool overprintSimulate, bool viewIntent = false) =>
         "-dBATCH -dNOPAUSE -dSAFER -dQUIET -sDEVICE=png16m -dUseCropBox " +
         "-dTextAlphaBits=4 -dGraphicsAlphaBits=4"
-        + (overprintSimulate ? " -dOverprint=/simulate" : "");
+        + (overprintSimulate ? " -dOverprint=/simulate" : "")
+        + (viewIntent ? " -dPrinted=false" : "");
 
     /// <summary>
     /// Render <paramref name="pageNumber"/> (1-based) at <paramref name="dpi"/>
@@ -85,7 +101,8 @@ public static class GhostscriptReferenceRenderer
         int dpi,
         int timeoutMs,
         string? userPassword)
-        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword, overprintSimulate: false);
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword,
+            overprintSimulate: false, viewIntent: false);
 
     /// <summary>
     /// Same as <see cref="TryRenderPage(string,int,int,int,string?)"/> but with
@@ -103,7 +120,27 @@ public static class GhostscriptReferenceRenderer
         int pageNumber,
         int dpi,
         int timeoutMs = 30_000)
-        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword: null, overprintSimulate: true);
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword: null,
+            overprintSimulate: true, viewIntent: false);
+
+    /// <summary>
+    /// Same, with <c>-dPrinted=false</c>, which makes Ghostscript judge an
+    /// annotation's <c>/F</c> flags by §12.5.3's VIEW rule instead of its print
+    /// rule (#1573) — Hidden and NoView suppressed, the Print flag irrelevant.
+    /// </summary>
+    /// <remarks>
+    /// This is the variant to compare a excise VIEWER raster against. Without
+    /// it gs is a print oracle (see the class remarks), so a fixture carrying a
+    /// no-Print or NoView annotation puts a view raster against a print one and
+    /// the disagreement is the harness's, not excise's.
+    /// </remarks>
+    public static ReferenceRenderResult TryRenderPageForViewIntent(
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        int timeoutMs = 30_000)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword: null,
+            overprintSimulate: false, viewIntent: true);
 
     private static ReferenceRenderResult TryRenderPage(
         string pdfPath,
@@ -111,7 +148,8 @@ public static class GhostscriptReferenceRenderer
         int dpi,
         int timeoutMs,
         string? userPassword,
-        bool overprintSimulate)
+        bool overprintSimulate,
+        bool viewIntent)
     {
         var sw = Stopwatch.StartNew();
         var command = _commandName.Value;
@@ -145,6 +183,11 @@ public static class GhostscriptReferenceRenderer
             psi.ArgumentList.Add("-dGraphicsAlphaBits=4");
             if (overprintSimulate)
                 psi.ArgumentList.Add("-dOverprint=/simulate");
+            // #1573: only the VIEW-intent variant passes anything. gs with a
+            // file output device already behaves as -dPrinted=true, so the
+            // default invocation (and its cached signature) is unchanged.
+            if (viewIntent)
+                psi.ArgumentList.Add("-dPrinted=false");
             psi.ArgumentList.Add($"-r{dpi.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
             psi.ArgumentList.Add($"-dFirstPage={pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
             psi.ArgumentList.Add($"-dLastPage={pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)}");

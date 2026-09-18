@@ -58,6 +58,10 @@ using var bmp2 = renderer.RenderPage(doc.GetPage(1), new RenderOptions(), cts.To
 
 `RenderOptions`: `Dpi` (default 150), `BackgroundColor` (default white), `AntiAlias`
 (default true), `ClipRect` (page points). The renderer honours the page `/Rotate` entry.
+`PrintIntent` (default false) judges each annotation's `/F` flags by ISO 32000-2
+§12.5.3's **print** rule instead of the viewer's — Hidden suppresses paper too,
+NoView says nothing about paper, and nothing prints without the Print flag — for
+a raster that goes to a printer (#1573).
 
 Page **metadata, text (`page.Letters`), links (`page.GetLinks()`), annotations
 (`page.GetAnnotations()`)** come from `Excise.Core` — combine them with rendered bitmaps to

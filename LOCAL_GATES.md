@@ -325,16 +325,20 @@ omitting them.
 ## Base selection
 
 `gate-asymmetry` (#618: a perf-path change may not rewrite a correctness
-expectation in the same range) compares HEAD against a base. Its row is
+expectation in the same range) compares a head against a base. Its row is
 `scripts/check-gate-asymmetry.sh $GATE_ASYMMETRY_BASE`; every runner exports
 that variable from `runner_gate_asymmetry_base <tier>`, in this order:
 
 1. **The pre-push hook.** git feeds `<local ref> <local sha> <remote ref>
    <remote sha>` per pushed ref on stdin; the hook exports the remote sha as
-   `GATE_ASYMMETRY_BASE`. That IS the range the gate is defined over ("two
-   pushes, not two commits"). An all-zero sha (a new remote branch) falls
-   through to 2. **A hook installed before 2026-09-05 reads no stdin — run
-   `scripts/test-tier.sh --install-hook` once in every clone.**
+   `GATE_ASYMMETRY_BASE` and the **local** sha as `GATE_ASYMMETRY_HEAD`. Those
+   two ARE the range the gate is defined over ("two pushes, not two commits").
+   An all-zero remote sha (a new remote branch) falls through to 2; an all-zero
+   local sha (a ref deletion) contributes neither. **A hook installed before
+   2026-09-17 has the pre-#1600 body inline — run
+   `scripts/test-tier.sh --install-hook` once in every clone.** After that the
+   installed hook is a stub that execs `scripts/pre-push-hook.sh`, so later
+   fixes land without re-installing.
 2. **A manual tier run** uses the last commit at which this tier finished with
    no NEW failure: `logs/runner-state/tier-pass/<tier>.rec`, written on a
    report exit 0 (a `full` pass also records `t1` and `t0`; a `t1` pass records
@@ -345,7 +349,25 @@ that variable from `runner_gate_asymmetry_base <tier>`, in this order:
    the key — ancestry is the real relation.
 3. **Fallback**, the first run on a machine: `git merge-base origin/develop HEAD`.
 
-The gate prints `base=<sha>` so an acceptance can be **scoped** to one range —
+### Head selection (#1600)
+
+The head defaults to `HEAD` and is overridden by `GATE_ASYMMETRY_HEAD` (or a
+second positional argument). It exists because `git push origin <sha>:develop`
+pushes a range that ENDS AT `<sha>`, and pushing in reviewable steps is what
+this gate's own failure message tells you to do. While the head was hard-coded,
+the hook read the remote sha and threw the local one away, so a stepped push
+evaluated `base...HEAD` — the wrong range, reported green, with only `base=` in
+the output to go on. A head that does not resolve is a hard failure:
+`GATE_ASYMMETRY_ALLOW_NO_BASE` is about an unfetchable *base* and does not
+launder it into a SKIP.
+
+⚠️ The head governs the RANGE only. Every test row still builds and runs the
+**working tree**, so on a stepped push the hook prints the pushed commit and the
+tested commit side by side. A pushed commit that is not an ancestor of HEAD is
+refused outright (`scripts/pre-push-hook.sh`), since neither the range nor the
+tests would describe it; the refusal prints the worktree route.
+
+The gate prints `base=<sha> head=<sha>` so an acceptance can be **scoped** to one range —
 the worked example for "Accepting a red". As of 2026-09-05 the
 `gate-asymmetry` row carries `#1358/base=a87dc32aa8c2`: KNOWN only for the
 backlog range starting at `origin/develop` = `a87dc32a` (the acceptance is

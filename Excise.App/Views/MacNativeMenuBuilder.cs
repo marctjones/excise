@@ -107,6 +107,8 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _printItem;
         private readonly NativeMenuItem _windowItem;
         private readonly List<NativeMenuItem> _tabActionItems = new();
+        private readonly List<DocumentTabSwitchCommand> _documentTabCommands = new();
+        private readonly int _windowFixedItemCount;
         private IReadOnlyList<string>? _recentFilesSnapshot;
         private string? _openDocumentsSnapshot;
 
@@ -142,14 +144,44 @@ internal static class MacNativeMenuBuilder
             // #1545: enabled only when a document is open AND its /P flags allow
             // printing, so it is not a document item; Refresh sets it.
             _printItem = CommandItem("Print...", _viewModel.PrintCommand, Key.P);
-            // #1552/#1553: macOS's own tab actions plus the open documents.
+            // #1598/#1552/#1553: this window's own document tabs, then macOS's
+            // window-tab actions, then the open documents.
+            //
+            // ⚠️ The first two items are THE ONLY WAY Control-Tab reaches the
+            // in-app tabs on macOS. MainWindow.OnTabSwitchKeyDown handles the
+            // same gesture through a tunnelling KeyDown handler, which works on
+            // Windows and Linux and never fires here: AppKit takes Control-Tab
+            // as a key-view/key-equivalent keystroke, so Avalonia is not told
+            // (#1598, measured with a real CGEvent). Avalonia maps Key.Tab to
+            // the NSMenuItem key equivalent "\t" (KeyTransform.mm), and an
+            // item's native validation asks its IsEnabled, which Avalonia keeps
+            // in step with Command.CanExecute — hence the live CanExecute on
+            // DocumentTabSwitchCommand rather than a flag set here.
+            //
+            // The macOS actions below them keep AppKit's own names with
+            // "Window" added: they switch the NSWindow tab group (several excise
+            // WINDOWS merged into one), which is a different thing from the
+            // document tabs of one window, and two identically titled pairs in
+            // one menu would be indistinguishable.
             _windowItem = Submenu("Window",
-                TabActionItem("Show Previous Tab", Workspace.MacWindowTabbing.TabAction.SelectPreviousTab),
-                TabActionItem("Show Next Tab", Workspace.MacWindowTabbing.TabAction.SelectNextTab),
+                DocumentTabItem("Show Previous Tab", -1, new KeyGesture(Key.Tab, KeyModifiers.Control | KeyModifiers.Shift)),
+                DocumentTabItem("Show Next Tab", +1, new KeyGesture(Key.Tab, KeyModifiers.Control)),
+                Separator(),
+                TabActionItem("Show Previous Window Tab", Workspace.MacWindowTabbing.TabAction.SelectPreviousTab),
+                TabActionItem("Show Next Window Tab", Workspace.MacWindowTabbing.TabAction.SelectNextTab),
+                // ⚠️ #1615: these two are the APPKIT actions on the NSWindow tab
+                // group, while the in-window AXAML menu's identically titled
+                // items act on the in-app tabs. Left as they were deliberately:
+                // which a macOS user should get is a product call.
                 TabActionItem("Move Tab to New Window", Workspace.MacWindowTabbing.TabAction.MoveTabToNewWindow),
                 TabActionItem("Merge All Windows", Workspace.MacWindowTabbing.TabAction.MergeAllWindows),
                 Separator(),
                 TabActionItem("Show or Hide Tab Bar", Workspace.MacWindowTabbing.TabAction.ToggleTabBar));
+            // #1598: the document list after these is rebuilt on every change,
+            // so the fixed prefix is counted once rather than derived from
+            // _tabActionItems.Count (which stopped being the whole prefix the
+            // moment the two items above were added).
+            _windowFixedItemCount = _windowItem.Menu!.Items.Count;
         }
 
         public NativeMenu Create()
@@ -384,6 +416,13 @@ internal static class MacNativeMenuBuilder
             var documents = _viewModel.OpenDocuments;
             foreach (var item in _tabActionItems)
                 item.IsEnabled = documents.Count > 1;
+            // #1598: the tab-switch items take their enabled state from their
+            // command, because that is what a native key equivalent is
+            // validated against at the moment the key is pressed. Setting
+            // IsEnabled here as well would fight Avalonia, which writes it from
+            // Command.CanExecute on every CanExecuteChanged.
+            foreach (var command in _documentTabCommands)
+                command.RaiseCanExecuteChanged();
 
             var snapshot = string.Join('\n', documents.Select(d =>
                 $"{d.Title}|{d.FilePath}|{d.IsCurrent}|{d.HasUnsavedChanges}"));
@@ -394,7 +433,7 @@ internal static class MacNativeMenuBuilder
             var windowMenu = _windowItem.Menu ??= new NativeMenu();
             // The tab actions and their separators stay; the document entries
             // after them are replaced.
-            var fixedCount = _tabActionItems.Count + 1;
+            var fixedCount = _windowFixedItemCount;
             while (windowMenu.Items.Count > fixedCount)
                 windowMenu.Items.RemoveAt(windowMenu.Items.Count - 1);
 
@@ -413,6 +452,37 @@ internal static class MacNativeMenuBuilder
                     IsChecked = document.IsCurrent,
                 });
             }
+        }
+
+        /// <summary>
+        /// One of this window's in-app document tabs (#1598, #1554), with the
+        /// key equivalent Safari uses. The command's CanExecute is live, so the
+        /// item is enabled — and its key equivalent therefore active — exactly
+        /// while the window has more than one tab.
+        /// </summary>
+        private NativeMenuItem DocumentTabItem(string header, int step, KeyGesture gesture)
+        {
+            var command = new DocumentTabSwitchCommand(_viewModel, step);
+            _documentTabCommands.Add(command);
+            return new NativeMenuItem(header) { Command = command, Gesture = gesture };
+        }
+
+        /// <summary>
+        /// Show the next or previous document tab of the window showing this
+        /// session (#1598). Not a <c>ReactiveCommand</c> on the view model
+        /// because its enabled state is a property of the WINDOW, which the
+        /// session does not own and can move between.
+        /// </summary>
+        private sealed class DocumentTabSwitchCommand(MainWindowViewModel viewModel, int step) : ICommand
+        {
+            public event System.EventHandler? CanExecuteChanged;
+
+            public bool CanExecute(object? parameter) => viewModel.CanSwitchTabs;
+
+            public void Execute(object? parameter) => viewModel.SwitchTab(step);
+
+            public void RaiseCanExecuteChanged() =>
+                CanExecuteChanged?.Invoke(this, System.EventArgs.Empty);
         }
 
         private NativeMenuItem TabActionItem(string header, Workspace.MacWindowTabbing.TabAction action)

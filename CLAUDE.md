@@ -534,7 +534,7 @@ last run's report without running anything.
 
 | Tier | Cost (t0 measured 2026-09-04, t1 measured 2026-09-10, the others estimated — `LOCAL_GATES.md` "Timings") | What | When |
 |------|------|------|------|
-| `t0` | 2–4 min warm, ~5 min cold; 2–3× that under load (8m29s on 2026-09-05) | Build + Excise.Core/Cli/Avalonia tests + the static gates (doc freshness, gate-asymmetry, redaction architecture, registries, selftests) | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. Every clone runs that once; a hook installed before 2026-09-05 must be re-installed (it read no stdin, and the base for gate-asymmetry is the push range on stdin). |
+| `t0` | 2–4 min warm, ~5 min cold; 2–3× that under load (8m29s on 2026-09-05) | Build + Excise.Core/Cli/Avalonia tests + the static gates (doc freshness, gate-asymmetry, redaction architecture, registries, selftests) | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. Every clone runs that once; a hook installed before **2026-09-17 (#1600)** must be re-installed — it carries the old inline body, which read only the remote sha off stdin, so `git push origin <sha>:develop` gated the wrong range. The installed hook is now a stub over `scripts/pre-push-hook.sh`, so later fixes need no re-install. |
 | `t1` | 56–57 min measured 2026-09-10; ~44–47 min projected once `skip-budget-rendering` stopped re-running `Excise.Rendering.Tests` that day | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic, benchmark AND the independent-oracle subsets with their floors) + the parity ratchets + the skip budgets + the full `Excise.App.Tests` run | Before merging anything to `develop`. This is what CI used to block a PR on; there is no CI now (see `LOCAL_GATES.md`), so running it is on you. |
 | `full` | ≈3 h | `t1` + every project chunked + the four corpus scans + the release-smoke rows + the GRADE benches; `caffeinate -i scripts/run-full-suite.sh`, resumable | Weekly, and before a release candidate. |
 | `t2` | ~30 min | `scripts/release-smoke.sh --release-tests` — a curated Release-config set, not a superset of `t1` | Release candidate (`docs/RELEASE_CHECKLIST.md`). |
@@ -1161,7 +1161,7 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
     ├── MutoolReferenceRenderer.cs        # 358 uses in Differential tests
-    ├── GhostscriptReferenceRenderer.cs   #  113
+    ├── GhostscriptReferenceRenderer.cs   #  116
     ├── PdftocairoReferenceRenderer.cs    #  83
     ├── PdftoppmReferenceRenderer.cs      #  18
     ├── MutoolTextExtractor.cs            # independent TEXT oracle (MuPDF)

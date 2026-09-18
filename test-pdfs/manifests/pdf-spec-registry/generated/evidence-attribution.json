@@ -8010,11 +8010,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -21482,11 +21484,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -22992,11 +22996,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -24463,11 +24469,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -81247,6 +81255,34 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationPrintIntentTests.cs::AnnotationPrintIntentTests.PrintIntent_DrawsExactlyWhatSection1253PutsOnPaper",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationPrintIntentTests.cs::AnnotationPrintIntentTests.WithoutPrintIntent_TheViewerRuleIsUnchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationPrintIntentTests.cs::AnnotationPrintIntentTests.ThePrintAndViewRulesDisagreeOnThisFixture",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationPrintIntentTests.cs::AnnotationPrintIntentTests.Ghostscript_AgreesWithBothRules",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82117,42 +82153,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_CorrectUserPassword_AcceptedAndFileChecksClean",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_OwnerPassword_AcceptedWithOwnerAuthority",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_WrongPassword_Rejected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_UserPasswordOnly_NoPasswordIsStillRejected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Pdftoppm_UserPasswordOnly_NoPasswordProducesNoRendering",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -83629,11 +83629,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContracts": [
@@ -85104,11 +85106,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContracts": [
@@ -86579,11 +86583,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContracts": [
@@ -88070,11 +88076,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContracts": [
@@ -89679,11 +89687,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContracts": [
@@ -91144,11 +91154,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContracts": [
@@ -92602,11 +92614,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContracts": [
@@ -94060,11 +94074,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContracts": [],
@@ -94783,11 +94799,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -95667,14 +95685,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_UnderMaximum_StillKeepsEveryFile",
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96203,11 +96221,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -97087,14 +97107,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_UnderMaximum_StillKeepsEveryFile",
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97637,11 +97657,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -98521,14 +98543,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_UnderMaximum_StillKeepsEveryFile",
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99097,11 +99119,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -99981,14 +100005,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.KeepAttachments_UnderMaximum_StillKeepsEveryFile",
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs::AttachmentRedactionTests.Maximum_WithoutKeepAttachments_TakesTheAnnotationCarriedFilesToo",
+          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -107367,11 +107391,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -108825,11 +108851,13 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesCustomInfoEntriesToo",
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_PreservesNonMetadataInfoEntries",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
@@ -114130,8 +114158,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7390,
-    "testMethodsWithCapabilityCandidate": 4537,
+    "testMethods": 7371,
+    "testMethodsWithCapabilityCandidate": 4510,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

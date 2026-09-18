@@ -233,6 +233,60 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   with nothing saying which or why (6 files → 5 on the all-routes fixture).
   Such a file specification is now re-anchored on the catalog `/AF` and
   reported.
+- **Ctrl+Tab switches document tabs on macOS** (#1598). It never did: the
+  gesture was handled by a tunnelling `KeyDown` handler in `MainWindow`, and
+  AppKit takes Control-Tab as a key-view / key-equivalent keystroke, so Avalonia
+  was never told. Found by `reader_speed_bench.py --multi --configs excise-tabs`
+  with a real CGEvent (2 of 2 runs, the front document never changed); every
+  in-app test passed throughout, because a synthetic key event reaches the
+  handler on every platform. The native Window menu now carries **Show Previous
+  Tab** (Ctrl+Shift+Tab) and **Show Next Tab** (Ctrl+Tab) — Safari's own key
+  equivalents — acting on the document tabs of the window whose menu it is,
+  enabled only while that window has more than one tab. The `KeyDown` path is
+  unchanged for Windows and Linux (and still serves Ctrl+PgDn/PgUp and
+  Cmd+Shift+] / [ on macOS). macOS's own window-tab actions, which move through
+  a merged NSWindow tab group rather than one window's document tabs, are
+  retitled **Show Previous/Next Window Tab** so the two pairs are
+  distinguishable in one menu.
+- **Windows printing now honours each annotation's `/Print` flag** (#1573).
+  The renderer had no print mode, so sheets were rastered with the VIEWER's
+  §12.5.3 rule — Hidden and NoView suppressed, everything else drawn — and that
+  is wrong on paper in both directions: review markup with no `/F` at all (the
+  common producer shape; excise's own authoring stamps `/F Print`, most others
+  do not) was printed although Acrobat and PDFKit leave it off, and a print-only
+  watermark (`NoView` + `Print`) was dropped although it is the one thing the
+  author meant for paper. `RenderOptions.PrintIntent` (new, public — the
+  Excise.Rendering API baseline changed) selects the print rule instead: Hidden
+  suppresses paper too, NoView says nothing about paper, and nothing prints
+  without the Print flag. `PrintSheetSource` sets it. Audit mode
+  (`RevealHiddenAnnotations`) is deliberately ignored under print intent — it
+  must never reach an export path, and a print raster is one. macOS is
+  unaffected: PDFKit prints the saved file and applies §12.5.3 itself.
+  The rule is pinned per annotation against Ghostscript, whose
+  `-dPrinted` switch makes it a print oracle and a view oracle on the same
+  fixture (`AnnotationPrintIntentTests`, plus `GhostscriptReferenceRenderer`
+  gains `TryRenderPageForViewIntent`).
+- **The pre-push gate checked the wrong commit range on a stepped push**
+  (#1600). git hands a `pre-push` hook `<local ref> <local sha> <remote ref>
+  <remote sha>` per pushed ref; the hook exported the remote sha as
+  `GATE_ASYMMETRY_BASE` and discarded the local one, while
+  `scripts/check-gate-asymmetry.sh` always evaluated `base...HEAD`. So
+  `git push origin <sha>:develop` from a checkout that had moved on judged
+  commits nobody was pushing — and reported green, with only `base=` in its
+  output to go on, which made the gate's own advice ("two pushes, not two
+  commits") impossible to follow from one checkout. The checker now takes a
+  head (`GATE_ASYMMETRY_HEAD`, or a second argument; default `HEAD`), prints it
+  resolved next to the base, and fails hard rather than silently falling back
+  when it does not resolve. The hook passes the pushed sha, and — because every
+  test row still builds the WORKING TREE — prints the pushed and tested commits
+  side by side on a stepped push and refuses a pushed commit that is not an
+  ancestor of HEAD, naming the temporary-worktree route instead. The hook body
+  moved to the tracked `scripts/pre-push-hook.sh` (`--install-hook` now writes a
+  two-line stub, and resolves the hook path through `git rev-parse --git-path`,
+  which a linked worktree needs), so it is testable:
+  `scripts/test-check-gate-asymmetry.sh` is a new t0 selftest row. ⚠️ **A hook
+  installed before this must be re-installed once**: `scripts/test-tier.sh
+  --install-hook`.
 - **Closing a document after an idle trim kept the whole document in memory**
   (#1564, #1543). A cache trim — the idle trim, a window switch or OS
   pressure — recorded the open document in render-ahead's single-page plan,

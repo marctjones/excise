@@ -132,6 +132,17 @@ public sealed class MultiDocumentTabTests : IDisposable
         tabs.Tabs[1].AccessibleName.Should().Be("pages-b.pdf, tab 2 of 2");
     }
 
+    /// <summary>
+    /// ⚠️ This passes on macOS and the feature does NOT (#1598).
+    /// <c>PressKeyAsync</c> hands Avalonia a synthetic key event, so it exercises
+    /// <c>MainWindow.OnTabSwitchKeyDown</c> — the real path on Windows and Linux.
+    /// A REAL Control-Tab on macOS is taken by AppKit as a key-view /
+    /// key-equivalent keystroke and never reaches that handler, which is why the
+    /// gesture also lives on the native Window menu
+    /// (<see cref="TheNativeWindowMenu_SwitchesThisWindowsTabs_WithSafarisKeyEquivalents"/>).
+    /// Nothing in a headless test can tell the two apart; only a CGEvent against
+    /// a real bundle can.
+    /// </summary>
     [FixedAvaloniaFact(Timeout = 60000)]
     public async Task CtrlTab_AndCtrlPageUp_SwitchTabs()
     {
@@ -526,5 +537,111 @@ public sealed class MultiDocumentTabTests : IDisposable
             command.Value.Arguments.Should().Equal("-R", "/tmp/a b; rm -rf ~.pdf");
         }
         FileManagerReveal.CommandFor("").Should().BeNull();
+    }
+    // ─────────────────── #1598: the native menu's tab switching ────────────
+
+    /// <summary>
+    /// The macOS Window menu carries Show Previous/Next Tab with Safari's key
+    /// equivalents, and they act on the tabs of the window whose menu it is.
+    /// This is the only path a real Control-Tab can take on macOS.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task TheNativeWindowMenu_SwitchesThisWindowsTabs_WithSafarisKeyEquivalents()
+    {
+        using var harness = new Harness();
+        var (_, window, tabs) = await OpenTabsAsync(harness,
+            NewPdf("m1.pdf", "M1"), NewPdf("m2.pdf", "M2"), NewPdf("m3.pdf", "M3"));
+        tabs.SelectedTab!.Title.Should().Be("m3.pdf");
+
+        var (previous, next) = TabSwitchItems((MainWindowViewModel)window.DataContext!);
+
+        previous.Gesture.Should().Be(new KeyGesture(Key.Tab, KeyModifiers.Control | KeyModifiers.Shift));
+        next.Gesture.Should().Be(new KeyGesture(Key.Tab, KeyModifiers.Control));
+        next.IsEnabled.Should().BeTrue("three tabs are open");
+        previous.IsEnabled.Should().BeTrue();
+
+        next.Command!.Execute(null);
+        await FlushAsync();
+        tabs.SelectedTab!.Title.Should().Be("m1.pdf", "Show Next Tab wraps past the last tab");
+        window.DataContext.Should().BeSameAs(tabs.SelectedTab.Session.ViewModel);
+
+        // The menu belongs to the session the window now shows.
+        var (previousAfter, _) = TabSwitchItems((MainWindowViewModel)window.DataContext!);
+        previousAfter.Command!.Execute(null);
+        await FlushAsync();
+        tabs.SelectedTab!.Title.Should().Be("m3.pdf", "Show Previous Tab wraps back past the first");
+    }
+
+    /// <summary>
+    /// With one tab there is nothing to switch to, so the items are DISABLED —
+    /// which on macOS also deactivates their key equivalents, leaving Tab to
+    /// move focus as it does everywhere else.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task TheNativeTabSwitchItems_AreDisabled_WithASingleTab()
+    {
+        using var harness = new Harness();
+        var (first, _, tabs) = await OpenTabsAsync(harness, NewPdf("only.pdf", "ONLY"));
+        tabs.Tabs.Should().ContainSingle();
+
+        var (previous, next) = TabSwitchItems(first.ViewModel);
+
+        next.IsEnabled.Should().BeFalse("one tab has nothing to switch to");
+        previous.IsEnabled.Should().BeFalse();
+        next.Command!.CanExecute(null).Should().BeFalse(
+            "a native key equivalent is validated against the item's enabled state, which " +
+            "Avalonia writes from Command.CanExecute");
+
+        next.Command!.Execute(null);
+        await FlushAsync();
+        tabs.SelectedTab!.Title.Should().Be("only.pdf", "and executing it anyway changes nothing");
+    }
+
+    /// <summary>
+    /// Two windows, two menus: each switches its OWN tabs (#1584's per-window
+    /// menu machinery, which swaps one menu's items per session).
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task EachWindowsNativeMenu_SwitchesOnlyItsOwnTabs()
+    {
+        using var harness = new Harness();
+        var (_, windowA, tabsA) = await OpenTabsAsync(harness,
+            NewPdf("a1.pdf", "A1"), NewPdf("a2.pdf", "A2"));
+
+        var second = harness.OpenWindow(DocumentOpenMode.NewTab);
+        await harness.Workspace.OpenDocumentsAsync([NewPdf("b1.pdf", "B1")], second);
+        foreach (var session in harness.Workspace.Sessions)
+            session.ViewModel.DocumentOpenMode = DocumentOpenMode.NewTab;
+        await harness.Workspace.OpenDocumentsAsync([NewPdf("b2.pdf", "B2")], second);
+        await FlushAsync();
+        var windowB = (MainWindow)second.Window!;
+        var tabsB = windowB.DocumentTabs!;
+        windowA.Should().NotBeSameAs(windowB);
+        tabsB.Tabs.Count.Should().BeGreaterThan(1, "the second window has tabs of its own");
+
+        var selectedA = tabsA.SelectedTab!.Title;
+        var selectedB = tabsB.SelectedTab!.Title;
+
+        var (_, nextB) = TabSwitchItems((MainWindowViewModel)windowB.DataContext!);
+        nextB.Command!.Execute(null);
+        await FlushAsync();
+
+        tabsB.SelectedTab!.Title.Should().NotBe(selectedB,
+            "the second window's menu moved the second window's selection");
+        tabsA.SelectedTab!.Title.Should().Be(selectedA,
+            "and left the first window's selection alone");
+    }
+
+    /// <summary>Window ▸ Show Previous Tab and Show Next Tab of one session's menu.</summary>
+    private static (NativeMenuItem Previous, NativeMenuItem Next) TabSwitchItems(MainWindowViewModel viewModel)
+    {
+        var menu = MacNativeMenuBuilder.Create(viewModel);
+        var windowMenu = menu.Items.OfType<NativeMenuItem>().Single(i => i.Header == "Window").Menu!;
+        var items = windowMenu.Items.OfType<NativeMenuItem>().ToList();
+        var previous = items.Single(i => i.Header == "Show Previous Tab");
+        var next = items.Single(i => i.Header == "Show Next Tab");
+        previous.Command.Should().NotBeNull();
+        next.Command.Should().NotBeNull();
+        return (previous, next);
     }
 }

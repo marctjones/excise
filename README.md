@@ -196,9 +196,12 @@ release notes:
     excise's own renderer at the printer's resolution, capped at 600 DPI, and
     sent through the Windows print spooler, so the printout matches the viewer
     and no Acrobat or other PDF handler is needed. "Print to file" is hidden;
-    choose *Microsoft Print to PDF* instead, or use Save As. The PDF's
-    per-annotation *print* flag is not consulted yet (#1573): what the viewer
-    shows is what prints. ⚠️ The Windows path was built and unit-tested on macOS and
+    choose *Microsoft Print to PDF* instead, or use Save As. Each annotation's
+    *print* flag decides whether it reaches paper (#1573, ISO 32000-2 §12.5.3),
+    as in Acrobat and macOS: review markup without that flag is not printed
+    even though the viewer shows it, and a print-only stamp or watermark
+    (*NoView* + *Print*) is printed even though the viewer does not show it.
+    ⚠️ The Windows path was built and unit-tested on macOS and
     has not yet been checked on a Windows machine.
   - **Linux** printing is not planned — Print… explains this, and you can
     Save As and print from another viewer.
@@ -375,7 +378,7 @@ Press **F1** to view all in-app.
 | Navigation | Next/Previous/First/Last Page | `Page Down/Up`, `Home`, `End` |
 | Modes | Redaction / Text Selection / Apply | `R` / `T` / `Enter` |
 | Pages | Rotate Left / Right | `Ctrl+L` / `Ctrl+R` |
-| Tabs | Next / Previous document tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` (or `Ctrl+PgDn` / `Ctrl+PgUp`) |
+| Tabs | Next / Previous document tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` (or `Ctrl+PgDn` / `Ctrl+PgUp`; on macOS also Window ▸ Show Next/Previous Tab) |
 
 ### CLI examples
 
