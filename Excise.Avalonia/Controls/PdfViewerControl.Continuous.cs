@@ -1619,7 +1619,8 @@ public partial class PdfViewerControl
     {
         get
         {
-            if (ViewMode != PdfViewMode.Continuous || _continuousScrollViewer == null || _continuousSlots.Count == 0)
+            if (ViewMode != PdfViewMode.Continuous || _continuousScrollViewer == null
+                || _continuousSlots is not { Count: > 0 } slots)
                 return CurrentPage;
 
             // ⚠️ A navigation still in flight must NOT be overridden. Setting
@@ -1640,7 +1641,7 @@ public partial class PdfViewerControl
                 return CurrentPage;
 
             return FindMostVisibleContinuousPage(
-                _continuousSlots,
+                slots,
                 _continuousScrollViewer.Offset.Y + 1,
                 _continuousScrollViewer.Viewport.Height);
         }

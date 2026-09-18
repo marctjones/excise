@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -21,12 +22,68 @@ public partial class PdfViewerControl
 
     private Rectangle? _tempTypewriterRect;
 
+    /// <summary>
+    /// The one box being edited, or null (#1648).
+    /// </summary>
+    /// <remarks>
+    /// Chrome — the outline, the tinted fill, the drag handle, the delete
+    /// button, the resize grip — used to be keyed to the MODE, so every pending
+    /// box wore it whenever typewriter mode was on. Clicking away from a box
+    /// you had just typed in left its outline sitting on the page, and there
+    /// was no way to see what the document would actually look like without
+    /// leaving the mode entirely. Reported live: "when I click off of a text
+    /// box I just made the box outline should not be visible again... when I am
+    /// not in the box editing it the text should just be displayed as it will
+    /// show up in the saved document."
+    /// </remarks>
+    private Guid? _focusedTypewriterId;
+
+    /// <summary>
+    /// How to (un)dress each box on screen, by operation id. Rebuilt with the
+    /// layer; used so focusing one box can strip the chrome from the rest
+    /// without tearing down and recreating their editors — a rebuild would
+    /// throw away the caret position of the box being clicked into.
+    /// </summary>
+    private readonly Dictionary<Guid, Action<bool>> _typewriterChrome = new();
+
+    /// <summary>
+    /// Give <paramref name="id"/> the chrome and take it from everything else.
+    /// </summary>
+    private void FocusTypewriterBox(Guid id)
+    {
+        _focusedTypewriterId = id;
+        foreach (var (operationId, applyChrome) in _typewriterChrome)
+            applyChrome(operationId == id);
+    }
+
+    /// <summary>Nothing is being edited (#1648).</summary>
+    internal void ClearTypewriterFocus() => _focusedTypewriterId = null;
+
+    /// <summary>
+    /// Discard every pending box nobody typed in (#1648). An empty box is a
+    /// click the user backed out of.
+    /// </summary>
+    internal void DiscardEmptyPendingTypewriterText(Guid? except = null)
+    {
+        if (TypewriterTextOperations == null)
+            return;
+
+        foreach (var operation in TypewriterTextOperations
+                     .Where(o => o.IsPending && string.IsNullOrEmpty(o.Text) && o.Id != except)
+                     .ToList())
+        {
+            TypewriterTextDeleted?.Invoke(this,
+                new TypewriterTextDeletedEventArgs(operation.Id, operation.PageNumber));
+        }
+    }
+
     private void RedrawTypewriterLayer()
     {
         if (_typewriterLayer == null)
             return;
 
         _typewriterLayer.Children.Clear();
+        _typewriterChrome.Clear();
 
         if (Document == null || TypewriterTextOperations == null)
             return;
@@ -52,19 +109,17 @@ public partial class PdfViewerControl
             MinWidth = MinimumTypewriterWidthDips,
             MinHeight = MinimumTypewriterHeightDips,
             ClipToBounds = false,
-            IsHitTestVisible = InteractionMode == InteractionMode.Typewriter,
         };
         shell.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
         shell.RowDefinitions.Add(new RowDefinition(new GridLength(1, GridUnitType.Star)));
 
-        var editing = InteractionMode == InteractionMode.Typewriter;
+        // #1648: chrome belongs to the box being EDITED, not to the mode. Every
+        // other box — pending or not, mode on or off — renders as the document
+        // will render it.
+        var inTypewriterMode = InteractionMode == InteractionMode.Typewriter;
+        var editing = inTypewriterMode && _focusedTypewriterId == operation.Id;
         var frame = new Border
         {
-            Background = new SolidColorBrush(Color.FromArgb(0x0A, 0x00, 0x7A, 0xCC)),
-            BorderBrush = editing
-                ? new SolidColorBrush(Color.FromArgb(0xE0, 0x00, 0x7A, 0xCC))
-                : Brushes.Transparent,
-            BorderThickness = editing ? new Thickness(1.5) : new Thickness(0),
             CornerRadius = new CornerRadius(2),
         };
         Grid.SetRowSpan(frame, 2);
@@ -73,11 +128,8 @@ public partial class PdfViewerControl
         var dragHandle = new Border
         {
             Height = 10,
-            Background = editing
-                ? new SolidColorBrush(Color.FromArgb(0x55, 0x00, 0x7A, 0xCC))
-                : Brushes.Transparent,
+            Background = new SolidColorBrush(Color.FromArgb(0x55, 0x00, 0x7A, 0xCC)),
             Cursor = new Cursor(StandardCursorType.SizeAll),
-            IsVisible = editing,
         };
         Grid.SetRow(dragHandle, 0);
         shell.Children.Add(dragHandle);
@@ -95,7 +147,6 @@ public partial class PdfViewerControl
             Foreground = ToAvaloniaBrush(operation.Style.Color),
             TextAlignment = ToAvaloniaTextAlignment(operation.Style.Alignment),
             VerticalContentAlignment = VerticalAlignment.Top,
-            IsReadOnly = !editing,
         };
         textBox.TextChanged += (_, _) =>
         {
@@ -139,7 +190,6 @@ public partial class PdfViewerControl
             FontSize = 11,
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Top,
-            IsVisible = editing,
         };
         ToolTip.SetTip(deleteButton, "Delete typewriter text");
         deleteButton.Click += (_, _) =>
@@ -154,13 +204,10 @@ public partial class PdfViewerControl
         {
             Width = 12,
             Height = 12,
-            Background = editing
-                ? new SolidColorBrush(Color.FromArgb(0xCC, 0x00, 0x7A, 0xCC))
-                : Brushes.Transparent,
+            Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x00, 0x7A, 0xCC)),
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Bottom,
             Cursor = new Cursor(StandardCursorType.TopLeftCorner),
-            IsVisible = editing,
         };
         Grid.SetRowSpan(resizeGrip, 2);
         shell.Children.Add(resizeGrip);
@@ -168,7 +215,49 @@ public partial class PdfViewerControl
         AttachTypewriterMoveBehavior(shell, dragHandle, operation);
         AttachTypewriterResizeBehavior(shell, resizeGrip, operation);
 
-        if (editing && string.IsNullOrEmpty(operation.Text))
+        // ── #1648: chrome on the focused box only ───────────────────────────
+        void ApplyChrome(bool focused)
+        {
+            frame.Background = focused
+                ? new SolidColorBrush(Color.FromArgb(0x0A, 0x00, 0x7A, 0xCC))
+                : Brushes.Transparent;
+            frame.BorderBrush = focused
+                ? new SolidColorBrush(Color.FromArgb(0xE0, 0x00, 0x7A, 0xCC))
+                : Brushes.Transparent;
+            frame.BorderThickness = focused ? new Thickness(1.5) : new Thickness(0);
+            dragHandle.IsVisible = focused;
+            deleteButton.IsVisible = focused;
+            resizeGrip.IsVisible = focused;
+            // Read-only rather than disabled: a read-only TextBox still takes
+            // focus, so clicking the text enters editing with the caret where
+            // the click landed. Rebuilding the editor to switch modes would
+            // throw that caret away.
+            textBox.IsReadOnly = !focused;
+        }
+
+        textBox.GotFocus += (_, _) => FocusTypewriterBox(operation.Id);
+        textBox.LostFocus += (_, _) =>
+        {
+            // Chrome only. An empty box is NOT deleted here: focus leaves for
+            // the style flyout too, and picking a colour before typing is a
+            // real way to use this — deleting there broke
+            // TypewriterColorPresetAccessibilityTests, which styles a box it
+            // has not typed into yet. Empty boxes are swept where they would
+            // actually be left behind: when another box is created, and when
+            // the mode is left.
+            if (_focusedTypewriterId == operation.Id)
+                _focusedTypewriterId = null;
+            ApplyChrome(false);
+        };
+
+        _typewriterChrome[operation.Id] = ApplyChrome;
+        ApplyChrome(editing);
+
+        // A box in the mode is clickable so it can be edited again; out of the
+        // mode it is inert and the page reads normally.
+        shell.IsHitTestVisible = inTypewriterMode;
+
+        if (inTypewriterMode && string.IsNullOrEmpty(operation.Text))
         {
             Dispatcher.UIThread.Post(() => textBox.Focus(), DispatcherPriority.Background);
         }

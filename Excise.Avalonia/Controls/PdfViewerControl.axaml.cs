@@ -537,6 +537,20 @@ public partial class PdfViewerControl : UserControl
                 control.ViewMode = PdfViewMode.SinglePage;
             }
 
+            // #1648: leaving typewriter mode discards boxes nobody typed in.
+            // An empty box is a click the user backed out of; keeping it leaves
+            // an invisible artefact in the document that only reappears when
+            // they next enter the mode.
+            if (e.OldValue is InteractionMode.Typewriter && e.NewValue is not InteractionMode.Typewriter)
+                control.DiscardEmptyPendingTypewriterText();
+
+            // #1648: nothing is being edited until the user picks a box. Without
+            // this, re-entering the mode dresses whichever box was last focused
+            // — the reader is shown an editing box they did not ask for, and the
+            // page stops looking like the document.
+            if (e.NewValue is not InteractionMode.Typewriter)
+                control.ClearTypewriterFocus();
+
             control.RedrawTypewriterLayer();
         });
     }
@@ -640,6 +654,15 @@ public partial class PdfViewerControl : UserControl
             or System.Collections.Specialized.NotifyCollectionChangedAction.Remove
             or System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
         {
+            // #1648: placing a box abandons any earlier one nobody typed in.
+            // The new box is exempt — it is empty by definition.
+            if (e.Action is System.Collections.Specialized.NotifyCollectionChangedAction.Add
+                && e.NewItems?.Count == 1
+                && e.NewItems[0] is Excise.Core.Editing.PdfTypewriterTextOperation added)
+            {
+                DiscardEmptyPendingTypewriterText(except: added.Id);
+            }
+
             RedrawTypewriterLayer();
         }
     }
