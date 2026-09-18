@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.10.0] - 2026-09-17
+
 Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
