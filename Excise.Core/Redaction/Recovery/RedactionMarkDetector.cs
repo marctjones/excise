@@ -133,35 +133,17 @@ public static class RedactionMarkDetector
         // What keeps the furniture out is SIZE, not the colour operator: the
         // same file's text underlines are 0.48-1.2pt tall and MinSidePt already
         // rejects them, while the bars are 13.8pt.
-        var fill = new Rgb(0, 0, 0);
+        // #1624: §8.4.2 q/Q save and restore the fill colour. This used to be a
+        // bare local, so a colour set inside a block leaked past its Q.
+        var fillState = new FillColourState(0, 0, 0);
 
         foreach (var op in ops)
         {
+            // q/Q and every colour operator, in one place (#1624).
+            if (fillState.Apply(op)) continue;
+
             switch (op.Name)
             {
-                case "g" when op.Operands.Count >= 1:
-                {
-                    var v = op.GetNumber(0);
-                    fill = new Rgb(v, v, v);
-                    break;
-                }
-                case "rg" when op.Operands.Count >= 3:
-                    fill = new Rgb(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2));
-                    break;
-                case "k" when op.Operands.Count >= 4:
-                    fill = FromCmyk(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2), op.GetNumber(3));
-                    break;
-                case "sc":
-                case "scn":
-                    // §8.6.8 operands depend on the current colour space, which
-                    // this pass does not track. Numeric operands are read the
-                    // way the component count implies; a pattern name (the
-                    // /P1 scn form) leaves the fill alone rather than guessing.
-                    if (TryReadComponents(op, out var scn))
-                    {
-                        fill = scn;
-                    }
-                    break;
                 case "Do":
                 {
                     // #1606: a covering box drawn INSIDE a Form XObject. The
@@ -188,6 +170,7 @@ public static class RedactionMarkDetector
                 case "b*":
                 {
                     if (op.BoundingBox is not { } box) break;
+                    var fill = new Rgb(fillState.Current.R, fillState.Current.G, fillState.Current.B);
                     if (Luminance(fill) > DarkLuminance) break;
                     var r = Transform(box, outer).Normalize();
                     if (r.Width < MinSidePt || r.Height < MinSidePt) break;

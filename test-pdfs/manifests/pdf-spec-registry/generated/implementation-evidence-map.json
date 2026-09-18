@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "6b7c36d511b7e78c93facb30866e5a13bedb1320b2069b5858ba42c13a704961",
+  "sourceFingerprint": "63c25c6148f2ec48a72363ee01ad5e5bb1099db2b3e8e6466de351bb3c92d0eb",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -4484,6 +4484,29 @@
     {
       "id": "Excise.Core/Redaction/Recovery/CoveredContentRecovery.cs",
       "path": "Excise.Core/Redaction/Recovery/CoveredContentRecovery.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/FillColourState.cs",
+      "path": "Excise.Core/Redaction/Recovery/FillColourState.cs",
       "kind": "source-file",
       "facets": [
         "redaction"
@@ -10361,7 +10384,7 @@
     }
   ],
   "summary": {
-    "records": 513,
+    "records": 514,
     "facets": {
       "annotations": 11,
       "content-and-graphics": 19,
@@ -10370,7 +10393,7 @@
       "forms": 9,
       "images": 32,
       "product-integration-general": 292,
-      "redaction": 75,
+      "redaction": 76,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 20,
       "transparency": 2
@@ -10419,10 +10442,10 @@
       "pdf.17.interactive.redaction-annotations:parse": 11,
       "pdf.17.interactive.redaction-annotations:preserve": 11,
       "pdf.17.interactive.redaction-annotations:render": 11,
-      "pdf.17.security.redaction-content-removal:extract": 75,
-      "pdf.17.security.redaction-content-removal:mutate": 75,
-      "pdf.17.security.redaction-content-removal:render": 75,
-      "pdf.17.security.redaction-content-removal:write": 75,
+      "pdf.17.security.redaction-content-removal:extract": 76,
+      "pdf.17.security.redaction-content-removal:mutate": 76,
+      "pdf.17.security.redaction-content-removal:render": 76,
+      "pdf.17.security.redaction-content-removal:write": 76,
       "pdf.17.syntax.encryption:mutate": 20,
       "pdf.17.syntax.encryption:parse": 20,
       "pdf.17.syntax.encryption:preserve": 20,

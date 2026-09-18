@@ -6,6 +6,7 @@ using Excise.Core.Content;
 using Excise.Core.Document;
 using Excise.Core.Fonts;
 using Excise.Core.Primitives;
+using Excise.Core.Redaction.Recovery;
 
 namespace Excise.Core.Text.Segmentation;
 
@@ -126,7 +127,11 @@ public static class HiddenTextDetector
         // on D.D.C. 1:17-cr-00201 #471 (Manafort, 2019-01-08), whose bars are
         // `x y w -h re f` with no colour operator in scope: excise saw nothing
         // under bars that are plainly visible and whose text pdftotext reads.
-        var fillRgb = new Rgb(0, 0, 0);
+        // #1624: §8.4.2 q/Q save and restore the fill colour. `q` used to push
+        // ONLY the CTM, so a colour set inside a block leaked past its Q — which
+        // read white pleading-line bands as the same grey as the body text and
+        // reported 83.7% of a clean court filing as hidden.
+        var fillState = new FillColourState(0, 0, 0);
         var currentPath = new List<PdfRectangle>();
         var finder = new LetterFinder();
 
@@ -140,13 +145,21 @@ public static class HiddenTextDetector
         for (int i = 0; i < ops.Count; i++)
         {
             var op = ops[i];
+
+            // Colour operators, in one place (#1624). q/Q are NOT delegated
+            // here: this detector also stacks the CTM, so they keep their own
+            // cases below and call into the colour state there.
+            if (op.Name is not ("q" or "Q") && fillState.Apply(op)) continue;
+
             switch (op.Name)
             {
                 case "q":
                     ctmStack.Push(ctm);
+                    fillState.Apply(op);            // colour half of the same save
                     break;
                 case "Q":
                     if (ctmStack.Count > 0) ctm = ctmStack.Pop();
+                    fillState.Apply(op);            // and of the same restore
                     break;
                 case "cm":
                     if (op.Operands.Count >= 6)
@@ -156,30 +169,6 @@ public static class HiddenTextDetector
                             op.GetNumber(2), op.GetNumber(3),
                             op.GetNumber(4), op.GetNumber(5));
                         ctm = local.Multiply(ctm);
-                    }
-                    break;
-
-                case "rg":
-                    if (op.Operands.Count >= 3)
-                        fillRgb = new Rgb(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2));
-                    break;
-                case "g":
-                    if (op.Operands.Count >= 1)
-                    {
-                        var v = op.GetNumber(0);
-                        fillRgb = new Rgb(v, v, v);
-                    }
-                    break;
-                case "k":
-                    if (op.Operands.Count >= 4)
-                    {
-                        // CMYK → rough RGB for opacity/darkness screening only.
-                        double c = op.GetNumber(0), m = op.GetNumber(1),
-                               y = op.GetNumber(2), k = op.GetNumber(3);
-                        fillRgb = new Rgb(
-                            (1 - c) * (1 - k),
-                            (1 - m) * (1 - k),
-                            (1 - y) * (1 - k));
                     }
                     break;
 
@@ -201,6 +190,7 @@ public static class HiddenTextDetector
                 case "B*":
                 case "b":
                 case "b*":
+                    var fillRgb = new Rgb(fillState.Current.R, fillState.Current.G, fillState.Current.B);
                     if (IsOpaqueObstructive(fillRgb))
                     {
                         foreach (var rect in currentPath)
@@ -233,7 +223,8 @@ public static class HiddenTextDetector
                     if (string.IsNullOrEmpty(text)) break;
                     var matches = finder.FindOperationLetters(text, letters);
                     if (matches.Count == 0) break;
-                    textEntries.Add(new TextEntry(i, text, BoundingBoxOf(matches), fillRgb, matches));
+                    textEntries.Add(new TextEntry(i, text, BoundingBoxOf(matches),
+                        new Rgb(fillState.Current.R, fillState.Current.G, fillState.Current.B), matches));
 
                     // #796: does the active (3,0) symbol cmap spell text that
                     // extraction (honouring /Encoding) does NOT recover? Compare

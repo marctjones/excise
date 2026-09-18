@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1280,
-  "indexedContentSha256": "9db6ce300b5909143506276a4a57d865527429716cc7b98a4e67c64aee0adb22",
+  "indexedContentSha256": "3e17ccad5151f119ebd1f9ecd76c90fc000c0584dd19a21bacc3dff905370e16",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -10769,6 +10769,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/CoveredContentRecovery.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "colour",
+            "scan"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/Recovery/MarkRegionTextRecovery.cs",
           "kind": "source",
           "matchedTerms": [
@@ -11310,20 +11318,9 @@
             "colour",
             "scan"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/ColorKeyMaskDifferentialTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "scan",
-            "renderpage",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 164
+      "candidateReferenceCount": 165
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -57433,6 +57430,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/CoveredContentRecovery.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/Recovery/MarkRegionTextRecovery.cs",
           "kind": "source",
           "matchedTerms": [
@@ -58118,19 +58125,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/RedactionWorkflowManagerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "applied",
-            "redaction",
-            "action",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 86
+      "candidateReferenceCount": 87
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -71751,6 +71748,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/CoveredContentRecovery.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "audit",
+            "local",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/Recovery/RecoveryModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -72296,18 +72302,9 @@
             "log",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/SymbolCmapHiddenTextDetectorTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "audit",
-            "log",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 139
+      "candidateReferenceCount": 140
     },
     {
       "id": "pdfe.product.platform.printing",

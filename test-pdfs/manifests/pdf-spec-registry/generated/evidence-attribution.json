@@ -95425,6 +95425,34 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AColourSetInsideABlock_DoesNotLeakPastTheQ",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.ARestoreReturnsTheEnclosingColour_NotTheInitialOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.NestedBlocksRestoreToTheEnclosingColour",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AnUnbalancedQ_LeavesTheColourAloneRatherThanThrowing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95531,34 +95559,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.EveryChannelThatRan_IsNamedInTheReport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.Fixtures_AreStructurallyValidPdfs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.HiddenTextRecovery_IsCorroboratedByTwoIndependentExtractors",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheReportedLocation_MatchesWhereMuPdfSeesTheGlyphs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheMarkRectangle_ContainsWhereMuPdfSeesTheGlyphs",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96773,6 +96773,34 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AColourSetInsideABlock_DoesNotLeakPastTheQ",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.ARestoreReturnsTheEnclosingColour_NotTheInitialOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.NestedBlocksRestoreToTheEnclosingColour",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AnUnbalancedQ_LeavesTheColourAloneRatherThanThrowing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96879,34 +96907,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.EveryChannelThatRan_IsNamedInTheReport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.Fixtures_AreStructurallyValidPdfs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.HiddenTextRecovery_IsCorroboratedByTwoIndependentExtractors",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheReportedLocation_MatchesWhereMuPdfSeesTheGlyphs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheMarkRectangle_ContainsWhereMuPdfSeesTheGlyphs",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98135,6 +98135,34 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AColourSetInsideABlock_DoesNotLeakPastTheQ",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.ARestoreReturnsTheEnclosingColour_NotTheInitialOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.NestedBlocksRestoreToTheEnclosingColour",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AnUnbalancedQ_LeavesTheColourAloneRatherThanThrowing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98241,34 +98269,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.EveryChannelThatRan_IsNamedInTheReport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.Fixtures_AreStructurallyValidPdfs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.HiddenTextRecovery_IsCorroboratedByTwoIndependentExtractors",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheReportedLocation_MatchesWhereMuPdfSeesTheGlyphs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheMarkRectangle_ContainsWhereMuPdfSeesTheGlyphs",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99523,6 +99523,34 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AColourSetInsideABlock_DoesNotLeakPastTheQ",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.ARestoreReturnsTheEnclosingColour_NotTheInitialOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.NestedBlocksRestoreToTheEnclosingColour",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AnUnbalancedQ_LeavesTheColourAloneRatherThanThrowing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -99629,34 +99657,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.EveryChannelThatRan_IsNamedInTheReport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.Fixtures_AreStructurallyValidPdfs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.HiddenTextRecovery_IsCorroboratedByTwoIndependentExtractors",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheReportedLocation_MatchesWhereMuPdfSeesTheGlyphs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.TheMarkRectangle_ContainsWhereMuPdfSeesTheGlyphs",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113786,8 +113786,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7476,
-    "testMethodsWithCapabilityCandidate": 4623,
+    "testMethods": 7480,
+    "testMethodsWithCapabilityCandidate": 4627,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

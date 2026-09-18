@@ -65,34 +65,20 @@ public static class CoveredContentRecovery
         var content = new List<(int Index, string Kind, string Description, PdfRectangle Box)>();
         var obstructions = new List<(int Index, PdfRectangle Box)>();
 
-        var fill = new Rgb(1, 1, 1);
-        var fillSet = false;
+        // #1624: §8.4.2 q/Q save and restore the fill colour. These were bare
+        // locals with no q/Q handling at all, so a colour set inside a block
+        // applied to every later fill on the page.
+        var fillState = new FillColourState(1, 1, 1);
 
         for (var i = 0; i < ops.Count; i++)
         {
             var op = ops[i];
+
+            // q/Q and every colour operator, in one place (#1624).
+            if (fillState.Apply(op)) continue;
+
             switch (op.Name)
             {
-                case "g" when op.Operands.Count >= 1:
-                {
-                    var v = op.GetNumber(0);
-                    fill = new Rgb(v, v, v);
-                    fillSet = true;
-                    break;
-                }
-                case "rg" when op.Operands.Count >= 3:
-                    fill = new Rgb(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2));
-                    fillSet = true;
-                    break;
-                case "k" when op.Operands.Count >= 4:
-                {
-                    double c = op.GetNumber(0), m = op.GetNumber(1),
-                           y = op.GetNumber(2), kk = op.GetNumber(3);
-                    fill = new Rgb((1 - c) * (1 - kk), (1 - m) * (1 - kk), (1 - y) * (1 - kk));
-                    fillSet = true;
-                    break;
-                }
-
                 case "Do":
                 {
                     if (op.Operands.Count == 0) break;
@@ -131,7 +117,8 @@ public static class CoveredContentRecovery
                     if (box.Width < MinSidePt || box.Height < MinSidePt) break;
 
                     var isFill = op.Name is not ("S" or "s");
-                    if (isFill && fillSet && Luminance(fill) <= DarkLuminance &&
+                    var fill = new Rgb(fillState.Current.R, fillState.Current.G, fillState.Current.B);
+                    if (isFill && fillState.Set && Luminance(fill) <= DarkLuminance &&
                         box.Width * box.Height <= 0.9 * pageArea)
                     {
                         obstructions.Add((i, box));
