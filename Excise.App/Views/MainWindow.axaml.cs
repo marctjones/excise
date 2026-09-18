@@ -160,6 +160,9 @@ public partial class MainWindow : Window
             TitleBarAppLabel.Margin = new Thickness(86, 0, 10, 0);
         }
 
+        // #1643: make the custom title row behave like a title bar.
+        TitleBarArea.PointerPressed += OnTitleBarPointerPressed;
+
         // Load and apply window settings (Issue #23)
         _windowSettings = _settingsStore.Load();
         _windowSettings.ApplyTo(this);
@@ -684,6 +687,48 @@ public partial class MainWindow : Window
 
         e.Handled = true;
         (step > 0 ? tabs.SelectNextTabCommand : tabs.SelectPreviousTabCommand).Execute().Subscribe();
+    }
+
+    /// <summary>
+    /// The left inset of the title row that belongs to the system window
+    /// buttons on macOS — the same 86 px the app label is pushed past.
+    /// </summary>
+    internal const double MacWindowButtonInset = 86;
+
+    /// <summary>
+    /// Whether a press at <paramref name="x"/> in the title row should start a
+    /// window drag (#1643).
+    /// </summary>
+    /// <remarks>
+    /// Pure so the rule can be asserted without a window manager: BeginMoveDrag
+    /// hands the gesture to the OS, and nothing in a headless test can observe
+    /// what the OS then does with it.
+    /// </remarks>
+    internal static bool IsWindowDragPoint(double x, bool isMacOS) =>
+        !isMacOS || x >= MacWindowButtonInset;
+
+    private void OnTitleBarPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            return;
+        if (!IsWindowDragPoint(e.GetPosition(TitleBarArea).X, OperatingSystem.IsMacOS()))
+            return;
+
+        // Double-click zooms, which is what macOS does by default and what
+        // Windows and most Linux shells do too.
+        if (e.ClickCount == 2)
+        {
+            WindowState = WindowState == WindowState.Maximized
+                ? WindowState.Normal
+                : WindowState.Maximized;
+            e.Handled = true;
+            return;
+        }
+
+        // Hand the gesture to the window manager. Everything the user expects
+        // from a title bar — moving, edge snapping, Spaces, Stage Manager —
+        // is the OS's to do once it has the drag.
+        BeginMoveDrag(e);
     }
 
     private long? TileCacheResidentBytes() => _pdfViewerControl?.ContinuousTileCacheResidentBytes;
