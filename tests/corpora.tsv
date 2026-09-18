@@ -39,3 +39,4 @@ gwg-processing-steps	planned	test-pdfs/gwg-steps	#1111 (source membership-gated;
 safedocs	extended	test-pdfs/safedocs	download-safedocs.sh	~200M	CommonCrawl-ToU	malformed-PDF subset (qpdf-flagged) for removal-path robustness, the #1039 class (#1112)
 govdocs1	extended	test-pdfs/govdocs1	download-govdocs1.sh	~100M	US-Gov-PublicDomain	text-bearing producer-diverse .gov PDF subset; redaction-target diversity + x-ray sweep (#1113)
 unredaction-bench	extended	test-pdfs/unredaction-bench	download-unredaction-bench.sh	varies	mixed-public-record	real-world redacted documents for the unredaction bench (#1590); vetted rows only, ground truth stays local
+recap	extended	test-pdfs/recap	download-recap-corpus.sh	varies	US-Gov-PublicDomain	RECAP court filings where SOMEBODY ELSE'S redaction leaked — x-ray-swept, clean files discarded; tier D (#1603)
