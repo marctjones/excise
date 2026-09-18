@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "39a0b62d31f6688da784260edb4c687a06262216",
+  "sourceRevision": "720bbd81e2ea17e40eb50b11a861f4357eaee913",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7493,
+    "retainedSymbols": 7568,
     "observedComponentDependencies": 70,
     "declaredDependencies": 68,
     "acceptedExceptions": 1,
@@ -24,8 +24,8 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 424,
-      "typeDependencyCount": 30,
+      "references": 429,
+      "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [
         {
@@ -38,7 +38,7 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 689,
+      "references": 693,
       "typeDependencyCount": 78,
       "classification": "declared",
       "evidence": [
@@ -192,8 +192,8 @@
     {
       "source": "cli",
       "target": "core-redaction",
-      "references": 98,
-      "typeDependencyCount": 24,
+      "references": 111,
+      "typeDependencyCount": 29,
       "classification": "declared",
       "evidence": [
         {
@@ -276,8 +276,8 @@
     {
       "source": "core",
       "target": "core-document",
-      "references": 177,
-      "typeDependencyCount": 30,
+      "references": 180,
+      "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [
         {
@@ -388,8 +388,8 @@
     {
       "source": "core-document",
       "target": "core",
-      "references": 62,
-      "typeDependencyCount": 16,
+      "references": 64,
+      "typeDependencyCount": 17,
       "classification": "declared",
       "evidence": [
         {
@@ -430,7 +430,7 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1411,
+      "references": 1413,
       "typeDependencyCount": 213,
       "classification": "declared",
       "evidence": [
@@ -528,8 +528,8 @@
     {
       "source": "core-redaction",
       "target": "core-content",
-      "references": 193,
-      "typeDependencyCount": 30,
+      "references": 217,
+      "typeDependencyCount": 34,
       "classification": "declared",
       "evidence": [
         {
@@ -542,8 +542,8 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 821,
-      "typeDependencyCount": 95,
+      "references": 914,
+      "typeDependencyCount": 101,
       "classification": "declared",
       "evidence": [
         {
@@ -584,8 +584,8 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 668,
-      "typeDependencyCount": 110,
+      "references": 796,
+      "typeDependencyCount": 120,
       "classification": "declared",
       "evidence": [
         {
@@ -940,7 +940,7 @@
     {
       "source": "rendering",
       "target": "core-document",
-      "references": 296,
+      "references": 297,
       "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [

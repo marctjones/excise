@@ -78,14 +78,6 @@ internal static class PdfUaIdentityXmp
         TimeSpan.FromSeconds(2));
 
     /// <summary>
-    /// Whether <paramref name="xmp"/> declares a PDF/UA identification at all,
-    /// without judging its value — the PRESENCE question. A bare substring
-    /// match, so a malformed or unknown value still counts as a claim.
-    /// </summary>
-    internal static bool DeclaresAnyIdentification(string? xmp)
-        => xmp != null && xmp.Contains("pdfuaid:part", StringComparison.Ordinal);
-
-    /// <summary>
     /// The validated PDF/UA identification in <paramref name="document"/>'s
     /// catalog XMP packet, or null when there is none or a value present fails
     /// validation. Returning null is the FAIL-SECURE answer: the caller then
