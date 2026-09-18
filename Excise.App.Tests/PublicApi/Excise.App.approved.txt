@@ -738,6 +738,8 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AttachmentsCommand { get; }
         public string AttachmentsCountText { get; }
         public string AttachmentsEmptyText { get; }
+        public string AttachmentsNoticeMessage { get; }
+        public string AttachmentsNoticeTitle { get; }
         public string AttachmentsSummary { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, int> AutoDetectFieldsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> BatesNumberingCommand { get; }
@@ -797,6 +799,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesBeforeCurrentCommand { get; }
         public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; }
         public bool IsAnnotationAuditModeEnabled { get; set; }
+        public bool IsAttachmentsNoticeOpen { get; set; }
         public bool IsAttachmentsSidebarVisible { get; set; }
         public bool IsClipboardSidebarVisible { get; set; }
         public bool IsContinuousView { get; }
