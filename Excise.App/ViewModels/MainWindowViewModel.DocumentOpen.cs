@@ -49,12 +49,7 @@ public partial class MainWindowViewModel
         if (!opensElsewhere && !await ConfirmDiscardUnsavedChangesAsync("open a different document"))
             return;
 
-        var files = await _filePicker.OpenFilesAsync(new OpenFilesRequest
-        {
-            Title = "Open PDF File",
-            AllowMultiple = opensElsewhere,
-            Filters = [FilePickerFilters.Pdf],
-        });
+        var files = await PickPdfFilesAsync(allowMultiple: opensElsewhere);
 
         if (files.Count == 0)
         {
@@ -72,6 +67,18 @@ public partial class MainWindowViewModel
 
         await LoadDocumentAsync(filePath);
     }
+
+    /// <summary>
+    /// The Open PDF picker, shared by File &gt; Open and by the tab strip's "+"
+    /// button (#1628) so both offer the same filters and the same title.
+    /// </summary>
+    internal Task<IReadOnlyList<string>> PickPdfFilesAsync(bool allowMultiple) =>
+        _filePicker.OpenFilesAsync(new OpenFilesRequest
+        {
+            Title = "Open PDF File",
+            AllowMultiple = allowMultiple,
+            Filters = [FilePickerFilters.Pdf],
+        });
 
     public async Task LoadDocumentAsync(string filePath)
     {

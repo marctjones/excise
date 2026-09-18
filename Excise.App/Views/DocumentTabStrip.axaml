@@ -4,49 +4,142 @@
              x:Class="Excise.App.Views.DocumentTabStrip"
              x:DataType="vm:DocumentTabsViewModel">
 
-    <!-- #1554: in-app document tabs. The strip never scrolls and never wraps:
-         the tabs share the width (each between MinWidth and MaxWidth, names
-         trimmed), and the overflow button on the right lists every tab. -->
+    <!-- #1554 / #1628: the in-app document tab strip.
+
+         PLACEMENT is the window's (MainWindow row 5): directly under the
+         toolbar and above the document. That is where every platform puts a
+         document tab bar — Finder and Safari on macOS, Files and GNOME's
+         header-bar apps on Linux, Explorer's tab row under the command bar on
+         Windows — so one placement satisfies all three and the control does
+         not need to know which one it is on.
+
+         APPEARANCE is this file's job, and it was the #1628 defect: the strip
+         painted itself in the toolbar's own background with a single hairline
+         between them, so it read as a second toolbar row crashing into the
+         first, and the selected tab differed from its neighbours by font
+         weight alone. A tab strip has to say three things at a glance —
+         "these are tabs", "this one is showing", "click another to switch" —
+         and it said none of them. So:
+
+           * the strip is a recessed band (darker than the toolbar) with its
+             own top AND bottom border, so it is plainly a separate row;
+           * the selected tab is lifted out of that band in the DOCUMENT's own
+             background colour and carries an accent bar along its top edge,
+             which is the cue Chrome, Edge, Firefox and Safari all use;
+           * a "+" button opens another document into this window, which is
+             the single clearest "this is a tab bar" affordance there is.
+
+         The strip never scrolls and never wraps: the tabs share the width
+         (each between MinWidth and MaxWidth, names trimmed) and the overflow
+         button on the right lists every tab.
+
+         The brushes are declared HERE rather than taken from the app theme for
+         the same reason the toolbar's shrink ladder lives in Window.Styles
+         (#1476): the headless test app loads FluentTheme only, so a
+         DynamicResource from Styles/Brushes.axaml resolves to nothing there
+         and the appearance this control is judged on could not be asserted.
+         The values are the app palette's. -->
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="TabStripBandBrush" Color="#F0F0F0"/>
+        <SolidColorBrush x:Key="TabStripBorderBrush" Color="#D0D0D0"/>
+        <SolidColorBrush x:Key="TabSelectedBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TabHoverBrush" Color="#E6E6E6"/>
+        <SolidColorBrush x:Key="TabAccentBrush" Color="#0078D4"/>
+        <SolidColorBrush x:Key="TabTextBrush" Color="#1F1F1F"/>
+        <SolidColorBrush x:Key="TabTextMutedBrush" Color="#666666"/>
+    </UserControl.Resources>
+
     <UserControl.Styles>
         <Style Selector="Border.document-tab">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource TabStripBorderBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,1,0"/>
-            <Setter Property="MinWidth" Value="40"/>
-            <Setter Property="MaxWidth" Value="220"/>
+            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="MaxWidth" Value="240"/>
+            <Setter Property="MinHeight" Value="32"/>
         </Style>
         <Style Selector="Border.document-tab:pointerover">
-            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+            <Setter Property="Background" Value="{StaticResource TabHoverBrush}"/>
         </Style>
+        <!-- The showing tab is lifted out of the band into the document's own
+             background, so the eye reads it as continuous with the page below. -->
         <Style Selector="Border.document-tab.selected">
-            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>
+            <Setter Property="Background" Value="{StaticResource TabSelectedBrush}"/>
         </Style>
+        <Style Selector="Border.document-tab.selected:pointerover">
+            <Setter Property="Background" Value="{StaticResource TabSelectedBrush}"/>
+        </Style>
+
+        <!-- The accent bar along the top edge of the showing tab. -->
+        <Style Selector="Border.document-tab-accent">
+            <Setter Property="Height" Value="3"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Border.document-tab.selected Border.document-tab-accent">
+            <Setter Property="Background" Value="{StaticResource TabAccentBrush}"/>
+        </Style>
+
         <Style Selector="Button.document-tab-button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="10,5,4,5"/>
+            <Setter Property="Padding" Value="12,4,4,6"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{StaticResource TabTextMutedBrush}"/>
+        </Style>
+        <Style Selector="Button.document-tab-button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
         </Style>
         <Style Selector="Border.document-tab.selected Button.document-tab-button">
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TabTextBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
+
+        <!-- The close button stays in the tree (and in the accessibility tree)
+             at all times, but is dimmed until the tab is the one showing or the
+             pointer is on it: eight tabs each shouting a close button is what
+             made the strip look like a row of controls rather than tabs. -->
         <Style Selector="Button.document-tab-close">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="6,2"/>
-            <Setter Property="Margin" Value="0,0,4,0"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="5,1"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TabTextMutedBrush}"/>
+            <Setter Property="Opacity" Value="0.35"/>
+        </Style>
+        <Style Selector="Border.document-tab:pointerover Button.document-tab-close">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="Border.document-tab.selected Button.document-tab-close">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <Style Selector="Button.tab-strip-action">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="MinHeight" Value="26"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{StaticResource TabTextMutedBrush}"/>
+        </Style>
+        <Style Selector="Button.tab-strip-action:pointerover">
+            <Setter Property="Foreground" Value="{StaticResource TabTextBrush}"/>
         </Style>
     </UserControl.Styles>
 
-    <Border Background="{DynamicResource SecondaryBackgroundBrush}"
-            BorderBrush="{DynamicResource BorderBrush}"
-            BorderThickness="0,0,0,1"
+    <Border x:Name="TabStripBand"
+            Background="{StaticResource TabStripBandBrush}"
+            BorderBrush="{StaticResource TabStripBorderBrush}"
+            BorderThickness="0,1,0,1"
             IsVisible="{Binding IsStripVisible}">
         <Grid ColumnDefinitions="*,Auto">
             <ItemsControl x:Name="DocumentTabsItemsControl"
@@ -63,49 +156,59 @@
                     <DataTemplate x:DataType="vm:DocumentTabViewModel">
                         <Border Classes="document-tab"
                                 Classes.selected="{Binding IsSelected}">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <Button Classes="document-tab-button"
-                                        Command="{Binding SelectCommand}"
-                                        ToolTip.Tip="{Binding ToolTip}"
-                                        AutomationProperties.Name="{Binding AccessibleName}">
-                                    <TextBlock Text="{Binding DisplayTitle}"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    <Button.ContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Header="Close Tab" Command="{Binding CloseCommand}"/>
-                                            <MenuItem Header="Close Other Tabs" Command="{Binding CloseOthersCommand}"/>
-                                            <Separator/>
-                                            <MenuItem Header="Move Tab to New Window" Command="{Binding MoveToNewWindowCommand}"/>
-                                            <Separator/>
-                                            <MenuItem Header="Copy Path" Command="{Binding CopyPathCommand}"
-                                                      IsEnabled="{Binding HasFilePath}"/>
-                                            <MenuItem Header="{Binding RevealHeader}" Command="{Binding RevealCommand}"
-                                                      IsEnabled="{Binding HasFilePath}"/>
-                                        </ContextMenu>
-                                    </Button.ContextMenu>
-                                </Button>
-                                <Button Grid.Column="1"
-                                        Classes="document-tab-close"
-                                        Content="✕"
-                                        Command="{Binding CloseCommand}"
-                                        ToolTip.Tip="Close tab"
-                                        AutomationProperties.Name="{Binding CloseButtonName}"/>
+                            <Grid RowDefinitions="Auto,*">
+                                <Border Grid.Row="0" Classes="document-tab-accent"/>
+                                <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+                                    <Button Classes="document-tab-button"
+                                            Command="{Binding SelectCommand}"
+                                            ToolTip.Tip="{Binding ToolTip}"
+                                            AutomationProperties.Name="{Binding AccessibleName}">
+                                        <TextBlock Text="{Binding DisplayTitle}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Close Tab" Command="{Binding CloseCommand}"/>
+                                                <MenuItem Header="Close Other Tabs" Command="{Binding CloseOthersCommand}"/>
+                                                <Separator/>
+                                                <MenuItem Header="Move Tab to New Window" Command="{Binding MoveToNewWindowCommand}"/>
+                                                <Separator/>
+                                                <MenuItem Header="Copy Path" Command="{Binding CopyPathCommand}"
+                                                          IsEnabled="{Binding HasFilePath}"/>
+                                                <MenuItem Header="{Binding RevealHeader}" Command="{Binding RevealCommand}"
+                                                          IsEnabled="{Binding HasFilePath}"/>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
+                                    </Button>
+                                    <Button Grid.Column="1"
+                                            Classes="document-tab-close"
+                                            Content="✕"
+                                            Command="{Binding CloseCommand}"
+                                            ToolTip.Tip="Close tab"
+                                            AutomationProperties.Name="{Binding CloseButtonName}"/>
+                                </Grid>
                             </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <Button x:Name="DocumentTabsOverflowButton"
-                    Grid.Column="1"
-                    Classes="document-tab-close"
-                    Content="⌄"
-                    ToolTip.Tip="All open documents"
-                    AutomationProperties.Name="All open documents">
-                <Button.Flyout>
-                    <MenuFlyout ItemsSource="{Binding OverflowMenuItems}"/>
-                </Button.Flyout>
-            </Button>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="DocumentTabsNewButton"
+                        Classes="tab-strip-action"
+                        Content="+"
+                        Command="{Binding NewTabCommand}"
+                        ToolTip.Tip="Open another document in this window"
+                        AutomationProperties.Name="Open another document in this window"/>
+                <Button x:Name="DocumentTabsOverflowButton"
+                        Classes="tab-strip-action"
+                        Content="⌄"
+                        ToolTip.Tip="All open documents"
+                        AutomationProperties.Name="All open documents">
+                    <Button.Flyout>
+                        <MenuFlyout ItemsSource="{Binding OverflowMenuItems}"/>
+                    </Button.Flyout>
+                </Button>
+            </StackPanel>
         </Grid>
     </Border>
 </UserControl>

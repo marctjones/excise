@@ -283,7 +283,8 @@ internal sealed class DocumentWorkspace : DocumentTabsViewModel.ITabsHost
     internal async Task OpenDocumentsAsync(
         IReadOnlyList<string> paths,
         DocumentSession? origin,
-        bool replaceConfirmed = false)
+        bool replaceConfirmed = false,
+        DocumentOpenMode? forceMode = null)
     {
         ArgumentNullException.ThrowIfNull(paths);
 
@@ -304,7 +305,10 @@ internal sealed class DocumentWorkspace : DocumentTabsViewModel.ITabsHost
             ShowInNewWindow(origin);
         }
 
-        var mode = ResolveOpenMode(origin);
+        // forceMode: the tab strip's "+" says where the document lands before
+        // the picker opens, so it does not consult the open-mode preference
+        // (#1628).
+        var mode = forceMode ?? ResolveOpenMode(origin);
         var originTaken = false;
 
         foreach (var path in targets)
@@ -455,6 +459,24 @@ internal sealed class DocumentWorkspace : DocumentTabsViewModel.ITabsHost
 
     void DocumentTabsViewModel.ITabsHost.MoveTabToNewWindow(DocumentTabsViewModel tabs, DocumentTabViewModel tab) =>
         MoveToNewWindow(tab.Session);
+
+    /// <summary>
+    /// The strip's "+" button (#1628): pick documents and open them as tabs of
+    /// the window that asked, regardless of the open-mode preference — the
+    /// button is drawn on that window's tab strip, so that is what it promised.
+    /// </summary>
+    async Task DocumentTabsViewModel.ITabsHost.OpenInNewTabAsync(DocumentTabsViewModel tabs)
+    {
+        ArgumentNullException.ThrowIfNull(tabs);
+        if (tabs.SelectedTab?.Session is not { IsDisposed: false } origin)
+            return;
+
+        var files = await origin.ViewModel.PickPdfFilesAsync(allowMultiple: true);
+        if (files.Count == 0)
+            return;
+
+        await OpenDocumentsAsync(files, origin, forceMode: DocumentOpenMode.NewTab);
+    }
 
     async Task DocumentTabsViewModel.ITabsHost.CopyPathAsync(string path)
     {
