@@ -6,10 +6,20 @@
 # so this needs no PACER credentials and incurs NO PACER FEES — the constraint
 # in #1591. x-ray was built by Free Law Project to sweep exactly this archive.
 #
-# WHAT THIS KEEPS. Not "court documents" — documents where SOMEBODY ELSE'S
-# REDACTION LEAKED. Every fetched PDF is swept with the vendored x-ray and
-# DELETED unless x-ray reports a bad redaction. A clean court filing is not a
-# tier-D document; it is a file we made somebody serve us for nothing.
+# WHAT THIS KEEPS. Not "court documents" — CANDIDATES. Every fetched PDF is
+# swept with the vendored x-ray and DELETED unless x-ray reports a bad
+# redaction. A clean court filing is not a tier-D document; it is a file we made
+# somebody serve us for nothing.
+#
+# ⚠️ KEPT IS NOT THE SAME AS LEAKING, and the manifest must not be read that
+# way. x-ray false-positives, measured on the one hit in 76 GovDocs1 files
+# (#1621): its qualifying stage accepts a character occluded >=80% by ANY
+# rectangle — a page-sized background panel counts — and its grouping stage then
+# attributes that character to the first rectangle it touches AT ALL, which was
+# a 53.6x7.2 box grazing it at 2.1%. mutool and excise agree the glyphs sit
+# entirely BELOW that box. So GovDocs1's real rate was 0 in 76, not 1 in 76.
+# x-ray is the right net here because it is cheap and independent, but every
+# kept document needs triage before it becomes a bench row.
 #
 # ⚠️ WHAT IT NEVER WRITES (#1602). The manifest records path, sha256, page and
 # leak CLASS. It has no column for recovered text and this script never prints
