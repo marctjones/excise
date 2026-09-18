@@ -29,9 +29,10 @@
 #   scripts/download-recap-corpus.sh --status                   what is here
 #   scripts/download-recap-corpus.sh --sweep-only               re-sweep, no fetch
 #
-# A free CourtListener API token (https://www.courtlistener.com/help/api/rest/)
-# in COURTLISTENER_TOKEN enables --query. --urls needs no token: RECAP storage
-# URLs are public, and that is the mode the Manafort rows already use.
+# NO CREDENTIALS ARE REQUIRED. --urls fetches public RECAP storage URLs, and
+# --query uses CourtListener's anonymous REST tier (~5 req/min). A free token in
+# COURTLISTENER_TOKEN only raises the quota (5,000/hour, private rather than a
+# pool shared with every other anonymous client) — it is never a prerequisite.
 
 set -uo pipefail
 
@@ -185,34 +186,61 @@ cmd_urls() {
 
 cmd_query() {
     local q="$1"
-    [ -n "${COURTLISTENER_TOKEN:-}" ] || die \
-"--query needs a free CourtListener API token.
 
-  1. Sign up:  https://www.courtlistener.com/sign-in/
-  2. Token:    https://www.courtlistener.com/profile/api-token/
-  3. export COURTLISTENER_TOKEN=...
-
---urls FILE needs no token: RECAP storage URLs are public, and that is what the
-Manafort rows in tests/unredaction-bench/manifest.tsv already use."
+    # ANONYMOUS BY DEFAULT. CourtListener allows unauthenticated REST access at
+    # ~5 requests/minute (5,000/day); a free token raises that to 5,000/hour and
+    # gives you a private pool instead of one shared across every anonymous
+    # client. We do not need the throughput — a sweep is bounded by the polite
+    # inter-document delay, not by the search call — so the script works with no
+    # setup at all and the token is purely an optimisation.
+    #
+    # ⚠️ The anonymous quota is shared, so a 429 here is somebody else's traffic
+    # as often as it is ours. Back off, do not retry harder.
+    # ⚠️ An empty array under `set -u` is UNBOUND in bash 3.2, which is what
+    # macOS ships. Expand it as ${auth[@]+"${auth[@]}"} at every use site.
+    local auth=() mode api_delay
+    if [ -n "${COURTLISTENER_TOKEN:-}" ]; then
+        auth=(-H "Authorization: Token $COURTLISTENER_TOKEN")
+        mode="authenticated"; api_delay=1
+    else
+        mode="anonymous (~5 req/min shared quota; COURTLISTENER_TOKEN raises it)"
+        api_delay=13
+    fi
 
     local py; py="$(find_xray)" || die "x-ray not installed — run scripts/download-xray.sh"
     mkdir -p "$DEST"; touch "$MANIFEST"
 
     echo "${BOLD}searching RECAP${RESET} ${DIM}$q${RESET}"
-    local api="https://www.courtlistener.com/api/rest/v4/search/"
-    local page; page="$(curl -fsSL --max-time 60 -A "$UA" \
-        -H "Authorization: Token $COURTLISTENER_TOKEN" \
-        --get --data-urlencode "q=$q" --data-urlencode "type=r" \
-        "$api")" || die "search failed — check the token and the rate limit"
+    echo "${DIM}mode: $mode${RESET}"
 
-    # filepath_local is the RECAP storage path; storage.courtlistener.com serves
-    # it without credentials.
+    local api="https://www.courtlistener.com/api/rest/v4/search/"
+    local page status
+    page="$(curl -sSL --max-time 60 -w '\n%{http_code}' -A "$UA" ${auth[@]+"${auth[@]}"} \
+        --get --data-urlencode "q=$q" --data-urlencode "type=r" "$api")"
+    status="$(printf '%s' "$page" | tail -1)"
+    page="$(printf '%s' "$page" | sed '$d')"
+
+    case "$status" in
+        200) ;;
+        429) die "rate limited (429). The anonymous quota is shared — wait, or set COURTLISTENER_TOKEN." ;;
+        401|403) die "search refused ($status). An API token may now be required for this endpoint; see https://www.courtlistener.com/help/api/rest/" ;;
+        *) die "search failed (HTTP $status)" ;;
+    esac
+    sleep "$api_delay"
+
     local urls; urls="$(printf '%s' "$page" | python3 -c '
 import json,sys
-d=json.load(sys.stdin)
+try:
+    d=json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
 seen=set()
 for r in d.get("results", []):
-    for doc in r.get("recap_documents", []) or [r]:
+    for doc in (r.get("recap_documents") or [r]):
+        # is_available means the PDF is actually IN the RECAP archive.
+        # filepath_local is often null for entries known only from the docket.
+        if not doc.get("is_available"):
+            continue
         p = doc.get("filepath_local")
         if p and p not in seen:
             seen.add(p)
