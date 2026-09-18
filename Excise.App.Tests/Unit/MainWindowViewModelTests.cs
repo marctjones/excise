@@ -656,9 +656,12 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public void IsClipboardSidebarVisible_InitiallyTrue()
+    public void IsClipboardSidebarVisible_InitiallyFalse()
     {
-        _viewModel.IsClipboardSidebarVisible.Should().BeTrue();
+        // #1654: off by default. An empty Clipboard History panel cost 250 px
+        // of every launch, and while #1645 was live it filled with fragments of
+        // the document nobody had asked to copy.
+        _viewModel.IsClipboardSidebarVisible.Should().BeFalse();
     }
 
     [Fact]

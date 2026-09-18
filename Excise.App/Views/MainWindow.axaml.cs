@@ -398,6 +398,9 @@ public partial class MainWindow : Window
         }
 
         viewModel.ViewerTileCacheResidentBytesProvider = TileCacheResidentBytes;
+        // #1650: the page a "current page" command acts on, which is the page
+        // filling the viewport rather than the one owning its top edge.
+        viewModel.ViewerMostVisiblePageProvider = MostVisibleViewerPage;
         SchedulePlatformMenuConfigure();
 
         // Push the viewer's *visible* viewport (inside-the-scrollbars)
@@ -547,6 +550,8 @@ public partial class MainWindow : Window
         // Only clear the provider if it is still this window's.
         if (viewModel.ViewerTileCacheResidentBytesProvider == (Func<long?>)TileCacheResidentBytes)
             viewModel.ViewerTileCacheResidentBytesProvider = null;
+        if (viewModel.ViewerMostVisiblePageProvider == (Func<int?>)MostVisibleViewerPage)
+            viewModel.ViewerMostVisiblePageProvider = null;
     }
 
     private void UpdateTitle(MainWindowViewModel viewModel)
@@ -682,6 +687,9 @@ public partial class MainWindow : Window
     }
 
     private long? TileCacheResidentBytes() => _pdfViewerControl?.ContinuousTileCacheResidentBytes;
+
+    /// <summary>#1650: the page filling the viewport, for "current page" commands.</summary>
+    private int? MostVisibleViewerPage() => _pdfViewerControl?.MostVisiblePage;
 
     private void ConfigurePlatformMenu(MainWindowViewModel viewModel)
     {
@@ -1384,14 +1392,15 @@ public partial class MainWindow : Window
                     e.Area.Height,
                     MainWindowViewModel.DefaultViewerRenderDpi)
                 : null;
-        if (!string.IsNullOrEmpty(e.Text))
-        {
-            _ = viewModel.SetSelectedTextAndCopyAsync(e.Text);
-        }
-        else
-        {
-            viewModel.SelectedText = string.Empty;
-        }
+        // #1645: selecting text does NOT copy it. This used to call
+        // SetSelectedTextAndCopyAsync, which put every selection on the OS
+        // clipboard and into Clipboard History — so an ordinary click, which is
+        // a one-character selection, overwrote whatever the user had copied.
+        // Worse for a redaction tool: it pushed fragments of the document onto
+        // a clipboard every other app can read, with no action from the user.
+        // The selection still powers highlight annotations and search; text
+        // reaches the clipboard only from an explicit Copy.
+        viewModel.SelectedText = string.IsNullOrEmpty(e.Text) ? string.Empty : e.Text;
     }
 
     private void OnPageChanged(object? sender, PageChangedEventArgs e)

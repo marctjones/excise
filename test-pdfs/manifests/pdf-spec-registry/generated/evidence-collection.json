@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1257,
-  "indexedContentSha256": "51c018ad7e586565c23cbb345069df64491d4bf74fbcce4e828c9b6cfd8d3392",
+  "indexedFileCount": 1258,
+  "indexedContentSha256": "fe38277e2d631ecfb926f4f36f7f5dae62b45eca1d67af5b204816aa1ce6a74b",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7988,7 +7988,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 572
+      "candidateReferenceCount": 574
     },
     {
       "id": "pdf.17.graphics.color",
@@ -40432,6 +40432,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/PageOrganizationWorkflowService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "widget",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -40833,19 +40842,9 @@
             "widget",
             "annotation"
           ]
-        },
-        {
-          "path": "tests/corpus-expectations-pdfium.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "widget",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 83
+      "candidateReferenceCount": 84
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -41282,6 +41281,15 @@
             "annotation",
             "pdfannotation",
             "redact"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/PageOrganizationWorkflowService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "link",
+            "annotation"
           ]
         },
         {
@@ -41735,18 +41743,9 @@
             "link",
             "annotation"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/ViewToggleMenuInteractionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "link",
-            "annotation"
-          ]
         }
       ],
-      "candidateReferenceCount": 92
+      "candidateReferenceCount": 93
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -46444,6 +46443,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/PageOrganizationWorkflowService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -46719,18 +46727,9 @@
             "line",
             "annotation"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PdfOutlineParserTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation"
-          ]
         }
       ],
-      "candidateReferenceCount": 185
+      "candidateReferenceCount": 186
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -48231,6 +48230,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/PageOrganizationWorkflowService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -48599,19 +48607,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/AnnotationAppearanceDrawnTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 143
+      "candidateReferenceCount": 144
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -51833,6 +51831,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/PageOrganizationWorkflowService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App/Services/Printing/WindowsDocumentPrinter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -51972,6 +51979,16 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/Controls/PdfViewerControlTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AttachmentsPanelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -52082,7 +52099,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 47
+      "candidateReferenceCount": 49
     },
     {
       "id": "pdf.20.annotation.subtype-023",
@@ -62766,7 +62783,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 379
+      "candidateReferenceCount": 380
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -63304,6 +63321,15 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "data",
+            "viewport",
+            "metadata"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -63502,17 +63528,9 @@
             "dictionaries",
             "metadata"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/ImageRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "coordinate",
-            "data"
-          ]
         }
       ],
-      "candidateReferenceCount": 187
+      "candidateReferenceCount": 189
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -65064,7 +65082,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 613
+      "candidateReferenceCount": 614
     },
     {
       "id": "pdf.20.extension.developer",

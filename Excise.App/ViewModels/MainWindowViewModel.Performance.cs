@@ -30,6 +30,38 @@ public partial class MainWindowViewModel
     internal Func<long?>? ViewerTileCacheResidentBytesProvider { get; set; }
 
     /// <summary>
+    /// #1650: the page a "current page" COMMAND acts on — the page with the
+    /// greatest visible area in the viewport, supplied by the viewer.
+    /// </summary>
+    /// <remarks>
+    /// <para><see cref="CurrentPageIndex"/> tracks the viewer's scroll anchor,
+    /// which is the page owning the TOP EDGE of the viewport. That is right for
+    /// anchoring and wrong for commands: two pixels of the previous page
+    /// peeking in at the top made it "current" while the reader was looking at
+    /// the next one, and Remove Current Page removed the page they were not
+    /// looking at. Reported live.</para>
+    /// <para>Null when no viewer is bound (headless view-model tests, a window
+    /// mid-teardown), in which case <see cref="CommandTargetPageIndex"/> falls
+    /// back to the anchor — the old behaviour, which is still the best answer
+    /// available without a viewport.</para>
+    /// </remarks>
+    internal Func<int?>? ViewerMostVisiblePageProvider { get; set; }
+
+    /// <summary>
+    /// The 0-based page every "current page" command must operate on (#1650).
+    /// </summary>
+    internal int CommandTargetPageIndex
+    {
+        get
+        {
+            var page = ViewerMostVisiblePageProvider?.Invoke();
+            if (page is not int oneBased || oneBased < 1 || oneBased > Math.Max(1, TotalPages))
+                return CurrentPageIndex;
+            return oneBased - 1;
+        }
+    }
+
+    /// <summary>
     /// Apply <paramref name="settings"/> (clamped) now. UI thread.
     /// <paramref name="fromPersistedStartup"/> is the window restoring
     /// window.json: then thumbnail pre-render is only ever turned OFF, because

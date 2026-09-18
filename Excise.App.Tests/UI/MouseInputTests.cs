@@ -1,4 +1,5 @@
 using System;
+using System.Reactive.Threading.Tasks;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1021,14 +1022,29 @@ public class MouseInputTests : IDisposable
         await Dispatcher.UIThread.InvokeAsync(() =>
             window.MouseUp(focusWindow, MouseButton.Left));
 
-        // Step 5: Verify clipboard history grew
+        // Step 5: the selection is live — and NOTHING has been copied.
+        // #1645: this used to assert clipboard history grew from the drag
+        // alone. Selecting no longer copies: an ordinary click is a
+        // one-character selection, and auto-copying it overwrote the user's
+        // clipboard and pushed document fragments to every app that can read
+        // it. The "not copied" half is the half that matters, so it is
+        // asserted before the explicit copy below.
+        for (int i = 0; i < 30 && string.IsNullOrEmpty(vm.SelectedText); i++)
+            await Task.Delay(100);
+
+        vm.SelectedText.Should().Be(expectedText, "the drag selects the text");
+        vm.ClipboardHistory.Count.Should().Be(initialHistoryCount,
+            "#1645: selecting must not copy — only an explicit Copy does");
+
+        // Step 6: an explicit Copy puts exactly that text on the clipboard.
+        await vm.CopyTextCommand.Execute().ToTask();
         for (int i = 0; i < 30 && vm.ClipboardHistory.Count == initialHistoryCount; i++)
             await Task.Delay(100);
 
         vm.ClipboardHistory.Count.Should().BeGreaterThan(initialHistoryCount,
-            "selecting and copying text should add a clipboard-history entry");
+            "Edit > Copy copies the live selection");
         vm.ClipboardHistory[0].Text.Should().Be(expectedText);
-        _out.WriteLine($"Workflow complete: selected '{expectedText}' → clipboard history updated");
+        _out.WriteLine($"Workflow complete: selected '{expectedText}', copied only on request");
     }
 
     #endregion

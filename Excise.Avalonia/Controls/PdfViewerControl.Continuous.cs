@@ -1027,6 +1027,14 @@ public partial class PdfViewerControl
         // Topmost visible page = the slot whose cumulative bottom passes the
         // current vertical offset (+ a small bias so a page counts as "current"
         // once its top edge is in view).
+        //
+        // ⚠️ #1650: this is deliberately NOT the most-visible page. CurrentPage
+        // is the SCROLL ANCHOR — mode-switch reading-position carry, the
+        // look-ahead window and the zoom re-layout all derive from it, and
+        // making it most-visible broke two of them (a zoom at a fixed
+        // offset/extent ratio legitimately changes which page dominates, so the
+        // anchor stopped being stable). The page a "current page" COMMAND acts
+        // on is a different question and is answered by MostVisiblePage.
         double offsetY = _continuousScrollViewer.Offset.Y + 1;
         int top = FindTopVisibleContinuousPage(_continuousSlots, offsetY);
 
@@ -1572,6 +1580,106 @@ public partial class PdfViewerControl
         }
 
         return cachedCount;
+    }
+
+    /// <summary>
+    /// The page a command that says "current page" must act on (#1650): in
+    /// continuous mode the page with the greatest visible area in the viewport,
+    /// otherwise the displayed page.
+    /// </summary>
+    /// <remarks>
+    /// Separate from <see cref="CurrentPage"/> on purpose — that one is the
+    /// scroll anchor and has to stay the page owning the top edge (see the note
+    /// at the scroll handler). This is what the reader would point at and say
+    /// "this page", which is what Remove Current Page, Extract, Export, Move
+    /// and Rotate must use.
+    /// </remarks>
+    public int MostVisiblePage
+    {
+        get
+        {
+            if (ViewMode != PdfViewMode.Continuous || _continuousScrollViewer == null || _continuousSlots.Count == 0)
+                return CurrentPage;
+
+            // ⚠️ A navigation still in flight must NOT be overridden. Setting
+            // CurrentPage (Go To Page, a clicked link, a thumbnail) scrolls
+            // asynchronously, so for a moment the anchor names the destination
+            // while the offset still describes where the reader came from.
+            // Answering from that offset would make a command act on the page
+            // the user just navigated AWAY from — caught by
+            // PageOrganizationCommandTests, which set a page and act at once.
+            //
+            // _pendingContinuousPage is that signal, and it is sufficient: an
+            // externally set CurrentPage reaches ScrollToPageContinuous through
+            // OnCurrentPageChanged, which sets it. A second guard ("the anchor
+            // page has no pixels on screen") was written and MEASURED INERT —
+            // removing it left PageOrganizationCommandTests and
+            // CurrentPageCommandTargetTests green — so it is not here.
+            if (_pendingContinuousPage is not null)
+                return CurrentPage;
+
+            return FindMostVisibleContinuousPage(
+                _continuousSlots,
+                _continuousScrollViewer.Offset.Y + 1,
+                _continuousScrollViewer.Viewport.Height);
+        }
+    }
+
+    /// <summary>
+    /// The page a command that says "current page" must act on (#1650): the one
+    /// with the greatest visible height in the viewport.
+    /// </summary>
+    /// <remarks>
+    /// <para>Not <see cref="FindTopVisibleContinuousPage"/>, which answers a
+    /// different question — "which page owns the top edge of the viewport" —
+    /// and is right for the hit-test and the look-ahead window that use it. It
+    /// was wrong here: it returns the first page with ANY pixel on screen, so a
+    /// two-pixel sliver of the previous page outvotes the page filling the rest
+    /// of the window. Remove Current Page then deletes the page the reader is
+    /// not looking at, which is how this was found.</para>
+    /// <para>Ties go to the upper page, which is what every reader does — and
+    /// what keeps the answer stable while scrolling through equal-height pages
+    /// rather than flickering between two.</para>
+    /// <para>A zero or negative viewport (a window mid-layout, a measure pass
+    /// before the scroll viewer has a size) falls back to the top-visible page:
+    /// with no viewport there is no "most visible", and answering the old way
+    /// is better than answering 1.</para>
+    /// </remarks>
+    internal static int FindMostVisibleContinuousPage(
+        IReadOnlyList<PdfPageSlot> slots, double offsetY, double viewportHeight)
+    {
+        if (slots.Count == 0)
+            return 1;
+        if (viewportHeight <= 0)
+            return FindTopVisibleContinuousPage(slots, offsetY);
+
+        var viewTop = offsetY;
+        var viewBottom = offsetY + viewportHeight;
+
+        // Start at the first page touching the viewport and walk forward only
+        // while pages still intersect it — the slot list can be thousands long
+        // and this runs on every scroll event.
+        var first = FindTopVisibleContinuousPage(slots, offsetY) - 1;
+        var best = first;
+        var bestVisible = double.NegativeInfinity;
+
+        for (var i = first; i < slots.Count; i++)
+        {
+            var top = slots[i].TopDip;
+            if (top >= viewBottom)
+                break;
+
+            var bottom = top + slots[i].DisplayHeight;
+            var visible = Math.Min(bottom, viewBottom) - Math.Max(top, viewTop);
+            // Strictly greater: a tie keeps the earlier (upper) page.
+            if (visible > bestVisible)
+            {
+                bestVisible = visible;
+                best = i;
+            }
+        }
+
+        return best + 1;
     }
 
     internal static int FindTopVisibleContinuousPage(IReadOnlyList<PdfPageSlot> slots, double offsetY)

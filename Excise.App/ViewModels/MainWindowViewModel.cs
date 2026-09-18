@@ -114,7 +114,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _areFieldAndLinkAnnotationsVisible = true;
     private bool _isAnnotationAuditModeEnabled;
     private bool _areFormFieldsHighlighted;
-    private bool _isClipboardSidebarVisible = true;
+    // #1654: off by default. An empty Clipboard History panel cost 250 px of
+    // every launch, and while #1645 was live it filled with fragments of the
+    // document nobody had asked to copy. It stays a View-menu toggle and the
+    // choice still persists in window.json.
+    private bool _isClipboardSidebarVisible;
     private DocumentOpenTiming? _lastDocumentOpenTiming;
     private long _renderVersion;
     private long _documentMutationVersion;
@@ -1410,7 +1414,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             RequestPreserveReadingPosition(); // #846: snapshot reading position before the page count/order changes
-            var removedIndex = CurrentPageIndex;
+            var removedIndex = CommandTargetPageIndex; // #1650: the page filling the viewport, not the sliver at its top edge
             var capturedPages = CapturePages(new[] { removedIndex });
             var result = await _pageOrganizationWorkflow.RemovePageAsync(removedIndex);
             if (!result.DidChange)
@@ -1470,7 +1474,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var path = await PickPdfForPageInsertionAsync("Select PDF to Insert Before Current Page");
         if (!string.IsNullOrWhiteSpace(path))
-            await InsertPagesFromFileAsync(path, CurrentPageIndex);
+            await InsertPagesFromFileAsync(path, CommandTargetPageIndex); // #1650
     }
 
     private async Task InsertPagesAfterCurrentAsync()
@@ -1480,7 +1484,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var path = await PickPdfForPageInsertionAsync("Select PDF to Insert After Current Page");
         if (!string.IsNullOrWhiteSpace(path))
-            await InsertPagesFromFileAsync(path, CurrentPageIndex + 1);
+            await InsertPagesFromFileAsync(path, CommandTargetPageIndex + 1); // #1650
     }
 
     public async Task InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex)
@@ -1590,7 +1594,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var path = await PickSavePdfPathAsync("Extract Current Page", suggestedName);
         if (!string.IsNullOrWhiteSpace(path))
-            await ExtractPagesToFileAsync(path, new[] { CurrentPageIndex });
+            await ExtractPagesToFileAsync(path, new[] { CommandTargetPageIndex }); // #1650
     }
 
     public async Task ExtractPagesToFileAsync(string outputPath, IEnumerable<int> pageIndices)
@@ -1660,22 +1664,29 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task MoveCurrentPageEarlierAsync()
     {
-        if (CurrentPageIndex <= 0)
+        // #1650: the guard reads the target so it agrees with the move. The
+        // second read inside MoveCurrentPageAsync is the same value — there is
+        // no await between them, so the viewport cannot scroll in between —
+        // and going through it keeps the one production path (the unwired-api
+        // gate caught the bypass, #908).
+        var from = CommandTargetPageIndex;
+        if (from <= 0)
             return;
 
-        await MoveCurrentPageAsync(CurrentPageIndex - 1);
+        await MoveCurrentPageAsync(from - 1);
     }
 
     private async Task MoveCurrentPageLaterAsync()
     {
-        if (CurrentPageIndex >= TotalPages - 1)
+        var from = CommandTargetPageIndex;
+        if (from >= TotalPages - 1)
             return;
 
-        await MoveCurrentPageAsync(CurrentPageIndex + 1);
+        await MoveCurrentPageAsync(from + 1);
     }
 
     public async Task MoveCurrentPageAsync(int toIndex)
-        => await MovePageAsync(CurrentPageIndex, toIndex);
+        => await MovePageAsync(CommandTargetPageIndex, toIndex); // #1650
 
     public async Task MovePageAsync(int fromIndex, int toIndex)
     {
@@ -2160,7 +2171,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var rotatedIndex = CurrentPageIndex;
+            var rotatedIndex = CommandTargetPageIndex; // #1650
             _documentService.RotatePageLeft(rotatedIndex);
             MarkPageOrganizationChanged();
             _history.Push("Rotate page left",
@@ -2189,7 +2200,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var rotatedIndex = CurrentPageIndex;
+            var rotatedIndex = CommandTargetPageIndex; // #1650
             _documentService.RotatePageRight(rotatedIndex);
             MarkPageOrganizationChanged();
             _history.Push("Rotate page right",
@@ -2218,7 +2229,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var rotatedIndex = CurrentPageIndex;
+            var rotatedIndex = CommandTargetPageIndex; // #1650
             _documentService.RotatePage180(rotatedIndex);
             MarkPageOrganizationChanged();
             _history.Push("Rotate page 180°",
@@ -2530,7 +2541,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task ExportCurrentPageAsync()
     {
-        _logger.LogInformation("Export current page command triggered (page {PageNumber})", CurrentPageIndex + 1);
+        // #1650: read the target page ONCE — the file name, the render and the
+        // log line must all name the same page, and the viewport can scroll
+        // while the save picker is open.
+        var exportPageIndex = CommandTargetPageIndex;
+        _logger.LogInformation("Export current page command triggered (page {PageNumber})", exportPageIndex + 1);
 
         if (!_documentService.IsDocumentLoaded || string.IsNullOrEmpty(_currentFilePath))
         {
@@ -2545,7 +2560,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var suggestedFileName = System.IO.Path.GetFileNameWithoutExtension(_currentFilePath) +
-                                $"_page{CurrentPageIndex + 1}.png";
+                                $"_page{exportPageIndex + 1}.png";
 
         var exportPath = await _filePicker.SaveFileAsync(new SaveFileRequest
         {
@@ -2566,8 +2581,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public async Task ExportCurrentPageToImageAsync(string outputPath, int dpi = 150)
     {
+        var pageIndex = CommandTargetPageIndex; // #1650
         _logger.LogInformation("Exporting current page {PageNumber} to: {Path}, DPI: {DPI}",
-            CurrentPageIndex + 1, outputPath, dpi);
+            pageIndex + 1, outputPath, dpi);
 
         if (!_documentService.IsDocumentLoaded || string.IsNullOrEmpty(_currentFilePath))
         {
@@ -2588,7 +2604,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var document = _documentService.GetCurrentDocument()
                 ?? throw new InvalidOperationException("No current document is available for export.");
             await _imageExportWorkflow.ExportPageAsync(
-                new PageImageExportRequest(document, CurrentPageIndex, outputPath, dpi));
+                new PageImageExportRequest(document, pageIndex, outputPath, dpi));
         }
         catch (Exception ex)
         {
