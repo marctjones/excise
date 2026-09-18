@@ -131,7 +131,8 @@ public class WindowSettings
     public int SinglePageCachedPages { get; set; } = 6;
 
     /// <summary>Background thumbnail pre-render after a document opens.</summary>
-    public bool ThumbnailPrewarm { get; set; } = true;
+    // #1565: off by default — see PerformanceSettings.Balanced for the measurement.
+    public bool ThumbnailPrewarm { get; set; } = false;
 
     /// <summary>Thumbnails kept in memory either side of the visible ones.</summary>
     public int ThumbnailKeepMargin { get; set; } = 48;

@@ -56,6 +56,19 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   working never has 126 background page renders started underneath them. The
   `ThumbnailPrewarm` preference is unchanged and now means "warm when idle",
   as it always said.
+- **The background thumbnail pre-render is OFF by default** (#1565). Marc's
+  decision, 2026-09-17, taken on the measurement rather than ahead of it. On
+  irs-1040-instructions.pdf (126 pages) the whole-document pre-warm costs
+  ~110 MB of peak footprint and ~80 MB that no compacting collect returns, plus
+  5 s of one CPU, for a DISK cache whose benefit lands on a later re-open of
+  the same file. Deferring it to an idle period (the first attempt) did not pay:
+  the #1543 re-run moved the work into the measured idle window instead, taking
+  idle CPU from 0.10% to 5.18% and the 30 s-idle footprint from 671 MB to
+  775 MB. Sidebar scrolling never depended on it — demand loads plus the
+  12-page prefetch margin already cover it, and the pre-warm never put a bitmap
+  in the sidebar at all. The setting stays (Preferences › Performance ›
+  "Render thumbnails in the background") and the Fast preset still turns it on,
+  because that preset is exactly this trade.
 - **The quiet period IS the existing idle delay** (#1565) — Preferences ›
   Performance › "Idle delay (seconds)", 30 s by default, formerly labelled
   "Idle delay before releasing caches". There is one definition of idle in the

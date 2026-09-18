@@ -43,6 +43,9 @@ public class ThumbnailPrewarmIdleGateTests
     {
         var session = new ThumbnailSidebarSession(NullLogger.Instance)
         {
+            // #1565: the pre-warm ships OFF; these tests are about how it
+            // behaves for a user who turned it on.
+            PrewarmEnabled = true,
             PrewarmIdleDelay = Gate,
         };
         document = PdfCoreDocument.Open(File.ReadAllBytes(path));
@@ -126,7 +129,7 @@ public class ThumbnailPrewarmIdleGateTests
         try
         {
             string cacheDir;
-            using (var first = new ThumbnailSidebarSession(NullLogger.Instance) { PrewarmIdleDelay = Gate })
+            using (var first = new ThumbnailSidebarSession(NullLogger.Instance) { PrewarmEnabled = true, PrewarmIdleDelay = Gate })
             {
                 first.Start(path, document, document.PageCount, cacheSalt: salt);
                 await first.PrewarmTask!.WaitAsync(TimeSpan.FromSeconds(120));
@@ -136,7 +139,7 @@ public class ThumbnailPrewarmIdleGateTests
                 cacheDir = ReadCacheDir(first);
             }
 
-            using var second = new ThumbnailSidebarSession(NullLogger.Instance) { PrewarmIdleDelay = Gate };
+            using var second = new ThumbnailSidebarSession(NullLogger.Instance) { PrewarmEnabled = true, PrewarmIdleDelay = Gate };
             second.Start(path, document, document.PageCount, cacheSalt: salt);
             await second.PrewarmTask!.WaitAsync(TimeSpan.FromSeconds(120));
 
@@ -207,6 +210,7 @@ public class ThumbnailPrewarmIdleGateTests
         var path = NewPdf(4);
         var session = new ThumbnailSidebarSession(NullLogger.Instance)
         {
+            PrewarmEnabled = true,
             PrewarmIdleDelay = TimeSpan.FromMinutes(10),
         };
         using var document = PdfCoreDocument.Open(File.ReadAllBytes(path));
@@ -238,6 +242,30 @@ public class ThumbnailPrewarmIdleGateTests
             session.Dispose();
             TestPdfGenerator.CleanupTestFile(path);
         }
+    }
+
+    /// <summary>
+    /// #1565: the shipped default. Measured on irs-1040-instructions.pdf — the
+    /// whole-document pre-warm costs ~110 MB of peak footprint, ~80 MB that no
+    /// compacting collect returns, and 5 s of one CPU, for a disk cache whose
+    /// benefit lands on a later re-open. Deferring it to an idle period moved
+    /// the work into the idle window instead (idle CPU 0.10% → 5.18%), so the
+    /// default is off and the preset that means "spend memory for speed" keeps
+    /// it on.
+    /// </summary>
+    [Fact]
+    public void ThePrewarm_IsOffByDefault_AndOnOnlyInTheFastPreset()
+    {
+        new Excise.App.Models.WindowSettings().ThumbnailPrewarm.Should().BeFalse(
+            "a fresh install must not pre-render 126 pages");
+        Excise.App.Models.PerformanceSettings.Balanced.ThumbnailPrewarm.Should().BeFalse();
+        Excise.App.Models.PerformanceSettings.LowMemory.ThumbnailPrewarm.Should().BeFalse();
+        Excise.App.Models.PerformanceSettings.Fast.ThumbnailPrewarm.Should().BeTrue(
+            "that preset is the explicit opt-in to spend memory for speed");
+
+        using var session = new ThumbnailSidebarSession(NullLogger.Instance);
+        session.PrewarmEnabled.Should().BeFalse(
+            "a session nobody has applied preferences to behaves like the product");
     }
 
     private static string ReadCacheDir(ThumbnailSidebarSession session) =>

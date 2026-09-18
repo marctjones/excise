@@ -200,7 +200,8 @@ public class PerformancePreferencesLiveApplyTests
             vm.ThumbnailPrewarmTask.Should().BeNull();
             await prewarm.WaitAsync(TimeSpan.FromSeconds(5));   // cancelled, not left to run 120 pages
 
-            vm.ApplyPerformanceSettings(PerformanceSettings.Balanced);
+            // #1565: Balanced no longer turns it on, so use the preset that does.
+            vm.ApplyPerformanceSettings(PerformanceSettings.Fast);
             vm.ThumbnailPrewarmTask.Should().NotBeNull("turning it back on restarts it for the open document");
             vm.ApplyPerformanceSettings(PerformanceSettings.LowMemory);
         }

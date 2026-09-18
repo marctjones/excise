@@ -93,7 +93,9 @@ internal sealed class ThumbnailSidebarSession : IDisposable
     internal Task? PrefetchTask { get; private set; }
     internal Task? PrewarmTask { get; private set; }
 
-    private bool _prewarmEnabled = true;
+    // #1565: matches the shipped preference default (PerformanceSettings.Balanced),
+    // so a session nobody has applied preferences to behaves like the product.
+    private bool _prewarmEnabled;
     private int _keepMarginPages = KeepMargin;
 
     /// <summary>
@@ -210,6 +212,21 @@ internal sealed class ThumbnailSidebarSession : IDisposable
         QueuePrewarm(_cache);
     }
 
+    /// <summary>
+    /// Drop everything derived from the current document. Closing a document
+    /// goes through here (<c>MainWindowViewModel.ResetClosedDocumentWorkspaceState</c>).
+    /// </summary>
+    /// <remarks>
+    /// #1565: a pre-warm in flight stops here, and FOUR independent things
+    /// stop it — the cancellation token, the generation guard the loop checks
+    /// each page, the disposed <see cref="ThumbnailCacheService"/> refusing a
+    /// warm, and its disposed render gate. That was measured, not assumed: a
+    /// test asserting "a closed document warms no more thumbnails" still
+    /// passed with the first three removed, so it was deleted rather than
+    /// shipped as a gate that cannot fail. The consequence for #1543 is that
+    /// the closed-document footprint rising after a pre-warm is NOT a pre-warm
+    /// still running; it is the per-page retention in #1613.
+    /// </remarks>
     internal void Reset()
     {
         Interlocked.Increment(ref _generation);

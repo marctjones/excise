@@ -169,6 +169,8 @@ public sealed class HeapRetentionReportTests
         // measures what the pre-warm costs, not when it starts.
         using var thumbnails = new ThumbnailSidebarSession(NullLogger.Instance)
         {
+            // #1565: the pre-warm ships off; this report measures what it costs.
+            PrewarmEnabled = true,
             PrewarmIdleDelay = TimeSpan.Zero,
         };
         string? thumbnailDir = null;
