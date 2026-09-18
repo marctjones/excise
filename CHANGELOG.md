@@ -167,6 +167,48 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   throttled.
 
 ### Fixed
+- **A long dialog message pushed its own buttons off the window** (#1622).
+  Every dialog in `AvaloniaUserDialogService` was a fixed-size
+  `CanResize=false` window holding a `StackPanel` of message plus buttons, and
+  a StackPanel gives its children unbounded height — so a message taller than
+  the window simply overflowed, buttons and all. Measured on the #1586
+  redacted-copy report in the shipped app: the text laid out 400x420 inside a
+  450x228 window with the OK button at y=493. A reader could see down to "so
+  the file remains PDF/A" and no further — the `Output profile:` line, the
+  per-removal lines and the "this copy is NO LONGER accessible or interactive"
+  warning were all below the bottom edge, and the report was only recoverable
+  through the accessibility tree. Marc hit this independently.
+  The content is now a `*,Auto` grid — the footer row is measured first, so it
+  cannot be displaced — inside a `SizeToContent.Height` window with a 640 px
+  cap, and the message sits in a ScrollViewer for whatever still does not fit.
+  Applies to all five dialogs (message, confirm, unsaved-changes, text prompt,
+  password prompt); the prompts keep their input field in the footer so it
+  cannot scroll away either.
+  ⚠️ The floor that keeps a SHORT message the size it always was lives on the
+  CONTENT, not the window: measured the same day, `Window.MinHeight` is not
+  applied under `SizeToContent` (a one-line dialog laid out 90 px tall with
+  MinHeight 200 set, and raising it to 520 changed nothing).
+  Gate: `DialogMessageLayoutTests`, on real laid-out bounds. Both of its
+  assertions were verified by planting defects: restoring the fixed height and
+  StackPanel reddens the long-message case, dropping the content floor or
+  inflating it reddens the short-message case, and — found this way, not
+  assumed — swapping the grid back for a StackPanel passed every first-draft
+  assertion, because the headless window honours neither MinHeight nor
+  MaxHeight under SizeToContent and simply grew. The test now also arranges
+  the content at a size smaller than the message and checks the button there.
+- **The attachments warning is a persistent banner, not a 5 s toast** (#1619).
+  The notices row sits above the document, so the toast's auto-dismiss re-laid
+  out the window and jumped the page under the reader five seconds after the
+  document opened. Measured on `irs-1040-instructions.pdf` — the one
+  reader-bench document with an embedded file — that dismissal WAS the whole
+  remaining #1544 `launch drawn` tail (5.6 s): the process used 0.0% of a core
+  from 3.0 s until the timer fired at STEP 13 + 5.002 s, in every repeat, and
+  removing the attachment removed the event. The banner now behaves like the
+  XFA notice beside it: it stays until the reader closes it or the document
+  changes. The wording and the pointer to the Attachments pane are unchanged,
+  and the generic toast surface (and its 5 s timer) is untouched. A warning
+  about a carrier the page view cannot show — one that can hold a full copy of
+  the data the page was redacted of — should not expire on a timer either.
 - **The hidden-layer removal stopped at the page** (#1586). Standard removes
   content in optional-content groups that are OFF by default — but the pass
   walked only the PAGE content stream, and for a `Do` it asked whether the

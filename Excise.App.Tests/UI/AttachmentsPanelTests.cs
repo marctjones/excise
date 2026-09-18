@@ -589,8 +589,53 @@ public class AttachmentsPanelTests : IDisposable
         var (vm, toasts) = CreateWithToasts();
         await vm.LoadDocumentAsync(PdfWithBothCarriers());
 
-        toasts.Should().ContainSingle(t => t.Message == "Document has attachments")
-            .Which.Details.Should().Be("2 embedded files travel with this PDF. See the Attachments pane.");
+        vm.IsAttachmentsNoticeOpen.Should().BeTrue();
+        vm.AttachmentsNoticeTitle.Should().Be("Document has attachments");
+        vm.AttachmentsNoticeMessage.Should()
+            .Be("2 embedded files travel with this PDF. See the Attachments pane.");
+
+        // #1619: a banner, NOT a toast. The toast surface is the one that
+        // auto-dismisses after 5 s, and the notices row displaces the document,
+        // so that dismissal re-laid out the window and jumped the page under
+        // the reader. A warning about a carrier the page view cannot show must
+        // not expire on a timer either.
+        toasts.Should().BeEmpty("the attachments warning is a persistent banner, not a 5 s toast");
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task AttachmentsNotice_TracksThePane_AndStaysOpenWhenItIsHidden()
+    {
+        var vm = MainWindowViewModelTestFactory.Create();
+        await vm.LoadDocumentAsync(PdfWithAttachment());
+
+        vm.AttachmentsNoticeMessage.Should()
+            .Be("1 embedded file travels with this PDF. See the Attachments pane.");
+
+        vm.ToggleAttachmentsSidebar();
+
+        vm.IsAttachmentsSidebarVisible.Should().BeFalse("precondition");
+        vm.IsAttachmentsNoticeOpen.Should().BeTrue("the banner stays until the reader closes it");
+        vm.AttachmentsNoticeMessage.Should()
+            .Be("1 embedded file travels with this PDF. Show them with View ▸ Show Attachments.",
+                "the banner must not keep pointing at a pane that is no longer shown");
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task AttachmentsNotice_IsClearedByAnotherDocumentAndByClosing()
+    {
+        var vm = MainWindowViewModelTestFactory.Create();
+        await vm.LoadDocumentAsync(PdfWithAttachment());
+        vm.IsAttachmentsNoticeOpen.Should().BeTrue("precondition");
+
+        await vm.LoadDocumentAsync(PdfWithoutAttachment());
+        vm.IsAttachmentsNoticeOpen.Should()
+            .BeFalse("a document with no attachments must not inherit the previous banner");
+
+        await vm.LoadDocumentAsync(PdfWithAttachment("again.pdf"));
+        vm.IsAttachmentsNoticeOpen.Should().BeTrue();
+
+        await vm.CloseDocumentCommand.Execute();
+        vm.IsAttachmentsNoticeOpen.Should().BeFalse("the document it described is gone");
     }
 
     // ── save ─────────────────────────────────────────────────────────────

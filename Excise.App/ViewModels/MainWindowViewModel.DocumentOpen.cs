@@ -124,6 +124,7 @@ public partial class MainWindowViewModel
         // while (or if) this one loads. Not RefreshAttachments(): the previous
         // document is still current here and would be re-listed.
         ClearAttachments();
+        ClearAttachmentsNotice();
         ClearXfaNotice();
 
         PdfCoreDocument = null;
@@ -294,7 +295,7 @@ public partial class MainWindowViewModel
         // screen to say so. List them on open and WARN, per the capability's
         // "warn when their presence is not otherwise obvious".
         RefreshAttachments();
-        WarnAboutAttachmentsOnOpen();
+        ShowAttachmentsNoticeOnOpen();
 
         // #1547: a dynamic XFA form shows only a placeholder page here; say why.
         RefreshXfaNotice();
@@ -346,6 +347,7 @@ public partial class MainWindowViewModel
         // #1563: a failed open used to leave the previous list on screen. The
         // document service is closed above, so this empties it.
         RefreshAttachments();
+        ClearAttachmentsNotice();
         ClearXfaNotice();
         OperationStatus = string.Empty;
 

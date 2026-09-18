@@ -1217,6 +1217,21 @@
                           Title="{Binding XfaNoticeTitle}"
                           Message="{Binding XfaNoticeMessage}"
                           Margin="0"/>
+
+            <!-- #1619: persistent attachments notice. Was a 5 s auto-dismissing
+                 toast; because this row displaces the document, that dismissal
+                 re-laid out the window and jumped the page under the reader
+                 five seconds after the document opened (it was the whole #1544
+                 launch tail on a document with an embedded file). A carrier the page view
+                 cannot show does not stop mattering after five seconds, so it
+                 now stays until closed or the document changes. -->
+            <ui:FAInfoBar x:Name="AttachmentsInfoBar"
+                          IsOpen="{Binding IsAttachmentsNoticeOpen, Mode=TwoWay}"
+                          IsClosable="True"
+                          Severity="Warning"
+                          Title="{Binding AttachmentsNoticeTitle}"
+                          Message="{Binding AttachmentsNoticeMessage}"
+                          Margin="0"/>
         </StackPanel>
 
         <!-- Main Content Area. Auto/Auto on the sidebar columns lets them

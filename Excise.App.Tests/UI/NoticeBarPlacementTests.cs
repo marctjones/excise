@@ -11,7 +11,7 @@ using Xunit;
 namespace Excise.App.Tests.UI;
 
 /// <summary>
-/// The toast and XFA notice bars must open below the toolbar. The window extends
+/// The toast, XFA and attachments notice bars must open below the toolbar. The window extends
 /// its client area into the title bar (ExtendClientAreaToDecorationsHint), so a
 /// bar placed above the custom title row is drawn under the macOS window buttons
 /// and pushes the title and toolbar down. The #1547 live check found exactly that.
@@ -30,15 +30,18 @@ public class NoticeBarPlacementTests
             var toolbar = window.FindControl<Border>("ToolbarBorder")!;
             var toast = window.FindControl<FAInfoBar>("ToastInfoBar")!;
             var xfa = window.FindControl<FAInfoBar>("XfaFormInfoBar")!;
+            // #1619: the attachments warning is a bar in this row too, not a toast.
+            var attachments = window.FindControl<FAInfoBar>("AttachmentsInfoBar")!;
             toast.Title = "toast";
             toast.IsOpen = true;
             xfa.IsOpen = true;
+            attachments.IsOpen = true;
             await Settle(window);
 
             var toolbarTop = toolbar.TranslatePoint(new Point(0, 0), window)!.Value.Y;
             var toolbarBottom = toolbarTop + toolbar.Bounds.Height;
 
-            foreach (var bar in new[] { toast, xfa })
+            foreach (var bar in new[] { toast, xfa, attachments })
             {
                 var top = bar.TranslatePoint(new Point(0, 0), window)!.Value.Y;
                 top.Should().BeGreaterThanOrEqualTo(toolbarBottom,
@@ -48,6 +51,7 @@ public class NoticeBarPlacementTests
             // Opening the bars must not move the toolbar down.
             toast.IsOpen = false;
             xfa.IsOpen = false;
+            attachments.IsOpen = false;
             await Settle(window);
             toolbar.TranslatePoint(new Point(0, 0), window)!.Value.Y.Should().Be(toolbarTop);
         }
