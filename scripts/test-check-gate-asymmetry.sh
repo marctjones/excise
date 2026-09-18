@@ -31,6 +31,15 @@
 # .git/hooks/pre-push. The stub repo is the whole point.
 set -euo pipefail
 
+# ⚠️ Every case below judges a range in the SYNTHETIC repo, so an inherited
+# GATE_ASYMMETRY_* value is always wrong here — and silently so. The pre-push
+# hook exports both, then runs the tier runner, which runs this selftest: with
+# GATE_ASYMMETRY_HEAD inherited, case 1's `check-gate-asymmetry.sh $BASE_SHA`
+# resolved its head to a sha from the REAL repo, judged an empty range and
+# exited 0, so the baseline "the gate can fail" case failed. #1600 unset them
+# for the hook sub-case only; they have to be unset for all of them.
+unset GATE_ASYMMETRY_BASE GATE_ASYMMETRY_HEAD GATE_ASYMMETRY_ALLOW_NO_BASE
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT

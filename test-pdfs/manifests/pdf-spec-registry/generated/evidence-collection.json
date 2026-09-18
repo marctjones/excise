@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1255,
-  "indexedContentSha256": "e0f5ec00e0a5ca98a3d80f98f26c5c131825d77c2f41a3c379ef0dd1df1a53ee",
+  "indexedFileCount": 1257,
+  "indexedContentSha256": "51c018ad7e586565c23cbb345069df64491d4bf74fbcce4e828c9b6cfd8d3392",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4061,7 +4061,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 154
+      "candidateReferenceCount": 155
     },
     {
       "id": "pdf.17.document.navigation",
@@ -4992,7 +4992,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 134
+      "candidateReferenceCount": 135
     },
     {
       "id": "pdf.17.document.metadata",
@@ -7988,7 +7988,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 571
+      "candidateReferenceCount": 572
     },
     {
       "id": "pdf.17.graphics.color",
@@ -11498,6 +11498,14 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/AboutWindowViewModel.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "version",
+            "versions"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -11597,6 +11605,14 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/Unit/AboutVersionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "version",
+            "versions"
+          ]
+        },
+        {
           "path": "tests/annotation-synthesis-policy.json",
           "kind": "test",
           "matchedTerms": [
@@ -11658,7 +11674,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 27
+      "candidateReferenceCount": 29
     },
     {
       "id": "pdf.20.compatibility.deprecated",
@@ -60168,7 +60184,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 162
+      "candidateReferenceCount": 163
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -61160,7 +61176,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 124
+      "candidateReferenceCount": 125
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -65048,7 +65064,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 612
+      "candidateReferenceCount": 613
     },
     {
       "id": "pdf.20.extension.developer",
@@ -71021,6 +71037,7 @@
           "matchedTerms": [
             "override",
             "pdfe",
+            "redaction",
             "security"
           ]
         },
@@ -71732,6 +71749,7 @@
           "matchedTerms": [
             "documents",
             "pdfe",
+            "redaction",
             "security"
           ]
         },
@@ -73316,6 +73334,7 @@
           "matchedTerms": [
             "pdfe",
             "restricted",
+            "redaction",
             "security"
           ]
         },
