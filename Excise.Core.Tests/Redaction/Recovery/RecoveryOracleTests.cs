@@ -100,19 +100,44 @@ public class RecoveryOracleTests
         box.Left.Should().BeApproximately(word.Left, 2.0);
         box.Right.Should().BeApproximately(word.Right, 2.0);
 
-        // VERTICAL is measured to a looser bound ON PURPOSE, because the two
-        // tools box glyphs differently and neither is wrong: MuPDF's stext quad
-        // is the FONT's em box (ascender to descender — 19.2pt for 14pt
-        // Helvetica), excise's is the glyph INK box, so on an all-caps run with
-        // no descenders excise's bottom sits on the baseline at 700 where
-        // MuPDF's sits at 695.8. Tightening this would not find a defect, it
-        // would pin one convention and call the other a bug. What must hold is
-        // that excise's box lies INSIDE MuPDF's line box — same line, right way
-        // up, no flipped-origin error, which is the failure this axis can
-        // actually catch.
-        box.Bottom.Should().BeGreaterThanOrEqualTo(word.Bottom - 0.5);
-        box.Top.Should().BeLessThanOrEqualTo(word.Top + 0.5);
-        box.Top.Should().BeGreaterThan(box.Bottom);
+        // VERTICAL is looser ON PURPOSE, because the two tools box glyphs
+        // differently and neither is wrong. What they are is DIFFERENT, and
+        // this comment used to say which in a way that was false (#1618):
+        //
+        //   MuPDF's stext quad   the FONT's em box, ascender to descender
+        //   excise's box         the §9.4.4 GLYPH CELL — the unit square under
+        //                        the text and font matrices, which is what the
+        //                        walker hands the sink and why the provenance
+        //                        reads "glyph boxes"
+        //
+        // A cell is NOT an ink box, and the difference is measurable on this
+        // fixture: at `/F1 14 Tf 72 700 Td`, excise's top is 714.0 — baseline
+        // plus font size, EXACTLY — while MuPDF puts the ascender at 710.4.
+        // The old bound asserted excise's box lay INSIDE MuPDF's, which a cell
+        // taller than the ascender can never satisfy; it was a false premise
+        // that happened to be untested until the first machine ran it.
+        //
+        // So pin what is actually true and still catches the failure this axis
+        // is for — a flipped origin, or a box on the wrong line: the two boxes
+        // describe the SAME LINE, i.e. they overlap vertically, and excise's
+        // is the right way up.
+        //
+        // ⚠️ The cell model has a consequence this fixture cannot see, because
+        // MANAFORT is all caps: a cell runs from the baseline UP, so a
+        // descending glyph's ink falls BELOW its own cell. A restored copy
+        // (#1588) drawn into this box would clip the tail off a 'g'. That is
+        // the live half of #1618 and it is a geometry question, not a bound.
+        box.Top.Should().BeGreaterThan(box.Bottom, "the box must not be inverted");
+        box.Bottom.Should().BeLessThan(word.Top, "same line — excise's box starts below MuPDF's top");
+        box.Top.Should().BeGreaterThan(word.Bottom, "same line — excise's box ends above MuPDF's bottom");
+
+        // The cell sits on the baseline and is exactly one em tall, so its top
+        // is above MuPDF's ascender and never by more than the ascender's
+        // shortfall against the full em (~4pt at 14pt Helvetica).
+        box.Top.Should().BeGreaterThanOrEqualTo(word.Top,
+            "a full-em cell reaches above the ascender MuPDF reports");
+        (box.Top - word.Top).Should().BeLessThan(5.0,
+            "but only by the em/ascender difference — more than that is a real divergence");
     }
 
     [Fact]
