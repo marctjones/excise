@@ -382,7 +382,7 @@ handler (`MainWindow.axaml.cs:265-279` catches and `Debug.WriteLine`s it).
 | `_performanceSettings` (15), `PerformanceSettings` (18) | state | current settings | P |
 | `PerformanceSettingsApplied` (24) | event | tells the window to push tile budget / cache / threads into the viewer | V (`:302`, never `-=`) |
 | `ViewerTileCacheResidentBytesProvider` (30) | `Func<long?>?` | view-supplied callback capturing the control (`:303`) | P (`PreferencesViewModel.cs:365`) |
-| `ApplyPerformanceSettings` (39–50) | internal | clamp, store, push `KeepMarginPages`/`PrewarmEnabled` into `_thumbnailSession`, raise the event | V (`:304`), P (`:376`) |
+| `ApplyPerformanceSettings` (39–50) | internal | clamp, store, push `KeepMarginPages`/`PrewarmIdleDelay` (from `IdleTrimSeconds`, #1565)/`PrewarmEnabled` into `_thumbnailSession`, raise the event | V (`:304`), P (`:376`) |
 | `ApplySavedPreferences` (57–63), `WritePreferencesTo` (69–82) | internal | copy back from Preferences; **`WindowSettings.Update` (disk) on the UI thread** | cs:3138, V (`:221`) |
 
 **`Permissions.cs`** — `IgnoreDocumentPermissions` (39, public, scripting),
@@ -487,7 +487,11 @@ not the injected verification workflow), `_signingLogger` (137),
 
 **`Thumbnails.cs`** — pure pass-through to `ThumbnailSidebarSession`:
 constants (14–15), `ThumbnailPrefetchTask`/`ThumbnailPrewarmTask`/`ThumbnailPrewarmEnabled`
-(17–24, internal seams), `ComputeThumbnailWindow` (26–37), `NotifyThumbnailViewport`
+(17–24, internal seams) plus `ThumbnailPrewarmIdleDelay`, `NotifyThumbnailActivity`
+and `ThumbnailRenderCountForTests` (#1565: the prewarm waits for a quiet period
+— the `IdleTrimSeconds` preference — that page, zoom, sidebar and search-index
+activity restarts),
+`ComputeThumbnailWindow` (26–37), `NotifyThumbnailViewport`
 (39, public, V `:460`), `EnsureThumbnailLoadedAsync` (42, public, V `:464`),
 `StartThumbnailSession` (47–60; passes `AttachPageSelectionTracking` from cs as
 the per-item callback), `ResetThumbnailSession` (62), `TrimThumbnailCaches`
@@ -983,6 +987,7 @@ Task EnsureThumbnailLoadedAsync(int pageIndex, CancellationToken cancellationTok
 void TrimThumbnailCaches(PdfViewerCacheTrimLevel level);
 void Start(string filePath, PdfDocument document, string? cacheSalt = null);   void Reset();
 bool PrewarmEnabled { get; set; }   int KeepMarginPages { get; set; }      // driven by PreferencesFacade
+TimeSpan PrewarmIdleDelay { get; set; }   void NotifyActivity();             // #1565: = IdleTrimSeconds
 Task? PrefetchTask { get; }   Task? PrewarmTask { get; }                    // existing test seams
 ```
 

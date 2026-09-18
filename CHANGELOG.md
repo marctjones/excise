@@ -117,6 +117,54 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   remove `/AcroForm /XFA` (and `/NeedsRendering`) from any document, report it
   as an `/XFA` carrier row (and a "XFA form" line in the redacted-copy dialog),
   and keep the AcroForm fields, which every non-XFA viewer already uses.
+- **The thumbnail sidebar no longer pre-renders the whole document while you
+  are waiting for the first page** (#1565). The background pre-warm used to
+  start with the document: on the 126-page IRS instructions it held a CPU busy
+  for 5.0 s from the moment the file opened (measured from the app's own log in
+  the 2026-09-17 release-baseline run: open complete at +0.1 s, search index at
+  +2.0 s, "pre-warm complete" at +5.0 s), which is what #1544 saw as a window
+  still changing 5.6 s after launch where Preview settles in 1.4 s. It now
+  waits for a quiet period in which nothing has opened a document, turned a
+  page, changed the zoom, scrolled the sidebar or reported search-index
+  progress — and any of those starts the wait again, so a reader who keeps
+  working never has 126 background page renders started underneath them. The
+  `ThumbnailPrewarm` preference is unchanged and now means "warm when idle",
+  as it always said.
+- **The background thumbnail pre-render is OFF by default** (#1565). Marc's
+  decision, 2026-09-17, taken on the measurement rather than ahead of it. On
+  irs-1040-instructions.pdf (126 pages) the whole-document pre-warm costs
+  ~110 MB of peak footprint and ~80 MB that no compacting collect returns, plus
+  5 s of one CPU, for a DISK cache whose benefit lands on a later re-open of
+  the same file. Deferring it to an idle period (the first attempt) did not pay:
+  the #1543 re-run moved the work into the measured idle window instead, taking
+  idle CPU from 0.10% to 5.18% and the 30 s-idle footprint from 671 MB to
+  775 MB. Sidebar scrolling never depended on it — demand loads plus the
+  12-page prefetch margin already cover it, and the pre-warm never put a bitmap
+  in the sidebar at all. The setting stays (Preferences › Performance ›
+  "Render thumbnails in the background") and the Fast preset still turns it on,
+  because that preset is exactly this trade.
+- **The quiet period IS the existing idle delay** (#1565) — Preferences ›
+  Performance › "Idle delay (seconds)", 30 s by default, formerly labelled
+  "Idle delay before releasing caches". There is one definition of idle in the
+  app rather than a second number nobody can find, so **lowering it also makes
+  thumbnails warm sooner** and raising it holds them back longer; the help text
+  on both controls says so. It applies whether or not "Drop scroll-back caches
+  when the window is deactivated, minimized, or idle" is on — it is a duration,
+  not a trim trigger, and a user who turned trimming off did not ask for the
+  pre-warm to run during their first page — so that box no longer disables it.
+  Changing it re-queues a pending pre-warm, so a lower value takes effect at
+  once instead of after the old period would have expired.
+- **Pre-warming a thumbnail no longer builds three bitmaps to throw them all
+  away** (#1565). The pre-warm wants the WebP on disk and nothing else, but it
+  went through the on-demand path, which produced the rendered master, a copy
+  for the caller and a second copy for the cache write — and on a re-open
+  decoded every cached WebP only to dispose the pixels. It now renders straight
+  to the cache file (`ThumbnailCacheService.WarmAsync`) and skips any page
+  already on disk without decoding it.
+- **The search-index status no longer redraws the status bar once per page**
+  (#1565). A 126-page document reported progress 126 times in ~2 s; reports are
+  now throttled to 250 ms, and the final one (which clears the text) is never
+  throttled.
 
 ### Fixed
 - **The hidden-layer removal stopped at the page** (#1586). Standard removes

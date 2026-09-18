@@ -23,6 +23,26 @@ public partial class MainWindowViewModel
         set => _thumbnailSession.PrewarmEnabled = value;
     }
 
+    /// <summary>
+    /// The quiet period the background thumbnail pre-render waits for before it
+    /// starts (#1565). Test seam; see
+    /// <see cref="ThumbnailSidebarSession.PrewarmIdleDelay"/>.
+    /// </summary>
+    internal System.TimeSpan ThumbnailPrewarmIdleDelay
+    {
+        get => _thumbnailSession.PrewarmIdleDelay;
+        set => _thumbnailSession.PrewarmIdleDelay = value;
+    }
+
+    /// <summary>
+    /// Something is using this document, so the pre-warm's quiet period starts
+    /// again (#1565).
+    /// </summary>
+    internal void NotifyThumbnailActivity() => _thumbnailSession.NotifyActivity();
+
+    /// <summary>Background thumbnail renders this document has cost (#1565).</summary>
+    internal int ThumbnailRenderCountForTests => _thumbnailSession.ThumbnailRenderCountForTests;
+
     internal static (int PrefetchFrom, int PrefetchTo, int KeepFrom, int KeepTo) ComputeThumbnailWindow(
         int visibleMin,
         int visibleMax,

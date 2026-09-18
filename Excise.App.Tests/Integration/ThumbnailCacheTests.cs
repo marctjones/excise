@@ -161,6 +161,78 @@ public class ThumbnailCacheTests
         }
     }
 
+    /// <summary>
+    /// #1565: the sidebar pre-warm wants the WebP on disk and no bitmap at all.
+    /// Going through <c>GetThumbnailAsync</c> cost three native bitmaps per
+    /// page (master + caller copy + cache-write copy) and, on a re-open,
+    /// decoded every cached WebP only to throw the pixels away.
+    /// </summary>
+    [Fact]
+    public async Task WarmAsync_WritesTheCacheSynchronously_AndSkipsPagesAlreadyOnDisk()
+    {
+        var pdfPath = Path.Combine(Path.GetTempPath(), $"excise-thumb-warm-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
+
+        try
+        {
+            using var doc = PdfDocument.Open(pdfPath);
+            string cacheDir;
+            using (var svc = new ThumbnailCacheService(pdfPath, doc, NullLogger.Instance))
+            {
+                await svc.WarmAsync(1);
+
+                svc.RenderCount.Should().Be(1, "a cold page is rendered once");
+                cacheDir = svc.CacheDir;
+                // Synchronously, unlike QueueCacheWrite: a warm has no caller
+                // waiting on pixels, so it encodes before it returns.
+                File.Exists(Path.Combine(cacheDir, "p00001.webp")).Should().BeTrue(
+                    "the warm's whole product is the file on disk");
+
+                await svc.WarmAsync(1);
+                svc.RenderCount.Should().Be(1, "a page already on disk is not rendered again");
+            }
+
+            using (var reopened = new ThumbnailCacheService(pdfPath, doc, NullLogger.Instance))
+            {
+                await reopened.WarmAsync(1);
+                reopened.RenderCount.Should().Be(0,
+                    "a second open warms nothing: the WebP is there and is not even decoded");
+
+                using var bmp = await reopened.GetThumbnailAsync(1);
+                bmp.Should().NotBeNull("and the warmed file still serves a real thumbnail");
+                reopened.RenderCount.Should().Be(0);
+            }
+        }
+        finally
+        {
+            TestPdfGenerator.CleanupTestFile(pdfPath);
+        }
+    }
+
+    [Fact]
+    public async Task WarmAsync_IgnoresPagesOutsideTheDocument()
+    {
+        var pdfPath = Path.Combine(Path.GetTempPath(), $"excise-thumb-warm-oob-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
+        try
+        {
+            using var doc = PdfDocument.Open(pdfPath);
+            using var svc = new ThumbnailCacheService(pdfPath, doc, NullLogger.Instance);
+
+            await svc.WarmAsync(-1);
+            await svc.WarmAsync(2);
+
+            svc.RenderCount.Should().Be(0);
+            (Directory.Exists(svc.CacheDir)
+                ? Directory.GetFiles(svc.CacheDir, "*.webp")
+                : Array.Empty<string>()).Should().BeEmpty();
+        }
+        finally
+        {
+            TestPdfGenerator.CleanupTestFile(pdfPath);
+        }
+    }
+
     private static async Task<string?> WaitForCacheFileAsync(string cacheDir, string fileName)
     {
         var deadline = Stopwatch.StartNew();

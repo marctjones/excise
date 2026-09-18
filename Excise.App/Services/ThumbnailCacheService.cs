@@ -185,6 +185,94 @@ public sealed class ThumbnailCacheService : IDisposable
     public string CacheDir => _cacheDir;
 
     /// <summary>
+    /// Make sure page <paramref name="pageIndex"/> (zero-based) is in the DISK
+    /// cache, producing no bitmap for the caller (#1565).
+    /// </summary>
+    /// <remarks>
+    /// <para>The sidebar pre-warm wants the WebP on disk and nothing else — it
+    /// disposed the bitmap <see cref="GetThumbnailAsync"/> handed it. Going
+    /// through that path cost three native bitmaps per page (the master, the
+    /// caller's <c>Copy()</c>, and <see cref="QueueCacheWrite"/>'s
+    /// <c>Copy()</c>), and on a re-open it DECODED every cached WebP just to
+    /// throw the pixels away.</para>
+    /// <para>Measured on irs-1040-instructions.pdf (126 pages) with the
+    /// headless open-cost probe, macOS phys_footprint over the process, deltas
+    /// from the same run's baseline: pre-warm through
+    /// <see cref="GetThumbnailAsync"/> peaked at +186 MB and left +113 MB after
+    /// the document was closed and the heap compacted; the whole document
+    /// without pre-warm was +77 MB peak and +35 MB after. So the copies, not
+    /// the retained thumbnails (~15 MB), were most of a cold open's cost. The
+    /// residue is SkiaSharp allocating each 306x396 BGRA bitmap through malloc:
+    /// one allocation per page instead of three shrinks it but cannot remove
+    /// it — reusing a single surface across same-sized pages would, and is not
+    /// done here.</para>
+    /// <para>A load already in flight for the same page is left to write the
+    /// cache itself, so a demand load and a warm never render the same page
+    /// twice.</para>
+    /// </remarks>
+    internal async Task WarmAsync(int pageIndex, CancellationToken cancellationToken = default)
+    {
+        if (_disposed || pageIndex < 0 || pageIndex >= _doc.PageCount)
+            return;
+
+        var cachePath = CachePathFor(pageIndex);
+        if (File.Exists(cachePath))
+        {
+            // The LRU trim keys off the access time, exactly as the decode path
+            // does when it serves a hit.
+            try { File.SetLastAccessTimeUtc(cachePath, DateTime.UtcNow); } catch { }
+            return;
+        }
+
+        lock (_lock)
+        {
+            if (_inFlight.ContainsKey(pageIndex))
+                return;
+        }
+
+        await Task.Run(() => RenderToCacheOnly(pageIndex, cachePath, cancellationToken), cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private void RenderToCacheOnly(int pageIndex, string cachePath, CancellationToken cancellationToken)
+    {
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _renderGate.Wait(cancellationToken);
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (_disposed || pageIndex < 0 || pageIndex >= _doc.PageCount)
+                    return;
+                var page = _doc.GetPage(pageIndex + 1);
+                Interlocked.Increment(ref _renderCount);
+                using var bmp = _renderer.RenderPage(page,
+                    new RenderOptions { Dpi = _thumbnailDpi, ReleaseDecodedImageSamples = true });
+                if (bmp == null)
+                    return;
+                // Encoded inside the gate, unlike QueueCacheWrite: a warm has
+                // no caller waiting on pixels, and the alternative is the copy
+                // this method exists to avoid.
+                TryWriteCache(cachePath, bmp);
+            }
+            finally { _renderGate.Release(); }
+        }
+        catch (OperationCanceledException)
+        {
+            // The document session changed or pre-warm was turned off.
+        }
+        catch (ObjectDisposedException)
+        {
+            // The service was disposed while this warm waited on the gate.
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Thumbnail warm failed for page {Page}", pageIndex);
+        }
+    }
+
+    /// <summary>
     /// Get the thumbnail for <paramref name="pageIndex"/> (zero-based).
     /// Returns from disk cache if present, otherwise renders and caches.
     /// Concurrent calls for the same page coalesce on a single in-flight

@@ -530,6 +530,9 @@ public partial class MainWindowViewModel : ViewModelBase
             _viewportSession.SetCurrentPageIndex(value);
             this.RaisePropertyChanged(nameof(CurrentPageIndex));
             RefreshCurrentPageBindings();
+            // #1565: turning a page is the reader working; the thumbnail
+            // pre-warm must not render 126 pages underneath them.
+            _thumbnailSession.NotifyActivity();
         }
     }
 
@@ -682,6 +685,8 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
 
         this.RaisePropertyChanged(nameof(ZoomLevel));
+        // #1565: a zoom change re-renders the page; the pre-warm waits again.
+        _thumbnailSession.NotifyActivity();
         if (transition.ShouldPersist)
             SaveZoomPreference();
     }
