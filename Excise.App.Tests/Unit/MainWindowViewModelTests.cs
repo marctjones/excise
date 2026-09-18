@@ -608,12 +608,18 @@ public class MainWindowViewModelTests
         _viewModel.IsOutlineSidebarVisible = false;
         _viewModel.IsThumbnailsSidebarVisible = false;
 
-        _viewModel.IsLeftSidebarVisible.Should().BeTrue(
-            "#1563: the Attachments pane is on by default and keeps the sidebar open");
+        // #1641: Attachments moved to the RIGHT sidebar, so outline and
+        // thumbnails alone decide the left one.
+        _viewModel.IsLeftSidebarVisible.Should().BeFalse(
+            "with outline and thumbnails off the left sidebar collapses, whatever attachments does");
+
+        _viewModel.IsAttachmentsSidebarVisible.Should().BeTrue("still on by default (#1563)");
+        _viewModel.IsRightSidebarVisible.Should().BeTrue(
+            "and it alone keeps the RIGHT sidebar open");
 
         _viewModel.IsAttachmentsSidebarVisible = false;
-        _viewModel.IsLeftSidebarVisible.Should().BeFalse(
-            "with no pane enabled the whole left sidebar collapses");
+        _viewModel.IsRightSidebarVisible.Should().BeFalse(
+            "with no pane wanting to show, the right sidebar collapses too");
     }
 
     [Fact]
@@ -627,8 +633,8 @@ public class MainWindowViewModelTests
 
         _viewModel.IsAttachmentsSidebarVisible.Should().BeFalse();
         raised.Should().Contain(nameof(MainWindowViewModel.IsAttachmentsSidebarVisible));
-        raised.Should().Contain(nameof(MainWindowViewModel.IsLeftSidebarVisible),
-            "the sidebar host's visibility is computed from this flag");
+        raised.Should().Contain(nameof(MainWindowViewModel.IsRightSidebarVisible),
+            "#1641: the pane moved to the right, and that host's visibility is computed from this flag");
     }
 
     [Fact]

@@ -28,7 +28,6 @@ public sealed class DocumentTabsViewModel : ReactiveObject
     internal interface ITabsHost
     {
         Task CloseTabAsync(DocumentTabsViewModel tabs, DocumentTabViewModel tab);
-        Task OpenInNewTabAsync(DocumentTabsViewModel tabs);
         void MoveTabToNewWindow(DocumentTabsViewModel tabs, DocumentTabViewModel tab);
         Task CopyPathAsync(string path);
         void RevealInFileManager(string path);
@@ -40,7 +39,6 @@ public sealed class DocumentTabsViewModel : ReactiveObject
         Tabs.CollectionChanged += OnTabsChanged;
         SelectNextTabCommand = ReactiveCommand.Create(() => SelectRelative(+1));
         SelectPreviousTabCommand = ReactiveCommand.Create(() => SelectRelative(-1));
-        NewTabCommand = ReactiveCommand.CreateFromTask(() => _host.OpenInNewTabAsync(this));
     }
 
     public ObservableCollection<DocumentTabViewModel> Tabs { get; } = new();
@@ -69,14 +67,6 @@ public sealed class DocumentTabsViewModel : ReactiveObject
 
     public ReactiveCommand<Unit, Unit> SelectPreviousTabCommand { get; }
 
-    /// <summary>
-    /// The strip's "+" button: open another document into THIS window's tabs,
-    /// whatever the open-mode preference says (#1628). The preference decides
-    /// where File > Open lands; a button drawn on a tab strip has already told
-    /// the user where this one lands, and doing anything else would make the
-    /// affordance a lie.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> NewTabCommand { get; }
 
     /// <summary>
     /// The overflow list: every tab, so a tab too narrow to read (or a strip

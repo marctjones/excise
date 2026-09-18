@@ -29,6 +29,7 @@ public partial class MainWindowViewModel
     private string? _openDocumentsSignature;
     private ReactiveCommand<OpenDocumentEntry, Unit>? _activateOpenDocumentCommand;
     private ReactiveCommand<Unit, Unit>? _moveToNewWindowCommand;
+    private ReactiveCommand<Unit, Unit>? _openInNewTabCommand;
     private ReactiveCommand<Unit, Unit>? _mergeAllWindowsCommand;
     private bool _sessionReleased;
 
@@ -94,6 +95,21 @@ public partial class MainWindowViewModel
     /// <summary>Window ▸ Move Tab to New Window (#1554).</summary>
     internal ReactiveCommand<Unit, Unit> MoveToNewWindowCommand =>
         _moveToNewWindowCommand ??= ReactiveCommand.Create(() => SessionHost?.MoveToNewWindow());
+
+    /// <summary>
+    /// The tab strip's "+" (#1628): open another document into THIS window's
+    /// tabs, whatever the open-mode preference says. The preference decides
+    /// where File ▸ Open lands; a button drawn on a tab strip has already told
+    /// the user where this one lands, and doing anything else would make the
+    /// affordance a lie.
+    /// </summary>
+    internal ReactiveCommand<Unit, Unit> OpenInNewTabCommand =>
+        _openInNewTabCommand ??= ReactiveCommand.CreateFromTask(
+            async () =>
+            {
+                if (SessionHost is { } host)
+                    await host.OpenInNewTabAsync();
+            });
 
     /// <summary>Window ▸ Merge All Windows (#1554).</summary>
     internal ReactiveCommand<Unit, Unit> MergeAllWindowsCommand =>

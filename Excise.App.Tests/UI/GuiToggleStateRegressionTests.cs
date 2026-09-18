@@ -54,8 +54,12 @@ public class GuiToggleStateRegressionTests
         outline.IsChecked.Should().BeTrue();
         thumbnails.IsChecked.Should().BeTrue();
         attachments.IsChecked.Should().BeTrue("#1563: the Attachments pane is visible by default");
-        viewClipboard.IsChecked.Should().BeTrue();
-        redactionClipboard.IsChecked.Should().BeTrue();
+        // #1654: Clipboard History is OFF by default — an empty panel cost
+        // 250 px of every launch. The menu items must say so, which is the
+        // point of this test: an IsChecked that disagrees with the view model
+        // is what left these menus permanently checked and dead on click.
+        viewClipboard.IsChecked.Should().BeFalse("#1654: off by default");
+        redactionClipboard.IsChecked.Should().BeFalse("#1654: and both entries agree");
         continuous.IsChecked.Should().BeTrue();
         outlineButton.Classes.Should().Contain("active");
         thumbnailsButton.Classes.Should().Contain("active");
@@ -101,12 +105,21 @@ public class GuiToggleStateRegressionTests
         attachmentsPanel.IsVisible.Should().BeFalse();
         leftSidebar.IsVisible.Should().BeFalse("every left-sidebar pane is hidden");
 
+        // #1654: the toggle now starts OFF, so a click turns it ON. The
+        // property under test is unchanged — the menu, its duplicate entry and
+        // the panel all follow one view-model flag — only the direction is.
         Click(viewClipboard);
         await PumpAsync(window);
-        vm.IsClipboardSidebarVisible.Should().BeFalse();
+        vm.IsClipboardSidebarVisible.Should().BeTrue();
+        viewClipboard.IsChecked.Should().BeTrue();
+        redactionClipboard.IsChecked.Should().BeTrue("duplicate clipboard menu entries must share one VM state");
+        clipboardSidebar.IsVisible.Should().BeTrue();
+
+        Click(viewClipboard);
+        await PumpAsync(window);
+        vm.IsClipboardSidebarVisible.Should().BeFalse("a second click toggles back");
         viewClipboard.IsChecked.Should().BeFalse();
-        redactionClipboard.IsChecked.Should().BeFalse("duplicate clipboard menu entries must share one VM state");
-        clipboardSidebar.IsVisible.Should().BeFalse();
+        redactionClipboard.IsChecked.Should().BeFalse();
 
         Click(continuous);
         await PumpAsync(window);
@@ -140,7 +153,8 @@ public class GuiToggleStateRegressionTests
         outline.IsChecked.Should().BeTrue();
         thumbnails.IsChecked.Should().BeTrue();
         attachments.IsChecked.Should().BeTrue();
-        clipboardItems.Should().OnlyContain(item => item.IsChecked);
+        clipboardItems.Should().OnlyContain(item => !item.IsChecked,
+            "#1654: Clipboard History is off by default, and the native menu must agree");
         continuous.IsChecked.Should().BeTrue();
         revealHidden.IsChecked.Should().BeFalse();
         revealRasterized.IsChecked.Should().BeFalse();
@@ -158,7 +172,12 @@ public class GuiToggleStateRegressionTests
         attachments.IsChecked.Should().BeFalse();
 
         clipboardItems[0].Command!.Execute(null);
-        vm.IsClipboardSidebarVisible.Should().BeFalse();
+        vm.IsClipboardSidebarVisible.Should().BeTrue("#1654: off by default, so the command turns it on");
+        clipboardItems.Should().OnlyContain(item => item.IsChecked,
+            "both native entries share one view-model flag");
+
+        clipboardItems[0].Command!.Execute(null);
+        vm.IsClipboardSidebarVisible.Should().BeFalse("and back");
         clipboardItems.Should().OnlyContain(item => !item.IsChecked);
 
         continuous.Command!.Execute(null);

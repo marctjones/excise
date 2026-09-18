@@ -116,7 +116,14 @@ public sealed class DocumentTabStripLayoutTests : IDisposable
 
         var plus = window.FindControl<DocumentTabStrip>("DocumentTabStripHost")!
             .FindControl<Button>("DocumentTabsNewButton")!;
-        plus.Command.Should().BeSameAs(tabs.NewTabCommand, "the + button opens a document into these tabs");
+        // The command lives on the WINDOW's view model, not the strip's: a
+        // window with no tabs view model would otherwise leave this button with
+        // a null Command, and a leaf button that resolves to nothing is a dead
+        // affordance (CommandBindingSweepTests caught exactly that).
+        plus.Command.Should().NotBeNull("the + button must resolve to a command in every window");
+        plus.Command.Should().BeSameAs(
+            ((MainWindowViewModel)window.DataContext!).OpenInNewTabCommand,
+            "and it is the window's open-into-these-tabs command");
 
         var windowsBefore = harness.Workspace.Sessions.Select(s => s.Window).Distinct().Count();
         await Dispatcher.UIThread.InvokeAsync(() => plus.Command!.Execute(null));

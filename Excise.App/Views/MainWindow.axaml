@@ -1555,7 +1555,7 @@
               <Grid RowDefinitions="*,Auto">
                 <Grid x:Name="ClipboardPanel"
                       Grid.Row="0" RowDefinitions="Auto,*,Auto"
-                      IsVisible="{Binding IsClipboardSidebarVisible}">
+                      IsVisible="{Binding ShowRightModePanel}">
                     <!-- Header — title swaps with the right-sidebar mode. -->
                     <Border Grid.Row="0" Background="{DynamicResource SecondaryBackgroundBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"

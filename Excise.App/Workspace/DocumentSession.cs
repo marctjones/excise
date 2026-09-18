@@ -69,6 +69,8 @@ internal sealed class DocumentSession : IDocumentSessionHost, IDisposable
     Task IDocumentSessionHost.OpenDocumentsAsync(IReadOnlyList<string> paths, bool replaceConfirmed) =>
         _workspace.OpenDocumentsAsync(paths, this, replaceConfirmed);
 
+    Task IDocumentSessionHost.OpenInNewTabAsync() => _workspace.OpenInNewTabAsync(this);
+
     bool IDocumentSessionHost.TryCloseSession() => _workspace.TryCloseSession(this);
 
     Task IDocumentSessionHost.RequestQuitAsync() => _workspace.RequestQuitAsync();

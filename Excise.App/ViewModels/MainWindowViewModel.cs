@@ -726,17 +726,45 @@ public partial class MainWindowViewModel : ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref _isClipboardSidebarVisible, value);
+            this.RaisePropertyChanged(nameof(ShowRightModePanel));
             this.RaisePropertyChanged(nameof(IsRightSidebarVisible));
         }
     }
 
     /// <summary>
-    /// The right sidebar host, which carries the clipboard / search-results /
-    /// pending-redactions pane and the attachments pane (#1641). Either one
-    /// alone is reason to show it.
+    /// The right sidebar host, which carries the attachments pane (#1641) and
+    /// the one-at-a-time clipboard / search-results / pending-redactions pane.
     /// </summary>
+    /// <remarks>
+    /// ⚠️ It is visible when a pane has a JOB, not when a toggle is on. Gating
+    /// the whole host on <see cref="IsClipboardSidebarVisible"/> meant search
+    /// results and pending redaction marks — which live in the same host — were
+    /// hidden with it. That coupling was always there; #1654 turning the
+    /// clipboard off by DEFAULT is what made it reach the user, and the full
+    /// suite caught it (PointerInteractionTests: "the search-results panel must
+    /// render a hit-testable clickable row per match").
+    ///
+    /// So the clipboard toggle governs the clipboard pane only. Searching shows
+    /// the results wherever the toggle sits, and redaction mode shows the
+    /// pending marks.
+    /// </remarks>
     public bool IsRightSidebarVisible =>
-        IsClipboardSidebarVisible || IsAttachmentsSidebarVisible;
+        IsAttachmentsSidebarVisible || ShowRightModePanel;
+
+    /// <summary>
+    /// The one-at-a-time pane inside the right sidebar: search results while
+    /// searching, pending marks while redacting, clipboard history otherwise
+    /// and only when the user has that on.
+    /// </summary>
+    /// <remarks>
+    /// The clipboard TOGGLE governs the clipboard pane alone. Gating the pane
+    /// on it hid search results and pending redaction marks too, because all
+    /// three share this one slot.
+    /// </remarks>
+    public bool ShowRightModePanel =>
+        ShowSearchResultsPanel
+        || ShowPendingRedactionsPanel
+        || (IsClipboardSidebarVisible && ShowClipboardHistoryPanel);
 
     /// <summary>
     /// Whether the page's annotations are drawn. Default true, which is what
@@ -920,9 +948,12 @@ public partial class MainWindowViewModel : ViewModelBase
             }
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));
-            // The right sidebar's panel selector depends on this flag.
+            // The right sidebar's panel selector depends on this flag, and so
+            // does whether the host shows at all (#1654).
             this.RaisePropertyChanged(nameof(ShowPendingRedactionsPanel));
             this.RaisePropertyChanged(nameof(ShowClipboardHistoryPanel));
+            this.RaisePropertyChanged(nameof(ShowRightModePanel));
+            this.RaisePropertyChanged(nameof(IsRightSidebarVisible));
         }
     }
 

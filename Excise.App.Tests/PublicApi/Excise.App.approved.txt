@@ -700,7 +700,6 @@ namespace Excise.App.ViewModels
     public sealed class DocumentTabsViewModel : ReactiveUI.ReactiveObject
     {
         public bool IsStripVisible { get; }
-        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> NewTabCommand { get; }
         public System.Collections.ObjectModel.ObservableCollection<Avalonia.Controls.MenuItem> OverflowMenuItems { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SelectNextTabCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SelectPreviousTabCommand { get; }
@@ -896,6 +895,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowDocumentationCommand { get; }
         public bool ShowPendingRedactionsPanel { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowPreferencesCommand { get; }
+        public bool ShowRightModePanel { get; }
         public bool ShowSearchResultsPanel { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowShortcutsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SignDocumentCommand { get; }

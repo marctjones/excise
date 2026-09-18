@@ -183,6 +183,9 @@ public partial class MainWindowViewModel
             this.RaisePropertyChanged(nameof(ShowSearchResultsPanel));
             this.RaisePropertyChanged(nameof(ShowPendingRedactionsPanel));
             this.RaisePropertyChanged(nameof(ShowClipboardHistoryPanel));
+            // ...and the pane and host, which show when they have a job.
+            this.RaisePropertyChanged(nameof(ShowRightModePanel));
+            this.RaisePropertyChanged(nameof(IsRightSidebarVisible));
         }
     }
 

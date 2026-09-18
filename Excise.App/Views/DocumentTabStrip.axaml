@@ -193,10 +193,14 @@
             </ItemsControl>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <!-- Bound to the WINDOW's view model, not this strip's: a
+                     window with no tabs view model yet would leave the button
+                     with a null Command, and a leaf button that resolves to
+                     nothing is a dead affordance (CommandBindingSweepTests). -->
                 <Button x:Name="DocumentTabsNewButton"
                         Classes="tab-strip-action"
                         Content="+"
-                        Command="{Binding NewTabCommand}"
+                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenInNewTabCommand}"
                         ToolTip.Tip="Open another document in this window"
                         AutomationProperties.Name="Open another document in this window"/>
                 <Button x:Name="DocumentTabsOverflowButton"

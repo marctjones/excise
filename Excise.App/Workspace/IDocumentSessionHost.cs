@@ -56,6 +56,18 @@ internal interface IDocumentSessionHost
     bool CanMoveToNewWindow { get; }
 
     /// <summary>
+    /// Pick documents and open them as tabs of THIS session's window (#1628),
+    /// whatever the open-mode preference says.
+    /// </summary>
+    /// <remarks>
+    /// Lives here rather than on <c>DocumentTabsViewModel</c> because the tab
+    /// strip's "+" button has to have a command even in a window that has no
+    /// tabs view model yet — a leaf button with a null Command is a dead
+    /// affordance, which CommandBindingSweepTests refuses.
+    /// </remarks>
+    Task OpenInNewTabAsync();
+
+    /// <summary>
     /// True when this session's window has more than one tab to switch between
     /// (#1598). Same condition as <see cref="CanMoveToNewWindow"/> today, kept
     /// separate because they answer different questions and

@@ -465,10 +465,15 @@ internal sealed class DocumentWorkspace : DocumentTabsViewModel.ITabsHost
     /// the window that asked, regardless of the open-mode preference — the
     /// button is drawn on that window's tab strip, so that is what it promised.
     /// </summary>
-    async Task DocumentTabsViewModel.ITabsHost.OpenInNewTabAsync(DocumentTabsViewModel tabs)
+    /// <summary>
+    /// The strip's "+" button (#1628): pick documents and open them as tabs of
+    /// the window that asked, regardless of the open-mode preference — the
+    /// button is drawn on that window's tab strip, so that is what it promised.
+    /// </summary>
+    internal async Task OpenInNewTabAsync(DocumentSession origin)
     {
-        ArgumentNullException.ThrowIfNull(tabs);
-        if (tabs.SelectedTab?.Session is not { IsDisposed: false } origin)
+        ArgumentNullException.ThrowIfNull(origin);
+        if (origin.IsDisposed)
             return;
 
         var files = await origin.ViewModel.PickPdfFilesAsync(allowMultiple: true);

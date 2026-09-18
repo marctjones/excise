@@ -114,8 +114,17 @@ public class GuiExpectedEffectTests
         // guard's precondition holds, and asserts the mutation HAPPENED
         // (page order / page count) alongside the region contract — so it
         // cannot go green on a guard-blocked no-op.
-        new("ToggleRedactionModeCommand", null),
-        new("ToggleTextSelectionModeCommand", null),
+        // ⚠️ These two are NOT pure page-surface commands, and saying they were
+        // only held because the right sidebar used to be open by default.
+        // The Clipboard region is one SLOT shared by three panes — clipboard
+        // history, search results, pending redactions — and entering redaction
+        // mode is exactly when the pending-marks pane has to appear. With the
+        // clipboard toggle now off by default (#1654) that shows up as a
+        // visibility change, which is the honest description of what the
+        // command does: a reader who marks a redaction must be able to see the
+        // mark they made.
+        new("ToggleRedactionModeCommand", Panel.Clipboard),
+        new("ToggleTextSelectionModeCommand", Panel.Clipboard),
         new("ToggleTypewriterModeCommand", null),
         new("ToggleFormAuthoringModeCommand", null),
         new("ToggleContinuousViewCommand", null),
