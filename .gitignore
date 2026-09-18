@@ -154,3 +154,8 @@ tools/vendor/
 
 # check-test-count.sh keeps its loss-streak ledger here between runs; local state, not evidence
 tests/test-count-loss-ledger.tsv
+
+# Unredaction bench ground truth (#1602): the real answers behind tier-B/C/D
+# redactions — victim names and similar. The manifest beside it IS committed;
+# the values never are. test-pdfs/* already covers the documents themselves.
+tests/unredaction-bench/*.local.tsv
