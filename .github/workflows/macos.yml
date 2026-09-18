@@ -168,6 +168,13 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: The tag names the version the tree declares
+        # #1627: a tagged build stamps the assemblies from the TREE, so a tag
+        # that disagrees ships a binary whose About window names a different
+        # release. That shipped once, for a whole cycle. Checked BEFORE the
+        # build, so the failure is one line rather than a bad artifact.
+        run: scripts/check-version-consistency.sh --tag "$GITHUB_REF_NAME"
+
       - name: Build the .app from the tag
         # The same script the local release uses, so the comparison below is
         # between two runs of one recipe rather than between two recipes.

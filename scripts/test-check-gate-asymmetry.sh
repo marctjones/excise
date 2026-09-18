@@ -65,6 +65,7 @@ root="$(git rev-parse --show-toplevel)"
 } > "$root/.tier-invocation"
 exit 0
 STUB
+cp "$ROOT/scripts/check-version-consistency.sh" "$REPO/scripts/"
 chmod +x "$REPO/scripts/"*.sh
 
 cd "$REPO"
@@ -78,6 +79,12 @@ git config commit.gpgsign false
 mkdir -p Excise.Rendering Excise.Avalonia/Controls Excise.Core/Content \
          Excise.Core/Fonts tools/Excise.RenderTools Excise.Benchmarks Demo.Tests
 echo "// hot path" > Excise.Rendering/Renderer.cs
+
+# #1627: the hook refuses a v* tag that disagrees with the tree, so the
+# synthetic repo needs the two files that declare the version. v9.9.9 below
+# agrees; the mismatch case is exercised separately.
+printf '<Project><PropertyGroup><VersionPrefix>9.9.9</VersionPrefix></PropertyGroup></Project>\n' > Directory.Build.props
+printf '# Changelog\n\n## [Unreleased]\n\n## [9.9.9] - 2026-01-01\n' > CHANGELOG.md
 echo "// viewer" > Excise.Avalonia/Controls/PdfViewerControl.cs
 echo "// parser" > Excise.Core/Content/ContentStreamParser.cs
 echo "// fonts" > Excise.Core/Fonts/Cff.cs
@@ -242,6 +249,21 @@ case "$HOOK_RAN" in
     *"head=$REWRITE_SHA"*) ok ;;
     *) fail "the tag must be peeled to its commit: $HOOK_RAN" ;;
 esac
+
+# 9b. #1627: a v* tag whose version disagrees with the tree is REFUSED, before
+#     the tier runs. A tagged build stamps the assemblies from the TREE, so a
+#     mismatch ships a binary whose About window names a different release —
+#     which is exactly what happened for a whole cycle.
+git tag -a v8.8.8 -m "wrong version"
+MISTAG_SHA="$(git rev-parse v8.8.8)"
+run_hook "refs/tags/v8.8.8 $MISTAG_SHA refs/tags/v8.8.8 $ZERO"
+[ "$HOOK_RC" -eq 1 ] || fail "a tag disagreeing with VersionPrefix must be refused, got rc=$HOOK_RC: $HOOK_OUT"
+[ "$HOOK_RAN" = "<not run>" ] || fail "a refused tag must not run the tier: $HOOK_RAN"
+case "$HOOK_OUT" in
+    *"set-version.sh 8.8.8"*) ok ;;
+    *) fail "the refusal must name the fix: $HOOK_OUT" ;;
+esac
+git tag -d v8.8.8 >/dev/null
 
 # 10. A new remote branch: the all-zero REMOTE sha is no base, so the runner
 #     falls through to its own base selection rather than being handed nonsense.

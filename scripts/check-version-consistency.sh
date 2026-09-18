@@ -50,8 +50,29 @@ if [ "${1:-}" = "--self-test" ]; then
     if ( cd "$work" && bash scripts/check-version-consistency.sh >/dev/null 2>&1 ); then
         echo "SELFTEST FAIL: a missing VersionPrefix must fail"; exit 1
     fi
-    echo "check-version-consistency: OK (4 checks)"
+    # --tag agrees with the tree.
+    printf '<Project><PropertyGroup><VersionPrefix>9.9.9</VersionPrefix></PropertyGroup></Project>\n' > "$work/$PROPS"
+    printf '# Changelog\n\n## [Unreleased]\n\n## [9.9.9] - 2026-01-01\n' > "$work/$CHANGELOG"
+    ( cd "$work" && bash scripts/check-version-consistency.sh --tag v9.9.9 >/dev/null ) \
+        || { echo "SELFTEST FAIL: a matching tag must pass"; exit 1; }
+    ( cd "$work" && bash scripts/check-version-consistency.sh --tag refs/tags/v9.9.9 >/dev/null ) \
+        || { echo "SELFTEST FAIL: a fully-qualified tag ref must pass"; exit 1; }
+    # --tag that disagrees with the tree FAILS. This is the whole point: a
+    # tagged build stamps from the tree, so a mismatch ships a wrong version.
+    if ( cd "$work" && bash scripts/check-version-consistency.sh --tag v9.9.10 >/dev/null 2>&1 ); then
+        echo "SELFTEST FAIL: a tag that disagrees with VersionPrefix must fail"; exit 1
+    fi
+    echo "check-version-consistency: OK (7 checks)"
     exit 0
+fi
+
+# --tag vX.Y.Z: the release tag must name the version the tree declares (#1627).
+# This is what makes the About window right on a tagged build without anyone
+# remembering to bump anything: the tag cannot disagree with the tree.
+TAG=""
+if [ "${1:-}" = "--tag" ]; then
+    TAG="${2:-}"
+    [ -n "$TAG" ] || { echo "usage: $0 --tag vX.Y.Z" >&2; exit 2; }
 fi
 
 [ -f "$PROPS" ] || { echo "no $PROPS" >&2; exit 2; }
@@ -81,6 +102,25 @@ if [ "$props_version" != "$changelog_version" ]; then
     echo "  $CHANGELOG newest release = $changelog_version" >&2
     echo "Bump VersionPrefix with the release, or add the CHANGELOG heading." >&2
     exit 1
+fi
+
+if [ -n "$TAG" ]; then
+    tag_version="${TAG#refs/tags/}"
+    tag_version="${tag_version#v}"
+    if [ "$tag_version" != "$props_version" ]; then
+        echo "FAIL: the tag and the tree declare different versions" >&2
+        echo "  tag                     = $TAG (version $tag_version)" >&2
+        echo "  $PROPS   VersionPrefix = $props_version" >&2
+        echo "" >&2
+        echo "A tagged build stamps the assemblies from the TREE, so this ships a" >&2
+        echo "binary whose About window disagrees with the release it is called." >&2
+        echo "That is #1627, which shipped 1.0.0 for a whole release cycle." >&2
+        echo "" >&2
+        echo "  scripts/set-version.sh $tag_version   # then commit, then re-tag" >&2
+        exit 1
+    fi
+    echo "version consistency OK: $TAG == $props_version (props) == $changelog_version (changelog)"
+    exit 0
 fi
 
 echo "version consistency OK: $props_version (props) == $changelog_version (changelog newest release)"

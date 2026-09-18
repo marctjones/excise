@@ -63,6 +63,13 @@
 # was installed, and the script it redirected to had a happy path that had never
 # run (#968, closed as won't-do). scripts/tag-release.sh has since been deleted
 # along with those trailers. Tag by hand: `git tag -a vX.Y.Z`.
+#
+# It DOES check one thing about a `v*` tag, added in #1627: that the tag names
+# the version the tree declares. That is not evidence-gathering, it is a string
+# comparison against Directory.Build.props, and it closes a failure that
+# actually happened — a whole release cycle shipped with the About window
+# reading "version 1.0.0" because a tagged build stamps the assemblies from the
+# TREE, and nothing compared the two. Cost: one `sed`, no build, no run.
 set -uo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)" || exit 1
@@ -71,6 +78,7 @@ cd "$ROOT" || exit 1
 head_sha="$(git rev-parse --verify HEAD 2>/dev/null || true)"
 base=""
 pushed=""
+tags=""
 
 if [ ! -t 0 ]; then
     while read -r _lref lsha _rref rsha; do
@@ -91,8 +99,29 @@ if [ ! -t 0 ]; then
         esac
 
         case "$rsha" in *[!0]*) base="$rsha" ;; esac
+
+        # #1627: remember the release tags being pushed, checked below.
+        case "${_rref:-}" in
+            refs/tags/v*) tags="${tags:+$tags }${_rref#refs/tags/}" ;;
+        esac
     done
 fi
+
+# A `v*` tag must name the version the tree declares, or the build it produces
+# reports a different version than the release is called.
+for _tag in ${tags:-}; do
+    if ! scripts/check-version-consistency.sh --tag "$_tag"; then
+        echo ""
+        echo "pre-push: REFUSED — the tag and the tree declare different versions (#1627)."
+        echo ""
+        echo "  Fix the tree, re-tag, and push again:"
+        echo "    scripts/set-version.sh ${_tag#v}"
+        echo "    git commit -am \"chore: ${_tag#v}\""
+        echo "    git tag -f -a $_tag -m \"excise $_tag\""
+        echo ""
+        exit 1
+    fi
+done
 
 pushed_count=0
 for _sha in ${pushed:-}; do

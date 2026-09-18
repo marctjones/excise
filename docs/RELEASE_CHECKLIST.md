@@ -5,11 +5,21 @@ Use this checklist before tagging any `v*` release.
 ## Tagging
 
 ```bash
+scripts/set-version.sh <version>          # Directory.Build.props + CHANGELOG
+git commit -am "chore: <version>"
 git tag -a v<version> -m "excise v<version>"
 git push origin v<version>
 ```
 
-That is all. There is no evidence-checking wrapper and no enforced trailer.
+`set-version.sh` is the only thing that changes the version, and it writes both
+places a human would otherwise edit by hand. Skipping it is not a shortcut: the
+pre-push hook refuses a `v*` tag whose version disagrees with
+`Directory.Build.props`, and the macOS release job checks the same thing before
+it builds — because a tagged build stamps the assemblies from the TREE, so a
+mismatch ships a binary whose About window names a different release. That is
+#1627, which shipped "version 1.0.0" for a whole release cycle.
+
+Beyond that there is no evidence-checking wrapper and no enforced trailer.
 
 There used to be: `scripts/tag-release.sh` wrote `Release-Evidence:` trailers
 into the annotated tag, and the pre-push hook refused any `v*` tag that lacked
