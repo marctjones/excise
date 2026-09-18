@@ -28,13 +28,21 @@ public class UnredactionScorecardTests
     private readonly Xunit.ITestOutputHelper _out;
     public UnredactionScorecardTests(Xunit.ITestOutputHelper o) => _out = o;
 
-    private static string RepoRoot()
+    /// <summary>
+    /// The constructed corpus, via the ONE shared locator (#1527/#1529).
+    /// This used to walk up to a <c>.git</c> marker — which in a git worktree is
+    /// a FILE at the WORKTREE root, so it stopped one checkout short of the
+    /// gitignored corpora and this gate skipped, claiming the corpus was absent
+    /// while 265 files of it sat in the main checkout.
+    /// </summary>
+    private static string? SyntheticCorpusManifest()
     {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
+        var corpus = TestRepoLayout.FindDirectory(Path.Combine("test-pdfs", "redaction-synthetic"));
+        if (corpus == null) return null;
+        var manifest = Path.Combine(corpus, "manifest.jsonl");
+        return File.Exists(manifest) ? manifest : null;
     }
+
 
     [Fact]
     public void Score_GradesPerChannelStratumTool_AndComputesExciseAdvantage()
@@ -109,10 +117,11 @@ public class UnredactionScorecardTests
     [Fact]
     public void ConsolidatedScorecard_CertainAndResidue_ExciseLeadsTheReferences()
     {
-        var corpus = Path.Combine(RepoRoot(), "test-pdfs", "redaction-synthetic");
-        var manifest = Path.Combine(corpus, "manifest.jsonl");
-        Assert.SkipUnless(File.Exists(manifest),
-            "constructed corpus absent [requires: corpus:redaction-synthetic]");
+        var manifest = SyntheticCorpusManifest();
+        Assert.SkipUnless(manifest != null, TestRepoLayout.AbsenceReason(
+            "constructed corpus (run scripts/gen-redaction-corpus.py)",
+            Path.Combine("test-pdfs", "redaction-synthetic", "manifest.jsonl")));
+        var corpus = Path.GetDirectoryName(manifest)!;
 
         // The generator builds `highlight-readable` as a NEGATIVE CONTROL — a
         // yellow highlight over text that stays readable is not a redaction, so

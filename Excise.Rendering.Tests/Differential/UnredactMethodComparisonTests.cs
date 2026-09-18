@@ -38,13 +38,21 @@ public sealed class UnredactMethodComparisonTests
          "Nancy Lisa Betty Margaret Sandra Ashley Kimberly Emily Donna Michelle " +
          "Louise Farrar Anne Dorothy Carol Amanda Melissa Deborah Stephanie").Split(' ');
 
-    private static string RepoRoot()
+    /// <summary>
+    /// The constructed corpus, via the ONE shared locator (#1527/#1529).
+    /// This used to walk up to a <c>.git</c> marker — which in a git worktree is
+    /// a FILE at the WORKTREE root, so it stopped one checkout short of the
+    /// gitignored corpora and this gate skipped, claiming the corpus was absent
+    /// while 265 files of it sat in the main checkout.
+    /// </summary>
+    private static string? SyntheticCorpusManifest()
     {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
+        var corpus = TestRepoLayout.FindDirectory(Path.Combine("test-pdfs", "redaction-synthetic"));
+        if (corpus == null) return null;
+        var manifest = Path.Combine(corpus, "manifest.jsonl");
+        return File.Exists(manifest) ? manifest : null;
     }
+
 
     // Standard-14 Helvetica AFM widths (1000ths em) for the fit computation --
     // the same source Excise.Core.Fonts.StandardFontMetrics uses, so the
@@ -110,9 +118,11 @@ public sealed class UnredactMethodComparisonTests
     public void ExactMetrics_vs_PixelTolerance_ResidueRecovery()
 
     {
-        var corpus = Path.Combine(RepoRoot(), "test-pdfs", "redaction-synthetic");
-        var manifest = Path.Combine(corpus, "manifest.jsonl");
-        Assert.SkipUnless(File.Exists(manifest), "corpus absent [requires: corpus:redaction-synthetic]");
+        var manifest = SyntheticCorpusManifest();
+        Assert.SkipUnless(manifest != null, TestRepoLayout.AbsenceReason(
+            "constructed corpus (run scripts/gen-redaction-corpus.py)",
+            Path.Combine("test-pdfs", "redaction-synthetic", "manifest.jsonl")));
+        var corpus = Path.GetDirectoryName(manifest)!;
 
         // Width-preserving name cases -- the residue-relevant band.
         var cases = File.ReadAllLines(manifest).Where(l => l.Length > 0)

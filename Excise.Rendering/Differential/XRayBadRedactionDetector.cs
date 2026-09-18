@@ -77,18 +77,65 @@ public static class XRayBadRedactionDetector
     }
 
     /// <summary>
-    /// <c>tools/vendor/xray-venv/bin/python</c>, walking up from the test
-    /// binary to the repo root, or null when it is not there.
+    /// <c>tools/vendor/xray-venv/bin/python</c>, in this checkout or — from a
+    /// git worktree — in the MAIN one.
+    ///
+    /// <para>⚠️ The venv is gitignored, so it exists only where
+    /// <c>download-xray.sh</c> was run, which is normally the main checkout.
+    /// This used to stop at the first <c>.git</c> marker; in a worktree that
+    /// marker is a FILE at the WORKTREE root, so the walk halted one checkout
+    /// short and x-ray read as NOT INSTALLED. The unredaction scorecard then
+    /// printed "x-ray (certain reference) not installed" and scored excise
+    /// against no reference at all — the #1527 shape, on the one comparison
+    /// that says whether we are any good.</para>
     /// </summary>
     private static string? FindRepoVenv()
+    {
+        foreach (var root in CheckoutRoots())
+        {
+            var candidate = Path.Combine(root, "tools", "vendor", "xray-venv", "bin", "python");
+            if (File.Exists(candidate)) return candidate;
+        }
+        return null;
+    }
+
+    /// <summary>This checkout, then the main checkout when this is a worktree.</summary>
+    private static IEnumerable<string> CheckoutRoots()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git")))
             dir = dir.Parent;
-        if (dir == null) return null;
+        if (dir == null) yield break;
 
-        var candidate = Path.Combine(dir.FullName, "tools", "vendor", "xray-venv", "bin", "python");
-        return File.Exists(candidate) ? candidate : null;
+        yield return dir.FullName;
+
+        // A worktree's .git is a FILE reading "gitdir: <path>"; that directory
+        // holds "commondir" pointing at the main repository's .git, whose
+        // parent is the main checkout.
+        var gitFile = Path.Combine(dir.FullName, ".git");
+        if (!File.Exists(gitFile)) yield break;
+
+        string? main = null;
+        try
+        {
+            var line = File.ReadAllText(gitFile).Trim();
+            const string prefix = "gitdir:";
+            if (!line.StartsWith(prefix, StringComparison.Ordinal)) yield break;
+
+            var gitDir = line[prefix.Length..].Trim();
+            if (!Path.IsPathRooted(gitDir)) gitDir = Path.GetFullPath(Path.Combine(dir.FullName, gitDir));
+
+            var commonDirFile = Path.Combine(gitDir, "commondir");
+            if (!File.Exists(commonDirFile)) yield break;
+
+            var common = File.ReadAllText(commonDirFile).Trim();
+            if (!Path.IsPathRooted(common)) common = Path.GetFullPath(Path.Combine(gitDir, common));
+
+            main = Path.GetDirectoryName(common.TrimEnd(Path.DirectorySeparatorChar));
+        }
+        catch { yield break; }
+
+        if (main != null && Directory.Exists(main)) yield return main;
     }
 
     /// <summary>True when an x-ray-capable python was found.</summary>
