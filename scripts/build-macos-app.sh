@@ -75,6 +75,10 @@ PUBLISH_ARGS=(
     "$ROOT/Excise.App/Excise.App.csproj"
     -c Release -r "$RID" --self-contained true
     -p:PublishSingleFile=false
+    # Stamp the assemblies with the same version the Info.plist gets. Without
+    # this every build carried .NET's 1.0.0 default, so the About window and
+    # `excise --version` disagreed with the bundle they shipped in.
+    -p:Version="$VERSION"
     -o "$PUBLISH_DIR"
 )
 if [ "$AOT" = "1" ]; then

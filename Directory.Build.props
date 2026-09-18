@@ -1,0 +1,25 @@
+<Project>
+
+  <!--
+    The version every excise assembly reports, and the default the macOS app
+    bundle is stamped with.
+
+    ⚠️ BUMP THIS WITH THE RELEASE. Until 2026-09-18 nothing set it, so every
+    assembly carried .NET's 1.0.0 default: the About window said "version
+    1.0.0" and the CLI version flag printed "1.0.0+commit" while the v3.10.0
+    bundle's Info.plist said 3.10.0. scripts/check-version-consistency.sh (a t0
+    row) compares this value against the newest CHANGELOG heading, so a release
+    that forgets it fails before the tag rather than shipping a wrong number.
+
+    scripts/build-macos-app.sh passes -p:Version (its own version argument) so a release
+    build stamps the tag's version even if this file lags; a plain
+    `dotnet build`/`dotnet run` reports the value here.
+
+    Excise.Core sets its own <Version> (its package version moves
+    independently) and keeps it: a project-level property wins over this one.
+  -->
+  <PropertyGroup>
+    <VersionPrefix>3.10.0</VersionPrefix>
+  </PropertyGroup>
+
+</Project>
