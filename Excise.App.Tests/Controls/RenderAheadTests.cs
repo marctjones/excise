@@ -266,12 +266,18 @@ public class RenderAheadTests
                 "an idle viewer renders nothing ahead — everything in reach is cached");
             viewer.ContinuousRenderStartCount.Should().Be(visibleStarts, "an idle viewer stays idle");
 
-            // The structural-refresh assertion that used to be here has moved
-            // out: it asserted that RefreshContinuousLayout "finds everything
-            // cached and starts nothing", which is a PERFORMANCE property that
-            // only held because the tile cache survived a structural mutation.
-            // Whether it should survive one is a correctness question and does
-            // not belong in a render-ahead budget test — #1651 owns it.
+            // #1651: a structural refresh DROPS the page-number-keyed tiles, so
+            // it re-renders. That cost is the fix, not a regression: keeping
+            // those tiles left the old pixels under the new page numbers and
+            // the reader's edit looked lost when they scrolled back. The cost
+            // is scoped — RefreshContinuousLayout has exactly one production
+            // caller, DocumentStructureChanged, so it never runs without a
+            // mutation behind it.
+            viewer.RefreshContinuousLayout();
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
+            await WaitLookAheadIdleAsync(window, viewer);
+            viewer.ContinuousRenderStartCount.Should().BeGreaterThan(visibleStarts,
+                "a structural refresh drops the page-number-keyed tiles and renders the new order");
         }
         finally
         {

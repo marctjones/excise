@@ -505,11 +505,11 @@ public partial class PdfViewerControl
             slots.Add(new PdfPageSlot(i, page.VisualWidth, page.VisualHeight, ZoomLevel));
         }
         ApplyContinuousSlotLayout(slots);
-        // #1466: a structural refresh (RefreshContinuousLayout) or a return to
-        // this view replaces the slots without going through
+        // #1466: a return to this view replaces the slots without going through
         // InvalidateContinuousCache, so the outgoing slots can still hold their
         // band-sized composites. Release them rather than leave them to the
         // finalizer; each slot defers the dispose until its binding has moved.
+        // (A structural refresh DOES invalidate now — #1651.)
         ReleaseSlotComposites(_continuousSlots);
         _continuousSlots = slots;
         RefreshContinuousByteMirrors();
@@ -791,11 +791,32 @@ public partial class PdfViewerControl
     /// click-safety sweep). Page CONTENT has not changed here, only the page
     /// order, so the rendered tiles stay valid.
     /// </summary>
+    /// <summary>
+    /// Re-lay-out the continuous view after a STRUCTURAL mutation — a page
+    /// added, inserted, moved, removed or rotated (#917).
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ #1651: this must drop the tile cache, and for a whole release it did
+    /// not. Tiles are keyed by <see cref="ContinuousTileKey"/>, whose first
+    /// field is the page NUMBER, so a mutation that changes which page has a
+    /// given number makes every tile for those numbers stale. The note left
+    /// here said "page CONTENT did not change — only the page order", which is
+    /// true of the pages and false of the keys: scrolling back to a number
+    /// re-composed the pre-mutation pixels and the reader's edit looked lost.
+    /// Measured before the fix — 5.5 MB of tiles survived moving page 4 to the
+    /// front of a four-page document.
+    ///
+    /// Invalidating is what the document-change and render-version paths
+    /// already do, and it carries the deferred-dispose handling (#1466/#1467)
+    /// that keeps the bitmap currently on screen alive until its binding has
+    /// moved.
+    /// </remarks>
     public void RefreshContinuousLayout()
     {
         if (ViewMode != PdfViewMode.Continuous || Document == null)
             return;
 
+        InvalidateContinuousCache();
         RebuildContinuous();
         RenderVisibleContinuousTiles();
     }
