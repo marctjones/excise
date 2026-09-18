@@ -106,10 +106,60 @@ print(f"LEAK {len(r)} {marks} {chars} a{alpha}/d{digit}/p{punct}")
 PY
 }
 
+# ---------------------------------------------------------------------------
+# The SECOND detector: excise itself. Prints EXCISE <marks> <recovered>, or
+# EXCISE-CLEAN / EXCISE-ERROR.
+#
+# ⚠️ WHY A SECOND ONE IS NECESSARY, AND IT IS NOT REDUNDANCY. x-ray finds ONE
+# failure mode — an opaque rectangle over intact text — and says so in its own
+# README. Bland et al.'s 6,541 names across 710 RECAP documents came from a
+# DIFFERENT mode: the glyph-position side channel left by an EXCISING redactor,
+# where the text is genuinely gone and its width is not. x-ray cannot see that
+# class at all, so sweeping RECAP with x-ray alone cannot reproduce their 710
+# documents no matter how many files it reads. Measured here: 131 RECAP
+# documents, 0 x-ray hits.
+#
+# ⚠️ AND WHY THE DETECTOR THAT FIRED IS RECORDED. Selecting a corpus with excise
+# biases it toward what excise can already find, which is precisely the blindness
+# a bench exists to measure. The `detector` column keeps that visible: a corpus
+# where every row reads `excise` is measuring excise against itself and must be
+# read that way. It is a candidate filter, never the grader — grading stays with
+# the independent oracles.
+# ---------------------------------------------------------------------------
+# ⚠️ `python3 - <<HEREDOC` in a pipeline reads the HEREDOC as stdin and throws
+# the pipe away. The reader must take its program from -c so stdin stays the
+# pipe. This cost a debugging round: the detector reported EXCISE-ERROR on a
+# document the same command classified correctly by hand.
+EXCISE_VERDICT_PY='
+import sys, json
+try:
+    r = json.load(sys.stdin)["recovery"]
+except Exception:
+    print("EXCISE-ERROR"); raise SystemExit(0)
+rec = r.get("marksRecovered", 0) + r.get("marksPartiallyRecovered", 0)
+# COUNTS ONLY, same rule as the x-ray sweep: never the recovered text.
+print("EXCISE %d %d" % (r.get("marks", 0), rec) if rec > 0 else "EXCISE-CLEAN")
+'
+
+sweep_excise() {
+    local pdf="$1"
+    local cli; cli="$(find "$ROOT/Excise.Cli/bin" -name excise.dll 2>/dev/null | head -1)"
+    [ -n "$cli" ] || { echo "EXCISE-ERROR"; return; }
+    # ⚠️ `excise unredact` EXITS NON-ZERO WHEN IT FINDS SOMETHING (that is its
+    # contract — see UnredactExitStatusTests), and this script runs under
+    # `set -o pipefail`. So a SUCCESSFUL detection failed the pipeline and fired
+    # the `|| echo` as well as the real verdict, appending a second line to the
+    # captured output and a stray row to the manifest. `|| true` on the producer
+    # keeps the exit status out of the pipeline's verdict; python's own status
+    # is what the `||` should be testing.
+    { dotnet "$cli" unredact "$pdf" --json 2>/dev/null || true; } \
+        | python3 -c "$EXCISE_VERDICT_PY" 2>/dev/null || echo "EXCISE-ERROR"
+}
+
 record() {
-    local f="$1" url="$2" verdict="$3"
+    local f="$1" url="$2" verdict="$3" detector="${4:-xray}"
     local sha; sha="$(sha_of "$f")"
-    printf '%s\t%s\t%s\t%s\n' "$sha" "$(basename "$f")" "$url" "$verdict" >> "$MANIFEST"
+    printf '%s\t%s\t%s\t%s\t%s\n' "$sha" "$(basename "$f")" "$url" "$detector" "$verdict" >> "$MANIFEST"
 }
 
 fetch_one() {
@@ -136,19 +186,22 @@ fetch_one() {
     fi
 
     mv "$tmp" "$f"
-    local verdict; verdict="$(sweep "$f" "$py")"
-    case "$verdict" in
-        LEAK*)
-            echo "  ${GREEN}✓ LEAK${RESET} $name  ${DIM}${verdict#LEAK }${RESET}"
-            record "$f" "$url" "$verdict"
-            ;;
-        *)
-            # A clean filing is not a tier-D document. Keeping it would grow the
-            # corpus without growing what it can measure.
-            rm -f "$f"
-            echo "  ${DIM}· clean, discarded${RESET}"
-            ;;
-    esac
+    local xv ev detector=""
+    xv="$(sweep "$f" "$py")"
+    ev="$(sweep_excise "$f")"
+
+    case "$xv" in LEAK*) detector="xray" ;; esac
+    case "$ev" in EXCISE\ *) detector="${detector:+$detector+}excise" ;; esac
+
+    if [ -n "$detector" ]; then
+        echo "  ${GREEN}✓ CANDIDATE${RESET} $name  ${DIM}[$detector] ${xv#LEAK } ${ev#EXCISE }${RESET}"
+        record "$f" "$url" "${xv#LEAK } | ${ev}" "$detector"
+    else
+        # Neither detector fired. Not a tier-D candidate; keeping it would grow
+        # the corpus without growing what it can measure.
+        rm -f "$f"
+        echo "  ${DIM}· clean, discarded${RESET}"
+    fi
     sleep "$DELAY"
 }
 
@@ -161,7 +214,7 @@ cmd_status() {
     if [ ! -f "$MANIFEST" ]; then echo "no RECAP corpus yet — $DEST"; return 0; fi
     local n; n=$(grep -c . "$MANIFEST" 2>/dev/null || echo 0)
     echo "${BOLD}$n leaking document(s)${RESET} in $DEST"
-    awk -F'\t' '{print "  "$2"  "$4}' "$MANIFEST"
+    awk -F'\t' '{printf "  %-28s [%s]  %s\n", $2, $4, $5}' "$MANIFEST"
 }
 
 cmd_sweep_only() {
