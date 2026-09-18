@@ -100,7 +100,8 @@ internal static class RedactCommandHandler
         // #1089/#1187: report verified removals and use the unified Core
         // redaction surface. The confidence oracle remains outside Core because
         // it depends on the optional OCR package.
-        var redaction = document.RedactText(request.Text, new RedactionOptions
+        var profileOptions = RedactionOptions.ForProfile(request.Profile);
+        var redaction = document.RedactText(request.Text, profileOptions with
         {
             CaseSensitive = request.CaseSensitive,
             WholeWord = request.WholeWord,   // #1052
@@ -109,9 +110,12 @@ internal static class RedactCommandHandler
                 : request.OvershootBox ? WidthPolicy.OvershootPreserveLayout   // #1189
                 : WidthPolicy.CollapsePreserveLayout,
             BoxColor = request.BoxColor,
-            // #1188/#1169: per-carrier mode. Null keeps the all-Strip default.
-            CarrierPolicy = request.CarrierPolicy
-                ?? Excise.Core.Operations.CarrierScrubPolicy.Default,
+            // #1188/#1169: per-carrier mode. An explicit --carrier-policy wins;
+            // otherwise the PROFILE's policy stands. Falling back to
+            // CarrierScrubPolicy.Default here would have silently downgraded
+            // --profile maximum's RemoveWhole back to Strip on every carrier,
+            // which is most of what that profile is (#1586).
+            CarrierPolicy = request.CarrierPolicy ?? profileOptions.CarrierPolicy,
             KeepAttachments = request.KeepAttachments,   // #1572
         }, guardedProgress);
 
@@ -194,7 +198,9 @@ internal static class RedactCommandHandler
             carrierNotes,
             diagnostics,
             redaction.WholeWord,
-            redaction.Attachments);
+            redaction.Attachments,
+            redaction.Removals,
+            redaction.AccessibilityAndInteractivityRemoved);
     }
 
     private static void Validate(RedactCommandRequest request)
@@ -250,7 +256,11 @@ internal readonly record struct RedactCommandRequest(
     Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null,   // #1188/#1169
     bool WholeWord = false,   // #1052
     bool OvershootBox = false,   // #1189
-    bool KeepAttachments = false);   // #1572 — opt out of removing every attachment
+    bool KeepAttachments = false,   // #1572 — opt out of removing every attachment
+    // #1586 — the output profile. Standard is the default on every path; the
+    // CLI must not be the one front end that quietly ships less.
+    Excise.Core.Text.Segmentation.RedactionProfile Profile
+        = Excise.Core.Text.Segmentation.RedactionProfile.Standard);
 
 internal sealed record RedactCommandResult(
     string InputPath,
@@ -261,11 +271,20 @@ internal sealed record RedactCommandResult(
     IReadOnlyList<string> CarrierNotes,
     IReadOnlyList<string> Diagnostics,
     bool WholeWord = false,   // #1052 — the match rule is part of the result
-    IReadOnlyList<AttachmentRedactionResult>? AttachmentResults = null)   // #1572
+    IReadOnlyList<AttachmentRedactionResult>? AttachmentResults = null,   // #1572
+    // #1586 — what the profile removed WHOLE, and whether the output is still
+    // accessible. Printed, because a removal made without a term match is
+    // destruction the user is entitled to know about.
+    IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals = null,
+    bool AccessibilityRemoved = false)
 {
     /// <summary>Every attachment removed or kept (#1572); never null.</summary>
     public IReadOnlyList<AttachmentRedactionResult> Attachments =>
         AttachmentResults ?? Array.Empty<AttachmentRedactionResult>();
+
+    /// <summary>What the output profile removed whole (#1586); never null.</summary>
+    public IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval> Removals =>
+        ProfileRemovals ?? Array.Empty<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>();
 }
 
 /// <summary>

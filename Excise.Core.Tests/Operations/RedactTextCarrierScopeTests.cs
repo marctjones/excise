@@ -120,10 +120,25 @@ public class RedactTextCarrierScopeTests
             doc.RedactText("SE");
             var saved = SaveToString(doc);
 
-            saved.Should().Contain("SECRETNAME in Info",
-                "terms under 3 characters are below PdfDocumentSanitizer's floor, so carriers " +
-                "are untouched — a documented limit, not an oversight. A caller redacting a " +
-                "1-2 character term must scrub carriers itself");
+            // #1586 CHANGED HALF OF THIS. The sub-3-character floor is still
+            // real and still a documented limit — but it now applies only to
+            // the carriers the Standard profile KEEPS. /Info and XMP are
+            // removed WHOLESALE, without a term and therefore without a floor,
+            // so the two that used to demonstrate the gap no longer can.
+            saved.Should().NotContain("SECRETNAME in Info",
+                "the Standard profile strips /Info wholesale, so the carrier-scrub floor " +
+                "cannot leave a 1-2 character term behind there any more (#1586)");
+            saved.Should().NotContain("SECRETNAME in XMP",
+                "same for the XMP packet");
+
+            // A KEPT carrier still shows the floor, which is what this test is
+            // for: a caller redacting a 1-2 character term must scrub the
+            // accessibility and navigation carriers itself.
+            saved.Should().Contain("SECRETNAME in bookmark",
+                "terms under 3 characters are below PdfDocumentSanitizer's floor, so the " +
+                "carriers the profile KEEPS are untouched — a documented limit, not an " +
+                "oversight. Excising 1-2 character fragments from every bookmark title, " +
+                "field name and /Alt would corrupt unrelated values for no security benefit");
         }
         finally { File.Delete(path); }
     }

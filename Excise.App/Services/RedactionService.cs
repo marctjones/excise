@@ -70,7 +70,12 @@ public class RedactionService
     /// <param name="keepAttachments">Keep the document's embedded files
     /// (#1572). Default false: the engine removes every attachment, since an
     /// area has no term to check one against.</param>
-    public void RedactArea(PdfPage page, PdfPageRect area, bool keepAttachments = false)
+    public void RedactArea(
+        PdfPage page,
+        PdfPageRect area,
+        bool keepAttachments = false,
+        Excise.Core.Text.Segmentation.RedactionProfile profile
+            = Excise.Core.Text.Segmentation.RedactionProfile.Standard)   // #1586
     {
         var visualArea = PdfCoordinateMapper.ToVisualPoints(page, area);
         if (!IntersectsVisualPage(visualArea, page.VisualWidth, page.VisualHeight))
@@ -92,11 +97,12 @@ public class RedactionService
         // The engine also strips the document's positionless carriers (/Info,
         // XMP) by default — see #897 and the note at the top of this class —
         // and, unless kept, every attachment (#1572).
-        page.RedactArea(coreRect, new Excise.Core.Text.Segmentation.RedactionOptions
-        {
-            Strategy = GlyphRemovalStrategy.AnyOverlap,
-            KeepAttachments = keepAttachments,
-        });
+        page.RedactArea(coreRect,
+            Excise.Core.Text.Segmentation.RedactionOptions.ForProfile(profile) with
+            {
+                Strategy = GlyphRemovalStrategy.AnyOverlap,
+                KeepAttachments = keepAttachments,
+            });
         // #1450: the Core helper, not a GUI copy — it threads the tracked
         // source spans/array boundaries RedactArea just produced through the
         // append, instead of re-serializing the whole page a second time.
@@ -167,11 +173,13 @@ public class RedactionService
         bool allowLowConfidence = false, bool wholeWord = false,
         Excise.Core.Text.Segmentation.WidthPolicy width =
             Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout,
-        bool keepAttachments = false)
+        bool keepAttachments = false,
+        Excise.Core.Text.Segmentation.RedactionProfile profile
+            = Excise.Core.Text.Segmentation.RedactionProfile.Standard)   // #1586
     {
         _logger.LogInformation(
-            "RedactText: '{Text}' in {Input} (wholeWord={WholeWord})",
-            textToRedact, inputPath, wholeWord);
+            "RedactText: '{Text}' in {Input} (wholeWord={WholeWord}, profile={Profile})",
+            textToRedact, inputPath, wholeWord, profile);
 
         try
         {
@@ -192,13 +200,14 @@ public class RedactionService
 
             // #1089: VerifiedRemovals, not the located count. The old int was
             // an attempt counter and reported a term that survived as success.
-            var redaction = doc.RedactText(textToRedact, new Excise.Core.Text.Segmentation.RedactionOptions
-            {
-                CaseSensitive = caseSensitive,
-                WholeWord = wholeWord,   // #1052
-                Width = width,           // #1189
-                KeepAttachments = keepAttachments,   // #1572
-            });
+            var redaction = doc.RedactText(textToRedact,
+                Excise.Core.Text.Segmentation.RedactionOptions.ForProfile(profile) with
+                {
+                    CaseSensitive = caseSensitive,
+                    WholeWord = wholeWord,   // #1052
+                    Width = width,           // #1189
+                    KeepAttachments = keepAttachments,   // #1572
+                });
             int totalMatches = redaction.VerifiedRemovals;
             // #643: this path opens without a password, so only empty-user-
             // password encrypted sources reach here — their redacted output

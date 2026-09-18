@@ -83,6 +83,8 @@ public partial class MainWindowViewModel : ViewModelBase
         Excise.Core.Operations.CarrierScrubMode.Strip;
     private bool _redactionWholeWord;
     private bool _redactionKeepAttachments;
+    private Excise.Core.Text.Segmentation.RedactionProfile _redactionProfile =
+        Excise.Core.Text.Segmentation.RedactionProfile.Standard;
     private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
         Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
     private bool _isRedactionMode;
@@ -365,6 +367,23 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Which output profile a redaction uses (#1586). Default
+    /// <see cref="Excise.Core.Text.Segmentation.RedactionProfile.Standard"/>.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ <see cref="Excise.Core.Text.Segmentation.RedactionProfile.Maximum"/>
+    /// produces output that is no longer accessible or interactive — forms and
+    /// annotations flattened, bookmarks, links, comments, field names and
+    /// alternate text gone. Every surface that offers it must SAY so; the
+    /// redacted-copy report carries the line.
+    /// </remarks>
+    public Excise.Core.Text.Segmentation.RedactionProfile RedactionProfile
+    {
+        get => _redactionProfile;
+        set => this.RaiseAndSetIfChanged(ref _redactionProfile, value);
+    }
+
+    /// <summary>
     /// How the removed run's WIDTH is handled (#1189). Default
     /// <see cref="Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout"/>.
     /// </summary>
@@ -390,10 +409,19 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public void ApplyRedactionPolicyPreferences(
         bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy,
-        bool keepAttachments = false)
+        bool keepAttachments = false,
+        string? profile = null)
     {
         RedactionWholeWord = wholeWord;
         RedactionKeepAttachments = keepAttachments;   // #1572
+
+        // #1586: an unparseable value stays Standard. Falling back to Maximum
+        // would apply an irreversible, accessibility-destroying profile the
+        // user never chose — the fallback has to fail toward the weaker
+        // DESTRUCTION, not the weaker protection, and Standard is already the
+        // safe default for protection.
+        if (Enum.TryParse<Excise.Core.Text.Segmentation.RedactionProfile>(profile, out var parsed))
+            RedactionProfile = parsed;
 
         if (Enum.TryParse<Excise.Core.Text.Segmentation.WidthPolicy>(widthPolicy, out var width))
             RedactionWidthPolicy = width;
@@ -410,9 +438,26 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     internal Excise.Core.Text.Segmentation.RedactedCopySafetyOptions BuildRedactedCopySafetyOptions()
     {
-        var policy = Excise.Core.Operations.CarrierScrubPolicy.Default
-            .With(Excise.Core.Operations.RedactionCarriers.ActionUris, LinkUriCarrierPolicy)
-            .With(
+        // #1586: start from the PROFILE's policy, not the all-Strip default.
+        // Maximum's whole point is RemoveWhole on every kept carrier, and
+        // rebuilding from Default here would have silently thrown that away —
+        // the same mistake the CLI handler made and the reason both are
+        // written this way.
+        var policy = Excise.Core.Text.Segmentation.RedactionOptions
+            .ForProfile(RedactionProfile).CarrierPolicy;
+
+        // ⚠️ A per-carrier preference overrides the profile only when the user
+        // MOVED it off Strip. Applying it unconditionally would have undone
+        // most of Maximum: both preferences default to Strip, so a Maximum
+        // redaction would have started from RemoveWhole on every kept carrier
+        // and then put link targets and metadata straight back to Strip. The
+        // enum has no "follow the profile" value, so "still at the default"
+        // means exactly that.
+        if (LinkUriCarrierPolicy != Excise.Core.Operations.CarrierScrubMode.Strip)
+            policy = policy.With(
+                Excise.Core.Operations.RedactionCarriers.ActionUris, LinkUriCarrierPolicy);
+        if (MetadataCarrierPolicy != Excise.Core.Operations.CarrierScrubMode.Strip)
+            policy = policy.With(
                 Excise.Core.Operations.RedactionCarriers.Info
                     | Excise.Core.Operations.RedactionCarriers.Xmp,
                 MetadataCarrierPolicy);
@@ -422,6 +467,7 @@ public partial class MainWindowViewModel : ViewModelBase
             CarrierPolicy = policy,
             WholeWord = RedactionWholeWord,   // #1052
             ScrubAttachments = !RedactionKeepAttachments,   // #1572
+            Profile = RedactionProfile,   // #1586
         };
     }
 

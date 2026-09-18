@@ -16,15 +16,40 @@ namespace Excise.Rendering.Tests.Differential;
 /// and the unredact carrier channel (per-carrier attribution). A SURVEY: it
 /// prints the table and asserts only that it ran. The cross-tool version is
 /// <see cref="RedactionBenchmarkRunner"/>'s <c>redaction-carrier-traps</c> corpus.
-/// First run (2026-09-17): 12 of 47 traps leaked, filed as #1581, #1582, #1583.
+/// Runs BOTH output profiles (#1586), because a profile that leaked where the
+/// other did not would otherwise be invisible here.
+///
+/// <para>Measured history, same machine, same traps:</para>
+/// <list type="bullet">
+///   <item>first run 2026-09-17: <b>12 of 47</b> leaked, filed as #1581, #1582,
+///     #1583;</item>
+///   <item>after the #1582 attachment work: <b>9 of 47</b>;</item>
+///   <item>after #1586 (the output profiles plus the #1581/#1583 fixes):
+///     <b>0 of 48</b> under Standard and under Maximum;</item>
+///   <item>with the two later #1586 traps — a hidden <c>/OC</c> span inside a
+///     VISIBLE form XObject, and a <c>/Figure</c> <c>/Alt</c> over a redacted
+///     image with no MCID link — <b>0 of 49</b> under both profiles. Both
+///     leaked before their fixes; the form-XObject one was a report that
+///     OVERSTATED (page-level spans removed, the one level down left).</item>
+/// </list>
+/// <para>Corroborated on the same 98 outputs (49 traps × 2 profiles) by tools
+/// that are not excise: mutool, pdftotext and pdfdetach read the token 0
+/// times, and <c>qpdf --check</c> reported 0 structure failures. The check is
+/// not inert — the same tools read the token in <b>49 of 49 INPUTS</b>.</para>
+/// <para>⚠️ It is still a SURVEY: it prints the table and asserts only that it
+/// ran over the traps. The assertions live in <c>RedactionProfileTests</c> and
+/// <c>CarrierTrapIndependentCorroborationTests</c>, so a leak that reappears
+/// here is a diagnosis aid, not the gate.</para>
 /// </summary>
 public sealed class CarrierTrapExciseRedactionSurveyTests
 {
     private readonly ITestOutputHelper _out;
     public CarrierTrapExciseRedactionSurveyTests(ITestOutputHelper o) => _out = o;
 
-    [Fact]
-    public void Survey_ExciseRedactText_OverEveryCarrierTrap()
+    [Theory]
+    [InlineData(RedactionProfile.Standard)]
+    [InlineData(RedactionProfile.Maximum)]
+    public void Survey_ExciseRedactText_OverEveryCarrierTrap(RedactionProfile profile)
     {
         Assert.SkipUnless(Environment.GetEnvironmentVariable("CARRIER_TRAP_SURVEY") == "1",
             "set CARRIER_TRAP_SURVEY=1 to run the excise carrier-trap redaction survey");
@@ -33,7 +58,9 @@ public sealed class CarrierTrapExciseRedactionSurveyTests
         // CARRIER_TRAP_SURVEY_KEEP=<dir> keeps each input and redacted output
         // there, for reproduction with independent tools.
         var keep = Environment.GetEnvironmentVariable("CARRIER_TRAP_SURVEY_KEEP");
-        var dir = string.IsNullOrEmpty(keep) ? Path.Combine(Path.GetTempPath(), $"carrier-survey-{Guid.NewGuid():N}") : keep;
+        var dir = string.IsNullOrEmpty(keep)
+            ? Path.Combine(Path.GetTempPath(), $"carrier-survey-{Guid.NewGuid():N}")
+            : Path.Combine(keep, profile.ToString().ToLowerInvariant());
         Directory.CreateDirectory(dir);
         var rows = new List<string>();
         var leaks = 0;
@@ -50,7 +77,7 @@ public sealed class CarrierTrapExciseRedactionSurveyTests
                         File.WriteAllBytes(Path.Combine(dir, $"{trap.Id}--{trap.Token}.input.pdf"), input);
                     using (var doc = PdfDocument.Open(input))
                     {
-                        doc.RedactText(trap.Token);
+                        doc.RedactText(trap.Token, RedactionOptions.ForProfile(profile));
                         doc.Save(output);
                     }
                     var qpdf = CarrierTrapIndependentCorroborationTests.QpdfDump(output)
@@ -79,7 +106,7 @@ public sealed class CarrierTrapExciseRedactionSurveyTests
                 try { Directory.Delete(dir, recursive: true); } catch (IOException) { }
         }
 
-        _out.WriteLine($"excise RedactText over {rows.Count} carrier traps — {leaks} leak(s):");
+        _out.WriteLine($"excise RedactText ({profile}) over {rows.Count} carrier traps — {leaks} leak(s):");
         foreach (var r in rows) _out.WriteLine("  " + r);
         Assert.True(rows.Count > 20, "the survey must actually exercise the traps");
     }

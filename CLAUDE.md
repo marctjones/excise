@@ -1144,6 +1144,8 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 │   ├── FormXObjectFlattener.cs     # inlines forms so their text is reachable
 │   ├── HiddenTextDetector.cs       # audit: visible-but-unextractable text
 │   ├── PdfDocumentSanitizer.cs     # /Info, XMP, outlines, annots (#608)
+│   ├── RedactionProfile.cs         # Standard / Maximum (#1586)
+│   ├── RedactionFeatureStripper.cs # THE profile removals; both entry points
 │   ├── RedactionCarriers.cs        # typed document-carrier scope
 │   └── XfaXmlCarrier.cs            # safe XML/XFA carrier rewrite
 ├── Content/
@@ -1309,10 +1311,21 @@ This redaction implementation:
   `https://www.irs.gov/-account` to anyone who knows the site. Surfaced as
   `--carrier-policy <carrier>=<mode>` and in Preferences → Redaction.
   ⚠️ A `ReportOnly` carrier STILL HOLDS THE TERM; `RedactionReport.Carriers`
-  says so and `IsCleanSuccess` goes false. ⚠️ **The safety default has NOT been
-  flipped**: #1169 argues URLs and structured metadata should default to
-  `RemoveWhole`, #1187 requires defaults to reproduce prior behaviour, and that
-  conflict is a product decision left to a human.
+  says so and `IsCleanSuccess` goes false.
+  ⚠️ **The #1169 conflict was DECIDED, 2026-09-17, and not by flipping this
+  default** (#1586). Marc's answer was two PROFILES rather than a different
+  per-carrier default: Standard *removes* `/Info` and XMP wholesale (so there
+  is no structured-metadata residue to infer from at all) and keeps
+  `Strip` on the accessibility and navigation carriers; Maximum sets
+  `RemoveWhole` on every kept carrier. The `CarrierScrubPolicy` default is
+  still all-`Strip`, and `RedactionOptions.Maximum` is what changes it — so
+  anything that rebuilds the policy from `CarrierScrubPolicy.Default` silently
+  undoes most of Maximum. Two front ends did exactly that while #1586 was
+  being wired; both now start from the profile's policy.
+  ⚠️ The 3-character scrub floor applies to `Strip` and **not** to
+  `RemoveWhole`: excising "of" from every `/Alt` corrupts unrelated values,
+  which is what the floor is for, while dropping the whole value is
+  destruction the caller chose.
 - ✅ **Whole-word matching is an explicit option** (#1052,
   `RedactionOptions.WholeWord`, `--whole-word`), off by default per #1000.
   It applies to page content and the carrier scrub together (#896), and the
@@ -1330,10 +1343,60 @@ This redaction implementation:
   flow, which REPORTS the exception
   (`RedactedCopySafetyReport.PdfAIdentificationPreserved`) so the dialog can say
   "XMP metadata removed except the PDF/A identification" instead of overstating
-  the scrub. ⚠️ A `pdfuaid` (PDF/UA) claim is deliberately NOT preserved: PDF/UA
-  requires a `dc:title` the strip deletes, so keeping the claim would assert
-  something the file no longer satisfies. Verdicts are veraPDF's
-  (`PdfATests`, `PdfAConformanceConservationTests`), never our writer's.
+  the scrub. ⚠️ **A `pdfuaid` (PDF/UA) claim IS preserved since #1586** — this
+  entry said the opposite until 2026-09-17, on the sound reasoning that PDF/UA
+  requires a `dc:title` the strip deletes. The premise is no longer true: the
+  identity-only packet now carries a **synthesised placeholder** title, so the
+  claim is one the output still satisfies and nothing document-derived rides
+  back in. Measured with veraPDF `-f ua1` on
+  `test-pdfs/pdfua/7.1-t01-pass-a.pdf` (passes as shipped): no `/Metadata` →
+  FAIL 7.1 test 8; `pdfuaid:part` alone → FAIL 7.1 test 9; `pdfuaid:part` +
+  synthesised `dc:title` → PASS. Verdicts are veraPDF's (`PdfATests`,
+  `PdfAConformanceConservationTests`, `RedactionProfileAccessibilityTests`),
+  never our writer's.
+- ✅ **Two output PROFILES, and Standard is the default on every path** (#1586,
+  Marc's decision 2026-09-17: GUI, CLI `redact`, batch `redaction.apply`,
+  scripting, library). `RedactionProfile` / `RedactionOptions.ForProfile` /
+  `.Maximum`; one stripper (`RedactionFeatureStripper`) called from
+  `RedactText` AND `RedactArea`/`RedactAreas`, so the profile cannot be
+  honoured on one path and forgotten on the other (#896).
+  **Standard removes whole**, because a term scrub cannot make these safe:
+  all JavaScript and every external-effect action (`/Launch`, `/SubmitForm`,
+  `/ImportData`, `/GoToR`, `/GoToE`; internal `/GoTo`/`/Named` navigation
+  stays) — found by **walking the reachable object graph**, `/JS` streams
+  included, with the `/Next` chain of each surviving action pruned;
+  `/PieceInfo`; page `/Thumb`; appearance streams of hidden annotations;
+  content in OFF optional-content groups (gated on `IncludeHiddenLayers`);
+  and `/Info` + XMP wholesale, keeping only the PDF/A and PDF/UA
+  identification. **Standard KEEPS and term-scrubs** `/TU`, `/Alt`,
+  `/ActualText`, `/E`, structure `/T`, field names, bookmark titles and link
+  targets. **Maximum** adds remove-whole on every kept carrier plus stripping
+  bookmarks, links, markup and field names, and flattening forms and
+  annotations.
+  ⚠️ **Enumerating known locations is the defect, not the design.** The old
+  `ScrubJavaScript` knew about three places and #1581 sat in the four it did
+  not. A new carrier gets reached by the graph walk, or it does not get
+  reached.
+  ⚠️ **Every removal is REPORTED** (`RedactionReport.Removals`,
+  `RedactedCopySafetyReport.Removals`, CLI `removed:` lines, batch
+  `profileRemovals`) and Maximum reports
+  `AccessibilityAndInteractivityRemoved`. These happen with no term match, so
+  the report is the only thing between them and "the tool mangled my document".
+  ⚠️ **The engine reads the FLAGS, never `RedactionOptions.Profile`** — that is
+  a label for the report. A hand-built option set that destroys accessibility
+  says so too.
+  ⚠️ Gate: `RedactionProfileTests` (25 tests, every removal two-sided — knob on
+  → gone, knob off → present, so a fixture that never carried the payload
+  cannot make it pass), `RedactProfileCommandTests` (the front end, because
+  two front ends nearly undid the profile they asked for) and
+  `RedactionProfileAccessibilityTests` (veraPDF `-f ua1`).
+- ✅ **A tagged document stays PDF/UA-conformant through a Standard redaction**
+  (#1586), and the covering box is marked `/Artifact` (§14.8.2.2). ⚠️ The
+  artifact marking is a FIX, not polish: a filled rectangle appended to a
+  tagged page is neither tagged as real content nor marked as an artifact, so
+  every excise redaction of a tagged PDF failed PDF/UA-1 clause 7.1 — silently,
+  in the core feature, and no test could see it. The new veraPDF gate found it
+  on its first run, while looking for something else.
 - ✅ **Removes every attachment from redacted output by default, on every entry
   point** (#1572). ⚠️ **This default WAS flipped, by Marc's decision on
   2026-09-17** — the one deliberate exception to #1187's "defaults reproduce

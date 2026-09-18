@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "9dd51e36723ab832b1dd7d381d66f21f5894b824bf0e585eee61849281209cca",
+  "sourceFingerprint": "aafb143de423de6e07fd0b736eb854267047cc1cbe7a54cfbd30b6b645fad4ad",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -109,6 +109,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Authoring/PdfUaIdentityXmp.cs",
+      "path": "Excise.Core/Authoring/PdfUaIdentityXmp.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -4574,8 +4584,54 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+      "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Redaction/RedactionOptions.cs",
       "path": "Excise.Core/Redaction/RedactionOptions.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/RedactionProfile.cs",
+      "path": "Excise.Core/Redaction/RedactionProfile.cs",
       "kind": "source-file",
       "facets": [
         "redaction"
@@ -9991,7 +10047,7 @@
     }
   ],
   "summary": {
-    "records": 498,
+    "records": 501,
     "facets": {
       "annotations": 11,
       "content-and-graphics": 19,
@@ -9999,8 +10055,8 @@
       "fonts": 30,
       "forms": 8,
       "images": 31,
-      "product-integration-general": 292,
-      "redaction": 60,
+      "product-integration-general": 293,
+      "redaction": 62,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 20,
       "transparency": 2
@@ -10049,10 +10105,10 @@
       "pdf.17.interactive.redaction-annotations:parse": 11,
       "pdf.17.interactive.redaction-annotations:preserve": 11,
       "pdf.17.interactive.redaction-annotations:render": 11,
-      "pdf.17.security.redaction-content-removal:extract": 60,
-      "pdf.17.security.redaction-content-removal:mutate": 60,
-      "pdf.17.security.redaction-content-removal:render": 60,
-      "pdf.17.security.redaction-content-removal:write": 60,
+      "pdf.17.security.redaction-content-removal:extract": 62,
+      "pdf.17.security.redaction-content-removal:mutate": 62,
+      "pdf.17.security.redaction-content-removal:render": 62,
+      "pdf.17.security.redaction-content-removal:write": 62,
       "pdf.17.syntax.encryption:mutate": 20,
       "pdf.17.syntax.encryption:parse": 20,
       "pdf.17.syntax.encryption:preserve": 20,
@@ -10078,7 +10134,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 20,
       "pdfe.product.security.signature-and-permission-warning:write": 20
     },
-    "fallbackRecords": 292,
+    "fallbackRecords": 293,
     "allRecordsMapped": true
   }
 }

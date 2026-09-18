@@ -42,8 +42,25 @@ namespace Excise.Core.Text.Segmentation;
 /// </remarks>
 internal static class StructureTreeRedactionScrubber
 {
-    /// <summary>Text carriers on a structure element, in scrub order.</summary>
+    /// <summary>
+    /// Text carriers on a MARKED-CONTENT property list (§14.6.2), in scrub
+    /// order. Deliberately NOT the same list as
+    /// <see cref="StructureElementTextCarriers"/>: a property list has no
+    /// title, so adding <c>/T</c> here would scrub an unrelated key a producer
+    /// happens to have called <c>/T</c>.
+    /// </summary>
     internal static readonly string[] TextCarriers = { "ActualText", "Alt", "E" };
+
+    /// <summary>
+    /// Text carriers on a STRUCTURE ELEMENT (§14.7.2 Table 355), in scrub
+    /// order. <c>/T</c> is the element's human-readable title — "Section
+    /// Quillfeather" — and #1583 measured it surviving a redaction that
+    /// cleared <c>/ActualText</c>, <c>/Alt</c> and <c>/E</c> around it. It is
+    /// shown in Acrobat's tag tree and read by assistive technology, so it is
+    /// a carrier in exactly the sense #636 was filed for.
+    /// </summary>
+    internal static readonly string[] StructureElementTextCarriers =
+        { "ActualText", "Alt", "E", "T" };
 
     /// <summary>
     /// Shortest removed run we will content-match on. One- and two-character
@@ -115,7 +132,7 @@ internal static class StructureTreeRedactionScrubber
         HashSet<int> affectedMcids,
         IReadOnlyCollection<string> removedText)
     {
-        var carriers = TextCarriers.Where(elem.ContainsKey).ToList();
+        var carriers = StructureElementTextCarriers.Where(elem.ContainsKey).ToList();
         if (carriers.Count == 0) return false;
 
         // Only touch elements belonging to the page we are redacting. An element

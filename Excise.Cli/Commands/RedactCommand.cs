@@ -110,6 +110,22 @@ internal static class RedactCommand
                 "and any other attachment is reported as NOT checked -- it may still contain the term.",
             DefaultValueFactory = _ => false,
         };
+        var profileOption = new Option<string>("--profile")
+        {
+            Description = "Output profile (#1586). 'standard' (the default) removes the hidden " +
+                "machinery a term scrub cannot make safe: all JavaScript, Launch/SubmitForm/" +
+                "ImportData/GoToR/GoToE actions (internal navigation is kept), /PieceInfo, page " +
+                "thumbnails, appearances of hidden annotations, content in optional-content " +
+                "layers that are OFF by default, and the document /Info and XMP packet (keeping " +
+                "the PDF/A and PDF/UA identification). Accessibility and navigation carriers -- " +
+                "tooltips, /Alt, /ActualText, structure titles, field names, bookmark titles, " +
+                "link targets -- are KEPT and term-scrubbed. " +
+                "'maximum' adds: remove the whole value of every kept carrier, strip bookmarks, " +
+                "link annotations, comments and field names, and flatten forms and annotations. " +
+                "THE OUTPUT IS NO LONGER ACCESSIBLE OR INTERACTIVE.",
+            DefaultValueFactory = _ => "standard",
+        };
+        profileOption.AcceptOnlyFromAmong("standard", "maximum");
         var progressOption = new Option<bool>("--progress")
         {
             Description = "Write page-based overall completion to stderr (0% through 100%).",
@@ -133,6 +149,7 @@ internal static class RedactCommand
             boxColorOption,
             ocrImageTextOption,
             flattenOcrOption,
+            profileOption,
             overshootBoxOption,
             wholeWordOption,
             carrierPolicyOption,
@@ -201,6 +218,11 @@ internal static class RedactCommand
                 return 1;
             }
 
+            var profileName = parseResult.GetValue(profileOption) ?? "standard";
+            var profile = profileName == "maximum"
+                ? Excise.Core.Text.Segmentation.RedactionProfile.Maximum
+                : Excise.Core.Text.Segmentation.RedactionProfile.Standard;
+
             var carrierPolicySpecs = parseResult.GetValue(carrierPolicyOption) ?? Array.Empty<string>();
             if (!TryParseCarrierPolicy(carrierPolicySpecs, out var carrierPolicy, out var policyError))
             {
@@ -240,7 +262,8 @@ internal static class RedactCommand
                     carrierPolicy,
                     parseResult.GetValue(wholeWordOption),
                     overshootBox,
-                    keepAttachments),
+                    keepAttachments,
+                    profile),
                     progress);
 
                 foreach (var diagnostic in result.Diagnostics)
@@ -255,6 +278,17 @@ internal static class RedactCommand
                     Console.WriteLine(
                         $"Redacted {result.Count} occurrence(s) of '{result.Text}'" +
                         (result.WholeWord ? " (whole-word matching)" : ""));
+
+                // #1586: a removal made WITHOUT a term match is destruction the
+                // user is entitled to know about. Printing it is the only thing
+                // between the profile and "the tool mangled my document".
+                foreach (var removal in result.Removals)
+                    Console.WriteLine($"  removed: {removal}");
+                if (result.AccessibilityRemoved)
+                    Console.WriteLine(
+                        "  WARNING: the --profile maximum output is NO LONGER accessible or " +
+                        "interactive: forms and annotations are flattened, and bookmarks, links, " +
+                        "comments, field names and alternate text are gone.");
 
                 foreach (var note in result.CarrierNotes)
                     Console.WriteLine($"  note: {note}");

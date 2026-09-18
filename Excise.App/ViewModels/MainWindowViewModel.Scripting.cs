@@ -357,7 +357,8 @@ public partial class MainWindowViewModel
                         currentInput, currentOutput, text, caseSensitive: false,
                         allowLowConfidence: false, wholeWord: RedactionWholeWord,   // #1052
                         width: RedactionWidthPolicy,                                // #1189
-                        keepAttachments: RedactionKeepAttachments);                 // #1572
+                        keepAttachments: RedactionKeepAttachments,                  // #1572
+                        profile: RedactionProfile);                                 // #1586
 
                     if (!result.Success)
                     {

@@ -2068,8 +2068,10 @@ namespace Excise.Core.Text.Segmentation
     {
         public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.RedactionOptions options) { }
         public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
+        public static Excise.Core.Text.Segmentation.RedactionReport RedactAreaWithReport(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.RedactionOptions options) { }
         public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.RedactionOptions options) { }
         public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
+        public static Excise.Core.Text.Segmentation.RedactionReport RedactAreasWithReport(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.RedactionOptions options) { }
     }
     public enum RedactedContentVerificationStatus
     {
@@ -2102,6 +2104,7 @@ namespace Excise.Core.Text.Segmentation
         public Excise.Core.Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
         public Excise.Core.Operations.RedactionCarriers Carriers { get; init; }
         public bool InspectKeptAttachments { get; init; }
+        public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; init; }
         public bool RefuseOnUnresolvedRedactAnnotations { get; init; }
         public bool RunCarrierAudit { get; init; }
         public bool RunHiddenTextAudit { get; init; }
@@ -2141,7 +2144,11 @@ namespace Excise.Core.Text.Segmentation
                     int UnresolvedRedactAnnotationCount = 0,
                     bool PdfAIdentificationPreserved = false,
                     System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? Attachments = null,
-                    System.Collections.Generic.IReadOnlyList<string>? XfaRemovals = null) { }
+                    System.Collections.Generic.IReadOnlyList<string>? XfaRemovals = null,
+                    Excise.Core.Text.Segmentation.RedactionProfile Profile = 0,
+                    System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals = null,
+                    bool AccessibilityAndInteractivityRemoved = false) { }
+        public bool AccessibilityAndInteractivityRemoved { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> AttachmentResults { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? Attachments { get; init; }
         public bool AttachmentsScrubbed { get; init; }
@@ -2156,10 +2163,13 @@ namespace Excise.Core.Text.Segmentation
         public int InfoFieldsScrubbed { get; init; }
         public bool MetadataScrubbed { get; init; }
         public bool PdfAIdentificationPreserved { get; init; }
+        public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals { get; init; }
         public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus RasterRedactionAuditStatus { get; init; }
         public int RedactionAreaCount { get; init; }
         public int RemainingRasterOverlapCount { get; init; }
         public int RemainingTermCount { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval> Removals { get; }
         public int RequestedTermCount { get; init; }
         public int SkippedRedactionAreaCount { get; init; }
         public int SkippedShortTermCount { get; init; }
@@ -2176,6 +2186,14 @@ namespace Excise.Core.Text.Segmentation
         public int SkippedRedactionAreaCount { get; init; }
         public static Excise.Core.Text.Segmentation.RedactedCopySafetyRequest ForAreas(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyArea> areas, int skippedRedactionAreaCount = 0, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions? options = null) { }
         public static Excise.Core.Text.Segmentation.RedactedCopySafetyRequest ForTerms(System.Collections.Generic.IReadOnlyList<string> terms, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions? options = null) { }
+    }
+    public sealed class RedactedFeatureRemoval : System.IEquatable<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>
+    {
+        public RedactedFeatureRemoval(string Feature, int Count, string? Detail = null) { }
+        public int Count { get; init; }
+        public string? Detail { get; init; }
+        public string Feature { get; init; }
+        public override string ToString() { }
     }
     public sealed class RedactionCarrierAudit : System.IEquatable<Excise.Core.Text.Segmentation.RedactionCarrierAudit>
     {
@@ -2201,13 +2219,28 @@ namespace Excise.Core.Text.Segmentation
         public Excise.Core.Operations.RedactionCarriers Carriers { get; init; }
         public bool CaseSensitive { get; init; }
         public bool DrawBox { get; init; }
+        public bool FlattenInteractiveContent { get; init; }
         public bool IncludeHiddenLayers { get; init; }
         public bool KeepAttachments { get; init; }
+        public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; init; }
+        public bool RemoveBookmarks { get; init; }
+        public bool RemoveExternalActions { get; init; }
+        public bool RemoveFieldNames { get; init; }
+        public bool RemoveHiddenAnnotationAppearances { get; init; }
+        public bool RemoveHiddenLayerContent { get; init; }
+        public bool RemoveLinkAnnotations { get; init; }
+        public bool RemoveMarkupAnnotations { get; init; }
+        public bool RemovePieceInfo { get; init; }
+        public bool RemoveScripts { get; init; }
+        public bool RemoveThumbnails { get; init; }
         public bool ScrubDocumentCarriers { get; init; }
         public Excise.Core.Text.Segmentation.GlyphRemovalStrategy Strategy { get; init; }
+        public bool StripDocumentMetadata { get; init; }
         public bool WholeWord { get; init; }
         public Excise.Core.Text.Segmentation.WidthPolicy Width { get; init; }
         public static Excise.Core.Text.Segmentation.RedactionOptions Default { get; }
+        public static Excise.Core.Text.Segmentation.RedactionOptions Maximum { get; }
+        public static Excise.Core.Text.Segmentation.RedactionOptions ForProfile(Excise.Core.Text.Segmentation.RedactionProfile profile) { }
     }
     public enum RedactionOutcome
     {
@@ -2215,9 +2248,15 @@ namespace Excise.Core.Text.Segmentation
         RemovalUnverified = 1,
         NothingToRemove = 2,
     }
+    public enum RedactionProfile
+    {
+        Standard = 0,
+        Maximum = 1,
+    }
     public sealed class RedactionReport
     {
         public RedactionReport() { }
+        public bool AccessibilityAndInteractivityRemoved { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> Attachments { get; init; }
         public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierResult> Carriers { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HyphenatedTermCandidate> HyphenatedCandidates { get; init; }
@@ -2226,6 +2265,8 @@ namespace Excise.Core.Text.Segmentation
         public bool IsCleanSuccess { get; }
         public int MatchesLocated { get; }
         public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.PageRedactionResult> Pages { get; init; }
+        public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval> Removals { get; init; }
         public int Survived { get; }
         public required string Term { get; init; }
         public int VerifiedRemovals { get; }

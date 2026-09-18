@@ -176,8 +176,188 @@ public sealed record RedactionOptions
     /// </remarks>
     public bool KeepAttachments { get; init; } = false;
 
-    /// <summary>The all-defaults options.</summary>
+    // ── #1586: output profile ───────────────────────────────────────────────
+
+    /// <summary>
+    /// Which output profile this run was asked for — a LABEL for the report,
+    /// not something the engine branches on. Build options with
+    /// <see cref="ForProfile"/>; the individual flags below are what actually
+    /// runs, so a flag changed afterwards wins over the label.
+    /// Default <see cref="RedactionProfile.Standard"/>. Enforced by: Core.
+    /// </summary>
+    public RedactionProfile Profile { get; init; } = RedactionProfile.Standard;
+
+    /// <summary>
+    /// Remove every JavaScript action — the document name tree,
+    /// <c>/OpenAction</c>, and catalog/page/annotation/field <c>/A</c> and
+    /// <c>/AA</c>, including <c>/JS</c> held as a STREAM — whether or not the
+    /// term matches. Default true (#1586, #1581). Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// Turning this off falls back to the TERM SCRUB, which reaches the same
+    /// places but can only cut out the term it was given: a script that
+    /// restates the redacted value in a form excise cannot match still ships.
+    /// </remarks>
+    public bool RemoveScripts { get; init; } = true;
+
+    /// <summary>
+    /// Remove every action whose effect reaches outside this document —
+    /// <c>/Launch</c>, <c>/SubmitForm</c>, <c>/ImportData</c>, <c>/GoToR</c>,
+    /// <c>/GoToE</c>. Internal <c>/GoTo</c> and <c>/Named</c> navigation is
+    /// kept. Default true (#1586, #1581). Enforced by: Core.
+    /// </summary>
+    public bool RemoveExternalActions { get; init; } = true;
+
+    /// <summary>
+    /// Remove <c>/PieceInfo</c> private application data from the catalog and
+    /// every page. Default true (#1586, #1583). Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// A producer's private dictionary can hold anything, including a draft of
+    /// the text on the page, and no consumer other than the producer can read
+    /// it — so there is nothing to lose and no way to scrub it selectively.
+    /// </remarks>
+    public bool RemovePieceInfo { get; init; } = true;
+
+    /// <summary>
+    /// Remove each page's <c>/Thumb</c> thumbnail image. Default true (#1586).
+    /// Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// A thumbnail is a pre-rendered picture of the page BEFORE the redaction.
+    /// Nothing regenerates it, so it survives as a small but complete image of
+    /// what was removed.
+    /// </remarks>
+    public bool RemoveThumbnails { get; init; } = true;
+
+    /// <summary>
+    /// Remove content in optional-content groups that are OFF in the
+    /// document's default configuration, and the groups themselves.
+    /// Default true (#1586). Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ <b>The most destructive Standard step on a real document.</b> A
+    /// hidden layer is often a watermark, a print-only mark or an alternate
+    /// language, and this deletes it. It is on by default because a layer that
+    /// is invisible in the default view is fully extractable by any tool, so a
+    /// reviewer who checked the page has not seen it — and
+    /// <see cref="IncludeHiddenLayers"/> only redacts the TERM there.
+    /// Every removal is counted in <see cref="RedactionReport.Removals"/>.
+    /// </remarks>
+    public bool RemoveHiddenLayerContent { get; init; } = true;
+
+    /// <summary>
+    /// Remove the appearance stream of any annotation or widget flagged Hidden
+    /// or NoView. Default true (#1586, #1581). Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// The appearance of an annotation nothing paints is text with no reader —
+    /// the #1581 <c>widget-appearance</c> trap. Same class as a hidden layer.
+    /// </remarks>
+    public bool RemoveHiddenAnnotationAppearances { get; init; } = true;
+
+    /// <summary>
+    /// Strip the document <c>/Info</c> dictionary and the XMP <c>/Metadata</c>
+    /// packet WHOLESALE instead of cutting the term out of them, keeping only
+    /// the PDF/A and PDF/UA identifications (#1507/#1586). Default true.
+    /// Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// <para>This is what makes the library, CLI and batch paths match the GUI
+    /// safe copy, which has always done the wholesale strip. It also closes the
+    /// #1583 custom-<c>/Info</c>-key leak by construction: a targeted scrub has
+    /// to know the key names, and a producer can invent any.</para>
+    /// <para>⚠️ <b>Changes existing behaviour.</b> Before #1586, a
+    /// <c>RedactText</c> run kept <c>/Title</c>, <c>/Author</c>, the XMP
+    /// packet and every custom schema, minus the term. Set this false to get
+    /// that back.</para>
+    /// </remarks>
+    public bool StripDocumentMetadata { get; init; } = true;
+
+    // ── Maximum-only removals (off by default) ──────────────────────────────
+
+    /// <summary>
+    /// Remove the document outline (bookmarks) entirely. Default false;
+    /// <see cref="RedactionProfile.Maximum"/> sets it. Enforced by: Core.
+    /// </summary>
+    public bool RemoveBookmarks { get; init; } = false;
+
+    /// <summary>
+    /// Remove every Link annotation. Default false;
+    /// <see cref="RedactionProfile.Maximum"/> sets it. Enforced by: Core.
+    /// </summary>
+    public bool RemoveLinkAnnotations { get; init; } = false;
+
+    /// <summary>
+    /// Remove every markup/comment annotation (§12.5.6.2 — Text, Highlight,
+    /// StrikeOut, FreeText, Stamp, Ink, Popup, …). Default false;
+    /// <see cref="RedactionProfile.Maximum"/> sets it. Enforced by: Core.
+    /// </summary>
+    public bool RemoveMarkupAnnotations { get; init; } = false;
+
+    /// <summary>
+    /// Remove AcroForm field names (<c>/T</c>) and tooltips (<c>/TU</c>).
+    /// Default false; <see cref="RedactionProfile.Maximum"/> sets it.
+    /// Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// A field name is frequently a sentence ("Your name as printed on your
+    /// passport") and is the last carrier a reviewer looks at. Removing it
+    /// breaks form submission and screen-reader labelling, which is why this
+    /// belongs to Maximum.
+    /// </remarks>
+    public bool RemoveFieldNames { get; init; } = false;
+
+    /// <summary>
+    /// Flatten forms and annotations into page content, so no interactive
+    /// object survives to carry text. Default false;
+    /// <see cref="RedactionProfile.Maximum"/> sets it. Enforced by: Core.
+    /// </summary>
+    public bool FlattenInteractiveContent { get; init; } = false;
+
+    /// <summary>The all-defaults options — the <see cref="RedactionProfile.Standard"/> profile.</summary>
     public static RedactionOptions Default { get; } = new();
+
+    /// <summary>
+    /// The options for <paramref name="profile"/>. Everything else keeps its
+    /// default; use a <c>with</c> expression to adjust.
+    /// </summary>
+    public static RedactionOptions ForProfile(RedactionProfile profile) => profile switch
+    {
+        RedactionProfile.Maximum => Maximum,
+        _ => Default,
+    };
+
+    /// <summary>
+    /// <see cref="RedactionProfile.Maximum"/>: every Standard removal, plus
+    /// remove-whole on each kept carrier, bookmarks / links / markup / field
+    /// names stripped, and forms and annotations flattened.
+    /// </summary>
+    /// <remarks>
+    /// The <see cref="CarrierPolicy"/> is <see cref="Operations.CarrierScrubMode.RemoveWhole"/>
+    /// on the carriers that are KEPT under Standard, and left at
+    /// <see cref="Operations.CarrierScrubMode.Strip"/> on the rest: <c>/Info</c>,
+    /// XMP, JavaScript, embedded files and XFA are removed wholesale by the
+    /// flags above, so asking for RemoveWhole there would only produce refusal
+    /// rows (the XFA carrier refuses it by design) about carriers that are
+    /// already gone.
+    /// </remarks>
+    public static RedactionOptions Maximum { get; } = new()
+    {
+        Profile = RedactionProfile.Maximum,
+        RemoveBookmarks = true,
+        RemoveLinkAnnotations = true,
+        RemoveMarkupAnnotations = true,
+        RemoveFieldNames = true,
+        FlattenInteractiveContent = true,
+        CarrierPolicy = Operations.CarrierScrubPolicy.Default.With(
+            Operations.RedactionCarriers.Outlines
+            | Operations.RedactionCarriers.Annotations
+            | Operations.RedactionCarriers.FormFields
+            | Operations.RedactionCarriers.StructTree
+            | Operations.RedactionCarriers.ActionUris,
+            Operations.CarrierScrubMode.RemoveWhole),
+    };
 
     internal bool CloseWidth => Width == WidthPolicy.CloseGap;
 }

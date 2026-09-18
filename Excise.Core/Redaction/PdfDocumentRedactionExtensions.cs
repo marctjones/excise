@@ -111,6 +111,7 @@ public static class PdfDocumentRedactionExtensions
             options.WholeWord,
             options.Width == WidthPolicy.OvershootPreserveLayout,
             options.KeepAttachments,
+            options,
             depth: 0);
     }
 
@@ -137,7 +138,22 @@ public static class PdfDocumentRedactionExtensions
         bool overshootBox = false)   // #1189 — widen the box so it stops measuring the run
         => RedactTextCore(document, text, caseSensitive, strategy, drawBlackRect, includeHiddenLayers,
             scrubDocumentCarriers, closeWidth, boxColor, carriers, progress, carrierPolicy, wholeWord,
-            overshootBox, keepAttachments: false, depth: 0);
+            overshootBox, keepAttachments: false,
+            // #1586: this overload gets the Standard profile, like every other
+            // path. That CHANGES ITS BEHAVIOUR — scripts, /PieceInfo,
+            // thumbnails, hidden layers and the metadata packet now go — and
+            // that is the point: a redaction API whose safe form is opt-in is
+            // how #896 happened.
+            // ...with the two parameters that the profile flags also read, so a
+            // caller passing scrubDocumentCarriers: false still gets the
+            // "I will handle the carriers myself" contract rather than a
+            // wholesale metadata strip it did not ask for.
+            profileOptions: RedactionOptions.Default with
+            {
+                ScrubDocumentCarriers = scrubDocumentCarriers,
+                IncludeHiddenLayers = includeHiddenLayers,
+            },
+            depth: 0);
 
     private static RedactionReport RedactTextCore(
         PdfDocument document,
@@ -155,6 +171,11 @@ public static class PdfDocumentRedactionExtensions
         bool wholeWord,
         bool overshootBox,
         bool keepAttachments,
+        // #1586: the OUTPUT PROFILE removals. Threaded as the whole record
+        // rather than another dozen bools because the stripper reads the flags
+        // directly, and because a caller that forgets one gets Standard — the
+        // safe value — instead of silently getting less.
+        RedactionOptions profileOptions,
         int depth)
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
@@ -171,6 +192,7 @@ public static class PdfDocumentRedactionExtensions
                 Pages = pageResults,
                 Carriers = carrierResults,
                 WholeWord = wholeWord,
+                Profile = profileOptions.Profile,
             };
 
         int totalMatches = 0;
@@ -190,7 +212,8 @@ public static class PdfDocumentRedactionExtensions
                 document, new[] { text }, caseSensitive, wholeWord, depth,
                 (nested, term) => RedactTextCore(nested, term, caseSensitive, strategy, drawBlackRect,
                     includeHiddenLayers, scrubDocumentCarriers, closeWidth, boxColor, carriers, null,
-                    carrierPolicy, wholeWord, overshootBox, keepAttachments: true, depth + 1));
+                    carrierPolicy, wholeWord, overshootBox, keepAttachments: true,
+                    profileOptions, depth + 1));
         }
         else
         {
@@ -212,6 +235,15 @@ public static class PdfDocumentRedactionExtensions
             if (removedAttachments.Count > 0)
                 document.RedactionLedger.RecordRemovedAttachments(removedAttachments);
         }
+
+        // #1586: the output-profile removals. Before the page loop, so hidden
+        // optional-content the profile deletes is not also walked for glyph
+        // removal, and before the carrier term-scrub below, so a carrier this
+        // deletes outright is not reported as having been scrubbed by term.
+        var profileRemovals = new List<RedactedFeatureRemoval>();
+        if (RedactionFeatureStripper.ApplyMetadataStrip(document, profileOptions) is { } metadataRow)
+            profileRemovals.Add(metadataRow);
+        profileRemovals.AddRange(RedactionFeatureStripper.Apply(document, profileOptions));
 
         var pageCount = document.PageCount;
         progress?.Invoke(0, pageCount);
@@ -413,7 +445,18 @@ public static class PdfDocumentRedactionExtensions
             // count while /Info, XMP, outlines and annotation /Contents kept the
             // term. Reported now, per the decided policy: surface, don't guess.
             const int minTermLength = 3;
-            if (text.Length < minTermLength)
+            // #1586: a sub-floor term is no longer a blanket skip. The floor is
+            // a STRIP rule — excising "of" from every /Alt corrupts unrelated
+            // values — and it does not apply to a carrier the caller set to
+            // RemoveWhole, which drops the value instead of cutting a fragment
+            // out of it. Skipping the whole pass meant Maximum, whose promise is
+            // that no carrier keeps the term, silently kept a 2-character one.
+            // ScrubTerms itself reports the floor per carrier now.
+            var anyRemoveWhole = Excise.Core.Operations.CarrierScrubPolicy.AllCarriers.Any(
+                c => (carriers & c) != 0
+                     && (carrierPolicy ?? Excise.Core.Operations.CarrierScrubPolicy.Default)
+                         .ModeFor(c) == Excise.Core.Operations.CarrierScrubMode.RemoveWhole);
+            if (text.Length < minTermLength && !anyRemoveWhole)
             {
                 foreach (var (carrier, _) in DocumentCarriers)
                     carrierResults.Add(new CarrierResult(carrier, false,
@@ -513,6 +556,10 @@ public static class PdfDocumentRedactionExtensions
             ImageRegionsRedacted = imageCounts.RegionEdited,
             ImagesDroppedWhole = imageCounts.RemovedWhole,
             HyphenatedCandidates = hyphenCandidates,
+            Profile = profileOptions.Profile,
+            Removals = profileRemovals,
+            AccessibilityAndInteractivityRemoved =
+                RedactionFeatureStripper.DestroysAccessibility(profileOptions),
         };
     }
 
@@ -689,12 +736,29 @@ public static class PdfDocumentRedactionExtensions
         // whole page to do it is exactly the round-trip risk #1093 removes.
         var content = page.GetContentStream(trackSourceSpans: true);
         var ops = content.Operators.ToList();
+        // #1586: marked as an ARTIFACT (§14.8.2.2). In a TAGGED document every
+        // piece of content must be either tagged as real content or marked as
+        // an artifact, and an untagged filled rectangle fails PDF/UA-1 clause
+        // 7.1 — measured with veraPDF, which rejected an otherwise conformant
+        // document purely because of this box ("Content shall be marked as
+        // Artifact or tagged as real content"). A covering box is the textbook
+        // artifact: it carries no meaning, and a screen reader that announced
+        // it would be reading the redaction rather than the document.
+        //
+        // Emitted unconditionally, not only for tagged documents: marked
+        // content in an untagged page is inert, and a conditional would mean
+        // the box is accessible only where somebody remembered to check.
+        ops.Add(new ContentOperator("BMC", new Excise.Core.Primitives.PdfObject[]
+        {
+            new Excise.Core.Primitives.PdfName("Artifact"),
+        }));
         ops.Add(ContentOperator.SaveState());
         ops.Add(ContentOperator.SetFillRgb(r, g, b));
         ops.Add(ContentOperator.Rectangle(
             rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom));
         ops.Add(ContentOperator.Fill());
         ops.Add(ContentOperator.RestoreState());
+        ops.Add(new ContentOperator("EMC"));
         page.SetContentStream(new ContentStream(ops) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
     }
 

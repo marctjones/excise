@@ -29,6 +29,29 @@ public enum RedactionOutcome
 /// </summary>
 public sealed record CarrierResult(string Carrier, bool Scrubbed, string? RefusedReason);
 
+/// <summary>
+/// One thing the output profile REMOVED WHOLE, rather than scrubbing a term out
+/// of it (#1586). Reported because a user who does not know their JavaScript,
+/// hidden layers or thumbnails are gone cannot tell a redaction from a
+/// mangling — and because "we removed it" is the only evidence that a carrier
+/// which cannot be scrubbed selectively was dealt with at all.
+/// </summary>
+/// <param name="Feature">
+/// What was removed, in the words a person would use ("JavaScript actions",
+/// "hidden optional-content layers").
+/// </param>
+/// <param name="Count">How many of them. Zero rows are not reported.</param>
+/// <param name="Detail">
+/// Optional extra a reviewer might need — e.g. that the XMP packet went but
+/// the PDF/A identification stayed.
+/// </param>
+public sealed record RedactedFeatureRemoval(string Feature, int Count, string? Detail = null)
+{
+    /// <inheritdoc/>
+    public override string ToString() =>
+        Detail == null ? $"{Count} × {Feature}" : $"{Count} × {Feature} ({Detail})";
+}
+
 /// <summary>Per-page detail.</summary>
 public sealed record PageRedactionResult(
     int PageNumber,
@@ -125,6 +148,40 @@ public sealed class RedactionReport
     public bool WholeWord { get; init; }
 
     /// <summary>
+    /// The output profile this run was asked for (#1586). Recorded for the same
+    /// reason as <see cref="WholeWord"/>: the policy that ran is part of the
+    /// result.
+    /// </summary>
+    public RedactionProfile Profile { get; init; } = RedactionProfile.Standard;
+
+    /// <summary>
+    /// What the profile removed WHOLE, feature by feature (#1586). Empty when
+    /// the document had none of it.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ These are removals the redaction made on the user's behalf WITHOUT a
+    /// term match — a JavaScript action, a hidden layer, a thumbnail. They are
+    /// not failures, and they do not make <see cref="IsCleanSuccess"/> false;
+    /// they are destruction a reviewer is entitled to know about.
+    /// </remarks>
+    public IReadOnlyList<RedactedFeatureRemoval> Removals { get; init; }
+        = Array.Empty<RedactedFeatureRemoval>();
+
+    /// <summary>
+    /// True when this run removed the document's accessibility and interactive
+    /// structure — <see cref="RedactionProfile.Maximum"/> (#1586). The output
+    /// will not pass PDF/UA, will not submit, and will not read correctly to a
+    /// screen reader.
+    /// </summary>
+    /// <remarks>
+    /// Stated as a property rather than left for the caller to infer from
+    /// <see cref="Profile"/>, because a front end must be able to SAY it — and
+    /// because the individual flags, not the profile label, are what the engine
+    /// honours, so a hand-built option set can trip this too.
+    /// </remarks>
+    public bool AccessibilityAndInteractivityRemoved { get; init; }
+
+    /// <summary>
     /// Images whose term region was blacked out in place, preserving the rest of
     /// the image (#1195). Informational.
     /// </summary>
@@ -190,6 +247,9 @@ public sealed class RedactionReport
         var removedFiles = Attachments.Count(a => a.Disposition == Excise.Core.Document.AttachmentDisposition.Removed);
         if (removedFiles > 0)
             parts.Add($"{removedFiles} attachment(s) removed");
+        foreach (var r in Removals) parts.Add(r.ToString());
+        if (AccessibilityAndInteractivityRemoved)
+            parts.Add("output is NO LONGER accessible or interactive (maximum profile)");
         foreach (var a in Attachments.Where(a => !a.IsClean))
             parts.Add($"attachment {a}");
         return string.Join("; ", parts);

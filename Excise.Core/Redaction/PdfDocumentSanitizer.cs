@@ -100,12 +100,27 @@ public static class PdfDocumentSanitizer
         ArgumentNullException.ThrowIfNull(terms);
         ArgumentNullException.ThrowIfNull(policy);
 
-        var actionable = terms
-            .Where(t => !string.IsNullOrWhiteSpace(t) && t.Length >= MinTermLength)
-            .Distinct(caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
+        var comparer = caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+        var present = terms
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Distinct(comparer)
             .ToList();
 
-        if (actionable.Count == 0) return CarrierScrubOutcome.Empty;
+        // The MinTermLength floor applies to STRIP and not to REMOVEWHOLE
+        // (#1586). Stripping "of" out of every /Alt in a document corrupts
+        // unrelated values for no security benefit — that is what the floor is
+        // for, and it stays. RemoveWhole excises no fragment: it drops the
+        // value, which is destruction the caller chose deliberately (it is
+        // Maximum's mode, and Maximum already declares the output no longer
+        // accessible). Applying the floor there instead left a 2-character
+        // term sitting in a carrier under the one profile whose whole promise
+        // is that no carrier keeps it.
+        var actionable = present.Where(t => t.Length >= MinTermLength).ToList();
+        var belowFloor = present.Count != actionable.Count;
+
+        if (present.Count == 0) return CarrierScrubOutcome.Empty;
+        if (actionable.Count == 0 && !AnyCarrierRemovesWhole(carriers, policy))
+            return CarrierScrubOutcome.Empty;
 
         var changed = false;
         var invalidation = PdfDocumentDerivedStateScope.None;
@@ -135,11 +150,31 @@ public static class PdfDocumentSanitizer
                 return;
             }
 
-            var scrub = new CarrierScrub(actionable, caseSensitive, mode, wholeWord);
+            var stageTerms = mode == CarrierScrubMode.RemoveWhole ? present : actionable;
+            if (stageTerms.Count == 0)
+            {
+                // Every term this caller gave is below the floor and this
+                // carrier strips rather than removes whole. Say so — a silently
+                // absent row reads as "nothing to do here".
+                rows.Add(new CarrierScrubResult(carrier, mode, TermFound: false, Modified: false,
+                    RefusedReason:
+                        $"every term is under {MinTermLength} characters; the {CarrierScrubMode.Strip} " +
+                        $"scrub floor is {MinTermLength}. Use {CarrierScrubMode.RemoveWhole} for this carrier " +
+                        "to drop the whole value instead"));
+                return;
+            }
+
+            var scrub = new CarrierScrub(stageTerms, caseSensitive, mode, wholeWord);
             var stageChanged = run(scrub);
             changed |= stageChanged;
             if (stageChanged) invalidation |= scope;
-            rows.Add(new CarrierScrubResult(carrier, mode, scrub.TermFound, stageChanged));
+            rows.Add(new CarrierScrubResult(carrier, mode, scrub.TermFound, stageChanged,
+                // A carrier that DID run, but on a reduced term list, is not a
+                // clean outcome for the terms it could not act on.
+                belowFloor && mode != CarrierScrubMode.RemoveWhole
+                    ? $"one or more terms are under {MinTermLength} characters and were not "
+                      + $"scrubbed from this carrier (the {CarrierScrubMode.Strip} floor)"
+                    : null));
         }
 
         Stage(RedactionCarriers.Info, s => ScrubInfo(document, s), PdfDocumentDerivedStateScope.Metadata);
@@ -165,6 +200,15 @@ public static class PdfDocumentSanitizer
 
         return new CarrierScrubOutcome(changed, rows);
     }
+
+    /// <summary>
+    /// Whether any in-scope carrier is set to
+    /// <see cref="CarrierScrubMode.RemoveWhole"/> — the one mode the
+    /// <see cref="MinTermLength"/> floor does not apply to.
+    /// </summary>
+    private static bool AnyCarrierRemovesWhole(RedactionCarriers carriers, CarrierScrubPolicy policy)
+        => CarrierScrubPolicy.AllCarriers.Any(
+            c => (carriers & c) != 0 && policy.ModeFor(c) == CarrierScrubMode.RemoveWhole);
 
     /// <summary>
     /// The per-carrier scrub decision, in one place (#1188). Each carrier walker
@@ -373,7 +417,16 @@ public static class PdfDocumentSanitizer
             // leaked. These are SEMANTIC values, so cut without trimming, exactly
             // as #1038 does — "Fallback SECRET" becomes "Fallback ", not
             // "Fallback" (and a second pass over an already-cut value is a no-op).
-            foreach (var key in new[] { "V", "DV" })
+            //
+            // #1581/#1586 adds /RV, the RICH-TEXT value (§12.7.4.3), for the
+            // same reason one step further on. The area path now scrubs it too,
+            // but the area path could not reach the measured trap at all: the
+            // widget sat at [72 600 272 620] while the term was drawn at y 680,
+            // so no match box ever overlapped it — and /RV needs no /V, so
+            // nothing else on the field drew excise's attention either. mutool
+            // DRAWS /RV, which is the part that makes it not merely a file-bytes
+            // leak: the redacted name was still on the page in another reader.
+            foreach (var key in new[] { "V", "DV", "RV" })
             {
                 if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
                     continue;
@@ -409,7 +462,9 @@ public static class PdfDocumentSanitizer
         {
             if (document.Resolve(stack.Pop()) is not PdfDictionary node || !visited.Add(node))
                 continue;
-            foreach (var key in new[] { "ActualText", "Alt", "E" })
+            // #1583: /T, the element title, is in this list too — see
+            // StructureTreeRedactionScrubber.StructureElementTextCarriers.
+            foreach (var key in Excise.Core.Text.Segmentation.StructureTreeRedactionScrubber.StructureElementTextCarriers)
             {
                 if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
                     continue;

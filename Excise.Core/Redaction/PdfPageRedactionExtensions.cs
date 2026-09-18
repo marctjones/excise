@@ -136,11 +136,42 @@ public static class PdfPageRedactionExtensions
     /// <see cref="RedactionOptions.KeepAttachments"/>) apply; the rest are RedactText-only.
     /// </summary>
     public static void RedactArea(this PdfPage page, PdfRectangle area, RedactionOptions options)
+        => page.RedactAreaWithReport(area, options);
+
+    /// <summary>
+    /// <see cref="RedactArea(PdfPage, PdfRectangle, RedactionOptions)"/>, and
+    /// tell the caller what the output profile removed (#1586).
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Why this exists.</b> The area path had no return channel at
+    /// all, so the profile removals — every script, the metadata packet, a
+    /// hidden layer — happened with nothing able to say so. A front end that
+    /// cannot report a removal it made on the user's behalf is the same shape
+    /// as a carrier that silently keeps a term.</para>
+    /// <para>⚠️ <b>The report is not a match report.</b> Area redaction has no
+    /// term, so <see cref="RedactionReport.Term"/> is empty and
+    /// <see cref="RedactionReport.Pages"/>, <see cref="RedactionReport.MatchesLocated"/>
+    /// and <see cref="RedactionReport.VerifiedRemovals"/> are all zero. Those
+    /// zeros mean "not applicable", not "nothing was redacted" — the geometry
+    /// the caller asked for was rewritten regardless. Read
+    /// <see cref="RedactionReport.Removals"/> and
+    /// <see cref="RedactionReport.Carriers"/>.</para>
+    /// </remarks>
+    public static RedactionReport RedactAreaWithReport(
+        this PdfPage page, PdfRectangle area, RedactionOptions options)
     {
+        if (page == null) throw new System.ArgumentNullException(nameof(page));
         if (options == null) throw new System.ArgumentNullException(nameof(options));
-        page.RedactAreaInternal(area, area, options.Strategy,
+        // #1586: the profile removals go first, for the same reasons as on the
+        // RedactText path — hidden optional content the profile deletes is not
+        // then walked for glyph removal, and the #1507 metadata strip runs
+        // before #1499's per-widget appearance decision reads TargetsPdfA.
+        var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
+        var imageCounts = page.RedactAreaInternal(area, area, options.Strategy,
             options.ScrubDocumentCarriers, options.CloseWidth,
             removeAttachments: !options.KeepAttachments);
+        return AreaReport(page.Document, options, metadataRow,
+            RedactionFeatureStripper.Apply(page.Document, options), imageCounts);
     }
 
     public static void RedactArea(
@@ -285,12 +316,84 @@ public static class PdfPageRedactionExtensions
         this PdfPage page,
         System.Collections.Generic.IEnumerable<PdfRectangle> areas,
         RedactionOptions options)
+        => page.RedactAreasWithReport(areas, options);
+
+    /// <summary>
+    /// <see cref="RedactAreas(PdfPage, System.Collections.Generic.IEnumerable{PdfRectangle}, RedactionOptions)"/>,
+    /// and tell the caller what the output profile removed (#1586). See
+    /// <see cref="RedactAreaWithReport"/> for what the report's zero counts
+    /// mean.
+    /// </summary>
+    public static RedactionReport RedactAreasWithReport(
+        this PdfPage page,
+        System.Collections.Generic.IEnumerable<PdfRectangle> areas,
+        RedactionOptions options)
     {
+        if (page == null) throw new System.ArgumentNullException(nameof(page));
         if (options == null) throw new System.ArgumentNullException(nameof(options));
+        var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
         var list = areas.Select(a => a.Normalize()).ToList();
-        page.RedactAreasInternal(list, list, options.Strategy,
+        var imageCounts = page.RedactAreasInternal(list, list, options.Strategy,
             options.ScrubDocumentCarriers, options.CloseWidth,
             removeAttachments: !options.KeepAttachments);
+        return AreaReport(page.Document, options, metadataRow,
+            RedactionFeatureStripper.Apply(page.Document, options), imageCounts);
+    }
+
+    /// <summary>
+    /// The report an area redaction returns: no term, no per-page match
+    /// counts, and the profile removals plus whatever the XFA/attachment
+    /// passes recorded on the document's redaction ledger.
+    /// </summary>
+    private static RedactionReport AreaReport(
+        Excise.Core.Document.PdfDocument document,
+        RedactionOptions options,
+        RedactedFeatureRemoval? metadataRow,
+        System.Collections.Generic.IReadOnlyList<RedactedFeatureRemoval> removals,
+        ImageRedactionCounts imageCounts)
+    {
+        var all = metadataRow == null
+            ? removals.ToList()
+            : new[] { metadataRow }.Concat(removals).ToList();
+        var carriers = new System.Collections.Generic.List<CarrierResult>();
+
+        // #1586 trap: an image was blacked out, and the structure tree
+        // describes an image in an /Alt with NO content link. Neither
+        // StructureTreeRedactionScrubber pass can reach it — pass 1 needs the
+        // structural link, pass 2 matches against removed TEXT and an image
+        // redaction removes none. So it is reported (Standard) or removed
+        // whole (Maximum), never silently left behind while IsCleanSuccess
+        // says the redaction was clean.
+        if (imageCounts.RegionEdited > 0 || imageCounts.RemovedWhole > 0)
+        {
+            var (refused, removed) =
+                RedactionFeatureStripper.ResolveUnlinkedAlternateText(document, options);
+            if (removed > 0)
+                all.Add(new RedactedFeatureRemoval("unlinked alternate-text value(s)", removed,
+                    "described content with no structural link, so it could not be checked"));
+            // Recorded, not just returned: the GUI calls the void RedactArea
+            // overload and drops this report, and RedactedCopySafetyPolicy
+            // reads the ledger to build the dialog's carrier rows.
+            if (refused > 0) document.RedactionLedger.RecordUncheckableAlternateText(refused);
+            if (refused > 0)
+                carriers.Add(new CarrierResult("structure-tree /Alt", false,
+                    $"{refused} alternate-text element(s) have no content link, so they could "
+                    + "not be checked against the redacted image(s) — review them by hand, or "
+                    + "use the maximum profile to drop them"));
+        }
+
+        return new()
+        {
+            Term = "",
+            Pages = System.Array.Empty<PageRedactionResult>(),
+            Carriers = carriers,
+            Attachments = document.RedactionLedger.RemovedAttachments,
+            Profile = options.Profile,
+            // The metadata strip ran first and is reported first.
+            Removals = all,
+            AccessibilityAndInteractivityRemoved =
+                RedactionFeatureStripper.DestroysAccessibility(options),
+        };
     }
 
     public static void RedactAreas(

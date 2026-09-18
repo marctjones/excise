@@ -100,6 +100,20 @@ public static class RedactedCopySafetyPolicy
                 }));
         }
 
+        // #1586: the profile's non-metadata removals. The engine pass already
+        // did this, so every call here is a no-op on a document that went
+        // through it — which is the point: the rows let the safety report say
+        // what a redacted copy no longer contains, and the area path had no
+        // other way to say it.
+        var profileOptions = RedactionOptions.ForProfile(options.Profile) with
+        {
+            CarrierPolicy = options.CarrierPolicy,
+            Carriers = options.Carriers,
+            WholeWord = options.WholeWord,
+            KeepAttachments = !options.ScrubAttachments,
+        };
+        var profileRemovals = RedactionFeatureStripper.Apply(document, profileOptions);
+
         var infoFieldsBefore = options.ScrubMetadata
             ? CountScrubbableInfoFields(document)
             : 0;
@@ -204,6 +218,22 @@ public static class RedactedCopySafetyPolicy
                 warnings.Add($"Kept attachment {file}.");
         }
 
+        // #1586: an /Alt or /ActualText describing an image an AREA redaction
+        // blacked out, with no /MCID link and no removed text to match on, so
+        // NEITHER structure-tree pass could check it. Read off the ledger
+        // because the GUI calls the void RedactArea overload and drops the
+        // engine's report — see PdfDocumentRedactionLedger. Standard keeps the
+        // carrier and REPORTS it; a report nobody receives is not one.
+        var uncheckableAlt = document.RedactionLedger.UncheckableAlternateText;
+        if (uncheckableAlt > 0)
+        {
+            warnings.Add(
+                $"Carrier structure-tree /Alt: {uncheckableAlt} alternate-text element(s) " +
+                "describe redacted image content but have no link to it, so they could NOT be " +
+                "checked — read them before sharing this copy, or use the maximum output " +
+                "profile to drop them.");
+        }
+
         if (options.RunCarrierAudit)
         {
             // Runs after any surgical scrub so it reports what survived, not
@@ -236,6 +266,20 @@ public static class RedactedCopySafetyPolicy
             warnings,
             failedStages);
 
+        // #1586: Maximum destroys the document's accessibility and
+        // interactivity, and the issue requires the report to SAY so. A warning,
+        // not a quiet field: the user chose a destructive profile and the copy
+        // they are about to ship will not read correctly to a screen reader,
+        // will not submit, and has no bookmarks, links or comments.
+        if (RedactionFeatureStripper.DestroysAccessibility(profileOptions))
+        {
+            warnings.Add(
+                "Maximum profile: this copy is NO LONGER accessible or interactive. Forms and " +
+                "annotations are flattened, and bookmarks, links, comments, field names and " +
+                "alternate text have been removed. It will not pass PDF/UA and will not read " +
+                "correctly to a screen reader.");
+        }
+
         return new RedactedCopySafetyReport(
             RedactionAreaCount: request.RedactionAreas.Count,
             SkippedRedactionAreaCount: request.SkippedRedactionAreaCount,
@@ -258,7 +302,11 @@ public static class RedactedCopySafetyPolicy
             UnresolvedRedactAnnotationCount: unresolvedRedactMarks,
             PdfAIdentificationPreserved: pdfAIdentificationPreserved,   // #1507
             Attachments: attachmentResults,                              // #1572
-            XfaRemovals: document.RedactionLedger.XfaRemovals.ToList()); // #1574
+            XfaRemovals: document.RedactionLedger.XfaRemovals.ToList(), // #1574
+            Profile: options.Profile,                                    // #1586
+            ProfileRemovals: profileRemovals,
+            AccessibilityAndInteractivityRemoved:
+                RedactionFeatureStripper.DestroysAccessibility(profileOptions));
     }
 
     /// <summary>

@@ -186,6 +186,25 @@ Rules enforced by the batch contract:
   the step with `ATTACHMENT_REFUSED`; a PDF portfolio fails with
   `PORTFOLIO_REFUSED` unless `keepAttachments: true` (both category
   `SECURITY`, nothing written).
+- `redaction.apply` runs the **Standard output profile** by default (#1586,
+  decided 2026-09-17), which also removes the hidden machinery a term scrub
+  cannot make safe: all JavaScript and every `/Launch`, `/SubmitForm`,
+  `/ImportData`, `/GoToR` and `/GoToE` action (internal `/GoTo` and `/Named`
+  navigation is kept), `/PieceInfo`, page thumbnails, the appearance streams of
+  hidden annotations, content on optional-content layers that are OFF by
+  default, and the document `/Info` and XMP packet — keeping only the PDF/A and
+  PDF/UA identification, so a tagged accessible document stays conformant.
+  Accessibility and navigation carriers (`/TU`, `/Alt`, `/ActualText`, `/E`,
+  structure titles, field names, bookmark titles, link targets) are KEPT and
+  term-scrubbed. Every removal is listed in the step result's
+  `profileRemovals` array, with `profile` naming which one ran.
+  `profile: "maximum"` adds remove-whole on every kept carrier and strips
+  bookmarks, link annotations, comments and field names and flattens forms and
+  annotations; the step result then sets `accessibilityRemoved: true` — **the
+  output is no longer accessible or interactive**. An unrecognised value fails
+  the step with `INVALID_PROFILE` rather than falling back to the weaker
+  profile: a typo that quietly gives you less redaction than you asked for is
+  the failure this refuses to allow.
 - Document `/P` permissions are enforced (#642): `text.extract` and
   `render.page` require the document's copy/extract permission, `form.fillForm`
   requires the form fill-in permission, and `form.addField` requires the modify

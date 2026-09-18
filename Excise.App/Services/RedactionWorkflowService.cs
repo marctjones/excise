@@ -78,7 +78,8 @@ internal sealed class RedactionWorkflowService
             _redactionService.RedactArea(
                 request.Document.Pages[redaction.PageNumber - 1],
                 redaction.PageArea,
-                keepAttachments: !request.SafetyOptions.ScrubAttachments);
+                keepAttachments: !request.SafetyOptions.ScrubAttachments,
+                profile: request.SafetyOptions.Profile);   // #1586
         }
 
         var appliedTypewriterOperations = PdfTypewriterTextApplier.Apply(

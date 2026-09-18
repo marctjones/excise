@@ -72,6 +72,25 @@ public static class VeraPdfReferenceValidator
     /// flavour from the file's metadata. Returns null when veraPDF is absent.
     /// </summary>
     public static VeraPdfResult? Validate(string pdfPath, int timeoutMs = 120_000)
+        => Validate(pdfPath, null, timeoutMs);
+
+    /// <summary>
+    /// Validate <paramref name="pdfPath"/> against a NAMED profile
+    /// (<c>ua1</c>, <c>ua2</c>, <c>1b</c>, <c>4</c>…) instead of letting
+    /// veraPDF auto-detect one.
+    /// </summary>
+    /// <remarks>
+    /// <para>Needed for PDF/UA (#1586). Auto-detection reads the flavour from
+    /// <c>pdfaid</c>, so a file that declares only <c>pdfuaid</c> is not
+    /// detected as anything and the auto-detect verdict says nothing about its
+    /// accessibility conformance. Naming the profile is the only way to ask
+    /// the PDF/UA question.</para>
+    /// <para>⚠️ A named profile makes veraPDF validate against it whether or
+    /// not the file CLAIMS it, so a passing verdict here is "conforms to ua1",
+    /// not "declares and conforms". Check the declaration separately when that
+    /// distinction matters.</para>
+    /// </remarks>
+    public static VeraPdfResult? Validate(string pdfPath, string? flavour, int timeoutMs = 120_000)
     {
         if (!IsAvailable) return null;
 
@@ -86,6 +105,11 @@ public static class VeraPdfReferenceValidator
             };
             psi.ArgumentList.Add("--format");
             psi.ArgumentList.Add("text");
+            if (flavour != null)
+            {
+                psi.ArgumentList.Add("-f");
+                psi.ArgumentList.Add(flavour);
+            }
             psi.ArgumentList.Add(pdfPath);
 
             using var proc = Process.Start(psi);

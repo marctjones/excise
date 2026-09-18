@@ -248,6 +248,20 @@
                         <Separator/>
 
                         <StackPanel Spacing="8">
+                            <TextBlock Text="Output Profile" FontWeight="Medium"/>
+                            <ComboBox x:Name="RedactionProfileComboBox"
+                                      ItemsSource="{Binding RedactionProfileOptions}"
+                                      SelectedItem="{Binding SelectedRedactionProfile}"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="Redaction Output Profile"
+                                      AutomationProperties.HelpText="How much of the PDF's hidden machinery a redaction removes."/>
+                            <TextBlock Text="Standard (default): also removes the parts of the PDF that can repeat the page and that cutting a word out cannot make safe — all JavaScript, actions that open files or submit data (page links still work), the producer's private data, page thumbnails, the appearance of hidden fields, content on layers that are switched off, and the document properties and XMP (a PDF/A or PDF/UA marker is kept). Tooltips, alternate text, structure titles, field names, bookmark titles and link targets are KEPT, with the redacted word cut out. Maximum: all of that, plus the whole value of every kept item is dropped, bookmarks, links, comments and field names are stripped, and forms and annotations are flattened — THE RESULT IS NO LONGER ACCESSIBLE OR INTERACTIVE, so a screen reader cannot read it properly and forms no longer work."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
                             <TextBlock Text="Match Rule" FontWeight="Medium"/>
                             <CheckBox x:Name="RedactionWholeWordCheckBox"
                                       Content="Whole words only"
@@ -295,7 +309,7 @@
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Link URL Redaction Policy"
                                       AutomationProperties.HelpText="How a link target containing the redacted text is handled."/>
-                            <TextBlock Text="Strip (default): cut the word out of the URL, leaving the rest. RemoveWhole: drop the entire link target, so no surrounding text survives to infer the word from. ReportOnly: change nothing and list the link in the redaction report for you to decide."
+                            <TextBlock Text="Strip (default): cut the word out of the URL, leaving the rest — and, under the Maximum profile, let that profile's own choice stand. RemoveWhole: drop the entire link target, so no surrounding text survives to infer the word from. ReportOnly: change nothing and list the link in the redaction report for you to decide."
                                        FontSize="10"
                                        Foreground="{DynamicResource TextTertiaryBrush}"
                                        TextWrapping="Wrap"/>
