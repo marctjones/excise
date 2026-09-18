@@ -143,6 +143,21 @@ cmd_fetch() {
             rm -f "$tmp"; failed=$((failed+1)); sleep "$DELAY"; continue
         fi
 
+        # ⚠️ Is it a PDF AT ALL? A server that answers with an interstitial
+        # rather than an error returns 200 and a body, and curl -f is happy.
+        # Measured on justice.gov's Epstein files: twelve requests returned
+        # twelve byte-identical 54 KB copies of an AGE-VERIFICATION page, each
+        # saved as <id>.pdf. The sha check below catches that only because a
+        # hash was already recorded — for a row whose hash is being established
+        # for the first time, an interstitial would be hashed AS the document
+        # and pinned. Check the magic bytes before anything else.
+        if [ "$(head -c 5 "$tmp")" != "%PDF-" ]; then
+            echo "  ${RED}not a PDF${RESET} — the server returned something else"
+            echo "  ${DIM}first bytes: $(head -c 40 "$tmp" | tr -d '\0' | tr '\n' ' ')${RESET}"
+            echo "  ${DIM}an age gate, a login wall or a consent page answers 200 with a body${RESET}"
+            rm -f "$tmp"; failed=$((failed+1)); sleep "$DELAY"; continue
+        fi
+
         local actual; actual="$(sha_of "$tmp")"
         if [ "$actual" != "$sha" ]; then
             # The document at a vetted URL changed. The vetting record describes
