@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1278,
-  "indexedContentSha256": "bf702344901606f6477f626b0af2646e7d7e7acc2ba59f466f47e18ee02636d5",
+  "indexedFileCount": 1280,
+  "indexedContentSha256": "e5d951bf92f538e6b58319e2e740fd9708d8822fc9eb651cdcf5f1e8e14f325f",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7953,7 +7953,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 574
+      "candidateReferenceCount": 577
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8774,7 +8774,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 290
+      "candidateReferenceCount": 291
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -11323,7 +11323,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 163
+      "candidateReferenceCount": 164
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -53383,7 +53383,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 199
+      "candidateReferenceCount": 198
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -57935,6 +57935,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/RealWorldLeakSurveyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionCompressedCanaryMutationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58108,19 +58118,9 @@
             "action",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/RedactionWorkflowServiceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "applied",
-            "redaction",
-            "action",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 85
+      "candidateReferenceCount": 86
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -59128,7 +59128,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 177
+      "candidateReferenceCount": 178
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -64902,7 +64902,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 616
+      "candidateReferenceCount": 617
     },
     {
       "id": "pdf.20.extension.developer",
@@ -67619,7 +67619,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 124
+      "candidateReferenceCount": 125
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -72297,7 +72297,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 138
+      "candidateReferenceCount": 139
     },
     {
       "id": "pdfe.product.platform.printing",

@@ -138,3 +138,5 @@ scripts/.run-full-conformance.sh   # tracked despite the dot; manual conformance
 scripts/report-gates.sh   # the report reducer (every runner ends with it; it never runs a test)
 scripts/report_gates.py   # body of report-gates.sh
 scripts/build-aot-cli.sh   # #1389/#1390 - publishes the Native AOT CLI; owns the LIBRARY_PATH recipe the link needs. No gate row runs it; called by hand and by the reference-performance bench via EXCISE_BENCHMARK_CLI_COMMAND. #1390 proposes a gate that would call it - move this entry when that lands
+scripts/download-unredaction-bench.sh   # #1591 - fetches the bench's vetted real-world documents; manifest-driven, run by hand
+scripts/download-recap-corpus.sh   # #1603 - RECAP bad-redaction sweep (x-ray-gated, clean files discarded); run by hand, no gate row
