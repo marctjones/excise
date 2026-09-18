@@ -169,7 +169,13 @@ run_hook() {
     rm -f "$REPO/.tier-invocation"
     local lines="" line
     for line in "$@"; do lines+="$line"$'\n'; done
-    HOOK_OUT="$(printf '%s' "$lines" | scripts/pre-push-hook.sh 2>&1)" && HOOK_RC=0 || HOOK_RC=$?
+    # The hook must be judged on what IT exports, so strip anything the
+    # surrounding runner already put in the environment: a t1 run exports
+    # GATE_ASYMMETRY_BASE for its own gate row, and an inherited value made the
+    # all-zero-remote case read base=<that> instead of base=<unset>.
+    HOOK_OUT="$(printf '%s' "$lines" \
+        | env -u GATE_ASYMMETRY_BASE -u GATE_ASYMMETRY_HEAD scripts/pre-push-hook.sh 2>&1)" \
+        && HOOK_RC=0 || HOOK_RC=$?
     if [ -f "$REPO/.tier-invocation" ]; then
         HOOK_RAN="$(cat "$REPO/.tier-invocation")"
     else
