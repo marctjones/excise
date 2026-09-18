@@ -69,6 +69,9 @@ public partial class MainWindowViewModel
         {
             this.RaiseAndSetIfChanged(ref _isAttachmentsSidebarVisible, value);
             this.RaisePropertyChanged(nameof(IsLeftSidebarVisible));
+            // The banner says either "See the Attachments pane" or how to show
+            // it; hiding the pane while it is up must not leave it lying.
+            this.RaisePropertyChanged(nameof(AttachmentsNoticeMessage));
         }
     }
 
@@ -156,6 +159,7 @@ public partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(AttachmentsSummary));
         this.RaisePropertyChanged(nameof(AttachmentsEmptyText));
         this.RaisePropertyChanged(nameof(AttachmentsCountText));
+        this.RaisePropertyChanged(nameof(AttachmentsNoticeMessage));
     }
 
     private static AttachmentEntry ToEntry(PdfEmbeddedFile file) => new(
@@ -442,22 +446,73 @@ public partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(StatusBarText));
     }
 
+    /// <summary>Title of the attachments banner.</summary>
+    internal const string AttachmentsNoticeTitleText = "Document has attachments";
+
+    /// <summary>Title of the attachments banner, for the view to bind to.</summary>
+    public string AttachmentsNoticeTitle => AttachmentsNoticeTitleText;
+
+    private bool _isAttachmentsNoticeOpen;
+
     /// <summary>
-    /// The toast shown when an opened document carries attachments (#1414's
+    /// Whether the attachments banner is showing. The banner's close button
+    /// writes false back through the two-way binding.
+    /// </summary>
+    public bool IsAttachmentsNoticeOpen
+    {
+        get => _isAttachmentsNoticeOpen;
+        set => this.RaiseAndSetIfChanged(ref _isAttachmentsNoticeOpen, value);
+    }
+
+    /// <summary>What the document carries, and where to look at it.</summary>
+    public string AttachmentsNoticeMessage
+    {
+        get
+        {
+            if (!HasAttachments)
+                return string.Empty;
+
+            var what = Attachments.Count == 1
+                ? "1 embedded file travels with this PDF."
+                : $"{Attachments.Count} embedded files travel with this PDF.";
+            var where = IsAttachmentsSidebarVisible
+                ? " See the Attachments pane."
+                : " Show them with View ▸ Show Attachments.";
+            return what + where;
+        }
+    }
+
+    /// <summary>
+    /// The banner shown when an opened document carries attachments (#1414's
     /// "warn when their presence is not otherwise obvious").
     /// </summary>
-    private void WarnAboutAttachmentsOnOpen()
+    /// <remarks>
+    /// A PERSISTENT, closable banner, not a toast (#1619), modelled on the XFA
+    /// notice beside it. Two reasons, one measured and one about the warning
+    /// itself:
+    /// <list type="bullet">
+    /// <item>The notices row sits above the document, so a toast's 5 s
+    /// auto-dismiss re-laid out the window and shifted the page under the
+    /// reader five seconds after it opened. Measured on
+    /// irs-1040-instructions (the one reader-bench document with an embedded
+    /// file): the #1544 launch-drawn tail was that dismissal and nothing else —
+    /// the process used 0.0% of a core from 3.0 s until the timer fired at
+    /// STEP 13 + 5.002 s.</item>
+    /// <item>What it warns about — a carrier the page view cannot show, which
+    /// can hold a full copy of the data the page was redacted of — does not
+    /// stop being true after five seconds. It now stays until the reader
+    /// dismisses it or the document changes, exactly like the XFA notice.</item>
+    /// </list>
+    /// </remarks>
+    private void ShowAttachmentsNoticeOnOpen()
     {
         if (!HasAttachments)
             return;
 
-        var what = Attachments.Count == 1
-            ? "1 embedded file travels with this PDF."
-            : $"{Attachments.Count} embedded files travel with this PDF.";
-        var where = IsAttachmentsSidebarVisible
-            ? " See the Attachments pane."
-            : " Show them with View ▸ Show Attachments.";
-
-        _toastService.ShowWarning("Document has attachments", what + where);
+        this.RaisePropertyChanged(nameof(AttachmentsNoticeMessage));
+        IsAttachmentsNoticeOpen = true;
     }
+
+    /// <summary>Hide the banner; the document it described is gone or replaced.</summary>
+    private void ClearAttachmentsNotice() => IsAttachmentsNoticeOpen = false;
 }

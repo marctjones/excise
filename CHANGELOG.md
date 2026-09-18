@@ -167,6 +167,19 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   throttled.
 
 ### Fixed
+- **The attachments warning is a persistent banner, not a 5 s toast** (#1619).
+  The notices row sits above the document, so the toast's auto-dismiss re-laid
+  out the window and jumped the page under the reader five seconds after the
+  document opened. Measured on `irs-1040-instructions.pdf` — the one
+  reader-bench document with an embedded file — that dismissal WAS the whole
+  remaining #1544 `launch drawn` tail (5.6 s): the process used 0.0% of a core
+  from 3.0 s until the timer fired at STEP 13 + 5.002 s, in every repeat, and
+  removing the attachment removed the event. The banner now behaves like the
+  XFA notice beside it: it stays until the reader closes it or the document
+  changes. The wording and the pointer to the Attachments pane are unchanged,
+  and the generic toast surface (and its 5 s timer) is untouched. A warning
+  about a carrier the page view cannot show — one that can hold a full copy of
+  the data the page was redacted of — should not expire on a timer either.
 - **The hidden-layer removal stopped at the page** (#1586). Standard removes
   content in optional-content groups that are OFF by default — but the pass
   walked only the PAGE content stream, and for a `Do` it asked whether the
