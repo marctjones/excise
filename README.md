@@ -496,6 +496,8 @@ Test categories:
 
 The PDF Association corpora are downloaded on demand with `scripts/download-test-pdfs.sh`. The full veraPDF corpus is intentionally treated as a slower conformance lane, not as a required inner-loop test.
 
+**The gates are local, and one command selects them: `scripts/test-tier.sh {t0|t1|full}`.** Every gate is a row in `tests/gates.tsv`; see [`LOCAL_GATES.md`](LOCAL_GATES.md). Two GitHub workflows (`.github/workflows/windows.yml`, `.github/workflows/linux.yml`) build excise on Windows and Linux and run a small set of tests that can only mean something there — printing, the single-instance handoff, "open with" arguments, base-14 font fallback with no Microsoft fonts. They are **advisory**: they never block a merge, they carry no coverage floors, corpus scans or reference-renderer oracles, and a green run is not a substitute for running a local tier. What they do and do not prove is in `LOCAL_GATES.md`, "The advisory platform runners".
+
 ## Building
 
 ### Plain self-contained binaries

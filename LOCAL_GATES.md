@@ -522,7 +522,7 @@ tier alone.
 
 ## A future GitHub Action
 
-tests/gates.tsv is what a future GitHub Action will consume — one job per tier, `runner_manifest_plan <tier>` is its only reader. Nothing is built for Actions here.
+tests/gates.tsv is what a future GitHub Action will consume — one job per tier, `runner_manifest_plan <tier>` is its only reader. **No tier is wired to Actions**, and the two workflows that now exist (see "The advisory platform runners" below) deliberately do not read the manifest: a runner that consumed a tier would be a gate, which is the mistake #1355 was.
 
 ## Coverage
 
@@ -566,6 +566,77 @@ Removed at `a708774d` (the commit before the teardown). To recover a workflow:
 git show a708774d:.github/workflows/ci.yml
 ```
 
-Restoring GitHub Actions for **Linux and Windows packaging only** — no gates,
-no cross-platform test matrix — is tracked as a separate issue. The gates stay
-local.
+Packaging for Linux and Windows is tracked separately (#1596/#1595) and is not
+written yet. What HAS come back is narrower than a test matrix and is described
+next. The gates stay local.
+
+## The advisory platform runners (#1593/#1594)
+
+Two workflows exist again: `.github/workflows/windows.yml` and
+`.github/workflows/linux.yml`. They run on a push to `develop` and on manual
+dispatch, and **not on tags** (`on.push.branches` never matches a tag ref).
+
+They are **ADVISORY**. That is a branch-protection fact, not a YAML property —
+they are advisory because they are not listed as required checks, and there is
+no key in either file that makes a job non-blocking. Do not go looking for one,
+and do not make either one required.
+
+**Why they are allowed to exist at all.** The old `ci.yml` was deleted because
+its Linux job tried to be the gate. These two do one thing the dev box
+physically cannot: run excise on a platform it is never run on. Windows
+printing (#1546) and multi-document support (#1553) were written and compiled
+on macOS and had never executed on Windows; `SingleInstanceChannel.IsEnabled`
+is false on macOS by design, so the whole single-instance handoff had never run
+anywhere.
+
+### What each job does
+
+| | Windows (`windows-latest`) | Linux (`ubuntu-latest`) |
+|---|---|---|
+| build | `excise.sln` Debug + Release, `-warnaserror` | same |
+| publish | win-x64 framework-dependent, self-contained; Native AOT in a **separate non-blocking job** | linux-x64 framework-dependent, self-contained |
+| smoke | published CLI `render`s a tracked fixture | same |
+| suites | Core, Cli, Avalonia | Core, Cli, Avalonia (`xvfb-run`) |
+| platform tests | `WindowsPrintLayoutTests`, `WindowsDocumentPrinterTests` (incl. the *Microsoft Print to PDF* spool), `MultiDocumentWindowTests` (named-pipe handoff), `AttachmentFileNamesTests`; a `-warnaserror:CA1416` build | `MultiDocumentWindowTests` (the same channel, as a **Unix domain socket**), `StartupDocumentResolverTests`, `StartupActivationWorkflowTests`, and the `Excise.Rendering.Tests` font subset with **no Microsoft fonts installed** |
+| skip hygiene | — | `check-skip-budget.sh` on the Core trx (#1172/#1527) |
+| GUI | `EXCISE_PERF_SCENARIO=null` launch with a tracked PDF on the command line, then quit | same, under `xvfb-run` |
+| artifacts | trx + logs | trx + logs |
+
+`Excise.App.Tests` is only ever run FILTERED by fully-qualified class name.
+Unfiltered it is a ~17-minute serial suite (serial by design, #363) and would
+blow the ~20-minute budget on both runners.
+
+Every filtered `dotnet test` is judged by `scripts/assert-trx-green.sh`, not by
+the exit code, for two reasons that both fail toward green: a `--filter` that
+matches nothing exits 0, and the Linux Avalonia test host exits 1 on native
+teardown *after* every test has passed (#752 — the deleted
+`scripts/run-avalonia-tests-linux.sh` existed for exactly that). Each job runs
+`assert-trx-green.sh --self-test` before trusting it, because a checker nobody
+has watched fail is a checker that cannot fail (#1527).
+
+### What a green run does NOT prove
+
+- **Nothing about the local tiers.** It is not a subset of `t0`, `t1` or
+  `full`, and a green runner is not a reason to skip the pre-push `t0`.
+- **No corpus, no oracles, no coverage, no pixels.** Deliberately: reference
+  renderers measure the runner's freetype/fontconfig and Skia build as much as
+  they measure excise, and a macOS-only maintainer cannot re-baseline them.
+  That is what made the old job permanently red, and a permanently red job is
+  an ignored job.
+- **Correct printed output.** The Windows job proves the GDI spooler produces
+  a PDF with the right page count and orientation through *Microsoft Print to
+  PDF*. `PrintDlgExW` is modal and a real print driver is not on the image, so
+  those stay manual checks from #1546 — as does anything about print quality.
+- **A verdict on Native AOT for win-x64.** That job is non-blocking on
+  purpose: AOT is a validated lane on osx-arm64 (#590) and other RIDs are
+  #595.
+
+### If one of them is red
+
+Read the trx artifact, and check whether the same thing is red locally before
+changing any code: a red here can be the runner's image, not excise. Never fix
+a runner red by weakening an assertion, and never add a hand-maintained
+"exclude these tests on this platform" list — a test that cannot run on a
+runner must say so in code with `Assert.SkipUnless(cond, "why")` (#1172), which
+is the only mechanism `check-skip-budget.sh` can check and the only one that
+works identically on every machine.
