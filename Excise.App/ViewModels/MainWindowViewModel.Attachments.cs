@@ -68,7 +68,7 @@ public partial class MainWindowViewModel
         set
         {
             this.RaiseAndSetIfChanged(ref _isAttachmentsSidebarVisible, value);
-            this.RaisePropertyChanged(nameof(IsLeftSidebarVisible));
+            this.RaisePropertyChanged(nameof(IsRightSidebarVisible));
             // The banner says either "See the Attachments pane" or how to show
             // it; hiding the pane while it is up must not leave it lying.
             this.RaisePropertyChanged(nameof(AttachmentsNoticeMessage));

@@ -89,7 +89,9 @@ public class GuiToggleStateRegressionTests
         vm.IsThumbnailsSidebarVisible.Should().BeFalse();
         thumbnails.IsChecked.Should().BeFalse();
         thumbnailsButton.Classes.Should().NotContain("active");
-        leftSidebar.IsVisible.Should().BeTrue("the Attachments pane is still visible");
+        // #1641: Attachments moved to the right sidebar, so with outline and
+        // thumbnails off the LEFT sidebar collapses whatever attachments does.
+        leftSidebar.IsVisible.Should().BeFalse("outline and thumbnails are both hidden");
         thumbnailsPanel.IsVisible.Should().BeFalse();
 
         Click(attachments);

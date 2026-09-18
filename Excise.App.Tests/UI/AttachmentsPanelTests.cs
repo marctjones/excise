@@ -423,6 +423,38 @@ public class AttachmentsPanelTests : IDisposable
     }
 
     [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task TheAttachmentsPane_IsOnTheRightOfTheDocument()
+    {
+        // #1641: it sits with the other per-document lists (search results,
+        // pending redactions, clipboard history) on the right. The left side is
+        // for navigating the pages, and the pane used to compete with the
+        // thumbnails for that space.
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
+        var window = new MainWindow(new InMemorySettingsStore()) { DataContext = vm, Width = 1200, Height = 900 };
+        window.Show();
+        try
+        {
+            await PumpAsync(window);
+            var pane = window.FindControl<Control>("AttachmentsPanel")!;
+            var viewer = window.FindControl<Control>("PdfViewerControl")!;
+            var leftSidebar = window.FindControl<Control>("LeftSidebarHost")!;
+
+            var paneLeft = pane.TranslatePoint(new Point(0, 0), window)!.Value.X;
+            var viewerRight = viewer.TranslatePoint(new Point(viewer.Bounds.Width, 0), window)!.Value.X;
+            var leftSidebarRight = leftSidebar.TranslatePoint(new Point(leftSidebar.Bounds.Width, 0), window)!.Value.X;
+
+            paneLeft.Should().BeGreaterThanOrEqualTo(viewerRight,
+                "the attachments pane is to the right of the document, not to its left");
+            paneLeft.Should().BeGreaterThan(leftSidebarRight,
+                "it is not in the outline/thumbnails sidebar any more");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
     public async Task ViewMenuToggle_HidesAndShowsThePane_AndLeavesTheOtherPanes()
     {
         var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
@@ -448,12 +480,22 @@ public class AttachmentsPanelTests : IDisposable
             vm.IsThumbnailsSidebarVisible = false;
             await PumpAsync(window);
             window.FindControl<Control>("LeftSidebarHost")!.IsVisible.Should().BeFalse(
-                "with every pane hidden the sidebar collapses");
+                "with outline and thumbnails hidden the LEFT sidebar collapses");
+
+            // #1641: Attachments lives in the RIGHT sidebar, with the other
+            // per-document lists. It alone is reason to show that host, and it
+            // no longer holds the left one open.
+            vm.IsClipboardSidebarVisible = false;
+            await PumpAsync(window);
+            window.FindControl<Control>("ClipboardSidebarHost")!.IsVisible.Should().BeFalse(
+                "with the attachments pane hidden too, the right sidebar collapses");
 
             vm.ToggleAttachmentsCommand.Execute().Subscribe();
             await PumpAsync(window);
-            window.FindControl<Control>("LeftSidebarHost")!.IsVisible.Should().BeTrue(
-                "the Attachments pane alone keeps the sidebar open");
+            window.FindControl<Control>("LeftSidebarHost")!.IsVisible.Should().BeFalse(
+                "the Attachments pane is not on the left any more");
+            window.FindControl<Control>("ClipboardSidebarHost")!.IsVisible.Should().BeTrue(
+                "the Attachments pane alone keeps the right sidebar open");
             window.FindControl<Control>("AttachmentsPanel")!.IsVisible.Should().BeTrue();
         }
         finally

@@ -710,7 +710,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// alone). (#369)
     /// </summary>
     public bool IsLeftSidebarVisible =>
-        IsOutlineSidebarVisible || IsThumbnailsSidebarVisible || IsAttachmentsSidebarVisible;
+        IsOutlineSidebarVisible || IsThumbnailsSidebarVisible;
 
     /// <summary>The outline/thumbnails splitter only makes sense when both panels show. (#369)</summary>
     public bool IsSidebarSplitterVisible => IsOutlineSidebarVisible && IsThumbnailsSidebarVisible;
@@ -719,8 +719,20 @@ public partial class MainWindowViewModel : ViewModelBase
     public bool IsClipboardSidebarVisible
     {
         get => _isClipboardSidebarVisible;
-        set => this.RaiseAndSetIfChanged(ref _isClipboardSidebarVisible, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isClipboardSidebarVisible, value);
+            this.RaisePropertyChanged(nameof(IsRightSidebarVisible));
+        }
     }
+
+    /// <summary>
+    /// The right sidebar host, which carries the clipboard / search-results /
+    /// pending-redactions pane and the attachments pane (#1641). Either one
+    /// alone is reason to show it.
+    /// </summary>
+    public bool IsRightSidebarVisible =>
+        IsClipboardSidebarVisible || IsAttachmentsSidebarVisible;
 
     /// <summary>
     /// Whether the page's annotations are drawn. Default true, which is what

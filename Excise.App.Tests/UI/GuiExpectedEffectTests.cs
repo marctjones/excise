@@ -249,7 +249,7 @@ public class GuiExpectedEffectTests
             {
                 [Panel.Outline] = window.FindControl<Control>("OutlinePanel")!,
                 [Panel.Thumbnails] = window.FindControl<Control>("ThumbnailsPanel")!,
-                [Panel.Clipboard] = window.FindControl<Control>("ClipboardSidebarHost")!,
+                [Panel.Clipboard] = window.FindControl<Control>("ClipboardPanel")!,
                 [Panel.Search] = window.FindControl<Control>("SearchTextBox")!,
                 [Panel.Attachments] = window.FindControl<Control>("AttachmentsPanel")!,
             };
@@ -362,7 +362,7 @@ public class GuiExpectedEffectTests
             {
                 [Panel.Outline] = window.FindControl<Control>("OutlinePanel")!,
                 [Panel.Thumbnails] = window.FindControl<Control>("ThumbnailsPanel")!,
-                [Panel.Clipboard] = window.FindControl<Control>("ClipboardSidebarHost")!,
+                [Panel.Clipboard] = window.FindControl<Control>("ClipboardPanel")!,
                 [Panel.Search] = window.FindControl<Control>("SearchTextBox")!,
                 [Panel.Attachments] = window.FindControl<Control>("AttachmentsPanel")!,
             };
