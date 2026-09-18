@@ -99,7 +99,7 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task InsertPagesFromFileAsync_ShowsPreservationWarningForAcroFormDocument()
+    public async Task InsertPagesFromFileAsync_ShowsNoPreservationWarning()
     {
         var targetPath = Path.Combine(_tempDir, "target.pdf");
         var insertPath = Path.Combine(_tempDir, "insert.pdf");
@@ -113,9 +113,16 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
 
         result.DidChange.Should().BeTrue();
         documentService.PageCount.Should().Be(2);
-        dialog.Messages.Should().ContainSingle();
-        dialog.Messages[0].Title.Should().Be("Page Organization");
-        dialog.Messages[0].Message.Should().Contain("AcroForm");
+
+        // #1652: no dialog. This used to assert a "Page Organization" message
+        // saying the result "may require manual review after saving", raised
+        // because the document HAS an /AcroForm — not because anything broke.
+        // Every real document trips at least one of those structural checks, so
+        // the dialog fired on every page operation and carried no information.
+        // The diagnostics are still computed and logged; the confidence comes
+        // from #1653 instead (save, reload, verify with a tool that is not
+        // excise).
+        dialog.Messages.Should().BeEmpty("a successful page operation reports nothing");
     }
 
     [Theory]
