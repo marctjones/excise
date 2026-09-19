@@ -78,6 +78,15 @@ internal static class RenderCommand
                     WriteJson(result);
                 else
                     WriteHuman(result);
+                // #1679: stderr in both modes, so --json stdout stays parseable and a
+                // human sees what the renderer recovered from. Exit stays 0 — a
+                // recovered malformation is a drawn page with a note, not a failure;
+                // a real OutOfMemoryException reaches the catch below and exits 1.
+                if (result.Diagnostics is { Count: > 0 } notes)
+                {
+                    foreach (var note in notes)
+                        Console.Error.WriteLine($"render note: {note}");
+                }
                 return 0;
             }
             catch (DocumentPageOutOfRangeException ex)

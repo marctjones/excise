@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "009b2d392f8134f1d4298cb5640b764d4929e4c415b11d191403887e4cb838d6",
+  "sourceFingerprint": "0f131f3534fc2d859710e0f39a42d7f1120822e99dfd40609340093d7340cf10",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -1179,6 +1179,29 @@
       "class": "DecodedImageSampleReleaseTests",
       "method": "TheImageSampleSink_StaysEmpty_ForAPageWithNoImages",
       "line": 164,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.ReleasingDecodedSamples_IsTheDefault",
+      "path": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs",
+      "class": "DecodedImageSampleReleaseTests",
+      "method": "ReleasingDecodedSamples_IsTheDefault",
+      "line": 192,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -28255,6 +28278,43 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/OutOfMemoryPropagationTests.cs::OutOfMemoryPropagationTests.OutOfMemoryDuringImageDecode_PropagatesOutOfRenderPage",
+      "path": "Excise.Rendering.Tests/OutOfMemoryPropagationTests.cs",
+      "class": "OutOfMemoryPropagationTests",
+      "method": "OutOfMemoryDuringImageDecode_PropagatesOutOfRenderPage",
+      "line": 29,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/OutOfMemoryPropagationTests.cs::OutOfMemoryPropagationTests.OrdinaryDecodeFailure_StillDrawsNothingAndDoesNotThrow",
+      "path": "Excise.Rendering.Tests/OutOfMemoryPropagationTests.cs",
+      "class": "OutOfMemoryPropagationTests",
+      "method": "OrdinaryDecodeFailure_StillDrawsNothingAndDoesNotThrow",
+      "line": 45,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "renderer-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/PageGroupBackdropTests.cs::PageGroupBackdropTests.BlendModesThatCollapseAgainstWhite_NowDrawInk",
       "path": "Excise.Rendering.Tests/PageGroupBackdropTests.cs",
       "class": "PageGroupBackdropTests",
@@ -43684,7 +43744,7 @@
     }
   ],
   "summary": {
-    "testMethods": 1210,
+    "testMethods": 1213,
     "facets": {
       "content-streams": 336,
       "content-strings-and-text": 7,
@@ -43692,9 +43752,9 @@
       "fonts": 203,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 315,
-      "images": 198,
+      "images": 200,
       "page-group-backdrop": 3,
-      "renderer-integration-general": 36,
+      "renderer-integration-general": 37,
       "renderer-performance-and-lifetime": 12,
       "transparency": 80
     },
@@ -43710,9 +43770,9 @@
       "pdf.17.graphics.fonts:extract": 203,
       "pdf.17.graphics.fonts:parse": 203,
       "pdf.17.graphics.fonts:render": 798,
-      "pdf.17.graphics.images:extract": 198,
-      "pdf.17.graphics.images:parse": 198,
-      "pdf.17.graphics.images:render": 785,
+      "pdf.17.graphics.images:extract": 200,
+      "pdf.17.graphics.images:parse": 200,
+      "pdf.17.graphics.images:render": 787,
       "pdf.17.graphics.paths-painting:parse": 315,
       "pdf.17.graphics.paths-painting:render": 315,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -43722,7 +43782,7 @@
       "pdf.17.transparency.model:parse": 80,
       "pdf.17.transparency.model:render": 690
     },
-    "unclassified": 36,
+    "unclassified": 37,
     "allTestsMapped": true
   }
 }

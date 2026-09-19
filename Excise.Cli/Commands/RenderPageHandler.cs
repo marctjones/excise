@@ -58,7 +58,19 @@ internal static class RenderPageHandler
         // document. The release lowers the render's peak, not just what is
         // kept afterwards: each image's samples are dropped once its bitmap is
         // built, instead of every image on the page being held at once (#1468).
-        var options = new RenderOptions { Dpi = request.Dpi, ReleaseDecodedImageSamples = true };
+        // #1679: the renderer's recovered-malformation notes go somewhere a
+        // caller can see. Until this they were dropped, so a render that drew
+        // nothing for an image it could not decode looked exactly like one that
+        // drew it. (Genuine OutOfMemoryException now PROPAGATES from the decode
+        // paths instead of being swallowed into "no image drawn" — that is a
+        // wrong picture with exit 0, which is worse than any memory number.)
+        var diagnostics = new List<string>();
+        var options = new RenderOptions
+        {
+            Dpi = request.Dpi,
+            ReleaseDecodedImageSamples = true,
+            Diagnostics = diagnostics,
+        };
         using var png = new MemoryStream();
         var renderWatch = Stopwatch.StartNew();
         renderer.RenderPageToPng(document.GetPage(request.PageNumber), png, options, cancellationToken);
@@ -91,7 +103,8 @@ internal static class RenderPageHandler
             height,
             openWatch.Elapsed.TotalMilliseconds,
             renderWatch.Elapsed.TotalMilliseconds,
-            writeWatch.Elapsed.TotalMilliseconds);
+            writeWatch.Elapsed.TotalMilliseconds,
+            diagnostics);
     }
 }
 
@@ -118,4 +131,5 @@ internal sealed record RenderPageResult(
     int Height,
     double OpenMs = 0,
     double RenderMs = 0,
-    double WriteMs = 0);
+    double WriteMs = 0,
+    IReadOnlyList<string>? Diagnostics = null);

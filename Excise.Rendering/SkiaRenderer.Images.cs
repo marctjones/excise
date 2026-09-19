@@ -576,7 +576,7 @@ internal partial class RenderContext
         {
             throw;
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return null;
         }
@@ -1542,7 +1542,7 @@ internal partial class RenderContext
             var value = (int)colorTransform;
             return value is 0 or 1 ? value : null;
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return null;
         }
@@ -1826,7 +1826,7 @@ internal partial class RenderContext
             System.Runtime.InteropServices.Marshal.Copy(pixels, 0, destination, pixels.Length);
             return bitmap;
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             bitmap.Dispose();
             return null;
@@ -1978,7 +1978,7 @@ internal partial class RenderContext
             {
                 ranges[i] = (int)maskArray.GetNumber(i);
             }
-            catch
+            catch (Exception ex) when (ex is not OutOfMemoryException)
             {
                 return null;   // a non-numeric entry means this is not a usable colour key
             }
@@ -2106,7 +2106,7 @@ internal partial class RenderContext
                 _ => colorSpaceObject is Excise.Core.Primitives.PdfName name ? name.Value : "DeviceRGB"
             };
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return colorSpaceObject is Excise.Core.Primitives.PdfName name ? name.Value : "DeviceRGB";
         }

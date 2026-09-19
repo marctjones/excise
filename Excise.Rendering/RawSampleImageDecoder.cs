@@ -73,7 +73,7 @@ internal static class RawSampleImageDecoder
         {
             throw;
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return null;
         }
@@ -221,7 +221,7 @@ internal static class RawSampleImageDecoder
             bitmap.Dispose();
             throw;
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             bitmap.Dispose();
             return null;
