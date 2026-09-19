@@ -83,7 +83,8 @@ internal static class UnredactionConfusionMatrix
         bool Detected,
         MarkRecoveryOutcome Outcome = MarkRecoveryOutcome.NotRecovered,
         double ResidualBits = 0,
-        int CandidateCount = 0);
+        int CandidateCount = 0,
+        string? DominantCarrier = null);
 
     /// <summary>One (tool, mode) cell.</summary>
     internal sealed record Cell(
@@ -123,9 +124,19 @@ internal static class UnredactionConfusionMatrix
     }
 
     /// <summary>A tool's declared scope, from tests/unredaction-tools.json.</summary>
+    /// <summary>The pseudo-mode real-world negatives are filed under.</summary>
+    public const string NegativeMode = "real-world-negative";
+
     internal sealed record ToolScope(string Id, string Kind, IReadOnlySet<string>? Modes, bool AllModes)
     {
-        public bool Covers(string modeId) => AllModes || (Modes?.Contains(modeId) ?? false);
+        /// <summary>
+        /// ⚠️ <see cref="NegativeMode"/> is in scope for EVERY tool. A negative
+        /// has no failure mode to be out of scope for, and a false positive is
+        /// meaningful for any tool — letting scope excuse one would mean a
+        /// detector could never be measured for over-firing.
+        /// </summary>
+        public bool Covers(string modeId) =>
+            modeId == NegativeMode || AllModes || (Modes?.Contains(modeId) ?? false);
     }
 
     public static string? RegistryPath =>
@@ -248,6 +259,17 @@ internal static class UnredactionConfusionMatrix
     /// </summary>
     public static string Render(
         IReadOnlyList<Cell> cells, IReadOnlyList<RecoveryProfile> profiles, IReadOnlyList<string> notMeasured)
+        => Render(cells, profiles, notMeasured, Array.Empty<(Case, ToolResult)>());
+
+    /// <summary>
+    /// With <paramref name="falsePositives"/>, the report breaks the FP column
+    /// down BY CAUSE. One discouraging number invites either despair or a
+    /// heuristic that grades around the problem; "28 of 33 are OCR layers"
+    /// invites the right conversation.
+    /// </summary>
+    public static string Render(
+        IReadOnlyList<Cell> cells, IReadOnlyList<RecoveryProfile> profiles,
+        IReadOnlyList<string> notMeasured, IReadOnlyList<(Case Case, ToolResult Result)> falsePositives)
     {
         var sb = new StringBuilder();
         sb.AppendLine("═══ UNREDACTION CONFUSION MATRIX (#1645) — detection per tool per mode ═══");
@@ -278,6 +300,35 @@ internal static class UnredactionConfusionMatrix
             var totals = tool.ToList();
             sb.AppendLine($"    {"TOTAL",-32} {totals.Sum(c => c.TruePositive),3} {totals.Sum(c => c.FalsePositive),3} " +
                           $"{totals.Sum(c => c.FalseNegative),3} {totals.Sum(c => c.TrueNegative),3}");
+        }
+
+        if (falsePositives.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("── what the FALSE POSITIVES were, by cause ──");
+            // Group on the CAUSE, not "cause (n)" — the per-document finding
+            // count belongs in the total, not in the key, or every row is unique
+            // and the breakdown says nothing.
+            static string CauseOf(string? c)
+            {
+                if (string.IsNullOrEmpty(c)) return "unattributed";
+                var i = c.LastIndexOf(" (", StringComparison.Ordinal);
+                return i < 0 ? c : c[..i];
+            }
+            static int CountIn(string? c)
+            {
+                if (string.IsNullOrEmpty(c)) return 0;
+                var i = c.LastIndexOf(" (", StringComparison.Ordinal);
+                return i >= 0 && int.TryParse(c[(i + 2)..].TrimEnd(')'), out var n) ? n : 0;
+            }
+
+            foreach (var g in falsePositives
+                         .GroupBy(f => (f.Result.Tool, Cause: CauseOf(f.Result.DominantCarrier)))
+                         .OrderByDescending(g => g.Count()))
+                sb.AppendLine(
+                    $"  {g.Key.Tool,-10} {g.Count(),3} document(s)  {g.Key.Cause}" +
+                    $"   (findings: {g.Sum(x => CountIn(x.Result.DominantCarrier))} total, " +
+                    $"worst {g.Max(x => CountIn(x.Result.DominantCarrier))})");
         }
 
         sb.AppendLine();

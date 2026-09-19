@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1294,
-  "indexedContentSha256": "61ab43a296fa146d3e0858639229618fcf69891815df197bec28c290e90f164e",
+  "indexedContentSha256": "93a86295d73e480e20c5f61ccec6519c0d05a0b60bb8bd5f9ecabba6f694ebe4",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4010,6 +4010,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Index.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "catalog",
+            "tree",
+            "catalog"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Rest.cs",
           "kind": "test",
           "matchedTerms": [
@@ -4035,18 +4044,9 @@
             "tree",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "geometry",
-            "tree",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 155
+      "candidateReferenceCount": 156
     },
     {
       "id": "pdf.17.document.navigation",
@@ -6414,7 +6414,8 @@
           "kind": "test",
           "matchedTerms": [
             "collections",
-            "embedded"
+            "embedded",
+            "catalog"
           ]
         },
         {
@@ -39945,6 +39946,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Index.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -40124,7 +40134,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -45895,6 +45905,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Index.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "circle",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -46123,7 +46143,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 38
+      "candidateReferenceCount": 39
     },
     {
       "id": "pdf.20.annotation.subtype-011",
@@ -47365,6 +47385,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Index.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "polygon",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -47554,7 +47584,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 35
+      "candidateReferenceCount": 36
     },
     {
       "id": "pdf.20.annotation.subtype-013",
@@ -53697,7 +53727,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 201
+      "candidateReferenceCount": 202
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -54136,6 +54166,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Index.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "transparency",
+            "transparency"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Security/EncryptionPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -54424,17 +54463,9 @@
             "parameters",
             "preview"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/RedactedCopySafetyPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "preview"
-          ]
         }
       ],
-      "candidateReferenceCount": 93
+      "candidateReferenceCount": 94
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -60382,7 +60413,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 156
+      "candidateReferenceCount": 157
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -72513,6 +72544,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Index.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "audit",
+            "log",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesRestTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -72612,18 +72653,9 @@
             "audit",
             "log"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/RedactedCopySafetyPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "audit",
-            "log",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 141
+      "candidateReferenceCount": 142
     },
     {
       "id": "pdfe.product.platform.printing",
