@@ -1,19 +1,19 @@
 {
-  "$schema": "internal — gated by Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs",
+  "$schema": "internal \u2014 gated by Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs",
   "title": "Redaction failure modes and the unredact channel that covers each (#1592)",
   "rationale": [
     "A redaction fails in a bounded number of ways. This registry is the list, and",
     "for each one the CHANNEL that recovers it, the EVIDENCE that the channel works,",
-    "and — where there is no channel — the issue tracking the gap.",
+    "and \u2014 where there is no channel \u2014 the issue tracking the gap.",
     "",
     "It exists because 'unredact has eight channels' says nothing about coverage.",
     "The question a user has is 'will it find MY leak', and that is answered per",
     "failure mode, not per channel. A mode with no channel is the most valuable row",
     "here: it is where excise reports a document clean that is not.",
     "",
-    "status: covered   — a channel handles it and a named test proves so",
-    "        partial   — a channel handles part of it; the note says which part is not",
-    "        gap       — no working channel; the issue column tracks it",
+    "status: covered   \u2014 a channel handles it and a named test proves so",
+    "        partial   \u2014 a channel handles part of it; the note says which part is not",
+    "        gap       \u2014 no working channel; the issue column tracks it",
     "",
     "A row may NAME a channel and still be a gap: the channel constant exists so",
     "the report can say the channel did not run and why, which is the honest",
@@ -38,7 +38,18 @@
       "channel": "hidden-text",
       "status": "covered",
       "evidence": "RecoveryChannelTests.HiddenText_UnderABlackBox_IsCertainLocatedAndLinked; DefaultFillColourMarkTests (the sub-shape that draws the box with NO colour operator, relying on PDF 32000-1 8.6.8's initial black)",
-      "note": "This row read `covered`, with a passing test and Manafort named right there in `producers`, while excise found ZERO marks and ZERO findings on the actual Manafort filing (D.D.C. 1:17-cr-00201 #471) — see #1617. The mode was covered; one of its SHAPES was not, because every fixture wrote `0 0 0 rg` before the box and the real document omits it. A status of `covered` is a claim about the fixtures that exist, not about the mode."
+      "note": "This row read `covered`, with a passing test and Manafort named right there in `producers`, while excise found ZERO marks and ZERO findings on the actual Manafort filing (D.D.C. 1:17-cr-00201 #471) \u2014 see #1617. The mode was covered; one of its SHAPES was not, because every fixture wrote `0 0 0 rg` before the box and the real document omits it. A status of `covered` is a claim about the fixtures that exist, not about the mode.",
+      "fixtureExemption": [
+        "ALREADY far above the floor, in a place the registry does not look. The",
+        "synthetic corpus varies this mode eight ways \u2014 B0's five colour shapes",
+        "(black-on-white, white-on-black, low-contrast, highlight-readable as a",
+        "negative control, and default-colour with NO colour operator) \u2014 plus the",
+        "Manafort 471/472 real-world pair, which is the same brief with the",
+        "redaction leaking and not leaking.",
+        "Three more hand-written fixtures here would be padding, and padding a mode",
+        "that already has the best coverage in the bench is exactly the wrong place",
+        "to spend fixtures."
+      ]
     },
     {
       "id": "box-drawn-by-annotation",
@@ -50,7 +61,7 @@
       "channel": "mark-region",
       "status": "covered",
       "evidence": "FailureModeChannelTests.AnnotationDrawnBox_TextInsideTheMarkIsRecovered",
-      "note": "Closed by the mark-region channel (#1606), which reads the page inside an annotation-derived mark instead of watching draw order. Before it, the mark appeared with outcome not-recovered while the text was trivially extractable — a false 'the redaction held'."
+      "note": "Closed by the mark-region channel (#1606), which reads the page inside an annotation-derived mark instead of watching draw order. Before it, the mark appeared with outcome not-recovered while the text was trivially extractable \u2014 a false 'the redaction held'."
     },
     {
       "id": "box-inside-form-xobject",
@@ -63,7 +74,7 @@
       "channel": "mark-region",
       "status": "covered",
       "evidence": "FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
-      "note": "Closed by #1606. RedactionMarkDetector now descends into Form XObjects, composing the form's /Matrix (§8.10.1) with the CTM at the Do, and emits a distinct FormXObjectBox kind. Text inside a form was never the problem — TextExtractor already recurses, so page.Letters has it; finding the MARK was what was missing. HiddenTextDetector still does not recurse, and does not need to: the mark-region channel covers this kind precisely because the page-level walk cannot."
+      "note": "Closed by #1606. RedactionMarkDetector now descends into Form XObjects, composing the form's /Matrix (\u00a78.10.1) with the CTM at the Do, and emits a distinct FormXObjectBox kind. Text inside a form was never the problem \u2014 TextExtractor already recurses, so page.Letters has it; finding the MARK was what was missing. HiddenTextDetector still does not recurse, and does not need to: the mark-region channel covers this kind precisely because the page-level walk cannot."
     },
     {
       "id": "box-light-or-low-contrast",
@@ -100,7 +111,7 @@
       "channel": "mark-region",
       "status": "covered",
       "evidence": "FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
-      "note": "This row claimed covered on the strength of a test that only asserted the MARK was detected, not that the text came back — and the tier-A bench caught the overstatement. The mark-region channel makes the claim true."
+      "note": "This row claimed covered on the strength of a test that only asserted the MARK was detected, not that the text came back \u2014 and the tier-A bench caught the overstatement. The mark-region channel makes the claim true."
     },
     {
       "id": "ocr-layer-left-in-place",
@@ -112,7 +123,7 @@
       "channel": "ocr-differential",
       "status": "partial",
       "evidence": "UnredactOcrChannelTests",
-      "note": "The differential recovers text from PIXELS under an obstruction. It does not read an existing invisible text layer — that is text-render-mode-3 above."
+      "note": "The differential recovers text from PIXELS under an obstruction. It does not read an existing invisible text layer \u2014 that is text-render-mode-3 above."
     },
     {
       "id": "partial-glyph-removal-kerning",
@@ -137,7 +148,7 @@
     },
     {
       "id": "vector-covered-only",
-      "description": "A box over vector artwork — a signature, a chart, a map. No text is involved, so a text-only audit reports the page clean.",
+      "description": "A box over vector artwork \u2014 a signature, a chart, a map. No text is involved, so a text-only audit reports the page clean.",
       "producers": [
         "every viewer-based redaction"
       ],
@@ -154,7 +165,7 @@
       "channel": "image-layer",
       "status": "covered",
       "evidence": "FailureModeChannelTests.OrphanedOriginalImage_IsReportedAsAPresentOnlyLeak",
-      "note": "Closed by #1608. Gated on a same-dimensions image being REFERENCED — the signature of a swap. Without that, an orphan is ordinary incremental-update debris and belongs to the prior-revision channel."
+      "note": "Closed by #1608. Gated on a same-dimensions image being REFERENCED \u2014 the signature of a swap. Without that, an orphan is ordinary incremental-update debris and belongs to the prior-revision channel."
     },
     {
       "id": "image-smask-trick",
@@ -165,7 +176,7 @@
       "channel": "image-layer",
       "status": "partial",
       "evidence": "FailureModeChannelTests.FullyMaskedImage_IsReportedAsAPresentOnlyLeak",
-      "note": "An all-zero 8-bit /SMask is detected. NOT detected: an /ExtGState /ca 0 drawing the image transparently, and masks in other bit depths or colour spaces — those need alpha tracking in the walker, which the box-light-or-low-contrast row also wants."
+      "note": "An all-zero 8-bit /SMask is detected. NOT detected: an /ExtGState /ca 0 drawing the image transparently, and masks in other bit depths or colour spaces \u2014 those need alpha tracking in the walker, which the box-light-or-low-contrast row also wants."
     },
     {
       "id": "incremental-update-prior-revision",
@@ -233,7 +244,7 @@
     },
     {
       "id": "marked-content-carrier",
-      "description": "The same carriers, inline in the content stream as a BDC property list — a different carrier the structure-tree walk never reaches.",
+      "description": "The same carriers, inline in the content stream as a BDC property list \u2014 a different carrier the structure-tree walk never reaches.",
       "producers": [
         "accessible-PDF producers"
       ],
@@ -250,7 +261,44 @@
       ],
       "channel": "carrier",
       "status": "partial",
-      "note": "DELIBERATE: CarrierTextRecovery covers the hidden-readable carriers and excludes bulk /Info + XMP, because dumping them would bury a real leak in ordinary document metadata. PdfDocumentSanitizer scrubs them (#608); the audit does not enumerate them."
+      "note": "DELIBERATE: CarrierTextRecovery covers the hidden-readable carriers and excludes bulk /Info + XMP, because dumping them would bury a real leak in ordinary document metadata. PdfDocumentSanitizer scrubs them (#608); the audit does not enumerate them.",
+      "fixtureExemption": [
+        "DELIBERATE non-coverage, and fixtures would invent the appearance of a",
+        "capability. The row's own status is `partial` for the reason that dumping",
+        "bulk /Info and XMP would bury a real leak in ordinary metadata \u2014 every",
+        "document has a /Producer and a creation date, and reporting them as",
+        "recoveries makes the report useless.",
+        "Three fixtures for a mode that is not supposed to fire would each assert",
+        "that nothing happens, which the negative-control population already covers",
+        "better. If this mode is ever given a real scope, delete this exemption",
+        "first \u2014 it is the record of a decision, not a placeholder."
+      ]
     }
-  ]
+  ],
+  "fixtureCoverageRule": {
+    "rule": "Every mode carries at least 3 fixtures, OR a fixtureExemption naming why it does not.",
+    "minimumFixtures": 3,
+    "rationale": [
+      "One fixture proves a channel CAN fire. It says nothing about the range it",
+      "fires across, and #1617 is what that costs: box-over-intact-text read",
+      "`covered`, with a passing test, while excise found ZERO marks on the actual",
+      "Manafort filing \u2014 because every fixture wrote `0 0 0 rg` and the real",
+      "document omits it. The mode was covered; one of its SHAPES was not.",
+      "",
+      "So the count is a floor, and what the fixtures VARY matters more than how",
+      "many there are. A variant must differ in a parameter the channel actually",
+      "responds to \u2014 coverage fraction, contrast, nesting depth, width-class",
+      "entropy \u2014 not in a Difficulty label. A label can be wrong and nothing",
+      "catches it; a parameter lets the gate assert the ladder is real.",
+      "",
+      "\u26a0\ufe0f An exemption is a CLAIM THAT NEEDS A REASON, not a way to be under the",
+      "floor quietly. Both current exemptions are checked by the gate for a",
+      "non-empty reason, and 'we have not got round to it' is not one of them."
+    ],
+    "derivedFrom": [
+      "FailureModeFixtures, NOT the `evidence` string on each row. The evidence",
+      "field is prose a human maintains and it drifts; the gate counts what the",
+      "builder actually produces."
+    ]
+  }
 }
