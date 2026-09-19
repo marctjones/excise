@@ -905,6 +905,7 @@ namespace Excise.Core.Document
         public Excise.Core.Primitives.PdfDictionary? GetShading(string name) { }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Word> GetWords() { }
         public Excise.Core.Primitives.PdfObject? GetXObject(string name) { }
+        public Excise.Core.Primitives.PdfObject? GetXObject(string name, Excise.Core.Primitives.PdfDictionary? containingStream) { }
         public void SetContentStream(Excise.Core.Content.ContentStream content) { }
         public void SetContentStreamBytes(byte[] data) { }
         public Excise.Core.Document.PdfRectangle ToContentStreamCoordinates(Excise.Core.Document.PdfRectangle visualRect) { }
@@ -1934,7 +1935,8 @@ namespace Excise.Core.Redaction.Recovery
     public static class RecoveryScanner
     {
         public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(Excise.Core.Document.PdfDocument document, System.Threading.CancellationToken cancellationToken = default) { }
-        public static Excise.Core.Redaction.Recovery.RecoveryReportBuilder ScanInto(Excise.Core.Document.PdfDocument document, Excise.Core.Redaction.Recovery.RecoveryReportBuilder builder, System.Threading.CancellationToken cancellationToken = default, System.Collections.Generic.IReadOnlyList<string>? dictionary = null) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(byte[] pdfBytes, System.Threading.CancellationToken cancellationToken = default) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryReportBuilder ScanInto(Excise.Core.Document.PdfDocument document, Excise.Core.Redaction.Recovery.RecoveryReportBuilder builder, System.Threading.CancellationToken cancellationToken = default, System.Collections.Generic.IReadOnlyList<string>? dictionary = null, byte[]? pdfBytes = null) { }
         public static class Channels
         {
             public const string Attachment = "attachment";
