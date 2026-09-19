@@ -80832,6 +80832,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Unrotated_VisualTopHalf_MapsToContentTopHalf",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82152,15 +82159,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_UserPasswordOnly_NoPasswordIsStillRejected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Pdftoppm_UserPasswordOnly_NoPasswordProducesNoRendering",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95369,6 +95367,90 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_OneHopBack_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_ThreeHopsBack_IsStillRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_SecretsRemovedAtDifferentHops_AreBothRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_FlatPacket_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_NestedFourSubformsDeep_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_AmongFiveSiblings_RecoversTheRightOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_AllZero_IsReportedPresent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_NearlyAllZero_IsNotYetDetected",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryRowNamesARealChannelOrNone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95475,90 +95557,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ARealContradictionFallsBackToTheBoxAndSaysSo",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.OnTheCorpus_TheGapNarrowsTheLeak_AndNeverDropsTheTrueAnswer",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.TheGapAgreesWithMutoolsOwnGlyphPositions",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.HiddenText_UnderABlackBox_IsCertainLocatedAndLinked",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.TextWithNoBoxOverIt_ProducesNoMarkAndNoHiddenTextFinding",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.MarkedContentActualText_IsRecoveredWithTheEnclosedGlyphBox",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.MarkedContentActualText_InANamedPropertyList_IsAlsoRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.FormFieldValue_SurvivingABlankedAppearance_IsCertainAtTheWidgetRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.ImageUnderABox_IsPresentOnlyNotCertain",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.VectorContentUnderABox_IsPresentOnly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.AnImageNotCoveredByAnything_IsNotReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.EveryChannelThatRan_IsNamedInTheReport",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96717,6 +96715,90 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_OneHopBack_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_ThreeHopsBack_IsStillRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_SecretsRemovedAtDifferentHops_AreBothRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_FlatPacket_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_NestedFourSubformsDeep_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_AmongFiveSiblings_RecoversTheRightOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_AllZero_IsReportedPresent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_NearlyAllZero_IsNotYetDetected",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryRowNamesARealChannelOrNone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96823,90 +96905,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ARealContradictionFallsBackToTheBoxAndSaysSo",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.OnTheCorpus_TheGapNarrowsTheLeak_AndNeverDropsTheTrueAnswer",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.TheGapAgreesWithMutoolsOwnGlyphPositions",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.HiddenText_UnderABlackBox_IsCertainLocatedAndLinked",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.TextWithNoBoxOverIt_ProducesNoMarkAndNoHiddenTextFinding",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.MarkedContentActualText_IsRecoveredWithTheEnclosedGlyphBox",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.MarkedContentActualText_InANamedPropertyList_IsAlsoRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.FormFieldValue_SurvivingABlankedAppearance_IsCertainAtTheWidgetRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.ImageUnderABox_IsPresentOnlyNotCertain",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.VectorContentUnderABox_IsPresentOnly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.AnImageNotCoveredByAnything_IsNotReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.EveryChannelThatRan_IsNamedInTheReport",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98079,6 +98077,90 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_OneHopBack_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_ThreeHopsBack_IsStillRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_SecretsRemovedAtDifferentHops_AreBothRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_FlatPacket_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_NestedFourSubformsDeep_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_AmongFiveSiblings_RecoversTheRightOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_AllZero_IsReportedPresent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_NearlyAllZero_IsNotYetDetected",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryRowNamesARealChannelOrNone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98185,90 +98267,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ARealContradictionFallsBackToTheBoxAndSaysSo",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.OnTheCorpus_TheGapNarrowsTheLeak_AndNeverDropsTheTrueAnswer",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.TheGapAgreesWithMutoolsOwnGlyphPositions",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.HiddenText_UnderABlackBox_IsCertainLocatedAndLinked",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.TextWithNoBoxOverIt_ProducesNoMarkAndNoHiddenTextFinding",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.MarkedContentActualText_IsRecoveredWithTheEnclosedGlyphBox",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.MarkedContentActualText_InANamedPropertyList_IsAlsoRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.FormFieldValue_SurvivingABlankedAppearance_IsCertainAtTheWidgetRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.ImageUnderABox_IsPresentOnlyNotCertain",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.VectorContentUnderABox_IsPresentOnly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.AnImageNotCoveredByAnything_IsNotReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.EveryChannelThatRan_IsNamedInTheReport",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99467,6 +99465,90 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_OneHopBack_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_ThreeHopsBack_IsStillRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_SecretsRemovedAtDifferentHops_AreBothRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_FlatPacket_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_NestedFourSubformsDeep_IsRecovered",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Xfa_AmongFiveSiblings_RecoversTheRightOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_AllZero_IsReportedPresent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_NearlyAllZero_IsNotYetDetected",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryRowNamesARealChannelOrNone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -99573,90 +99655,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ARealContradictionFallsBackToTheBoxAndSaysSo",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.OnTheCorpus_TheGapNarrowsTheLeak_AndNeverDropsTheTrueAnswer",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.TheGapAgreesWithMutoolsOwnGlyphPositions",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.HiddenText_UnderABlackBox_IsCertainLocatedAndLinked",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.TextWithNoBoxOverIt_ProducesNoMarkAndNoHiddenTextFinding",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.MarkedContentActualText_IsRecoveredWithTheEnclosedGlyphBox",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.MarkedContentActualText_InANamedPropertyList_IsAlsoRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.FormFieldValue_SurvivingABlankedAppearance_IsCertainAtTheWidgetRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.ImageUnderABox_IsPresentOnlyNotCertain",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.VectorContentUnderABox_IsPresentOnly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.AnImageNotCoveredByAnything_IsNotReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.EveryChannelThatRan_IsNamedInTheReport",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113786,8 +113784,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7487,
-    "testMethodsWithCapabilityCandidate": 4634,
+    "testMethods": 7499,
+    "testMethodsWithCapabilityCandidate": 4646,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

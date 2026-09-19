@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1282,
-  "indexedContentSha256": "11cf1f1c48450618acb16629cb5aaff325045cb0bf146df1be3eac0dd6931294",
+  "indexedFileCount": 1285,
+  "indexedContentSha256": "07f8d64469a40305209c5d353c4d96e3c9988286eb3d2b47113b2712e2e7acf9",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7953,7 +7953,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 577
+      "candidateReferenceCount": 579
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8774,7 +8774,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 291
+      "candidateReferenceCount": 292
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -13890,9 +13890,17 @@
             "character",
             "positioning"
           ]
+        },
+        {
+          "path": "tests/unredaction-tools.json",
+          "kind": "test",
+          "matchedTerms": [
+            "character",
+            "positioning"
+          ]
         }
       ],
-      "candidateReferenceCount": 36
+      "candidateReferenceCount": 37
     },
     {
       "id": "pdf.17.content.marked",
@@ -39104,7 +39112,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 118
+      "candidateReferenceCount": 119
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -51133,7 +51141,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 167
+      "candidateReferenceCount": 168
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -53390,7 +53398,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 198
+      "candidateReferenceCount": 199
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -55225,7 +55233,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 190
+      "candidateReferenceCount": 191
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -62621,7 +62629,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 374
+      "candidateReferenceCount": 375
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
