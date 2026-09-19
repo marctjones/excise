@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -17,11 +18,75 @@ public sealed class AboutWindowViewModel
 {
     public string AppName { get; } = "Excise";
 
-    public string AppVersion { get; } =
-        Assembly.GetExecutingAssembly()
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-        ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
-        ?? "0.0.0";
+    /// <summary>
+    /// What the user is told they are running. The BUNDLE wins where there is
+    /// one: scripts/build-macos-app.sh stamps Info.plist from its --version,
+    /// so CFBundleShortVersionString is the version of the thing that shipped,
+    /// while the assembly attribute is whatever the build happened to set.
+    /// Until 2026-09-18 nothing set it, so this read "version 1.0.0" inside a
+    /// 3.10.0 app. Both are stamped now; the bundle stays first so a future
+    /// build that forgets -p:Version reports the shipped number rather than a
+    /// default, and the "+&lt;commit sha&gt;" suffix is trimmed because it is
+    /// build provenance, not a version a user can act on.
+    /// </summary>
+    public string AppVersion { get; } = ResolveVersion();
+
+    internal static string ResolveVersion(string? bundlePlistPath = null)
+    {
+        var fromBundle = ReadBundleShortVersion(bundlePlistPath ?? BundlePlistPath());
+        if (!string.IsNullOrWhiteSpace(fromBundle))
+            return fromBundle!;
+
+        var informational = Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (!string.IsNullOrWhiteSpace(informational))
+        {
+            var plus = informational!.IndexOf('+');
+            return plus > 0 ? informational[..plus] : informational;
+        }
+
+        return Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
+    }
+
+    /// <summary>
+    /// &lt;app&gt;.app/Contents/Info.plist for a macOS bundle; null anywhere else.
+    /// The managed binaries live in Contents/MacOS, so the plist is one level up.
+    /// </summary>
+    private static string? BundlePlistPath()
+    {
+        var dir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
+        if (!string.Equals(Path.GetFileName(dir), "MacOS", StringComparison.Ordinal))
+            return null;
+        var contents = Path.GetDirectoryName(dir);
+        return contents == null ? null : Path.Combine(contents, "Info.plist");
+    }
+
+    /// <summary>
+    /// CFBundleShortVersionString, read with a deliberately small XML walk
+    /// rather than a plist library: this runs at window construction and must
+    /// never throw or block. Anything unreadable returns null and the caller
+    /// falls back to the assembly attribute.
+    /// </summary>
+    private static string? ReadBundleShortVersion(string? plistPath)
+    {
+        if (plistPath == null || !File.Exists(plistPath))
+            return null;
+        try
+        {
+            var text = File.ReadAllText(plistPath);
+            const string key = "<key>CFBundleShortVersionString</key>";
+            var at = text.IndexOf(key, StringComparison.Ordinal);
+            if (at < 0) return null;
+            var open = text.IndexOf("<string>", at, StringComparison.Ordinal);
+            if (open < 0) return null;
+            var close = text.IndexOf("</string>", open, StringComparison.Ordinal);
+            if (close < 0) return null;
+            var value = text[(open + "<string>".Length)..close].Trim();
+            return string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+        catch (IOException) { return null; }
+        catch (UnauthorizedAccessException) { return null; }
+    }
 
     public string Tagline { get; } =
         "Cross-platform PDF editor with true content-level redaction, " +

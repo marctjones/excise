@@ -905,6 +905,29 @@ public class PdfViewerControlTests
             "slot offsets should be precomputed once instead of summed on every scroll event");
         PdfViewerControl.FindTopVisibleContinuousPage(slots, slots[1].TopDip + 1)
             .Should().Be(2);
+
+        // #1650: the page a "current page" command acts on is the page with the
+        // MOST VISIBLE AREA, which is a different question. Scroll so that only
+        // the last 2 dip of page 1 are on screen and the rest of the viewport
+        // is page 2: top-visible says 1, most-visible says 2, and the commands
+        // must follow most-visible. Before this, Remove Current Page there
+        // removed page 1.
+        var sliver = slots[0].TopDip + slots[0].DisplayHeight - 2;
+        var viewport = slots[1].DisplayHeight;
+
+        PdfViewerControl.FindTopVisibleContinuousPage(slots, sliver)
+            .Should().Be(1, "page 1 still owns the top edge of the viewport");
+        PdfViewerControl.FindMostVisibleContinuousPage(slots, sliver, viewport)
+            .Should().Be(2, "page 2 fills the viewport; page 1 has 2 dip of it");
+
+        // At the top of the document, both agree.
+        PdfViewerControl.FindMostVisibleContinuousPage(slots, 1, viewport)
+            .Should().Be(1);
+
+        // No viewport yet (a measure pass before the scroll viewer is sized):
+        // fall back rather than answer page 1 regardless of the offset.
+        PdfViewerControl.FindMostVisibleContinuousPage(slots, slots[1].TopDip + 1, 0)
+            .Should().Be(2);
     }
 
     [FixedAvaloniaFact]

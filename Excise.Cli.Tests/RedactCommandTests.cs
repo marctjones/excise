@@ -72,8 +72,25 @@ public class RedactCommandTests : IDisposable
             "nothing excise failed to examine");
     }
 
+    /// <summary>
+    /// ⚠️ <b>This test asserted the OPPOSITE until 2026-09-17.</b> It pinned
+    /// "CLI term redaction is surgical; GUI-style wholesale safe-share metadata
+    /// removal would be a compatibility-breaking policy change" — and #1586 is
+    /// that policy change, decided deliberately: the CLI, batch, scripting and
+    /// library paths now match the GUI safe copy, because a redaction whose
+    /// thoroughness depends on which front end you used is the #896 failure
+    /// with a different carrier.
+    ///
+    /// <para>What it buys: a producer may put text under ANY <c>/Info</c> key
+    /// (§14.3.3), so a targeted scrub must know names it cannot know — #1583's
+    /// <c>/CaseName</c> trap survived the targeted scrub and does not survive
+    /// the strip.</para>
+    ///
+    /// <para>The opt-out is <c>RedactionOptions.StripDocumentMetadata =
+    /// false</c>, which is what the second half of this test pins.</para>
+    /// </summary>
     [Fact]
-    public void RunRedactWithNotes_PreservesUnrelatedMetadataUnderCliTermPolicy()
+    public void RunRedactWithNotes_StripsDocumentMetadataUnderTheStandardProfile()
     {
         var input = TempPath(".pdf");
         var output = TempPath(".pdf");
@@ -94,10 +111,28 @@ public class RedactCommandTests : IDisposable
 
         count.Should().Be(1);
         notes.Should().BeEmpty();
-        using var redacted = PdfDocument.Open(output);
-        redacted.Title.Should().Be("Public quarterly report",
-            "CLI term redaction is surgical; GUI-style wholesale safe-share metadata removal " +
-            "would be a compatibility-breaking policy change");
+        using (var redacted = PdfDocument.Open(output))
+        {
+            redacted.Title.Should().BeNullOrEmpty(
+                "#1586: the Standard profile strips /Info and XMP wholesale on every path, " +
+                "so the CLI output matches the GUI safe copy");
+        }
+
+        // The opt-out, and the planted failure: with the strip off the title
+        // survives, which proves the fixture really had one and that the first
+        // assertion is not passing because SetTitle did nothing.
+        var keptOutput = TempPath(".pdf");
+        using (var doc = PdfDocument.Open(input))
+        {
+            doc.RedactText("Confidential", Excise.Core.Text.Segmentation.RedactionOptions.Default
+                with { StripDocumentMetadata = false });
+            doc.Save(keptOutput);
+        }
+        using (var kept = PdfDocument.Open(keptOutput))
+        {
+            kept.Title.Should().Be("Public quarterly report",
+                "StripDocumentMetadata: false restores the surgical term-scrub behaviour");
+        }
     }
 
     [Fact]

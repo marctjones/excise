@@ -44,6 +44,93 @@ public sealed class AnnotationAppearancePolicyTests
         Assert.True(audit.ShouldRender);
     }
 
+    /// <summary>
+    /// §12.5.3's PRINT rule, all four combinations of Print × NoView (#1573).
+    /// The two that the VIEW rule gets wrong on paper are the interesting ones:
+    /// an annotation with no <c>/F</c> at all must NOT print (review markup
+    /// Acrobat and PDFKit leave off paper), and NoView+Print MUST (a print-only
+    /// watermark, the one thing the author meant for paper).
+    /// </summary>
+    [Theory]
+    [InlineData(PdfAnnotationFlags.None, false)]
+    [InlineData(PdfAnnotationFlags.Print, true)]
+    [InlineData(PdfAnnotationFlags.NoView, false)]
+    [InlineData(PdfAnnotationFlags.NoView | PdfAnnotationFlags.Print, true)]
+    public void EvaluateVisibility_PrintIntentSelectsOnThePrintFlag(
+        PdfAnnotationFlags flags,
+        bool expectedOnPaper)
+    {
+        var decision = AnnotationAppearancePolicy.EvaluateVisibility(
+            Annotation(PdfAnnotationSubtype.Square, flags),
+            new RenderOptions { PrintIntent = true });
+
+        Assert.Equal(expectedOnPaper, decision.ShouldRender);
+        if (!expectedOnPaper)
+            Assert.Equal(AnnotationVisibilityDisposition.NotPrintable, decision.Disposition);
+    }
+
+    /// <summary>The VIEW rule is unchanged by #1573 — the same four flags.</summary>
+    [Theory]
+    [InlineData(PdfAnnotationFlags.None, true)]
+    [InlineData(PdfAnnotationFlags.Print, true)]
+    [InlineData(PdfAnnotationFlags.NoView, false)]
+    [InlineData(PdfAnnotationFlags.NoView | PdfAnnotationFlags.Print, false)]
+    public void EvaluateVisibility_WithoutPrintIntentTheViewRuleIsUnchanged(
+        PdfAnnotationFlags flags,
+        bool expectedOnScreen)
+    {
+        var decision = AnnotationAppearancePolicy.EvaluateVisibility(
+            Annotation(PdfAnnotationSubtype.Square, flags),
+            new RenderOptions());
+
+        Assert.Equal(expectedOnScreen, decision.ShouldRender);
+    }
+
+    /// <summary>Hidden (bit 2) suppresses paper too, Print flag or not.</summary>
+    [Theory]
+    [InlineData(PdfAnnotationFlags.Hidden)]
+    [InlineData(PdfAnnotationFlags.Hidden | PdfAnnotationFlags.Print)]
+    public void EvaluateVisibility_PrintIntentStillObeysHidden(PdfAnnotationFlags flags)
+    {
+        var decision = AnnotationAppearancePolicy.EvaluateVisibility(
+            Annotation(PdfAnnotationSubtype.Square, flags),
+            new RenderOptions { PrintIntent = true });
+
+        Assert.False(decision.ShouldRender);
+        Assert.Equal(AnnotationVisibilityDisposition.NotPrintable, decision.Disposition);
+    }
+
+    /// <summary>
+    /// Audit mode has NO say under print intent (#1573). RevealHiddenAnnotations
+    /// draws what no conforming viewer shows and its own remarks say it must
+    /// never reach an export path; a print raster is one, and a Hidden
+    /// annotation revealed onto paper is invented ink in a shared artefact.
+    /// </summary>
+    [Fact]
+    public void EvaluateVisibility_PrintIntentIgnoresAuditMode()
+    {
+        var options = new RenderOptions { PrintIntent = true, RevealHiddenAnnotations = true };
+
+        Assert.False(AnnotationAppearancePolicy.EvaluateVisibility(
+            Annotation(PdfAnnotationSubtype.Square, PdfAnnotationFlags.Hidden), options).ShouldRender);
+        Assert.False(AnnotationAppearancePolicy.EvaluateVisibility(
+            Annotation(PdfAnnotationSubtype.Square, PdfAnnotationFlags.None), options).ShouldRender);
+    }
+
+    /// <summary>
+    /// The category switches are asked FIRST, print intent or not: "print what
+    /// is on the page" never overrides "the user hid review markup".
+    /// </summary>
+    [Fact]
+    public void EvaluateVisibility_PrintIntentStillHonoursTheCategorySwitches()
+    {
+        var decision = AnnotationAppearancePolicy.EvaluateVisibility(
+            Annotation(PdfAnnotationSubtype.Square, PdfAnnotationFlags.Print),
+            new RenderOptions { PrintIntent = true, ShowCommentAnnotations = false });
+
+        Assert.Equal(AnnotationVisibilityDisposition.CategoryDisabled, decision.Disposition);
+    }
+
     [Fact]
     public void EvaluateVisibility_InvisibleOnlySuppressesUnknownSubtypes()
     {

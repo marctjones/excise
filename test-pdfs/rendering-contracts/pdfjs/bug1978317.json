@@ -1,28 +1,27 @@
 {
   "Path": "pdfjs/bug1978317.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:input-policy",
-  "RootCause": "DEGENERATE_INPUT",
+  "Owner": "rendering:quality",
+  "RootCause": "RAW_PIXEL_MATCH",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Notes": "Re-keyed 2026-09-18. The legacy TSV migration pinned page \"0\" with ExpectedRawStatus MALFORMED_PDF / \"no Pages dictionary\". That is wrong: mutool info and qpdf --show-npages both read this as a valid 1-page PDF-1.7, and excise renders page 1 with 3 of 3 comparable oracles agreeing (mutool, PDFBox, PDFium; worst diffFraction 0.019, 0 missing ink tiles). Two REFERENCE tools are the ones that fail it: pdftocairo exits 2 (\"Page annotations object (page 1) is likely malformed. Too big: (32768)\") and Ghostscript times out at 120 s. Contracts are 1-based everywhere else (3702 pages keyed \"1\"); this was one of four files carrying a \"0\" key, and the only one that is not genuinely page-less.",
   "Pages": {
-    "0": {
-      "ExpectedRawStatus": "MALFORMED_PDF",
-      "ExpectedErrorContains": "no Pages dictionary",
+    "1": {
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "RAW_PIXEL_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Three oracles render it and agree with excise; the two that do not (pdftocairo, Ghostscript) fail on the file itself, not on excise's output."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Failing closed is acceptable for this malformed fixture.",
-      "Notes": "Document without a Pages dictionary is accepted as malformed input."
+      "QualityReason": "excise agrees with every oracle that can render the file. Triaged 2026-09-18 against the full-suite raw scan rather than pinned from it.",
+      "Notes": "Replaces a stale page-\"0\" MALFORMED_PDF pin; see the file-level Notes."
     }
   }
 }

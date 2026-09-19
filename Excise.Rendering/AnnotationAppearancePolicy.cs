@@ -51,7 +51,20 @@ internal static class AnnotationAppearancePolicy
         if (!isFieldOrLink && !options.ShowCommentAnnotations)
             return new(AnnotationVisibilityDisposition.CategoryDisabled, isFieldOrLink);
 
-        if ((annotation.Flags & (PdfAnnotationFlags.Hidden | PdfAnnotationFlags.NoView)) != 0
+        if (options.PrintIntent)
+        {
+            // §12.5.3's PRINT rule, which is not the viewer's (#1573): Hidden
+            // suppresses paper too, NoView says nothing about paper, and
+            // nothing prints without the Print flag. RevealHiddenAnnotations is
+            // an audit mode that must never reach an export path (its own
+            // remarks), so it has no say here.
+            if ((annotation.Flags & PdfAnnotationFlags.Hidden) != 0
+                || (annotation.Flags & PdfAnnotationFlags.Print) == 0)
+            {
+                return new(AnnotationVisibilityDisposition.NotPrintable, isFieldOrLink);
+            }
+        }
+        else if ((annotation.Flags & (PdfAnnotationFlags.Hidden | PdfAnnotationFlags.NoView)) != 0
             && !options.RevealHiddenAnnotations)
         {
             return new(AnnotationVisibilityDisposition.HiddenByFlags, isFieldOrLink);
@@ -158,6 +171,14 @@ internal enum AnnotationVisibilityDisposition
     Render,
     CategoryDisabled,
     HiddenByFlags,
+
+    /// <summary>
+    /// Print intent, and §12.5.3 says this annotation does not go on paper:
+    /// Hidden, or no Print flag (#1573). Distinct from
+    /// <see cref="HiddenByFlags"/> because the two answer different questions —
+    /// a NoView annotation is HiddenByFlags on screen and prints fine.
+    /// </summary>
+    NotPrintable,
     UnsupportedInvisible,
 }
 

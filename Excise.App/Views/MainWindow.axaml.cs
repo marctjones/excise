@@ -160,6 +160,9 @@ public partial class MainWindow : Window
             TitleBarAppLabel.Margin = new Thickness(86, 0, 10, 0);
         }
 
+        // #1643: make the custom title row behave like a title bar.
+        TitleBarArea.PointerPressed += OnTitleBarPointerPressed;
+
         // Load and apply window settings (Issue #23)
         _windowSettings = _settingsStore.Load();
         _windowSettings.ApplyTo(this);
@@ -398,6 +401,9 @@ public partial class MainWindow : Window
         }
 
         viewModel.ViewerTileCacheResidentBytesProvider = TileCacheResidentBytes;
+        // #1650: the page a "current page" command acts on, which is the page
+        // filling the viewport rather than the one owning its top edge.
+        viewModel.ViewerMostVisiblePageProvider = MostVisibleViewerPage;
         SchedulePlatformMenuConfigure();
 
         // Push the viewer's *visible* viewport (inside-the-scrollbars)
@@ -438,7 +444,8 @@ public partial class MainWindow : Window
             settings.RedactionWidthPolicy,
             settings.LinkUriCarrierPolicy,
             settings.MetadataCarrierPolicy,
-            settings.RedactionKeepAttachments);
+            settings.RedactionKeepAttachments,
+            settings.RedactionProfile);   // #1586
         viewModel.ApplyPrintScalingPreference(settings.PrintScaling);
         viewModel.ApplyDocumentOpenModePreference(settings.DocumentOpenMode);
         // Preferences → Performance: subscribe first so the restore below
@@ -546,6 +553,8 @@ public partial class MainWindow : Window
         // Only clear the provider if it is still this window's.
         if (viewModel.ViewerTileCacheResidentBytesProvider == (Func<long?>)TileCacheResidentBytes)
             viewModel.ViewerTileCacheResidentBytesProvider = null;
+        if (viewModel.ViewerMostVisiblePageProvider == (Func<int?>)MostVisibleViewerPage)
+            viewModel.ViewerMostVisiblePageProvider = null;
     }
 
     private void UpdateTitle(MainWindowViewModel viewModel)
@@ -680,7 +689,52 @@ public partial class MainWindow : Window
         (step > 0 ? tabs.SelectNextTabCommand : tabs.SelectPreviousTabCommand).Execute().Subscribe();
     }
 
+    /// <summary>
+    /// The left inset of the title row that belongs to the system window
+    /// buttons on macOS — the same 86 px the app label is pushed past.
+    /// </summary>
+    internal const double MacWindowButtonInset = 86;
+
+    /// <summary>
+    /// Whether a press at <paramref name="x"/> in the title row should start a
+    /// window drag (#1643).
+    /// </summary>
+    /// <remarks>
+    /// Pure so the rule can be asserted without a window manager: BeginMoveDrag
+    /// hands the gesture to the OS, and nothing in a headless test can observe
+    /// what the OS then does with it.
+    /// </remarks>
+    internal static bool IsWindowDragPoint(double x, bool isMacOS) =>
+        !isMacOS || x >= MacWindowButtonInset;
+
+    private void OnTitleBarPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            return;
+        if (!IsWindowDragPoint(e.GetPosition(TitleBarArea).X, OperatingSystem.IsMacOS()))
+            return;
+
+        // Double-click zooms, which is what macOS does by default and what
+        // Windows and most Linux shells do too.
+        if (e.ClickCount == 2)
+        {
+            WindowState = WindowState == WindowState.Maximized
+                ? WindowState.Normal
+                : WindowState.Maximized;
+            e.Handled = true;
+            return;
+        }
+
+        // Hand the gesture to the window manager. Everything the user expects
+        // from a title bar — moving, edge snapping, Spaces, Stage Manager —
+        // is the OS's to do once it has the drag.
+        BeginMoveDrag(e);
+    }
+
     private long? TileCacheResidentBytes() => _pdfViewerControl?.ContinuousTileCacheResidentBytes;
+
+    /// <summary>#1650: the page filling the viewport, for "current page" commands.</summary>
+    private int? MostVisibleViewerPage() => _pdfViewerControl?.MostVisiblePage;
 
     private void ConfigurePlatformMenu(MainWindowViewModel viewModel)
     {
@@ -1383,14 +1437,15 @@ public partial class MainWindow : Window
                     e.Area.Height,
                     MainWindowViewModel.DefaultViewerRenderDpi)
                 : null;
-        if (!string.IsNullOrEmpty(e.Text))
-        {
-            _ = viewModel.SetSelectedTextAndCopyAsync(e.Text);
-        }
-        else
-        {
-            viewModel.SelectedText = string.Empty;
-        }
+        // #1645: selecting text does NOT copy it. This used to call
+        // SetSelectedTextAndCopyAsync, which put every selection on the OS
+        // clipboard and into Clipboard History — so an ordinary click, which is
+        // a one-character selection, overwrote whatever the user had copied.
+        // Worse for a redaction tool: it pushed fragments of the document onto
+        // a clipboard every other app can read, with no action from the user.
+        // The selection still powers highlight annotations and search; text
+        // reaches the clipboard only from an explicit Copy.
+        viewModel.SelectedText = string.IsNullOrEmpty(e.Text) ? string.Empty : e.Text;
     }
 
     private void OnPageChanged(object? sender, PageChangedEventArgs e)

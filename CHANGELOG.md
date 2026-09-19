@@ -6,10 +6,86 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.10.0] - 2026-09-17
+
 Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Changed
+- **Redaction output profiles: Standard is the new default everywhere, and
+  Maximum is an explicit choice** (#1586). Product decision by Marc Jones,
+  2026-09-17; it supersedes the "defaults were deliberately not flipped" note
+  for these carriers (#1169/#1187). Every path — GUI, `excise redact`, batch
+  `redaction.apply`, scripting, and the library's
+  `RedactText`/`RedactArea`/`RedactAreas` — now removes the hidden machinery a
+  term scrub cannot make safe, and REPORTS each removal:
+  - **all JavaScript** (the document name tree, `/OpenAction`, and
+    catalog/page/annotation/field `/A` and `/AA`, including `/JS` held as a
+    STREAM) and every **external-effect action** (`/Launch`, `/SubmitForm`,
+    `/ImportData`, `/GoToR`, `/GoToE`). Internal `/GoTo` and `/Named`
+    navigation is kept. Found by walking the reachable object graph, with the
+    `/Next` chain of each surviving action pruned — enumerating known
+    locations is what #1581 was.
+  - **`/PieceInfo`** (catalog, pages and form XObjects), **page `/Thumb`**
+    images (a picture of the page *before* the redaction, which nothing
+    regenerates), and the **appearance stream of any hidden annotation or
+    widget** (`/F` Hidden/NoView, or on an OFF layer).
+  - **content in optional-content groups that are OFF by default**, those
+    groups' definitions, and annotations on them. The most destructive Standard
+    step on a real document — a hidden layer is often a watermark — so every
+    removal is counted in the report. Gated on `IncludeHiddenLayers`: a caller
+    who asked not to reach into hidden layers does not get them deleted
+    instead.
+  - the document **`/Info` dictionary and XMP `/Metadata` packet, wholesale**,
+    keeping only the PDF/A and PDF/UA identification. This is what makes the
+    library, CLI and batch paths match the GUI safe copy, and it closes #1583's
+    custom-`/Info`-key leak by construction: §14.3.3 lets a producer use any
+    key, so a targeted scrub must know names it cannot know.
+  - Accessibility and navigation carriers are **KEPT** and term-scrubbed:
+    `/TU`, `/Alt`, `/ActualText`, `/E`, structure-element `/T`, field names,
+    bookmark titles and link targets.
+  - **Maximum** (`--profile maximum`, batch `profile: maximum`, Preferences ›
+    Redaction › Output Profile) adds: remove-whole on every kept carrier, and
+    strips bookmarks, link annotations, comments/markup and field names, and
+    flattens forms and annotations. The report, the CLI and the redacted-copy
+    dialog all say the output is **no longer accessible or interactive**.
+  - Opt out per removal with `RedactionOptions.RemoveScripts`,
+    `.RemoveExternalActions`, `.RemovePieceInfo`, `.RemoveThumbnails`,
+    `.RemoveHiddenLayerContent`, `.RemoveHiddenAnnotationAppearances` and
+    `.StripDocumentMetadata`. The engine reads only these flags;
+    `RedactionOptions.Profile` is a label for the report, so a hand-built option
+    set cannot misreport what ran.
+  - ⚠️ **Behaviour changes for existing callers.** A `RedactText` or
+    `RedactArea` call that used to keep `/Title`, `/Author`, the XMP packet,
+    every custom schema, all JavaScript, `/PieceInfo`, thumbnails and hidden
+    layers now loses them. `StripDocumentMetadata = false` restores the old
+    surgical metadata scrub.
+  - `RedactArea`/`RedactAreas` gained report-returning overloads
+    (`RedactAreaWithReport`, `RedactAreasWithReport`); the area path previously
+    had no return channel at all.
+- **PDF/UA identification survives the metadata strip** (#1586, extending
+  #1507). Measured with veraPDF 1.28 `-f ua1` on
+  `test-pdfs/pdfua/7.1-t01-pass-a.pdf`, which passes as shipped: removing the
+  catalog `/Metadata` fails clause 7.1 test 8; re-emitting `pdfuaid:part` alone
+  fails 7.1 test 9 (`dc:title` is required); `pdfuaid:part` plus a
+  **synthesised** `dc:title` passes. The identity-only packet now carries both
+  identifications and a fixed placeholder title, so no document-derived text
+  rides back in. This supersedes `PdfAIdentityXmp`'s "a PDF/UA claim is
+  deliberately NOT preserved" note, whose premise — that the strip deletes the
+  title — is no longer true.
+- **`PdfDocument.ScrubMetadata` now clears EVERY `/Info` key**, not the
+  §14.3.3 Table 349 list (#1583). A producer's `/CaseName (…)` survived the
+  call the API described as removing "all document-level metadata", and the
+  carrier-trap survey measured it leaking to qpdf afterwards. Use
+  `ScrubInfoKeys` to name what goes instead.
+- **The carrier-scrub 3-character floor applies to `Strip` and not to
+  `RemoveWhole`** (#1586). Stripping "of" out of every `/Alt` corrupts
+  unrelated values, which is what the floor is for; dropping the whole value is
+  destruction the caller chose, and it is Maximum's mode. Applying the floor
+  there left a 2-character term sitting in a carrier under the one profile
+  whose promise is that no carrier keeps it. `ScrubTerms` now reports the floor
+  per carrier instead of skipping the whole pass.
+
 - **Redacted output carries no attachments by default** (#1572). Product
   decision by Marc Jones, 2026-09-17. Before, only the GUI's redacted-copy flow
   removed attachments; `excise redact`, batch `redaction.apply`, scripting and
@@ -43,6 +119,54 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   remove `/AcroForm /XFA` (and `/NeedsRendering`) from any document, report it
   as an `/XFA` carrier row (and a "XFA form" line in the redacted-copy dialog),
   and keep the AcroForm fields, which every non-XFA viewer already uses.
+- **The thumbnail sidebar no longer pre-renders the whole document while you
+  are waiting for the first page** (#1565). The background pre-warm used to
+  start with the document: on the 126-page IRS instructions it held a CPU busy
+  for 5.0 s from the moment the file opened (measured from the app's own log in
+  the 2026-09-17 release-baseline run: open complete at +0.1 s, search index at
+  +2.0 s, "pre-warm complete" at +5.0 s), which is what #1544 saw as a window
+  still changing 5.6 s after launch where Preview settles in 1.4 s. It now
+  waits for a quiet period in which nothing has opened a document, turned a
+  page, changed the zoom, scrolled the sidebar or reported search-index
+  progress — and any of those starts the wait again, so a reader who keeps
+  working never has 126 background page renders started underneath them. The
+  `ThumbnailPrewarm` preference is unchanged and now means "warm when idle",
+  as it always said.
+- **The background thumbnail pre-render is OFF by default** (#1565). Marc's
+  decision, 2026-09-17, taken on the measurement rather than ahead of it. On
+  irs-1040-instructions.pdf (126 pages) the whole-document pre-warm costs
+  ~110 MB of peak footprint and ~80 MB that no compacting collect returns, plus
+  5 s of one CPU, for a DISK cache whose benefit lands on a later re-open of
+  the same file. Deferring it to an idle period (the first attempt) did not pay:
+  the #1543 re-run moved the work into the measured idle window instead, taking
+  idle CPU from 0.10% to 5.18% and the 30 s-idle footprint from 671 MB to
+  775 MB. Sidebar scrolling never depended on it — demand loads plus the
+  12-page prefetch margin already cover it, and the pre-warm never put a bitmap
+  in the sidebar at all. The setting stays (Preferences › Performance ›
+  "Render thumbnails in the background") and the Fast preset still turns it on,
+  because that preset is exactly this trade.
+- **The quiet period IS the existing idle delay** (#1565) — Preferences ›
+  Performance › "Idle delay (seconds)", 30 s by default, formerly labelled
+  "Idle delay before releasing caches". There is one definition of idle in the
+  app rather than a second number nobody can find, so **lowering it also makes
+  thumbnails warm sooner** and raising it holds them back longer; the help text
+  on both controls says so. It applies whether or not "Drop scroll-back caches
+  when the window is deactivated, minimized, or idle" is on — it is a duration,
+  not a trim trigger, and a user who turned trimming off did not ask for the
+  pre-warm to run during their first page — so that box no longer disables it.
+  Changing it re-queues a pending pre-warm, so a lower value takes effect at
+  once instead of after the old period would have expired.
+- **Pre-warming a thumbnail no longer builds three bitmaps to throw them all
+  away** (#1565). The pre-warm wants the WebP on disk and nothing else, but it
+  went through the on-demand path, which produced the rendered master, a copy
+  for the caller and a second copy for the cache write — and on a re-open
+  decoded every cached WebP only to dispose the pixels. It now renders straight
+  to the cache file (`ThumbnailCacheService.WarmAsync`) and skips any page
+  already on disk without decoding it.
+- **The search-index status no longer redraws the status bar once per page**
+  (#1565). A 126-page document reported progress 126 times in ~2 s; reports are
+  now throttled to 250 ms, and the final one (which clears the text) is never
+  throttled.
 
 ### Fixed
 - **`unredact` saw NOTHING on the Manafort filing: both detectors treated an
@@ -75,6 +199,169 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   the bench scored 100% on the same day this document scored zero. A gate built
   from fixtures its authors wrote cannot see an assumption those authors share —
   it took one real document, which is the entire argument for tier B.
+
+- **A long dialog message pushed its own buttons off the window** (#1622).
+  Every dialog in `AvaloniaUserDialogService` was a fixed-size
+  `CanResize=false` window holding a `StackPanel` of message plus buttons, and
+  a StackPanel gives its children unbounded height — so a message taller than
+  the window simply overflowed, buttons and all. Measured on the #1586
+  redacted-copy report in the shipped app: the text laid out 400x420 inside a
+  450x228 window with the OK button at y=493. A reader could see down to "so
+  the file remains PDF/A" and no further — the `Output profile:` line, the
+  per-removal lines and the "this copy is NO LONGER accessible or interactive"
+  warning were all below the bottom edge, and the report was only recoverable
+  through the accessibility tree. Marc hit this independently.
+  The content is now a `*,Auto` grid — the footer row is measured first, so it
+  cannot be displaced — inside a `SizeToContent.Height` window with a 640 px
+  cap, and the message sits in a ScrollViewer for whatever still does not fit.
+  Applies to all five dialogs (message, confirm, unsaved-changes, text prompt,
+  password prompt); the prompts keep their input field in the footer so it
+  cannot scroll away either.
+  ⚠️ The floor that keeps a SHORT message the size it always was lives on the
+  CONTENT, not the window: measured the same day, `Window.MinHeight` is not
+  applied under `SizeToContent` (a one-line dialog laid out 90 px tall with
+  MinHeight 200 set, and raising it to 520 changed nothing).
+  Gate: `DialogMessageLayoutTests`, on real laid-out bounds. Both of its
+  assertions were verified by planting defects: restoring the fixed height and
+  StackPanel reddens the long-message case, dropping the content floor or
+  inflating it reddens the short-message case, and — found this way, not
+  assumed — swapping the grid back for a StackPanel passed every first-draft
+  assertion, because the headless window honours neither MinHeight nor
+  MaxHeight under SizeToContent and simply grew. The test now also arranges
+  the content at a size smaller than the message and checks the button there.
+- **The attachments warning is a persistent banner, not a 5 s toast** (#1619).
+  The notices row sits above the document, so the toast's auto-dismiss re-laid
+  out the window and jumped the page under the reader five seconds after the
+  document opened. Measured on `irs-1040-instructions.pdf` — the one
+  reader-bench document with an embedded file — that dismissal WAS the whole
+  remaining #1544 `launch drawn` tail (5.6 s): the process used 0.0% of a core
+  from 3.0 s until the timer fired at STEP 13 + 5.002 s, in every repeat, and
+  removing the attachment removed the event. The banner now behaves like the
+  XFA notice beside it: it stays until the reader closes it or the document
+  changes. The wording and the pointer to the Attachments pane are unchanged,
+  and the generic toast surface (and its 5 s timer) is untouched. A warning
+  about a carrier the page view cannot show — one that can hold a full copy of
+  the data the page was redacted of — should not expire on a timer either.
+- **The hidden-layer removal stopped at the page** (#1586). Standard removes
+  content in optional-content groups that are OFF by default — but the pass
+  walked only the PAGE content stream, and for a `Do` it asked whether the
+  XObject *itself* carried a hidden `/OC`. A hidden `/OC … BDC … EMC` span
+  inside a **visible** form XObject (whose `/Properties` live in the form's own
+  resources) was left in place, while the report still said hidden spans had
+  been removed. A guarantee that holds one level deep is the failure mode this
+  project treats as worse than promising nothing. The pass now recurses into
+  visible form XObjects (bounded at depth 8) and both levels share one span
+  filter so they cannot drift. Trap: `ocg-hidden-in-form`.
+- **An `/Alt` describing a redacted image could not be checked, and was not
+  reported** (#1586). `StructureTreeRedactionScrubber` has two passes and both
+  are blind to a `/Figure` whose `/Alt` describes an image an AREA redaction
+  blacked out: pass 1 needs an `/MCID`/`/OBJR` link to the area, and pass 2
+  content-matches the carrier against text the glyph pass removed — an image
+  redaction removes none. The area report now raises a `structure-tree /Alt`
+  carrier refusal naming the count (so `IsCleanSuccess` goes false), and
+  Maximum drops the whole value and reports the removal. It is deliberately
+  **not** stripped under Standard: an image can be blacked out in one corner
+  and correctly described everywhere else, and an `/Alt` is all a blind reader
+  gets.
+  ⚠️ **The refusal reaches the GUI dialog through the ledger, not the return
+  value.** `Excise.App/Services/RedactionService.RedactArea` calls the `void`
+  `page.RedactArea(rect, options)` overload and discards the `RedactionReport`,
+  so the engine computed the carrier row and threw it away. The count is now
+  recorded on `PdfDocumentRedactionLedger` — the mechanism created for exactly
+  this in #1572 — and `RedactedCopySafetyPolicy` reads it, so the redacted-copy
+  dialog carries the warning. A report nobody receives is not one.
+- **Maximum could take an attachment the caller asked to keep** (#1586).
+  `FileAttachment`, `Sound` and `Movie` are markup annotations, so Maximum's
+  annotation strip removed the only reference to a file the caller had kept
+  with `KeepAttachments` — the same defect the `/GoToE` action strip had, by a
+  different door. Such a file specification is now re-anchored on the catalog
+  `/AF` (§7.11.4) and the re-anchoring is reported; a `Sound` annotation, whose
+  clip is a bare stream rather than a file specification and so cannot be
+  re-anchored, is KEPT instead of silently emptied.
+- **The redaction covering box was untagged content** (#1586). A filled
+  rectangle appended to a TAGGED page is neither tagged as real content nor
+  marked as an artifact, so every excise redaction of a tagged PDF produced a
+  file that fails PDF/UA-1 clause 7.1 — silently, in the core feature, and no
+  existing test could see it. Found by #1586's new veraPDF accessibility gate on
+  its first run, while looking for a different defect. The box is now wrapped in
+  `/Artifact BMC … EMC` (§14.8.2.2), which is what it is: it carries no meaning,
+  and a screen reader announcing it would be reading the redaction rather than
+  the document.
+- **Redaction leaks in interactive carriers** (#1581), each confirmed with
+  qpdf's object dump after redaction and each now clean: a widget's `/AA /K`
+  JavaScript, a widget's `/AA /F` JavaScript held as a **stream**, a
+  non-terminal field's `/A` JavaScript, a `/Launch` action's file target, the
+  appearance stream of a widget flagged hidden, and a text field's **`/RV`**
+  rich value. `/RV` is the one the profile's removals do not cover: it needs no
+  `/V`, and the measured trap put the widget at `[72 600 272 620]` while the
+  term was drawn at y 680, so no match box ever overlapped it — `/RV` therefore
+  joins `/V` and `/DV` in the **document-level** field scrub. mutool *draws*
+  `/RV`, so the redacted name was still on the page in another reader, not only
+  in the bytes.
+- **Redaction leaks in document-level carriers** (#1583): custom `/Info` keys,
+  structure-element `/T`, and `/PieceInfo` private data. Structure-element text
+  carriers are now their own list (`/ActualText`, `/Alt`, `/E`, `/T`), kept
+  separate from the marked-content property-list carriers, which have no title.
+- **`KeepAttachments` silently lost a file to the action strip** (#1586).
+  Removing a `/GoToE` action drops the only reference to the embedded file it
+  targets, so a caller who explicitly asked to keep attachments got one fewer
+  with nothing saying which or why (6 files → 5 on the all-routes fixture).
+  Such a file specification is now re-anchored on the catalog `/AF` and
+  reported.
+- **Ctrl+Tab switches document tabs on macOS** (#1598). It never did: the
+  gesture was handled by a tunnelling `KeyDown` handler in `MainWindow`, and
+  AppKit takes Control-Tab as a key-view / key-equivalent keystroke, so Avalonia
+  was never told. Found by `reader_speed_bench.py --multi --configs excise-tabs`
+  with a real CGEvent (2 of 2 runs, the front document never changed); every
+  in-app test passed throughout, because a synthetic key event reaches the
+  handler on every platform. The native Window menu now carries **Show Previous
+  Tab** (Ctrl+Shift+Tab) and **Show Next Tab** (Ctrl+Tab) — Safari's own key
+  equivalents — acting on the document tabs of the window whose menu it is,
+  enabled only while that window has more than one tab. The `KeyDown` path is
+  unchanged for Windows and Linux (and still serves Ctrl+PgDn/PgUp and
+  Cmd+Shift+] / [ on macOS). macOS's own window-tab actions, which move through
+  a merged NSWindow tab group rather than one window's document tabs, are
+  retitled **Show Previous/Next Window Tab** so the two pairs are
+  distinguishable in one menu.
+- **Windows printing now honours each annotation's `/Print` flag** (#1573).
+  The renderer had no print mode, so sheets were rastered with the VIEWER's
+  §12.5.3 rule — Hidden and NoView suppressed, everything else drawn — and that
+  is wrong on paper in both directions: review markup with no `/F` at all (the
+  common producer shape; excise's own authoring stamps `/F Print`, most others
+  do not) was printed although Acrobat and PDFKit leave it off, and a print-only
+  watermark (`NoView` + `Print`) was dropped although it is the one thing the
+  author meant for paper. `RenderOptions.PrintIntent` (new, public — the
+  Excise.Rendering API baseline changed) selects the print rule instead: Hidden
+  suppresses paper too, NoView says nothing about paper, and nothing prints
+  without the Print flag. `PrintSheetSource` sets it. Audit mode
+  (`RevealHiddenAnnotations`) is deliberately ignored under print intent — it
+  must never reach an export path, and a print raster is one. macOS is
+  unaffected: PDFKit prints the saved file and applies §12.5.3 itself.
+  The rule is pinned per annotation against Ghostscript, whose
+  `-dPrinted` switch makes it a print oracle and a view oracle on the same
+  fixture (`AnnotationPrintIntentTests`, plus `GhostscriptReferenceRenderer`
+  gains `TryRenderPageForViewIntent`).
+- **The pre-push gate checked the wrong commit range on a stepped push**
+  (#1600). git hands a `pre-push` hook `<local ref> <local sha> <remote ref>
+  <remote sha>` per pushed ref; the hook exported the remote sha as
+  `GATE_ASYMMETRY_BASE` and discarded the local one, while
+  `scripts/check-gate-asymmetry.sh` always evaluated `base...HEAD`. So
+  `git push origin <sha>:develop` from a checkout that had moved on judged
+  commits nobody was pushing — and reported green, with only `base=` in its
+  output to go on, which made the gate's own advice ("two pushes, not two
+  commits") impossible to follow from one checkout. The checker now takes a
+  head (`GATE_ASYMMETRY_HEAD`, or a second argument; default `HEAD`), prints it
+  resolved next to the base, and fails hard rather than silently falling back
+  when it does not resolve. The hook passes the pushed sha, and — because every
+  test row still builds the WORKING TREE — prints the pushed and tested commits
+  side by side on a stepped push and refuses a pushed commit that is not an
+  ancestor of HEAD, naming the temporary-worktree route instead. The hook body
+  moved to the tracked `scripts/pre-push-hook.sh` (`--install-hook` now writes a
+  two-line stub, and resolves the hook path through `git rev-parse --git-path`,
+  which a linked worktree needs), so it is testable:
+  `scripts/test-check-gate-asymmetry.sh` is a new t0 selftest row. ⚠️ **A hook
+  installed before this must be re-installed once**: `scripts/test-tier.sh
+  --install-hook`.
 - **Closing a document after an idle trim kept the whole document in memory**
   (#1564, #1543). A cache trim — the idle trim, a window switch or OS
   pressure — recorded the open document in render-ahead's single-page plan,

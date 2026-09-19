@@ -53,7 +53,13 @@ public sealed class WholeWordRedactionTests
         // #1000's decision, pinned as a fact. Redacting "Lee" by substring also
         // takes the "lee" out of "Sleeman".
         using var doc = PdfDocument.Open(SleemanPdf());
-        var report = doc.RedactText("Lee", RedactionOptions.Default);
+        // #1586: StripDocumentMetadata: false. The Standard profile deletes
+        // /Info wholesale, which is the right default and would make this test
+        // pass for the wrong reason — an empty title matches no rule at all.
+        // What is pinned here is the carrier scrub's MATCH RULE, so the carrier
+        // has to survive to be read.
+        var report = doc.RedactText(
+            "Lee", RedactionOptions.Default with { StripDocumentMetadata = false });
 
         report.WholeWord.Should().BeFalse();
         report.MatchesLocated.Should().Be(2,
@@ -84,7 +90,12 @@ public sealed class WholeWordRedactionTests
         // substring, whole-word "Lee" would leave the page correct and still
         // turn "Sleeman" into "Sman" in /Info — one redaction, two rules.
         using var doc = PdfDocument.Open(SleemanPdf());
-        doc.RedactText("Lee", RedactionOptions.Default with { WholeWord = true });
+        // StripDocumentMetadata: false — see Substring_IsStillTheDefault.
+        doc.RedactText("Lee", RedactionOptions.Default with
+        {
+            WholeWord = true,
+            StripDocumentMetadata = false,
+        });
 
         TitleOf(doc).Should().Be("Sleeman met",
             "the carrier scrub honours the same word-boundary rule");

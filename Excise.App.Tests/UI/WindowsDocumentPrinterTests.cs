@@ -149,6 +149,87 @@ public class WindowsDocumentPrinterTests : IDisposable
         CancellationToken cancellationToken = default) =>
         new(path, "job 1546", scaling, Owner: null, cancellationToken);
 
+    /// <summary>
+    /// A one-page PDF with two annotations that the view rule and the print rule
+    /// disagree about (#1573): a red square with no <c>/F</c> at all, which
+    /// §12.5.3 keeps off paper, and a blue <c>NoView|Print</c> square, which is
+    /// a print-only watermark. Hand-written, because
+    /// <c>PdfAnnotationAuthoring</c> stamps <c>/F Print</c> on everything it
+    /// creates — the flag under test.
+    /// </summary>
+    private string AnnotationFlagPdf(string name)
+    {
+        var annots = new[]
+        {
+            "/Subtype /Square /Rect [20 500 200 680] /C [1 0 0] /IC [1 0 0] /BS << /W 3 >>",
+            "/Subtype /Square /F 36 /Rect [220 500 400 680] /C [0 0 1] /IC [0 0 1] /BS << /W 3 >>",
+        };
+        var refs = string.Join(" ", annots.Select((_, i) => $"{4 + i} 0 R"));
+        var objects = new[]
+        {
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 612 792] >>\nendobj\n",
+            $"3 0 obj\n<< /Type /Page /Parent 2 0 R /Annots [{refs}] >>\nendobj\n",
+        }.Concat(annots.Select((a, i) => $"{4 + i} 0 obj\n<< /Type /Annot {a} >>\nendobj\n")).ToArray();
+
+        var sb = new System.Text.StringBuilder("%PDF-1.7\n");
+        var offsets = new List<int>();
+        foreach (var o in objects)
+        {
+            offsets.Add(sb.Length);
+            sb.Append(o);
+        }
+
+        int xref = sb.Length;
+        sb.Append("xref\n0 ").Append(objects.Length + 1).Append("\n0000000000 65535 f \n");
+        foreach (var offset in offsets)
+            sb.Append(offset.ToString("D10")).Append(" 00000 n \n");
+        sb.Append("trailer\n<< /Size ").Append(objects.Length + 1)
+          .Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF");
+
+        var path = Path.Combine(_dir, name);
+        File.WriteAllBytes(path, System.Text.Encoding.Latin1.GetBytes(sb.ToString()));
+        return path;
+    }
+
+    /// <summary>
+    /// #1573: the sheets this printer hands the spooler are rastered with PRINT
+    /// intent, so the annotation <c>/F</c> flags follow §12.5.3's print rule and
+    /// not the viewer's. Before this, a sticky note with no Print flag reached
+    /// paper although Acrobat and PDFKit leave it off, and a print-only
+    /// watermark was dropped.
+    ///
+    /// <para>The assertion is about the PIXELS the spooler receives, not about
+    /// the options object: an options assertion would pass on a renderer that
+    /// ignores the flag. The rule itself is pinned against Ghostscript in
+    /// Excise.Rendering.Tests' AnnotationPrintIntentTests.</para>
+    /// </summary>
+    [Fact]
+    public void PrintSheets_ApplyTheSection1253PrintRuleToAnnotationFlags()
+    {
+        using var document = PdfDocument.Open(File.ReadAllBytes(AnnotationFlagPdf("print-flags.pdf")));
+        var sheets = new PrintSheetSource(
+            document, PrintPageSequence.Build(document.PageCount, [], 1, true), PrintScalingMode.ShrinkOversized);
+
+        using var raster = sheets.Render(0, Letter100, CancellationToken.None);
+
+        long red = 0, blue = 0;
+        for (int y = 0; y < raster.Bitmap.Height; y++)
+        {
+            for (int x = 0; x < raster.Bitmap.Width; x++)
+            {
+                var c = raster.Bitmap.GetPixel(x, y);
+                if (c.Red > 150 && c.Green < 100 && c.Blue < 100) red++;
+                else if (c.Blue > 150 && c.Red < 100 && c.Green < 100) blue++;
+            }
+        }
+
+        red.Should().Be(0,
+            "an annotation with no Print flag does not go on paper (§12.5.3)");
+        blue.Should().BeGreaterThan(100,
+            "a NoView annotation WITH the Print flag is exactly what the author meant to print");
+    }
+
     // ── the printer ────────────────────────────────────────────────────
 
     [Fact]

@@ -252,15 +252,32 @@ public class RenderAheadTests
             viewer.ContinuousLookAheadStartCount.Should().Be(2,
                 "from page 2 only page 3 is rendered ahead: page 1 is still cached from when it was read");
 
-            // A pass at the same position (a structural refresh rebuilds the
-            // slots and re-plans) finds everything cached and starts nothing.
+            // An IDLE viewer starts nothing: no scroll, no zoom, no mutation.
+            // Stated as a delta rather than a pinned count (#617): the property
+            // is "idle starts nothing", which survives any legal change to how
+            // much is rendered ahead, while a hard 2 has to be rewritten every
+            // time that budget moves — and a rewritten expectation is exactly
+            // what makes a perf change able to redefine "correct".
+            int lookAheadStarts = viewer.ContinuousLookAheadStartCount;
             int visibleStarts = viewer.ContinuousRenderStartCount;
+            await PumpAsync(window, TimeSpan.FromMilliseconds(500));
+            viewer.ContinuousLookAheadStartCount.Should().Be(2, "no render-ahead for cells already cached");
+            viewer.ContinuousLookAheadStartCount.Should().Be(lookAheadStarts,
+                "an idle viewer renders nothing ahead — everything in reach is cached");
+            viewer.ContinuousRenderStartCount.Should().Be(visibleStarts, "an idle viewer stays idle");
+
+            // #1651: a structural refresh DROPS the page-number-keyed tiles, so
+            // it re-renders. That cost is the fix, not a regression: keeping
+            // those tiles left the old pixels under the new page numbers and
+            // the reader's edit looked lost when they scrolled back. The cost
+            // is scoped — RefreshContinuousLayout has exactly one production
+            // caller, DocumentStructureChanged, so it never runs without a
+            // mutation behind it.
             viewer.RefreshContinuousLayout();
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
             await WaitLookAheadIdleAsync(window, viewer);
-            await PumpAsync(window, TimeSpan.FromMilliseconds(500));
-            viewer.ContinuousLookAheadStartCount.Should().Be(2, "no render-ahead for cells already cached");
-            viewer.ContinuousRenderStartCount.Should().Be(visibleStarts);
+            viewer.ContinuousRenderStartCount.Should().BeGreaterThan(visibleStarts,
+                "a structural refresh drops the page-number-keyed tiles and renders the new order");
         }
         finally
         {

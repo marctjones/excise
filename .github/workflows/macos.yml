@@ -1,0 +1,228 @@
+# macOS runner — ADVISORY on develop, EVIDENCE on a tag (#1595)
+#
+# WHAT THIS IS FOR
+#
+# macOS is the platform excise is developed and released on, so unlike the
+# Linux and Windows runners this one is NOT here to find platform surprises.
+# It answers two different questions:
+#
+#   1. On develop: does excise build and test on a machine that is NOT Marc's?
+#      Every local gate runs on one Mac with a warm nuget cache, a full corpus,
+#      six reference renderers and whatever else accumulated there. A clean
+#      runner is the only check that the build does not silently depend on any
+#      of it.
+#   2. On a v* tag: can the release .app be built from the tagged tree alone,
+#      and does the result match what was built locally? #1389 is the reason
+#      this matters — a different SDK (Homebrew's) produced a binary that wrote
+#      DIFFERENT PDF BYTES. A second, independent build of the same tag is the
+#      cheapest detector for that class of problem.
+#
+# WHAT THIS IS NOT
+#
+# Not the release gate. t1 (and t2 for a candidate) run locally, where the
+# corpora and the reference renderers actually are — LOCAL_GATES.md, and the
+# #1355 reasoning the Linux workflow's header spells out. This runner has no
+# corpus, no oracles, no coverage floors and no pixel baselines.
+#
+# It also does not PUBLISH anything. The tag job uploads its .app as a build
+# artifact; attaching assets to a GitHub release is #1596, and publishing stays
+# a human decision. The builds are unsigned and not notarized by choice
+# (MEMORY: "Signing/notarization declined"); the tag job only ad-hoc signs, the
+# same as scripts/build-macos-app.sh does locally (#635).
+
+name: macOS (advisory)
+
+on:
+  push:
+    branches:
+      - develop
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+concurrency:
+  group: macos-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Any 10.0.x SDK; global.json's rollForward latestFeature accepts whatever
+  # patch lands. Never pin a patch floor (MEMORY: "SDK: any 10.0.x").
+  DOTNET_VERSION: '10.0.x'
+  # NU3012: ReactiveUI/Splat's author signing cert was revoked upstream (#343).
+  DOTNET_NUGET_SIGNATURE_VERIFICATION: false
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+  TRX_DIR: ${{ github.workspace }}/artifacts/trx
+
+jobs:
+  macos:
+    name: macOS build + tests
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Record the toolchain
+        # dotnet --info is evidence, not noise: #1389/#1390 turned on WHICH
+        # SDK build was in use, and a version number alone cannot tell
+        # Microsoft's from Homebrew's.
+        run: |
+          dotnet --info
+          cat global.json
+          sw_vers
+          uname -m
+          mkdir -p "$TRX_DIR"
+
+      - name: Cache nuget
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-macos-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-macos-
+
+      - name: Restore
+        run: dotnet restore excise.sln
+
+      - name: Build (Debug, warnings are errors)
+        run: dotnet build excise.sln -c Debug --no-restore -warnaserror
+
+      - name: Build (Release, warnings are errors)
+        # Release excludes the Roslyn-scripting branches (EnableScripting is
+        # off there), so a warning inside them only appears in this build.
+        run: dotnet build excise.sln -c Release --no-restore -warnaserror
+
+      - name: Self-test the trx verdict
+        # A --filter matching nothing exits 0, so the exit code of the test
+        # steps is not the verdict; assert-trx-green.sh is. Prove its red paths
+        # before trusting it (#1527).
+        run: scripts/assert-trx-green.sh --self-test
+
+      - name: Excise.Core.Tests
+        run: |
+          dotnet test Excise.Core.Tests --no-build -c Debug \
+            --results-directory "$TRX_DIR" \
+            --logger "trx;LogFileName=core.trx" \
+            --logger "console;verbosity=normal"
+
+      - name: Excise.Cli.Tests
+        run: |
+          dotnet test Excise.Cli.Tests --no-build -c Debug \
+            --results-directory "$TRX_DIR" \
+            --logger "trx;LogFileName=cli.trx" \
+            --logger "console;verbosity=normal"
+
+      - name: Excise.Avalonia.Tests (headless)
+        run: |
+          dotnet test Excise.Avalonia.Tests --no-build -c Debug \
+            --results-directory "$TRX_DIR" \
+            --logger "trx;LogFileName=avalonia.trx" \
+            --logger "console;verbosity=normal"
+
+      - name: Verify Core/Cli/Avalonia actually ran
+        # A floor, not an exact count: a filter or rename that empties a suite
+        # must read as red, never as a silent 0-test pass. Raise it when the
+        # counts rise; never lower it.
+        run: |
+          scripts/assert-trx-green.sh \
+            "$TRX_DIR/core.trx" "$TRX_DIR/cli.trx" "$TRX_DIR/avalonia.trx" \
+            --min-passed 1000
+
+      - name: The static gates that need no corpus
+        # These are t0 rows that depend on the tree alone. The ones needing a
+        # corpus, the reference renderers or a full App.Tests trx stay local.
+        run: |
+          set -euo pipefail
+          scripts/verify-true-redaction.sh
+          scripts/check-fixture-locators.sh
+          scripts/check-doc-claim-freshness.sh
+          scripts/check-redaction-oracles.sh
+
+      - name: Skips carry a reason (#1172, on this runner's trx)
+        run: scripts/check-skip-budget.sh Excise.Core.Tests/Excise.Core.Tests.csproj --trx "$TRX_DIR/core.trx"
+
+      - name: Upload trx
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-trx
+          path: artifacts/trx/
+          retention-days: 7
+          if-no-files-found: warn
+
+  release-app:
+    name: macOS release .app (tag only)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: macos
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: The tag names the version the tree declares
+        # #1627: a tagged build stamps the assemblies from the TREE, so a tag
+        # that disagrees ships a binary whose About window names a different
+        # release. That shipped once, for a whole cycle. Checked BEFORE the
+        # build, so the failure is one line rather than a bad artifact.
+        run: scripts/check-version-consistency.sh --tag "$GITHUB_REF_NAME"
+
+      - name: Build the .app from the tag
+        # The same script the local release uses, so the comparison below is
+        # between two runs of one recipe rather than between two recipes.
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "building $VERSION"
+          scripts/build-macos-app.sh --version "$VERSION" --output dist
+
+      - name: The built app is the tagged version, signed and self-contained
+        # A zip that unpacks is not a build that shipped correctly. There is no
+        # CLI inside the .app (CFBundleExecutable is Excise.App and the bundle
+        # carries no `excise` binary), and launching the GUI needs a window
+        # server the runner does not have — a launch there fails with Avalonia's
+        # -6661 for reasons that have nothing to do with the build (MEMORY:
+        # "-6661 is display state"). So this checks what CAN be checked without
+        # a display: the version the tag asked for, the ad-hoc signature (#635)
+        # and the native components that must travel with it.
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          plutil -p "dist/excise.app/Contents/Info.plist" | grep -F "$VERSION"
+          codesign -dv "dist/excise.app" 2>&1 | grep -F 'Signature=adhoc'
+          test -x "dist/excise.app/Contents/MacOS/Excise.App"
+          for lib in libSkiaSharp.dylib libHarfBuzzSharp.dylib libAvaloniaNative.dylib; do
+            test -f "dist/excise.app/Contents/MacOS/$lib" || {
+              echo "missing native component: $lib"; exit 1; }
+          done
+
+      - name: Record the checksum for comparison with the local build
+        # #1389: a different SDK produced a binary that wrote different PDF
+        # bytes. Two independent builds of one tag are the cheap detector. The
+        # zip itself is not byte-reproducible (timestamps), so this records the
+        # checksum as evidence rather than asserting equality — compare the
+        # unpacked payload when a mismatch matters.
+        run: |
+          set -euo pipefail
+          shasum -a 256 dist/excise-*-macos-*.zip | tee dist/ci-build.sha256
+
+      - name: Upload the build
+        # Artifact only. Attaching to the GitHub release is #1596, and
+        # publishing stays a human decision.
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-app-${{ github.ref_name }}
+          path: |
+            dist/excise-*-macos-*.zip
+            dist/excise-*-macos-*.zip.sha256
+            dist/ci-build.sha256
+          retention-days: 14
+          if-no-files-found: error

@@ -231,8 +231,25 @@ internal static class PdfAIdentityXmp
     /// packet that carries <paramref name="identity"/> and nothing else.
     /// </summary>
     internal static void Write(PdfDocument document, PdfAIdentity identity)
+        => Write(document, identity, null);
+
+    /// <summary>
+    /// Replace <paramref name="document"/>'s catalog <c>/Metadata</c> with a
+    /// packet that carries the PDF/A and/or PDF/UA identifications given, and
+    /// nothing else (#1586). At least one must be non-null.
+    /// </summary>
+    /// <remarks>
+    /// One packet, not two: a document has exactly one catalog
+    /// <c>/Metadata</c> stream, so a file that is both PDF/A and PDF/UA must
+    /// declare both identifications inside it. Writing them separately would
+    /// mean the second call silently discarded the first.
+    /// </remarks>
+    internal static void Write(PdfDocument document, PdfAIdentity? pdfA, PdfUaIdentity? pdfUa)
     {
-        var bytes = Encoding.UTF8.GetBytes(BuildPacket(identity));
+        if (pdfA == null && pdfUa == null)
+            throw new ArgumentException("at least one identification must be given", nameof(pdfA));
+
+        var bytes = Encoding.UTF8.GetBytes(BuildPacket(pdfA, pdfUa));
 
         var dict = new PdfDictionary();
         dict.SetName("Type", "Metadata");
@@ -269,21 +286,42 @@ internal static class PdfAIdentityXmp
     /// validation, so do not widen the patterns there without adding escaping
     /// here.
     /// </remarks>
-    private static string BuildPacket(PdfAIdentity identity)
+    private static string BuildPacket(PdfAIdentity? pdfA, PdfUaIdentity? pdfUa)
     {
         var sb = new StringBuilder();
         sb.Append("<?xpacket begin=\"\uFEFF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n");
         sb.Append("<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">\n");
         sb.Append(" <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n");
-        sb.Append("  <rdf:Description rdf:about=\"\" xmlns:pdfaid=\"http://www.aiim.org/pdfa/ns/id/\">\n");
-        sb.Append($"   <pdfaid:part>{identity.Part}</pdfaid:part>\n");
-        if (identity.Conformance != null)
-            sb.Append($"   <pdfaid:conformance>{identity.Conformance}</pdfaid:conformance>\n");
-        if (identity.Rev != null)
-            sb.Append($"   <pdfaid:rev>{identity.Rev}</pdfaid:rev>\n");
-        sb.Append("  </rdf:Description>\n");
+        if (pdfA is { } identity)
+        {
+            sb.Append("  <rdf:Description rdf:about=\"\" xmlns:pdfaid=\"http://www.aiim.org/pdfa/ns/id/\">\n");
+            sb.Append($"   <pdfaid:part>{identity.Part}</pdfaid:part>\n");
+            if (identity.Conformance != null)
+                sb.Append($"   <pdfaid:conformance>{identity.Conformance}</pdfaid:conformance>\n");
+            if (identity.Rev != null)
+                sb.Append($"   <pdfaid:rev>{identity.Rev}</pdfaid:rev>\n");
+            sb.Append("  </rdf:Description>\n");
+        }
+        // #1586: PDF/UA-1 clause 7.1 needs BOTH the claim and a non-empty
+        // dc:title \u2014 measured against veraPDF, the claim alone fails test 9.
+        // The title is a fixed placeholder, never the document's own, so
+        // nothing document-derived rides back in through this packet.
+        if (pdfUa is { } ua)
+        {
+            sb.Append("  <rdf:Description rdf:about=\"\" xmlns:pdfuaid=\"http://www.aiim.org/pdfua/ns/id/\">\n");
+            sb.Append($"   <pdfuaid:part>{ua.Part}</pdfuaid:part>\n");
+            if (ua.Rev != null)
+                sb.Append($"   <pdfuaid:rev>{ua.Rev}</pdfuaid:rev>\n");
+            sb.Append("  </rdf:Description>\n");
+        }
         sb.Append("  <rdf:Description rdf:about=\"\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n");
         sb.Append("   <dc:format>application/pdf</dc:format>\n");
+        if (pdfUa != null)
+        {
+            sb.Append("   <dc:title>\n    <rdf:Alt xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n");
+            sb.Append($"     <rdf:li xml:lang=\"x-default\">{PdfUaIdentityXmp.PlaceholderTitle}</rdf:li>\n");
+            sb.Append("    </rdf:Alt>\n   </dc:title>\n");
+        }
         sb.Append("  </rdf:Description>\n");
         sb.Append(" </rdf:RDF>\n</x:xmpmeta>\n<?xpacket end=\"w\"?>");
         return sb.ToString();

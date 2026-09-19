@@ -1,0 +1,395 @@
+# Windows runner — ADVISORY (#1593)
+#
+# WHAT THIS IS FOR
+#
+# Windows printing (#1546) and multi-document support (#1553) were written and
+# compiled on macOS and have never RUN on Windows. Two whole code paths have
+# never executed anywhere: DocumentPrinterFactory's Windows branch, and the
+# single-instance channel (SingleInstanceChannel.IsEnabled is false on macOS by
+# design, so its named-pipe handoff has never been exercised by anything).
+# This job runs them.
+#
+# WHAT THIS IS NOT
+#
+# It is NOT a gate. GitHub Actions were deleted at a708774d on 2026-09-04
+# because a Linux runner tried to be a full gate — coverage floors, corpus skip
+# allowlists, rendering oracles — in an environment nobody develops in, and a
+# macOS-only maintainer could not keep it honest, so it sat permanently red and
+# was therefore ignored. That is how a real regression hides.
+#
+# The authoritative gates are LOCAL: scripts/test-tier.sh t0/t1/full. This job
+# builds, publishes, and runs the small set of tests that can only mean
+# something on Windows. No coverage floors, no corpus scans, no
+# reference-renderer oracles, nothing that needs a gitignored corpus.
+#
+# "Advisory" is a branch-protection setting, not a YAML property: there is no
+# key here that makes a job non-blocking. It is advisory because it is not
+# listed as a required check. Do not look for a flag.
+#
+# NO TAGS. `on.push` names only the develop branch, and a branch filter never
+# matches a tag ref, so tagging cannot start this. Release packaging is
+# #1595/#1596 and belongs in its own workflow.
+
+name: Windows (advisory)
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+# Only the newest run per ref. A burst of pushes used to stack full runs and
+# crawl for over an hour on runner contention (observed 2026-08-25).
+concurrency:
+  group: windows-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Any 10.0.x SDK. global.json asks for 10.0.100 with rollForward
+  # latestFeature, so whatever patch or feature band the runner installs is
+  # accepted — never pin a patch floor here (MEMORY: "SDK: any 10.0.x").
+  DOTNET_VERSION: '10.0.x'
+  # ReactiveUI/Splat's author signing certificate was revoked upstream, so a
+  # fresh restore fails NU3012 on packages that are otherwise the correct
+  # published versions. Tracked with the ReactiveUI removal in #343.
+  DOTNET_NUGET_SIGNATURE_VERIFICATION: false
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+  TRX_DIR: ${{ github.workspace }}\artifacts\trx
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # 1. Build, publish, and the Windows-only tests. Target ~20 minutes; the
+  #    timeout is the ceiling, not the budget.
+  # ─────────────────────────────────────────────────────────────────────────
+  windows:
+    name: Windows build + platform tests
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Record the toolchain
+        # The SDK actually selected, next to what global.json asked for. A
+        # version number alone cannot identify an SDK build (#1389/#1390), so
+        # print the whole thing rather than asserting on a string.
+        run: |
+          dotnet --info
+          Get-Content global.json
+          New-Item -ItemType Directory -Force -Path "$env:TRX_DIR" | Out-Null
+
+      - name: Cache nuget
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-windows-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-windows-
+
+      - name: Restore
+        run: dotnet restore excise.sln
+
+      # ── build: 0 warnings, both configurations ───────────────────────────
+      # -warnaserror after an explicit restore: restore's own NU warnings are
+      # not re-emitted by --no-restore, so this promotes compiler and analyzer
+      # warnings only. CLAUDE.md: "Always maintain a clean build (0 warnings,
+      # 0 errors)."
+      - name: Build (Debug, warnings are errors)
+        run: dotnet build excise.sln -c Debug --no-restore -warnaserror
+
+      - name: Build (Release, warnings are errors)
+        # Release is a different compilation: EnableScripting is off, so the
+        # Roslyn-scripting #if branches are excluded and a warning inside them
+        # only appears here.
+        run: dotnet build excise.sln -c Release --no-restore -warnaserror
+
+      - name: The CA1416 suppression has not come back
+        # Excise.App.csproj deliberately does NOT suppress CA1416 any more
+        # (#1546): the Windows-only print code must stay reachable only behind
+        # OperatingSystem.IsWindows(), and the platform-compatibility analyzer
+        # is the proof. CA1416 is enabled by default and is not suppressed, so
+        # THE -warnaserror SLN BUILDS ABOVE ARE THE CA1416 CHECK — a CA1416
+        # warning is already an error there.
+        #
+        # What remains is the one thing those builds cannot see: the
+        # suppression being re-added to silence a warning, which would make
+        # them pass for the wrong reason. So this step is a grep, not a build.
+        #
+        # ⚠️ Do not "strengthen" this into a `dotnet build Excise.App
+        # -warnaserror:CA1416`. After the sln build the project is up to date,
+        # CoreCompile is skipped, no analyzer runs, and the step exits 0 no
+        # matter what — a check that cannot fail (#1527).
+        run: |
+          $proj = Get-Content Excise.App/Excise.App.csproj -Raw
+          if ($proj -match '<NoWarn>[^<]*CA1416') {
+            throw "CA1416 is suppressed in Excise.App.csproj again — see #1546"
+          }
+          Write-Host "CA1416 is not suppressed; the -warnaserror builds above enforce it"
+          if (-not (Select-String -Path Excise.App/Excise.App.csproj -Pattern 'CA1416' -Quiet)) {
+            throw "the #1546 note explaining why CA1416 stays unsuppressed is gone from Excise.App.csproj"
+          }
+
+      # ── publish ──────────────────────────────────────────────────────────
+      # NOTE the absence of --no-restore, which every other dotnet step here
+      # carries. `dotnet restore excise.sln` above restores for no RID, so a
+      # RID-specific publish with --no-restore fails NETSDK1047 ("assets file
+      # doesn't have a target for net10.0/win-x64") — no csproj declares
+      # RuntimeIdentifiers. Publish does its own RID restore; let it.
+      - name: Publish win-x64 (framework-dependent)
+        run: |
+          dotnet publish Excise.App/Excise.App.csproj -c Release -r win-x64 `
+            --self-contained false `
+            -o artifacts/publish/win-x64-framework-dependent
+          dotnet publish Excise.Cli/Excise.Cli.csproj -c Release -r win-x64 `
+            --self-contained false `
+            -o artifacts/publish/win-x64-cli
+
+      - name: Publish win-x64 (self-contained)
+        run: |
+          dotnet publish Excise.App/Excise.App.csproj -c Release -r win-x64 `
+            --self-contained true `
+            -o artifacts/publish/win-x64-self-contained
+
+      - name: The published CLI starts and renders
+        # A publish that produces an unrunnable binary is a publish that
+        # passed. Rendering a tracked fixture proves the assembly loads, that
+        # SkiaSharp's native component (libSkiaSharp — Excise.Rendering is NOT
+        # pure managed, #1503) resolves on this platform, and that it
+        # rasterises.
+        run: |
+          & artifacts/publish/win-x64-cli/excise.exe --help | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "the published CLI did not run" }
+          New-Item -ItemType Directory -Force -Path artifacts/cli-smoke | Out-Null
+          & artifacts/publish/win-x64-cli/excise.exe render `
+            test-pdfs/pdf20/ascii85-image.pdf `
+            --page 1 --dpi 72 --output artifacts/cli-smoke/page1.png
+          if ($LASTEXITCODE -ne 0) { throw "the published CLI could not render" }
+          if ((Get-Item artifacts/cli-smoke/page1.png).Length -le 0) { throw "the render produced an empty PNG" }
+          Get-ChildItem artifacts/cli-smoke
+
+      # ── the checker the test steps below depend on ───────────────────────
+      - name: Self-test the trx verdict
+        # Every filtered step below is judged by scripts/assert-trx-green.sh
+        # rather than by `dotnet test`'s exit code, because a --filter matching
+        # nothing exits 0. A checker nobody has watched fail is a checker that
+        # cannot fail (#1527), so prove its red paths first.
+        shell: bash
+        run: scripts/assert-trx-green.sh --self-test
+
+      # ── the platform-agnostic suites, on Windows ─────────────────────────
+      # No corpora and no macOS-only tools here. Tests that need either carry
+      # their own declared Assert.Skip reason (#1172) and report as skipped,
+      # which is why there is no hand-maintained exclusion list — #1527 is
+      # what happens when a runner's test population is decided by a list.
+      - name: Excise.Core.Tests
+        run: |
+          dotnet test Excise.Core.Tests --no-build -c Debug `
+            --results-directory "$env:TRX_DIR" `
+            --logger "trx;LogFileName=core.trx" `
+            --logger "console;verbosity=normal"
+
+      - name: Excise.Cli.Tests
+        run: |
+          dotnet test Excise.Cli.Tests --no-build -c Debug `
+            --results-directory "$env:TRX_DIR" `
+            --logger "trx;LogFileName=cli.trx" `
+            --logger "console;verbosity=normal"
+
+      - name: Excise.Avalonia.Tests
+        # windows-latest has an interactive desktop session, so the headless
+        # Avalonia session needs no display shim.
+        run: |
+          dotnet test Excise.Avalonia.Tests --no-build -c Debug `
+            --results-directory "$env:TRX_DIR" `
+            --logger "trx;LogFileName=avalonia.trx" `
+            --logger "console;verbosity=normal"
+
+      - name: Verify Core/Cli/Avalonia actually ran
+        shell: bash
+        run: |
+          scripts/assert-trx-green.sh \
+            artifacts/trx/core.trx artifacts/trx/cli.trx artifacts/trx/avalonia.trx \
+            --min-passed 1000
+
+      # ── Microsoft Print to PDF, for the spooler tests ────────────────────
+      - name: Provision "Microsoft Print to PDF"
+        # WindowsDocumentPrinterTests.SpoolToPrintToPdf skips with a declared
+        # reason when this printer is absent, so its absence is honest rather
+        # than invisible — but a skipped printer test proves nothing, so try to
+        # make it present. On the Server SKU the image uses, Print to PDF is an
+        # optional feature rather than installed-by-default as on Windows
+        # 10/11. Best-effort: a feature that will not install must not red an
+        # advisory job, and the declared skip then covers it.
+        continue-on-error: true
+        run: |
+          Write-Host "--- printers before ---"
+          Get-Printer | Select-Object Name,DriverName | Format-Table -AutoSize
+          $feature = Get-WindowsOptionalFeature -Online `
+            -FeatureName Printing-PrintToPDFServices-Features -ErrorAction SilentlyContinue
+          if ($null -eq $feature) {
+            Write-Host "::warning::Printing-PrintToPDFServices-Features is not an available feature on this image"
+          } elseif ($feature.State -ne 'Enabled') {
+            Enable-WindowsOptionalFeature -Online `
+              -FeatureName Printing-PrintToPDFServices-Features -NoRestart -All
+          }
+          Write-Host "--- printers after ---"
+          Get-Printer | Select-Object Name,DriverName | Format-Table -AutoSize
+
+      # ── the Windows-only tests ───────────────────────────────────────────
+      # These live in Excise.App.Tests, which is SERIAL BY DESIGN
+      # ([assembly: CollectionBehavior(DisableTestParallelization = true)] —
+      # xunit's parallelism races SkiaSharp's process-wide native font manager
+      # and crashes the host, #363) and takes ~17 minutes unfiltered. So this
+      # runs a FILTERED subset, by fully-qualified class name so a substring
+      # cannot pull in a neighbour:
+      #
+      #   WindowsPrintLayoutTests      — sheet geometry, DEVMODE, #1546
+      #   WindowsDocumentPrinterTests  — the GDI path, the "Microsoft Print to
+      #                                  PDF" spool, and the platform-selection
+      #                                  test whose IsWindows() branch has
+      #                                  never executed anywhere
+      #   MultiDocumentWindowTests     — the named-pipe single-instance handoff
+      #                                  (#1553); off on macOS by design, so
+      #                                  this is its first real run
+      #   AttachmentFileNamesTests     — path and reserved-name handling, which
+      #                                  is only interesting on NTFS/Win32
+      - name: Windows-only tests (filtered Excise.App.Tests)
+        run: |
+          dotnet test Excise.App.Tests --no-build -c Debug `
+            --filter "FullyQualifiedName~Excise.App.Tests.Unit.WindowsPrintLayoutTests|FullyQualifiedName~Excise.App.Tests.UI.WindowsDocumentPrinterTests|FullyQualifiedName~Excise.App.Tests.UI.MultiDocumentWindowTests|FullyQualifiedName~Excise.App.Tests.Unit.AttachmentFileNamesTests" `
+            --results-directory "$env:TRX_DIR" `
+            --logger "trx;LogFileName=windows-platform.trx" `
+            --logger "console;verbosity=normal" `
+            --blame-hang-timeout 180000
+
+      - name: Verify the Windows-only tests actually ran
+        # --min-passed 40: the four classes hold well over a hundred cases, so
+        # a floor this low still catches a rename that empties the filter while
+        # leaving room for the printer-dependent skips. Raise it, never lower
+        # it, once the first real run reports a true count.
+        shell: bash
+        run: scripts/assert-trx-green.sh artifacts/trx/windows-platform.trx --min-passed 40
+
+      # ── headless-ish app smoke ───────────────────────────────────────────
+      - name: GUI smoke (launch, open a PDF, quit)
+        # #1497's in-process scenario runner. The `null` scenario is
+        # mark → waitIdle → idle 10s, and the runner quits the app itself; a
+        # tracked fixture PDF is passed on the COMMAND LINE, so this also
+        # exercises the startup-activation ("open with") path on Windows for
+        # the first time. SAMPLE_MS=250 because no outer sampler is attached
+        # and the default 20s-per-boundary wait would be all of the runtime.
+        #
+        # Deliberately NOT downloading the smoke corpus: every
+        # document-opening scenario in tests/gui-perf-scenarios.json points at
+        # test-pdfs/smoke/, which is gitignored and fetched from live .gov URLs
+        # — making an advisory launch check depend on irs.gov turns URL rot
+        # into a red that looks like a code defect.
+        #
+        # Blocking, not continue-on-error: the job is already advisory, and a
+        # smoke test that cannot fail is not a smoke test (#1527).
+        run: |
+          $out = "artifacts/gui-smoke"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $env:EXCISE_PERF_SCENARIO = "tests/gui-perf-scenarios.json"
+          $env:EXCISE_PERF_SCENARIO_ID = "null"
+          $env:EXCISE_PERF_SCENARIO_OUT = $out
+          $env:EXCISE_PERF_SCENARIO_SAMPLE_MS = "250"
+          $exe = "Excise.App/bin/Debug/net10.0/Excise.App.exe"
+          if (-not (Test-Path $exe)) { throw "no Debug build of the app at $exe" }
+          $pdf = "Excise.App.Tests/Resources/sample-pdfs/birth-certificate-request-scrambled.pdf"
+          $p = Start-Process -FilePath $exe -ArgumentList $pdf -PassThru `
+                 -RedirectStandardOutput "$out/app.out.log" `
+                 -RedirectStandardError  "$out/app.err.log"
+          if (-not $p.WaitForExit(180000)) {
+            $p.Kill(); throw "the app did not quit within 180s — the scenario runner shuts it down itself"
+          }
+          Get-Content "$out/app.out.log","$out/app.err.log" -ErrorAction SilentlyContinue
+          $resultFile = Join-Path $out "scenario-result.json"
+          if (-not (Test-Path $resultFile)) {
+            throw "no scenario-result.json — the app died before the runner finished (exit $($p.ExitCode))"
+          }
+          $r = Get-Content $resultFile -Raw | ConvertFrom-Json
+          Write-Host "scenario=$($r.scenario) steps=$($r.steps) failures=$($r.failures) totalMs=$($r.totalMs)"
+          if ($r.steps -lt 1)   { throw "the scenario ran no steps" }
+          if ($r.failures -ne 0) { throw "$($r.failures) scenario step(s) failed" }
+          if ($p.ExitCode -ne 0) { throw "the app exited $($p.ExitCode) after a clean scenario" }
+
+      # ── artifacts ────────────────────────────────────────────────────────
+      - name: Upload trx and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-test-results
+          path: |
+            artifacts/trx/
+            artifacts/gui-smoke/
+            artifacts/cli-smoke/
+            **/TestResults/
+          retention-days: 14
+          if-no-files-found: warn
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 2. Native AOT. A SEPARATE job, and non-blocking.
+  #
+  #    Separate because a Windows AOT publish drives the MSVC linker over the
+  #    whole app and can take as long as everything above it put together; in
+  #    the same job it would eat the ~20 minute budget and make the useful
+  #    signal wait behind the optional one. Non-blocking because #1593 asks for
+  #    it that way: AOT is a validated opt-in lane on osx-arm64 (#590), other
+  #    RIDs are #595, and win-x64 is not claimed to work yet. A red here means
+  #    "still not ready", not "this push is broken".
+  # ─────────────────────────────────────────────────────────────────────────
+  windows-aot:
+    name: Native AOT (win-x64, non-blocking)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache nuget
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-windows-aot-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-windows-aot-
+
+      - name: AOT publish (win-x64)
+        run: |
+          dotnet publish Excise.App/Excise.App.csproj -c Release -r win-x64 `
+            -p:PublishAot=true `
+            -o artifacts/publish/win-x64-aot
+
+      - name: Report what came out
+        if: always()
+        run: |
+          if (Test-Path artifacts/publish/win-x64-aot) {
+            Get-ChildItem artifacts/publish/win-x64-aot |
+              Sort-Object Length -Descending |
+              Select-Object -First 15 Name,Length |
+              Format-Table -AutoSize
+          }
+
+      - name: Upload AOT evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-aot-evidence
+          path: artifacts/publish/win-x64-aot/
+          retention-days: 7
+          if-no-files-found: warn

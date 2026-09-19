@@ -31,8 +31,8 @@ public sealed class PageOrganizationWorkflowService
         if (!_documentService.IsDocumentLoaded || _documentService.PageCount <= 1)
             return PageOrganizationResult.NoChange(pageIndex);
 
-        await ShowOperationWarningsAsync(new[] { pageIndex });
 
+        LogOperationDiagnostics(new[] { pageIndex });
         _documentService.RemovePage(pageIndex);
         var newPageIndex = Math.Min(pageIndex, Math.Max(0, _documentService.PageCount - 1));
         _logger.LogInformation("Removed page {PageIndex}; current page should become {NewPageIndex}", pageIndex, newPageIndex);
@@ -49,8 +49,8 @@ public sealed class PageOrganizationWorkflowService
         if (indices.Length == 0 || indices.Length >= _documentService.PageCount)
             return PageOrganizationResult.NoChange(currentPageIndex);
 
-        await ShowOperationWarningsAsync(indices);
 
+        LogOperationDiagnostics(indices);
         var newPageIndex = RemapCurrentPageAfterRemoval(currentPageIndex, indices, _documentService.PageCount);
         _documentService.RemovePages(indices);
         newPageIndex = Math.Min(newPageIndex, Math.Max(0, _documentService.PageCount - 1));
@@ -64,7 +64,7 @@ public sealed class PageOrganizationWorkflowService
         if (!_documentService.IsDocumentLoaded)
             return PageOrganizationResult.NoChange();
 
-        await ShowOperationWarningsAsync();
+        LogOperationDiagnostics();
         _documentService.InsertPagesFromPdf(sourcePdfPath, insertAtIndex);
 
         _logger.LogInformation("Inserted pages from {SourcePdfPath} at {InsertAtIndex}", sourcePdfPath, insertAtIndex);
@@ -77,7 +77,7 @@ public sealed class PageOrganizationWorkflowService
             return;
 
         var materialized = pageIndices.Distinct().ToArray();
-        await ShowOperationWarningsAsync(materialized);
+        LogOperationDiagnostics(materialized);
         _documentService.ExtractPagesToPdf(outputPath, materialized);
 
         _logger.LogInformation("Extracted {PageCount} page(s) to {OutputPath}", materialized.Length, outputPath);
@@ -88,7 +88,7 @@ public sealed class PageOrganizationWorkflowService
         if (!_documentService.IsDocumentLoaded || fromIndex == toIndex)
             return PageOrganizationResult.NoChange(fromIndex);
 
-        await ShowOperationWarningsAsync(new[] { fromIndex, toIndex });
+        LogOperationDiagnostics(new[] { fromIndex, toIndex });
         _documentService.MovePage(fromIndex, toIndex);
 
         _logger.LogInformation("Moved page from {FromIndex} to {ToIndex}", fromIndex, toIndex);
@@ -113,8 +113,8 @@ public sealed class PageOrganizationWorkflowService
         if (!movable)
             return PageOrganizationResult.NoChange(currentPageIndex, indices);
 
-        await ShowOperationWarningsAsync(indices);
 
+        LogOperationDiagnostics(indices);
         var newCurrentPageIndex = RemapCurrentPageAfterMove(currentPageIndex, indices, delta, _documentService.PageCount);
         var newSelectedPageIndices = _documentService.MovePages(indices, delta);
 
@@ -205,16 +205,30 @@ public sealed class PageOrganizationWorkflowService
         return new SplitDocumentResult(paths);
     }
 
-    private async Task ShowOperationWarningsAsync(IEnumerable<int>? pageIndices = null)
+    /// <summary>
+    /// #1652: the page-organization diagnostics, LOGGED — they used to open a
+    /// modal dialog after every page operation saying the result "may require
+    /// manual review after saving".
+    ///
+    /// <para>They are not a measurement. Each one fires on the mere PRESENCE of
+    /// a document-level structure — an <c>/Outlines</c> tree, an
+    /// <c>/AcroForm</c>, a <c>/Names</c> tree, a link or widget annotation on
+    /// an affected page — whether or not the operation broke anything. On any
+    /// real document at least one of them is always true, so the dialog fired
+    /// every time and carried no information; it only taught people to click
+    /// through dialogs.</para>
+    ///
+    /// <para>The confidence has to come from #1653 instead — GUI coverage of
+    /// every Document-menu command that saves, reloads and verifies with a tool
+    /// that is not excise. Until a check here can say a destination ACTUALLY
+    /// dangles, this stays a log line.</para>
+    /// </summary>
+    private void LogOperationDiagnostics(IEnumerable<int>? pageIndices = null)
     {
         var diagnostics = _documentService.AnalyzePageOperationPreservation(pageIndices);
-        if (!diagnostics.HasWarnings)
-            return;
-
-        await _dialogService.ShowMessageAsync(
-            "Page Organization",
-            "This operation may require manual review after saving:\n\n" +
-            string.Join("\n", diagnostics.Warnings.Select(w => $"- {w}")));
+        if (diagnostics.HasWarnings)
+            _logger.LogDebug("Page organization structural notes: {Notes}",
+                string.Join(" | ", diagnostics.Warnings));
     }
 
     private IEnumerable<int> ValidPageIndices(IEnumerable<int> pageIndices) =>

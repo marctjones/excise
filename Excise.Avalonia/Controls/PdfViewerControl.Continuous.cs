@@ -505,11 +505,11 @@ public partial class PdfViewerControl
             slots.Add(new PdfPageSlot(i, page.VisualWidth, page.VisualHeight, ZoomLevel));
         }
         ApplyContinuousSlotLayout(slots);
-        // #1466: a structural refresh (RefreshContinuousLayout) or a return to
-        // this view replaces the slots without going through
+        // #1466: a return to this view replaces the slots without going through
         // InvalidateContinuousCache, so the outgoing slots can still hold their
         // band-sized composites. Release them rather than leave them to the
         // finalizer; each slot defers the dispose until its binding has moved.
+        // (A structural refresh DOES invalidate now — #1651.)
         ReleaseSlotComposites(_continuousSlots);
         _continuousSlots = slots;
         RefreshContinuousByteMirrors();
@@ -791,11 +791,32 @@ public partial class PdfViewerControl
     /// click-safety sweep). Page CONTENT has not changed here, only the page
     /// order, so the rendered tiles stay valid.
     /// </summary>
+    /// <summary>
+    /// Re-lay-out the continuous view after a STRUCTURAL mutation — a page
+    /// added, inserted, moved, removed or rotated (#917).
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ #1651: this must drop the tile cache, and for a whole release it did
+    /// not. Tiles are keyed by <see cref="ContinuousTileKey"/>, whose first
+    /// field is the page NUMBER, so a mutation that changes which page has a
+    /// given number makes every tile for those numbers stale. The note left
+    /// here said "page CONTENT did not change — only the page order", which is
+    /// true of the pages and false of the keys: scrolling back to a number
+    /// re-composed the pre-mutation pixels and the reader's edit looked lost.
+    /// Measured before the fix — 5.5 MB of tiles survived moving page 4 to the
+    /// front of a four-page document.
+    ///
+    /// Invalidating is what the document-change and render-version paths
+    /// already do, and it carries the deferred-dispose handling (#1466/#1467)
+    /// that keeps the bitmap currently on screen alive until its binding has
+    /// moved.
+    /// </remarks>
     public void RefreshContinuousLayout()
     {
         if (ViewMode != PdfViewMode.Continuous || Document == null)
             return;
 
+        InvalidateContinuousCache();
         RebuildContinuous();
         RenderVisibleContinuousTiles();
     }
@@ -1027,6 +1048,14 @@ public partial class PdfViewerControl
         // Topmost visible page = the slot whose cumulative bottom passes the
         // current vertical offset (+ a small bias so a page counts as "current"
         // once its top edge is in view).
+        //
+        // ⚠️ #1650: this is deliberately NOT the most-visible page. CurrentPage
+        // is the SCROLL ANCHOR — mode-switch reading-position carry, the
+        // look-ahead window and the zoom re-layout all derive from it, and
+        // making it most-visible broke two of them (a zoom at a fixed
+        // offset/extent ratio legitimately changes which page dominates, so the
+        // anchor stopped being stable). The page a "current page" COMMAND acts
+        // on is a different question and is answered by MostVisiblePage.
         double offsetY = _continuousScrollViewer.Offset.Y + 1;
         int top = FindTopVisibleContinuousPage(_continuousSlots, offsetY);
 
@@ -1572,6 +1601,107 @@ public partial class PdfViewerControl
         }
 
         return cachedCount;
+    }
+
+    /// <summary>
+    /// The page a command that says "current page" must act on (#1650): in
+    /// continuous mode the page with the greatest visible area in the viewport,
+    /// otherwise the displayed page.
+    /// </summary>
+    /// <remarks>
+    /// Separate from <see cref="CurrentPage"/> on purpose — that one is the
+    /// scroll anchor and has to stay the page owning the top edge (see the note
+    /// at the scroll handler). This is what the reader would point at and say
+    /// "this page", which is what Remove Current Page, Extract, Export, Move
+    /// and Rotate must use.
+    /// </remarks>
+    public int MostVisiblePage
+    {
+        get
+        {
+            if (ViewMode != PdfViewMode.Continuous || _continuousScrollViewer == null
+                || _continuousSlots is not { Count: > 0 } slots)
+                return CurrentPage;
+
+            // ⚠️ A navigation still in flight must NOT be overridden. Setting
+            // CurrentPage (Go To Page, a clicked link, a thumbnail) scrolls
+            // asynchronously, so for a moment the anchor names the destination
+            // while the offset still describes where the reader came from.
+            // Answering from that offset would make a command act on the page
+            // the user just navigated AWAY from — caught by
+            // PageOrganizationCommandTests, which set a page and act at once.
+            //
+            // _pendingContinuousPage is that signal, and it is sufficient: an
+            // externally set CurrentPage reaches ScrollToPageContinuous through
+            // OnCurrentPageChanged, which sets it. A second guard ("the anchor
+            // page has no pixels on screen") was written and MEASURED INERT —
+            // removing it left PageOrganizationCommandTests and
+            // CurrentPageCommandTargetTests green — so it is not here.
+            if (_pendingContinuousPage is not null)
+                return CurrentPage;
+
+            return FindMostVisibleContinuousPage(
+                slots,
+                _continuousScrollViewer.Offset.Y + 1,
+                _continuousScrollViewer.Viewport.Height);
+        }
+    }
+
+    /// <summary>
+    /// The page a command that says "current page" must act on (#1650): the one
+    /// with the greatest visible height in the viewport.
+    /// </summary>
+    /// <remarks>
+    /// <para>Not <see cref="FindTopVisibleContinuousPage"/>, which answers a
+    /// different question — "which page owns the top edge of the viewport" —
+    /// and is right for the hit-test and the look-ahead window that use it. It
+    /// was wrong here: it returns the first page with ANY pixel on screen, so a
+    /// two-pixel sliver of the previous page outvotes the page filling the rest
+    /// of the window. Remove Current Page then deletes the page the reader is
+    /// not looking at, which is how this was found.</para>
+    /// <para>Ties go to the upper page, which is what every reader does — and
+    /// what keeps the answer stable while scrolling through equal-height pages
+    /// rather than flickering between two.</para>
+    /// <para>A zero or negative viewport (a window mid-layout, a measure pass
+    /// before the scroll viewer has a size) falls back to the top-visible page:
+    /// with no viewport there is no "most visible", and answering the old way
+    /// is better than answering 1.</para>
+    /// </remarks>
+    internal static int FindMostVisibleContinuousPage(
+        IReadOnlyList<PdfPageSlot> slots, double offsetY, double viewportHeight)
+    {
+        if (slots.Count == 0)
+            return 1;
+        if (viewportHeight <= 0)
+            return FindTopVisibleContinuousPage(slots, offsetY);
+
+        var viewTop = offsetY;
+        var viewBottom = offsetY + viewportHeight;
+
+        // Start at the first page touching the viewport and walk forward only
+        // while pages still intersect it — the slot list can be thousands long
+        // and this runs on every scroll event.
+        var first = FindTopVisibleContinuousPage(slots, offsetY) - 1;
+        var best = first;
+        var bestVisible = double.NegativeInfinity;
+
+        for (var i = first; i < slots.Count; i++)
+        {
+            var top = slots[i].TopDip;
+            if (top >= viewBottom)
+                break;
+
+            var bottom = top + slots[i].DisplayHeight;
+            var visible = Math.Min(bottom, viewBottom) - Math.Max(top, viewTop);
+            // Strictly greater: a tie keeps the earlier (upper) page.
+            if (visible > bestVisible)
+            {
+                bestVisible = visible;
+                best = i;
+            }
+        }
+
+        return best + 1;
     }
 
     internal static int FindTopVisibleContinuousPage(IReadOnlyList<PdfPageSlot> slots, double offsetY)

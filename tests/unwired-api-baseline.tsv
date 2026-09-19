@@ -145,6 +145,7 @@ Excise.Rendering	tests-only	PdftotextTextExtractor	#1372 a reference ORACLE, lik
 Excise.Rendering	tests-only	QpdfReferenceTool	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	RequiresPassword	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	ShowEncryption	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	TryRenderPageForViewIntent	#1573 a reference ORACLE entry point, like TryRenderPageWithOverprintSimulation beside it: tests-only BY DESIGN. It passes gs -dPrinted=false so a excise VIEWER raster is compared against a view raster; gs with a file output device otherwise renders for paper. Production must never shell out to Ghostscript. #1611 tracks the sweep of the existing gs differentials onto it.
 Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	VeraPdfReferenceValidator	triage:external validator oracle (#1056) — tests-only BY DESIGN, like the other Differential reference tools; production must never depend on veraPDF being installed
 Excise.Rendering	tests-only	VertexCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract

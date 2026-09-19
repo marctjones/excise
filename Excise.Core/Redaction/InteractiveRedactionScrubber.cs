@@ -280,6 +280,12 @@ internal static class InteractiveRedactionScrubber
                     page.Document, field.RawDictionary, "V", term, caseSensitive, pruneCandidates, wholeWord);
                 changed |= RedactStringEntry(
                     page.Document, field.RawDictionary, "DV", term, caseSensitive, pruneCandidates, wholeWord);
+                // #1581: /RV, the rich-text value (§12.7.4.3). It is an
+                // independent carrier — a field can have /RV and NO /V at all
+                // — and mutool DRAWS it, so the term stayed both in the file
+                // and on the page while every /V assertion read clean.
+                changed |= RedactStringEntry(
+                    page.Document, field.RawDictionary, "RV", term, caseSensitive, pruneCandidates, wholeWord);
                 // #1098: rewrite the appearance to remove the term's GLYPHS so
                 // the field still renders its remaining text in readers that
                 // ignore /NeedAppearances. Drops /AP (leak-safe) only if the
@@ -291,6 +297,7 @@ internal static class InteractiveRedactionScrubber
             {
                 changed |= field.RawDictionary.Remove("V");
                 changed |= field.RawDictionary.Remove("DV");
+                changed |= field.RawDictionary.Remove("RV");   // #1581
                 // Area mode knows only a rectangle, so the whole appearance goes.
                 changed |= field.RawDictionary.Remove("AP");
             }

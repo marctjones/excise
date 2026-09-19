@@ -423,6 +423,38 @@ public class AttachmentsPanelTests : IDisposable
     }
 
     [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task TheAttachmentsPane_IsOnTheRightOfTheDocument()
+    {
+        // #1641: it sits with the other per-document lists (search results,
+        // pending redactions, clipboard history) on the right. The left side is
+        // for navigating the pages, and the pane used to compete with the
+        // thumbnails for that space.
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
+        var window = new MainWindow(new InMemorySettingsStore()) { DataContext = vm, Width = 1200, Height = 900 };
+        window.Show();
+        try
+        {
+            await PumpAsync(window);
+            var pane = window.FindControl<Control>("AttachmentsPanel")!;
+            var viewer = window.FindControl<Control>("PdfViewerControl")!;
+            var leftSidebar = window.FindControl<Control>("LeftSidebarHost")!;
+
+            var paneLeft = pane.TranslatePoint(new Point(0, 0), window)!.Value.X;
+            var viewerRight = viewer.TranslatePoint(new Point(viewer.Bounds.Width, 0), window)!.Value.X;
+            var leftSidebarRight = leftSidebar.TranslatePoint(new Point(leftSidebar.Bounds.Width, 0), window)!.Value.X;
+
+            paneLeft.Should().BeGreaterThanOrEqualTo(viewerRight,
+                "the attachments pane is to the right of the document, not to its left");
+            paneLeft.Should().BeGreaterThan(leftSidebarRight,
+                "it is not in the outline/thumbnails sidebar any more");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
     public async Task ViewMenuToggle_HidesAndShowsThePane_AndLeavesTheOtherPanes()
     {
         var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
@@ -448,12 +480,22 @@ public class AttachmentsPanelTests : IDisposable
             vm.IsThumbnailsSidebarVisible = false;
             await PumpAsync(window);
             window.FindControl<Control>("LeftSidebarHost")!.IsVisible.Should().BeFalse(
-                "with every pane hidden the sidebar collapses");
+                "with outline and thumbnails hidden the LEFT sidebar collapses");
+
+            // #1641: Attachments lives in the RIGHT sidebar, with the other
+            // per-document lists. It alone is reason to show that host, and it
+            // no longer holds the left one open.
+            vm.IsClipboardSidebarVisible = false;
+            await PumpAsync(window);
+            window.FindControl<Control>("ClipboardSidebarHost")!.IsVisible.Should().BeFalse(
+                "with the attachments pane hidden too, the right sidebar collapses");
 
             vm.ToggleAttachmentsCommand.Execute().Subscribe();
             await PumpAsync(window);
-            window.FindControl<Control>("LeftSidebarHost")!.IsVisible.Should().BeTrue(
-                "the Attachments pane alone keeps the sidebar open");
+            window.FindControl<Control>("LeftSidebarHost")!.IsVisible.Should().BeFalse(
+                "the Attachments pane is not on the left any more");
+            window.FindControl<Control>("ClipboardSidebarHost")!.IsVisible.Should().BeTrue(
+                "the Attachments pane alone keeps the right sidebar open");
             window.FindControl<Control>("AttachmentsPanel")!.IsVisible.Should().BeTrue();
         }
         finally
@@ -589,8 +631,53 @@ public class AttachmentsPanelTests : IDisposable
         var (vm, toasts) = CreateWithToasts();
         await vm.LoadDocumentAsync(PdfWithBothCarriers());
 
-        toasts.Should().ContainSingle(t => t.Message == "Document has attachments")
-            .Which.Details.Should().Be("2 embedded files travel with this PDF. See the Attachments pane.");
+        vm.IsAttachmentsNoticeOpen.Should().BeTrue();
+        vm.AttachmentsNoticeTitle.Should().Be("Document has attachments");
+        vm.AttachmentsNoticeMessage.Should()
+            .Be("2 embedded files travel with this PDF. See the Attachments pane.");
+
+        // #1619: a banner, NOT a toast. The toast surface is the one that
+        // auto-dismisses after 5 s, and the notices row displaces the document,
+        // so that dismissal re-laid out the window and jumped the page under
+        // the reader. A warning about a carrier the page view cannot show must
+        // not expire on a timer either.
+        toasts.Should().BeEmpty("the attachments warning is a persistent banner, not a 5 s toast");
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task AttachmentsNotice_TracksThePane_AndStaysOpenWhenItIsHidden()
+    {
+        var vm = MainWindowViewModelTestFactory.Create();
+        await vm.LoadDocumentAsync(PdfWithAttachment());
+
+        vm.AttachmentsNoticeMessage.Should()
+            .Be("1 embedded file travels with this PDF. See the Attachments pane.");
+
+        vm.ToggleAttachmentsSidebar();
+
+        vm.IsAttachmentsSidebarVisible.Should().BeFalse("precondition");
+        vm.IsAttachmentsNoticeOpen.Should().BeTrue("the banner stays until the reader closes it");
+        vm.AttachmentsNoticeMessage.Should()
+            .Be("1 embedded file travels with this PDF. Show them with View ▸ Show Attachments.",
+                "the banner must not keep pointing at a pane that is no longer shown");
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task AttachmentsNotice_IsClearedByAnotherDocumentAndByClosing()
+    {
+        var vm = MainWindowViewModelTestFactory.Create();
+        await vm.LoadDocumentAsync(PdfWithAttachment());
+        vm.IsAttachmentsNoticeOpen.Should().BeTrue("precondition");
+
+        await vm.LoadDocumentAsync(PdfWithoutAttachment());
+        vm.IsAttachmentsNoticeOpen.Should()
+            .BeFalse("a document with no attachments must not inherit the previous banner");
+
+        await vm.LoadDocumentAsync(PdfWithAttachment("again.pdf"));
+        vm.IsAttachmentsNoticeOpen.Should().BeTrue();
+
+        await vm.CloseDocumentCommand.Execute();
+        vm.IsAttachmentsNoticeOpen.Should().BeFalse("the document it described is gone");
     }
 
     // ── save ─────────────────────────────────────────────────────────────

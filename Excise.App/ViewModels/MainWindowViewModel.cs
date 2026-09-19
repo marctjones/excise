@@ -83,6 +83,8 @@ public partial class MainWindowViewModel : ViewModelBase
         Excise.Core.Operations.CarrierScrubMode.Strip;
     private bool _redactionWholeWord;
     private bool _redactionKeepAttachments;
+    private Excise.Core.Text.Segmentation.RedactionProfile _redactionProfile =
+        Excise.Core.Text.Segmentation.RedactionProfile.Standard;
     private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
         Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
     private bool _isRedactionMode;
@@ -112,7 +114,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _areFieldAndLinkAnnotationsVisible = true;
     private bool _isAnnotationAuditModeEnabled;
     private bool _areFormFieldsHighlighted;
-    private bool _isClipboardSidebarVisible = true;
+    // #1654: off by default. An empty Clipboard History panel cost 250 px of
+    // every launch, and while #1645 was live it filled with fragments of the
+    // document nobody had asked to copy. It stays a View-menu toggle and the
+    // choice still persists in window.json.
+    private bool _isClipboardSidebarVisible;
     private DocumentOpenTiming? _lastDocumentOpenTiming;
     private long _renderVersion;
     private long _documentMutationVersion;
@@ -365,6 +371,23 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Which output profile a redaction uses (#1586). Default
+    /// <see cref="Excise.Core.Text.Segmentation.RedactionProfile.Standard"/>.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ <see cref="Excise.Core.Text.Segmentation.RedactionProfile.Maximum"/>
+    /// produces output that is no longer accessible or interactive — forms and
+    /// annotations flattened, bookmarks, links, comments, field names and
+    /// alternate text gone. Every surface that offers it must SAY so; the
+    /// redacted-copy report carries the line.
+    /// </remarks>
+    public Excise.Core.Text.Segmentation.RedactionProfile RedactionProfile
+    {
+        get => _redactionProfile;
+        set => this.RaiseAndSetIfChanged(ref _redactionProfile, value);
+    }
+
+    /// <summary>
     /// How the removed run's WIDTH is handled (#1189). Default
     /// <see cref="Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout"/>.
     /// </summary>
@@ -390,10 +413,19 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public void ApplyRedactionPolicyPreferences(
         bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy,
-        bool keepAttachments = false)
+        bool keepAttachments = false,
+        string? profile = null)
     {
         RedactionWholeWord = wholeWord;
         RedactionKeepAttachments = keepAttachments;   // #1572
+
+        // #1586: an unparseable value stays Standard. Falling back to Maximum
+        // would apply an irreversible, accessibility-destroying profile the
+        // user never chose — the fallback has to fail toward the weaker
+        // DESTRUCTION, not the weaker protection, and Standard is already the
+        // safe default for protection.
+        if (Enum.TryParse<Excise.Core.Text.Segmentation.RedactionProfile>(profile, out var parsed))
+            RedactionProfile = parsed;
 
         if (Enum.TryParse<Excise.Core.Text.Segmentation.WidthPolicy>(widthPolicy, out var width))
             RedactionWidthPolicy = width;
@@ -410,9 +442,26 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     internal Excise.Core.Text.Segmentation.RedactedCopySafetyOptions BuildRedactedCopySafetyOptions()
     {
-        var policy = Excise.Core.Operations.CarrierScrubPolicy.Default
-            .With(Excise.Core.Operations.RedactionCarriers.ActionUris, LinkUriCarrierPolicy)
-            .With(
+        // #1586: start from the PROFILE's policy, not the all-Strip default.
+        // Maximum's whole point is RemoveWhole on every kept carrier, and
+        // rebuilding from Default here would have silently thrown that away —
+        // the same mistake the CLI handler made and the reason both are
+        // written this way.
+        var policy = Excise.Core.Text.Segmentation.RedactionOptions
+            .ForProfile(RedactionProfile).CarrierPolicy;
+
+        // ⚠️ A per-carrier preference overrides the profile only when the user
+        // MOVED it off Strip. Applying it unconditionally would have undone
+        // most of Maximum: both preferences default to Strip, so a Maximum
+        // redaction would have started from RemoveWhole on every kept carrier
+        // and then put link targets and metadata straight back to Strip. The
+        // enum has no "follow the profile" value, so "still at the default"
+        // means exactly that.
+        if (LinkUriCarrierPolicy != Excise.Core.Operations.CarrierScrubMode.Strip)
+            policy = policy.With(
+                Excise.Core.Operations.RedactionCarriers.ActionUris, LinkUriCarrierPolicy);
+        if (MetadataCarrierPolicy != Excise.Core.Operations.CarrierScrubMode.Strip)
+            policy = policy.With(
                 Excise.Core.Operations.RedactionCarriers.Info
                     | Excise.Core.Operations.RedactionCarriers.Xmp,
                 MetadataCarrierPolicy);
@@ -422,6 +471,7 @@ public partial class MainWindowViewModel : ViewModelBase
             CarrierPolicy = policy,
             WholeWord = RedactionWholeWord,   // #1052
             ScrubAttachments = !RedactionKeepAttachments,   // #1572
+            Profile = RedactionProfile,   // #1586
         };
     }
 
@@ -484,6 +534,9 @@ public partial class MainWindowViewModel : ViewModelBase
             _viewportSession.SetCurrentPageIndex(value);
             this.RaisePropertyChanged(nameof(CurrentPageIndex));
             RefreshCurrentPageBindings();
+            // #1565: turning a page is the reader working; the thumbnail
+            // pre-warm must not render 126 pages underneath them.
+            _thumbnailSession.NotifyActivity();
         }
     }
 
@@ -636,6 +689,8 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
 
         this.RaisePropertyChanged(nameof(ZoomLevel));
+        // #1565: a zoom change re-renders the page; the pre-warm waits again.
+        _thumbnailSession.NotifyActivity();
         if (transition.ShouldPersist)
             SaveZoomPreference();
     }
@@ -659,7 +714,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// alone). (#369)
     /// </summary>
     public bool IsLeftSidebarVisible =>
-        IsOutlineSidebarVisible || IsThumbnailsSidebarVisible || IsAttachmentsSidebarVisible;
+        IsOutlineSidebarVisible || IsThumbnailsSidebarVisible;
 
     /// <summary>The outline/thumbnails splitter only makes sense when both panels show. (#369)</summary>
     public bool IsSidebarSplitterVisible => IsOutlineSidebarVisible && IsThumbnailsSidebarVisible;
@@ -668,8 +723,48 @@ public partial class MainWindowViewModel : ViewModelBase
     public bool IsClipboardSidebarVisible
     {
         get => _isClipboardSidebarVisible;
-        set => this.RaiseAndSetIfChanged(ref _isClipboardSidebarVisible, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isClipboardSidebarVisible, value);
+            this.RaisePropertyChanged(nameof(ShowRightModePanel));
+            this.RaisePropertyChanged(nameof(IsRightSidebarVisible));
+        }
     }
+
+    /// <summary>
+    /// The right sidebar host, which carries the attachments pane (#1641) and
+    /// the one-at-a-time clipboard / search-results / pending-redactions pane.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ It is visible when a pane has a JOB, not when a toggle is on. Gating
+    /// the whole host on <see cref="IsClipboardSidebarVisible"/> meant search
+    /// results and pending redaction marks — which live in the same host — were
+    /// hidden with it. That coupling was always there; #1654 turning the
+    /// clipboard off by DEFAULT is what made it reach the user, and the full
+    /// suite caught it (PointerInteractionTests: "the search-results panel must
+    /// render a hit-testable clickable row per match").
+    ///
+    /// So the clipboard toggle governs the clipboard pane only. Searching shows
+    /// the results wherever the toggle sits, and redaction mode shows the
+    /// pending marks.
+    /// </remarks>
+    public bool IsRightSidebarVisible =>
+        IsAttachmentsSidebarVisible || ShowRightModePanel;
+
+    /// <summary>
+    /// The one-at-a-time pane inside the right sidebar: search results while
+    /// searching, pending marks while redacting, clipboard history otherwise
+    /// and only when the user has that on.
+    /// </summary>
+    /// <remarks>
+    /// The clipboard TOGGLE governs the clipboard pane alone. Gating the pane
+    /// on it hid search results and pending redaction marks too, because all
+    /// three share this one slot.
+    /// </remarks>
+    public bool ShowRightModePanel =>
+        ShowSearchResultsPanel
+        || ShowPendingRedactionsPanel
+        || (IsClipboardSidebarVisible && ShowClipboardHistoryPanel);
 
     /// <summary>
     /// Whether the page's annotations are drawn. Default true, which is what
@@ -853,9 +948,12 @@ public partial class MainWindowViewModel : ViewModelBase
             }
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));
-            // The right sidebar's panel selector depends on this flag.
+            // The right sidebar's panel selector depends on this flag, and so
+            // does whether the host shows at all (#1654).
             this.RaisePropertyChanged(nameof(ShowPendingRedactionsPanel));
             this.RaisePropertyChanged(nameof(ShowClipboardHistoryPanel));
+            this.RaisePropertyChanged(nameof(ShowRightModePanel));
+            this.RaisePropertyChanged(nameof(IsRightSidebarVisible));
         }
     }
 
@@ -1347,7 +1445,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             RequestPreserveReadingPosition(); // #846: snapshot reading position before the page count/order changes
-            var removedIndex = CurrentPageIndex;
+            var removedIndex = CommandTargetPageIndex; // #1650: the page filling the viewport, not the sliver at its top edge
             var capturedPages = CapturePages(new[] { removedIndex });
             var result = await _pageOrganizationWorkflow.RemovePageAsync(removedIndex);
             if (!result.DidChange)
@@ -1407,7 +1505,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var path = await PickPdfForPageInsertionAsync("Select PDF to Insert Before Current Page");
         if (!string.IsNullOrWhiteSpace(path))
-            await InsertPagesFromFileAsync(path, CurrentPageIndex);
+            await InsertPagesFromFileAsync(path, CommandTargetPageIndex); // #1650
     }
 
     private async Task InsertPagesAfterCurrentAsync()
@@ -1417,7 +1515,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var path = await PickPdfForPageInsertionAsync("Select PDF to Insert After Current Page");
         if (!string.IsNullOrWhiteSpace(path))
-            await InsertPagesFromFileAsync(path, CurrentPageIndex + 1);
+            await InsertPagesFromFileAsync(path, CommandTargetPageIndex + 1); // #1650
     }
 
     public async Task InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex)
@@ -1527,7 +1625,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var path = await PickSavePdfPathAsync("Extract Current Page", suggestedName);
         if (!string.IsNullOrWhiteSpace(path))
-            await ExtractPagesToFileAsync(path, new[] { CurrentPageIndex });
+            await ExtractPagesToFileAsync(path, new[] { CommandTargetPageIndex }); // #1650
     }
 
     public async Task ExtractPagesToFileAsync(string outputPath, IEnumerable<int> pageIndices)
@@ -1597,22 +1695,29 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task MoveCurrentPageEarlierAsync()
     {
-        if (CurrentPageIndex <= 0)
+        // #1650: the guard reads the target so it agrees with the move. The
+        // second read inside MoveCurrentPageAsync is the same value — there is
+        // no await between them, so the viewport cannot scroll in between —
+        // and going through it keeps the one production path (the unwired-api
+        // gate caught the bypass, #908).
+        var from = CommandTargetPageIndex;
+        if (from <= 0)
             return;
 
-        await MoveCurrentPageAsync(CurrentPageIndex - 1);
+        await MoveCurrentPageAsync(from - 1);
     }
 
     private async Task MoveCurrentPageLaterAsync()
     {
-        if (CurrentPageIndex >= TotalPages - 1)
+        var from = CommandTargetPageIndex;
+        if (from >= TotalPages - 1)
             return;
 
-        await MoveCurrentPageAsync(CurrentPageIndex + 1);
+        await MoveCurrentPageAsync(from + 1);
     }
 
     public async Task MoveCurrentPageAsync(int toIndex)
-        => await MovePageAsync(CurrentPageIndex, toIndex);
+        => await MovePageAsync(CommandTargetPageIndex, toIndex); // #1650
 
     public async Task MovePageAsync(int fromIndex, int toIndex)
     {
@@ -2097,7 +2202,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var rotatedIndex = CurrentPageIndex;
+            var rotatedIndex = CommandTargetPageIndex; // #1650
             _documentService.RotatePageLeft(rotatedIndex);
             MarkPageOrganizationChanged();
             _history.Push("Rotate page left",
@@ -2126,7 +2231,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var rotatedIndex = CurrentPageIndex;
+            var rotatedIndex = CommandTargetPageIndex; // #1650
             _documentService.RotatePageRight(rotatedIndex);
             MarkPageOrganizationChanged();
             _history.Push("Rotate page right",
@@ -2155,7 +2260,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var rotatedIndex = CurrentPageIndex;
+            var rotatedIndex = CommandTargetPageIndex; // #1650
             _documentService.RotatePage180(rotatedIndex);
             MarkPageOrganizationChanged();
             _history.Push("Rotate page 180°",
@@ -2374,6 +2479,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OutlineNodes.Clear();
         this.RaisePropertyChanged(nameof(HasOutline));
         RefreshAttachments(); // no document loaded -> empties the list
+        ClearAttachmentsNotice(); // #1619
         ClearXfaNotice(); // #1547
         RefreshHiddenTextHighlights(); // no document loaded -> cancels + empties
         OperationStatus = string.Empty; // e.g. a stale "Indexing for search… 3/10"
@@ -2466,7 +2572,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task ExportCurrentPageAsync()
     {
-        _logger.LogInformation("Export current page command triggered (page {PageNumber})", CurrentPageIndex + 1);
+        // #1650: read the target page ONCE — the file name, the render and the
+        // log line must all name the same page, and the viewport can scroll
+        // while the save picker is open.
+        var exportPageIndex = CommandTargetPageIndex;
+        _logger.LogInformation("Export current page command triggered (page {PageNumber})", exportPageIndex + 1);
 
         if (!_documentService.IsDocumentLoaded || string.IsNullOrEmpty(_currentFilePath))
         {
@@ -2481,7 +2591,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var suggestedFileName = System.IO.Path.GetFileNameWithoutExtension(_currentFilePath) +
-                                $"_page{CurrentPageIndex + 1}.png";
+                                $"_page{exportPageIndex + 1}.png";
 
         var exportPath = await _filePicker.SaveFileAsync(new SaveFileRequest
         {
@@ -2502,8 +2612,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public async Task ExportCurrentPageToImageAsync(string outputPath, int dpi = 150)
     {
+        var pageIndex = CommandTargetPageIndex; // #1650
         _logger.LogInformation("Exporting current page {PageNumber} to: {Path}, DPI: {DPI}",
-            CurrentPageIndex + 1, outputPath, dpi);
+            pageIndex + 1, outputPath, dpi);
 
         if (!_documentService.IsDocumentLoaded || string.IsNullOrEmpty(_currentFilePath))
         {
@@ -2524,7 +2635,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var document = _documentService.GetCurrentDocument()
                 ?? throw new InvalidOperationException("No current document is available for export.");
             await _imageExportWorkflow.ExportPageAsync(
-                new PageImageExportRequest(document, CurrentPageIndex, outputPath, dpi));
+                new PageImageExportRequest(document, pageIndex, outputPath, dpi));
         }
         catch (Exception ex)
         {

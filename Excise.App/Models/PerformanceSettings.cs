@@ -23,7 +23,9 @@ public enum PerformancePreset
 /// </summary>
 /// <param name="TileCacheBudgetMb">Continuous-view tile cache budget, MiB.</param>
 /// <param name="SinglePageCachedPages">Single-page LRU capacity, bitmaps.</param>
-/// <param name="ThumbnailPrewarm">Render every thumbnail in the background after a document opens.</param>
+/// <param name="ThumbnailPrewarm">Render every thumbnail in the background once the
+/// document has been idle for <paramref name="IdleTrimSeconds"/> (#1565). OFF in
+/// <see cref="Balanced"/> — see the remarks on <see cref="Balanced"/>.</param>
 /// <param name="ThumbnailKeepMargin">Thumbnails kept in memory either side of the visible ones.</param>
 /// <param name="SoftCacheTrims">Trim on deactivate/minimize/idle (#1478).</param>
 /// <param name="IdleTrimSeconds">Idle delay before a soft trim.</param>
@@ -58,11 +60,26 @@ public sealed record PerformanceSettings(
     /// </summary>
     public static int MaxRenderThreads => Math.Max(2, Environment.ProcessorCount);
 
-    /// <summary>Today's defaults, exactly as the viewer and thumbnail sidebar build them.</summary>
+    /// <summary>
+    /// Today's defaults, exactly as the viewer and thumbnail sidebar build them.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="ThumbnailPrewarm"/> is OFF here, changed from on by Marc's
+    /// decision on 2026-09-17 after #1565 measured what it costs on a 126-page
+    /// document: ~110 MB of peak footprint and ~80 MB that no compacting
+    /// collect returns, plus 5 s of one CPU, for a DISK cache whose benefit
+    /// lands mostly on a later re-open of the same file. Deferring it to an
+    /// idle period did not pay: the #1543 re-run put the work inside the
+    /// measured idle window instead, taking idle CPU from 0.10% to 5.18% and
+    /// the 30 s-idle footprint from 671 MB to 775 MB. Sidebar scrolling is
+    /// already covered by demand loads plus the 12-page prefetch margin.
+    /// <see cref="Fast"/> keeps it on: that preset means "spend memory for
+    /// speed", and a user choosing it has asked for exactly this trade.
+    /// </remarks>
     public static PerformanceSettings Balanced => new(
         TileCacheBudgetMb: 200,
         SinglePageCachedPages: 6,
-        ThumbnailPrewarm: true,
+        ThumbnailPrewarm: false,
         ThumbnailKeepMargin: 48,
         SoftCacheTrims: true,
         IdleTrimSeconds: 30,

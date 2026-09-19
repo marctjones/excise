@@ -55,6 +55,41 @@ internal interface IDocumentSessionHost
     /// <summary>True when this session is one of several tabs in its window (#1554).</summary>
     bool CanMoveToNewWindow { get; }
 
+    /// <summary>
+    /// Pick documents and open them as tabs of THIS session's window (#1628),
+    /// whatever the open-mode preference says.
+    /// </summary>
+    /// <remarks>
+    /// Lives here rather than on <c>DocumentTabsViewModel</c> because the tab
+    /// strip's "+" button has to have a command even in a window that has no
+    /// tabs view model yet — a leaf button with a null Command is a dead
+    /// affordance, which CommandBindingSweepTests refuses.
+    /// </remarks>
+    Task OpenInNewTabAsync();
+
+    /// <summary>
+    /// True when this session's window has more than one tab to switch between
+    /// (#1598). Same condition as <see cref="CanMoveToNewWindow"/> today, kept
+    /// separate because they answer different questions and
+    /// <c>MacNativeMenuBuilder</c>'s tab-switch items are enabled by this one.
+    /// </summary>
+    bool CanSwitchTabs { get; }
+
+    /// <summary>
+    /// Show the next (<paramref name="step"/> +1) or previous (-1) tab of this
+    /// session's window, wrapping at the ends (#1598). A no-op when the window
+    /// has one tab.
+    /// </summary>
+    /// <remarks>
+    /// The window's tabs are the view's business, but on macOS a KEYSTROKE
+    /// cannot reach them: AppKit treats Control-Tab as a key-view/key-equivalent
+    /// keystroke, so it never arrives at Avalonia's KeyDown (measured by
+    /// <c>reader_speed_bench.py --multi</c> with a real CGEvent). The native
+    /// Window menu has to carry the gesture, and the native menu is built from a
+    /// view model — so the view model needs a way to ask.
+    /// </remarks>
+    void SwitchTab(int step);
+
     /// <summary>Move this session's tab into a window of its own.</summary>
     void MoveToNewWindow();
 

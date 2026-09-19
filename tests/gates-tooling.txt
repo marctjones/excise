@@ -9,10 +9,11 @@ scripts/architecture_artifacts.py   # body of check-architecture-artifacts.sh
 scripts/archive-bench-run.sh   # the ONE redaction-bench scorer; appends to tests/redaction-bench-history.jsonl (the report reads the history)
 scripts/assert-fresh.sh   # freshness guard invoked by lib-runner before every --no-build
 scripts/assert_fresh_build.py   # body of assert-fresh.sh
+scripts/assert-trx-green.sh   # the trx verdict for the two ADVISORY GitHub runners (#1593/#1594): a --filter matching nothing exits 0, and the Linux Avalonia host exits 1 on native teardown after passing. Not a local gate — lib-runner's zero-test guard and report-gates.sh cover the tiers. Its own --self-test runs as a step in both workflows
 scripts/audit-image-feature-coverage.py   # registry audit helper
 scripts/audit-pdf20-renderer-coverage.py   # registry audit helper
 scripts/build-bench-tiers.py   # regenerates tests/bench-tiers/*.tsv from corpora
-scripts/build-deb.sh   # Linux packaging; no Linux runner today
+scripts/build-deb.sh   # Linux packaging; no Linux PACKAGING runner (#1596) — the advisory linux.yml builds and publishes but packages nothing
 scripts/build-image-feature-inventory.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-macos-app.sh   # packaging (release-smoke package gate)
 scripts/build-gui-interaction-registry.py   # invoked by check-gui-interaction-registry.sh (row gui-interaction-registry, #1374)
@@ -29,7 +30,7 @@ scripts/build-pdf-spec-inventory.py   # invoked by check-pdf-capability-registry
 scripts/build-renderer-promotion-queue.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-renderer-test-evidence-map.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-screen-probe.sh   # #1544 builds tools/screen-probe (ScreenCaptureKit window recorder) for reader_speed_bench.py; a build helper, not a check
-scripts/build-windows-installer.ps1   # Windows packaging; no Windows runner today
+scripts/build-windows-installer.ps1   # Windows packaging; no Windows PACKAGING runner (#1595) — the advisory windows.yml builds and publishes but packages nothing
 scripts/build.sh   # plain build
 scripts/check-arlington-revision.py   # invoked by the registry pipeline
 scripts/check-contract-manifest-agreement.sh   # the same comparison runs in t0 inside Excise.Cli.Tests (Contracts_AgreeWithTheCorpusExpectationManifests, #977); this prints the whole list for humans
@@ -93,6 +94,7 @@ scripts/lib-runner.sh   # library sourced by every runner
 scripts/make-reader-bench-scan.py   # #1543 builds the reader benchmark's scanned-document fixture (no local corpus holds a real multi-page scan); a generator, not a check
 scripts/mine-hard-redaction-cases.py   # bench corpus mining
 scripts/monitor-exploratory-corpus.sh   # progress monitor for a running corpus scan
+scripts/pre-push-hook.sh   # the pre-push hook BODY (#1600); installed as a stub by test-tier.sh --install-hook, pinned by the gate-asymmetry-selftest row
 scripts/profile-render.sh   # dotnet-trace hotspot workflow for one CLI render (#1351); a diagnostic, not a gate
 scripts/profile_render_analyze.py   # body of profile-render.sh: self/inclusive time from an evented speedscope profile
 scripts/profile-test-rss-by-filter.sh   # measurement helper (#861)

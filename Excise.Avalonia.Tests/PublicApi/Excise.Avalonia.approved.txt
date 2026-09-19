@@ -145,6 +145,7 @@ namespace Excise.Avalonia.Controls
         public bool HighlightFormFields { get; set; }
         public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; set; }
         public bool IsLoading { get; }
+        public int MostVisiblePage { get; }
         public Excise.Avalonia.Controls.PathCaptureKind PathCaptureKind { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
         public long RenderVersion { get; set; }

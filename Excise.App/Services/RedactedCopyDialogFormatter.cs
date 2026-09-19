@@ -33,6 +33,14 @@ internal sealed class RedactedCopyDialogFormatter
         foreach (var xfa in report.XfaRemovals ?? Array.Empty<string>())
             lines.Add($"- XFA form: {xfa}");
 
+        // #1586: what the output profile removed WITHOUT a term match — every
+        // script, a hidden layer, the thumbnails. The user did not ask for each
+        // of these individually, so the report is the only place they learn it
+        // happened; a silent removal reads as "the tool mangled my document".
+        lines.Add($"- Output profile: {report.Profile}");
+        foreach (var removal in report.Removals)
+            lines.Add($"  - removed {removal}");
+
         lines.Add(string.Empty);
         lines.Add("Removed text is not repeated in this report. Open Clipboard History only if you need to review captured selection previews.");
 

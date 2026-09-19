@@ -83,11 +83,23 @@ public class TextSelectionDragTests
             await Task.Delay(50);
             await Dispatcher.UIThread.InvokeAsync(() => window.MouseUp(end, MouseButton.Left));
 
+            for (var i = 0; i < 30 && string.IsNullOrEmpty(vm.SelectedText); i++)
+                await Task.Delay(100);
+
+            // #1645: the drag SELECTS; it does not copy. What this test is
+            // really about — column order rather than PDF paint order —
+            // belongs to the selection, so it is asserted there first.
+            vm.SelectedText.Should().Be(expected,
+                "a mouse selection must retain column order and line breaks, not PDF paint order");
+            vm.ClipboardHistory.Count.Should().Be(historyBefore,
+                "#1645: selecting must not copy");
+
+            await vm.CopyTextCommand.Execute().ToTask();
             for (var i = 0; i < 30 && vm.ClipboardHistory.Count == historyBefore; i++)
                 await Task.Delay(100);
 
             vm.ClipboardHistory.Count.Should().BeGreaterThan(historyBefore,
-                "a mouse selection must reach the clipboard-history path");
+                "an explicit Copy reaches the clipboard-history path");
             vm.ClipboardHistory[0].Text.Should().Be(expected,
                 "paste-ready text must retain column order and line breaks, not PDF paint order");
         }

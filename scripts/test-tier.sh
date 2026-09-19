@@ -110,8 +110,10 @@ Usage: scripts/test-tier.sh {t0|t1|full|t2|t3} [--resume]
                   without running anything: NEW vs KNOWN reds, SKIPPED
                   prerequisites, IMPROVE ratchets, GRADES vs the reference tools.
                   --full lists every row. --no-gh skips the open-issue check.
-  --install-hook  install t0 as .git/hooks/pre-push and exit. Re-run once after
-                  updating this script: the hook reads the push range on stdin.
+  --install-hook  install t0 as the pre-push hook and exit. The hook is a stub
+                  that execs scripts/pre-push-hook.sh, so later fixes land
+                  without re-installing — but a hook installed before #1600
+                  carries the old inline body and MUST be re-installed once.
   --resume        skip t0/t1 steps that already passed for this exact command
                   and tree (redaction rows never skip). full resumes by default.
 
@@ -120,56 +122,35 @@ EOF
 }
 
 if [ "$INSTALL_HOOK" = "1" ]; then
-    HOOK="$ROOT/.git/hooks/pre-push"
+    # #1600: `$ROOT/.git` is a FILE in a linked worktree, so writing
+    # "$ROOT/.git/hooks/pre-push" failed there outright. git knows where the
+    # (shared) hooks directory is; ask it.
+    HOOK="$(git rev-parse --git-path hooks/pre-push)"
+    mkdir -p "$(dirname "$HOOK")"
+    # The body lives in scripts/pre-push-hook.sh, tracked and selftested
+    # (scripts/test-check-gate-asymmetry.sh). The installed hook is a stub, so
+    # an old install picks up every later fix instead of freezing a heredoc.
     cat > "$HOOK" <<'HOOKEOF'
 #!/usr/bin/env bash
-# Installed by scripts/test-tier.sh --install-hook (#646).
+# Installed by scripts/test-tier.sh --install-hook (#646, #1600).
 #
-# ONE job: run t0 before every push.
+# A stub on purpose: the logic is scripts/pre-push-hook.sh, which is tracked,
+# reviewable and covered by scripts/test-check-gate-asymmetry.sh, so a later fix
+# lands without re-installing. stdin (git's push range, one line per pushed ref)
+# is inherited by the exec.
 #
-# It earns that. Today alone it blocked two pushes carrying unreviewed public
-# API changes and one carrying a broken Excise.Avalonia test — each a real
-# defect, caught before it left the machine.
-#
-# WHAT THIS HOOK USED TO ALSO DO, AND WHY IT NO LONGER DOES
-#
-# It refused any `v*` tag that was lightweight or lacked a Release-Evidence
-# trailer, to force release tags through scripts/tag-release.sh. Removed
-# because it guarded a path nothing had ever taken:
-#
-#   * v3.6.0, v3.7.0 and v3.8.0 all have ZERO Release-Evidence trailers —
-#     every existing release tag was made the way the clause forbade.
-#   * The clause never fired. No v* push has been attempted since it was
-#     installed.
-#   * It redirected to scripts/tag-release.sh, whose happy path has never
-#     run (#968, closed as won't-do). So the only sanctioned route was an
-#     unrehearsed script, and the guard's whole cost landed on someone
-#     trying to tag a release.
-#
-# scripts/tag-release.sh has since been deleted outright, along with the
-# Release-Evidence trailers it wrote. Tag by hand: `git tag -a vX.Y.Z`.
-#
-# THE PUSH RANGE. git feeds "<local ref> <local sha> <remote ref> <remote sha>"
-# per pushed ref on stdin. The remote sha is the base the gate-asymmetry gate
-# is defined over ("two pushes, not two commits", #618) — so it is exported
-# as GATE_ASYMMETRY_BASE. An all-zero sha (a new remote branch) falls through
-# to the runner's own base selection (LOCAL_GATES.md).
-base=""
-if [ ! -t 0 ]; then
-    while read -r _lref _lsha _rref rsha; do
-        case "$rsha" in *[!0]*) base="$rsha" ;; esac
-    done
+# ⚠️ Hooks live in the SHARED git dir, so this one file serves every worktree —
+# including a branch that predates #1600 and has no scripts/pre-push-hook.sh. A
+# bare exec would fail there with "No such file or directory" and no gate would
+# run, so the absence is reported and the push REFUSED, never skipped.
+hook="$(git rev-parse --show-toplevel)/scripts/pre-push-hook.sh"
+if [ ! -x "$hook" ]; then
+    echo "pre-push: $hook is missing on this branch (it predates #1600)." >&2
+    echo "  Merge develop into it, or run scripts/test-tier.sh t0 here and" >&2
+    echo "  push with --no-verify once it passes." >&2
+    exit 1
 fi
-[ -n "$base" ] && export GATE_ASYMMETRY_BASE="$base"
-
-# git spawns hooks with the invoking process's environment, not a login shell, so a PATH
-# fixup living only in ~/.zprofile/~/.zshrc is invisible here. Prepend the official SDK
-# explicitly (global.json pins it; CLAUDE.md "Build Failures" explains why the Homebrew
-# formula must not be picked up instead) so this hook is correct regardless of what shell
-# or tool invoked `git push`.
-[ -d "$HOME/.dotnet" ] && export PATH="$HOME/.dotnet:$PATH"
-
-exec "$(git rev-parse --show-toplevel)/scripts/test-tier.sh" t0
+exec "$hook" "$@"
 HOOKEOF
     chmod +x "$HOOK"
     say "${G}Installed${N} $HOOK"

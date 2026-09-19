@@ -556,7 +556,13 @@
 
 
         <!-- Modern Title Bar Area -->
-        <Grid Grid.Row="2" Height="40" Background="{DynamicResource ToolbarBackgroundBrush}"
+        <!-- #1643: this row IS the window's title bar (the window extends its
+             client area into the decorations), so it has to behave like one:
+             drag to move and snap, double-click to zoom. Avalonia does not
+             wire that up for a custom title area — the window must call
+             BeginMoveDrag itself, which is what the code-behind does. -->
+        <Grid x:Name="TitleBarArea"
+              Grid.Row="2" Height="40" Background="{DynamicResource ToolbarBackgroundBrush}"
               ColumnDefinitions="Auto,*,Auto">
             <!-- App Icon and Title -->
             <StackPanel x:Name="TitleBarAppLabel"
@@ -1194,29 +1200,20 @@
           </StackPanel>
         </Border>
 
-        <!-- Notices sit between the toolbar/search bar and the document.
-             Row 1 used to hold them, above the custom title bar, where
-             ExtendClientAreaToDecorationsHint put them under the macOS
-             window buttons (found in the #1547 live check). -->
+        <!-- Row 5 is window CHROME: the tab strip, which is part of the
+             window and must displace the document like the toolbar does.
+             The notification banners used to live here too and no longer do —
+             they FLOAT over the document (#1646, NoticeOverlay below), because
+             a banner that takes a layout row moves the page under the reader
+             every time one opens or closes. #1619 was exactly that: an
+             attachments toast auto-dismissing after 5 s re-laid out the window
+             and jumped the page three seconds after the document had settled. -->
         <StackPanel Grid.Row="5">
             <!-- #1554: in-app document tabs. Its DataContext is the window's
                  DocumentTabsViewModel, set in code-behind; it shows only when
                  the window holds more than one document. -->
             <views:DocumentTabStrip x:Name="DocumentTabStripHost" IsVisible="False"/>
 
-            <!-- Toast Notification InfoBar -->
-            <ui:FAInfoBar x:Name="ToastInfoBar" IsOpen="False" IsClosable="True" Margin="0"/>
-
-            <!-- #1547: persistent XFA notice. Stays until closed or the
-                 document changes, because a dynamic XFA placeholder page
-                 stays on screen too. -->
-            <ui:FAInfoBar x:Name="XfaFormInfoBar"
-                          IsOpen="{Binding IsXfaNoticeOpen, Mode=TwoWay}"
-                          IsClosable="True"
-                          Severity="{Binding XfaNoticeSeverity}"
-                          Title="{Binding XfaNoticeTitle}"
-                          Message="{Binding XfaNoticeMessage}"
-                          Margin="0"/>
         </StackPanel>
 
         <!-- Main Content Area. Auto/Auto on the sidebar columns lets them
@@ -1226,9 +1223,12 @@
              column. -->
         <Grid Grid.Row="6" ColumnDefinitions="Auto,*,Auto">
 
-            <!-- Left sidebar — Outline (top), Thumbnails (middle), Attachments
-                 (bottom, #1563). Each pane has its own View menu toggle; the
-                 host shows while any of them is on. -->
+            <!-- Left sidebar — Outline (top), Thumbnails (bottom). Each pane has
+                 its own View menu toggle; the host shows while either is on.
+                 Attachments moved to the RIGHT sidebar (#1641): it belongs with
+                 the other per-document lists (search results, pending
+                 redactions, clipboard history), and the left side is for
+                 navigating the pages. -->
             <Border x:Name="LeftSidebarHost"
                     Grid.Column="0"
                     Width="220"
@@ -1236,7 +1236,7 @@
                     Background="{DynamicResource SidebarBackgroundBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="0,0,1,0">
-              <Grid RowDefinitions="*,Auto,*,Auto">
+              <Grid RowDefinitions="*,Auto,*">
 
                 <!-- Outline / Table of Contents -->
                 <Grid x:Name="OutlinePanel"
@@ -1418,116 +1418,19 @@
                     </ItemsControl>
                 </ScrollViewer>
                 </Grid>
-
-                <!-- #1563: Attachments pane. Visible by default and when empty,
-                     so a document's embedded files are never out of sight.
-                     Auto height with a capped list: it takes little room when
-                     empty and never pushes the thumbnails off screen.
-                     excise never opens or runs an attachment; Save writes the
-                     bytes to a place the user picks. -->
-                <Grid x:Name="AttachmentsPanel"
-                      Grid.Row="3" RowDefinitions="Auto,Auto,Auto"
-                      IsVisible="{Binding IsAttachmentsSidebarVisible}">
-                    <Border Grid.Row="0"
-                            Background="{DynamicResource SecondaryBackgroundBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="0,1,0,1"
-                            Padding="10,6"
-                            ToolTip.Tip="{Binding AttachmentsSummary}">
-                        <DockPanel>
-                            <TextBlock Text="Attachments"
-                                       FontWeight="SemiBold" FontSize="12"
-                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <TextBlock Text="{Binding AttachmentsCountText}"
-                                       HorizontalAlignment="Right"
-                                       FontSize="11"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        </DockPanel>
-                    </Border>
-
-                    <TextBlock x:Name="AttachmentsEmptyText"
-                               Grid.Row="1"
-                               Margin="10,8"
-                               FontSize="11"
-                               Text="{Binding AttachmentsEmptyText}"
-                               IsVisible="{Binding !HasAttachments}"
-                               Foreground="{DynamicResource TextSecondaryBrush}"/>
-
-                    <ListBox x:Name="AttachmentsList"
-                             Grid.Row="1"
-                             MaxHeight="180"
-                             ItemsSource="{Binding Attachments}"
-                             SelectedItem="{Binding SelectedAttachment, Mode=TwoWay}"
-                             IsVisible="{Binding HasAttachments}"
-                             Background="Transparent"
-                             BorderThickness="0"
-                             AutomationProperties.Name="Attachments">
-                        <!-- The row container is what a screen reader lands
-                             on, so it carries "name, size" (#1563). -->
-                        <ListBox.Styles>
-                            <Style Selector="ListBoxItem" x:DataType="models:AttachmentEntry">
-                                <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}"/>
-                                <Setter Property="Padding" Value="8,4"/>
-                            </Style>
-                        </ListBox.Styles>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:AttachmentEntry">
-                                <StackPanel Spacing="1" ToolTip.Tip="{Binding ToolTipText}">
-                                    <DockPanel>
-                                        <TextBlock DockPanel.Dock="Right"
-                                                   Margin="6,0,0,0"
-                                                   Text="{Binding SizeDisplay}"
-                                                   FontSize="10"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                        <TextBlock Text="{Binding DisplayName}"
-                                                   FontSize="11"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    </DockPanel>
-                                    <TextBlock Text="{Binding DetailText}"
-                                               IsVisible="{Binding HasDetail}"
-                                               FontSize="10"
-                                               TextTrimming="CharacterEllipsis"
-                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-
-                    <WrapPanel Grid.Row="2" Orientation="Horizontal" Margin="6,2,6,6"
-                               IsVisible="{Binding HasAttachments}">
-                        <Button x:Name="SaveAttachmentButton"
-                                Content="Save…"
-                                Command="{Binding SaveSelectedAttachmentCommand}"
-                                IsEnabled="{Binding SelectedAttachment, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                Classes="modern-button"
-                                Margin="0,0,4,4"
-                                access:CommandAccessibility.CommandId="document.saveAttachment"
-                                ToolTip.Tip="Save the selected attachment to a location you choose. excise never opens or runs attachments."
-                                AutomationProperties.Name="Save Attachment"/>
-                        <Button x:Name="SaveAllAttachmentsButton"
-                                Content="Save All…"
-                                Command="{Binding SaveAllAttachmentsCommand}"
-                                Classes="modern-button"
-                                Margin="0,0,4,4"
-                                access:CommandAccessibility.CommandId="document.saveAllAttachments"
-                                ToolTip.Tip="Save every attachment into a folder you choose. Existing files are never overwritten."
-                                AutomationProperties.Name="Save All Attachments"/>
-                        <Button x:Name="RemoveAllAttachmentsButton"
-                                Content="Remove All"
-                                Command="{Binding RemoveAllAttachmentsCommand}"
-                                Classes="modern-button"
-                                Margin="0,0,4,4"
-                                access:CommandAccessibility.CommandId="document.removeAllAttachments"
-                                ToolTip.Tip="Strip the document's embedded files. Undoable; save afterwards to keep the change."
-                                AutomationProperties.Name="Remove All Attachments"/>
-                    </WrapPanel>
-                </Grid>
               </Grid>
             </Border>
 
+            <!-- #1646: notification banners float OVER the document, anchored
+                 to the top of the viewport. They are in the document column
+                 only — covering the sidebars would hide the lists the banner is
+                 usually telling you to look at — and after the viewer in
+                 document order, so they paint on top of it. Nothing about them
+                 is in the layout: opening or closing one must not move the
+                 page. -->
             <!-- PDF Viewer -->
-            <Border Grid.Column="1"
+            <Border x:Name="DocumentArea"
+                    Grid.Column="1"
                     Background="#E8E8E8">
                 <Grid>
                     <!-- Empty State (shown when no document is loaded) -->
@@ -1602,15 +1505,57 @@
                 </Grid>
             </Border>
 
+            <StackPanel x:Name="NoticeOverlay"
+                        Grid.Column="1"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Stretch"
+                        ZIndex="10"
+                        Spacing="4"
+                        Margin="12,12,12,0">
+                <!-- Toast Notification InfoBar -->
+                <ui:FAInfoBar x:Name="ToastInfoBar" IsOpen="False" IsClosable="True" Margin="0"/>
+
+                <!-- #1547: persistent XFA notice. Stays until closed or the
+                     document changes, because a dynamic XFA placeholder page
+                     stays on screen too. -->
+                <ui:FAInfoBar x:Name="XfaFormInfoBar"
+                              IsOpen="{Binding IsXfaNoticeOpen, Mode=TwoWay}"
+                              IsClosable="True"
+                              Severity="{Binding XfaNoticeSeverity}"
+                              Title="{Binding XfaNoticeTitle}"
+                              Message="{Binding XfaNoticeMessage}"
+                              Margin="0"/>
+
+                <!-- #1619: persistent attachments notice. Was a 5 s
+                     auto-dismissing toast, and because the notices used to take
+                     a layout row, that dismissal re-laid out the window and
+                     jumped the page under the reader five seconds after the
+                     document opened — the whole #1544 launch tail on a document
+                     with an embedded file. A carrier the page view cannot show
+                     does not stop mattering after five seconds, so it stays
+                     until closed or the document changes. Floating over the
+                     document (#1646) removes the re-layout as well. -->
+                <ui:FAInfoBar x:Name="AttachmentsInfoBar"
+                              IsOpen="{Binding IsAttachmentsNoticeOpen, Mode=TwoWay}"
+                              IsClosable="True"
+                              Severity="Warning"
+                              Title="{Binding AttachmentsNoticeTitle}"
+                              Message="{Binding AttachmentsNoticeMessage}"
+                              Margin="0"/>
+            </StackPanel>
+
             <!-- Clipboard History Sidebar -->
             <Border x:Name="ClipboardSidebarHost"
                     Grid.Column="2"
                     Width="250"
-                    IsVisible="{Binding IsClipboardSidebarVisible}"
+                    IsVisible="{Binding IsRightSidebarVisible}"
                     Background="{DynamicResource SidebarBackgroundBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="1,0,0,0">
-                <Grid RowDefinitions="Auto,*,Auto">
+              <Grid RowDefinitions="*,Auto">
+                <Grid x:Name="ClipboardPanel"
+                      Grid.Row="0" RowDefinitions="Auto,*,Auto"
+                      IsVisible="{Binding ShowRightModePanel}">
                     <!-- Header — title swaps with the right-sidebar mode. -->
                     <Border Grid.Row="0" Background="{DynamicResource SecondaryBackgroundBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"
@@ -1858,6 +1803,113 @@
                         </ItemsControl>
                     </ScrollViewer>
                 </Grid>
+
+
+                    <!-- #1563: Attachments pane. Visible by default and when empty,
+                         so a document's embedded files are never out of sight.
+                         Auto height with a capped list: it takes little room when
+                         empty and never pushes the thumbnails off screen.
+                         excise never opens or runs an attachment; Save writes the
+                         bytes to a place the user picks. -->
+                    <Grid x:Name="AttachmentsPanel"
+                          Grid.Row="1" RowDefinitions="Auto,Auto,Auto"
+                          IsVisible="{Binding IsAttachmentsSidebarVisible}">
+                        <Border Grid.Row="0"
+                                Background="{DynamicResource SecondaryBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="0,1,0,1"
+                                Padding="10,6"
+                                ToolTip.Tip="{Binding AttachmentsSummary}">
+                            <DockPanel>
+                                <TextBlock Text="Attachments"
+                                           FontWeight="SemiBold" FontSize="12"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBlock Text="{Binding AttachmentsCountText}"
+                                           HorizontalAlignment="Right"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </DockPanel>
+                        </Border>
+
+                        <TextBlock x:Name="AttachmentsEmptyText"
+                                   Grid.Row="1"
+                                   Margin="10,8"
+                                   FontSize="11"
+                                   Text="{Binding AttachmentsEmptyText}"
+                                   IsVisible="{Binding !HasAttachments}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                        <ListBox x:Name="AttachmentsList"
+                                 Grid.Row="1"
+                                 MaxHeight="180"
+                                 ItemsSource="{Binding Attachments}"
+                                 SelectedItem="{Binding SelectedAttachment, Mode=TwoWay}"
+                                 IsVisible="{Binding HasAttachments}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 AutomationProperties.Name="Attachments">
+                            <!-- The row container is what a screen reader lands
+                                 on, so it carries "name, size" (#1563). -->
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem" x:DataType="models:AttachmentEntry">
+                                    <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}"/>
+                                    <Setter Property="Padding" Value="8,4"/>
+                                </Style>
+                            </ListBox.Styles>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:AttachmentEntry">
+                                    <StackPanel Spacing="1" ToolTip.Tip="{Binding ToolTipText}">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Right"
+                                                       Margin="6,0,0,0"
+                                                       Text="{Binding SizeDisplay}"
+                                                       FontSize="10"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       FontSize="11"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        </DockPanel>
+                                        <TextBlock Text="{Binding DetailText}"
+                                                   IsVisible="{Binding HasDetail}"
+                                                   FontSize="10"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <WrapPanel Grid.Row="2" Orientation="Horizontal" Margin="6,2,6,6"
+                                   IsVisible="{Binding HasAttachments}">
+                            <Button x:Name="SaveAttachmentButton"
+                                    Content="Save…"
+                                    Command="{Binding SaveSelectedAttachmentCommand}"
+                                    IsEnabled="{Binding SelectedAttachment, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    Classes="modern-button"
+                                    Margin="0,0,4,4"
+                                    access:CommandAccessibility.CommandId="document.saveAttachment"
+                                    ToolTip.Tip="Save the selected attachment to a location you choose. excise never opens or runs attachments."
+                                    AutomationProperties.Name="Save Attachment"/>
+                            <Button x:Name="SaveAllAttachmentsButton"
+                                    Content="Save All…"
+                                    Command="{Binding SaveAllAttachmentsCommand}"
+                                    Classes="modern-button"
+                                    Margin="0,0,4,4"
+                                    access:CommandAccessibility.CommandId="document.saveAllAttachments"
+                                    ToolTip.Tip="Save every attachment into a folder you choose. Existing files are never overwritten."
+                                    AutomationProperties.Name="Save All Attachments"/>
+                            <Button x:Name="RemoveAllAttachmentsButton"
+                                    Content="Remove All"
+                                    Command="{Binding RemoveAllAttachmentsCommand}"
+                                    Classes="modern-button"
+                                    Margin="0,0,4,4"
+                                    access:CommandAccessibility.CommandId="document.removeAllAttachments"
+                                    ToolTip.Tip="Strip the document's embedded files. Undoable; save afterwards to keep the change."
+                                    AutomationProperties.Name="Remove All Attachments"/>
+                        </WrapPanel>
+                    </Grid>
+              </Grid>
             </Border>
         </Grid>
 

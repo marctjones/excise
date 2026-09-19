@@ -30,7 +30,19 @@
 # and still fails an illegal one, so it never needs rewriting in the first place.
 #
 # Usage:
-#   scripts/check-gate-asymmetry.sh [base-ref]      # default: origin/develop
+#   scripts/check-gate-asymmetry.sh [base-ref] [head-ref]
+#       base-ref  default: origin/develop (or $GATE_ASYMMETRY_BASE via the caller)
+#       head-ref  default: $GATE_ASYMMETRY_HEAD, else HEAD
+#
+# WHY THE HEAD IS A VARIABLE AND NOT ALWAYS HEAD (#1600)
+# ------------------------------------------------------
+# `git push origin <sha>:develop` pushes a range that ENDS AT <sha>, which need
+# not be HEAD — and pushing in reviewable steps is exactly what this gate's own
+# failure message tells you to do ("two pushes, not two commits"). While the
+# head was hard-coded, the pre-push hook read the remote sha off stdin and
+# ignored the local one, so a stepped push evaluated base...HEAD: the wrong
+# range, every time, and the advice was impossible to follow without a second
+# worktree per step. The hook now passes the pushed sha as GATE_ASYMMETRY_HEAD.
 #
 # WHY THE DEFAULT IS origin/develop, NOT origin/main (#965)
 # ---------------------------------------------------------
@@ -46,6 +58,7 @@
 set -euo pipefail
 
 BASE="${1:-origin/develop}"
+HEAD_REF="${2:-${GATE_ASYMMETRY_HEAD:-HEAD}}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
@@ -69,10 +82,25 @@ if ! git rev-parse --verify --quiet "$BASE" >/dev/null; then
   exit 1
 fi
 
-RANGE="$BASE...HEAD"
-# The base is printed resolved so an acceptance in tests/gates.tsv can be SCOPED
-# to one range ("#1358/base=<sha>"): the same red against any other base is NEW.
-echo "==> range $RANGE base=$(git rev-parse "$BASE")"
+# A head that does not resolve is the same vacuous-green hazard as a missing
+# base, and there is no escape hatch for it: a caller that passes a head is
+# naming a specific tree, and silently evaluating a different one would be
+# worse than failing. (GATE_ASYMMETRY_ALLOW_NO_BASE deliberately does NOT
+# apply — it is about an unfetchable REMOTE ref, not about a local sha the
+# caller just handed us.)
+if ! git rev-parse --verify --quiet "$HEAD_REF" >/dev/null; then
+  echo "check-gate-asymmetry: head ref '$HEAD_REF' not found."
+  echo "  Passed as \$2 or GATE_ASYMMETRY_HEAD. Without it resolving, this gate"
+  echo "  would evaluate some OTHER range and report green for the one asked"
+  echo "  about. Name a ref that exists, or leave it unset to use HEAD."
+  exit 1
+fi
+
+RANGE="$BASE...$HEAD_REF"
+# Base AND head are printed resolved so an acceptance in tests/gates.tsv can be
+# SCOPED to one range ("#1358/base=<sha>"): the same red against any other base
+# is NEW. #1600: the head is printed too, because it is no longer always HEAD.
+echo "==> range $RANGE base=$(git rev-parse "$BASE") head=$(git rev-parse "$HEAD_REF")"
 
 # (a) Performance-sensitive paths: the render/scroll/tile hot paths and anything
 #     under a benchmarks/hotspot tree.

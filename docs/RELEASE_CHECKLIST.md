@@ -5,11 +5,21 @@ Use this checklist before tagging any `v*` release.
 ## Tagging
 
 ```bash
+scripts/set-version.sh <version>          # Directory.Build.props + CHANGELOG
+git commit -am "chore: <version>"
 git tag -a v<version> -m "excise v<version>"
 git push origin v<version>
 ```
 
-That is all. There is no evidence-checking wrapper and no enforced trailer.
+`set-version.sh` is the only thing that changes the version, and it writes both
+places a human would otherwise edit by hand. Skipping it is not a shortcut: the
+pre-push hook refuses a `v*` tag whose version disagrees with
+`Directory.Build.props`, and the macOS release job checks the same thing before
+it builds — because a tagged build stamps the assemblies from the TREE, so a
+mismatch ships a binary whose About window names a different release. That is
+#1627, which shipped "version 1.0.0" for a whole release cycle.
+
+Beyond that there is no evidence-checking wrapper and no enforced trailer.
 
 There used to be: `scripts/tag-release.sh` wrote `Release-Evidence:` trailers
 into the annotated tag, and the pre-push hook refused any `v*` tag that lacked
@@ -110,10 +120,7 @@ the decisions no row can make.
    release evidence; keep it. Verdicts, exit codes and the report layout:
    `LOCAL_GATES.md`, "The report".
 
-4. **The manual Acrobat step** under "Encryption Evidence" below — Acrobat is
-   not scriptable here and is deliberately not faked in the automated gate.
-
-5. **Tag** ("Release" below).
+4. **Tag** ("Release" below).
 
 The decisions no row can make:
 
@@ -232,14 +239,15 @@ this section exists to catch.
   `EXCISE_REQUIRE_ENCRYPTION_INTEROP_TOOLS=1` env var makes an all-tools-missing
   (vacuously green) run a hard failure, which is what release evidence
   requires.
-- **Manual Acrobat step** (Acrobat is not scriptable in this environment —
-  it is deliberately not faked in the automated gate): produce one R6
-  (AES-256) and one R4 (AES-128) sample encrypted by excise with a non-empty
-  user password, and open each in Adobe Acrobat (Reader is fine):
-  - the correct password must open the document;
-  - the wrong password must be rejected;
-  - dismissing the password prompt (no password) must not show any content;
-  - File > Properties > Security must report the document as protected.
+- **No manual Acrobat step.** It used to be here: produce an R6 and an R4
+  sample and open each in Acrobat by hand. Dropped 2026-09-17 (Marc's call),
+  because the gate above already covers the catastrophic direction — the wrong
+  password AND the absent password are rejected by mutool, qpdf, Ghostscript
+  and pdftoppm, and qpdf decodes the `/P` mask independently — so Acrobat added
+  a fifth opinion on a property four independent readers already agree on, at
+  the cost of the release's only manual step. Spot-check in Acrobat if a user
+  ever reports that a protected file opens without its password; do not gate
+  the release on it.
 - Also relevant: `EncryptionWriterInteropTests` (per-writer-issue coverage,
   #639/#640) and `EncryptionPreservationInteropTests` (#643 round-trips);
   both run under `dotnet test Excise.Rendering.Tests --filter

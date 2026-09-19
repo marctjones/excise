@@ -21,7 +21,27 @@ internal sealed class ThumbnailSidebarSession : IDisposable
     internal const int PrefetchMargin = 12;
     internal const int KeepMargin = 48;
 
+    /// <summary>
+    /// How long the document must be left alone before the background
+    /// pre-render of every thumbnail starts (#1565). The running value comes
+    /// from the <c>IdleTrimSeconds</c> preference — see
+    /// <see cref="PrewarmIdleDelay"/>; this is only the value a session has
+    /// before any preferences have been applied to it, and it equals
+    /// <see cref="Models.PerformanceSettings.Balanced"/>'s.
+    /// </summary>
+    /// <remarks>
+    /// Pre-warm used to start with the document. On irs-1040-instructions.pdf
+    /// (126 pages) it then held a CPU busy for 5.0 s — measured from the
+    /// release-baseline run's own log, document open complete at +0.107 s, text
+    /// index at +2.0 s, "pre-warm complete" at +5.0 s — which is what #1544 saw
+    /// as a window that keeps changing for 5.6 s after launch while Preview
+    /// settles in 1.4 s.
+    /// </remarks>
+    internal static readonly TimeSpan DefaultPrewarmIdleDelay = TimeSpan.FromSeconds(30);
+
     private readonly ILogger _logger;
+    private long _lastActivityTicks = Environment.TickCount64;
+    private TimeSpan _prewarmIdleDelay = DefaultPrewarmIdleDelay;
     private readonly Dictionary<int, Task> _loadTasks = new();
     private readonly object _loadLock = new();
     private readonly HashSet<int> _visibleIndices = new();
@@ -39,11 +59,43 @@ internal sealed class ThumbnailSidebarSession : IDisposable
         _logger = logger;
     }
 
+    /// <summary>
+    /// The quiet period the pre-warm waits for before it starts (#1565).
+    /// </summary>
+    /// <remarks>
+    /// <para>This is the <c>IdleTrimSeconds</c> preference, pushed in by
+    /// <see cref="MainWindowViewModel.ApplyPerformanceSettings"/>. There is
+    /// deliberately ONE definition of idle in the app rather than a second
+    /// number nobody can find: lowering "Trim caches after (seconds)" also
+    /// makes thumbnails warm sooner, and raising it holds them back longer.
+    /// It is a duration, so it applies whether or not soft cache trims are on
+    /// — a user who turned trimming off did not ask for the pre-warm to run
+    /// during their first page.</para>
+    /// <para>Changing it re-queues a pending pre-warm, so the new period is in
+    /// force at once rather than after the old one expires. Tests that must
+    /// observe the pre-warm running set a short one.</para>
+    /// </remarks>
+    internal TimeSpan PrewarmIdleDelay
+    {
+        get => _prewarmIdleDelay;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(value.Ticks, nameof(value));
+            if (_prewarmIdleDelay == value)
+                return;
+            _prewarmIdleDelay = value;
+            if (_cache is { } cache && PrewarmEnabled)
+                QueuePrewarm(cache);
+        }
+    }
+
     internal ObservableCollection<PageThumbnail> Items { get; } = new();
     internal Task? PrefetchTask { get; private set; }
     internal Task? PrewarmTask { get; private set; }
 
-    private bool _prewarmEnabled = true;
+    // #1565: matches the shipped preference default (PerformanceSettings.Balanced),
+    // so a session nobody has applied preferences to behaves like the product.
+    private bool _prewarmEnabled;
     private int _keepMarginPages = KeepMargin;
 
     /// <summary>
@@ -96,6 +148,15 @@ internal sealed class ThumbnailSidebarSession : IDisposable
     }
     internal long GenerationForTests => Volatile.Read(ref _generation);
 
+    /// <summary>
+    /// Renderer invocations this document's thumbnail cache has made (#1565);
+    /// 0 while the pre-warm is still waiting for a quiet period.
+    /// </summary>
+    internal int ThumbnailRenderCountForTests => _cache?.RenderCount ?? 0;
+
+    /// <summary>Where this document's thumbnail WebPs are written (#1565 tests).</summary>
+    internal string? ThumbnailCacheDirForTests => _cache?.CacheDir;
+
     internal static (int PrefetchFrom, int PrefetchTo, int KeepFrom, int KeepTo) ComputeWindow(
         int visibleMin,
         int visibleMax,
@@ -126,6 +187,7 @@ internal sealed class ThumbnailSidebarSession : IDisposable
         ArgumentOutOfRangeException.ThrowIfNegative(pageCount);
 
         Reset();
+        NotifyActivity();
         _cache = new ThumbnailCacheService(
             filePath,
             document,
@@ -150,6 +212,21 @@ internal sealed class ThumbnailSidebarSession : IDisposable
         QueuePrewarm(_cache);
     }
 
+    /// <summary>
+    /// Drop everything derived from the current document. Closing a document
+    /// goes through here (<c>MainWindowViewModel.ResetClosedDocumentWorkspaceState</c>).
+    /// </summary>
+    /// <remarks>
+    /// #1565: a pre-warm in flight stops here, and FOUR independent things
+    /// stop it — the cancellation token, the generation guard the loop checks
+    /// each page, the disposed <see cref="ThumbnailCacheService"/> refusing a
+    /// warm, and its disposed render gate. That was measured, not assumed: a
+    /// test asserting "a closed document warms no more thumbnails" still
+    /// passed with the first three removed, so it was deleted rather than
+    /// shipped as a gate that cannot fail. The consequence for #1543 is that
+    /// the closed-document footprint rising after a pre-warm is NOT a pre-warm
+    /// still running; it is the per-page retention in #1613.
+    /// </remarks>
     internal void Reset()
     {
         Interlocked.Increment(ref _generation);
@@ -178,6 +255,7 @@ internal sealed class ThumbnailSidebarSession : IDisposable
 
     internal void NotifyViewport(int pageIndex, bool isVisible)
     {
+        NotifyActivity();
         lock (_viewportLock)
         {
             var changed = isVisible
@@ -236,6 +314,9 @@ internal sealed class ThumbnailSidebarSession : IDisposable
 
             if (!_loadTasks.TryGetValue(pageIndex, out loadTask!))
             {
+                // A demand load is the sidebar filling in for the reader: the
+                // pre-warm's quiet period starts again (#1565).
+                NotifyActivity();
                 loadTask = LoadCoreAsync(pageIndex, generation, cache, cancellationToken);
                 _loadTasks[pageIndex] = loadTask;
                 _ = loadTask.ContinueWith(
@@ -363,6 +444,10 @@ internal sealed class ThumbnailSidebarSession : IDisposable
         {
             try
             {
+                await WaitForQuietAsync(cancellationToken);
+                _logger.LogInformation(
+                    "Thumbnail pre-warm starting for {Pages} pages", pageCount);
+
                 for (var index = 0; index < pageCount; index++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -375,7 +460,9 @@ internal sealed class ThumbnailSidebarSession : IDisposable
                     if (index < Items.Count && Items[index].ThumbnailImage is not null)
                         continue;
 
-                    using var bitmap = await cache.GetThumbnailAsync(index, cancellationToken);
+                    // Warm, not load: the pixels were disposed immediately and
+                    // producing them cost three native bitmaps per page (#1565).
+                    await cache.WarmAsync(index, cancellationToken);
                     await Task.Delay(25, cancellationToken);
                 }
 
@@ -393,6 +480,38 @@ internal sealed class ThumbnailSidebarSession : IDisposable
             }
         }, CancellationToken.None);
     }
+
+    /// <summary>
+    /// Wait until nothing has touched this document for
+    /// <see cref="DefaultPrewarmIdleDelay"/> (#1565).
+    /// </summary>
+    /// <remarks>
+    /// One wake-up per activity burst, not a poll: each <c>Task.Delay</c> is
+    /// exactly the time still owed, and the loop ends as soon as that time has
+    /// passed with no further activity. Nothing is armed once it returns, so an
+    /// idle app is doing no work here (the #1462 guarantee).
+    /// </remarks>
+    private async Task WaitForQuietAsync(CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var owed = _prewarmIdleDelay
+                       - TimeSpan.FromMilliseconds(
+                           Environment.TickCount64 - Volatile.Read(ref _lastActivityTicks));
+            if (owed <= TimeSpan.Zero)
+                return;
+            await Task.Delay(owed, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Something is using this document, so the pre-warm's quiet period starts
+    /// again (#1565). Cheap and thread-safe: the view model calls it from page
+    /// changes, zoom changes and search-index progress.
+    /// </summary>
+    internal void NotifyActivity() =>
+        Volatile.Write(ref _lastActivityTicks, Environment.TickCount64);
 
     private async Task LoadCoreAsync(
         int pageIndex,

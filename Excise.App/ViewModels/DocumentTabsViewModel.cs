@@ -67,6 +67,7 @@ public sealed class DocumentTabsViewModel : ReactiveObject
 
     public ReactiveCommand<Unit, Unit> SelectPreviousTabCommand { get; }
 
+
     /// <summary>
     /// The overflow list: every tab, so a tab too narrow to read (or a strip
     /// too full to show them all) is still one click away. The strip never

@@ -49,12 +49,7 @@ public partial class MainWindowViewModel
         if (!opensElsewhere && !await ConfirmDiscardUnsavedChangesAsync("open a different document"))
             return;
 
-        var files = await _filePicker.OpenFilesAsync(new OpenFilesRequest
-        {
-            Title = "Open PDF File",
-            AllowMultiple = opensElsewhere,
-            Filters = [FilePickerFilters.Pdf],
-        });
+        var files = await PickPdfFilesAsync(allowMultiple: opensElsewhere);
 
         if (files.Count == 0)
         {
@@ -72,6 +67,18 @@ public partial class MainWindowViewModel
 
         await LoadDocumentAsync(filePath);
     }
+
+    /// <summary>
+    /// The Open PDF picker, shared by File &gt; Open and by the tab strip's "+"
+    /// button (#1628) so both offer the same filters and the same title.
+    /// </summary>
+    internal Task<IReadOnlyList<string>> PickPdfFilesAsync(bool allowMultiple) =>
+        _filePicker.OpenFilesAsync(new OpenFilesRequest
+        {
+            Title = "Open PDF File",
+            AllowMultiple = allowMultiple,
+            Filters = [FilePickerFilters.Pdf],
+        });
 
     public async Task LoadDocumentAsync(string filePath)
     {
@@ -124,6 +131,7 @@ public partial class MainWindowViewModel
         // while (or if) this one loads. Not RefreshAttachments(): the previous
         // document is still current here and would be re-listed.
         ClearAttachments();
+        ClearAttachmentsNotice();
         ClearXfaNotice();
 
         PdfCoreDocument = null;
@@ -237,19 +245,42 @@ public partial class MainWindowViewModel
         }
     }
 
+    /// <summary>
+    /// Minimum gap between two "Indexing for search…" status updates (#1565).
+    /// </summary>
+    /// <remarks>
+    /// The build reports once per page, so a 126-page document redrew the
+    /// status bar 126 times over ~2 s — every one of them a frame the launch
+    /// measurement counts as the window still changing. The final report
+    /// (which clears the text) is never throttled.
+    /// </remarks>
+    private static readonly TimeSpan TextIndexProgressInterval = TimeSpan.FromMilliseconds(250);
+
     private void StartDocumentTextIndex()
     {
         Services.DocumentTextIndex? indexGeneration = null;
+        var lastReport = System.Diagnostics.Stopwatch.StartNew();
+        var firstReport = true;
         var indexProgress = new Progress<(int Done, int Total)>(progress =>
         {
             if (!ReferenceEquals(TextIndex, indexGeneration))
                 return;
 
+            // #1565: indexing is work on this document, so the thumbnail
+            // pre-warm's quiet period starts again and the two never overlap.
+            _thumbnailSession.NotifyActivity();
+
+            var isFinal = progress.Done >= progress.Total;
+            if (!isFinal && !firstReport && lastReport.Elapsed < TextIndexProgressInterval)
+                return;
+            firstReport = false;
+            lastReport.Restart();
+
             if (string.IsNullOrEmpty(OperationStatus) || OperationStatus.StartsWith("Indexing"))
             {
-                OperationStatus = progress.Done < progress.Total
-                    ? $"Indexing for search… {progress.Done}/{progress.Total}"
-                    : string.Empty;
+                OperationStatus = isFinal
+                    ? string.Empty
+                    : $"Indexing for search… {progress.Done}/{progress.Total}";
             }
         });
         indexGeneration = _textIndexSession.Start(PdfCoreDocument!, indexProgress);
@@ -271,7 +302,7 @@ public partial class MainWindowViewModel
         // screen to say so. List them on open and WARN, per the capability's
         // "warn when their presence is not otherwise obvious".
         RefreshAttachments();
-        WarnAboutAttachmentsOnOpen();
+        ShowAttachmentsNoticeOnOpen();
 
         // #1547: a dynamic XFA form shows only a placeholder page here; say why.
         RefreshXfaNotice();
@@ -323,6 +354,7 @@ public partial class MainWindowViewModel
         // #1563: a failed open used to leave the previous list on screen. The
         // document service is closed above, so this empties it.
         RefreshAttachments();
+        ClearAttachmentsNotice();
         ClearXfaNotice();
         OperationStatus = string.Empty;
 

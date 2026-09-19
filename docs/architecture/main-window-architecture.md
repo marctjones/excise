@@ -382,7 +382,7 @@ handler (`MainWindow.axaml.cs:265-279` catches and `Debug.WriteLine`s it).
 | `_performanceSettings` (15), `PerformanceSettings` (18) | state | current settings | P |
 | `PerformanceSettingsApplied` (24) | event | tells the window to push tile budget / cache / threads into the viewer | V (`:302`, never `-=`) |
 | `ViewerTileCacheResidentBytesProvider` (30) | `Func<long?>?` | view-supplied callback capturing the control (`:303`) | P (`PreferencesViewModel.cs:365`) |
-| `ApplyPerformanceSettings` (39–50) | internal | clamp, store, push `KeepMarginPages`/`PrewarmEnabled` into `_thumbnailSession`, raise the event | V (`:304`), P (`:376`) |
+| `ApplyPerformanceSettings` (39–50) | internal | clamp, store, push `KeepMarginPages`/`PrewarmIdleDelay` (from `IdleTrimSeconds`, #1565)/`PrewarmEnabled` into `_thumbnailSession`, raise the event | V (`:304`), P (`:376`) |
 | `ApplySavedPreferences` (57–63), `WritePreferencesTo` (69–82) | internal | copy back from Preferences; **`WindowSettings.Update` (disk) on the UI thread** | cs:3138, V (`:221`) |
 
 **`Permissions.cs`** — `IgnoreDocumentPermissions` (39, public, scripting),
@@ -487,7 +487,11 @@ not the injected verification workflow), `_signingLogger` (137),
 
 **`Thumbnails.cs`** — pure pass-through to `ThumbnailSidebarSession`:
 constants (14–15), `ThumbnailPrefetchTask`/`ThumbnailPrewarmTask`/`ThumbnailPrewarmEnabled`
-(17–24, internal seams), `ComputeThumbnailWindow` (26–37), `NotifyThumbnailViewport`
+(17–24, internal seams) plus `ThumbnailPrewarmIdleDelay`, `NotifyThumbnailActivity`
+and `ThumbnailRenderCountForTests` (#1565: the prewarm waits for a quiet period
+— the `IdleTrimSeconds` preference — that page, zoom, sidebar and search-index
+activity restarts),
+`ComputeThumbnailWindow` (26–37), `NotifyThumbnailViewport`
 (39, public, V `:460`), `EnsureThumbnailLoadedAsync` (42, public, V `:464`),
 `StartThumbnailSession` (47–60; passes `AttachPageSelectionTracking` from cs as
 the per-item callback), `ResetThumbnailSession` (62), `TrimThumbnailCaches`
@@ -983,6 +987,7 @@ Task EnsureThumbnailLoadedAsync(int pageIndex, CancellationToken cancellationTok
 void TrimThumbnailCaches(PdfViewerCacheTrimLevel level);
 void Start(string filePath, PdfDocument document, string? cacheSalt = null);   void Reset();
 bool PrewarmEnabled { get; set; }   int KeepMarginPages { get; set; }      // driven by PreferencesFacade
+TimeSpan PrewarmIdleDelay { get; set; }   void NotifyActivity();             // #1565: = IdleTrimSeconds
 Task? PrefetchTask { get; }   Task? PrewarmTask { get; }                    // existing test seams
 ```
 
@@ -1586,10 +1591,28 @@ a view model on its own, in which case every path behaves exactly as before).
   document window joins the origin window's tab group with
   `addTabbedWindow:ordered:` when `NSWindow.userTabbingPreference` says so
   (System Settings ▸ Desktop & Dock ▸ "Prefer tabs when opening documents").
-  Merge All Windows, Move Tab to New Window, Show Tab Bar and the tab
+  Merge All Windows, Move Tab to New Window, Show Tab Bar and the window-tab
   next/previous actions are sent to the key window from the native Window menu.
+  Those two are titled "Show Previous/Next **Window** Tab" there (#1598): they
+  move through a merged NSWindow tab group, which is not what "Show Previous/
+  Next Tab" means to a user looking at one window's document tabs.
 - **In-app tabs (#1554).** A window hosts a `DocumentTabsViewModel`; its
-  `DataContext` is the selected session. One viewer per window, so an
+  `DataContext` is the selected session. Switching has TWO paths, and on macOS
+  only one of them works (#1598): `MainWindow.OnTabSwitchKeyDown` (a tunnelling
+  KeyDown handler — Ctrl+Tab, Ctrl+Shift+Tab, Ctrl+PgDn/PgUp, Cmd+Shift+]/[)
+  serves Windows and Linux, while AppKit consumes Control-Tab as a
+  key-view/key-equivalent keystroke before Avalonia hears about it. So the
+  native Window menu carries Show Previous/Next Tab with Safari's Ctrl+Tab and
+  Ctrl+Shift+Tab, through `IDocumentSessionHost.CanSwitchTabs`/`SwitchTab`:
+  the session asks its window, so a session that moves windows switches the
+  tabs of whichever window shows it. The items' enabled state comes from the
+  command's `CanExecute`, not from a flag, because Avalonia writes
+  `NativeMenuItem.IsEnabled` from `Command.CanExecute` and that is what
+  AppKit's validation (and therefore the key equivalent) reads at the moment
+  the key is pressed.
+  ⚠️ A headless test cannot tell the two paths apart: a synthetic key event
+  reaches the KeyDown handler on every platform. Only a CGEvent against a real
+  bundle can, which is how #1598 was found. One viewer per window, so an
   inactive tab holds no tile cache at all; switching re-renders the visible
   page and restores the tab's scroll position. That trade (no per-tab tile
   cache, one page render per switch) is deliberate: a viewer per tab needs the

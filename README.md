@@ -72,7 +72,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - **Annotation authoring** — 15 annotation types from the Annotate menu, all written as real PDF annotations: highlight selected text or mark it up with Underline, StrikeOut and Squiggly, sticky notes, shapes from a drag (Square, Circle, FreeText), rubber stamps (all 15 standard names, plus an image stamp from a picked file for signatures and letterheads), and drawn paths (freehand Ink, Line, Arrow, Polygon, PolyLine). Drawn paths use one capture mode: drag for ink and lines, click-per-vertex for polygons with double-click or Enter to finish, Escape to abandon, Backspace to take back a point
 - Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
 - Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, validates the signer certificate chain against the OS trust store (distinguishing valid-and-trusted from valid-but-untrusted, modified, and unverifiable signatures), and clearly reports remaining OS trust-chain validation limitations (revocation is not checked)
-- **Attachments pane** — a sidebar pane, shown by default, lists files embedded in the PDF (name, size, description, modified date, and the page for files attached to a page annotation); save one or all of them to a location you choose, or strip them (undoable). A warning appears on open when a document carries attachments, because they are invisible on the page and can hold a full copy of the document's data (ZUGFeRD/Factur-X). Hide it with View ▸ Show Attachments. excise never opens or runs an attachment
+- **Attachments pane** — a sidebar pane, shown by default, lists files embedded in the PDF (name, size, description, modified date, and the page for files attached to a page annotation); save one or all of them to a location you choose, or strip them (undoable). A warning banner appears on open when a document carries attachments, because they are invisible on the page and can hold a full copy of the document's data (ZUGFeRD/Factur-X); it stays until you close it or open another document, rather than disappearing on a timer (#1619). Hide the pane with View ▸ Show Attachments. excise never opens or runs an attachment
 - Open a PDF by dragging it onto the window
 - **Several documents at once** — each opens in its own window, with its own undo history and unsaved-changes state; on macOS the windows use native tabs when System Settings asks for them. Preferences ▸ Documents can instead open documents as tabs inside one window (close, reorder by dragging, move a tab to its own window, overflow list) or replace the current document as before
 - Prompts before closing, quitting, or opening another file with unsaved changes — and saves a **copy**, never overwriting your original
@@ -93,6 +93,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Safe-to-share save path — `RedactedCopySafetyService` scrubs Info metadata, XMP metadata, and embedded files/attachments by default, then reports content-removal, metadata, attachment, and hidden-text audit status without repeating removed text
 - Archival documents stay archival — a redaction of a PDF/A file keeps the `pdfaid` identification PDF/A requires (and nothing else from the XMP packet), so the output still validates with veraPDF instead of silently ceasing to be PDF/A
 - `PdfDocument.ScrubMetadata(scrubAttachments: true)` strips Info dict, XMP, and embedded files in one call — important when redacted documents may carry the data they were redacted of in attachments (ZUGFeRD, Factur-X)
+- **Two redaction output profiles, Standard by default** — every redaction (GUI, `excise redact`, batch `redaction.apply`, scripting, and the `RedactText`/`RedactArea` library calls) also removes the hidden machinery that cutting a word out cannot make safe, and lists each removal in the report: all JavaScript; actions that open files, submit data or import data (page links and bookmarks still work); the producer's private `/PieceInfo` data; page thumbnails (a picture of the page *before* the redaction); the appearance of hidden fields and annotations; content on optional-content layers that are switched off; and the document properties and XMP metadata (a PDF/A or PDF/UA marker is kept, so a tagged, accessible PDF stays accessible — verified with veraPDF). Tooltips, alternate text, structure titles, field names, bookmark titles and link targets are **kept**, with the redacted word cut out. `--profile maximum` / Preferences ▸ Redaction ▸ Output Profile adds: the whole value of every kept item is dropped, and bookmarks, links, comments and field names are stripped and forms and annotations flattened — **the result is no longer accessible or interactive**, and the report says so
 - **No attachments in redacted output, by default** — every redaction (GUI, `excise redact`, batch `redaction.apply`, scripting, and the `RedactText`/`RedactArea` library calls) removes every embedded file, including files attached to page annotations and embedded media, and lists each removed file with its size. To keep them, use `--keep-attachments`, batch `keepAttachments: true`, `RedactionOptions.KeepAttachments`, or Preferences ▸ Redaction: kept text attachments (txt, csv, xml, html, json, md) have the term cut out, attached PDFs are redacted too, and any other attachment is reported as not checked. A PDF portfolio is refused unless attachments are kept
 - **XFA forms** — redacting a document with an XFA form removes the XFA packet (the AcroForm fields stay), because its form data repeats the field values and Acrobat would put them back on the page
 - OCG-aware — `RedactText` defaults to `includeHiddenLayers=true` so hidden optional content groups don't slip past
@@ -195,9 +196,12 @@ release notes:
     excise's own renderer at the printer's resolution, capped at 600 DPI, and
     sent through the Windows print spooler, so the printout matches the viewer
     and no Acrobat or other PDF handler is needed. "Print to file" is hidden;
-    choose *Microsoft Print to PDF* instead, or use Save As. The PDF's
-    per-annotation *print* flag is not consulted yet (#1573): what the viewer
-    shows is what prints. ⚠️ The Windows path was built and unit-tested on macOS and
+    choose *Microsoft Print to PDF* instead, or use Save As. Each annotation's
+    *print* flag decides whether it reaches paper (#1573, ISO 32000-2 §12.5.3),
+    as in Acrobat and macOS: review markup without that flag is not printed
+    even though the viewer shows it, and a print-only stamp or watermark
+    (*NoView* + *Print*) is printed even though the viewer does not show it.
+    ⚠️ The Windows path was built and unit-tested on macOS and
     has not yet been checked on a Windows machine.
   - **Linux** printing is not planned — Print… explains this, and you can
     Save As and print from another viewer.
@@ -374,7 +378,7 @@ Press **F1** to view all in-app.
 | Navigation | Next/Previous/First/Last Page | `Page Down/Up`, `Home`, `End` |
 | Modes | Redaction / Text Selection / Apply | `R` / `T` / `Enter` |
 | Pages | Rotate Left / Right | `Ctrl+L` / `Ctrl+R` |
-| Tabs | Next / Previous document tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` (or `Ctrl+PgDn` / `Ctrl+PgUp`) |
+| Tabs | Next / Previous document tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` (or `Ctrl+PgDn` / `Ctrl+PgUp`; on macOS also Window ▸ Show Next/Previous Tab) |
 
 ### CLI examples
 
@@ -491,6 +495,8 @@ Test categories:
 - Conformance — smoke corpus parse/render, Isartor round-trip, and optional veraPDF corpus parse/render
 
 The PDF Association corpora are downloaded on demand with `scripts/download-test-pdfs.sh`. The full veraPDF corpus is intentionally treated as a slower conformance lane, not as a required inner-loop test.
+
+**The gates are local, and one command selects them: `scripts/test-tier.sh {t0|t1|full}`.** Every gate is a row in `tests/gates.tsv`; see [`LOCAL_GATES.md`](LOCAL_GATES.md). Two GitHub workflows (`.github/workflows/windows.yml`, `.github/workflows/linux.yml`) build excise on Windows and Linux and run a small set of tests that can only mean something there — printing, the single-instance handoff, "open with" arguments, base-14 font fallback with no Microsoft fonts. They are **advisory**: they never block a merge, they carry no coverage floors, corpus scans or reference-renderer oracles, and a green run is not a substitute for running a local tier. What they do and do not prove is in `LOCAL_GATES.md`, "The advisory platform runners".
 
 ## Building
 

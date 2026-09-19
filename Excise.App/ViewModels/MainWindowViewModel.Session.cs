@@ -29,6 +29,7 @@ public partial class MainWindowViewModel
     private string? _openDocumentsSignature;
     private ReactiveCommand<OpenDocumentEntry, Unit>? _activateOpenDocumentCommand;
     private ReactiveCommand<Unit, Unit>? _moveToNewWindowCommand;
+    private ReactiveCommand<Unit, Unit>? _openInNewTabCommand;
     private ReactiveCommand<Unit, Unit>? _mergeAllWindowsCommand;
     private bool _sessionReleased;
 
@@ -71,9 +72,44 @@ public partial class MainWindowViewModel
         _activateOpenDocumentCommand ??= ReactiveCommand.Create<OpenDocumentEntry>(
             entry => SessionHost?.ActivateDocument(entry));
 
+    /// <summary>
+    /// True when this window has more than one tab, so Window ▸ Show Next/
+    /// Previous Tab does something (#1598). False for a view model with no
+    /// session host, which is every plain unit test.
+    /// </summary>
+    internal bool CanSwitchTabs => SessionHost?.CanSwitchTabs == true;
+
+    /// <summary>
+    /// Window ▸ Show Next Tab (+1) / Show Previous Tab (-1) (#1598): the
+    /// in-app document tabs of THIS window, not macOS's window tabs.
+    /// </summary>
+    /// <remarks>
+    /// This exists on the view model because on macOS the only thing that can
+    /// receive Control-Tab is the native menu, which is built from a view model
+    /// (<c>MacNativeMenuBuilder</c>). AppKit consumes Control-Tab as a
+    /// key-view/key-equivalent keystroke before Avalonia's tunnelling KeyDown
+    /// handler ever sees it.
+    /// </remarks>
+    internal void SwitchTab(int step) => SessionHost?.SwitchTab(step);
+
     /// <summary>Window ▸ Move Tab to New Window (#1554).</summary>
     internal ReactiveCommand<Unit, Unit> MoveToNewWindowCommand =>
         _moveToNewWindowCommand ??= ReactiveCommand.Create(() => SessionHost?.MoveToNewWindow());
+
+    /// <summary>
+    /// The tab strip's "+" (#1628): open another document into THIS window's
+    /// tabs, whatever the open-mode preference says. The preference decides
+    /// where File ▸ Open lands; a button drawn on a tab strip has already told
+    /// the user where this one lands, and doing anything else would make the
+    /// affordance a lie.
+    /// </summary>
+    internal ReactiveCommand<Unit, Unit> OpenInNewTabCommand =>
+        _openInNewTabCommand ??= ReactiveCommand.CreateFromTask(
+            async () =>
+            {
+                if (SessionHost is { } host)
+                    await host.OpenInNewTabAsync();
+            });
 
     /// <summary>Window ▸ Merge All Windows (#1554).</summary>
     internal ReactiveCommand<Unit, Unit> MergeAllWindowsCommand =>

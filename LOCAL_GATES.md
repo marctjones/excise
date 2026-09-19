@@ -325,16 +325,20 @@ omitting them.
 ## Base selection
 
 `gate-asymmetry` (#618: a perf-path change may not rewrite a correctness
-expectation in the same range) compares HEAD against a base. Its row is
+expectation in the same range) compares a head against a base. Its row is
 `scripts/check-gate-asymmetry.sh $GATE_ASYMMETRY_BASE`; every runner exports
 that variable from `runner_gate_asymmetry_base <tier>`, in this order:
 
 1. **The pre-push hook.** git feeds `<local ref> <local sha> <remote ref>
    <remote sha>` per pushed ref on stdin; the hook exports the remote sha as
-   `GATE_ASYMMETRY_BASE`. That IS the range the gate is defined over ("two
-   pushes, not two commits"). An all-zero sha (a new remote branch) falls
-   through to 2. **A hook installed before 2026-09-05 reads no stdin — run
-   `scripts/test-tier.sh --install-hook` once in every clone.**
+   `GATE_ASYMMETRY_BASE` and the **local** sha as `GATE_ASYMMETRY_HEAD`. Those
+   two ARE the range the gate is defined over ("two pushes, not two commits").
+   An all-zero remote sha (a new remote branch) falls through to 2; an all-zero
+   local sha (a ref deletion) contributes neither. **A hook installed before
+   2026-09-17 has the pre-#1600 body inline — run
+   `scripts/test-tier.sh --install-hook` once in every clone.** After that the
+   installed hook is a stub that execs `scripts/pre-push-hook.sh`, so later
+   fixes land without re-installing.
 2. **A manual tier run** uses the last commit at which this tier finished with
    no NEW failure: `logs/runner-state/tier-pass/<tier>.rec`, written on a
    report exit 0 (a `full` pass also records `t1` and `t0`; a `t1` pass records
@@ -345,7 +349,25 @@ that variable from `runner_gate_asymmetry_base <tier>`, in this order:
    the key — ancestry is the real relation.
 3. **Fallback**, the first run on a machine: `git merge-base origin/develop HEAD`.
 
-The gate prints `base=<sha>` so an acceptance can be **scoped** to one range —
+### Head selection (#1600)
+
+The head defaults to `HEAD` and is overridden by `GATE_ASYMMETRY_HEAD` (or a
+second positional argument). It exists because `git push origin <sha>:develop`
+pushes a range that ENDS AT `<sha>`, and pushing in reviewable steps is what
+this gate's own failure message tells you to do. While the head was hard-coded,
+the hook read the remote sha and threw the local one away, so a stepped push
+evaluated `base...HEAD` — the wrong range, reported green, with only `base=` in
+the output to go on. A head that does not resolve is a hard failure:
+`GATE_ASYMMETRY_ALLOW_NO_BASE` is about an unfetchable *base* and does not
+launder it into a SKIP.
+
+⚠️ The head governs the RANGE only. Every test row still builds and runs the
+**working tree**, so on a stepped push the hook prints the pushed commit and the
+tested commit side by side. A pushed commit that is not an ancestor of HEAD is
+refused outright (`scripts/pre-push-hook.sh`), since neither the range nor the
+tests would describe it; the refusal prints the worktree route.
+
+The gate prints `base=<sha> head=<sha>` so an acceptance can be **scoped** to one range —
 the worked example for "Accepting a red". As of 2026-09-05 the
 `gate-asymmetry` row carries `#1358/base=a87dc32aa8c2`: KNOWN only for the
 backlog range starting at `origin/develop` = `a87dc32a` (the acceptance is
@@ -500,7 +522,7 @@ tier alone.
 
 ## A future GitHub Action
 
-tests/gates.tsv is what a future GitHub Action will consume — one job per tier, `runner_manifest_plan <tier>` is its only reader. Nothing is built for Actions here.
+tests/gates.tsv is what a future GitHub Action will consume — one job per tier, `runner_manifest_plan <tier>` is its only reader. **No tier is wired to Actions**, and the two workflows that now exist (see "The advisory platform runners" below) deliberately do not read the manifest: a runner that consumed a tier would be a gate, which is the mistake #1355 was.
 
 ## Coverage
 
@@ -544,6 +566,77 @@ Removed at `a708774d` (the commit before the teardown). To recover a workflow:
 git show a708774d:.github/workflows/ci.yml
 ```
 
-Restoring GitHub Actions for **Linux and Windows packaging only** — no gates,
-no cross-platform test matrix — is tracked as a separate issue. The gates stay
-local.
+Packaging for Linux and Windows is tracked separately (#1596/#1595) and is not
+written yet. What HAS come back is narrower than a test matrix and is described
+next. The gates stay local.
+
+## The advisory platform runners (#1593/#1594)
+
+Two workflows exist again: `.github/workflows/windows.yml` and
+`.github/workflows/linux.yml`. They run on a push to `develop` and on manual
+dispatch, and **not on tags** (`on.push.branches` never matches a tag ref).
+
+They are **ADVISORY**. That is a branch-protection fact, not a YAML property —
+they are advisory because they are not listed as required checks, and there is
+no key in either file that makes a job non-blocking. Do not go looking for one,
+and do not make either one required.
+
+**Why they are allowed to exist at all.** The old `ci.yml` was deleted because
+its Linux job tried to be the gate. These two do one thing the dev box
+physically cannot: run excise on a platform it is never run on. Windows
+printing (#1546) and multi-document support (#1553) were written and compiled
+on macOS and had never executed on Windows; `SingleInstanceChannel.IsEnabled`
+is false on macOS by design, so the whole single-instance handoff had never run
+anywhere.
+
+### What each job does
+
+| | Windows (`windows-latest`) | Linux (`ubuntu-latest`) |
+|---|---|---|
+| build | `excise.sln` Debug + Release, `-warnaserror` | same |
+| publish | win-x64 framework-dependent, self-contained; Native AOT in a **separate non-blocking job** | linux-x64 framework-dependent, self-contained |
+| smoke | published CLI `render`s a tracked fixture | same |
+| suites | Core, Cli, Avalonia | Core, Cli, Avalonia (`xvfb-run`) |
+| platform tests | `WindowsPrintLayoutTests`, `WindowsDocumentPrinterTests` (incl. the *Microsoft Print to PDF* spool), `MultiDocumentWindowTests` (named-pipe handoff), `AttachmentFileNamesTests`; a `-warnaserror:CA1416` build | `MultiDocumentWindowTests` (the same channel, as a **Unix domain socket**), `StartupDocumentResolverTests`, `StartupActivationWorkflowTests`, and the `Excise.Rendering.Tests` font subset with **no Microsoft fonts installed** |
+| skip hygiene | — | `check-skip-budget.sh` on the Core trx (#1172/#1527) |
+| GUI | `EXCISE_PERF_SCENARIO=null` launch with a tracked PDF on the command line, then quit | same, under `xvfb-run` |
+| artifacts | trx + logs | trx + logs |
+
+`Excise.App.Tests` is only ever run FILTERED by fully-qualified class name.
+Unfiltered it is a ~17-minute serial suite (serial by design, #363) and would
+blow the ~20-minute budget on both runners.
+
+Every filtered `dotnet test` is judged by `scripts/assert-trx-green.sh`, not by
+the exit code, for two reasons that both fail toward green: a `--filter` that
+matches nothing exits 0, and the Linux Avalonia test host exits 1 on native
+teardown *after* every test has passed (#752 — the deleted
+`scripts/run-avalonia-tests-linux.sh` existed for exactly that). Each job runs
+`assert-trx-green.sh --self-test` before trusting it, because a checker nobody
+has watched fail is a checker that cannot fail (#1527).
+
+### What a green run does NOT prove
+
+- **Nothing about the local tiers.** It is not a subset of `t0`, `t1` or
+  `full`, and a green runner is not a reason to skip the pre-push `t0`.
+- **No corpus, no oracles, no coverage, no pixels.** Deliberately: reference
+  renderers measure the runner's freetype/fontconfig and Skia build as much as
+  they measure excise, and a macOS-only maintainer cannot re-baseline them.
+  That is what made the old job permanently red, and a permanently red job is
+  an ignored job.
+- **Correct printed output.** The Windows job proves the GDI spooler produces
+  a PDF with the right page count and orientation through *Microsoft Print to
+  PDF*. `PrintDlgExW` is modal and a real print driver is not on the image, so
+  those stay manual checks from #1546 — as does anything about print quality.
+- **A verdict on Native AOT for win-x64.** That job is non-blocking on
+  purpose: AOT is a validated lane on osx-arm64 (#590) and other RIDs are
+  #595.
+
+### If one of them is red
+
+Read the trx artifact, and check whether the same thing is red locally before
+changing any code: a red here can be the runner's image, not excise. Never fix
+a runner red by weakening an assertion, and never add a hand-maintained
+"exclude these tests on this platform" list — a test that cannot run on a
+runner must say so in code with `Assert.SkipUnless(cond, "why")` (#1172), which
+is the only mechanism `check-skip-budget.sh` can check and the only one that
+works identically on every machine.

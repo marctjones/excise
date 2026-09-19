@@ -26,8 +26,11 @@ public class PerformancePreferencesTests
         PerformanceSettings.LowMemory.Should().Be(new PerformanceSettings(
             TileCacheBudgetMb: 64, SinglePageCachedPages: 2, ThumbnailPrewarm: false, ThumbnailKeepMargin: 16,
             SoftCacheTrims: true, IdleTrimSeconds: 15, RenderThreads: 2));
+        // #1565: ThumbnailPrewarm went false in Balanced (Marc, 2026-09-17) —
+        // ~110 MB peak, ~80 MB permanent and 5 s of CPU for a disk cache that
+        // mainly helps re-opens. Fast keeps it: that preset IS that trade.
         PerformanceSettings.Balanced.Should().Be(new PerformanceSettings(
-            TileCacheBudgetMb: 200, SinglePageCachedPages: 6, ThumbnailPrewarm: true, ThumbnailKeepMargin: 48,
+            TileCacheBudgetMb: 200, SinglePageCachedPages: 6, ThumbnailPrewarm: false, ThumbnailKeepMargin: 48,
             SoftCacheTrims: true, IdleTrimSeconds: 30, RenderThreads: Math.Clamp(cpu - 1, 2, 6)));
         PerformanceSettings.Fast.Should().Be(new PerformanceSettings(
             TileCacheBudgetMb: 400, SinglePageCachedPages: 12, ThumbnailPrewarm: true, ThumbnailKeepMargin: 48,

@@ -66,6 +66,13 @@ public class WindowSettings
     public string RedactionWidthPolicy { get; set; } = "CollapsePreserveLayout";
 
     /// <summary>
+    /// The redaction output profile (#1586): "Standard" or "Maximum".
+    /// Persisted as the enum NAME, so an unrecognised value falls back to
+    /// Standard — never to the destructive profile a user did not pick.
+    /// </summary>
+    public string RedactionProfile { get; set; } = "Standard";
+
+    /// <summary>
     /// How a link's <c>/A /URI</c> holding the redacted term is handled (#1169).
     /// Parsed back to <see cref="Excise.Core.Operations.CarrierScrubMode"/>.
     /// </summary>
@@ -131,7 +138,8 @@ public class WindowSettings
     public int SinglePageCachedPages { get; set; } = 6;
 
     /// <summary>Background thumbnail pre-render after a document opens.</summary>
-    public bool ThumbnailPrewarm { get; set; } = true;
+    // #1565: off by default — see PerformanceSettings.Balanced for the measurement.
+    public bool ThumbnailPrewarm { get; set; } = false;
 
     /// <summary>Thumbnails kept in memory either side of the visible ones.</summary>
     public int ThumbnailKeepMargin { get; set; } = 48;

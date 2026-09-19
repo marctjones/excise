@@ -136,7 +136,7 @@
                                           Content="Render thumbnails in the background"
                                           IsChecked="{Binding ThumbnailPrewarm}"
                                           AutomationProperties.Name="Thumbnail Background Rendering"
-                                          AutomationProperties.HelpText="Pre-render every page thumbnail after a document opens."/>
+                                          AutomationProperties.HelpText="Pre-render every page thumbnail once the document has been idle for the idle delay below."/>
 
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="Thumbnails kept around the visible ones" FontWeight="Medium"/>
@@ -155,14 +155,16 @@
                                           AutomationProperties.HelpText="Drop scroll-back caches when the window is deactivated, minimized, or idle."/>
 
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Idle delay before releasing caches (seconds)" FontWeight="Medium"/>
+                                    <TextBlock Text="Idle delay (seconds)" FontWeight="Medium"/>
+                                    <!-- #1565: this is now the app's one idle delay. It gates the
+                                         background thumbnail pre-render as well as the cache trim,
+                                         so it stays editable when soft trims are off. -->
                                     <NumericUpDown x:Name="IdleTrimSecondsNumericUpDown"
                                                    Value="{Binding IdleTrimSeconds}"
-                                                   IsEnabled="{Binding SoftCacheTrims}"
                                                    Minimum="10" Maximum="600" Increment="5" FormatString="0"
                                                    HorizontalAlignment="Stretch"
-                                                   AutomationProperties.Name="Idle Trim Delay"
-                                                   AutomationProperties.HelpText="Seconds without viewer activity before caches are released, 10 to 600."/>
+                                                   AutomationProperties.Name="Idle Delay"
+                                                   AutomationProperties.HelpText="Seconds without activity before scroll-back caches are released and background thumbnail rendering starts, 10 to 600. Lowering it warms thumbnails sooner."/>
                                 </StackPanel>
 
                                 <StackPanel Spacing="4">
@@ -248,6 +250,20 @@
                         <Separator/>
 
                         <StackPanel Spacing="8">
+                            <TextBlock Text="Output Profile" FontWeight="Medium"/>
+                            <ComboBox x:Name="RedactionProfileComboBox"
+                                      ItemsSource="{Binding RedactionProfileOptions}"
+                                      SelectedItem="{Binding SelectedRedactionProfile}"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="Redaction Output Profile"
+                                      AutomationProperties.HelpText="How much of the PDF's hidden machinery a redaction removes."/>
+                            <TextBlock Text="Standard (default): also removes the parts of the PDF that can repeat the page and that cutting a word out cannot make safe — all JavaScript, actions that open files or submit data (page links still work), the producer's private data, page thumbnails, the appearance of hidden fields, content on layers that are switched off, and the document properties and XMP (a PDF/A or PDF/UA marker is kept). Tooltips, alternate text, structure titles, field names, bookmark titles and link targets are KEPT, with the redacted word cut out. Maximum: all of that, plus the whole value of every kept item is dropped, bookmarks, links, comments and field names are stripped, and forms and annotations are flattened — THE RESULT IS NO LONGER ACCESSIBLE OR INTERACTIVE, so a screen reader cannot read it properly and forms no longer work."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
                             <TextBlock Text="Match Rule" FontWeight="Medium"/>
                             <CheckBox x:Name="RedactionWholeWordCheckBox"
                                       Content="Whole words only"
@@ -295,7 +311,7 @@
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Link URL Redaction Policy"
                                       AutomationProperties.HelpText="How a link target containing the redacted text is handled."/>
-                            <TextBlock Text="Strip (default): cut the word out of the URL, leaving the rest. RemoveWhole: drop the entire link target, so no surrounding text survives to infer the word from. ReportOnly: change nothing and list the link in the redaction report for you to decide."
+                            <TextBlock Text="Strip (default): cut the word out of the URL, leaving the rest — and, under the Maximum profile, let that profile's own choice stand. RemoveWhole: drop the entire link target, so no surrounding text survives to infer the word from. ReportOnly: change nothing and list the link in the redaction report for you to decide."
                                        FontSize="10"
                                        Foreground="{DynamicResource TextTertiaryBrush}"
                                        TextWrapping="Wrap"/>

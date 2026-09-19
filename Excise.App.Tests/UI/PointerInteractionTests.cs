@@ -829,6 +829,7 @@ public class PointerInteractionTests : IDisposable
             vm.SearchMatches = new ObservableCollection<SearchMatch> { match };
             vm.IsSearchVisible = true;
             vm.ShowSearchResultsPanel.Should().BeTrue();
+            vm.IsRightSidebarVisible.Should().BeTrue("the results live in the right sidebar host");
 
             var rowPoint = await SettleSearchResultRow(window, vm);
             vm.CurrentPageIndex.Should().NotBe(2);

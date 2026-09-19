@@ -812,9 +812,18 @@ public partial class PdfDocument : IDisposable
     {
         // Wipe the legacy Info dictionary in place — keep the dict so xref
         // structure is preserved, just empty it.
+        //
+        // ⚠️ EVERY key, not the standard list (#1583/#1586). This used to
+        // iterate InfoKeysToScrub, which is the §14.3.3 Table 349 set, and
+        // §14.3.3 explicitly allows "any other key" — so a producer's
+        // /CaseName (TOKEN) sat untouched in a dictionary the API said it had
+        // scrubbed. Measured: the carrier-trap survey's `info-custom-key`
+        // still leaked to qpdf after this method ran. A wholesale strip that
+        // strips a fixed list is not wholesale; it is a targeted scrub with a
+        // misleading name.
         if (Info != null)
         {
-            foreach (var key in InfoKeysToScrub)
+            foreach (var key in Info.Keys.Select(k => k.Value).ToList())
                 Info.Remove(key);
         }
 
@@ -872,15 +881,21 @@ public partial class PdfDocument : IDisposable
     {
         // Read BEFORE the strip — afterwards there is no packet to read.
         var identity = Excise.Core.Authoring.PdfAIdentityXmp.TryRead(this);
+        // #1586: the same move for a PDF/UA claim. This used to be deliberately
+        // NOT preserved because PDF/UA-1 requires a dc:title the strip deletes;
+        // the packet now carries a synthesised placeholder title, so the claim
+        // is one the output still satisfies (measured against veraPDF — see
+        // PdfUaIdentityXmp).
+        var uaIdentity = Excise.Core.Authoring.PdfUaIdentityXmp.TryRead(this);
 
         ScrubMetadata(scrubAttachments);
 
         // No identification, or one we could not validate: leave the document
         // as the wholesale strip left it. Emitting a claim excise could not read
         // back would be worse than withdrawing one.
-        if (identity == null) return false;
+        if (identity == null && uaIdentity == null) return false;
 
-        Excise.Core.Authoring.PdfAIdentityXmp.Write(this, identity.Value);
+        Excise.Core.Authoring.PdfAIdentityXmp.Write(this, identity, uaIdentity);
 
         // PDF/A-4 (ISO 19005-4 6.1.3, veraPDF PDFA-4): the Info key "shall not
         // be present ... unless there exists a PieceInfo entry", and an Info
@@ -892,7 +907,10 @@ public partial class PdfDocument : IDisposable
         // either way (their Info rules are all "absent or consistent"), and this
         // runs only on the PDF/A path, so non-archival documents keep the
         // emptied dictionary exactly as before.
-        if (Info is { Count: 0 })
+        // #1586: still gated on the PDF/A identification specifically. PDF/UA
+        // has no Info-dictionary rule, so a UA-only document keeps the emptied
+        // dictionary exactly as the strip left it.
+        if (identity != null && Info is { Count: 0 })
         {
             Trailer.Remove("Info");
             Info = null;
@@ -914,12 +932,6 @@ public partial class PdfDocument : IDisposable
         InvalidateDerivedState(PdfDocumentDerivedStateScope.Metadata);
     }
 
-    private static readonly string[] InfoKeysToScrub = new[]
-    {
-        "Title", "Author", "Subject", "Keywords",
-        "Creator", "Producer", "CreationDate", "ModDate",
-        "Trapped"
-    };
 
     /// <summary>
     /// True if this document was opened with a working security handler.
