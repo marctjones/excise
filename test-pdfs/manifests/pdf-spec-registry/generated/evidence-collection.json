@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1261,
-  "indexedContentSha256": "b964e9947a76ffd0e79f5971e82d27228f0298536f5523e2b81ecf3fcd0a2eca",
+  "indexedFileCount": 1263,
+  "indexedContentSha256": "05fbd1dd0ee7ff41c87bd864b5c5c9b24e84340513a4a9aa490daee38c21de91",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7988,7 +7988,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 576
+      "candidateReferenceCount": 577
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8813,7 +8813,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 289
+      "candidateReferenceCount": 290
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -60201,7 +60201,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 163
+      "candidateReferenceCount": 165
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -62783,7 +62783,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 381
+      "candidateReferenceCount": 382
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -65082,7 +65082,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 617
+      "candidateReferenceCount": 618
     },
     {
       "id": "pdf.20.extension.developer",
@@ -67868,6 +67868,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/CarrierTrapSurveyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "redaction",
+            "refusal",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -68062,19 +68071,9 @@
             "refusal",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/TypewriterOutputFidelityTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "editing",
-            "pdfe",
-            "redaction",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 123
+      "candidateReferenceCount": 124
     },
     {
       "id": "pdfe.product.redaction.review-panel",
