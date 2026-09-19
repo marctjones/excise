@@ -69,19 +69,35 @@ public class SharedNamedPropertyListRecoveryTests
     [Fact]
     public void ACarrierSharedByTwoSpans_IsReportedOnceNotPerSpan()
     {
-        Assert.Skip(
-            "#1672 OPEN — MEASURED as 2, and whether 1 is correct is an open design " +
-            "question, not a bug I can fix under merge pressure. Per carrier (one " +
-            "dictionary, one scrub, one leak) argues 1; per location (an audit says " +
-            "WHERE, and the dictionary paints two page regions) argues 2. Choosing the " +
-            "number that makes this green would be fitting the fixture to the " +
-            "implementation, which is exactly the habit that produced three weak gates " +
-            "on this branch. Decide in #1672, then this assertion becomes real.");
-
         var matching = Scan().Count(f => f.Text == Carrier);
 
         matching.Should().Be(1,
             "one dictionary holds the value once, however many spans point at it");
+    }
+
+    /// <summary>
+    /// ⚠️ THE OTHER SIDE, and the one that catches over-collapsing. An INLINE
+    /// dictionary is written out per span, so two inline spans carrying the
+    /// same text are two carriers IN THE FILE and must stay two findings.
+    /// Without this, a dedupe keyed on the VALUE rather than on the named
+    /// resource would pass the test above while quietly losing a real second
+    /// carrier — and losing a carrier is the failure mode this whole tool
+    /// exists to prevent.
+    /// </summary>
+    [Fact]
+    public void TwoINLINECarriersWithTheSameText_AreStillReportedTwice()
+    {
+        using var document = PdfDocument.Open(RecoveryFixtureBuilder.Build(
+            $"/Span <</ActualText ({Carrier})>> BDC\nBT /F1 14 Tf 72 700 Td (one) Tj ET\nEMC\n" +
+            $"/Span <</ActualText ({Carrier})>> BDC\nBT /F1 14 Tf 72 670 Td (two) Tj ET\nEMC\n"));
+
+        var findings = RecoveryScanner.Scan(document).AllFindings
+            .Where(f => f.Channel == RecoveryScanner.Channels.MarkedContent && f.Text == Carrier)
+            .ToList();
+
+        findings.Should().HaveCount(2,
+            "two inline dictionaries are two separate carriers; only the NAMED form " +
+            "is one object referenced twice");
     }
 
     private static System.Collections.Generic.IReadOnlyList<RecoveredFinding> Scan()
