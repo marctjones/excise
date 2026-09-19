@@ -38,6 +38,7 @@
 #   scripts/download-recap-corpus.sh --urls FILE                sweep a URL list
 #   scripts/download-recap-corpus.sh --status                   what is here
 #   scripts/download-recap-corpus.sh --sweep-only               re-sweep, no fetch
+#   scripts/download-recap-corpus.sh --fetch-negatives          re-fetch the clean set
 #
 # NO CREDENTIALS ARE REQUIRED. --urls fetches public RECAP storage URLs, and
 # --query uses CourtListener's anonymous REST tier (~5 req/min). A free token in
@@ -50,6 +51,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(dirname "$SCRIPT_DIR")"
 DEST="$ROOT/test-pdfs/recap"
 MANIFEST="$DEST/.excise-manifest.tsv"
+# ⚠️ The NEGATIVES manifest is the other half of the bench and was missing.
+# A sweep that keeps only the hits throws away the population a false-positive
+# column needs — and #1624 (83.7% of a clean filing reported as hidden text)
+# scored as NOTHING precisely because every bench row was a leak row. Clean
+# documents are recorded as url+sha here and the FILE is still deleted; the
+# corpus stays reconstructible without keeping court records we do not need.
+NEGATIVES="$DEST/.excise-negatives.tsv"
 XRAY_PY="$ROOT/tools/vendor/xray-venv/bin/python"
 [ -x "$XRAY_PY" ] || XRAY_PY="$(dirname "$ROOT")/../tools/vendor/xray-venv/bin/python"
 
@@ -81,9 +89,18 @@ find_xray() {
 # `chars` is a COUNT and `classes` is a character-class summary (alpha/digit/
 # punct). Neither can reconstruct a value, which is the point — see #1602.
 # ---------------------------------------------------------------------------
+# ⚠️ Both verdict readers pass through `verdict_line`. MuPDF writes diagnostics
+# on its OWN channel — "cannot create appearance stream for Screen annotations"
+# landed in a verdict, its embedded newlines wrote 8 blank manifest rows, and
+# nothing complained. A verdict is ONE line matching a known token or it is an
+# error; anything else is a tool talking, not an answer.
+verdict_line() {
+    awk 'BEGIN{v="ERROR"} /^(CLEAN|LEAK |ERROR|EXCISE |EXCISE-CLEAN|EXCISE-ERROR)/{v=$0} END{print v}'
+}
+
 sweep() {
     local pdf="$1" py="$2"
-    "$py" - "$pdf" <<'PY' 2>/dev/null
+    "$py" - "$pdf" <<'PY' 2>/dev/null | verdict_line
 import sys, xray
 try:
     r = xray.inspect(sys.argv[1])
@@ -152,8 +169,8 @@ sweep_excise() {
     # captured output and a stray row to the manifest. `|| true` on the producer
     # keeps the exit status out of the pipeline's verdict; python's own status
     # is what the `||` should be testing.
-    { dotnet "$cli" unredact "$pdf" --json 2>/dev/null || true; } \
-        | python3 -c "$EXCISE_VERDICT_PY" 2>/dev/null || echo "EXCISE-ERROR"
+    { { dotnet "$cli" unredact "$pdf" --json 2>/dev/null || true; } \
+        | python3 -c "$EXCISE_VERDICT_PY" 2>/dev/null || echo "EXCISE-ERROR"; } | verdict_line
 }
 
 record() {
@@ -199,8 +216,9 @@ fetch_one() {
     else
         # Neither detector fired. Not a tier-D candidate; keeping it would grow
         # the corpus without growing what it can measure.
+        printf '%s\t%s\t%s\n' "$(sha_of "$f")" "$url" "$(wc -c <"$f" | tr -d ' ')" >> "$NEGATIVES"
         rm -f "$f"
-        echo "  ${DIM}· clean, discarded${RESET}"
+        echo "  ${DIM}· clean, recorded as a negative and discarded${RESET}"
     fi
     sleep "$DELAY"
 }
@@ -213,7 +231,8 @@ sha_of_stdin() {
 cmd_status() {
     if [ ! -f "$MANIFEST" ]; then echo "no RECAP corpus yet — $DEST"; return 0; fi
     local n; n=$(grep -c . "$MANIFEST" 2>/dev/null || echo 0)
-    echo "${BOLD}$n leaking document(s)${RESET} in $DEST"
+    local neg; neg=$(grep -c . "$NEGATIVES" 2>/dev/null || echo 0)
+    echo "${BOLD}$n candidate(s)${RESET} and ${BOLD}$neg recorded negative(s)${RESET} in $DEST"
     awk -F'\t' '{printf "  %-28s [%s]  %s\n", $2, $4, $5}' "$MANIFEST"
 }
 
@@ -236,7 +255,7 @@ cmd_urls() {
     local list="$1"
     [ -f "$list" ] || die "no such file: $list"
     local py; py="$(find_xray)" || die "x-ray not installed — run scripts/download-xray.sh"
-    mkdir -p "$DEST"; touch "$MANIFEST"
+    mkdir -p "$DEST"; touch "$MANIFEST" "$NEGATIVES"
     local n=0
     while read -r url; do
         case "$url" in ''|\#*) continue ;; esac
@@ -271,7 +290,7 @@ cmd_query() {
     fi
 
     local py; py="$(find_xray)" || die "x-ray not installed — run scripts/download-xray.sh"
-    mkdir -p "$DEST"; touch "$MANIFEST"
+    mkdir -p "$DEST"; touch "$MANIFEST" "$NEGATIVES"
 
     echo "${BOLD}searching RECAP${RESET} ${DIM}$q${RESET}"
     echo "${DIM}mode: $mode${RESET}"
@@ -317,9 +336,35 @@ for r in d.get("results", []):
     rm -f "$tmp"
 }
 
+# ---------------------------------------------------------------------------
+# Re-fetch the recorded negatives into their own directory. Kept separate from
+# the candidates so a confusion matrix can address the two populations without
+# guessing which is which.
+# ---------------------------------------------------------------------------
+cmd_fetch_negatives() {
+    [ -s "$NEGATIVES" ] || die "no negatives recorded yet — run a sweep first"
+    local out="$DEST/negatives"; mkdir -p "$out"
+    local n=0 got=0
+    while IFS=$'\t' read -r sha url size; do
+        [ -n "$url" ] || continue
+        n=$((n+1)); [ "$n" -gt "$MAX_DOCS" ] && break
+        local f="$out/recap_neg_${sha:0:16}.pdf"
+        [ -f "$f" ] && { got=$((got+1)); continue; }
+        if curl -fsSL --max-time 120 -A "$UA" -o "$f.part" "$url" \
+           && [ "$(head -c 5 "$f.part")" = "%PDF-" ]; then
+            mv "$f.part" "$f"; got=$((got+1))
+        else
+            rm -f "$f.part"
+        fi
+        sleep "$DELAY"
+    done < "$NEGATIVES"
+    echo "$got negative(s) in $out"
+}
+
 case "${1:---status}" in
     --status)     cmd_status ;;
     --sweep-only) cmd_sweep_only ;;
+    --fetch-negatives) cmd_fetch_negatives ;;
     --urls)       shift; cmd_urls "${1:?--urls needs a file}" ;;
     --query)      shift; cmd_query "${1:?--query needs a search string}" ;;
     -h|--help)    sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//' ;;
