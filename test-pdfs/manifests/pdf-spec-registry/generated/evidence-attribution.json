@@ -83621,14 +83621,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -85089,14 +85089,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -86557,14 +86557,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -88041,14 +88041,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -89644,14 +89644,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -91103,14 +91103,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -92555,14 +92555,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94007,14 +94007,14 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs::RecoveryChannelTests.UnappliedRedactAnnotation_IsAMarkAndItsTextComesBack",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs::RecoveryOracleTests.CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95472,91 +95472,91 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryRowNamesARealChannelOrNone",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryChannelHasAtLeastOneRow",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.StatusIsOneOfTheThreeDefinedValues",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.CoveredRowsCiteEvidence",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_OneDeep_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.GapRowsCiteAnIssue",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_TwoDeep_IsStillFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.PartialRowsSayWhatIsNotCovered",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ThreeDeep_IsStillFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.IdsAreUnique",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsNotYetFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.TheMatrixStillReportsGaps",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverAWord_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AColourSetInsideABlock_DoesNotLeakPastTheQ",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_WithOverlayText_StillLeaksTheOriginal",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.ARestoreReturnsTheEnclosingColour_NotTheInitialOne",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverPartOfALine_RecoversTheMarkedRun",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.NestedBlocksRestoreToTheEnclosingColour",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AnUnbalancedQ_LeavesTheColourAloneRatherThanThrowing",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_Alt_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_NamedPropertyList_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96820,91 +96820,91 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryRowNamesARealChannelOrNone",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryChannelHasAtLeastOneRow",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.StatusIsOneOfTheThreeDefinedValues",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.CoveredRowsCiteEvidence",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_OneDeep_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.GapRowsCiteAnIssue",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_TwoDeep_IsStillFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.PartialRowsSayWhatIsNotCovered",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ThreeDeep_IsStillFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.IdsAreUnique",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsNotYetFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.TheMatrixStillReportsGaps",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverAWord_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AColourSetInsideABlock_DoesNotLeakPastTheQ",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_WithOverlayText_StillLeaksTheOriginal",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.ARestoreReturnsTheEnclosingColour_NotTheInitialOne",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverPartOfALine_RecoversTheMarkedRun",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.NestedBlocksRestoreToTheEnclosingColour",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AnUnbalancedQ_LeavesTheColourAloneRatherThanThrowing",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_Alt_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_NamedPropertyList_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98182,91 +98182,91 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryRowNamesARealChannelOrNone",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryChannelHasAtLeastOneRow",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.StatusIsOneOfTheThreeDefinedValues",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.CoveredRowsCiteEvidence",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_OneDeep_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.GapRowsCiteAnIssue",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_TwoDeep_IsStillFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.PartialRowsSayWhatIsNotCovered",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ThreeDeep_IsStillFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.IdsAreUnique",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsNotYetFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.TheMatrixStillReportsGaps",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverAWord_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AColourSetInsideABlock_DoesNotLeakPastTheQ",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_WithOverlayText_StillLeaksTheOriginal",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.ARestoreReturnsTheEnclosingColour_NotTheInitialOne",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverPartOfALine_RecoversTheMarkedRun",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.NestedBlocksRestoreToTheEnclosingColour",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AnUnbalancedQ_LeavesTheColourAloneRatherThanThrowing",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_Alt_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_NamedPropertyList_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99570,91 +99570,91 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryRowNamesARealChannelOrNone",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.EveryChannelHasAtLeastOneRow",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.StatusIsOneOfTheThreeDefinedValues",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.CoveredRowsCiteEvidence",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_OneDeep_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.GapRowsCiteAnIssue",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_TwoDeep_IsStillFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.PartialRowsSayWhatIsNotCovered",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ThreeDeep_IsStillFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.IdsAreUnique",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsNotYetFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeRegistryTests.cs::FailureModeRegistryTests.TheMatrixStillReportsGaps",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverAWord_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AColourSetInsideABlock_DoesNotLeakPastTheQ",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_WithOverlayText_StillLeaksTheOriginal",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.ARestoreReturnsTheEnclosingColour_NotTheInitialOne",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverPartOfALine_RecoversTheMarkedRun",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.NestedBlocksRestoreToTheEnclosingColour",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs::FillColourStateTests.AnUnbalancedQ_LeavesTheColourAloneRatherThanThrowing",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_Alt_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_NamedPropertyList_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113784,8 +113784,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7502,
-    "testMethodsWithCapabilityCandidate": 4649,
+    "testMethods": 7515,
+    "testMethodsWithCapabilityCandidate": 4662,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
