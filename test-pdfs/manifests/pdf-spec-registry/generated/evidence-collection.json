@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1319,
-  "indexedContentSha256": "8b0caae912867423bd7e34be16052d6b7f3b33260d7c0172d59f3cc4abdb8038",
+  "indexedFileCount": 1321,
+  "indexedContentSha256": "a5c1a88b5bfdea8fdbcb96e15b54d4a7b4d5c2a735f0d44ee620de80836c1721",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7985,7 +7985,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 598
+      "candidateReferenceCount": 599
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8803,7 +8803,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 299
+      "candidateReferenceCount": 300
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -61063,7 +61063,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 168
+      "candidateReferenceCount": 170
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -63638,7 +63638,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 396
+      "candidateReferenceCount": 397
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -65934,7 +65934,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 642
+      "candidateReferenceCount": 643
     },
     {
       "id": "pdf.20.extension.developer",
@@ -68768,6 +68768,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/CarrierTrapSurveyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "redaction",
+            "refusal",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -68913,20 +68922,9 @@
             "redaction",
             "security"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "editing",
-            "pdfe",
-            "redaction",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 129
+      "candidateReferenceCount": 130
     },
     {
       "id": "pdfe.product.redaction.review-panel",

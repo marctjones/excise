@@ -21,8 +21,14 @@ SEEN_OPTION=0
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -c|--configuration)
+            # #1539: captured, NOT forwarded. Both the build and the test
+            # invocation below pass -c "$CONFIG" themselves, so appending it
+            # here handed `dotnet test` the option twice. dotnet test rejects
+            # that by printing its whole help text and exiting non-zero — while
+            # the build half had already succeeded — so `scripts/t.sh -c
+            # Release` produced a real Release build, ran NO tests, and looked
+            # like the user had mistyped something.
             CONFIG="${2:-Debug}"
-            TEST_ARGS+=("$1" "$CONFIG")
             shift 2
             SEEN_OPTION=1
             ;;

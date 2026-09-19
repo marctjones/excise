@@ -62,6 +62,53 @@ public class RedactionCollateralHarness
     private const string BaselinePath = "tests/redaction-collateral/baseline.json";
 
     /// <summary>
+    /// The collateral a row with NO baseline entry may destroy (#1530). It is
+    /// the same headroom a baselined ZERO gets, which is what 220 of the 235
+    /// baselined keys are (p95 = 4, largest = 141, measured 2026-09-19).
+    /// </summary>
+    private const int UnbaselinedCollateralCeiling = 50;
+
+    /// <summary>
+    /// Whether <paramref name="collateral"/> breaks the ratchet for
+    /// <paramref name="key"/> (#1530).
+    /// </summary>
+    /// <remarks>
+    /// Extracted so the ABSENT-key rule can be tested. Measured 2026-09-19: on
+    /// a fully provisioned machine every one of the 101 rows this harness runs
+    /// is in the baseline, so the absent branch is never reached by the corpus
+    /// — it guards a fixture or term that does not exist yet. A guard nothing
+    /// exercises is indistinguishable from a guard that does not work, which is
+    /// what #1530 is about, so RedactionCollateralCeilingTests exercises it
+    /// directly instead of waiting for the corpus to grow.
+    /// </remarks>
+    internal static bool CollateralExceedsCeiling(
+        IReadOnlyDictionary<string, int> baseline,
+        string key,
+        int collateral,
+        out string message)
+    {
+        var known = baseline.TryGetValue(key, out var recorded);
+        var allowed = known ? recorded : 0;
+
+        // Headroom absorbs extractor jitter; anything larger is a real increase
+        // in destroyed text.
+        var ceiling = allowed + Math.Max(UnbaselinedCollateralCeiling, allowed / 10);
+        if (collateral <= ceiling)
+        {
+            message = string.Empty;
+            return false;
+        }
+
+        var provenance = known
+            ? $"baseline {allowed}"
+            : "no baseline entry, so the ceiling is the zero-collateral default";
+        message =
+            $"collateral {collateral} exceeds {provenance} (ceiling {ceiling}) — " +
+            "redaction destroyed MORE untargeted text than before";
+        return true;
+    }
+
+    /// <summary>
     /// #1101 — fixtures where excise's own match count disagrees with mutool's
     /// before/after delta. Recorded, not skipped: the collateral half of the
     /// gate still runs on them; only the count half is excused.
@@ -215,20 +262,23 @@ public class RedactionCollateralHarness
                 measured[term] = collateral;
 
                 var key = $"{fixtureName}|{term}";
-                // ⚠️ An ABSENT key applies no ceiling at all — see issue #1530.
-                // The term-still-present and count-vs-oracle assertions above
-                // still run, so such a row is not vacuous; it is the COLLATERAL
-                // property specifically that goes unbounded.
-                if (baseline.TryGetValue(key, out var allowed))
-                {
-                    // Headroom absorbs extractor jitter; anything larger is a
-                    // real increase in destroyed text.
-                    var ceiling = allowed + Math.Max(50, allowed / 10);
-                    if (collateral > ceiling)
-                        failures.Add(
-                            $"'{term}': collateral {collateral} exceeds baseline {allowed} (ceiling {ceiling}) — " +
-                            "redaction destroyed MORE untargeted text than before");
-                }
+
+                // #1530: an ABSENT key used to apply NO ceiling at all, so a
+                // large share of the rows this harness runs — the corpus is
+                // sampled dynamically while the baseline holds 235 keys — could
+                // destroy an arbitrary amount of untargeted text silently. The
+                // term-still-present and count-vs-oracle assertions ran either
+                // way, so those rows were not vacuous; it was the COLLATERAL
+                // property specifically that went unbounded, and that is the
+                // #942/#899 defect class (redaction destroying 5-36% of a
+                // document per term).
+                //
+                // An unbaselined row is now held to the ceiling a ZERO-baseline
+                // row gets. Treating "no recorded collateral" as "expect none"
+                // is the faithful default rather than a guess: that is what the
+                // corpus looks like (see UnbaselinedCollateralCeiling).
+                if (CollateralExceedsCeiling(baseline, key, collateral, out var message))
+                    failures.Add($"'{term}': {message}");
             }
             finally { try { File.Delete(output); } catch { /* best effort */ } }
         }
