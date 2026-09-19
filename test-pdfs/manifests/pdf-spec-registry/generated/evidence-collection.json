@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1326,
-  "indexedContentSha256": "df01d1919e0a5a56b88764fff8df0b017870b894206d9d8ec621da0accf2cadf",
+  "indexedContentSha256": "6cb971f23fe9a305dd3f884365f5eaac6062b75ea8585cc612c880cd47d5af3e",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7986,7 +7986,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 600
+      "candidateReferenceCount": 601
     },
     {
       "id": "pdf.17.graphics.color",
@@ -64112,6 +64112,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Differential/ReferenceRenderResult.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "data",
+            "measurement"
+          ]
+        },
+        {
           "path": "Excise.Rendering/README.md",
           "kind": "source",
           "matchedTerms": [
@@ -64420,19 +64428,9 @@
             "data",
             "dictionaries"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "coordinate",
-            "data",
-            "measurement",
-            "metadata"
-          ]
         }
       ],
-      "candidateReferenceCount": 198
+      "candidateReferenceCount": 199
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -65982,7 +65980,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 646
+      "candidateReferenceCount": 647
     },
     {
       "id": "pdf.20.extension.developer",

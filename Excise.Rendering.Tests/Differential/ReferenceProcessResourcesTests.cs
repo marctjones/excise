@@ -37,9 +37,47 @@ public sealed class ReferenceProcessResourcesTests
 
         exited.Should().BeTrue();
         process.ExitCode.Should().Be(0);
-        // macOS and Windows may discard accounting as soon as a short-lived
-        // process exits; null is the documented cross-platform result.
-        (resources.CpuMs is null || resources.CpuMs.Value >= 0).Should().BeTrue();
+        resources.CpuMs.Should().NotBeNull(
+            "a completed child must report its CPU — see ShortLivedProcess_StillReportsBothCounters");
+        resources.CpuMs!.Value.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    // #1674 — the counters used to be lost entirely for any process that exited
+    // inside the sampler's first wait, because the loop waited before it sampled
+    // and a process that has exited has no readable accounting left. That deleted
+    // the measurement for whichever tool was FASTEST: over a 2026-09-19 sweep,
+    // excise NativeAOT kept 15 of 27 samples and mutool 45 of 81, while the three
+    // slowest tools lost none — so the fast binary reported MORE cpu than the slow
+    // one. This pins the short case specifically; the pre-existing tests all use
+    // either the long-lived current process or `dotnet --version`, and none of them
+    // could see it.
+    [Fact]
+    public void ShortLivedProcess_StillReportsBothCounters()
+    {
+        using var process = Process.Start(new ProcessStartInfo("/bin/sh")
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            // 50 ms: under the old 100 ms wait, so a sampler that waits before it
+            // samples reads nothing, but long enough to be sampled at all. This is
+            // the real timescale — the fastest reference-performance run measured on
+            // 2026-09-19 was mutool at 51 ms, and the excise rows it silently dropped
+            // were 74-121 ms. ⚠️ A process that exits before the FIRST sample is still
+            // unmeasurable by polling; only kernel accounting (wait4/getrusage, or
+            // /usr/bin/time) closes that, and #1674 tracks it.
+            ArgumentList = { "-c", "sleep 0.05" },
+        });
+        process.Should().NotBeNull();
+
+        var exited = ReferenceProcessResources.WaitForExitAndCapture(process!, 30_000, out var resources);
+
+        exited.Should().BeTrue();
+        resources.PeakWorkingSetBytes.Should().NotBeNull(
+            "a run too short to sample is still a run — dropping it biases every "
+            + "aggregate toward the slower tool");
+        resources.PeakWorkingSetBytes!.Value.Should().BeGreaterThan(0);
+        resources.CpuMs.Should().NotBeNull();
     }
 
     [Fact]

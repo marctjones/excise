@@ -21,6 +21,28 @@ public sealed record ReferenceRenderResult(
 /// </summary>
 public readonly record struct ReferenceProcessResources(long? PeakWorkingSetBytes, long? CpuMs)
 {
+    /// <summary>
+    /// How often the running child is sampled. ⚠️ #1674 — this used to WAIT first and
+    /// sample second, with a 100 ms wait. A process that exited inside that first wait
+    /// returned from <c>WaitForExit(100)</c> immediately, so the sampling line below was
+    /// never reached, and the post-exit <see cref="Capture"/> throws (the OS has already
+    /// discarded the accounting) and is swallowed into null. Every run shorter than
+    /// 100 ms therefore reported NO cpu and NO peak RSS at all.
+    ///
+    /// <para>That is not uniform noise — it deletes the measurement for whichever tool is
+    /// FASTEST. Measured 2026-09-19 over 9 fixtures x 3 runs x 3 shapes: excise NativeAOT
+    /// kept 15 samples of 27 and mutool 45 of 81, while ghostscript, pdftocairo and pdfbox
+    /// — the three slowest — lost none. The surviving samples were the slow ones, so the
+    /// AOT build reported a HIGHER cpu median (216 ms) than the Debug build (106 ms) while
+    /// its wall clock was LOWER (148 vs 213 ms). A reader would conclude the opposite of
+    /// the truth.</para>
+    ///
+    /// <para>So: sample BEFORE waiting, and wait in short slices. The cost is one
+    /// <c>proc_pidinfo</c>-class syscall per slice — about 0.5% overhead on a 1.5 s render
+    /// — which is worth paying to stop silently dropping the fast half of the data.</para>
+    /// </summary>
+    private const int SampleIntervalMs = 10;
+
     public static bool WaitForExitAndCapture(Process process, int timeoutMs, out ReferenceProcessResources resources)
     {
         var elapsed = Stopwatch.StartNew();
@@ -28,16 +50,18 @@ public readonly record struct ReferenceProcessResources(long? PeakWorkingSetByte
         long cpuMs = 0;
         while (elapsed.ElapsedMilliseconds < timeoutMs)
         {
-            if (process.WaitForExit(100))
+            // Sample FIRST: a process that exits during the wait below leaves nothing
+            // readable behind, so anything not captured while it was alive is lost.
+            var sample = Capture(process);
+            peakWorkingSetBytes = Math.Max(peakWorkingSetBytes, sample.PeakWorkingSetBytes ?? 0);
+            cpuMs = Math.Max(cpuMs, sample.CpuMs ?? 0);
+
+            if (process.WaitForExit(SampleIntervalMs))
             {
                 process.WaitForExit(); // flush redirected output before the caller reads it
                 resources = Merge(peakWorkingSetBytes, cpuMs, Capture(process));
                 return true;
             }
-
-            var sample = Capture(process);
-            peakWorkingSetBytes = Math.Max(peakWorkingSetBytes, sample.PeakWorkingSetBytes ?? 0);
-            cpuMs = Math.Max(cpuMs, sample.CpuMs ?? 0);
         }
 
         resources = new ReferenceProcessResources(
