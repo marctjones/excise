@@ -42,4 +42,33 @@
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
   </ItemGroup>
 
+  <!--
+    #1207 / #1468: peak RSS on an image-heavy render is dominated by GC-RETAINED
+    memory, not by live data. Measured 2026-09-19 on Altona technical2_x4 p1:
+    the live managed heap mid-render is 145 MB (gcdump), of which System.Byte[]
+    is 15.6 MB, while RSS peaks at 711 MiB. The decoded image samples ARE being
+    released — the deferred-decode release frees 522 MiB during that render —
+    but freeing to the GC is not returning to the OS, and a page that decodes
+    and discards dozens of ~90 MiB sample arrays grows the heap and keeps it.
+
+    ConserveMemory tells the GC to decommit rather than retain. Measured, two
+    runs each, same page at 150 dpi:
+
+        baseline                 1.56 s   711 MiB
+        System.GC.ConserveMemory=5   1.57 s   406 MiB
+        System.GC.ConserveMemory=9   1.59 s   411 MiB
+
+    42% less memory for ~1% wall clock. 5 is used rather than 9 because it is
+    no worse on memory here and asks less of the collector.
+
+    WARNING: this is scoped to the CLI on purpose. The opposite was measured for
+    the TEST RUNNER, where GC tuning made peak RSS ~24% WORSE (552 MB vs 446 MB
+    on Excise.Core.Tests) — a long-lived multi-assembly host is not a
+    short-lived one-page render. Do not promote this to Directory.Build.props,
+    and measure before applying it to the GUI.
+  -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
+  </ItemGroup>
+
 </Project>
