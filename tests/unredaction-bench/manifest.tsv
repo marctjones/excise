@@ -16,6 +16,27 @@
 #   tier          B — the hidden value is already published, so the bench can SCORE
 #                 C — public record, no published ground truth; leak CLASS only, never values
 #                 D — sensitive-provenance sources under a value-free positional design (#1603)
+#
+#                 !! THESE LETTERS ARE NOT docs/BENCH_TIERS.md's LETTERS (#1620). !!
+#                 That file grades by WHAT KIND OF DOCUMENT it is (A synthetic,
+#                 B real-world producer-diverse, C adversarial, D known-bad real
+#                 redactions). This column grades by WHAT WE ARE PERMITTED TO
+#                 MEASURE on it. They are different axes, not refinements.
+#
+#                 The collision runs in the DANGEROUS direction, so read it
+#                 carefully before acting on a tier letter you saw elsewhere:
+#                 BENCH_TIERS.md tier D is "someone else's redaction leaked",
+#                 which sounds like exactly what this bench wants, while tier D
+#                 HERE is the MOST RESTRICTED category, where scoring values is
+#                 forbidden. Getting those two backwards inverts the permission.
+#
+#                 ⚠️ The letters are what is ambiguous; the restriction is NOT
+#                 enforced by them. RealWorldLeakSurvey's MarkRow has no field a
+#                 recovered value can occupy and SurveyRowsHoldNoRecoveredText
+#                 checks that by reflection, so misreading this column cannot
+#                 leak a value. #1620 tracks renaming these to words
+#                 (scoreable / class-only / positional-only), which is the
+#                 actual fix; this note is the stopgap.
 #   status        vetted   — all three vetting questions answered yes; the script downloads it
 #                 excluded — assessed and REJECTED; never downloaded. The reason is the point.
 #                 blocked  — assessed, WANTED, and cannot be fetched by this script. Not a

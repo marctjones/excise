@@ -1,5 +1,20 @@
 # Benchmark difficulty tiers (#1120)
 
+> ⚠️ **These letters are not the only A/B/C/D in this repo (#1620).**
+> `tests/unredaction-bench/manifest.tsv` also grades rows "tier B/C/D" and
+> means something else entirely: **this** file grades by *what kind of document
+> it is*, that one grades by *what we are permitted to measure on it*. They are
+> different axes, not refinements of each other.
+>
+> The overlap is worst exactly where it matters. Tier D **here** is "known-bad
+> real redactions, found by sweeping with x-ray" — which sounds like precisely
+> what an unredaction bench wants. Tier D **there** is the most restricted
+> category there is, where scoring recovered values is forbidden outright
+> (#1603). A reader who carries a letter from one file to the other gets the
+> permission backwards.
+>
+> Renaming the manifest's letters to words is tracked as #1620.
+
 Tier A (synthetic, `tests/redaction-corpus`, built by `gen-redaction-corpus.py`)
 tells you what is **broken**. Tiers B/C/D tell you whether it **matters** on
 documents people actually have — the benchmark's external validity.

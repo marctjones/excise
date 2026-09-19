@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1301,
-  "indexedContentSha256": "a9ec728aa55223ae1730d43e210b8d5179504ccfc99e371220edd9d89410918c",
+  "indexedFileCount": 1303,
+  "indexedContentSha256": "e2a516520aa559551904f05e8b998ef30969f867eee4d0cf3354b8ec5c03f758",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -10578,7 +10578,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 184
+      "candidateReferenceCount": 185
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -61375,7 +61375,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 112
+      "candidateReferenceCount": 113
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -65251,7 +65251,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 627
+      "candidateReferenceCount": 628
     },
     {
       "id": "pdf.20.extension.developer",
@@ -73431,6 +73431,16 @@
           ]
         },
         {
+          "path": "tests/unredaction-bench/manifest.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "restricted",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "tests/unwired-api-baseline.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -73476,7 +73486,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 45
+      "candidateReferenceCount": 46
     }
   ],
   "summary": {
