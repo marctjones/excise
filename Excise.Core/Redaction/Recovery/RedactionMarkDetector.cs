@@ -292,31 +292,6 @@ public static class RedactionMarkDetector
         }
     }
 
-    private static bool TryReadComponents(ContentOperator op, out Rgb rgb)
-    {
-        rgb = default;
-        var numbers = new List<double>();
-        foreach (var operand in op.Operands)
-        {
-            switch (operand)
-            {
-                case PdfInteger i: numbers.Add(i.Value); break;
-                case PdfReal r: numbers.Add(r.Value); break;
-                default: return false;   // a pattern name: not a device colour
-            }
-        }
-        switch (numbers.Count)
-        {
-            case 1: rgb = new Rgb(numbers[0], numbers[0], numbers[0]); return true;
-            case 3: rgb = new Rgb(numbers[0], numbers[1], numbers[2]); return true;
-            case 4: rgb = FromCmyk(numbers[0], numbers[1], numbers[2], numbers[3]); return true;
-            default: return false;
-        }
-    }
-
-    private static Rgb FromCmyk(double c, double m, double y, double k)
-        => new((1 - c) * (1 - k), (1 - m) * (1 - k), (1 - y) * (1 - k));
-
     private static double Luminance(Rgb c) => 0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B;
 
     private static string DescribeColor(Rgb c)

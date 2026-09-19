@@ -65,6 +65,33 @@ internal static class RecoveryFixtureBuilder
         return Build(content, extraResources: extraResources);
     }
 
+    /// <summary>
+    /// #1599/#1625 — TWO spans sharing ONE named property list, the case every
+    /// other named-list fixture here misses.
+    ///
+    /// <para>Every existing fixture emits one <c>/Span /P1 BDC</c> against one
+    /// <c>/Properties</c> entry, so the dictionary is EXCLUSIVE to its span.
+    /// That leaves the interesting branch untested: when two spans reference
+    /// <c>/P1</c> and only one is redacted, the carrier must stay — the
+    /// surviving span still needs it — and the recovery channel must still
+    /// find it, ONCE rather than once per referencing span.</para>
+    ///
+    /// <para>⚠️ The first span's text is the redaction target; the second is
+    /// the survivor. Both draw real glyphs, so a test can assert the redaction
+    /// actually happened rather than passing because nothing ran.</para>
+    /// </summary>
+    internal static byte[] SharedNamedPropertyList(
+        string carrierValue, string firstText, string secondText,
+        string carrierKey = "ActualText")
+    {
+        var content = string.Create(CultureInfo.InvariantCulture,
+            $"/Span /P1 BDC\nBT /F1 14 Tf 72 700 Td ({firstText}) Tj ET\nEMC\n" +
+            $"/Span /P1 BDC\nBT /F1 14 Tf 72 670 Td ({secondText}) Tj ET\nEMC\n");
+
+        return Build(content,
+            extraResources: $"/Properties << /P1 << /{carrierKey} ({carrierValue}) >> >>");
+    }
+
     /// <summary>A page with a form field whose /V survives behind a black box.</summary>
     internal static byte[] FormFieldValueUnderBox(
         string fieldName, string value, double x = 72, double y = 700)

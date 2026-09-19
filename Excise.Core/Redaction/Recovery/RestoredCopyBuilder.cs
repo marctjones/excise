@@ -264,7 +264,6 @@ public static class RestoredCopyBuilder
         => new(Fonts.WinAnsiEncoding.Encode(text, out lost));
 
     /// <summary>Overload for callers that only need the bytes.</summary>
-    internal static PdfString Drawable(string text) => Drawable(text, out _);
 
     private static string Truncate(string text, int max)
         => text.Length <= max ? text : text[..(max - 1)] + "…";
