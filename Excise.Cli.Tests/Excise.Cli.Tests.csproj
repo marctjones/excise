@@ -36,4 +36,10 @@
     <ProjectReference Include="..\tools\Excise.RenderTools\Excise.RenderTools.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- #1527/#1674: the ONE fixture locator. Linked the same way it is into
+         Excise.App.Tests and Excise.Rendering.Tests. -->
+    <Compile Include="../Excise.Core.Tests/TestSupport/TestRepoLayout.cs" Link="TestSupport/TestRepoLayout.cs" />
+  </ItemGroup>
+
 </Project>

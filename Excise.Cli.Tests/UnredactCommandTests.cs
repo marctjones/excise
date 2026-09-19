@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using AwesomeAssertions;
 using Excise.Cli.Commands;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Cli.Tests;
@@ -16,13 +17,19 @@ namespace Excise.Cli.Tests;
 /// </summary>
 public class UnredactCommandTests
 {
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
-    }
+    /// <summary>
+    /// The LOCAL checkout root — where `dotnet run --project Excise.Cli` must
+    /// run, because it has to exercise THIS worktree's binary.
+    ///
+    /// <para>⚠️ Anchoring on <c>.git</c> is CORRECT here and WRONG for fixtures
+    /// (#1674). In a worktree <c>.git</c> is a FILE at the worktree root, so
+    /// this walk stops exactly where the build output is — which is what we
+    /// want. It is also why it must NOT be used to find gitignored corpora,
+    /// which live in the MAIN checkout: see <see cref="CorpusCase"/>.</para>
+    /// </summary>
+    private static string RepoRoot() =>
+        TestRepoLayout.LocalCheckoutRoot ?? throw new InvalidOperationException(
+            "no local checkout above " + AppContext.BaseDirectory);
 
     private static (int Exit, string Out) Run(params string[] args)
     {
@@ -257,10 +264,20 @@ public class UnredactCommandTests
     private static string RepoRootPath() => RepoRoot();
 
     /// <summary>A synthetic corpus case path, or null if the corpus is absent.</summary>
+    /// <summary>
+    /// ⚠️ #1674: this resolves through <see cref="TestRepoLayout"/>, NOT
+    /// <see cref="RepoRoot"/>. The synthetic corpus is gitignored, so it lives
+    /// in the MAIN checkout; <c>RepoRoot()</c> stops at the WORKTREE's <c>.git</c>
+    /// FILE and never sees it. Measured: four tests in this class skipped in
+    /// every worktree session behind "synthetic corpus absent" while 272 PDFs
+    /// sat in the main checkout. That reads identically to a pass — the #1527
+    /// shape, and the reason a union t1 caught a real red my own t1 had
+    /// silently skipped.
+    /// </summary>
     private static string? CorpusCase(string idContains, string method)
     {
-        var dir = Path.Combine(RepoRoot(), "test-pdfs", "redaction-synthetic");
-        if (!Directory.Exists(dir)) return null;
+        var dir = TestRepoLayout.FindDirectory("test-pdfs", "redaction-synthetic");
+        if (dir == null) return null;
         return Directory.GetFiles(dir, "*.pdf")
             .FirstOrDefault(f => Path.GetFileName(f).Contains(idContains)
                                  && Path.GetFileName(f).Contains(method));
@@ -347,10 +364,26 @@ public class UnredactCommandTests
         // inside a longer line. This used to read as clean (box < 50% of the
         // operator); now the covered glyph RUN is reported.
         var pdf = CorpusCase("B0-", "under-box-black-on-white");
-        Assert.SkipWhen(pdf == null, "synthetic corpus absent");
+        Assert.SkipWhen(pdf == null, TestRepoLayout.AbsenceReason(
+            "the synthetic redaction corpus", "test-pdfs/redaction-synthetic"));
         var (exit, output) = Run(pdf!, "--mode", "certain");
         exit.Should().Be(3, "a box over just the word still hides recoverable text");
-        output.Should().Contain("CERTAIN");
+
+        // ⚠️ #1674: this asserted `Contain("CERTAIN")` — an uppercase SECTION
+        // HEADING that #1669's classification rework replaced with class-grouped
+        // headings (HIDDEN / metadata and navigation). The report now says
+        // "1 finding(s), 1 certain" in lower case, so the test failed on wording
+        // while the recovery it exists to prove worked perfectly.
+        //
+        // Pinning the RECOVERED VALUE instead is strictly stronger: the old
+        // assertion passed on any output containing the word, including one that
+        // found the mark and recovered NOTHING. This one fails if the tool ever
+        // stops printing what it read out from under the box. The corpus encodes
+        // the planted secret as the filename's last segment.
+        var secret = Path.GetFileNameWithoutExtension(pdf!).Split('-')[^1];
+        output.Should().Contain(secret,
+            "the point of #1149 is that the covered glyph RUN comes back, so the " +
+            "report must print it, not merely announce that something was found");
     }
 
     [Fact]

@@ -36,13 +36,12 @@ public class UnredactOcrChannelTests
         }
     }
 
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
-    }
+    /// <summary>#1674: the ONE shared locator. A hand walk to `.git` finds a
+    /// WORKTREE root, where gitignored corpora and tools/vendor do not exist.</summary>
+    private static string RepoRoot() =>
+        Excise.TestSupport.TestRepoLayout.MainCheckoutRoot
+        ?? Excise.TestSupport.TestRepoLayout.LocalCheckoutRoot
+        ?? throw new System.InvalidOperationException("no checkout above the test binary");
 
     private static (int Exit, string Out) RunUnredact(params string[] args)
     {
