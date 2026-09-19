@@ -1900,6 +1900,18 @@ namespace Excise.Core.Redaction.Recovery
         Candidate = 1,
         PresentOnly = 2,
     }
+    public enum RecoveryFindingClass
+    {
+        RedactionResidue = 0,
+        ContentCarrier = 1,
+        DocumentFurniture = 2,
+    }
+    public static class RecoveryFindingClassifier
+    {
+        public static Excise.Core.Redaction.Recovery.RecoveryFindingClass Classify(Excise.Core.Redaction.Recovery.RecoveredFinding finding) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryFindingClass Classify(string channel, string carrier, bool isLinkedToAMark) { }
+        public static bool IndicatesAFailedRedaction(Excise.Core.Redaction.Recovery.RecoveryFindingClass c) { }
+    }
     public sealed class RecoveryLocation : System.IEquatable<Excise.Core.Redaction.Recovery.RecoveryLocation>
     {
         public RecoveryLocation(int PageNumber, Excise.Core.Document.PdfRectangle Rect, string Provenance) { }
