@@ -132,6 +132,23 @@ internal static class UnredactCommandOutput
 
         if (report.Certain.Count > 0)
         {
+            // ⚠️ THE ONE LINE A READER ACTS ON. Counting only the classes that
+            // indicate a failed redaction: "191 findings" on a scanned filing
+            // and "31 findings" on the Manafort leak looked identical before
+            // this, and only one of them is news.
+            //
+            // The EXIT CODE deliberately does not use this split — it still
+            // goes non-zero on anything, because #608 is a redacted term
+            // leaking into XMP and a script that exited 0 on that would be the
+            // silent leak this whole design refuses. The summary ranks; the
+            // exit status stays paranoid.
+            var meaningful = report.Certain.Count(
+                f => RecoveryFindingClassifier.IndicatesAFailedRedaction(f.Class));
+            var furniture = report.Certain.Count - meaningful;
+            output.WriteLine(
+                $"  → {meaningful} finding(s) indicate a failed redaction" +
+                (furniture > 0 ? $"; {furniture} are ordinary document metadata" : "") + ".");
+
             // #1669 — GROUPED BY WHAT IT INDICATES, loudest first.
             //
             // Ungrouped, this list buried its own answer. Measured on 57 clean
