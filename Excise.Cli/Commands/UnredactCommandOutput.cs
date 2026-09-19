@@ -105,6 +105,17 @@ internal static class UnredactCommandOutput
                     ? $", {restore.DocumentLevelItems} document-level item(s) " +
                       (restore.SummaryIncluded ? "in a summary note" : "NOT included")
                     : ""));
+            // ⚠️ #1644 — a lossy DRAWN layer must announce itself. The page's
+            // font is WinAnsi and has no byte for CJK, Cyrillic, Greek or
+            // U+0100+ Latin, so on those documents the reconstruction shows
+            // substitutes. An artifact offered as evidence of what a redaction
+            // leaked must not understate it quietly; the JSON and each
+            // finding's annotation still carry the text verbatim.
+            if (restore.UndrawableCharacters > 0)
+                output.WriteLine(
+                    $"  ⚠ {restore.UndrawableCharacters} character(s) could not be DRAWN with the " +
+                    "page's own font and appear as '?'. The recovered text is intact in the JSON " +
+                    "report and in each finding's annotation — only the drawn layer is lossy.");
             output.WriteLine(
                 "  ⚠️ this file CONTAINS the recovered text by design, and is watermarked " +
                 "as a reconstruction. Handle it as you would the unredacted original.");

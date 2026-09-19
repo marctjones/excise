@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1299,
-  "indexedContentSha256": "e950afd54c24b962308101bb8444e90565e6c0803a4fd829254abb3438681cde",
+  "indexedFileCount": 1301,
+  "indexedContentSha256": "c864fbea72530c47dc57a31fa15f5d86eee72b9ec747a88353cfb91d51737c96",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -6103,6 +6103,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Fonts/WinAnsiEncoding.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "collections",
+            "embedded"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/AttachmentCarrierScrubber.cs",
           "kind": "source",
           "matchedTerms": [
@@ -6165,6 +6173,16 @@
             "collections",
             "embedded",
             "catalog",
+            "pdfdocument"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/Recovery/RestoredCopyBuilder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "metadata",
             "pdfdocument"
           ]
         },
@@ -6730,28 +6748,9 @@
             "catalog",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Fonts/VerticalWritingRenderingTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "collections",
-            "embedded",
-            "catalog",
-            "pdfdocument"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Visual/BirthCertFormLayoutTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "collections",
-            "embedded",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 89
+      "candidateReferenceCount": 91
     },
     {
       "id": "pdf.17.graphics.state",
@@ -7945,7 +7944,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 581
+      "candidateReferenceCount": 582
     },
     {
       "id": "pdf.17.graphics.color",
@@ -10148,6 +10147,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/RestoredCopyBuilder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "fonts",
+            "glyph"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/Letter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -10567,17 +10574,9 @@
             "fonts",
             "glyph"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "fonts",
-            "glyph"
-          ]
         }
       ],
-      "candidateReferenceCount": 183
+      "candidateReferenceCount": 184
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -56636,6 +56635,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Fonts/WinAnsiEncoding.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "redaction",
+            "review",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/README.md",
           "kind": "source",
           "matchedTerms": [
@@ -57463,20 +57472,9 @@
             "action",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/MultiDocumentSessionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "redaction",
-            "review",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 106
+      "candidateReferenceCount": 107
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -65149,6 +65147,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Fonts/WinAnsiEncoding.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "data",
+            "private"
+          ]
+        },
+        {
           "path": "Excise.Core/Graphics/PdfFont.cs",
           "kind": "source",
           "matchedTerms": [
@@ -65240,17 +65246,9 @@
             "private",
             "metadata"
           ]
-        },
-        {
-          "path": "Excise.Core/Primitives/PdfString.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "data",
-            "private"
-          ]
         }
       ],
-      "candidateReferenceCount": 626
+      "candidateReferenceCount": 627
     },
     {
       "id": "pdf.20.extension.developer",
@@ -68053,6 +68051,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Fonts/WinAnsiEncoding.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "redaction",
+            "review",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core/Parsing/PdfLexer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -68743,18 +68750,9 @@
             "review",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "redaction",
-            "visibility",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 143
+      "candidateReferenceCount": 144
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",

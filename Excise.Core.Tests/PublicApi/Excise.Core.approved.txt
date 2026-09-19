@@ -2046,10 +2046,11 @@ namespace Excise.Core.Redaction.Recovery
         public static Excise.Core.Redaction.Recovery.RestoredCopyBuilder.RestoreResult Apply(Excise.Core.Document.PdfDocument document, Excise.Core.Redaction.Recovery.RecoveryReport report) { }
         public readonly struct RestoreResult : System.IEquatable<Excise.Core.Redaction.Recovery.RestoredCopyBuilder.RestoreResult>
         {
-            public RestoreResult(int ItemsDrawn, int DocumentLevelItems, bool SummaryPageAdded) { }
+            public RestoreResult(int ItemsDrawn, int DocumentLevelItems, bool SummaryPageAdded, int UndrawableCharacters = 0) { }
             public int DocumentLevelItems { get; init; }
             public int ItemsDrawn { get; init; }
             public bool SummaryPageAdded { get; init; }
+            public int UndrawableCharacters { get; init; }
         }
     }
     public static class XfaValueRecovery

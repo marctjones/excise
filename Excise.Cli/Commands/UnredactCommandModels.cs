@@ -177,7 +177,14 @@ internal sealed record UnredactRestoreResult(
     string Path,
     int ItemsDrawn,
     int DocumentLevelItems,
-    bool SummaryIncluded);
+    bool SummaryIncluded,
+    /// <summary>
+    /// ⚠️ #1644 — characters the DRAWN layer could not represent. The page's
+    /// own font is WinAnsi; CJK, Cyrillic, Greek and U+0100+ Latin have no byte
+    /// in it. Non-zero means the reconstruction understates what was recovered,
+    /// and an artifact offered as evidence must not do that silently.
+    /// </summary>
+    int UndrawableCharacters = 0);
 
 internal sealed record UnredactReport(
     UnredactQuantification Quantification,

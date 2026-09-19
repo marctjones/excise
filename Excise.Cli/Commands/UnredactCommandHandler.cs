@@ -265,7 +265,7 @@ internal static class UnredactCommandHandler
             var result = Core.Redaction.Recovery.RestoredCopyBuilder.Apply(document, report);
             document.Save(destination);
             return new UnredactRestoreResult(
-                destination, result.ItemsDrawn, result.DocumentLevelItems, result.SummaryPageAdded);
+                destination, result.ItemsDrawn, result.DocumentLevelItems, result.SummaryPageAdded, result.UndrawableCharacters);
         }
         catch (Exception ex)
         {

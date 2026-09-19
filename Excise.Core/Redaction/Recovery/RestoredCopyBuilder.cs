@@ -41,8 +41,16 @@ public static class RestoredCopyBuilder
     /// <param name="ItemsDrawn">Findings painted onto a page.</param>
     /// <param name="DocumentLevelItems">Findings with no page, listed on the summary page.</param>
     /// <param name="SummaryPageAdded">Whether a summary page was appended.</param>
+    /// <param name="UndrawableCharacters">
+    /// ⚠️ Characters with no WinAnsi form, substituted in the DRAWN layer
+    /// (#1644). Non-zero means the page understates what was recovered and the
+    /// caller must say so — on a CJK or Cyrillic document this is every glyph.
+    /// The JSON report and each finding's annotation still carry the text
+    /// verbatim; only the drawn layer is lossy.
+    /// </param>
     public readonly record struct RestoreResult(
-        int ItemsDrawn, int DocumentLevelItems, bool SummaryPageAdded);
+        int ItemsDrawn, int DocumentLevelItems, bool SummaryPageAdded,
+        int UndrawableCharacters = 0);
 
     /// <summary>
     /// Draw <paramref name="report"/>'s findings onto <paramref name="document"/>
@@ -51,6 +59,7 @@ public static class RestoredCopyBuilder
     /// </summary>
     public static RestoreResult Apply(PdfDocument document, RecoveryReport report)
     {
+        var undrawable = 0;
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(report);
 
@@ -67,7 +76,7 @@ public static class RestoredCopyBuilder
             var ops = new List<ContentOperator>(page.GetContentStream().Operators);
             foreach (var finding in byPage)
             {
-                DrawFinding(ops, finding, font);
+                DrawFinding(ops, finding, font, ref undrawable);
                 AddExplanatoryAnnotation(document, byPage.Key, finding);
                 drawn++;
             }
@@ -78,11 +87,17 @@ public static class RestoredCopyBuilder
 
         StampMetadata(document);
         var summaryAdded = documentLevel.Count > 0 && TryAddSummaryAnnotation(document, documentLevel);
-        return new RestoreResult(drawn, documentLevel.Count, summaryAdded);
+        return new RestoreResult(drawn, documentLevel.Count, summaryAdded, undrawable);
     }
 
+    /// <param name="undrawableTotal">
+    /// Accumulates characters with no WinAnsi form (#1644). Passed by ref
+    /// rather than returned so every draw site contributes to one count the
+    /// caller reports — a per-call number nobody adds up is a number nobody
+    /// sees.
+    /// </param>
     private static void DrawFinding(
-        List<ContentOperator> ops, RecoveredFinding finding, string? font)
+        List<ContentOperator> ops, RecoveredFinding finding, string? font, ref int undrawableTotal)
     {
         var rect = finding.Location!.Rect.Normalize();
         var certain = finding.Confidence == RecoveryConfidence.Certain;
@@ -115,7 +130,8 @@ public static class RestoredCopyBuilder
             new PdfName(font), new PdfReal(size),
         }));
         ops.Add(Op("Td", rect.Left + 1, rect.Bottom + rect.Height * 0.2));
-        ops.Add(new ContentOperator("Tj", new PdfObject[] { new PdfString(Drawable(text!)) }));
+        ops.Add(new ContentOperator("Tj", new PdfObject[] { Drawable(text!, out var undrawable) }));
+        undrawableTotal += undrawable;
         ops.Add(new ContentOperator("ET"));
         ops.Add(new ContentOperator("Q"));
     }
@@ -227,18 +243,28 @@ public static class RestoredCopyBuilder
     }
 
     /// <summary>
-    /// Text safe to DRAW with a reused simple font.
+    /// Encode text for drawing with the page's own (WinAnsi) simple font,
+    /// reporting anything that has no WinAnsi form.
     ///
-    /// <para>A page's own font is almost always WinAnsi-encoded, and a
-    /// non-ASCII character forces the string into UTF-16BE, which such a font
-    /// renders as mojibake — the em-dash in this class's own watermark did
-    /// exactly that on the first run. Replacing what cannot be drawn keeps the
-    /// visible layer legible; the finding's ANNOTATION carries the value
-    /// verbatim, so nothing is lost, and a reader who needs the exact bytes has
-    /// them there and in the JSON report.</para>
+    /// <para><b>This used to flatten to printable ASCII</b> —
+    /// <c>c is >= ' ' and &lt;= '~' ? c : '?'</c> — so a reconstruction of the
+    /// Manafort leak printed <c>?conceded?</c> where the recovered text is
+    /// <c>"conceded"</c>. The JSON report was right and the drawn page was
+    /// wrong, in an artifact whose stated purpose is what a reviewer hands a
+    /// court. WinAnsi HAS the curly quotes (0x93/0x94); the old rule was
+    /// rejecting characters the encoding contains (#1644).</para>
+    ///
+    /// <para>⚠️ <paramref name="lost"/> is not decoration. CJK, Cyrillic, Greek
+    /// and U+0100+ Latin have no WinAnsi byte, so on those documents this still
+    /// substitutes — and the caller MUST say so rather than let the page imply
+    /// it recovered text it could not draw. That is the half of #1644 that
+    /// needs an embedded font and stays open.</para>
     /// </summary>
-    internal static string Drawable(string text)
-        => string.Concat(text.Select(c => c is >= ' ' and <= '~' ? c : '?'));
+    internal static PdfString Drawable(string text, out int lost)
+        => new(Fonts.WinAnsiEncoding.Encode(text, out lost));
+
+    /// <summary>Overload for callers that only need the bytes.</summary>
+    internal static PdfString Drawable(string text) => Drawable(text, out _);
 
     private static string Truncate(string text, int max)
         => text.Length <= max ? text : text[..(max - 1)] + "…";
