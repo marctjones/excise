@@ -154,7 +154,10 @@ public static class RedactionMarkDetector
                     // finding the MARK is all that is missing.
                     if (op.Operands.Count == 0) break;
                     var xname = op.GetName(0);
-                    if (page.GetXObject(xname) is not PdfStream nested) break;
+                    // §8.10.1: resolve against the CURRENT form's /Resources
+                    // first, then the page's. `form` is null at page level
+                    // (#1666).
+                    if (page.GetXObject(xname, form) is not PdfStream nested) break;
                     if (nested.GetNameOrNull("Subtype") != "Form") break;
                     if (op.GraphicsTransform is not { } ctm) break;
                     CollectFormFills(page, nested, ctm, pageArea, found, depth);

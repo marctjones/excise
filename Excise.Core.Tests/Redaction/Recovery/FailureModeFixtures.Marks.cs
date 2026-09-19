@@ -75,10 +75,10 @@ internal static partial class FailureModeFixtures
     internal static byte[] BoxInFormDepth3(string secret) => BoxInNestedForms(secret, depth: 3);
 
     /// <summary>
-    /// ⚠️ EXPECTED MISS (#1666). The child form is named ONLY in its parent
-    /// form's /Resources, which is where §8.10.1 says it belongs. excise
-    /// resolves a nested `Do` against the PAGE's /XObject, so the inner form is
-    /// never walked and the box inside it is not a mark.
+    /// The child form is named ONLY in its parent form's /Resources, which is
+    /// where §8.10.1 says it belongs (#1666). Was an expected miss when written
+    /// — excise resolved a nested `Do` against the PAGE's /XObject — and is now
+    /// found, because isolating the lookup from the depth made the fix obvious.
     ///
     /// <para>Not a depth limit — MaxFormDepth is 8. The two fixtures above pass
     /// at the same nesting because they ALSO name every form on the page; the

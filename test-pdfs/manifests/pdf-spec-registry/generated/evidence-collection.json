@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1288,
-  "indexedContentSha256": "35e32c9bc2edd930cd9751e76aec0c7c2e0f1ab579d7d8f5d4608cb2755d1b02",
+  "indexedFileCount": 1290,
+  "indexedContentSha256": "d583893b9ddbc4caae4eea1e9c012ea954fbeb97f22989819ef628860aeea23b",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -10581,7 +10581,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 182
+      "candidateReferenceCount": 183
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -14218,6 +14218,22 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Marks.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "marked",
+            "property"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "marked",
+            "property"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -14430,7 +14446,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 55
+      "candidateReferenceCount": 57
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -43120,6 +43136,26 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Marks.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "highlight",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "highlight",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs",
           "kind": "test",
           "matchedTerms": [
@@ -43490,7 +43526,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 66
+      "candidateReferenceCount": 68
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -45074,6 +45110,26 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Marks.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryFixtureBuilder.cs",
           "kind": "test",
           "matchedTerms": [
@@ -45471,7 +45527,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 59
+      "candidateReferenceCount": 61
     },
     {
       "id": "pdf.20.annotation.subtype-010",
@@ -45754,6 +45810,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "circle",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -45972,7 +46038,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 37
+      "candidateReferenceCount": 38
     },
     {
       "id": "pdf.20.annotation.subtype-011",
@@ -46908,7 +46974,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 189
+      "candidateReferenceCount": 191
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -47214,6 +47280,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "polygon",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -47393,7 +47469,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 34
+      "candidateReferenceCount": 35
     },
     {
       "id": "pdf.20.annotation.subtype-013",
@@ -49834,6 +49910,26 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Marks.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -50053,7 +50149,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 49
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -51189,7 +51285,7 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs",
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Marks.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
@@ -51199,7 +51295,7 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryFixtureBuilder.cs",
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
@@ -51209,7 +51305,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 168
+      "candidateReferenceCount": 170
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -55301,7 +55397,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 191
+      "candidateReferenceCount": 193
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -55826,6 +55922,28 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Marks.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs",
           "kind": "test",
           "matchedTerms": [
@@ -56266,32 +56384,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "tests/format-compatibility-suite.json",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "redaction",
-            "acroform",
-            "action",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "tests/gui-interaction-registry.json",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "redaction",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 89
+      "candidateReferenceCount": 91
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -57860,6 +57955,28 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Marks.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/FillColourStateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58180,29 +58297,9 @@
             "action",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/RedactionMouseDragBroadeningTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "applied",
-            "redaction",
-            "action",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/SecondRedactionSaveScrubTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "applied",
-            "redaction",
-            "action",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 89
+      "candidateReferenceCount": 91
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -62699,7 +62796,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 375
+      "candidateReferenceCount": 376
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -64986,7 +65083,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 619
+      "candidateReferenceCount": 620
     },
     {
       "id": "pdf.20.extension.developer",

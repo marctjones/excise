@@ -67,15 +67,23 @@ public class FailureModeFixturesMarksTests
         => Found(FailureModeFixtures.BoxInFormDepth3(Secret)).Should().BeTrue();
 
     /// <summary>
-    /// ⚠️ EXPECTED MISS — #1666. The child is named only in its parent form's
-    /// /Resources, which is where §8.10.1 puts it. excise resolves a nested `Do`
-    /// against the PAGE, so the inner form is never walked.
+    /// The child form is named ONLY in its parent form's /Resources, which is
+    /// where §8.10.1 puts it — and the covering box inside it is found (#1666).
+    ///
+    /// <para>This was an EXPECTED MISS when written, and its own message said
+    /// to promote it rather than delete it if the gap ever closed. It closed in
+    /// the same pass: the fixture isolated page-only /XObject resolution from
+    /// nesting depth, which is what made the one-line fix obvious.</para>
+    ///
+    /// <para>⚠️ The pair is the point and both must stay. TwoDeep/ThreeDeep also
+    /// name every form on the page, so they pin DEPTH; this one names the child
+    /// only where the spec puts it, so it pins the LOOKUP. Either alone would
+    /// have left the other cause unexplained.</para>
     /// </summary>
     [Fact]
-    public void FormXObject_ChildScopedToTheForm_IsNotYetFound()
-        => Found(FailureModeFixtures.BoxInFormChildScopedToTheForm(Secret)).Should().BeFalse(
-            "#1666: nested Do resolves against page /XObject only. If this starts " +
-            "passing the gap has closed — promote it rather than deleting the test");
+    public void FormXObject_ChildScopedToTheForm_IsFound()
+        => Found(FailureModeFixtures.BoxInFormChildScopedToTheForm(Secret)).Should().BeTrue(
+            "§8.10.1 scopes a nested Do to its parent form's /Resources");
 
     // ── redact-annotation-unapplied ─────────────────────────────────────────
 

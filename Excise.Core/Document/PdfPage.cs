@@ -504,8 +504,34 @@ public partial class PdfPage
     /// <summary>
     /// Get an XObject (form or image) from the page resources.
     /// </summary>
-    public PdfObject? GetXObject(string name)
+    public PdfObject? GetXObject(string name) => GetXObject(name, null);
+
+    /// <summary>
+    /// Get an XObject, consulting <paramref name="preferredResources"/> before
+    /// the page's — §8.10.1: a form XObject carries its own <c>/Resources</c>,
+    /// and a <c>Do</c> INSIDE a form resolves against those first.
+    ///
+    /// <para>⚠️ #1666. Every caller used the page-only lookup, so a form-in-form
+    /// whose child is named only in the wrapper's resources — which is where the
+    /// spec puts it — was never resolved, and a covering box inside it was not a
+    /// mark. Measured on identical bytes at identical nesting: child in the form
+    /// only, not found; child also on the page, found. Not a depth limit.</para>
+    ///
+    /// <para>Falling back to the page is deliberate and also §8.10.1: a form may
+    /// omit <c>/Resources</c> and inherit the page's.</para>
+    /// </summary>
+    /// <param name="containingStream">
+    /// The form XObject whose content stream holds this <c>Do</c>, or null at
+    /// page level. Its <c>/Resources</c> are resolved here rather than by the
+    /// caller, so every caller gets the same §8.10.1 order.
+    /// </param>
+    public PdfObject? GetXObject(string name, PdfDictionary? containingStream)
     {
+        var formResources = containingStream?.ResolveDictionary(_document, "Resources");
+        var scoped = formResources?.ResolveDictionary(_document, "XObject");
+        if (scoped?.GetOptional(name) is { } inner)
+            return _document.Resolve(inner);
+
         var xobjects = Resources?.ResolveDictionary(_document, "XObject");
         if (xobjects == null)
             return null;
