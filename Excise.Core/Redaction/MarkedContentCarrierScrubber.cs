@@ -58,16 +58,22 @@ internal static class MarkedContentCarrierScrubber
         // content, so it still carries the glyph bounding boxes that tell us which
         // marked-content spans covered the area, and it is the list whose BDC
         // property dicts we mutate in place before the glyph pass consumes it.
-        var affectedSpans = CollectAffectedCarrierSpans(ops, area);
+        var affectedSpans = CollectAffectedCarrierSpans(ops, area, page);
         var removedText = StructureTreeRedactionScrubber.CollectRemovedText(page, area);
-        return Scrub(ops, affectedSpans, removedText, page.Document);
+        return Scrub(
+            ops,
+            affectedSpans,
+            removedText,
+            page.Document,
+            page.Document.Resolve(page.Resources?.GetOptional("Properties") ?? PdfNull.Instance) as PdfDictionary);
     }
 
     internal static bool Scrub(
         IReadOnlyList<ContentOperator> ops,
         HashSet<ContentOperator> affectedSpans,
         IReadOnlyCollection<string> removedText,
-        PdfDocument doc)
+        PdfDocument doc,
+        PdfDictionary? properties = null)
     {
         var removedAny = false;
 
@@ -76,7 +82,19 @@ internal static class MarkedContentCarrierScrubber
             if (op.Name is not ("BDC" or "DP")) continue;
 
             var props = op.Operands.OfType<PdfDictionary>().FirstOrDefault();
-            if (props == null) continue;
+            PdfName? propertyName = null;
+            if (props == null)
+            {
+                // #1599: the NAMED form. The dictionary lives in
+                // /Resources /Properties and may be shared, so it is only safe
+                // to scrub when no span that survives this redaction still
+                // points at it.
+                propertyName = NamedPropertyList(op);
+                if (propertyName == null) continue;
+                props = doc.Resolve(properties?.GetOptional(propertyName.Value) ?? PdfNull.Instance) as PdfDictionary;
+                if (props == null) continue;
+                if (!EveryReferenceIsAffected(ops, propertyName.Value, affectedSpans)) continue;
+            }
 
             var enclosesRemovedGlyphs = affectedSpans.Contains(op);
 
@@ -109,7 +127,7 @@ internal static class MarkedContentCarrierScrubber
     /// or nested glyph falls in the redaction region.
     /// </summary>
     private static HashSet<ContentOperator> CollectAffectedCarrierSpans(
-        IReadOnlyList<ContentOperator> ops, PdfRectangle area)
+        IReadOnlyList<ContentOperator> ops, PdfRectangle area, PdfPage? page = null)
     {
         var affected = new HashSet<ContentOperator>();
         var stack = new Stack<ContentOperator?>();   // the BDC op opening each span (null for BMC)
@@ -123,7 +141,7 @@ internal static class MarkedContentCarrierScrubber
                     break;
 
                 case "BDC":
-                    stack.Push(HasTextCarrier(op) ? op : null);
+                    stack.Push(HasTextCarrier(op, page) ? op : null);
                     break;
 
                 case "EMC":
@@ -142,9 +160,54 @@ internal static class MarkedContentCarrierScrubber
         return affected;
     }
 
-    private static bool HasTextCarrier(ContentOperator bdc)
+    /// <summary>
+    /// The <c>/Properties</c> key a <c>BDC</c> names, or null when it carries an
+    /// inline dictionary (or nothing). §14.6.2: the operands are
+    /// <c>tag properties BDC</c>, so the NAME is the second one — the first is
+    /// the tag (<c>/Span</c>) and must not be mistaken for it.
+    /// </summary>
+    private static PdfName? NamedPropertyList(ContentOperator bdc) =>
+        bdc.Operands.Count >= 2 ? bdc.Operands[1] as PdfName : null;
+
+    /// <summary>
+    /// True when every <c>BDC</c> in this content that names
+    /// <paramref name="key"/> encloses removed glyphs (#1599).
+    /// </summary>
+    /// <remarks>
+    /// The shared-dictionary hazard in one predicate. If a span that SURVIVES
+    /// this redaction still points at the dictionary, scrubbing it erases that
+    /// span's accessibility text too — the over-removal #1182 deferred this
+    /// over. When no such span exists, the value belongs solely to content
+    /// being removed and can go.
+    /// </remarks>
+    private static bool EveryReferenceIsAffected(
+        IReadOnlyList<ContentOperator> ops,
+        string key,
+        HashSet<ContentOperator> affectedSpans)
+    {
+        foreach (var op in ops)
+        {
+            if (op.Name is not ("BDC" or "DP")) continue;
+            if (NamedPropertyList(op)?.Value != key) continue;
+            if (!affectedSpans.Contains(op)) return false;
+        }
+        return true;
+    }
+
+    private static bool HasTextCarrier(ContentOperator bdc, PdfPage? page)
     {
         var props = bdc.Operands.OfType<PdfDictionary>().FirstOrDefault();
+        if (props == null && page != null && NamedPropertyList(bdc) is { } name)
+        {
+            // #1599: a named span carries the same text carriers as an inline
+            // one, so enclosure tracking has to see it too — otherwise the span
+            // is never marked affected and the dictionary is never reachable.
+            var properties = page.Document.Resolve(
+                page.Resources?.GetOptional("Properties") ?? PdfNull.Instance) as PdfDictionary;
+            props = page.Document.Resolve(
+                properties?.GetOptional(name.Value) ?? PdfNull.Instance) as PdfDictionary;
+        }
+
         return props != null &&
                StructureTreeRedactionScrubber.TextCarriers.Any(props.ContainsKey);
     }
