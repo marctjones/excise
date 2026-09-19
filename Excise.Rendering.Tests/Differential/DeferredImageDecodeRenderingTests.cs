@@ -68,7 +68,14 @@ public class DeferredImageDecodeRenderingTests
 
     private static SKBitmap Render(PdfDocument doc)
         => new SkiaRenderer().RenderPage(doc.GetPage(1),
-            new RenderOptions { Dpi = 72, AntiAlias = false, BackgroundColor = SKColors.White });
+            new RenderOptions { Dpi = 72, AntiAlias = false, BackgroundColor = SKColors.White,
+                // #1468: releasing is now the DEFAULT, so a render that says nothing
+                // drops the samples once the bitmap exists and IsDecoded reads false
+                // afterwards. This class is about the deferred DECODE path — that the
+                // render drives it and the pixels match a warm decode — not about the
+                // release policy, so it opts out to keep "the samples were read" observable.
+                ReleaseDecodedImageSamples = false,
+            });
 
     private static byte[] Jbig2RefusalDocument()
     {

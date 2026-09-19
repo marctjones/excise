@@ -174,6 +174,29 @@ public class DecodedImageSampleReleaseTests
         sink.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// #1468: releasing is the DEFAULT, and a render that says nothing gets it.
+    ///
+    /// <para>This exists because the old default was the defect. The option used
+    /// to default to false, so a caller had to remember to opt in; three did (the
+    /// CLI, the thumbnail cache, the Windows printer) and two did not — the GUI's
+    /// image export and the bare <c>RenderPage</c> API both silently held every
+    /// decoded image on a page until the document closed.</para>
+    ///
+    /// <para>⚠️ Nothing else pins this. The theory above passes <c>release</c>
+    /// explicitly for both values, so it is green whichever way the default
+    /// points, and every other test constructs its own options. Without this
+    /// case, flipping the default back is a silent change.</para>
+    /// </summary>
+    [Fact]
+    public void ReleasingDecodedSamples_IsTheDefault()
+    {
+        new RenderOptions().ReleaseDecodedImageSamples.Should().BeTrue(
+            "a caller that says nothing must not hold every decoded image on the "
+            + "page until the document closes; the interactive viewer is the one "
+            + "caller that opts OUT, and it does so explicitly");
+    }
+
     // ---- helpers -------------------------------------------------------
 
     private static SKBitmap Render(PdfDocument doc, bool release, ICollection<PdfStream>? sink = null)

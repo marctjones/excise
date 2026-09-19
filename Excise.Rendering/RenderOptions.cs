@@ -149,7 +149,14 @@ public record RenderOptions
     /// interactive viewer draws a page as several band renders, and releasing
     /// after each would inflate a large image once per band.</para>
     /// </remarks>
-    public bool ReleaseDecodedImageSamples { get; init; }
+    /// <para><b>Defaults to TRUE since #1468.</b> It used to default to false,
+    /// and that default was the defect: three callers remembered to opt in (the
+    /// CLI, the thumbnail cache, the Windows printer) and two did not — the GUI's
+    /// image export (<c>PageImageRenderer</c>) and the bare <c>RenderPage</c>
+    /// public API both silently held every decoded image on a page until the
+    /// document closed. A caller that wants the samples KEPT now has to say so,
+    /// which is one place to look instead of five places to remember.</para>
+    public bool ReleaseDecodedImageSamples { get; init; } = true;
 
     /// <summary>
     /// Optional sink that receives every image and mask stream whose samples

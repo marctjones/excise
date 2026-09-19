@@ -1468,6 +1468,13 @@ public partial class PdfViewerControl
                         ShowFieldAndLinkAnnotations = showFields,
                         RevealHiddenAnnotations = revealHidden,
                         HighlightFormFields = highlightFields,
+                        // #1468: the ONE caller that opts OUT, and deliberately.
+                        // The viewer draws a page as several band renders, so
+                        // releasing after each would re-inflate a large image once
+                        // per band. It pins the samples here and releases them
+                        // later off the UI thread through the sink below (#1492),
+                        // which is why it must not also release eagerly.
+                        ReleaseDecodedImageSamples = false,
                         ImageSampleStreamSink = imageSamples,
                     }, renderToken);
                 }, token);
