@@ -95388,6 +95388,20 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeCoverageGateTests.cs::FailureModeCoverageGateTests.EveryModeHasThreeFixtures_OrARegisteredExemption",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeCoverageGateTests.cs::FailureModeCoverageGateTests.EveryFixtureGroup_NamesARegisteredMode",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_OneHopBack_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95543,20 +95557,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_Alt_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_NamedPropertyList_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96736,6 +96736,20 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeCoverageGateTests.cs::FailureModeCoverageGateTests.EveryModeHasThreeFixtures_OrARegisteredExemption",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeCoverageGateTests.cs::FailureModeCoverageGateTests.EveryFixtureGroup_NamesARegisteredMode",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_OneHopBack_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96891,20 +96905,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_Alt_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_NamedPropertyList_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98098,6 +98098,20 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeCoverageGateTests.cs::FailureModeCoverageGateTests.EveryModeHasThreeFixtures_OrARegisteredExemption",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeCoverageGateTests.cs::FailureModeCoverageGateTests.EveryFixtureGroup_NamesARegisteredMode",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_OneHopBack_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98253,20 +98267,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_Alt_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_NamedPropertyList_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99486,6 +99486,20 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeCoverageGateTests.cs::FailureModeCoverageGateTests.EveryModeHasThreeFixtures_OrARegisteredExemption",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeCoverageGateTests.cs::FailureModeCoverageGateTests.EveryFixtureGroup_NamesARegisteredMode",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.PriorRevision_OneHopBack_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -99641,20 +99655,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_Alt_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_NamedPropertyList_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113784,8 +113784,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7515,
-    "testMethodsWithCapabilityCandidate": 4662,
+    "testMethods": 7517,
+    "testMethodsWithCapabilityCandidate": 4664,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
