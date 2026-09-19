@@ -26,6 +26,12 @@ public partial class MainWindowViewModel
             return;
         }
 
+        // #1623: this message IS reachable, despite the command being
+        // IsEnabled-bound to HasTextSelection. That property asks only for a
+        // sized selection area and non-empty text; TryGetContentRect asks for
+        // more — a loaded document and a page number still within its page
+        // count. Remove pages while a selection is held and the command is
+        // enabled while the guard fires. Keep the message.
         if (!TryGetCurrentTextSelectionContentRect(out var pageNumber, out var contentRect))
         {
             await _dialogService.ShowMessageAsync(

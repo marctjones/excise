@@ -85,7 +85,7 @@ try
         {
             // Load document
             Console.WriteLine($"    Loading...");
-            await LoadDocumentCommand(pdfPath);
+            await LoadDocumentHeadlessAsync(pdfPath);
 
             if (CurrentDocument == null)
             {

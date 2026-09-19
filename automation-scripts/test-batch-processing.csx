@@ -84,7 +84,7 @@ try
         {
             // Load document
             Console.WriteLine($"    Loading...");
-            await LoadDocumentCommand(inputPath);
+            await LoadDocumentHeadlessAsync(inputPath);
 
             if (CurrentDocument == null)
             {

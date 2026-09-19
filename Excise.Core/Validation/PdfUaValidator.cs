@@ -378,14 +378,88 @@ public static class PdfUaValidator
     private static IEnumerable<StructNode> AllNodes(StructTreeAnalysis tree) =>
         tree.Roots.SelectMany(r => r.DescendantsAndSelf());
 
+    // #1532: dc:title, parsed. Both serialisations XMP permits — an element
+    // (<dc:title><rdf:Alt><rdf:li>T</rdf:li></rdf:Alt></dc:title>) and the
+    // simplified-RDF attribute (dc:title="T") — with length-bounded captures
+    // and no nested quantifier, so they stay linear on hostile input. Same
+    // construction as PdfAIdentityXmp (#1524/#1526).
+    private static readonly System.Text.RegularExpressions.Regex DcTitleElement = new(
+        @"<dc:title\b[^>]{0,512}>(?<v>.{0,8192}?)</dc:title>",
+        System.Text.RegularExpressions.RegexOptions.Singleline
+        | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    private static readonly System.Text.RegularExpressions.Regex DcTitleAttribute = new(
+        @"\bdc:title\s{0,16}=\s{0,16}""(?<v>[^""]{0,8192})""",
+        System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    private static readonly System.Text.RegularExpressions.Regex RdfListItem = new(
+        @"<rdf:li\b(?<attrs>[^>]{0,512})>(?<v>.{0,8192}?)</rdf:li>",
+        System.Text.RegularExpressions.RegexOptions.Singleline
+        | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// The document's XMP <c>dc:title</c>, or null when there is no USABLE one
+    /// (#1532).
+    /// </summary>
+    /// <remarks>
+    /// <para>This used to be <c>xmp.Contains("dc:title")</c> — a substring
+    /// match standing in for a parse, the same error as #1524 in a different
+    /// schema. It passed <c>&lt;dc:title/&gt;</c>, an <c>rdf:Alt</c> holding an
+    /// empty <c>rdf:li</c>, and the literal text "dc:title" occurring anywhere
+    /// in the packet: a comment, a custom schema, another property's value.
+    /// ISO 14289-1 §7.1 requires the title to be present AND non-empty
+    /// (Matterhorn 06-003/06-004 check the title itself), so a file with an
+    /// empty title was reported conformant on this rule.</para>
+    /// <para>Presence and VALUE are deliberately the same question here: a
+    /// title that exists and is empty does not satisfy the rule, so there is
+    /// nothing for a caller to do with "present but unusable".</para>
+    /// </remarks>
+    internal static string? ReadDcTitle(string xmp)
+    {
+        if (string.IsNullOrEmpty(xmp))
+            return null;
+
+        var element = DcTitleElement.Match(xmp);
+        if (element.Success)
+        {
+            var inner = element.Groups["v"].Value;
+
+            // rdf:Alt/rdf:li, preferring x-default as XMP readers do.
+            string? fallback = null;
+            foreach (System.Text.RegularExpressions.Match li in RdfListItem.Matches(inner))
+            {
+                var value = Clean(li.Groups["v"].Value);
+                if (value == null)
+                    continue;
+                if (li.Groups["attrs"].Value.Contains("x-default", StringComparison.Ordinal))
+                    return value;
+                fallback ??= value;
+            }
+            if (fallback != null)
+                return fallback;
+
+            // No rdf:li: a bare <dc:title>Text</dc:title>.
+            return inner.Contains('<', StringComparison.Ordinal) ? null : Clean(inner);
+        }
+
+        var attribute = DcTitleAttribute.Match(xmp);
+        return attribute.Success ? Clean(attribute.Groups["v"].Value) : null;
+    }
+
+    /// <summary>Decoded and trimmed, or null when nothing usable is left.</summary>
+    private static string? Clean(string raw)
+    {
+        var decoded = System.Net.WebUtility.HtmlDecode(raw).Trim();
+        return decoded.Length == 0 ? null : decoded;
+    }
+
     private static bool XmpHasDcTitle(PdfDocument doc)
     {
         if (doc.Resolve(doc.Catalog.GetOptional("Metadata") ?? PdfNull.Instance) is not PdfStream s)
             return false;
         try
         {
-            var xmp = s.GetDecodedString(System.Text.Encoding.UTF8);
-            return xmp.Contains("dc:title", StringComparison.Ordinal);
+            return ReadDcTitle(s.GetDecodedString(System.Text.Encoding.UTF8)) != null;
         }
         catch { return false; }
     }

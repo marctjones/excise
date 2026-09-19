@@ -44,7 +44,7 @@ try
 {
     // Step 1: Load document
     Console.WriteLine($"\n[1/5] Loading document: {sourcePdf}");
-    await LoadDocumentCommand(sourcePdf);
+    await LoadDocumentHeadlessAsync(sourcePdf);
 
     if (CurrentDocument == null)
     {
@@ -93,7 +93,7 @@ try
 
     // Step 5: Verify redaction through the same extraction path used by the app.
     Console.WriteLine($"\n[5/5] Verifying redaction by reloading saved PDF");
-    await LoadDocumentCommand(outputPdf);
+    await LoadDocumentHeadlessAsync(outputPdf);
     var extracted = ExtractAllText();
     if (extracted.Contains(textToRedact, StringComparison.OrdinalIgnoreCase))
     {

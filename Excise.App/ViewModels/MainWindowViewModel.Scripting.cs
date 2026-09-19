@@ -50,10 +50,41 @@ public partial class MainWindowViewModel
     // Note: These are NOT ReactiveCommands - they're simple Task-returning methods for scripting
 
     /// <summary>
-    /// Load a document (for Roslyn scripts).
-    /// Returns a Task that completes when the document is loaded.
+    /// Parse a document for a Roslyn script, WITHOUT driving the viewer
+    /// (#1540).
     /// </summary>
-    public Task LoadDocumentCommand(string filePath) => LoadDocumentViaScriptAsync(filePath);
+    /// <remarks>
+    /// <para>⚠️ This is not what opening a document in the GUI does. It calls
+    /// the document service directly — no thumbnails, no rendering, no layout —
+    /// deliberately, so a script does not block on operations that need a
+    /// dispatcher. The GUI open is
+    /// <see cref="LoadDocumentAsync"/>.</para>
+    /// <para>The distinction is not cosmetic: #1497's performance runner used
+    /// the old name to open documents and produced a complete, plausible,
+    /// entirely meaningless measurement — 9 steps, 0 failures, every viewer
+    /// counter 0, "scrolled" 17 pages in 245 ms because nothing was laid out.
+    /// It read as a clean answer to #1461. Switching this one call to
+    /// <c>LoadDocumentAsync</c> moved the peak from 391 MB to 1555 MB, inside
+    /// #1461's recorded band. The failure is silent and looks like good
+    /// news.</para>
+    /// </remarks>
+    public Task LoadDocumentHeadlessAsync(string filePath) => LoadDocumentViaScriptAsync(filePath);
+
+    /// <summary>
+    /// Former name of <see cref="LoadDocumentHeadlessAsync"/>, kept so existing
+    /// <c>.csx</c> scripts keep running (#1540).
+    /// </summary>
+    /// <remarks>
+    /// The name was the defect: it is public, awaitable, takes a path, needs no
+    /// dialog, sits beside <see cref="RedactTextCommand"/> and
+    /// <see cref="SaveDocumentCommand"/> which DO perform the user-facing
+    /// operation — and it is not a <c>ReactiveCommand</c> at all, unlike every
+    /// real command on this view model. Everything about it invited use as "the
+    /// way to open a document".
+    /// </remarks>
+    [System.Obsolete("Renamed to LoadDocumentHeadlessAsync: this parses the file without driving the viewer. " +
+                     "For a real GUI open — thumbnails, rendering, layout — use LoadDocumentAsync (#1540).")]
+    public Task LoadDocumentCommand(string filePath) => LoadDocumentHeadlessAsync(filePath);
 
     /// <summary>
     /// Redact all occurrences of text (for Roslyn scripts).

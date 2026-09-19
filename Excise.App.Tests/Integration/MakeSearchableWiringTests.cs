@@ -117,13 +117,13 @@ public class MakeSearchableWiringTests : IDisposable
                 "fixture sanity: a scan has no real text layer before conversion");
 
         var (vm, _) = CreateViewModel();
-        // LoadDocumentCommand is the lightweight scripting load path (no
+        // LoadDocumentHeadlessAsync is the lightweight scripting load path (no
         // thumbnails/dispatcher-bound rendering) — it deliberately does not
         // populate PdfCoreDocument, only the PdfDocumentService's document,
         // which is what RunMakeSearchableAsync mutates and
         // OnMakeSearchableCompletedAsync's RefreshAfterDocumentMutationAsync
         // call is what populates PdfCoreDocument for the first time below.
-        await vm.LoadDocumentCommand(path);
+        await vm.LoadDocumentHeadlessAsync(path);
 
         var reports = new List<(int Done, int Total)>();
         var progress = new SyncProgress<(int Done, int Total)>(reports.Add);
@@ -163,7 +163,7 @@ public class MakeSearchableWiringTests : IDisposable
         }
 
         var (vm, _) = CreateViewModel();
-        await vm.LoadDocumentCommand(path);
+        await vm.LoadDocumentHeadlessAsync(path);
 
         var progress = new Progress<(int Done, int Total)>();
         var result = await vm.RunMakeSearchableAsync("eng", force: false, progress, CancellationToken.None);

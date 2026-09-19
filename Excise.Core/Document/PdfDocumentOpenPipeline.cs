@@ -318,7 +318,41 @@ internal static class PdfDocumentOpenPipeline
         }
 
         return new PdfDocumentOpenResult(
-            objectStore, trailer, catalog, info, version, permissions);
+            objectStore, trailer, catalog, info, EffectiveVersion(version, catalog), permissions);
+    }
+
+    /// <summary>
+    /// The document version §7.5.5 says applies: the catalog's <c>/Version</c>
+    /// when it is present and LATER than the header, otherwise the header
+    /// (#1533).
+    /// </summary>
+    /// <remarks>
+    /// <para>The catalog entry exists precisely so an incremental update can
+    /// raise a file's version without rewriting byte 0. Reading the header
+    /// alone made <c>PdfDocument.Version</c> understate such a file, and
+    /// exactly one behaviour gate consumes it —
+    /// <c>PdfDocumentWriter.ShouldUseCompressedObjects</c> via
+    /// <c>VersionAtLeast(…, 1, 5)</c> — so a 1.7 document with a 1.4 header was
+    /// denied object streams it was entitled to use.</para>
+    /// <para>⚠️ Only an override that RAISES the version is honoured. §7.5.5
+    /// gives the catalog precedence outright, but a catalog claiming a version
+    /// LOWER than the header would let a malformed file talk excise out of a
+    /// capability the header already promised, and every consumer here is a
+    /// capability gate. Taking the maximum keeps the spec's purpose — letting
+    /// an update raise the version — without that.</para>
+    /// </remarks>
+    private static string EffectiveVersion(string headerVersion, PdfDictionary catalog)
+    {
+        if (catalog.GetOptional("Version") is not PdfName declared)
+            return headerVersion;
+
+        var catalogVersion = declared.Value;
+        if (!IsValidPdfVersion(catalogVersion))
+            return headerVersion;
+
+        return string.CompareOrdinal(catalogVersion, headerVersion) > 0
+            ? catalogVersion
+            : headerVersion;
     }
 
     /// <summary>

@@ -36,7 +36,7 @@ try
 {
     // Execute: Load document
     Console.WriteLine($"Loading: {testPdf}");
-    await LoadDocumentCommand(testPdf);
+    await LoadDocumentHeadlessAsync(testPdf);
 
     // Verify: CurrentDocument is set
     if (CurrentDocument == null)

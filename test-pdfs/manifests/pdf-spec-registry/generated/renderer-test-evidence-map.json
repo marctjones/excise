@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "cc4d6ccced1da4f13ec8f06416a1fefb544ca39e9552881b302e859d59d856f1",
+  "sourceFingerprint": "009b2d392f8134f1d4298cb5640b764d4929e4c415b11d191403887e4cb838d6",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -8672,7 +8672,7 @@
       "path": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs",
       "class": "ExtractionParityTests",
       "method": "PageTextOrderStrategy_KnownFormAndTablePages_RemainRawStream",
-      "line": 62,
+      "line": 63,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -8713,7 +8713,7 @@
       "path": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs",
       "class": "ExtractionParityTests",
       "method": "GenerateExtractionParityReport",
-      "line": 109,
+      "line": 135,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -8752,7 +8752,7 @@
       "path": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs",
       "class": "ExtractionParityTests",
       "method": "AdversarialCorpus_ExciseDoesNotCatastrophicallyUnderExtractRelativeToMutool",
-      "line": 251,
+      "line": 277,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -16629,11 +16629,50 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Differential/ReferenceProcessResourcesTests.cs::ReferenceProcessResourcesTests.ShortLivedProcess_StillReportsBothCounters",
+      "path": "Excise.Rendering.Tests/Differential/ReferenceProcessResourcesTests.cs",
+      "class": "ReferenceProcessResourcesTests",
+      "method": "ShortLivedProcess_StillReportsBothCounters",
+      "line": 55,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Differential/ReferenceProcessResourcesTests.cs::ReferenceProcessResourcesTests.WaitForExitAndCapture_ShortTimeout_ReturnsFalseWithSampledResources",
       "path": "Excise.Rendering.Tests/Differential/ReferenceProcessResourcesTests.cs",
       "class": "ReferenceProcessResourcesTests",
       "method": "WaitForExitAndCapture_ShortTimeout_ReturnsFalseWithSampledResources",
-      "line": 46,
+      "line": 84,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -16672,7 +16711,7 @@
       "path": "Excise.Rendering.Tests/Differential/ReferenceProcessResourcesTests.cs",
       "class": "ReferenceProcessResourcesTests",
       "method": "Capture_SameProcessHandle_ReflectsGrowthSinceThePreviousCall",
-      "line": 68,
+      "line": 106,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -43645,11 +43684,11 @@
     }
   ],
   "summary": {
-    "testMethods": 1209,
+    "testMethods": 1210,
     "facets": {
       "content-streams": 336,
       "content-strings-and-text": 7,
-      "differential-rendering": 655,
+      "differential-rendering": 656,
       "fonts": 203,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 315,
@@ -43662,7 +43701,7 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 7,
       "pdf.17.content.streams:parse": 343,
-      "pdf.17.content.streams:render": 800,
+      "pdf.17.content.streams:render": 801,
       "pdf.17.content.text-state:extract": 7,
       "pdf.17.content.text-state:parse": 7,
       "pdf.17.content.text-state:render": 7,
@@ -43670,10 +43709,10 @@
       "pdf.17.graphics.color:render": 53,
       "pdf.17.graphics.fonts:extract": 203,
       "pdf.17.graphics.fonts:parse": 203,
-      "pdf.17.graphics.fonts:render": 797,
+      "pdf.17.graphics.fonts:render": 798,
       "pdf.17.graphics.images:extract": 198,
       "pdf.17.graphics.images:parse": 198,
-      "pdf.17.graphics.images:render": 784,
+      "pdf.17.graphics.images:render": 785,
       "pdf.17.graphics.paths-painting:parse": 315,
       "pdf.17.graphics.paths-painting:render": 315,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -43681,7 +43720,7 @@
       "pdf.17.graphics.state:parse": 315,
       "pdf.17.graphics.state:render": 315,
       "pdf.17.transparency.model:parse": 80,
-      "pdf.17.transparency.model:render": 689
+      "pdf.17.transparency.model:render": 690
     },
     "unclassified": 36,
     "allTestsMapped": true

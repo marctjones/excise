@@ -49,7 +49,7 @@ public class RevealHiddenTextTests : IDisposable
         var vm = MainWindowViewModelTestFactory.Create();
 
         // Act: simulate the user's workflow — load the PDF, flip the toggle.
-        await vm.LoadDocumentCommand(path);
+        await vm.LoadDocumentHeadlessAsync(path);
         vm.CurrentPageIndex = 0;
         vm.RevealHiddenText.Should().BeFalse("default off");
         vm.HiddenTextHighlights.Should().BeEmpty("nothing populated until revealed");
@@ -87,7 +87,7 @@ public class RevealHiddenTextTests : IDisposable
         File.WriteAllBytes(path, BuildRasterWithOverlayPdf());
 
         var vm = MainWindowViewModelTestFactory.Create();
-        await vm.LoadDocumentCommand(path);
+        await vm.LoadDocumentHeadlessAsync(path);
         vm.CurrentPageIndex = 0;
 
         // Structural-only — should find nothing because the text only

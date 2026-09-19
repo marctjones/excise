@@ -70,7 +70,7 @@ try
 
         // Load fresh document for each test
         Console.WriteLine($"  Loading document...");
-        await LoadDocumentCommand(sourcePdf);
+        await LoadDocumentHeadlessAsync(sourcePdf);
 
         if (CurrentDocument == null)
         {
@@ -137,7 +137,7 @@ try
 
         // Verify word is GONE
         Console.WriteLine($"  Verifying redaction (reloading and extracting text)...");
-        await LoadDocumentCommand(outputPath);
+        await LoadDocumentHeadlessAsync(outputPath);
         var textAfter = ExtractAllText();
         Console.WriteLine($"  Extracted {textAfter.Length} characters from redacted PDF");
 

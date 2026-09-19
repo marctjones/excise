@@ -40,8 +40,13 @@ public partial class MainWindowViewModel
     {
         if (!_documentService.IsDocumentLoaded)
         {
+            // #1623: no dialog. Document ▸ Security… is IsEnabled-bound to
+            // IsDocumentLoaded, the SAME condition as this guard, so the
+            // message could never reach a user — the disabled menu item and its
+            // tooltip are the whole UX. The guard stays: this method is also
+            // reachable from scripting, where an early return is the right
+            // answer and a modal dialog would not be.
             _logger.LogWarning("Document Security requested with no document loaded");
-            await _dialogService.ShowMessageAsync("Document Security", "Open a PDF before setting a password.");
             return;
         }
 
