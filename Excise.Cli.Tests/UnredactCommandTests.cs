@@ -211,7 +211,12 @@ public class UnredactCommandTests
                     "widthResidueBitsTotal", "recovered", "corroboration");
             parsed.RootElement.GetProperty("certain")[0].EnumerateObject()
                 .Select(property => property.Name)
-                .Should().Equal("page", "text", "hiddenBy", "x", "y");
+                // #1669 added `class`: RedactionResidue | ContentCarrier |
+                // DocumentFurniture. Additive, so an existing JSON consumer
+                // keeps working, and a machine reader needs the ranking as
+                // much as a human does — 28 of 57 clean court filings report
+                // SOMETHING, and three quarters of it was metadata.
+                .Should().Equal("page", "text", "hiddenBy", "x", "y", "class");
         }
 
         var residueReport = new UnredactReport(

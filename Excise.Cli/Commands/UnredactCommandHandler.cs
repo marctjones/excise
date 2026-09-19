@@ -116,7 +116,11 @@ internal static class UnredactCommandHandler
             findings.Add(new UnredactCertainFinding(
                 hit.PageNumber, hit.Text, hit.HiddenBy,
                 Math.Round(hit.BoundingBox.Left, 1),
-                Math.Round(hit.BoundingBox.Bottom, 1)));
+                Math.Round(hit.BoundingBox.Bottom, 1),
+                // This path predates the recovery model and has no mark link,
+                // so the classifier is told so explicitly rather than guessing.
+                Class: RecoveryFindingClassifier.Classify(
+                    RecoveryScanner.Channels.HiddenText, hit.HiddenBy, isLinkedToAMark: false)));
         }
 
         // #1592: the prior-revision channel needs the file's literal bytes (it
@@ -146,7 +150,9 @@ internal static class UnredactCommandHandler
             }
             var finding = new UnredactCertainFinding(
                 carrier.PageNumber, carrier.Text, carrier.Carrier, 0, 0,
-                Object: obj, Location: carrier.Location, Proximity: proximity)
+                Object: obj, Location: carrier.Location, Proximity: proximity,
+                Class: RecoveryFindingClassifier.Classify(
+                    RecoveryScanner.Channels.Carrier, carrier.Carrier, isLinkedToAMark: false))
             {
                 FromCarrier = true,
             };

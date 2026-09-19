@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
+using Excise.Core.Redaction.Recovery;
 
 namespace Excise.Cli.Commands;
 
@@ -23,6 +28,48 @@ internal static class UnredactCommandOutput
             output.WriteLine(JsonSerializer.Serialize(report, CliJsonContext.Default.UnredactReport));
         else
             WriteHuman(report, output);
+    }
+
+    /// <summary>
+    /// The heading for one class. The wording is the point: a reader has to be
+    /// able to tell why two sections exist without consulting the docs.
+    /// </summary>
+    private static string Heading(RecoveryFindingClass c, int n) => c switch
+    {
+        // ⚠️ Says "not visible", NOT "where a redaction was applied". The
+        // class covers text under a mark AND invisible text with no mark, and
+        // the second has no redaction to have been applied — the earlier
+        // wording asserted something untrue of half the section.
+        RecoveryFindingClass.RedactionResidue =>
+            $"✗ HIDDEN — text present in the file but not visible on the page ({n}):",
+        RecoveryFindingClass.ContentCarrier =>
+            $"✗ RESTATED — a carrier still holds page content ({n}):",
+        _ =>
+            $"· metadata and navigation — present in most documents, redacted or not ({n}):",
+    };
+
+    /// <summary>
+    /// A one-line caveat when one carrier dominates a section — ranking
+    /// without hiding, which is the whole design of #1669.
+    ///
+    /// <para>A scanned filing produced <b>191</b> render-mode-3 findings and
+    /// another produced 13,686. Every one is real: the text IS invisible and
+    /// extractable. But an OCR layer is how scanning works, and a reader who
+    /// is not told that reads 191 lines as 191 redaction failures. Saying so
+    /// costs one line and is the difference between a report and a dump.</para>
+    ///
+    /// <para>⚠️ Nothing is removed. The count stays in the heading and every
+    /// finding is still printed — a caveat that suppressed its subject would
+    /// be the silent-leak trade this design exists to refuse.</para>
+    /// </summary>
+    private static IEnumerable<string> Caveats(IReadOnlyList<UnredactCertainFinding> group)
+    {
+        var ocr = group.Count(f => f.HiddenBy.Contains("render mode 3", StringComparison.Ordinal));
+        if (ocr > 0 && ocr >= group.Count / 2)
+            yield return
+                $"  ⓘ {ocr} of these are an invisible text layer (render mode 3). That is how a " +
+                "SCANNED page carries its text, and on a document nobody redacted it is normal — " +
+                "but it is also exactly how text is hidden deliberately, so it is reported.";
     }
 
     private static string CarrierLine(UnredactCertainFinding finding) =>
@@ -85,17 +132,33 @@ internal static class UnredactCommandOutput
 
         if (report.Certain.Count > 0)
         {
-            output.WriteLine($"✗ CERTAIN — text is actually present ({report.Certain.Count}):");
-            foreach (var finding in report.Certain)
+            // #1669 — GROUPED BY WHAT IT INDICATES, loudest first.
+            //
+            // Ungrouped, this list buried its own answer. Measured on 57 clean
+            // court filings: 28 reported something, and three quarters of that
+            // was link /URI targets and XMP metadata — one document produced
+            // 13,686 findings from its OCR layer. A reader cannot act on a list
+            // where "the name under the black box" and "dc:creator" are the
+            // same shape of line.
+            //
+            // ⚠️ Furniture is still PRINTED, below the line and labelled. #608
+            // is a redacted term leaking into XMP; suppressing it would trade a
+            // flood for a silent leak, which is the worse of the two.
+            foreach (var group in report.Certain.GroupBy(f => f.Class).OrderBy(g => (int)g.Key))
             {
-                if (finding.FromCarrier)
+                output.WriteLine(Heading(group.Key, group.Count()));
+                foreach (var note in Caveats(group.ToList())) output.WriteLine(note);
+                foreach (var finding in group)
                 {
-                    output.WriteLine(CarrierLine(finding));
-                    continue;
+                    if (finding.FromCarrier)
+                    {
+                        output.WriteLine(CarrierLine(finding));
+                        continue;
+                    }
+                    output.WriteLine(
+                        $"  page {finding.Page} ({finding.X},{finding.Y}) " +
+                        $"[{finding.HiddenBy}]: \"{finding.Text}\"");
                 }
-                output.WriteLine(
-                    $"  page {finding.Page} ({finding.X},{finding.Y}) " +
-                    $"[{finding.HiddenBy}]: \"{finding.Text}\"");
             }
         }
 

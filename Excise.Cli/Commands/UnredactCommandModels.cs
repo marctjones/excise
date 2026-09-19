@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 
+using Excise.Core.Redaction.Recovery;
+
 namespace Excise.Cli.Commands;
 
 /// <summary>
@@ -34,7 +36,15 @@ internal sealed record UnredactCertainFinding(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     string? Location = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? Proximity = null)
+    string? Proximity = null,
+    /// <summary>
+    /// #1669 — what this finding INDICATES. A link's /URI and text under a
+    /// black box are both "text a reader cannot see"; only one of them means a
+    /// redaction failed, and a report that lists them at the same volume
+    /// buries the second in the first. Measured: 28 of 57 clean court filings
+    /// reported something, and metadata plus link targets were 3/4 of it.
+    /// </summary>
+    RecoveryFindingClass Class = RecoveryFindingClass.RedactionResidue)
 {
     /// <summary>
     /// A document carrier finding: it has no page position, so the human
