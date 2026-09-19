@@ -362,6 +362,11 @@ public partial class MainWindowViewModel
         if (!_documentService.IsDocumentLoaded)
             return;
 
+        // #1623: this message IS reachable. The button and menu item are
+        // IsEnabled-bound to IsDocumentLoaded, NOT to the document having form
+        // fields, so any PDF without an /AcroForm reaches this guard with the
+        // command enabled. Keep the message — it is the only thing that tells
+        // the user why nothing happened.
         if (_documentService.GetCurrentDocument()?.GetAcroForm() == null)
         {
             await _dialogService.ShowMessageAsync("No Form Fields", "This PDF does not contain interactive form fields to flatten.");
