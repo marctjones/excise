@@ -40,6 +40,32 @@ set -euo pipefail
 # for the hook sub-case only; they have to be unset for all of them.
 unset GATE_ASYMMETRY_BASE GATE_ASYMMETRY_HEAD GATE_ASYMMETRY_ALLOW_NO_BASE
 
+# ⚠️ #1673 — THE SAME REASONING, FOR GIT'S OWN VARIABLES, AND THIS ONE WRITES
+# TO DISK. The block above unsets the variables THIS script's subject reads.
+# Git exports its own to every hook, and `GIT_DIR` BEATS THE WORKING DIRECTORY:
+# under the pre-push hook, `cd "$REPO"; git init .` re-initialised the REAL
+# repository (`warning: re-init: ignored --initial-branch=develop`), wrote
+# `core.bare = true` — set GIT_DIR with no GIT_WORK_TREE and git treats it as
+# bare — and then put `user.name = Selftest` and `selftest@example.com` into
+# the SHARED config. Every checkout on the machine failed with `fatal: this
+# operation must be run in a work tree`, and any commit made meanwhile would
+# have been authored by a fake identity. Six worktrees and two sessions, from
+# a selftest.
+#
+# The lesson is the scope of the previous fix, not the variable. #1600 unset
+# one family for one sub-case; 1a7a50e1 widened it to all cases THE SAME DAY —
+# and neither asked what ELSE the invoking environment injects. That is #1391's
+# shape twice over: a defect fixed at the call site that bit, recorded as a
+# fixed class, siblings never swept.
+#
+# So this sweeps the WHOLE GIT_* family rather than the two that happened to
+# bite. A synthetic repo must start from a clean git environment; there is no
+# GIT_* variable an outer process could set that this script wants to inherit.
+for _inherited in $(env | sed -n 's/^\(GIT_[A-Za-z0-9_]*\)=.*/\1/p'); do
+    unset "$_inherited"
+done
+unset _inherited
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
@@ -69,10 +95,14 @@ cp "$ROOT/scripts/check-version-consistency.sh" "$REPO/scripts/"
 chmod +x "$REPO/scripts/"*.sh
 
 cd "$REPO"
-git init -q -b develop .
-git config user.email selftest@example.com
-git config user.name Selftest
-git config commit.gpgsign false
+# Explicit paths, belt and braces to the unset above (#1673): a bare `.` or an
+# implicit cwd is what let an inherited GIT_DIR redirect these at the real
+# repository. With `-C "$REPO"` a leaked variable can no longer silently
+# retarget them.
+git init -q -b develop "$REPO"
+git -C "$REPO" config user.email selftest@example.com
+git -C "$REPO" config user.name Selftest
+git -C "$REPO" config commit.gpgsign false
 
 # Every pathspec check-gate-asymmetry.sh declares must match a TRACKED file or
 # its own preflight fails the run (a pathspec matching nothing is silent, #941).
@@ -318,5 +348,40 @@ awk '/if \[ ! -x "\$hook" \]; then/,/^fi$/' "$ROOT/scripts/test-tier.sh" | grep 
 grep -q 'git rev-parse --git-path hooks/pre-push' "$ROOT/scripts/test-tier.sh" \
     || fail "the hook path must come from git, not \$ROOT/.git (a worktree's .git is a FILE)"
 ok
+
+# ───────── #1673: this script must not write to an INHERITED GIT_DIR ────────
+#
+# ⚠️ THE OBVIOUS VERSION OF THIS CHECK CANNOT FAIL. Asserting "the selftest
+# leaves the real config alone" passes trivially when run the way anyone runs
+# it — from a shell, with no GIT_DIR set. It was the pre-push HOOK that made it
+# destructive, because git exports GIT_DIR only to hooks. So the check has to
+# RECREATE that environment or it is theatre: point GIT_DIR at a throwaway
+# repository, re-invoke this script, and prove that repository is untouched.
+#
+# Verified by planting: with the GIT_* sweep at the top removed, this is the
+# one check that reddens, and it reddens for the real reason — the inner run
+# re-inits the victim and writes Selftest into its config.
+if [ -z "${GATE_ASYMMETRY_INNER-}" ]; then
+    victim="$WORK/victim"
+    git init -q -b main "$victim"
+    before="$(shasum "$victim/.git/config" | cut -d' ' -f1)"
+
+    # Failure is fine and deliberately ignored — this case is about the SIDE
+    # EFFECT on $victim, not about the inner run's verdict.
+    GATE_ASYMMETRY_INNER=1 GIT_DIR="$victim/.git" \
+        bash "$ROOT/scripts/test-check-gate-asymmetry.sh" >/dev/null 2>&1 || true
+
+    after="$(shasum "$victim/.git/config" | cut -d' ' -f1)"
+    [ "$before" = "$after" ] \
+        || fail "#1673: run with GIT_DIR inherited, this script rewrote that repository's config
+    (that is how core.bare=true and user.name=Selftest reached the shared
+     config from the pre-push hook, breaking six worktrees at once)"
+
+    # The identity is the dangerous half, so name it rather than trusting the
+    # hash to have covered it.
+    ! git -C "$victim" config --local --get user.name >/dev/null 2>&1 \
+        || fail "#1673: a fake commit identity was written into the inherited repository"
+    ok
+fi
 
 echo "test-check-gate-asymmetry: OK ($CHECKS checks)"
