@@ -1,0 +1,82 @@
+{
+  "title": "Unredaction tools and the failure modes each one is BUILT to find",
+  "rationale": [
+    "A confusion matrix that infers a tool's scope from its results cannot tell a",
+    "REGRESSION from a mode the tool was never meant to handle. x-ray scoring zero",
+    "on 19 of 20 modes is not 19 false negatives — it is 19 modes outside its stated",
+    "scope, and reporting them as misses flatters excise by construction.",
+    "",
+    "So scope is DECLARED here and the matrix reads it. A tool that scores zero on a",
+    "mode INSIDE its scope is a real false negative and blocks. A tool that scores a",
+    "hit OUTSIDE its declared scope is reported as `beyond-declared-scope` rather",
+    "than silently folded in: it means either the tool does more than its",
+    "documentation claims, or this file is stale. Both are worth a human look, and",
+    "neither should be averaged away."
+  ],
+  "tools": [
+    {
+      "id": "excise",
+      "kind": "recoverer",
+      "scope": "*",
+      "scopeNote": "excise claims every registered mode. A zero anywhere is a finding.",
+      "recoveryRungs": ["Recovered", "PartiallyRecovered", "CandidatesOnly", "NotRecovered"],
+      "recoveryNote": [
+        "The full ladder. `Recovered` is a READING of bytes with zero residual bits;",
+        "`CandidatesOnly` is an INFERENCE carrying a candidate set and a bits figure.",
+        "Collapsing those two into 'found it' is what the matrix exists to stop."
+      ]
+    },
+    {
+      "id": "xray",
+      "kind": "detector",
+      "version": "0.3.6",
+      "source": "https://github.com/freelawproject/x-ray (BSD-2-Clause)",
+      "scope": ["box-over-intact-text"],
+      "scopeNote": [
+        "x-ray's own README: it supports 'the most basic (and most common) type of",
+        "bad redaction, rectangles on top of text'. Read from the source (pdf_utils.py):",
+        "get_good_rectangles requires fill_opacity == 1, a fill, >4x4pt, and not in the",
+        "top 43pt; get_intersecting_chars requires a char >=80% occluded by a rect drawn",
+        "AFTER it (or of the same colour); filter_redactions_by_text then drops repeated",
+        "characters, blanks, non-alphanumerics and an OK-word list (redacted/confidential",
+        "/privileged).",
+        "",
+        "⚠️ box-inside-form-xobject and box-drawn-by-annotation are DELIBERATELY not",
+        "listed even though PyMuPDF might reach them: nothing in x-ray's documentation",
+        "claims them. If the matrix reports beyond-declared-scope hits there, measure it",
+        "and widen this list on the evidence — do not widen it on a guess."
+      ],
+      "recoveryRungs": ["Recovered", "NotRecovered"],
+      "recoveryNote": [
+        "x-ray READS characters PyMuPDF already extracted; it never infers. So it has",
+        "no partial and no candidate rung, and the matrix must not score it as though",
+        "a missing candidate set were a weakness — on its own mode it is exact or",
+        "nothing, which is a different shape of answer, not a worse one."
+      ]
+    },
+    {
+      "id": "edact-ray",
+      "kind": "recoverer",
+      "source": "https://github.com/maxwell-bland/deredaction (NO LICENSE)",
+      "scope": [],
+      "status": "not-installable",
+      "scopeNote": [
+        "Bland et al., PETS 2023 — the glyph-position side channel, which is the",
+        "partial-glyph-removal-kerning mode and the one x-ray cannot see at all.",
+        "",
+        "⚠️ It cannot be graded, and the reason is not that we have not got round to it.",
+        "The author deliberately withheld the recovery code: 'Remediation efforts and",
+        "questionable legality prevent me from releasing the code publicly to",
+        "automatically break redactions', and of the excising directory specifically,",
+        "'I had to delete about 80%-90% of the code in this directory'. What ships is a",
+        "glyph-positioning library (pts) and a redaction LOCATOR. The repository also",
+        "carries no licence at all.",
+        "",
+        "Kept as a row so the absence is recorded rather than rediscovered. If it is",
+        "ever wired in, it is as a geometry oracle for the residue channel — a second",
+        "opinion on glyph positions, independent of mutool — not as a recoverer."
+      ],
+      "recoveryRungs": []
+    }
+  ]
+}
