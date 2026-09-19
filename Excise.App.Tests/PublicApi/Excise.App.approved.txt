@@ -985,7 +985,11 @@ namespace Excise.App.ViewModels
         public void JumpToOutline(Excise.App.Models.OutlineNode? node) { }
         public void JumpToSearchMatch(Excise.App.Models.SearchMatch match) { }
         public System.Threading.Tasks.Task LoadDocumentAsync(string filePath) { }
+        [System.Obsolete("Renamed to LoadDocumentHeadlessAsync: this parses the file without driving the vi" +
+            "ewer. For a real GUI open — thumbnails, rendering, layout — use LoadDocumentAsyn" +
+            "c (#1540).")]
         public System.Threading.Tasks.Task LoadDocumentCommand(string filePath) { }
+        public System.Threading.Tasks.Task LoadDocumentHeadlessAsync(string filePath) { }
         public void MarkPageForOperation(int pageIndex, bool isSelected) { }
         public System.Threading.Tasks.Task MoveCurrentPageAsync(int toIndex) { }
         public System.Threading.Tasks.Task MovePageAsync(int fromIndex, int toIndex) { }

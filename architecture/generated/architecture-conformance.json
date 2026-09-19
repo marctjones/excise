@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "7947f4faebee7e46feb1261f4a7d8fadc7a74f85",
+  "sourceRevision": "dd513bc0050f9d73146fa78962b0f603fec7838f",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7590,
+    "retainedSymbols": 7793,
     "observedComponentDependencies": 70,
     "declaredDependencies": 68,
     "acceptedExceptions": 1,
@@ -38,7 +38,7 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 692,
+      "references": 691,
       "typeDependencyCount": 78,
       "classification": "declared",
       "evidence": [
@@ -150,8 +150,8 @@
     {
       "source": "cli",
       "target": "core-document",
-      "references": 159,
-      "typeDependencyCount": 44,
+      "references": 170,
+      "typeDependencyCount": 45,
       "classification": "declared",
       "evidence": [
         {
@@ -192,14 +192,14 @@
     {
       "source": "cli",
       "target": "core-redaction",
-      "references": 111,
-      "typeDependencyCount": 29,
+      "references": 234,
+      "typeDependencyCount": 51,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Commands.RedactCommand",
-          "target": "Excise.Core.Operations.RedactionCarriers",
-          "references": 14
+          "source": "Excise.Cli.Commands.UnredactCommandHandler",
+          "target": "Excise.Core.Redaction.Recovery.RecoveryScanner.Channels",
+          "references": 19
         }
       ]
     },
@@ -262,14 +262,14 @@
     {
       "source": "cli",
       "target": "rendering",
-      "references": 23,
+      "references": 26,
       "typeDependencyCount": 7,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Cli.Commands.UnredactCommandHandler",
-          "target": "Excise.Rendering.Differential.ResidueRecoveryEngine.Recovery",
-          "references": 6
+          "target": "Excise.Rendering.Differential.ResidueRecoveryEngine.Gap",
+          "references": 8
         }
       ]
     },
@@ -290,8 +290,8 @@
     {
       "source": "core",
       "target": "core-fonts",
-      "references": 39,
-      "typeDependencyCount": 4,
+      "references": 41,
+      "typeDependencyCount": 5,
       "classification": "declared",
       "evidence": [
         {
@@ -430,8 +430,8 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1413,
-      "typeDependencyCount": 213,
+      "references": 1425,
+      "typeDependencyCount": 218,
       "classification": "declared",
       "evidence": [
         {
@@ -528,8 +528,8 @@
     {
       "source": "core-redaction",
       "target": "core-content",
-      "references": 217,
-      "typeDependencyCount": 34,
+      "references": 279,
+      "typeDependencyCount": 46,
       "classification": "declared",
       "evidence": [
         {
@@ -542,28 +542,28 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 914,
-      "typeDependencyCount": 101,
+      "references": 1181,
+      "typeDependencyCount": 144,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.CarrierTextRecovery",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 116
+          "references": 117
         }
       ]
     },
     {
       "source": "core-redaction",
       "target": "core-fonts",
-      "references": 5,
-      "typeDependencyCount": 2,
+      "references": 11,
+      "typeDependencyCount": 4,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Text.Segmentation.HiddenTextDetector",
-          "target": "Excise.Core.Fonts.TrueTypeFontFile",
-          "references": 3
+          "source": "Excise.Core.Redaction.Recovery.RedactionFitAnalyzer",
+          "target": "Excise.Core.Fonts.StandardFontMetrics",
+          "references": 4
         }
       ]
     },
@@ -584,22 +584,22 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 796,
-      "typeDependencyCount": 120,
+      "references": 882,
+      "typeDependencyCount": 148,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.CarrierTextRecovery",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 73
+          "references": 76
         }
       ]
     },
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 119,
-      "typeDependencyCount": 18,
+      "references": 143,
+      "typeDependencyCount": 21,
       "classification": "declared",
       "evidence": [
         {
@@ -682,7 +682,7 @@
     {
       "source": "core-text",
       "target": "core-content",
-      "references": 36,
+      "references": 37,
       "typeDependencyCount": 5,
       "classification": "declared",
       "evidence": [

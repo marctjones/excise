@@ -1302,6 +1302,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/CatalogVersionOverrideTests.cs::CatalogVersionOverrideTests.TheVersionIsTheLaterOfHeaderAndCatalog",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataAndFieldOptionsTests.cs::MetadataAndFieldOptionsTests.Language_SetNull_RemovesCatalogLang",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -1393,15 +1400,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -2731,6 +2729,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/CatalogVersionOverrideTests.cs::CatalogVersionOverrideTests.TheVersionIsTheLaterOfHeaderAndCatalog",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataAndFieldOptionsTests.cs::MetadataAndFieldOptionsTests.Language_SetNull_RemovesCatalogLang",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -2822,15 +2827,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -4160,6 +4156,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/CatalogVersionOverrideTests.cs::CatalogVersionOverrideTests.TheVersionIsTheLaterOfHeaderAndCatalog",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataAndFieldOptionsTests.cs::MetadataAndFieldOptionsTests.Language_SetNull_RemovesCatalogLang",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -4251,15 +4254,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -5589,6 +5583,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/CatalogVersionOverrideTests.cs::CatalogVersionOverrideTests.TheVersionIsTheLaterOfHeaderAndCatalog",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataAndFieldOptionsTests.cs::MetadataAndFieldOptionsTests.Language_SetNull_RemovesCatalogLang",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -5680,15 +5681,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -17305,6 +17297,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/CatalogVersionOverrideTests.cs::CatalogVersionOverrideTests.TheVersionIsTheLaterOfHeaderAndCatalog",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataAndFieldOptionsTests.cs::MetadataAndFieldOptionsTests.Language_SetNull_RemovesCatalogLang",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -17396,15 +17395,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -18734,6 +18724,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/CatalogVersionOverrideTests.cs::CatalogVersionOverrideTests.TheVersionIsTheLaterOfHeaderAndCatalog",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataAndFieldOptionsTests.cs::MetadataAndFieldOptionsTests.Language_SetNull_RemovesCatalogLang",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -18825,15 +18822,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -20215,6 +20203,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/CatalogVersionOverrideTests.cs::CatalogVersionOverrideTests.TheVersionIsTheLaterOfHeaderAndCatalog",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataAndFieldOptionsTests.cs::MetadataAndFieldOptionsTests.Language_SetNull_RemovesCatalogLang",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -20306,15 +20301,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113756,8 +113742,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7617,
-    "testMethodsWithCapabilityCandidate": 4729,
+    "testMethods": 7627,
+    "testMethodsWithCapabilityCandidate": 4739,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

@@ -8672,7 +8672,7 @@
       "path": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs",
       "class": "ExtractionParityTests",
       "method": "PageTextOrderStrategy_KnownFormAndTablePages_RemainRawStream",
-      "line": 62,
+      "line": 63,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -8713,7 +8713,7 @@
       "path": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs",
       "class": "ExtractionParityTests",
       "method": "GenerateExtractionParityReport",
-      "line": 109,
+      "line": 135,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -8752,7 +8752,7 @@
       "path": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs",
       "class": "ExtractionParityTests",
       "method": "AdversarialCorpus_ExciseDoesNotCatastrophicallyUnderExtractRelativeToMutool",
-      "line": 251,
+      "line": 277,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
