@@ -147,14 +147,30 @@ public sealed class RecoveryReportBuilder
             if (marks.Any(m => m.PageNumber == location.PageNumber && Overlaps(m.Rect, normalized, 0.6)))
                 continue;
 
-            perPage.TryGetValue(location.PageNumber, out var n);
-            perPage[location.PageNumber] = ++n;
             // The kind follows the evidence: a channel reading under a painted
             // obstruction saw a box; the residue channel saw a hole where a run
             // used to be and nothing was drawn over it.
             var kind = finding.Channel == "residue"
                 ? RedactionMarkKind.EmptiedRegion
                 : RedactionMarkKind.FilledBox;
+
+            // #1625: a DRAWN mark has to clear the same size gate here as it
+            // does in RedactionMarkDetector. Without this, a 468 × 0.48 pt
+            // table rule — rejected there at both call sites — re-entered as a
+            // FilledBox through this door, because synthesis had no opinion
+            // about what a mark is.
+            //
+            // ⚠️ EmptiedRegion is deliberately NOT gated. It is a hole, not a
+            // drawn rectangle: nothing was painted, so "too thin to be a bar"
+            // does not apply, and the right minimum for a removed run is a
+            // different question nobody has measured. Gating it on this
+            // constant would be assuming the answer.
+            if (kind == RedactionMarkKind.FilledBox
+                && !RecoveryGeometry.IsMarkSized(normalized.Width, normalized.Height))
+                continue;
+
+            perPage.TryGetValue(location.PageNumber, out var n);
+            perPage[location.PageNumber] = ++n;
             marks.Add(new RedactionMark(
                 $"p{location.PageNumber}m{n}", location.PageNumber, normalized, kind,
                 kind == RedactionMarkKind.EmptiedRegion

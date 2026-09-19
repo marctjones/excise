@@ -475,18 +475,38 @@ public static class HiddenTextDetector
     /// word-sized box over a longer line register (full coverage of the SECRET,
     /// partial coverage of the operator) as surely as a whole-line box.
     /// </summary>
+    /// <summary>
+    /// The longest contiguous run of this operator's glyphs that the box
+    /// majority-covers — and that contains at least one NON-WHITESPACE glyph.
+    ///
+    /// <para>⚠️ #1625: the ink requirement is load-bearing, not tidiness. A run
+    /// of pure spaces carries nothing to recover, so reporting it is a false
+    /// positive by construction — there is no leaked text in a space. On
+    /// <c>recap_ddff65c821d6b7d1.pdf</c> a 0.48 pt table rule produced seven
+    /// findings whose entire recovered value was <c>" "</c>, and those seven
+    /// then synthesised a redaction mark that made a clean filing read as a
+    /// failed redaction.</para>
+    ///
+    /// <para>The check is per-RUN rather than on the final string, so a box
+    /// covering four spaces and, further along, "Jo" still reports "Jo" — the
+    /// longest run is no longer automatically the winner. Pairing D already
+    /// rejected whitespace for the invisible-text case; A, B and C all funnel
+    /// through here, so this is the one place the other three share.</para>
+    /// </summary>
     private static (string Text, PdfRectangle Box)? CoveredRun(TextEntry t, PdfRectangle box)
     {
         int bestStart = -1, bestLen = 0, curStart = -1, curLen = 0;
+        var curHasInk = false;
         for (var k = 0; k < t.Matches.Count; k++)
         {
             if (CoversMajority(box, t.Matches[k].Letter.GlyphRectangle))
             {
-                if (curStart < 0) { curStart = k; curLen = 0; }
+                if (curStart < 0) { curStart = k; curLen = 0; curHasInk = false; }
                 curLen++;
-                if (curLen > bestLen) { bestLen = curLen; bestStart = curStart; }
+                if (!string.IsNullOrWhiteSpace(t.Matches[k].Letter.Value)) curHasInk = true;
+                if (curHasInk && curLen > bestLen) { bestLen = curLen; bestStart = curStart; }
             }
-            else { curStart = -1; curLen = 0; }
+            else { curStart = -1; curLen = 0; curHasInk = false; }
         }
         if (bestLen == 0) return null;
 

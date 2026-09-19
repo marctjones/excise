@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1301,
-  "indexedContentSha256": "c864fbea72530c47dc57a31fa15f5d86eee72b9ec747a88353cfb91d51737c96",
+  "indexedContentSha256": "a9ec728aa55223ae1730d43e210b8d5179504ccfc99e371220edd9d89410918c",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7709,6 +7709,7 @@
           "kind": "source",
           "matchedTerms": [
             "clipping",
+            "construction",
             "line",
             "path"
           ]
@@ -7813,6 +7814,14 @@
           "kind": "source",
           "matchedTerms": [
             "construction",
+            "line",
+            "path"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/Recovery/RedactionMarkDetector.cs",
+          "kind": "source",
+          "matchedTerms": [
             "line",
             "path"
           ]
@@ -7934,17 +7943,9 @@
             "line",
             "style"
           ]
-        },
-        {
-          "path": "Excise.Rendering/AdobeGlyphList.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "line",
-            "style"
-          ]
         }
       ],
-      "candidateReferenceCount": 582
+      "candidateReferenceCount": 583
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8360,6 +8361,7 @@
             "color",
             "colour",
             "output",
+            "spaces",
             "values"
           ]
         },
@@ -21133,7 +21135,8 @@
           "kind": "source",
           "matchedTerms": [
             "color",
-            "colour"
+            "colour",
+            "spaces"
           ]
         },
         {

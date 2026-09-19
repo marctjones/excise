@@ -37,7 +37,7 @@ public static class CoveredContentRecovery
 {
     private const double DarkLuminance = 0.45;
     private const double CoveredFraction = 0.5;
-    private const double MinSidePt = 2.0;
+    private const double MinSidePt = RecoveryGeometry.MinSidePt;   // #1625: one threshold, not three
 
     /// <param name="Kind">"image" or "vector" — which <c>Channel</c> the finding gets.</param>
     /// <param name="Covered">The covered content's box, page space.</param>

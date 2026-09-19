@@ -44,8 +44,13 @@ public static class RedactionMarkDetector
     /// <summary>A fill covering more of the page than this is a background, not a mark.</summary>
     private const double MaxPageAreaFraction = 0.4;
 
-    /// <summary>Smaller than this in either dimension is a rule or a glyph-scale artefact.</summary>
-    private const double MinSidePt = 2.0;
+    /// <summary>
+    /// Smaller than this in either dimension is a rule or a glyph-scale
+    /// artefact. ⚠️ Shared with the builder's mark SYNTHESIS path since #1625 —
+    /// this gate used to be honoured here and nowhere else, so a rule the
+    /// detector rejected came back as a mark anyway.
+    /// </summary>
+    private const double MinSidePt = RecoveryGeometry.MinSidePt;
 
     /// <summary>Form XObjects nest, and a self-referencing one is a real corpus shape.</summary>
     private const int MaxFormDepth = 8;
