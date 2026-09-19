@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1298,
-  "indexedContentSha256": "e4d7449d3a069cefd9beb36c5579959e0131af0995a7c6290d39e6798b27e00a",
+  "indexedContentSha256": "114617c0227cf9704d25001f3627c595d62d74683d4de2c7c09a34018ce0c868",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -3531,6 +3531,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/ResidualArtefactRecovery.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "catalog",
+            "tree",
+            "catalog",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/StructureTreeRedactionScrubber.cs",
           "kind": "source",
           "matchedTerms": [
@@ -4010,15 +4020,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Index.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "catalog",
-            "tree",
-            "catalog"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Rest.cs",
           "kind": "test",
           "matchedTerms": [
@@ -4416,6 +4417,7 @@
           "matchedTerms": [
             "named",
             "viewer",
+            "catalog",
             "pdfdocument"
           ]
         },
@@ -6151,6 +6153,7 @@
           "matchedTerms": [
             "collections",
             "embedded",
+            "catalog",
             "pdfdocument"
           ]
         },
@@ -6410,8 +6413,7 @@
           "kind": "test",
           "matchedTerms": [
             "collections",
-            "embedded",
-            "catalog"
+            "embedded"
           ]
         },
         {
@@ -50969,6 +50971,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/ResidualArtefactRecovery.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/Recovery/RestoredCopyBuilder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -51437,19 +51449,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Index.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 176
+      "candidateReferenceCount": 177
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -62638,14 +62640,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Redaction/CarrierTextRecovery.Attachments.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "associated",
-            "class"
-          ]
-        },
-        {
           "path": "Excise.Core/Redaction/CarrierTextRecovery.Forms.cs",
           "kind": "source",
           "matchedTerms": [
@@ -62958,9 +62952,18 @@
             "structure",
             "tagged"
           ]
+        },
+        {
+          "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "class",
+            "maps",
+            "metadata"
+          ]
         }
       ],
-      "candidateReferenceCount": 381
+      "candidateReferenceCount": 380
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -65344,8 +65347,7 @@
           "kind": "source",
           "matchedTerms": [
             "extension",
-            "extensions",
-            "pdfa"
+            "extensions"
           ]
         },
         {
@@ -67401,15 +67403,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Redaction/Recovery/ResidualArtefactRecovery.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "pdfe",
-            "redaction",
-            "redaction"
-          ]
-        },
-        {
           "path": "Excise.Core/Redaction/Recovery/RestoredCopyBuilder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -67962,9 +67955,18 @@
             "refusal",
             "redaction"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "redaction",
+            "refusal",
+            "redaction"
+          ]
         }
       ],
-      "candidateReferenceCount": 125
+      "candidateReferenceCount": 124
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -68094,15 +68096,6 @@
             "redaction",
             "visibility",
             "ocr",
-            "redaction"
-          ]
-        },
-        {
-          "path": "Excise.Core/Redaction/Recovery/ResidualArtefactRecovery.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "pdfe",
-            "redaction",
             "redaction"
           ]
         },
@@ -68750,9 +68743,18 @@
             "review",
             "redaction"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "redaction",
+            "visibility",
+            "redaction"
+          ]
         }
       ],
-      "candidateReferenceCount": 144
+      "candidateReferenceCount": 143
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -69041,6 +69043,7 @@
           "kind": "source",
           "matchedTerms": [
             "attachment",
+            "copy",
             "pdfe"
           ]
         },
@@ -69132,7 +69135,6 @@
           "matchedTerms": [
             "attachment",
             "copy",
-            "pdfe",
             "redaction"
           ]
         },
@@ -70098,7 +70100,6 @@
           "matchedTerms": [
             "attachment",
             "attachments",
-            "pdfe",
             "redaction"
           ]
         },
@@ -70455,6 +70456,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesRestTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Security/EncryptionPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -70673,18 +70683,9 @@
             "save",
             "stripping"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "pdfe",
-            "save",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 122
+      "candidateReferenceCount": 123
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -72165,7 +72166,7 @@
           "kind": "source",
           "matchedTerms": [
             "audit",
-            "pdfe",
+            "log",
             "redaction"
           ]
         },
@@ -72588,16 +72589,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Index.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "audit",
-            "log",
-            "ocr",
-            "redaction"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesRestTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -72697,9 +72688,18 @@
             "audit",
             "log"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/RedactedCopySafetyPolicyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "audit",
+            "log",
+            "redaction"
+          ]
         }
       ],
-      "candidateReferenceCount": 142
+      "candidateReferenceCount": 141
     },
     {
       "id": "pdfe.product.platform.printing",

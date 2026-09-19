@@ -74,20 +74,25 @@ public static class ResidualArtefactRecovery
 
     private static void ScanAttachments(PdfDocument document, List<ResidualArtefact> found)
     {
-        IReadOnlyList<PdfEmbeddedFile> files;
-        try { files = document.GetEmbeddedFiles(); }
+        // #1667: the SHARED enumeration. This used to call GetEmbeddedFiles(),
+        // which is catalog-only, while the carrier channel walked page and
+        // annotation /AF too — so a file hung off a page was reported by one
+        // channel and not the other, and the attachment channel is the one
+        // carrying the description a reader needs.
+        IReadOnlyList<EmbeddedFileEnumerator.Found> files;
+        try { files = EmbeddedFileEnumerator.All(document); }
         catch { return; }
 
-        foreach (var file in files)
+        foreach (var (file, page, source) in files)
         {
             // /UF or /F is what a user sees; the name-tree key is the fallback.
             var name = !string.IsNullOrWhiteSpace(file.FileName) ? file.FileName!
                 : !string.IsNullOrWhiteSpace(file.Name) ? file.Name
                 : "(unnamed)";
             found.Add(new ResidualArtefact(
-                "attachment", 0,
-                $"embedded file \"{name}\" — a whole document carried inside this one, " +
-                "untouched by a page redaction"));
+                "attachment", page,
+                $"embedded file \"{name}\" ({source}) — a whole document carried inside this " +
+                "one, untouched by a page redaction"));
         }
     }
 }

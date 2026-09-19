@@ -25,38 +25,24 @@ public static partial class CarrierTextRecovery
     /// </remarks>
     private static void ScanAttachments(PdfDocument doc, Collector c)
     {
-        var seen = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
-        foreach (var file in doc.GetEmbeddedFiles())
+        // #1667: ONE enumeration, shared with the attachment channel. This
+        // method used to hold its own copy of the walk — catalog name tree plus
+        // catalog/page/annotation /AF — while ResidualArtefactRecovery called
+        // the catalog-only GetEmbeddedFiles(). Two walks answering the same
+        // question is the drift shape this repo keeps paying for; the copies
+        // had already diverged by one carrier before anybody looked.
+        foreach (var (file, page, source) in EmbeddedFileEnumerator.All(doc, c.Token))
         {
-            c.Token.ThrowIfCancellationRequested();
-            if (!seen.Add(file.RawDictionary)) continue;
+            var fromNameTree = source == "name tree";
+            // A synthetic key (_AF_0, _Annotation_1) is a placeholder the parser
+            // invented, not a name anyone wrote. Passing it through would print
+            // it as the attachment's name.
             var syntheticName = file.Name.StartsWith("_AF_", StringComparison.Ordinal)
                                 || file.Name.StartsWith("_Annotation_", StringComparison.Ordinal);
-            ReportAttachment(doc, c, file, syntheticName ? null : file.Name, file.PageNumber ?? 0, "attachment");
-        }
-
-        void FromAssociatedFiles(PdfDictionary? owner, int page, string source)
-        {
-            if (owner == null || doc.Resolve(owner.GetOptional("AF") ?? PdfNull.Instance) is not PdfArray af) return;
-            foreach (var entry in af)
-            {
-                if (doc.Resolve(entry) is not PdfDictionary fs || !seen.Add(fs)) continue;
-                var parsed = PdfEmbeddedFileParser.ParseFileSpecification(doc, fs, "");
-                if (parsed != null)
-                    ReportAttachment(doc, c, parsed, null, page, source);
-            }
-        }
-
-        FromAssociatedFiles(doc.Catalog, 0, "attachment (catalog /AF)");
-        for (var i = 1; i <= doc.PageCount; i++)
-        {
-            c.Token.ThrowIfCancellationRequested();
-            var page = doc.GetPage(i);
-            FromAssociatedFiles(page.Dictionary, i, "attachment (page /AF)");
-            if (doc.Resolve(page.Dictionary.GetOptional("Annots") ?? PdfNull.Instance) is PdfArray annots)
-                foreach (var a in annots)
-                    if (doc.Resolve(a) is PdfDictionary annot)
-                        FromAssociatedFiles(annot, i, "attachment (annotation /AF)");
+            ReportAttachment(doc, c, file,
+                fromNameTree && !syntheticName ? file.Name : null,
+                page,
+                fromNameTree ? "attachment" : $"attachment ({source})");
         }
     }
 

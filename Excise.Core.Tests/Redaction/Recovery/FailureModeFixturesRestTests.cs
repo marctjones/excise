@@ -115,17 +115,21 @@ public class FailureModeFixturesRestTests
             RecoveryScanner.Channels.Attachment).Should().BeTrue();
 
     /// <summary>
-    /// ⚠️ EXPECTED MISS (#1667) — and the asymmetry is the finding. The
-    /// SCRUBBER walks page and annotation /AF (#1572); the AUDIT calls
-    /// GetEmbeddedFiles(), which walks only /Catalog/Names/EmbeddedFiles,
-    /// /Catalog/Names/AF and /Catalog/AF. So excise REMOVES an attachment it
-    /// cannot SEE: `redact` strips this file and `unredact` calls the document
-    /// clean.
+    /// #1667 — a file hung off the PAGE's /AF, reported on the attachment
+    /// channel like the other two shapes.
+    ///
+    /// <para>⚠️ This was written as an expected miss on a premise that was
+    /// WRONG. I read ResidualArtefactRecovery's catalog-only walk and concluded
+    /// the audit was blind; it was not — CarrierTextRecovery.Attachments
+    /// already walked page and annotation /AF, so the file WAS reported, on the
+    /// `carrier` channel. The real defect was two walks answering the same
+    /// question and disagreeing, which is why both now share
+    /// EmbeddedFileEnumerator.</para>
     /// </summary>
-    [Fact] public void Attachment_OnPageAssociatedFiles_IsNotYetSeenByTheAudit()
+    [Fact] public void Attachment_OnPageAssociatedFiles_IsReported()
         => OnChannel(FailureModeFixtures.AttachmentOnPageAssociatedFiles(),
-            RecoveryScanner.Channels.Attachment).Should().BeFalse(
-            "#1667: the audit's embedded-file walk is catalog-only");
+            RecoveryScanner.Channels.Attachment).Should().BeTrue(
+            "#1667: one enumeration, so both channels see all three shapes");
 
     [Fact] public void Attachment_AsAFileAttachmentAnnotation_IsReported()
         => OnChannel(FailureModeFixtures.AttachmentAsAnnotation(),

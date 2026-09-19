@@ -138,10 +138,7 @@ internal static partial class FailureModeFixtures
         ["leftover-embedded-file"] = new[]
         {
             new Variant(nameof(AttachmentInNameTree), () => AttachmentInNameTree()),
-            new Variant(nameof(AttachmentOnPageAssociatedFiles), () => AttachmentOnPageAssociatedFiles(),
-                ExpectedMiss: true,
-                MissReason: "#1667: the audit's embedded-file walk is catalog-only while the " +
-                            "SCRUBBER walks page /AF — excise removes what it cannot see"),
+            new Variant(nameof(AttachmentOnPageAssociatedFiles), () => AttachmentOnPageAssociatedFiles()),
             new Variant(nameof(AttachmentAsAnnotation), () => AttachmentAsAnnotation()),
         },
         ["leftover-form-value"] = new[]
