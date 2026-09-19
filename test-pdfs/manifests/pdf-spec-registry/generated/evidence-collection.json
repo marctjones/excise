@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1296,
-  "indexedContentSha256": "40b142e2f14e2cbeb3d33cd1d2121681328d692714c2f5c6d9e8f2deaaaf846a",
+  "indexedContentSha256": "aa11409989800e07d2e344a3abe0d8b65f77955c4ae6e49e05702c5a63f0d81b",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -5885,7 +5885,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 105
+      "candidateReferenceCount": 106
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -7945,7 +7945,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 581
+      "candidateReferenceCount": 580
     },
     {
       "id": "pdf.17.graphics.color",
@@ -41909,6 +41909,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/UnredactionMatrixRunTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "link",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Visual/AnnotationDefaultAppearanceTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42006,19 +42016,9 @@
             "link",
             "annotation"
           ]
-        },
-        {
-          "path": "tests/annotation-support-matrix.json",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "link",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 92
+      "candidateReferenceCount": 93
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -47079,7 +47079,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 194
+      "candidateReferenceCount": 195
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -48971,7 +48971,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 142
+      "candidateReferenceCount": 143
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -51450,7 +51450,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 173
+      "candidateReferenceCount": 174
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -63704,7 +63704,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 192
+      "candidateReferenceCount": 191
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -65955,7 +65955,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 158
+      "candidateReferenceCount": 157
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -71655,7 +71655,6 @@
           "matchedTerms": [
             "documents",
             "ocr",
-            "scanned",
             "ocr",
             "redaction"
           ]

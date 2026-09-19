@@ -102,35 +102,28 @@ internal static class UnredactionMatrixRun
     }
 
     /// <summary>
-    /// ⚠️ WHAT COUNTS AS A DETECTION, and getting this wrong cost a run.
+    /// ⚠️ WHAT COUNTS AS A DETECTION — and this now asks the PRODUCT, not the
+    /// bench.
     ///
-    /// <para>The first version of this method counted ANY finding. On the
-    /// real-world negatives that scored excise at <b>42.1% specificity</b> — 33
-    /// "false positives" of 57 — which looked like a serious defect and was my
-    /// measurement error. Two things fire on ordinary documents that have no
-    /// redaction in them at all:</para>
-    /// <list type="bullet">
-    ///   <item><b>/Info metadata.</b> Author, CreationDate, Keywords, Subject.
-    ///   Every PDF has them, so they are excluded — unambiguous.</item>
-    ///   <item><b>OCR layers.</b> One scanned filing produced 191
-    ///   <c>render mode 3</c> findings. ⚠️ These are NOT excluded, and the
-    ///   second attempt to exclude them is why. Gating on "no mark on the page"
-    ///   took <c>text-render-mode-3</c> from 3/3 to 1/3 — that mode IS invisible
-    ///   text with no mark, so the heuristic ate the thing it was meant to
-    ///   distinguish from.</item>
-    /// </list>
+    /// <para>Detection is "did excise report something that indicates a FAILED
+    /// REDACTION", which <see cref="RecoveryFindingClassifier"/> decides.
+    /// Furniture — /Info, XMP, link /URI targets, /PieceInfo, an OCR layer on a
+    /// page with no mark — is still REPORTED by the tool and is not counted
+    /// here.</para>
     ///
-    /// <para><b>There is no reliable discriminator, and the registry already
-    /// says so</b> — <c>ocr-layer-left-in-place</c> is `partial` because
-    /// judging legitimate-OCR against leak is the reader's call. So the bench
-    /// does not invent one. OCR-driven false positives are COUNTED and then
-    /// broken out by cause in the report, because "excise flags every OCR
-    /// layer" is a true and useful thing to publish, and hiding it behind a
-    /// heuristic would be the bench grading around a known limitation.</para>
+    /// <para><b>The history matters, because the bench nearly grew its own
+    /// answer.</b> Counting any finding scored 42.1% specificity. Excluding
+    /// /Info by hand got 50.9%. Then excluding OCR-with-no-mark by hand took
+    /// <c>text-render-mode-3</c> from 3/3 to 1/3 — the heuristic ate the mode it
+    /// was meant to distinguish from. At that point the bench was accumulating
+    /// private judgements about what counts as a leak, which is exactly the
+    /// thing a bench must not do: it would have been grading excise against
+    /// rules excise does not follow.</para>
     ///
-    /// <para>This narrows the BENCH, not excise. `excise unredact` still reports
-    /// all of it, which is right — the tool tells its user everything it found
-    /// and the bench asks a sharper question.</para>
+    /// <para>So the judgement moved into the product (#1669) where a user
+    /// benefits from it, and the bench reads it. If the classification is
+    /// wrong, the tool is wrong and the tool's tests say so — rather than the
+    /// bench quietly disagreeing with the thing it measures.</para>
     /// </summary>
     private static ToolResult ScoreExcise(byte[] pdf, string caseId)
     {
@@ -138,20 +131,18 @@ internal static class UnredactionMatrixRun
         try { report = RecoveryScanner.Scan(pdf); }
         catch { return new ToolResult("excise", caseId, false); }
 
+        var counted = report.AllFindings
+            .Where(f => RecoveryFindingClassifier.IndicatesAFailedRedaction(
+                RecoveryFindingClassifier.Classify(f)))
+            .ToList();
         var leakedMarks = report.Marks.Where(m => m.Outcome != MarkRecoveryOutcome.NotRecovered).ToList();
 
-        // Ordinary document metadata is on every PDF ever written. This is the
-        // ONLY exclusion; see the summary for the one that was tried and undone.
-        static bool CountsAsALeak(RecoveredFinding f) =>
-            !f.Carrier.StartsWith("/Info ", StringComparison.Ordinal);
-
-        var counted = report.AllFindings.Where(CountsAsALeak).ToList();
         if (leakedMarks.Count == 0 && counted.Count == 0)
             return new ToolResult("excise", caseId, false);
 
         var best = leakedMarks.Count > 0
             ? leakedMarks.Select(m => m.Outcome).Min()   // enum order: Recovered is lowest
-            : MarkRecoveryOutcome.Recovered;             // a document-level carrier is a reading
+            : MarkRecoveryOutcome.Recovered;             // a content carrier is a reading
 
         var candidates = counted.Sum(f => f.Candidates.Count);
         var bits = counted.Where(f => f.ResidualBits > 0).Select(f => f.ResidualBits).ToList();
@@ -161,11 +152,6 @@ internal static class UnredactionMatrixRun
             DominantCarrier(counted));
     }
 
-    /// <summary>
-    /// x-ray's verdict. Exact-or-nothing by construction — it reads characters
-    /// PyMuPDF already extracted and never infers, so it has no candidate rung
-    /// and the matrix must not score the absence as a weakness.
-    /// </summary>
     /// <summary>
     /// The carrier most of a document's findings came through — what a reader
     /// would blame. Reported so a false-positive column can be broken down by

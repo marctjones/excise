@@ -59,18 +59,21 @@ public class UnredactionMatrixRunTests
         _out.WriteLine($"real-world negatives: {negatives!.TrueNegative} clean, " +
                        $"{negatives.FalsePositive} false positive(s) of {negatives.Scored}");
 
-        // ⚠️ A RATCHET AT THE MEASURED VALUE, NOT A TARGET. excise reports a
-        // leak on 28 of 57 clean court filings — 21 via `carrier`, 7 via OCR
-        // layers (one document produced 13,686 findings). x-ray scores 100% on
-        // the same 57. That is #1669, and it is a scope question rather than the
-        // graphics-state defect #1624 was.
+        // ⚠️ A RATCHET AT THE MEASURED VALUE, NOT A TARGET.
         //
-        // The floor exists so it cannot get WORSE unnoticed. Per CLAUDE.md's own
-        // warning about floors: a green run here means "no worse than 50.9%",
-        // never "good enough". Raise it when #1669 lands; do not delete it.
-        const double measuredFloor = 0.50;
+        // 50.9% -> 84.2% when #1669's classifier demoted document METADATA and
+        // NAVIGATION (link /URI targets, XMP, /Info, /PieceInfo, annotation
+        // authors) out of the verdict. The remaining 9 of 57 are the
+        // deliberately-unresolved case: invisible text with no mark, which is
+        // an OCR layer and a 3-Tr "redaction" at the same time. Reported on
+        // purpose — see RecoveryFindingClass.
+        //
+        // Per CLAUDE.md's warning about floors: green here means "no worse than
+        // 84.2%", never "good enough". Raise it when the report learns to RANK
+        // the ambiguous class; do not delete it.
+        const double measuredFloor = 0.84;
         negatives.Specificity.Should().BeGreaterThanOrEqualTo(measuredFloor,
-            "#1669 — the ratchet is the measured 50.9%, and #1624 is why negatives exist at " +
+            "#1669 — the ratchet is the measured 84.2%, and #1624 is why negatives exist at " +
             "all: a bench with none scored 83.7% of a clean filing as hidden text as NOTHING");
     }
 }
