@@ -102,7 +102,13 @@ internal static class UnredactCommandHandler
         // #1589: --dictionary already exists for residue mode; the same word
         // list ranks candidates for every mark that held.
         var dictionary = LoadDictionary(input.DictionaryPath);
-        RecoveryScanner.ScanInto(document, builder, cancellationToken, dictionary);
+        // #1665: the bytes enable the prior-revision channel. Passing them here
+        // is what makes the CLI and every library caller run the SAME set —
+        // this handler used to hold the only correct call.
+        byte[]? pdfBytes = null;
+        try { pdfBytes = File.ReadAllBytes(input.FilePath); }
+        catch { /* ScanInto declares the channel skipped when bytes are absent */ }
+        RecoveryScanner.ScanInto(document, builder, cancellationToken, dictionary, pdfBytes);
 
         foreach (var hit in HiddenTextDetector.Scan(document, includeVisibleFailedRedactions: true))
         {
@@ -115,7 +121,6 @@ internal static class UnredactCommandHandler
 
         // #1592: the prior-revision channel needs the file's literal bytes (it
         // truncates at an earlier %%EOF), which an open PdfDocument cannot give.
-        AddPriorRevision(input, builder, cancellationToken);
 
         // These carriers are physically present and therefore CERTAIN, not a
         // residue estimate (#1179). Only text a reader cannot already see is a
@@ -194,47 +199,6 @@ internal static class UnredactCommandHandler
         }
 
         return findings;
-    }
-
-    /// <summary>
-    /// #1592 — text earlier revisions of the file still hold. An incremental
-    /// update leaves the pre-redaction document whole at the front of the file.
-    /// </summary>
-    private static void AddPriorRevision(
-        UnredactCommandInput input, RecoveryReportBuilder builder, CancellationToken cancellationToken)
-    {
-        byte[] bytes;
-        try { bytes = File.ReadAllBytes(input.FilePath); }
-        catch
-        {
-            builder.ChannelSkipped(
-                RecoveryScanner.Channels.PriorRevision, "could not re-read the file bytes");
-            return;
-        }
-
-        var (findings, summary) = PriorRevisionRecovery.Scan(bytes, cancellationToken);
-        builder.ChannelRan(RecoveryScanner.Channels.PriorRevision);
-
-        // An earlier revision excise cannot open is NOT evidence that it is
-        // clean -- another tool may well read it -- so the shortfall is
-        // reported rather than swallowed.
-        if (summary.RevisionsUnreadable > 0)
-        {
-            builder.ChannelSkipped(
-                RecoveryScanner.Channels.PriorRevision + " (partial)",
-                $"{summary.RevisionsUnreadable} of {summary.RevisionCount} revision(s) would not parse; " +
-                $"{summary.RevisionsParsed} read, {summary.PagesRemoved} page(s) gone since the earliest");
-        }
-
-        foreach (var finding in findings)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            builder.AddFinding(RecoveredFinding.Certain(
-                RecoveryScanner.Channels.PriorRevision,
-                $"revision {finding.RevisionIndex} of {summary.RevisionCount}",
-                finding.Text,
-                new RecoveryLocation(finding.PageNumber, finding.Rect, "prior-revision glyph boxes")));
-        }
     }
 
     /// <summary>

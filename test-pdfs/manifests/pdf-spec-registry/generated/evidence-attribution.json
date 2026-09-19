@@ -95192,6 +95192,27 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.TheDocumentOverload_DeclaresPriorRevisionSkipped_WithAReason",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.TheByteOverload_RunsPriorRevision_AndRecoversFromIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.ABarDrawnWithNoColourOperator_IsAMark",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95536,27 +95557,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.IntersectingTheBoxWithTheGapIsNeverLooserThanEither",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ACrossingSmallerThanEpsilonIsAgreement_NotContradiction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ARealContradictionFallsBackToTheBoxAndSaysSo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96540,6 +96540,27 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.TheDocumentOverload_DeclaresPriorRevisionSkipped_WithAReason",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.TheByteOverload_RunsPriorRevision_AndRecoversFromIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.ABarDrawnWithNoColourOperator_IsAMark",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96884,27 +96905,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.IntersectingTheBoxWithTheGapIsNeverLooserThanEither",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ACrossingSmallerThanEpsilonIsAgreement_NotContradiction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ARealContradictionFallsBackToTheBoxAndSaysSo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97902,6 +97902,27 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.TheDocumentOverload_DeclaresPriorRevisionSkipped_WithAReason",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.TheByteOverload_RunsPriorRevision_AndRecoversFromIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.ABarDrawnWithNoColourOperator_IsAMark",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98246,27 +98267,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.IntersectingTheBoxWithTheGapIsNeverLooserThanEither",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ACrossingSmallerThanEpsilonIsAgreement_NotContradiction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ARealContradictionFallsBackToTheBoxAndSaysSo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99290,6 +99290,27 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.TheDocumentOverload_DeclaresPriorRevisionSkipped_WithAReason",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.TheByteOverload_RunsPriorRevision_AndRecoversFromIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/DefaultFillColourMarkTests.cs::DefaultFillColourMarkTests.ABarDrawnWithNoColourOperator_IsAMark",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -99634,27 +99655,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ASurvivingSpaceOnBothSidesMakesTheGapAnEquality",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.IntersectingTheBoxWithTheGapIsNeverLooserThanEither",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ACrossingSmallerThanEpsilonIsAgreement_NotContradiction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/NeighbourGapWidthBudgetTests.cs::NeighbourGapWidthBudgetTests.ARealContradictionFallsBackToTheBoxAndSaysSo",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113784,8 +113784,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7499,
-    "testMethodsWithCapabilityCandidate": 4646,
+    "testMethods": 7502,
+    "testMethodsWithCapabilityCandidate": 4649,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

@@ -105,8 +105,10 @@ internal static class RealWorldLeakSurvey
     /// </summary>
     public static IReadOnlyList<MarkRow> Survey(Document document, string pdfPath)
     {
-        using var doc = PdfDocument.Open(File.ReadAllBytes(pdfPath));
-        var report = RecoveryScanner.Scan(doc);
+        // #1665: the BYTE overload, so the prior-revision channel actually runs.
+        // This used to call Scan(PdfDocument), which silently omitted it — the
+        // bench's own real-world driver was blind to a registered mode.
+        var report = RecoveryScanner.Scan(File.ReadAllBytes(pdfPath));
 
         var xrayHits = XRayBadRedactionDetector.Inspect(pdfPath);
 

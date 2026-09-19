@@ -47,11 +47,24 @@ public static class RecoveryScanner
     /// <summary>
     /// Run the document-only channels into a builder the caller can add more to.
     /// </summary>
+    /// <param name="pdfBytes">
+    /// The file's literal bytes, enabling the PRIOR-REVISION channel. Optional
+    /// only because an already-open <see cref="PdfDocument"/> cannot produce
+    /// them — the channel needs the file's prefix to walk <c>/Prev</c>.
+    ///
+    /// <para>⚠️ When null the channel is declared SKIPPED, with the reason. It
+    /// used to be neither run nor declared (#1665): one caller existed, in the
+    /// CLI, and every library caller — including the bench's own real-world
+    /// survey — silently got a report with no prior-revision channel in it and
+    /// no way to notice. A report over thirteen channels must not read like one
+    /// over fourteen, which is what ChannelsRun/ChannelsSkipped are for.</para>
+    /// </param>
     public static RecoveryReportBuilder ScanInto(
         PdfDocument document,
         RecoveryReportBuilder builder,
         CancellationToken cancellationToken = default,
-        IReadOnlyList<string>? dictionary = null)
+        IReadOnlyList<string>? dictionary = null,
+        byte[]? pdfBytes = null)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(builder);
@@ -69,13 +82,73 @@ public static class RecoveryScanner
         AddXfaValues(document, builder, cancellationToken);
         AddImageLayerLeaks(document, builder, cancellationToken);
         AddMarkFits(document, marks, builder, dictionary, cancellationToken);
+        AddPriorRevision(pdfBytes, builder, cancellationToken);
 
         return builder;
     }
 
-    /// <summary>Convenience for a caller running only the document-only channels.</summary>
+    /// <summary>
+    /// Convenience overload. ⚠️ Declares the prior-revision channel SKIPPED,
+    /// because a <see cref="PdfDocument"/> cannot supply the bytes it needs.
+    /// Prefer the byte overload when you have them.
+    /// </summary>
     public static RecoveryReport Scan(PdfDocument document, CancellationToken cancellationToken = default)
         => ScanInto(document, new RecoveryReportBuilder(), cancellationToken).Build();
+
+    /// <summary>
+    /// Every document-only channel INCLUDING prior-revision. This is the
+    /// overload a caller with the file should use (#1665).
+    /// </summary>
+    public static RecoveryReport Scan(byte[] pdfBytes, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(pdfBytes);
+        using var document = PdfDocument.Open(pdfBytes);
+        return ScanInto(document, new RecoveryReportBuilder(), cancellationToken, null, pdfBytes).Build();
+    }
+
+    /// <summary>
+    /// #1592 — text earlier revisions still hold. An incremental update leaves
+    /// the pre-redaction document whole at the front of the file.
+    ///
+    /// <para>Lived in the CLI handler until #1665. Moved here so there is ONE
+    /// implementation: the CLI had the only correct call, and the library had
+    /// none.</para>
+    /// </summary>
+    private static void AddPriorRevision(
+        byte[]? pdfBytes, RecoveryReportBuilder builder, CancellationToken cancellationToken)
+    {
+        if (pdfBytes == null)
+        {
+            builder.ChannelSkipped(Channels.PriorRevision,
+                "needs the file bytes to walk /Prev; call RecoveryScanner.Scan(byte[]) " +
+                "or pass pdfBytes to ScanInto");
+            return;
+        }
+
+        var (findings, summary) = PriorRevisionRecovery.Scan(pdfBytes, cancellationToken);
+        builder.ChannelRan(Channels.PriorRevision);
+
+        // An earlier revision excise cannot open is NOT evidence that it is
+        // clean -- another tool may well read it -- so the shortfall is
+        // reported rather than swallowed.
+        if (summary.RevisionsUnreadable > 0)
+        {
+            builder.ChannelSkipped(
+                Channels.PriorRevision + " (partial)",
+                $"{summary.RevisionsUnreadable} of {summary.RevisionCount} revision(s) would not parse; " +
+                $"{summary.RevisionsParsed} read, {summary.PagesRemoved} page(s) gone since the earliest");
+        }
+
+        foreach (var finding in findings)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            builder.AddFinding(RecoveredFinding.Certain(
+                Channels.PriorRevision,
+                $"revision {finding.RevisionIndex} of {summary.RevisionCount}",
+                finding.Text,
+                new RecoveryLocation(finding.PageNumber, finding.Rect, "prior-revision glyph boxes")));
+        }
+    }
 
     private static void AddHiddenText(
         PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken)

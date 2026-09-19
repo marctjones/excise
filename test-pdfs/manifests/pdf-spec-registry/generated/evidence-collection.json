@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1285,
-  "indexedContentSha256": "07f8d64469a40305209c5d353c4d96e3c9988286eb3d2b47113b2712e2e7acf9",
+  "indexedFileCount": 1287,
+  "indexedContentSha256": "0f667554277f2524fe91c250ad7877ec6ecfaa4e29a039986f8114b72105c5db",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1039,6 +1039,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "incremental",
+            "update"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/XfaXmlCarrier.cs",
           "kind": "source",
           "matchedTerms": [
@@ -1475,20 +1483,9 @@
             "trailer",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Parsing/StructureAwareFuzzTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "indirect",
-            "streams",
-            "syntax",
-            "trailer",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 182
+      "candidateReferenceCount": 185
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -4004,6 +4001,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Hard.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "catalog",
+            "tree",
+            "catalog"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -4042,19 +4048,9 @@
             "metadata",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "catalog",
-            "tree",
-            "catalog",
-            "metadata"
-          ]
         }
       ],
-      "candidateReferenceCount": 152
+      "candidateReferenceCount": 153
     },
     {
       "id": "pdf.17.document.navigation",
@@ -33348,6 +33344,24 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Hard.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "smask",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "smask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryFixtureBuilder.cs",
           "kind": "test",
           "matchedTerms": [
@@ -33435,7 +33449,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 21
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdf.20.image.requirement-021",
@@ -33783,6 +33797,24 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Hard.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryFixtureBuilder.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34101,7 +34133,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 64
+      "candidateReferenceCount": 66
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -34453,6 +34485,24 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Hard.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryFixtureBuilder.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34770,7 +34820,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 64
+      "candidateReferenceCount": 66
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -35913,6 +35963,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Hard.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bitspercomponent",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36220,7 +36279,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 60
+      "candidateReferenceCount": 61
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -36632,6 +36691,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Hard.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryChannelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36846,7 +36914,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 47
+      "candidateReferenceCount": 48
     },
     {
       "id": "pdf.20.image.requirement-027",
@@ -38849,6 +38917,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixtures.Hard.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -39101,18 +39178,9 @@
             "lab",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/ScannedRasterRedactionLeakTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 119
+      "candidateReferenceCount": 120
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -53398,7 +53466,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 199
+      "candidateReferenceCount": 201
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -59142,7 +59210,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 178
+      "candidateReferenceCount": 180
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -59633,6 +59701,18 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "actions",
+            "including",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/RedactionCarriers.cs",
           "kind": "source",
           "matchedTerms": [
@@ -60068,19 +60148,9 @@
             "uri",
             "action"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PdfOutlineParserDestinationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "destinations",
-            "goto",
-            "uri",
-            "action"
-          ]
         }
       ],
-      "candidateReferenceCount": 155
+      "candidateReferenceCount": 156
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -63371,7 +63441,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 189
+      "candidateReferenceCount": 191
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -64916,7 +64986,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 617
+      "candidateReferenceCount": 619
     },
     {
       "id": "pdf.20.extension.developer",
