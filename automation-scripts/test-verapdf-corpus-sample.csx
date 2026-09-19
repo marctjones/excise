@@ -151,7 +151,7 @@ try
             // Load document
             Console.WriteLine($"    Loading PDF...");
             var loadStart = DateTime.Now;
-            await LoadDocumentCommand(pdfPath);
+            await LoadDocumentHeadlessAsync(pdfPath);
             var loadTime = (DateTime.Now - loadStart).TotalSeconds;
             Console.WriteLine($"    Load time: {loadTime:F1}s");
 
@@ -293,7 +293,7 @@ try
 
             // Verify AFTER redaction by loading output and extracting text
             Console.WriteLine($"    Verifying redaction (loading saved file)...");
-            await LoadDocumentCommand(outputPath);
+            await LoadDocumentHeadlessAsync(outputPath);
             var textAfter = ExtractAllText();
             var stillContainsWord = textAfter.ToLower().Contains(wordToRedact.ToLower());
 

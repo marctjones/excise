@@ -113,7 +113,12 @@ public class ScriptedGuiTests
         var viewModel = MainWindowViewModelTestFactory.Create();
         var testPdf = CreateTestPdf();
 
-        // Act — escape path separators for the script string literal
+        // Act — deliberately calls the OLD name. #1540 renamed this to
+        // LoadDocumentHeadlessAsync and kept LoadDocumentCommand as an
+        // [Obsolete] alias so users' existing .csx scripts keep running; this
+        // is the only remaining caller, and it exists to prove the alias still
+        // resolves through the scripting engine. Every other script here uses
+        // the new name.
         var result = await ExecuteScriptAsync(viewModel, $@"
             await LoadDocumentCommand(@""{testPdf}"");
             var isLoaded = CurrentDocument != null;
@@ -135,7 +140,7 @@ public class ScriptedGuiTests
 
         // Act
         var result = await ExecuteScriptAsync(viewModel, $@"
-            await LoadDocumentCommand(@""{testPdf}"");
+            await LoadDocumentHeadlessAsync(@""{testPdf}"");
             await RedactTextCommand(""SECRET"");
             return PendingRedactions.Count;
         ");
@@ -156,7 +161,7 @@ public class ScriptedGuiTests
 
         // Act — complete load → redact → apply → save workflow through scripting
         var result = await ExecuteScriptAsync(viewModel, $@"
-            await LoadDocumentCommand(@""{sourcePdf}"");
+            await LoadDocumentHeadlessAsync(@""{sourcePdf}"");
             await RedactTextCommand(""SECRET"");
             await RedactTextCommand(""CONFIDENTIAL"");
             await ApplyRedactionsCommand();
@@ -212,7 +217,7 @@ public class ScriptedGuiTests
 
         // Act — birth certificate redaction workflow
         var result = await ExecuteScriptAsync(viewModel, $@"
-            await LoadDocumentCommand(@""{birthCertPath}"");
+            await LoadDocumentHeadlessAsync(@""{birthCertPath}"");
             var terms = new[] {{ ""TORRINGTON"", ""CERTIFICATE"", ""BIRTH"", ""CITY CLERK"" }};
             foreach (var term in terms)
                 await RedactTextCommand(term);
@@ -246,7 +251,7 @@ public class ScriptedGuiTests
         var result = await ExecuteScriptAsync(viewModel, $@"
             try
             {{
-                await LoadDocumentCommand(@""{nonexistentFile}"");
+                await LoadDocumentHeadlessAsync(@""{nonexistentFile}"");
                 return false; // Should not reach here
             }}
             catch (FileNotFoundException)
@@ -271,7 +276,7 @@ public class ScriptedGuiTests
         // Act — CreateMultiPageTestPdf seeds "Secret on Page N" on each page;
         // we ask scripting to redact that common substring.
         var result = await ExecuteScriptAsync(viewModel, $@"
-            await LoadDocumentCommand(@""{multiPagePdf}"");
+            await LoadDocumentHeadlessAsync(@""{multiPagePdf}"");
             var pageCount = CurrentDocument.PageCount;
             await RedactTextCommand(""Secret"");
             await ApplyRedactionsCommand();

@@ -61,7 +61,7 @@ try
     Console.WriteLine($"\n[Step 1/5] Loading birth certificate");
     Console.WriteLine($"  Source: {sourcePdf}");
 
-    await LoadDocumentCommand(sourcePdf);
+    await LoadDocumentHeadlessAsync(sourcePdf);
 
     if (CurrentDocument == null)
     {
@@ -143,7 +143,7 @@ try
 
     int verificationsPassed = 0;
     int verificationsFailed = 0;
-    await LoadDocumentCommand(outputPdf);
+    await LoadDocumentHeadlessAsync(outputPdf);
     var extracted = ExtractAllText();
     foreach (var term in termsToRedact)
     {

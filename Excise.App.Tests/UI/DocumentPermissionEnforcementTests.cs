@@ -82,7 +82,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
         CreateViewModelWithRestrictedFixtureAsync(string fixturePath)
     {
         var (vm, toasts) = CreateViewModel();
-        await vm.LoadDocumentCommand(fixturePath);
+        await vm.LoadDocumentHeadlessAsync(fixturePath);
         return (vm, toasts);
     }
 
@@ -132,7 +132,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
         }
 
         var (vm, toasts) = CreateViewModel();
-        await vm.LoadDocumentCommand(blankPath);
+        await vm.LoadDocumentHeadlessAsync(blankPath);
 
         await vm.SetSelectedTextAndCopyAsync("hello");
 
