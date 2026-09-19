@@ -238,9 +238,18 @@ internal sealed class PdfDocumentObjectStore : IDisposable
                     // run, so the deferred decode sees exactly the bytes and
                     // DecodeParms the eager one would have.
                     if (IsDeferredDecodeImage(filteredStream))
+                    {
+                        // F1 (#1207): computed HERE, under _parseLock at resolve time,
+                        // because resolving /ColorSpace (an ICC stream's /N, a DeviceN
+                        // names array) is allowed here and forbidden inside the deferred
+                        // decode, whose lock rule is stream lock only.
+                        filteredStream.ExpectedDecodedLength = EstimateDecodedImageLength(filteredStream);
                         filteredStream.DeferDecode(DecodeDeferredStream);
+                    }
                     else
+                    {
                         DecodeStream(filteredStream);
+                    }
                 }
             }
 
@@ -256,6 +265,88 @@ internal sealed class PdfDocumentObjectStore : IDisposable
     /// fonts, ICC profiles and JBIG2 globals have callers that branch on
     /// <see cref="PdfStream.IsDecoded"/> and stay decoded at resolve time.
     /// </summary>
+    /// <summary>
+    /// The byte count a single-stage /FlateDecode image is expected to inflate
+    /// to, from its dictionary alone — or 0 when anything needed is missing,
+    /// unknown, or does not fit an array. Only Flate: it is the one filter whose
+    /// output size the dictionary predicts and whose decoder grows-and-copies.
+    /// With a PNG predictor the inflated rows carry one filter-type byte each and
+    /// are sized by the /DecodeParms the predictor itself will read.
+    /// </summary>
+    private long EstimateDecodedImageLength(PdfStream stream)
+    {
+        var filters = stream.Filters;
+        if (filters.Count != 1 || filters[0] is not ("FlateDecode" or "Fl"))
+            return 0;
+
+        int width = stream.GetInt("Width", 0), height = stream.GetInt("Height", 0);
+        if (width <= 0 || height <= 0)
+            return 0;
+
+        int bitsPerComponent, components;
+        if (stream.GetBool("ImageMask"))
+        {
+            bitsPerComponent = 1;
+            components = 1;
+        }
+        else
+        {
+            bitsPerComponent = stream.GetInt("BitsPerComponent", 0);
+            components = ImageComponentCount(stream.GetOptional("ColorSpace"));
+            if (bitsPerComponent <= 0 || components <= 0)
+                return 0;
+        }
+
+        var parms = stream.DecodeParams.Count > 0 ? stream.DecodeParams[0] : null;
+        long rowBytes;
+        if (parms != null && parms.GetInt("Predictor", 1) >= 10)
+        {
+            long colors = parms.GetInt("Colors", 1), columns = parms.GetInt("Columns", 1), bpc = parms.GetInt("BitsPerComponent", 8);
+            rowBytes = 1 + (colors * columns * bpc + 7) / 8;
+        }
+        else
+        {
+            rowBytes = ((long)components * bitsPerComponent * width + 7) / 8;
+        }
+
+        var expected = rowBytes * height;
+        return expected > int.MaxValue ? 0 : expected;
+    }
+
+    /// <summary>Component count of an image /ColorSpace, or 0 when it cannot be read from the dictionaries.</summary>
+    private int ImageComponentCount(PdfObject? colorSpace)
+    {
+        if (colorSpace == null)
+            return 0;
+        var resolved = Resolve(colorSpace);
+        switch (resolved)
+        {
+            case PdfName name:
+            {
+                var cs = ColorSpaces.PdfColorSpace.FromName(name.Value);
+                return cs.Type is ColorSpaces.PdfColorSpaceType.Unknown or ColorSpaces.PdfColorSpaceType.Pattern ? 0 : cs.Components;
+            }
+            case PdfArray array when array.Count >= 1 && array[0] is PdfName family:
+                switch (family.Value)
+                {
+                    case "ICCBased":
+                        return array.Count >= 2 && Resolve(array[1]) is PdfStream icc ? Math.Max(0, icc.GetInt("N", 0)) : 0;
+                    case "Indexed" or "I" or "Separation" or "CalGray" or "DeviceGray" or "G":
+                        return 1;
+                    case "CalRGB" or "Lab" or "DeviceRGB" or "RGB":
+                        return 3;
+                    case "DeviceCMYK" or "CMYK":
+                        return 4;
+                    case "DeviceN":
+                        return array.Count >= 2 && Resolve(array[1]) is PdfArray names ? names.Count : 0;
+                    default:
+                        return 0;
+                }
+            default:
+                return 0;
+        }
+    }
+
     private static bool IsDeferredDecodeImage(PdfStream stream)
     {
         if (stream.GetNameOrNull("Subtype") != "Image")

@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "dd513bc0050f9d73146fa78962b0f603fec7838f",
+  "sourceRevision": "8a08dc7f00f8ccf5b2d7f9d62796f4e7fab1e4b0",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7793,
+    "retainedSymbols": 7799,
     "observedComponentDependencies": 70,
     "declaredDependencies": 68,
     "acceptedExceptions": 1,
@@ -108,14 +108,14 @@
     {
       "source": "avalonia",
       "target": "rendering",
-      "references": 27,
+      "references": 28,
       "typeDependencyCount": 3,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Rendering.RenderOptions",
-          "references": 19
+          "references": 20
         }
       ]
     },
@@ -262,7 +262,7 @@
     {
       "source": "cli",
       "target": "rendering",
-      "references": 26,
+      "references": 27,
       "typeDependencyCount": 7,
       "classification": "declared",
       "evidence": [
@@ -388,8 +388,8 @@
     {
       "source": "core-document",
       "target": "core",
-      "references": 64,
-      "typeDependencyCount": 17,
+      "references": 71,
+      "typeDependencyCount": 19,
       "classification": "declared",
       "evidence": [
         {
@@ -430,7 +430,7 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1425,
+      "references": 1440,
       "typeDependencyCount": 218,
       "classification": "declared",
       "evidence": [
@@ -486,8 +486,8 @@
     {
       "source": "core-parsing",
       "target": "core-primitives",
-      "references": 139,
-      "typeDependencyCount": 30,
+      "references": 140,
+      "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [
         {
@@ -542,8 +542,8 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1181,
-      "typeDependencyCount": 144,
+      "references": 1191,
+      "typeDependencyCount": 145,
       "classification": "declared",
       "evidence": [
         {

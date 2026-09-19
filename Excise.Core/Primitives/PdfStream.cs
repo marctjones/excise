@@ -36,6 +36,19 @@ public class PdfStream : PdfDictionary
     private bool _decodedByDeferral;
 
     /// <summary>
+    /// How many bytes the /Filter pipeline's Flate stage is expected to produce,
+    /// or 0 when unknown (#1207, #1468 — F1). Set by the object store at resolve
+    /// time for a deferred-decode image, from /Width, /Height, /BitsPerComponent
+    /// and the component count of /ColorSpace (plus the PNG-predictor row byte
+    /// when /DecodeParms says so). <see cref="Filters.FlateFilterDecoder"/> uses
+    /// it to allocate the decoded array ONCE at the right size instead of
+    /// growing a chunk list and copying it into an exact-size result — which
+    /// held both live at the end and made a 92 MiB image cost ~184 MiB at its
+    /// peak. A wrong hint costs one extra copy, never a wrong byte.
+    /// </summary>
+    internal long ExpectedDecodedLength { get; set; }
+
+    /// <summary>
     /// Creates a new PDF stream with the specified dictionary and data.
     /// </summary>
     /// <param name="dictionary">The stream dictionary (will be copied).</param>
