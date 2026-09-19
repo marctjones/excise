@@ -9,6 +9,7 @@ using Excise.Core.Document;
 using Excise.Core.Text;
 using Xunit;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 
 namespace Excise.Rendering.Tests.Differential;
 
@@ -80,11 +81,31 @@ public sealed class ExtractionParityTests
             ("test-pdfs/smoke/scotus-trump-v-us.pdf", 3),
         };
 
+        // #1538: the smoke corpus is DOWNLOADED (scripts/download-smoke-corpus.sh)
+        // and test-pdfs/* is gitignored, so on a checkout that has not fetched
+        // it every case was `continue`d and the run fell through to an
+        // assertion claiming three "checked-in" files were missing. That points
+        // a reader at repository corruption instead of at an un-downloaded
+        // corpus — the #1527 shape with the polarity reversed: not a skip with
+        // a false reason, but a FAILURE with a false reason, which the #1172
+        // gate cannot see at all because the test does not skip.
+        //
+        // Absent corpus is now a skip whose reason carries the absolute paths
+        // that were searched, so check-skip-budget.sh can re-test the claim and
+        // fail a skip that lies.
+        var present = cases
+            .Where(c => File.Exists(Path.Combine(root!, c.RelativePath)))
+            .ToList();
+        Assert.SkipWhen(
+            present.Count == 0,
+            TestRepoLayout.AbsenceReason(
+                "smoke corpus (run scripts/download-smoke-corpus.sh)",
+                cases.Select(c => c.RelativePath).Distinct().ToArray()));
+
         var examined = 0;
-        foreach (var (relativePath, pageNumber) in cases)
+        foreach (var (relativePath, pageNumber) in present)
         {
             var path = Path.Combine(root!, relativePath);
-            if (!File.Exists(path)) continue;
 
             using var document = PdfDocument.Open(path);
             var page = document.GetPage(pageNumber);
@@ -101,8 +122,13 @@ public sealed class ExtractionParityTests
             examined++;
         }
 
-        examined.Should().BeGreaterThanOrEqualTo(3,
-            "the three checked-in ACC table/report controls must always be available");
+        // Every fixture that IS present must have been examined. The old
+        // ">= 3 because they are checked in" was false on both counts: none of
+        // these are checked in, and the count it demanded could not be met by a
+        // checkout that had simply not downloaded them.
+        examined.Should().Be(present.Count,
+            "every smoke fixture that is present must be examined — a loop that silently "
+            + "examines nothing while the files exist is the defect this count guards");
     }
 
     [Fact]
