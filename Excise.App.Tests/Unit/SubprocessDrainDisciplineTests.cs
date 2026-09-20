@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.App.Tests.Unit;
 
@@ -110,16 +111,9 @@ public class SubprocessDrainDisciplineTests
         return parts.Contains("obj") || parts.Contains("bin");
     }
 
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "excise.sln")))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Could not find repository root from test base directory.");
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln. LOCAL
+    // checkout, deliberately: this reads THIS worktree's own source / writes its
+    // own artifacts, and the main checkout may be on a different branch.
+    private static string FindRepoRoot() =>
+        TestRepoLayout.LocalCheckoutRoot ?? throw new DirectoryNotFoundException("Could not find repository root from test base directory.");
 }

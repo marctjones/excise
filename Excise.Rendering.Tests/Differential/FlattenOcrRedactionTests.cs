@@ -50,7 +50,7 @@ public sealed class FlattenOcrRedactionTests
                 RedirectStandardError = true,
                 UseShellExecute = false,
             };
-            foreach (var argument in new[] { cli!, "redact", input, output, Term, "--flatten-ocr" })
+            foreach (var argument in new[] { cli!, "redact", input!, output, Term, "--flatten-ocr" })
                 start.ArgumentList.Add(argument);
             using var child = Process.Start(start)!;
             var stdout = child.StandardOutput.ReadToEnd();
@@ -60,7 +60,7 @@ public sealed class FlattenOcrRedactionTests
 
             SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(output), Term).Should().BeEmpty();
             (MutoolTextExtractor.ExtractPage(output, 1) ?? "").Should().NotContain(Term);
-            RedactionBenchmarkRunner.MeasureImageBakedReadable(input, output, Term).Should().Be(0,
+            RedactionBenchmarkRunner.MeasureImageBakedReadable(input!, output, Term).Should().Be(0,
                 "a Ghostscript render OCR-ed by tesseract must not reveal the baked secret");
         }
         finally { try { File.Delete(output); } catch { } }

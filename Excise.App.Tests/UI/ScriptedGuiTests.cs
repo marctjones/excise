@@ -6,6 +6,7 @@ using AwesomeAssertions;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
+using Excise.TestSupport;
 using Xunit;
 namespace Excise.App.Tests.UI;
 
@@ -190,30 +191,16 @@ public class ScriptedGuiTests
         var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Use synthetic birth certificate PDF (not the original personal file)
-        // Find repository root by walking up from current directory
-        var currentDir = Directory.GetCurrentDirectory();
-        var repoRoot = currentDir;
-        while (repoRoot != null && !Directory.Exists(Path.Combine(repoRoot, ".git")) && !File.Exists(Path.Combine(repoRoot, ".git")))
-        {
-            var parent = Directory.GetParent(repoRoot);
-            repoRoot = parent?.FullName;
-        }
-
-        if (repoRoot == null)
-        {
-            _output.WriteLine("Skipping: Could not find repository root");
-            return;
-        }
-
-        var birthCertPath = Path.Combine(repoRoot, "test-pdfs", "sample-pdfs", "birth-certificate-request-scrambled.pdf");
+        // #1706 — the shared locator, not a hand-rolled walk to .git (which used
+        // Directory.GetParent rather than .Parent, so a scan for the latter
+        // missed it). And a real SKIP with a checkable reason: this used to
+        // `return` — i.e. REPORT A PASS — when it could not find the fixture,
+        // which is the silent-green shape #1706 is about.
+        var birthCertPath = TestRepoLayout.FindFile(
+            "test-pdfs", "sample-pdfs", "birth-certificate-request-scrambled.pdf");
+        Assert.SkipWhen(birthCertPath == null, TestRepoLayout.AbsenceReason(
+            "synthetic birth certificate", "test-pdfs/sample-pdfs/birth-certificate-request-scrambled.pdf"));
         var outputPdf = Path.Combine(_testDataDir, "birth-cert-redacted.pdf");
-
-        // Skip if synthetic birth certificate not available
-        if (!File.Exists(birthCertPath))
-        {
-            _output.WriteLine($"Skipping: Synthetic birth certificate not found at {birthCertPath}");
-            return;
-        }
 
         // Act — birth certificate redaction workflow
         var result = await ExecuteScriptAsync(viewModel, $@"

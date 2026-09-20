@@ -12,6 +12,7 @@ using AwesomeAssertions;
 using Excise.Avalonia.Controls;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
@@ -392,21 +393,9 @@ public class TypewriterWorkflowTests
         Cleanup(dir);
     }
 
-    private static string? RestrictedFixturePathOrNull()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "excise.sln")))
-            {
-                var path = Path.Combine(dir.FullName,
-                    "test-pdfs", "poppler", "unittestcases", "Gday garçon - owner.pdf");
-                return File.Exists(path) ? path : null;
-            }
-            dir = dir.Parent;
-        }
-        return null;
-    }
+    // #1706 — the shared locator, not a hand-rolled walk to excise.sln.
+    private static string? RestrictedFixturePathOrNull() =>
+        TestRepoLayout.FindFile("test-pdfs", "poppler", "unittestcases", "Gday garçon - owner.pdf");
 
     private static (string source, string output, string dir) MakePaths()
     {

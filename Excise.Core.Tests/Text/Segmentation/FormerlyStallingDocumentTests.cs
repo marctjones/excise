@@ -3,6 +3,7 @@ using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -54,15 +55,8 @@ public class FormerlyStallingDocumentTests
     private const string Fixture = "test-pdfs/pdfjs/issue15629.pdf";
     private const string Term = "Louise";
 
-    private static string? FixturePath()
-    {
-        var dir = new DirectoryInfo(System.AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git")))
-            dir = dir.Parent;
-        if (dir == null) return null;
-        var path = Path.Combine(dir.FullName, Fixture);
-        return File.Exists(path) ? path : null;
-    }
+    // #1706 — the shared locator, not a hand-rolled walk to .git.
+    private static string? FixturePath() => TestRepoLayout.FindFile(Fixture);
 
     /// <summary>
     /// The property that matters, and the one #1089 exists to make expressible:

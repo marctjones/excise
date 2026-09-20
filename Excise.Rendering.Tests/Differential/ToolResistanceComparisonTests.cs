@@ -8,6 +8,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -49,18 +50,10 @@ public sealed class ToolResistanceComparisonTests
         "date" => Dates, "digits" => Digits, _ => Names,
     };
 
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? AppContext.BaseDirectory;
-    }
-
-    private static string? PyMuPdfPython()
-    {
-        var p = Path.Combine(RepoRoot(), "tools", "vendor", "xray-venv", "bin", "python");
-        return File.Exists(p) ? p : null;
-    }
+    // #1706 — the shared locator: a hand-rolled walk to .git stops at a
+    // worktree's .git FILE, short of the main checkout / a tracked repo file.
+    private static string? PyMuPdfPython() =>
+        TestRepoLayout.FindFile("tools", "vendor", "xray-venv", "bin", "python");
 
     /// <summary>Redact with a tool; return the output path, or null on failure.</summary>
     private static bool RedactWith(string tool, string src, string dst, string term)
@@ -78,8 +71,8 @@ public sealed class ToolResistanceComparisonTests
         }
 
         var py = PyMuPdfPython();
-        var script = Path.Combine(RepoRoot(), "scripts", "benchmark-adapters", "redact-pymupdf.py");
-        if (py == null || !File.Exists(script)) return false;
+        var script = TestRepoLayout.FindFile("scripts", "benchmark-adapters", "redact-pymupdf.py");
+        if (py == null || script == null) return false;
         try
         {
             var psi = new ProcessStartInfo(py) { RedirectStandardOutput = true, RedirectStandardError = true,
@@ -113,14 +106,14 @@ public sealed class ToolResistanceComparisonTests
     [Fact]
     public void ResistancePerBand_ExciseVsPyMuPdf()
     {
-        var corpus = Path.Combine(RepoRoot(), "test-pdfs", "redaction-synthetic");
-        var manifest = Path.Combine(corpus, "manifest.jsonl");
-        Assert.SkipUnless(File.Exists(manifest),
-            "run scripts/gen-redaction-corpus.py first [requires: corpus:redaction-synthetic]");
-        Assert.SkipUnless(PyMuPdfPython() != null,
-            "needs the PyMuPDF venv (scripts/download-xray.sh) [requires: file:tools/vendor/xray-venv/bin/python]");
+        var corpus = TestRepoLayout.FindDirectory("test-pdfs", "redaction-synthetic");
+        var manifest = corpus == null ? null : Path.Combine(corpus, "manifest.jsonl");
+        Assert.SkipUnless(manifest != null && File.Exists(manifest), TestRepoLayout.AbsenceReason(
+            "constructed corpus — run scripts/gen-redaction-corpus.py first", "test-pdfs/redaction-synthetic"));
+        Assert.SkipUnless(PyMuPdfPython() != null, TestRepoLayout.AbsenceReason(
+            "PyMuPDF venv — run scripts/download-xray.sh", "tools/vendor/xray-venv/bin/python"));
 
-        var originals = File.ReadAllLines(manifest).Where(l => l.Length > 0)
+        var originals = File.ReadAllLines(manifest!).Where(l => l.Length > 0)
             .Select(l => JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(l)!)
             .Where(m => m["method"].GetString() == "original")
             .ToList();
@@ -135,7 +128,7 @@ public sealed class ToolResistanceComparisonTests
             var band = m["band"].GetString()!;
             var answer = m["answer"].GetString()!;
             var kind = m["dictionary"].GetString()!;
-            var src = Path.Combine(corpus, id + ".pdf");
+            var src = Path.Combine(corpus!, id + ".pdf");
             if (!File.Exists(src)) continue;
             var dict = DictFor(kind);
 

@@ -1,8 +1,7 @@
-using System;
-using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text;
@@ -20,26 +19,22 @@ namespace Excise.Core.Tests.Text;
 /// </summary>
 public sealed class ReadingOrderRegressionTests
 {
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
-    }
-
     [Fact]
     public void MultiColumnInstructionBooklet_ReadsColumnByColumn_NoInterleaving()
     {
         // The worst #899 page (irs-1040-instructions p117, was 0.774 coverage,
         // interleaved). Corpus-gated: skip when the fixture is absent.
-        var path = Path.Combine(RepoRoot(), "test-pdfs", "smoke", "irs-1040-instructions.pdf");
-        if (!File.Exists(path))
-            path = Path.Combine(RepoRoot(), "test-pdfs", "federal", "irs-1040-instructions.pdf");
-        Assert.SkipUnless(File.Exists(path),
-            "irs-1040-instructions.pdf absent [requires: corpus:smoke]");
+        //
+        // #1706 — this used to walk upward to the first .git and join
+        // test-pdfs onto it, which stops at a worktree's .git FILE rather than
+        // the main checkout where the corpus lives.
+        var path = TestRepoLayout.FindFile("test-pdfs", "smoke", "irs-1040-instructions.pdf")
+                   ?? TestRepoLayout.FindFile("test-pdfs", "federal", "irs-1040-instructions.pdf");
+        Assert.SkipUnless(path != null, TestRepoLayout.AbsenceReason(
+            "irs-1040-instructions.pdf",
+            "test-pdfs/smoke/irs-1040-instructions.pdf", "test-pdfs/federal/irs-1040-instructions.pdf"));
 
-        using var doc = PdfDocument.Open(path);
+        using var doc = PdfDocument.Open(path!);
         doc.PageCount.Should().BeGreaterThanOrEqualTo(117);
         // Normalise whitespace runs — reading ORDER is the #899 property, not exact
         // spacing (GetPage.Text emits run-gap spaces the CLI collapses).

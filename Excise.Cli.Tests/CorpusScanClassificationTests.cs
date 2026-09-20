@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Excise.Core.Parsing;
+using Excise.TestSupport;
 using System.Diagnostics;
 using Xunit;
 
@@ -2073,19 +2074,11 @@ public class CorpusScanClassificationTests
         return (Path.Combine(repoRoot, "test-pdfs", "rendering-contracts"), repoRoot);
     }
 
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "excise.sln")) &&
-                Directory.Exists(Path.Combine(dir.FullName, "test-pdfs")))
-            {
-                return dir.FullName;
-            }
-            dir = dir.Parent;
-        }
-
-        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk requiring excise.sln AND
+    // a test-pdfs directory at the same level. A worktree's partial test-pdfs
+    // (the tracked subdirectories only) satisfied that second condition too,
+    // stopping the walk at the worktree root short of the main checkout.
+    private static string FindRepoRoot() =>
+        TestRepoLayout.MainCheckoutRoot
+        ?? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
 }

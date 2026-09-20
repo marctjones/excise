@@ -8,6 +8,7 @@ using Excise.Rendering;
 using SkiaSharp;
 using Xunit;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 
 namespace Excise.Rendering.Tests.Differential;
 
@@ -384,17 +385,10 @@ public sealed class DifferentialRenderingTests
     /// (where excise.sln lives). Tests are otherwise unaware of where on
     /// disk they're running.
     /// </summary>
-    private static string? LocateRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "excise.sln")))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
-        return null;
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln. The
+    // old walk stopped at a worktree's .git FILE, short of the MAIN checkout
+    // where the gitignored corpora below actually live.
+    private static string? LocateRepoRoot() => TestRepoLayout.MainCheckoutRoot;
 
     private const string SentinelNoCorpus = "<no-corpus-downloaded>";
 }

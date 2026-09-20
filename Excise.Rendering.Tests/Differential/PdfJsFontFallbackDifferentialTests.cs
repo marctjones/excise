@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -68,15 +69,8 @@ public sealed class PdfJsFontFallbackDifferentialTests
         report.MeanAbsoluteError.Should().BeLessThan(9.5);
     }
 
-    private static string? LocateRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "excise.sln")))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
-        return null;
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln. The
+    // old walk stopped at a worktree's .git FILE, short of the MAIN checkout
+    // where the gitignored corpora below actually live.
+    private static string? LocateRepoRoot() => TestRepoLayout.MainCheckoutRoot;
 }

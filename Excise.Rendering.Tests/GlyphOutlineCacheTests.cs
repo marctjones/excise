@@ -1,7 +1,7 @@
-using System;
 using System.IO;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests;
@@ -20,9 +20,9 @@ public class GlyphOutlineCacheTests
     [Fact]
     public void RepeatedGlyphsAreTessellatedOnceAndReused()
     {
-        var fixture = Path.Combine(
-            FindRepoRoot(), "test-pdfs", "sample-pdfs", "multilingual-noto-cjk.pdf");
-        if (!File.Exists(fixture))
+        // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
+        var fixture = TestRepoLayout.FindFile("test-pdfs", "sample-pdfs", "multilingual-noto-cjk.pdf");
+        if (fixture == null)
             return; // fixture not present in this checkout — nothing to guard
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(fixture));
@@ -46,11 +46,4 @@ public class GlyphOutlineCacheTests
         // glyphs). On Latin body text corpus-wide it exceeds 90% (#598).
     }
 
-    private static string FindRepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !File.Exists(Path.Combine(d.FullName, "excise.sln")))
-            d = d.Parent;
-        return d?.FullName ?? AppContext.BaseDirectory;
-    }
 }

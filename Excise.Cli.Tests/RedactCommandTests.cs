@@ -176,17 +176,15 @@ public class RedactCommandTests : IDisposable
     public void RunRedact_OcrImageText_RemovesASecretBakedOnlyIntoPixels()
     {
         Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git")))
-            dir = dir.Parent;
-        Assert.SkipWhen(dir == null, "repository root unavailable");
-
-        var input = Path.Combine(dir!.FullName, "test-pdfs", "redaction-adversarial",
-            "image-baked-text--IMAGEBAKEDSECRET.pdf");
-        Assert.SkipWhen(!File.Exists(input), "image-baked-text fixture not present");
+        // #1706 — the shared locator, not a hand-rolled walk to .git.
+        var input = TestRepoLayout.FindFile(
+            "test-pdfs", "redaction-adversarial", "image-baked-text--IMAGEBAKEDSECRET.pdf");
+        Assert.SkipWhen(input == null, TestRepoLayout.AbsenceReason(
+            "image-baked-text redaction fixture",
+            "test-pdfs/redaction-adversarial/image-baked-text--IMAGEBAKEDSECRET.pdf"));
         var output = TempPath(".pdf");
 
-        RedactCommandTestDriver.RunRedact(input, output, "IMAGEBAKEDSECRET", caseSensitive: false,
+        RedactCommandTestDriver.RunRedact(input!, output, "IMAGEBAKEDSECRET", caseSensitive: false,
             ocrImageText: true).Should().Be(1,
                 "OCR must locate the image-only term before the normal structural and image-redaction path runs (#1186)");
 
@@ -201,15 +199,15 @@ public class RedactCommandTests : IDisposable
     public async Task RunAsync_RedactFlattenOcr_ReplacesTheSourceWithCleanImageOnlyOutput()
     {
         Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
-        Assert.SkipWhen(dir == null, "repository root unavailable");
-        var input = Path.Combine(dir!.FullName, "test-pdfs", "redaction-adversarial",
-            "image-baked-text--IMAGEBAKEDSECRET.pdf");
-        Assert.SkipWhen(!File.Exists(input), "image-baked-text fixture not present");
+        // #1706 — the shared locator, not a hand-rolled walk to .git.
+        var input = TestRepoLayout.FindFile(
+            "test-pdfs", "redaction-adversarial", "image-baked-text--IMAGEBAKEDSECRET.pdf");
+        Assert.SkipWhen(input == null, TestRepoLayout.AbsenceReason(
+            "image-baked-text redaction fixture",
+            "test-pdfs/redaction-adversarial/image-baked-text--IMAGEBAKEDSECRET.pdf"));
         var output = TempPath(".pdf");
 
-        (await Program.RunAsync(new[] { "redact", input, output, "IMAGEBAKEDSECRET", "--flatten-ocr" })).Should().Be(0);
+        (await Program.RunAsync(new[] { "redact", input!, output, "IMAGEBAKEDSECRET", "--flatten-ocr" })).Should().Be(0);
         SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(output), "IMAGEBAKEDSECRET").Should().BeEmpty();
         using var doc = PdfDocument.Open(output);
         doc.GetPage(1).Text.Should().BeEmpty("the flattened output intentionally has no text layer");
@@ -221,15 +219,15 @@ public class RedactCommandTests : IDisposable
     public async Task RunAsync_RedactFlattenOcr_NoMatch_FailsWithoutWritingOutput()
     {
         Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
-        Assert.SkipWhen(dir == null, "repository root unavailable");
-        var input = Path.Combine(dir!.FullName, "test-pdfs", "redaction-adversarial",
-            "image-baked-text--IMAGEBAKEDSECRET.pdf");
-        Assert.SkipWhen(!File.Exists(input), "image-baked-text fixture not present");
+        // #1706 — the shared locator, not a hand-rolled walk to .git.
+        var input = TestRepoLayout.FindFile(
+            "test-pdfs", "redaction-adversarial", "image-baked-text--IMAGEBAKEDSECRET.pdf");
+        Assert.SkipWhen(input == null, TestRepoLayout.AbsenceReason(
+            "image-baked-text redaction fixture",
+            "test-pdfs/redaction-adversarial/image-baked-text--IMAGEBAKEDSECRET.pdf"));
         var output = TempPath(".pdf");
 
-        (await Program.RunAsync(new[] { "redact", input, output, "NOTPRESENT", "--flatten-ocr" })).Should().NotBe(0);
+        (await Program.RunAsync(new[] { "redact", input!, output, "NOTPRESENT", "--flatten-ocr" })).Should().NotBe(0);
         File.Exists(output).Should().BeFalse("a failed image-only redaction must not create an unredacted output");
     }
 

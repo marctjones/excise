@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 using AwesomeAssertions;
@@ -6,6 +5,7 @@ using Excise.Core.Document;
 using Excise.Core.Fonts;
 using Excise.Core.Primitives;
 using Excise.Rendering.Fonts;
+using Excise.TestSupport;
 using SkiaSharp;
 using Xunit;
 
@@ -24,11 +24,12 @@ public sealed class TamReviewCffSubsetTests
     [Fact]
     public void TamReviewBodyFont_CustomGNamesResolveToDrawableCffGlyphs()
     {
-        var pdfPath = LocateTamReviewPdf();
-        Assert.SkipUnless(File.Exists(pdfPath),
-            "pdf.js TAMReview fixture not found at test-pdfs/pdfjs/TAMReview.pdf.");
+        // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
+        var pdfPath = TestRepoLayout.FindFile("test-pdfs", "pdfjs", "TAMReview.pdf");
+        Assert.SkipUnless(pdfPath != null,
+            TestRepoLayout.AbsenceReason("pdf.js TAMReview fixture", "test-pdfs/pdfjs/TAMReview.pdf"));
 
-        using var doc = PdfDocument.Open(pdfPath);
+        using var doc = PdfDocument.Open(pdfPath!);
         var font = FindFontByBaseName(doc, "EMMOLK+Cambria");
         font.Should().NotBeNull("TAMReview body text uses this embedded Type1C subset");
 
@@ -63,11 +64,12 @@ public sealed class TamReviewCffSubsetTests
     [Fact]
     public void TamReviewPage17_BodyParagraphTextProducesInk()
     {
-        var pdfPath = LocateTamReviewPdf();
-        Assert.SkipUnless(File.Exists(pdfPath),
-            "pdf.js TAMReview fixture not found at test-pdfs/pdfjs/TAMReview.pdf.");
+        // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
+        var pdfPath = TestRepoLayout.FindFile("test-pdfs", "pdfjs", "TAMReview.pdf");
+        Assert.SkipUnless(pdfPath != null,
+            TestRepoLayout.AbsenceReason("pdf.js TAMReview fixture", "test-pdfs/pdfjs/TAMReview.pdf"));
 
-        using var doc = PdfDocument.Open(pdfPath);
+        using var doc = PdfDocument.Open(pdfPath!);
         using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(17), new RenderOptions { Dpi = RenderDpi });
 
         var bodyInk = CountDarkPixels(
@@ -165,17 +167,5 @@ public sealed class TamReviewCffSubsetTests
         stream.Should().NotBeNull();
 
         return stream!.DecodedData;
-    }
-
-    private static string LocateTamReviewPdf()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "excise.sln")))
-                return Path.Combine(dir.FullName, "test-pdfs", "pdfjs", "TAMReview.pdf");
-            dir = dir.Parent;
-        }
-        return Path.Combine("test-pdfs", "pdfjs", "TAMReview.pdf");
     }
 }

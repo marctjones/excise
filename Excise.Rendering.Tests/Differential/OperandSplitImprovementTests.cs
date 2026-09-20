@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -23,14 +23,6 @@ public class OperandSplitImprovementTests
 {
     private readonly Xunit.ITestOutputHelper _out;
     public OperandSplitImprovementTests(Xunit.ITestOutputHelper o) => _out = o;
-
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
-    }
 
     // Real fixtures whose text redaction rewrites content (not just carriers),
     // with a term the oracle sees on them.
@@ -80,8 +72,11 @@ public class OperandSplitImprovementTests
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
-        var present = Cases.Where(c => File.Exists(Path.Combine(RepoRoot(), c.Rel))).ToList();
-        Assert.SkipUnless(present.Count > 0, "no fixtures present [requires: corpus:pdfjs]");
+        // #1706 — the shared locator, so a worktree's .git FILE does not stop
+        // the search short of the main checkout, where these corpora live.
+        var present = Cases.Where(c => TestRepoLayout.FindFile(c.Rel) != null).ToList();
+        Assert.SkipUnless(present.Count > 0, TestRepoLayout.AbsenceReason(
+            "fixtures", Cases.Select(c => c.Rel).ToArray()));
 
         long totalSplits = 0;
         int worseCases = 0, improvedCases = 0;
@@ -89,7 +84,7 @@ public class OperandSplitImprovementTests
 
         foreach (var (rel, term) in present)
         {
-            var path = Path.Combine(RepoRoot(), rel);
+            var path = TestRepoLayout.FindFile(rel)!;
             var on = RedactAndMeasure(path, term, disableSplit: false);
             var off = RedactAndMeasure(path, term, disableSplit: true);
             totalSplits += on.Splits;

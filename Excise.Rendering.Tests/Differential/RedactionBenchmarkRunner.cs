@@ -284,11 +284,8 @@ public sealed class RedactionBenchmarkRunner
     }
 
     /// <summary>The x-ray venv python, which also carries PyMuPDF.</summary>
-    private static string? PyMuPdfPython()
-    {
-        var p = Path.Combine(RepoRoot(), "tools", "vendor", "xray-venv", "bin", "python");
-        return File.Exists(p) ? p : null;
-    }
+    private static string? PyMuPdfPython() =>
+        TestRepoLayout.FindFile("tools", "vendor", "xray-venv", "bin", "python");
 
     /// <summary>
     /// Run a competitor as a subprocess. Returns the occurrence count it
@@ -297,13 +294,13 @@ public sealed class RedactionBenchmarkRunner
     /// <summary>iText 7 + pdfSweep jars (scripts/download-itext.sh) and a java.</summary>
     private static bool ItextRunnable() =>
         ItextClasspath() != null
-        && File.Exists(Path.Combine(RepoRoot(), "scripts", "ItextRedactor.java"))
+        && TestRepoLayout.FindFile("scripts", "ItextRedactor.java") != null
         && PdfBoxReferenceRedactor.IsAvailable;   // reuses the #1042 java resolution
 
     private static string? ItextClasspath()
     {
-        var dir = Path.Combine(RepoRoot(), "tools", "vendor", "itext");
-        if (!Directory.Exists(dir)) return null;
+        var dir = TestRepoLayout.FindDirectory("tools", "vendor", "itext");
+        if (dir == null) return null;
         var jars = Directory.GetFiles(dir, "*.jar");
         return jars.Length > 0 ? string.Join(Path.PathSeparator, jars) : null;
     }
@@ -318,8 +315,8 @@ public sealed class RedactionBenchmarkRunner
             var java = System.Environment.GetEnvironmentVariable("EXCISE_JAVA_COMMAND")
                        ?? (File.Exists("/opt/homebrew/opt/openjdk/bin/java") ? "/opt/homebrew/opt/openjdk/bin/java" : "java");
             var cp = ItextClasspath();
-            var driver = Path.Combine(RepoRoot(), "scripts", "ItextRedactor.java");
-            if (cp == null || !File.Exists(driver)) return null;
+            var driver = TestRepoLayout.FindFile("scripts", "ItextRedactor.java");
+            if (cp == null || driver == null) return null;
             psi = new System.Diagnostics.ProcessStartInfo(java)
             {
                 RedirectStandardOutput = true, RedirectStandardError = true,
@@ -331,8 +328,8 @@ public sealed class RedactionBenchmarkRunner
 
         var python = PyMuPdfPython();
         if (python == null) return null;
-        var script = Path.Combine(RepoRoot(), "scripts", "benchmark-adapters", $"redact-{tool}.py");
-        if (!File.Exists(script)) return null;
+        var script = TestRepoLayout.FindFile("scripts", "benchmark-adapters", $"redact-{tool}.py");
+        if (script == null) return null;
 
         try
         {
@@ -370,14 +367,6 @@ public sealed class RedactionBenchmarkRunner
             return m.Count > 0 ? int.Parse(m[m.Count - 1].Groups[1].Value) : 0;
         }
         catch { return null; }
-    }
-
-    private static string RepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git")))
-            dir = dir.Parent;
-        return dir?.FullName ?? AppContext.BaseDirectory;
     }
 
     /// <summary>The commit this run's binaries were built from (#1400) --
@@ -426,7 +415,12 @@ public sealed class RedactionBenchmarkRunner
         Assert.SkipUnless(Environment.GetEnvironmentVariable("REDACTION_BENCH") == "1",
             "set REDACTION_BENCH=1 to run the benchmark [requires: env:REDACTION_BENCH]");
 
-        var root = RepoRoot();
+        // #1706 — LOCAL checkout, deliberately: results.jsonl, the git commit
+        // and the TRACKED redaction-hard-cases.tsv manifest all belong to the
+        // worktree actually running this benchmark, not wherever the main
+        // checkout happens to be. The gitignored corpora below resolve
+        // separately through TestRepoLayout's local-then-main search.
+        var root = TestRepoLayout.LocalCheckoutRoot ?? AppContext.BaseDirectory;
         var rows = new List<Row>();
         var docsSeen = 0;
 
@@ -456,8 +450,8 @@ public sealed class RedactionBenchmarkRunner
         foreach (var (corpus, take) in Corpora)
         {
             if (onlyCorpora is { Length: > 0 } && !onlyCorpora.Contains(corpus)) continue;
-            var dir = Path.Combine(root, "test-pdfs", corpus);
-            if (!Directory.Exists(dir)) { _out.WriteLine($"absent: {corpus}"); continue; }
+            var dir = TestRepoLayout.FindDirectory("test-pdfs", corpus);
+            if (dir == null) { _out.WriteLine($"absent: {corpus}"); continue; }
 
             // Ordered, then taken — the case list must be reproducible, or two
             // runs cannot be compared and the numbers mean nothing.
@@ -509,8 +503,8 @@ public sealed class RedactionBenchmarkRunner
             foreach (var hc in ReadHardCases(root))
             {
                 if (onlyDifficulty is { Length: > 0 } && !onlyDifficulty.Contains(hc.Difficulty)) continue;
-                var path = Path.Combine(root, hc.Path);
-                if (!File.Exists(path)) { _out.WriteLine($"hard-case absent: {hc.Path}"); continue; }
+                var path = TestRepoLayout.FindFile(hc.Path);
+                if (path == null) { _out.WriteLine($"hard-case absent: {hc.Path}"); continue; }
                 docsSeen++;
                 foreach (var row in MeasureToolsInParallel(tool =>
                 {

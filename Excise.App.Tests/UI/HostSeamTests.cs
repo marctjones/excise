@@ -12,6 +12,7 @@ using Excise.App.Tests.Utilities;
 using Excise.App.Tests.Utilities.Fakes;
 using Moq;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.App.Tests.UI;
 
@@ -271,16 +272,9 @@ public class HostSeamTests
         return offenders;
     }
 
-    private static string FindRepoRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory != null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "excise.sln")))
-                return directory.FullName;
-            directory = directory.Parent;
-        }
-
-        throw new InvalidOperationException("Could not find repository root.");
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln. LOCAL
+    // checkout, deliberately: this reads THIS worktree's own source / writes its
+    // own artifacts, and the main checkout may be on a different branch.
+    private static string FindRepoRoot() =>
+        TestRepoLayout.LocalCheckoutRoot ?? throw new InvalidOperationException("Could not find repository root.");
 }

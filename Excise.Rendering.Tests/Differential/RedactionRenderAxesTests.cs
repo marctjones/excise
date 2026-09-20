@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -190,15 +191,6 @@ public class RedactionRenderAxesTests
         finally { File.Delete(pdf); }
     }
 
-    private static string? LocateRepoRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory != null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "excise.sln")))
-                return directory.FullName;
-            directory = directory.Parent;
-        }
-        return null;
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln.
+    private static string? LocateRepoRoot() => TestRepoLayout.MainCheckoutRoot;
 }

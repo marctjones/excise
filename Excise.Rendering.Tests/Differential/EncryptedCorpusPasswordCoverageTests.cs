@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -92,7 +93,8 @@ public class EncryptedCorpusPasswordCoverageTests
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable,
             "qpdf not installed — needed to identify which fixtures are encrypted");
 
-        var root = FindRepoRoot();
+        // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
+        var root = TestRepoLayout.MainCheckoutRoot;
         Assert.SkipWhen(root == null, "could not locate repo root");
 
         var present = CorpusDirs
@@ -140,7 +142,8 @@ public class EncryptedCorpusPasswordCoverageTests
     [Fact]
     public void EveryManifestPassword_ActuallyDecryptsItsFixture()
     {
-        var root = FindRepoRoot();
+        // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
+        var root = TestRepoLayout.MainCheckoutRoot;
         Assert.SkipWhen(root == null, "could not locate repo root");
 
         var known = LoadPasswordManifest(Path.Combine(root!, "tests", "corpus-passwords.tsv"));
@@ -190,7 +193,8 @@ public class EncryptedCorpusPasswordCoverageTests
     [Fact]
     public void NoManifestEntry_MatchesMoreThanOneCorpusFile()
     {
-        var root = FindRepoRoot();
+        // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
+        var root = TestRepoLayout.MainCheckoutRoot;
         Assert.SkipWhen(root == null, "could not locate repo root");
 
         var known = LoadPasswordManifest(Path.Combine(root!, "tests", "corpus-passwords.tsv"));
@@ -272,14 +276,4 @@ public class EncryptedCorpusPasswordCoverageTests
         return map;
     }
 
-    private static string? FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "excise.sln"))) return dir.FullName;
-            dir = dir.Parent;
-        }
-        return null;
-    }
 }

@@ -6,6 +6,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Rendering.Differential;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Rendering.Tests.Differential;
 
@@ -17,14 +18,6 @@ namespace Excise.Rendering.Tests.Differential;
 public class CompetitorAdapterTests
 {
     private const string Secret = "Farrar";
-
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
-    }
 
     private static byte[] Fixture()
     {
@@ -56,16 +49,25 @@ public class CompetitorAdapterTests
     [Fact]
     public void RasterBaseline_LeavesNoExtractableTextAnywhere_TheAnchor()
     {
-        var venv = Path.Combine(RepoRoot(), "tools", "vendor", "xray-venv", "bin", "python");
-        Assert.SkipUnless(File.Exists(venv) && MutoolReferenceRenderer.IsAvailable, "venv/mutool absent");
+        // ⚠️ #1706 — tools/vendor/ is GITIGNORED: it lives in the MAIN checkout
+        // and a worktree has none. This used to join it onto the nearest .git,
+        // which is the worktree, so both tests below skipped there claiming the
+        // venv and jars were "absent" while they sat one checkout over.
+        // TestRepoLayout searches local-then-main, and the skip reason now
+        // carries the paths it searched so check-skip-budget.sh can falsify it.
+        var venv = TestRepoLayout.FindFile("tools", "vendor", "xray-venv", "bin", "python");
+        Assert.SkipUnless(venv != null, TestRepoLayout.AbsenceReason(
+            "PyMuPDF/x-ray venv", "tools/vendor/xray-venv/bin/python"));
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
         var input = Path.Combine(Path.GetTempPath(), $"ras-in-{Guid.NewGuid():N}.pdf");
         var output = Path.Combine(Path.GetTempPath(), $"ras-out-{Guid.NewGuid():N}.pdf");
         try
         {
             File.WriteAllBytes(input, Fixture());
-            var script = Path.Combine(RepoRoot(), "scripts", "benchmark-adapters", "redact-raster.py");
-            var (exit, _) = Run(venv, script, input, output, Secret);
+            var script = TestRepoLayout.FindFile("scripts", "benchmark-adapters", "redact-raster.py");
+            script.Should().NotBeNull("redact-raster.py is checked into git");
+            var (exit, _) = Run(venv!, script!, input, output, Secret);
             exit.Should().Be(0);
 
             // The anchor's whole point: rasterising everything means NO text
@@ -81,21 +83,23 @@ public class CompetitorAdapterTests
     [Fact]
     public void ItextPdfSweep_RemovesTheTerm_ButKeepsItsNeighbours()
     {
-        var jarDir = Path.Combine(RepoRoot(), "tools", "vendor", "itext");
-        var driver = Path.Combine(RepoRoot(), "scripts", "ItextRedactor.java");
-        Assert.SkipUnless(Directory.Exists(jarDir) && Directory.GetFiles(jarDir, "*.jar").Length > 0
-            && File.Exists(driver) && PdfBoxReferenceRedactor.IsAvailable && MutoolReferenceRenderer.IsAvailable,
-            "itext jars / java / mutool absent");
+        var jarDir = TestRepoLayout.FindDirectory("tools", "vendor", "itext");
+        var driver = TestRepoLayout.FindFile("scripts", "ItextRedactor.java");
+        Assert.SkipUnless(jarDir != null && Directory.GetFiles(jarDir, "*.jar").Length > 0,
+            TestRepoLayout.AbsenceReason("iText jars — run scripts/download-itext.sh", "tools/vendor/itext"));
+        Assert.SkipUnless(driver != null, "scripts/ItextRedactor.java is checked into git");
+        Assert.SkipUnless(PdfBoxReferenceRedactor.IsAvailable, "java (PdfBox reference redactor) not available");
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
         var java = Environment.GetEnvironmentVariable("EXCISE_JAVA_COMMAND")
                    ?? (File.Exists("/opt/homebrew/opt/openjdk/bin/java") ? "/opt/homebrew/opt/openjdk/bin/java" : "java");
-        var cp = string.Join(Path.PathSeparator, Directory.GetFiles(jarDir, "*.jar"));
+        var cp = string.Join(Path.PathSeparator, Directory.GetFiles(jarDir!, "*.jar"));
         var input = Path.Combine(Path.GetTempPath(), $"it-in-{Guid.NewGuid():N}.pdf");
         var output = Path.Combine(Path.GetTempPath(), $"it-out-{Guid.NewGuid():N}.pdf");
         try
         {
             File.WriteAllBytes(input, Fixture());
-            var (exit, _) = Run(java, "--class-path", cp, driver, input, output, Secret);
+            var (exit, _) = Run(java, "--class-path", cp, driver!, input, output, Secret);
             exit.Should().Be(0);
 
             var text = MutoolTextExtractor.ExtractPage(output, 1) ?? "";
