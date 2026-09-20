@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1329,
-  "indexedContentSha256": "b2e81d27b9405103809708a5366a166acde40c3ff3159b20c7f68fc24f50aafa",
+  "indexedFileCount": 1330,
+  "indexedContentSha256": "a76a9af86de3497a1824541fc159c5ae5d2ebd4d867237fda22872bf539c941e",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -8819,7 +8819,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 305
+      "candidateReferenceCount": 306
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9794,7 +9794,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 224
+      "candidateReferenceCount": 225
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -11365,7 +11365,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 169
+      "candidateReferenceCount": 170
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -21858,7 +21858,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 114
+      "candidateReferenceCount": 115
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -28053,6 +28053,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.Images.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -28374,7 +28385,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 43
+      "candidateReferenceCount": 44
     },
     {
       "id": "pdf.20.image.requirement-004",
@@ -28534,6 +28545,17 @@
             "flatedecode",
             "image",
             "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/SkiaRenderer.Images.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
           ]
         },
         {
@@ -28861,7 +28883,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 43
+      "candidateReferenceCount": 44
     },
     {
       "id": "pdf.20.image.requirement-005",
@@ -29021,6 +29043,17 @@
             "flatedecode",
             "image",
             "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/SkiaRenderer.Images.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
           ]
         },
         {
@@ -29368,7 +29401,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 45
+      "candidateReferenceCount": 46
     },
     {
       "id": "pdf.20.image.requirement-006",
@@ -34441,6 +34474,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/StreamedSubsampledDecodeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/Utilities/FixedAvaloniaFact.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34524,7 +34566,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 70
+      "candidateReferenceCount": 71
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -35165,6 +35207,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/StreamedSubsampledDecodeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/Utilities/FixedAvaloniaFact.cs",
           "kind": "test",
           "matchedTerms": [
@@ -35248,7 +35299,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 70
+      "candidateReferenceCount": 71
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -36065,7 +36116,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 166
+      "candidateReferenceCount": 168
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -37415,6 +37466,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/StreamedSubsampledDecodeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/RedactionMouseWorkflowTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37433,7 +37493,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 53
     },
     {
       "id": "pdf.20.image.requirement-027",
@@ -38019,6 +38079,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/StreamedSubsampledDecodeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Visual/CombinedRedactionRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -38064,7 +38133,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 61
+      "candidateReferenceCount": 62
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -38388,6 +38457,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/StreamedSubsampledDecodeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-pdfium.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -38425,7 +38503,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 32
+      "candidateReferenceCount": 33
     },
     {
       "id": "pdf.20.image.requirement-029",
@@ -66310,7 +66388,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 649
+      "candidateReferenceCount": 651
     },
     {
       "id": "pdf.20.extension.developer",

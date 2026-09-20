@@ -486,6 +486,103 @@ internal static class RawSampleImageDecoder
     /// JpxImageDecoder.cs (there is no shared home for it across the three
     /// decode paths; keep this in sync if the mapping ever changes there).
     /// </summary>
+    /// <summary>
+    /// F2: decode a request whose <c>Samples</c> are ALREADY the target grid (built by
+    /// <see cref="BuildSubsampledGrid"/>) through <see cref="DecodeGeneral"/> with no
+    /// subsampling. Deliberately not <see cref="Decode"/>: with <c>subsample=false</c>
+    /// that entry routes 8-bpc Gray/RGB/CMYK through <c>TryDecodeFast</c>, a different
+    /// code path, while the materialised subsampled path is <see cref="DecodeGeneral"/>.
+    /// Same reader on both sides is what makes the pixels identical by construction.
+    /// </summary>
+    internal static SKBitmap? DecodePreSubsampled(RawSampleImageDecodeRequest request)
+        => DecodeGeneral(request with { TargetWidth = null, TargetHeight = null }, request.Width, request.Height, subsample: false);
+
+    /// <summary>
+    /// F2 (#1207/#1677): read source rows one at a time from <paramref name="source"/>
+    /// and keep only the samples <see cref="DecodeGeneral"/> would have read for a
+    /// <paramref name="targetWidth"/> x <paramref name="targetHeight"/> subsampled
+    /// decode, packed exactly as a request of that size expects: 8 bpc rows are
+    /// <c>W*comps</c> bytes, other depths byte-aligned <c>W*comps*bpc</c> bits, and
+    /// 1 bpc ONE BIT PER PIXEL regardless of components — the same quirk the reader
+    /// has (<c>singleBitRowStrideBits</c>), reproduced so it reads the right bits.
+    /// Returns null (caller falls back to the materialised path) if the source ends
+    /// before the last needed row, so a truncated stream keeps #878's semantics.
+    /// </summary>
+    internal static byte[]? BuildSubsampledGrid(
+        Stream source, int sourceWidth, int sourceHeight, int componentsPerPixel, int bitsPerComponent,
+        int targetWidth, int targetHeight, CancellationToken cancellationToken)
+    {
+        if (sourceWidth <= 0 || sourceHeight <= 0 || targetWidth <= 0 || targetHeight <= 0 || componentsPerPixel <= 0)
+            return null;
+        if (bitsPerComponent is not (1 or 2 or 4 or 8 or 16))
+            return null;
+
+        int RowBytes(int width) => bitsPerComponent == 1
+            ? AlignBitsToByte(width) / 8
+            : bitsPerComponent == 8
+                ? checked(width * componentsPerPixel)
+                : AlignBitsToByte(checked(width * componentsPerPixel * bitsPerComponent)) / 8;
+
+        var sourceRowBytes = RowBytes(sourceWidth);
+        var targetRowBytes = RowBytes(targetWidth);
+        var grid = new byte[checked(targetRowBytes * targetHeight)];
+        var row = new byte[sourceRowBytes];
+        var bufferedRow = -1;
+        var bitsPerPixel = bitsPerComponent == 1 ? 1 : componentsPerPixel * bitsPerComponent;
+
+        for (var ty = 0; ty < targetHeight; ty++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var sy = MapTargetToSource(ty, targetHeight, sourceHeight);
+            while (bufferedRow < sy)
+            {
+                if (!ReadExactly(source, row))
+                    return null;
+                bufferedRow++;
+            }
+
+            var targetRowBit = (long)ty * targetRowBytes * 8;
+            for (var tx = 0; tx < targetWidth; tx++)
+            {
+                var sx = MapTargetToSource(tx, targetWidth, sourceWidth);
+                if (bitsPerComponent == 8)
+                {
+                    Buffer.BlockCopy(row, sx * componentsPerPixel, grid, ty * targetRowBytes + tx * componentsPerPixel, componentsPerPixel);
+                }
+                else if (bitsPerComponent == 16)
+                {
+                    Buffer.BlockCopy(row, sx * componentsPerPixel * 2, grid, ty * targetRowBytes + tx * componentsPerPixel * 2, componentsPerPixel * 2);
+                }
+                else
+                {
+                    var srcBit = (long)sx * bitsPerPixel;
+                    var dstBit = targetRowBit + (long)tx * bitsPerPixel;
+                    for (var b = 0; b < bitsPerPixel; b++)
+                    {
+                        var s = srcBit + b;
+                        var bit = (row[s >> 3] >> (7 - (int)(s & 7))) & 1;
+                        var d = dstBit + b;
+                        if (bit != 0) grid[d >> 3] |= (byte)(0x80 >> (int)(d & 7));
+                    }
+                }
+            }
+        }
+
+        return grid;
+    }
+
+    private static bool ReadExactly(Stream source, byte[] buffer)
+    {
+        var filled = 0;
+        while (filled < buffer.Length)
+        {
+            var read = source.Read(buffer, filled, buffer.Length - filled);
+            if (read <= 0) return false;
+            filled += read;
+        }
+        return true;
+    }
+
     private static int MapTargetToSource(int targetPosition, int targetSize, int sourceSize)
         => Math.Clamp((int)(((targetPosition + 0.5) * sourceSize) / targetSize), 0, sourceSize - 1);
 

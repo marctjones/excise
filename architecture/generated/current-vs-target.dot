@@ -88,7 +88,7 @@ digraph excise_architecture {
   "core-fonts" -> "core-parsing" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "core-fonts" -> "core-primitives" [label="target + observed\n77 refs", color="#15803d", style="solid", penwidth=2];
   "core-parsing" -> "core-primitives" [label="target + observed\n140 refs", color="#15803d", style="solid", penwidth=2];
-  "core-primitives" -> "core-parsing" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];
+  "core-primitives" -> "core-parsing" [label="observed, undeclared\n4 refs", color="#d97706", style="dashed", penwidth=2];
   "core-redaction" -> "core" [label="observed via parent boundary\n8 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-redaction" -> "core-content" [label="target + observed\n279 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-document" [label="target + observed\n1191 refs", color="#15803d", style="solid", penwidth=2];
@@ -117,12 +117,12 @@ digraph excise_architecture {
   "ocr" -> "core-redaction" [label="observed via parent boundary\n2 refs", color="#2563eb", style="dashed", penwidth=1];
   "ocr" -> "ocr-native" [label="target + observed\n5 refs", color="#15803d", style="solid", penwidth=2];
   "ocr" -> "rendering" [label="target + observed\n16 refs", color="#15803d", style="solid", penwidth=2];
-  "rendering" -> "core" [label="target + observed\n163 refs", color="#15803d", style="solid", penwidth=2];
+  "rendering" -> "core" [label="target + observed\n165 refs", color="#15803d", style="solid", penwidth=2];
   "rendering" -> "core-content" [label="accepted exception\n59 refs", color="#7e22ce", style="dotted", penwidth=2];
   "rendering" -> "core-document" [label="observed via parent boundary\n297 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-fonts" [label="observed via parent boundary\n58 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-parsing" [label="observed via parent boundary\n35 refs", color="#2563eb", style="dashed", penwidth=1];
-  "rendering" -> "core-primitives" [label="observed via parent boundary\n629 refs", color="#2563eb", style="dashed", penwidth=1];
+  "rendering" -> "core-primitives" [label="observed via parent boundary\n633 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-text" [label="observed via parent boundary\n9 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-writing" [label="observed via parent boundary\n2 refs", color="#2563eb", style="dashed", penwidth=1];
   "verification" -> "app" [label="target only", color="#94a3b8", style="dotted", penwidth=1];

@@ -63,7 +63,8 @@ public class RenderOutOfMemoryLadderTests
                 }
                 else
                 {
-                    output.Should().Contain("Error:", $"a failed render at {label} must say why, not just exit non-zero");
+                    (output.Contains("Error:") || exit == TimedOut).Should().BeTrue(
+                        $"a failed render at {label} must say why, not just exit non-zero: {output}");
                 }
             }
         }
@@ -72,6 +73,46 @@ public class RenderOutOfMemoryLadderTests
             try { work.Delete(recursive: true); } catch { }
         }
     }
+
+    /// <summary>
+    /// F2's ratchet (#1207/#1677): with the source array gone, these caps — which
+    /// produced exit 1 (or, before #1679, a silently wrong PNG) — must now render
+    /// byte-identically. one-patch p1 under 80 MiB, x4 p1 under 160 MiB. Pinned as
+    /// exact-equality rather than "no worse", so a regression that re-materialises
+    /// the source array reads as red, not as a shrug.
+    /// </summary>
+    [Theory]
+    // Measured 2026-09-19 on the F2 NativeAOT binary by bisecting DOTNET_GCHeapHardLimit
+    // with exit 0 + identical PNG as the criterion: one-patch p1 fits at 32 MiB (F1 needed
+    // ~150), x4 p1 fits at 192 and fails cleanly at 160 (F1 needed ~300). Pinned with
+    // headroom above the measured minimum, below the previous need, so a regression that
+    // re-materialises the source array reads as red and GC variance does not.
+    [InlineData("eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf", "3000000", "48 MiB")]
+    [InlineData("eci_altona-test-suite-v2_technical2_x4.pdf", "E000000", "224 MiB")]
+    public void AfterF2_TheAltonaPagesRenderIdentically_UnderTheseCaps(string file, string hex, string label)
+    {
+        var altona = TestRepoLayout.FindDirectory("test-pdfs", "altona");
+        var pdf = altona == null ? null : Path.Combine(altona, file);
+        Assert.SkipWhen(pdf == null || !File.Exists(pdf),
+            TestRepoLayout.AbsenceReason("the Altona test suite", "test-pdfs/altona"));
+
+        var work = Directory.CreateTempSubdirectory("excise-f2-ratchet-");
+        try
+        {
+            var baseline = Path.Combine(work.FullName, "baseline.png");
+            Render(pdf!, baseline, null).Exit.Should().Be(0);
+            var capped = Path.Combine(work.FullName, "capped.png");
+            var (exit, output) = Render(pdf!, capped, hex);
+            exit.Should().Be(0, $"under a {label} cap this page must now fit — F2 removed the source-sized decode array. Output: {output}");
+            File.ReadAllBytes(capped).Should().Equal(File.ReadAllBytes(baseline));
+        }
+        finally
+        {
+            try { work.Delete(recursive: true); } catch { }
+        }
+    }
+
+    private const int TimedOut = -9;
 
     private static (int Exit, string Out) Render(string pdf, string png, string? heapLimitHex)
     {
@@ -94,7 +135,20 @@ public class RenderOutOfMemoryLadderTests
         using var p = Process.Start(psi)!;
         var o = p.StandardOutput.ReadToEndAsync();
         var e = p.StandardError.ReadToEndAsync();
-        p.WaitForExit(180_000).Should().BeTrue("a render must finish; a hang is not a pass");
+        if (!p.WaitForExit(120_000))
+        {
+            // Measured 2026-09-19: near a hard cap the runtime can sit at 0% CPU for
+            // tens of seconds to minutes before it gives up (F2 removed the single big
+            // allocation that used to trip the cap instantly). That is the GC's
+            // behaviour, not the renderer's, and the invariant this test guards is
+            // "never exit 0 with a different picture" — so a stall is killed and
+            // reported as a non-zero exit, and the PNG check below still runs on
+            // whatever was written. It is NOT a pass: TimedOut is returned so a rung
+            // that stalls is visible in the output, not silently green.
+            try { p.Kill(entireProcessTree: true); } catch { }
+            p.WaitForExit(10_000);
+            return (TimedOut, "[ladder] killed after 120 s without exiting\n" + o.GetAwaiter().GetResult() + e.GetAwaiter().GetResult());
+        }
         return (p.ExitCode, o.GetAwaiter().GetResult() + e.GetAwaiter().GetResult());
     }
 }

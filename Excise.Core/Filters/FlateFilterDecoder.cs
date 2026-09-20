@@ -88,6 +88,26 @@ internal sealed class FlateFilterDecoder : AliasedFilterDecoder
         return new Func<byte[], byte[]>[] { RawDeflate, Zlib, Gzip };
     }
 
+    /// <summary>
+    /// F2 (#1207/#1677): the Flate data as a forward-only <see cref="Stream"/>, for a
+    /// reader that consumes rows and never wants the whole inflated array. Chooses the
+    /// SAME first attempt <see cref="GetAttemptOrder"/> would: gzip magic → gzip, zlib
+    /// header → zlib, else raw deflate with the header skip. A stream cannot retry a
+    /// different strategy after a partial read, so a caller that hits
+    /// <see cref="InvalidDataException"/> mid-way must fall back to the materialised
+    /// path, which still has all three attempts.
+    /// </summary>
+    internal static Stream OpenDecodeStream(byte[] data)
+    {
+        if (data.Length >= 2 && data[0] == 0x1F && data[1] == 0x8B)
+            return new GZipStream(new MemoryStream(data), CompressionMode.Decompress);
+        if (LooksLikeZlibHeader(data))
+            return new ZLibStream(new MemoryStream(data), CompressionMode.Decompress);
+        // No header skip here: DecodeRawDeflate only skips a zlib header when the zlib
+        // attempt has already FAILED — a retry this forward-only path does not get.
+        return new DeflateStream(new MemoryStream(data), CompressionMode.Decompress);
+    }
+
     private static bool LooksLikeZlibHeader(byte[] data)
     {
         if (data.Length < 2)

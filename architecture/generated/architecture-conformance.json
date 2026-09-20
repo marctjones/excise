@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "8a08dc7f00f8ccf5b2d7f9d62796f4e7fab1e4b0",
+  "sourceRevision": "a434ab399ca7d838ac63ad30a5fb4bcc200d047c",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7799,
+    "retainedSymbols": 7805,
     "observedComponentDependencies": 70,
     "declaredDependencies": 68,
     "acceptedExceptions": 1,
@@ -500,13 +500,18 @@
     {
       "source": "core-primitives",
       "target": "core-parsing",
-      "references": 2,
-      "typeDependencyCount": 1,
+      "references": 4,
+      "typeDependencyCount": 2,
       "classification": "undeclared",
       "evidence": [
         {
           "source": "Excise.Core.Primitives.PdfStream",
           "target": "Excise.Core.Filters.BasicStreamFilters",
+          "references": 2
+        },
+        {
+          "source": "Excise.Core.Primitives.PdfStream",
+          "target": "Excise.Core.Filters.FlateFilterDecoder",
           "references": 2
         }
       ]
@@ -892,14 +897,14 @@
     {
       "source": "rendering",
       "target": "core",
-      "references": 163,
+      "references": 165,
       "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Rendering.RenderContext",
           "target": "Excise.Core.ColorSpaces.PdfColorSpace",
-          "references": 62
+          "references": 64
         }
       ]
     },
@@ -982,14 +987,14 @@
     {
       "source": "rendering",
       "target": "core-primitives",
-      "references": 629,
+      "references": 633,
       "typeDependencyCount": 41,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Rendering.RenderContext",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 191
+          "references": 192
         }
       ]
     },

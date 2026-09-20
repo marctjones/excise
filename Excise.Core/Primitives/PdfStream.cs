@@ -314,6 +314,23 @@ public class PdfStream : PdfDictionary
     /// <see cref="DecodeFailureReason"/>) rather than throw. Called once, at
     /// resolve time, before the stream is reachable from any other thread.
     /// </remarks>
+    /// <summary>
+    /// F2: a forward-only stream of this stream's inflated bytes, or null when the
+    /// filter pipeline is not exactly one Flate stage or carries a predictor. Never
+    /// caches, never writes <c>_decodedData</c>: the point is that the inflated
+    /// array never exists. The caller owns the returned stream.
+    /// </summary>
+    internal Stream? TryOpenFlateDecodeStream()
+    {
+        var filters = Filters;
+        if (filters.Count != 1 || filters[0] is not ("FlateDecode" or "Fl"))
+            return null;
+        var parms = DecodeParams.Count > 0 ? DecodeParams[0] : null;
+        if (parms != null && parms.GetInt("Predictor", 1) > 1)
+            return null;
+        return global::Excise.Core.Filters.FlateFilterDecoder.OpenDecodeStream(_encodedData);
+    }
+
     internal void DeferDecode(Action<PdfStream> decode)
     {
         ArgumentNullException.ThrowIfNull(decode);

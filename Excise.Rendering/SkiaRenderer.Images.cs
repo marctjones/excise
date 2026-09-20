@@ -555,6 +555,17 @@ internal partial class RenderContext
             // HERE — after the DCT/JPX branches, which read EncodedData and
             // must not inflate — so a refusal is recorded before it is checked
             // instead of vanishing into the catch below.
+            // F2 (#1207/#1677): when this render releases samples anyway (the CLI,
+            // thumbnails, print — the viewer opts out) and the draw is smaller than
+            // the source, read the Flate stream row by row straight into the target
+            // grid. The 88 MiB source array for a 6784x3392 CMYK image is never
+            // allocated; the previous image's copy therefore never lingers as garbage
+            // either. Falls through to the materialised path for anything it does not
+            // handle, so pixels and refusals are unchanged there.
+            if (_options.ReleaseDecodedImageSamples && !imageStream.IsDecoded
+                && TryDecodeStreamedSubsampled(imageStream, width, height, bitsPerComponent, colorSpace) is { } streamed)
+                return streamed;
+
             imageStream.TryEnsureDecoded();
             if (imageStream.DecodeFailureReason is { } reason)
             {
@@ -1695,6 +1706,48 @@ internal partial class RenderContext
                     _page.Document.Resolve(x) is Excise.Core.Primitives.PdfName fn ? "/" + fn.Value : "?")),
             _ => "no filter",
         };
+    }
+
+    /// <summary>F2: see the call site in <see cref="DecodeImageBitmap"/>. Null means "not handled here"; never an error.</summary>
+    private SKBitmap? TryDecodeStreamedSubsampled(
+        Excise.Core.Primitives.PdfStream stream, int width, int height, int bitsPerComponent, string colorSpace)
+    {
+        if (width <= 0 || height <= 0 || stream.GetBool("ImageMask"))
+            return null;
+        if (bitsPerComponent is not (1 or 2 or 4 or 8 or 16))
+            return null;
+
+        var (targetWidth, targetHeight) = EstimateDeviceTargetSize(width, height);
+        if (targetWidth >= width && targetHeight >= height)
+            return null; // no subsampling: the materialised path builds a bitmap of source size anyway
+
+        PdfColorSpace pdfColorSpace;
+        try { pdfColorSpace = ResolveSampleColorSpace(stream, colorSpace); }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { return null; }
+        var componentsPerPixel = pdfColorSpace.Components;
+        if (componentsPerPixel <= 0)
+            return null;
+
+        using var source = stream.TryOpenFlateDecodeStream();
+        if (source == null)
+            return null;
+
+        byte[]? grid;
+        try
+        {
+            grid = RawSampleImageDecoder.BuildSubsampledGrid(
+                source, width, height, componentsPerPixel, bitsPerComponent, targetWidth, targetHeight, _cancellationToken);
+        }
+        catch (Exception ex) when (ex is System.IO.InvalidDataException or System.IO.IOException)
+        {
+            return null; // a stream cannot retry another inflate strategy; the materialised path can
+        }
+        if (grid == null)
+            return null;
+
+        return RawSampleImageDecoder.DecodePreSubsampled(new RawSampleImageDecodeRequest(
+            grid, targetWidth, targetHeight, bitsPerComponent, pdfColorSpace, componentsPerPixel,
+            GetImageDecodeArray(stream), TryGetColorKeyMask(stream, componentsPerPixel), _cancellationToken));
     }
 
     private SKBitmap? CreateBitmapFromRawData(byte[] data, int width, int height, int bitsPerComponent, string colorSpace, Excise.Core.Primitives.PdfStream stream)
