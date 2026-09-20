@@ -536,6 +536,22 @@ wiring the floors into a tier is #1359.
 ## What changed 2026-09-05
 
 - **`--resume` resolves `{TRX:x}` to the evidence.** A consumer of a checkpointed producer's trx now points at the trx beside the producer's evidence log in the earlier run directory, not at this run's `LOG_DIR` (the first resumed full run failed test-count-core/cli/avalonia that way). `scripts/test-runner-plan-expand.sh` pins it.
+- ⚠️ **A merge conflict in `test-pdfs/manifests/pdf-spec-registry/generated/*`
+  is resolved by REGENERATING, never by `--ours`/`--theirs`.** Merging develop
+  into any branch that touched test source conflicts there almost every time,
+  because both sides regenerated the same derived files from different trees.
+  Picking a side yields a registry that is internally consistent and describes
+  **neither tree** — and the gate then blesses it, because it only compares
+  regenerated-vs-committed at the resulting tip, which is a comparison the
+  wrong copy can pass. Resolve with either side to complete the merge, then run
+  `scripts/check-pdf-capability-registry.sh` (it exits 1 and leaves the correct
+  files) and `git add -A && git commit --amend --no-edit`. The same applies to
+  `architecture/generated/*` via `scripts/check-architecture-artifacts.sh
+  --update`. ⚠️ Those are two SEPARATE generated sets with two separate gates;
+  regenerating one does not regenerate the other, and forgetting the
+  architecture set is the easier mistake — it cost a NEW red on t1 on
+  2026-09-20 after every commit that day regenerated only the registry.
+  (Reported by the unredact track, 2026-09-20.)
 - **The registry gate is split** (#1366): the t0 `pdf-capability-registry` row regenerates from committed inputs and READS the test-outcomes snapshot; a full-tier GRADE row `pdf-registry-outcomes` imports the run's trx from its ledger, prints the `test evidence` line, stashes the regenerated files under `<LOG_DIR>/registry-outcomes/` and leaves the tree clean; `--adopt <LOG_DIR>` moves the snapshot. Before this the first full run reddened its own registry row and every t0 after it.
 
 - `tests/gates.tsv` became the single declaration; the runners' own step lists
