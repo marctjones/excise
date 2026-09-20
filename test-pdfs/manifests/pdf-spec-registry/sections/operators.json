@@ -82,6 +82,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -206,6 +213,13 @@
             "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::SaveRestore_RestoresFillColorAfterQ_AgreesWithIndependentRenderer",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -332,6 +346,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -456,6 +477,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::LineWidth_w_ThickensTheStrokedBand_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -582,6 +610,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -706,6 +741,13 @@
             "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RoundLineJoin_StaysBoundedUnlikeAMiterSpike_AgreesWithIndependentRenderer",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -832,6 +874,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -956,6 +1005,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -1082,6 +1138,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -1206,6 +1269,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::RenderingIntent_ri_AndFlatness_i_AreOutputNeutral_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -1332,6 +1402,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -1456,6 +1533,13 @@
             "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -1582,6 +1666,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -1706,6 +1797,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CubicBezier_c_ApexFollowsTheCurveNotTheControlPoints_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -1832,6 +1930,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -1956,6 +2061,13 @@
             "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -2082,6 +2194,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -2206,6 +2325,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::Rectangle_re_PlacesTheBoxAtTheRequestedCorner_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -2332,6 +2458,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -2456,6 +2589,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseAndStroke_s_DrawsTheClosingSegmentUnlike_S_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -2582,6 +2722,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -2706,6 +2853,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::UppercaseFill_F_IsASynonymForLowercase_f_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -2832,6 +2986,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -2956,6 +3117,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::FillThenStroke_B_And_BStar_DifferOnlyInTheFillRule_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -3082,6 +3250,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -3206,6 +3381,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseFillStroke_b_StrokesTheClosingSegmentUnlike_B_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -3332,6 +3514,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -3456,6 +3645,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NoOpPathPaint_n_LeavesThePageBlank_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -3582,6 +3778,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -3706,6 +3909,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -3832,6 +4042,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -3956,6 +4173,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -4082,6 +4306,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -4206,6 +4437,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -4332,6 +4570,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -4456,6 +4701,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -4582,6 +4834,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -4706,6 +4965,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -4832,6 +5098,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -4956,6 +5229,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -5082,6 +5362,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -5207,6 +5494,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -5331,6 +5625,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -5832,6 +6133,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -5956,6 +6264,13 @@
             "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -6082,6 +6397,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -6206,6 +6528,13 @@
             "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -6332,6 +6661,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -6456,6 +6792,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -6582,6 +6925,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -6706,6 +7056,13 @@
             "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -6832,6 +7189,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -6956,6 +7320,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextRise_Ts_LiftsTheBaseline_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -7082,6 +7453,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -7206,6 +7584,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextPosition_TD_AlsoSetsTheLeading_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -7332,6 +7717,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -7456,6 +7848,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -7582,6 +7981,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -7706,6 +8112,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ShowTextArray_TJ_AppliesTheArrayAdjustment_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -7832,6 +8245,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -7956,6 +8376,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NextLineShowText_Quote_SetsSpacingAndStepsDown_MatchesMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -8082,6 +8509,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -8207,6 +8641,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -8316,6 +8757,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -8442,6 +8890,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -8567,6 +9022,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -8676,6 +9138,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -8787,6 +9256,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -8897,6 +9373,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -9006,6 +9489,13 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+            "modes": [
+              "parse"
             ]
           }
         ]

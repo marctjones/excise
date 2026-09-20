@@ -55018,10 +55018,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -55159,10 +55166,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -55300,10 +55314,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -55441,10 +55462,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -55582,10 +55610,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -55723,10 +55758,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -55864,10 +55906,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -56005,10 +56054,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -56146,10 +56202,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -56287,10 +56350,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -56428,10 +56498,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -56569,10 +56646,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -56710,10 +56794,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -56851,10 +56942,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -56992,10 +57090,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -57133,10 +57238,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -57274,10 +57386,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -57415,10 +57534,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -57556,10 +57682,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -57697,10 +57830,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -57838,10 +57978,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -57979,10 +58126,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58120,10 +58274,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58261,10 +58422,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58402,10 +58570,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58543,10 +58718,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58684,10 +58866,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58825,10 +59014,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58966,10 +59162,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59107,10 +59310,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59248,10 +59458,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59389,10 +59606,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59530,10 +59754,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59671,10 +59902,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59812,10 +60050,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59953,10 +60198,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -60094,10 +60346,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -60235,10 +60494,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -60376,10 +60642,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -60517,10 +60790,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -60658,10 +60938,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -60799,10 +61086,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -60940,10 +61234,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -61504,10 +61805,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -61645,10 +61953,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -61786,10 +62101,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -61927,10 +62249,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62068,10 +62397,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62209,10 +62545,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62350,10 +62693,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62491,10 +62841,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62632,10 +62989,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62773,10 +63137,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62914,10 +63285,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -63055,10 +63433,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -63196,10 +63581,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -63337,10 +63729,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -63478,10 +63877,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -63619,10 +64025,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -63760,10 +64173,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -63901,10 +64321,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -64042,10 +64469,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -64183,10 +64617,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -64324,10 +64765,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -64439,10 +64887,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -64580,10 +65035,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -64721,10 +65183,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -64836,10 +65305,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -64951,10 +65427,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -65066,10 +65549,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66520,10 +67010,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66611,10 +67108,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66702,10 +67206,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66793,10 +67304,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66884,10 +67402,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66975,10 +67500,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67066,10 +67598,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67164,10 +67703,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67255,10 +67801,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67346,10 +67899,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67437,10 +67997,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67528,10 +68095,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67619,10 +68193,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67710,10 +68291,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67801,10 +68389,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67892,10 +68487,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67983,10 +68585,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68074,10 +68683,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68165,10 +68781,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68256,10 +68879,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68347,10 +68977,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68438,10 +69075,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68620,10 +69264,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68802,10 +69453,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68984,10 +69642,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -69082,10 +69747,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -69264,10 +69936,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -69355,10 +70034,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -69446,10 +70132,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -69537,10 +70230,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -69628,10 +70328,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -69719,10 +70426,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -69810,10 +70524,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -69901,10 +70622,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -69992,10 +70720,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -70083,10 +70818,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -70174,10 +70916,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -70265,10 +71014,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -70356,10 +71112,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -70699,10 +71462,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -70790,10 +71560,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -70881,10 +71658,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -70972,10 +71756,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71063,10 +71854,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71154,10 +71952,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71245,10 +72050,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71336,10 +72148,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71427,10 +72246,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71518,10 +72344,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71609,10 +72442,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71700,10 +72540,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71791,10 +72638,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71973,10 +72827,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72064,10 +72925,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72337,10 +73205,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72428,10 +73303,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72519,10 +73401,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72584,10 +73473,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72675,10 +73571,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72766,10 +73669,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72831,10 +73741,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72896,10 +73813,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72961,10 +73885,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorParseRecognitionTests.cs::EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -112689,11 +113620,11 @@
     "modesWithExplicitContracts": 882,
     "modesWithPassingExplicitContracts": 876,
     "modesWithRecordedPassingCandidate": 646,
-    "gradeImplemented": 346,
-    "gradeVerified": 533,
+    "gradeImplemented": 213,
+    "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7683,
-    "testMethodsWithCapabilityCandidate": 4785,
+    "testMethods": 7685,
+    "testMethodsWithCapabilityCandidate": 4787,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

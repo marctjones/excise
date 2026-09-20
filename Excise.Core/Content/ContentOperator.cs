@@ -511,6 +511,14 @@ public class ContentOperator
             "BX" or "EX"
                 => OperatorCategory.Compatibility,
 
+            // Type 3 font glyph metrics (§9.6.5). Handled by the walker's
+            // arity table and by ContentStreamParser's /d1 bbox reader since
+            // #980, but uncategorised until #1702 -- so they reported
+            // Category=Unknown, indistinguishable from an operator excise has
+            // never heard of.
+            "d0" or "d1"
+                => OperatorCategory.Type3GlyphMetrics,
+
             _ => OperatorCategory.Unknown
         };
     }
@@ -618,5 +626,7 @@ public enum OperatorCategory
     /// <summary>Marked content operators (BMC, EMC, etc.).</summary>
     MarkedContent,
     /// <summary>Compatibility operators (BX, EX).</summary>
-    Compatibility
+    Compatibility,
+    /// <summary>Type 3 font glyph-metric operators (d0, d1) -- ISO 32000-2 §9.6.5.</summary>
+    Type3GlyphMetrics
 }

@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-20T19:24:33.567375+00:00",
-  "gitRevision": "d30f7bb5af8c1c9f7c68f0a9e8204b72e5f6700c",
+  "recordedAt": "2026-09-20T19:59:47.801711+00:00",
+  "gitRevision": "6db6553fb7e284e0bf0e66ca69d453f9ce2aaf5a",
   "dotnetVersion": "10.0.401",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -336,6 +336,11 @@
       "path": "logs/pdf20-parse/image-parse.trx",
       "modifiedAt": "2026-09-20T19:23:59.769702+00:00",
       "sha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "path": "logs/pdf20-parse/parse.trx",
+      "modifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "sha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
     }
   ],
   "outcomes": [
@@ -57356,6 +57361,590 @@
       "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
     },
     {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"'\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126215",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"B\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0124185",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"B*\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0128920",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"BDC\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0125986",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"BMC\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0123081",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"BT\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126297",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"BX\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0125653",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"CS\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0116170",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"DP\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126482",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Do\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0145383",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"EMC\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0120590",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"ET\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0133646",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"EX\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126887",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"F\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0136982",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"G\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0123754",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"J\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0121971",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"K\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126002",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"M\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0128848",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"MP\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0121189",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Q\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0127379",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"RG\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0130308",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"S\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0127447",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"SC\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0127486",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"SCN\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0129123",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"T*\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0124666",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"TD\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126462",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"TJ\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0129444",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"TL\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0129820",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Tc\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126407",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Td\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126126",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Tf\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126185",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Tj\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0132217",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Tm\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0481737",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Tr\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0130391",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Ts\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0124696",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Tw\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0121729",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"Tz\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0129152",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"W\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0128754",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"W*\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126424",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"\\\"\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0148820",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"b\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0120714",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"b*\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0128141",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"c\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0115784",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"cm\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0122627",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"cs\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126972",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"d\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0124875",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"d0\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0124509",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"d1\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0123901",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"f\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0119471",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"f*\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126858",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"g\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0117571",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"gs\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0125986",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"h\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126331",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"i\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0130871",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"j\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0128679",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"k\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0121483",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"l\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0123968",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"m\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0128362",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"n\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126806",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"q\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126855",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"re\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0125600",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"rg\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0129992",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"ri\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0123295",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"s\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0128310",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"sc\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0123961",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"scn\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0131189",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"sh\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0125860",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"v\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0131766",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"w\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0132977",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.EachAnnexAOperator_IsSeenByQpdf_AndRecognisedByExcisesParser(op: \"y\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0127470",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorParseRecognitionTests.ExciseDoesNotRecogniseAnInventedOperator_SoRecognitionIsFalsifiable",
+      "outcome": "Passed",
+      "duration": "00:00:00.0011107",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorRoundTripScopeTests.InventedOperators_SurviveTheRoundTrip_SoTokenSurvivalIsNotParseEvidence",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005186",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorRoundTripScopeTests.UneditedPage_ContentStreamBytes_AreCopiedNotReserialised",
+      "outcome": "Passed",
+      "duration": "00:00:00.0432608",
+      "trx": "logs/pdf20-parse/parse.trx",
+      "resultModifiedAt": "2026-09-20T19:59:19.832564+00:00",
+      "trxSha256": "ebf1e5592917383be7c31b02eca1166d78fff5c4ef36dd60ded57a58b6cb8733"
+    },
+    {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
       "outcome": "Passed",
       "duration": "00:00:00.0653154",
@@ -73477,11 +74066,11 @@
     }
   ],
   "summary": {
-    "trxFiles": 66,
-    "tests": 9142,
+    "trxFiles": 67,
+    "tests": 9215,
     "outcomes": {
       "NotExecuted": 926,
-      "Passed": 8216
+      "Passed": 8289
     },
     "status": "recorded"
   }

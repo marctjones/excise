@@ -436,6 +436,7 @@ namespace Excise.Core.Content
         XObject = 11,
         MarkedContent = 12,
         Compatibility = 13,
+        Type3GlyphMetrics = 14,
     }
 }
 namespace Excise.Core.Document
