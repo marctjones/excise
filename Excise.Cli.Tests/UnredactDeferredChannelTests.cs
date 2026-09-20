@@ -156,6 +156,33 @@ public class UnredactDeferredChannelTests
         finally { File.Delete(path); }
     }
 
+    [Fact]
+    public void TheALLCLEAR_CarriesTheLimitationToo_NotJustTheScore()
+    {
+        // ⚠️ THE BRANCH THAT MATTERS. A report with findings gets read
+        // carefully; a green tick gets read and closed. A tick over a document
+        // whose only leak sits under a deferred channel is the exact false
+        // reassurance this tool exists to remove, so the limitation has to be
+        // on the SAME screen as the tick, not in a footer below the lists.
+        var path = WriteFixture(EmptyPage());
+        try
+        {
+            var outcome = Run(path, includeDeferred: false);
+            using var text = new StringWriter();
+            using var error = new StringWriter();
+            UnredactCommandOutput.Write(outcome, json: false, text, error);
+            var printed = text.ToString();
+
+            printed.Should().Contain("✓ No recoverable text",
+                "this fixture is the all-clear branch, or the test is not testing it");
+            printed.Should().Contain("NOT COVERED BY THIS REPORT");
+            printed.IndexOf("NOT COVERED BY THIS REPORT", StringComparison.Ordinal)
+                .Should().BeGreaterThan(printed.IndexOf("✓ No recoverable text", StringComparison.Ordinal),
+                    "it belongs directly under the verdict it qualifies");
+        }
+        finally { File.Delete(path); }
+    }
+
     // ── the headline is the TEXT score ──────────────────────────────────────
 
     [Fact]
@@ -248,6 +275,10 @@ public class UnredactDeferredChannelTests
          "<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceGray " +
          "/BitsPerComponent 8 /Length 4 >>\nstream\n\x00\x40\x80\xFF\nendstream",
          "/XObject << /Im0 6 0 R >>");
+
+    /// <summary>Nothing hidden and nothing redacted: the all-clear branch.</summary>
+    private static (string Content, string? ExtraObject, string? Resources) EmptyPage() =>
+        ("BT /F1 14 Tf 72 700 Td (Nothing to see here) Tj ET\n", null, null);
 
     /// <summary>A filled vector path under an opaque black box — the Tier 1 half.</summary>
     private static (string Content, string? ExtraObject, string? Resources) VectorUnderBox() =>
