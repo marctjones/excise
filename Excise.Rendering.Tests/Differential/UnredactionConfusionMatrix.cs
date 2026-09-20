@@ -284,6 +284,11 @@ internal static class UnredactionConfusionMatrix
             sb.AppendLine("    mode                              TP  FP  FN  TN   prec  recall  spec    F1");
             foreach (var c in tool)
             {
+                // #1690 — a deferred mode's row is PRINTED (it is still
+                // measured; a row that vanished could not show a regression)
+                // and MARKED, so it is legible next to the graded rows and
+                // visibly outside the total below them.
+                var deferred = UnredactionBenchAxes.IsDeferredMode(c.ModeId) ? "  [deferred #1690]" : "";
                 if (c.Scored == 0 && c.OutOfScope > 0)
                 {
                     sb.AppendLine($"    {c.ModeId,-32}  —   —   —   —    out of declared scope ({c.OutOfScope} case(s))");
@@ -291,15 +296,25 @@ internal static class UnredactionConfusionMatrix
                 }
                 sb.AppendLine(
                     $"    {c.ModeId,-32} {c.TruePositive,3} {c.FalsePositive,3} {c.FalseNegative,3} {c.TrueNegative,3}" +
-                    $"   {Pct(c.Precision)} {Pct(c.Recall)}  {Pct(c.Specificity)} {Pct(c.F1)}");
+                    $"   {Pct(c.Precision)} {Pct(c.Recall)}  {Pct(c.Specificity)} {Pct(c.F1)}{deferred}");
                 if (c.BeyondDeclaredScope > 0)
                     sb.AppendLine($"       ⚠ {c.BeyondDeclaredScope} hit(s) BEYOND declared scope — " +
                                   "the tool does more than tests/unredaction-tools.json claims, or that file is stale");
             }
 
-            var totals = tool.ToList();
-            sb.AppendLine($"    {"TOTAL",-32} {totals.Sum(c => c.TruePositive),3} {totals.Sum(c => c.FalsePositive),3} " +
+            // ⚠️ #1690 — the TOTAL is the GRADED total: Tier 1 modes only. A
+            // deferred channel reports presence, not a value, so folding its
+            // cells in would move the headline with findings that recovered no
+            // text — in either direction. The deferred cells are totalled
+            // separately, never dropped.
+            var totals = tool.Where(c => !UnredactionBenchAxes.IsDeferredMode(c.ModeId)).ToList();
+            sb.AppendLine($"    {"TOTAL (graded, tier 1)",-32} {totals.Sum(c => c.TruePositive),3} {totals.Sum(c => c.FalsePositive),3} " +
                           $"{totals.Sum(c => c.FalseNegative),3} {totals.Sum(c => c.TrueNegative),3}");
+            var deferredCells = tool.Where(c => UnredactionBenchAxes.IsDeferredMode(c.ModeId)).ToList();
+            if (deferredCells.Count > 0)
+                sb.AppendLine($"    {"deferred (#1690, not graded)",-32} {deferredCells.Sum(c => c.TruePositive),3} " +
+                              $"{deferredCells.Sum(c => c.FalsePositive),3} {deferredCells.Sum(c => c.FalseNegative),3} " +
+                              $"{deferredCells.Sum(c => c.TrueNegative),3}");
         }
 
         if (falsePositives.Count > 0)

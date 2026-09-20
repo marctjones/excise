@@ -60,10 +60,17 @@ internal static class UnredactCommandHandler
                 restore = restored;
             }
             var quantification = Quantify(mode, input.NoCorroboration, certain, residue, recovery);
+            // ⚠️ #1690 — derived from the channels this run actually skipped,
+            // never asserted. `--ocr` alone leaves the image channels deferred
+            // and the OCR one not; a fixed sentence would have claimed a blind
+            // spot this report does not have, which is the same species of
+            // error as claiming coverage it does not have.
+            var limitations = RecoveryChannelTiers.LimitationsFor(recovery.ChannelsSkipped.Keys);
             var report = new UnredactReport(
                 quantification, certain, residue, recovery, restore,
                 present.Count > 0 ? present : null,
-                input.IncludeVisibleCarriers ? duplicates : null);
+                input.IncludeVisibleCarriers ? duplicates : null,
+                limitations.Count > 0 ? limitations : null);
             // The exit code reads EVERY channel, not just the two lists: a
             // model-only channel (a prior revision, an XFA value) is a recovery
             // and must not exit 0. See ExitCodeFor.
@@ -108,7 +115,14 @@ internal static class UnredactCommandHandler
         byte[]? pdfBytes = null;
         try { pdfBytes = File.ReadAllBytes(input.FilePath); }
         catch { /* ScanInto declares the channel skipped when bytes are absent */ }
-        RecoveryScanner.ScanInto(document, builder, cancellationToken, dictionary, pdfBytes);
+        // #1690: the TEXT focus. `--include-deferred` is what brings the image
+        // channels back; without it ScanInto declares them skipped WITH their
+        // reason, never silently absent.
+        RecoveryScanner.ScanInto(
+            document, builder, cancellationToken, dictionary, pdfBytes,
+            input.IncludeDeferred
+                ? RecoveryScanOptions.IncludingDeferred
+                : RecoveryScanOptions.Default);
 
         foreach (var hit in HiddenTextDetector.Scan(document, includeVisibleFailedRedactions: true))
         {
@@ -164,9 +178,12 @@ internal static class UnredactCommandHandler
 
         if (!input.UseOcr)
         {
+            // #1690: the OCR differential is DEFERRED, and the reason comes
+            // from the tier authority so the CLI, the engine and the bench
+            // quote the same sentence and the same flag.
             builder.ChannelSkipped(
                 RecoveryScanner.Channels.OcrDifferential,
-                "not requested (--ocr)");
+                RecoveryChannelTiers.DeferralReason(RecoveryScanner.Channels.OcrDifferential));
             return findings;
         }
 
@@ -217,21 +234,20 @@ internal static class UnredactCommandHandler
     {
         if (mode is not (UnredactMode.Certain or UnredactMode.Both))
         {
-            foreach (var channel in new[]
-                     {
-                         RecoveryScanner.Channels.HiddenText, RecoveryScanner.Channels.Carrier,
-                         RecoveryScanner.Channels.MarkedContent, RecoveryScanner.Channels.CoveredImage,
-                         RecoveryScanner.Channels.CoveredVector, RecoveryScanner.Channels.FormField,
-                     })
+            // DERIVED, not hand-listed. This used to name six channels and
+            // omit the other seven, so `--mode residue` produced a report that
+            // declared six skips and silently ran none of the rest — a report
+            // over one channel reading like one over seven. Adding a channel to
+            // Channels.All is now enough.
+            foreach (var channel in RecoveryScanner.Channels.All)
             {
+                if (channel == RecoveryScanner.Channels.Residue) continue;
                 builder.ChannelSkipped(channel, "--mode residue");
             }
         }
 
         if (mode is not (UnredactMode.Residue or UnredactMode.Both))
             builder.ChannelSkipped(RecoveryScanner.Channels.Residue, "--mode certain");
-
-
     }
 
     /// <summary>
@@ -428,7 +444,24 @@ internal static class UnredactCommandHandler
             .Concat(recovery.DocumentLevel)
             .Where(f => !legacyChannels.Contains(f.Channel, StringComparer.Ordinal))
             .ToList();
-        var modelCertain = modelOnly.Count(f => f.Confidence == "certain");
+
+        // ⚠️ #1690 — a DEFERRED channel's finding is REPORTED but not GRADED.
+        // It still appears in the model, in the per-mark summary and in the
+        // finding lists; it just does not move the headline, because the
+        // headline is the text-recovery score and an image reported
+        // present-only is not a recovered value. Counting it there would let
+        // `--include-deferred` inflate the same document's score with findings
+        // that recovered no text.
+        //
+        // Both halves are filtered, not just the model-only set: an OCR
+        // differential hit lands in the LEGACY `certain` list, where it was
+        // being counted as "text present" with a recognition's error rate
+        // attached.
+        var gradedCertain = certain
+            .Where(f => !RecoveryChannelTiers.IsDeferred(ChannelOfLegacyFinding(f)))
+            .ToList();
+        var modelCertain = modelOnly.Count(
+            f => f.Confidence == "certain" && !RecoveryChannelTiers.IsDeferred(f.Channel));
         var residueBitsTotal = Math.Round(residue.Sum(finding => finding.ResidualEntropyBits), 2);
         var corroboration = mode is UnredactMode.Residue or UnredactMode.Both
             ? noCorroboration
@@ -436,14 +469,30 @@ internal static class UnredactCommandHandler
                 : "mutool (independent)"
             : "n/a (certain mode)";
 
+        // Findings COUNTS everything the report lists, including the deferred
+        // ones: that number answers "how much is in this report", and hiding
+        // rows from it would make the lists below not add up.
         return new UnredactQuantification(
             certain.Count + residue.Count + modelOnly.Count,
-            certain.Count + modelCertain,
+            gradedCertain.Count + modelCertain,
             residue.Count,
             residueBitsTotal,
-            certain.Count + uniqueRecoveries + modelCertain,
+            gradedCertain.Count + uniqueRecoveries + modelCertain,
             corroboration);
     }
+
+    /// <summary>
+    /// The channel a LEGACY finding came from. The flat list predates the
+    /// recovery model and carries no channel field, so the tier is read from
+    /// <c>HiddenBy</c> — which the OCR path sets to the channel name verbatim.
+    /// Everything else in that list is hidden text or a carrier, both Tier 1.
+    /// </summary>
+    private static string ChannelOfLegacyFinding(UnredactCertainFinding finding) =>
+        finding.HiddenBy == RecoveryScanner.Channels.OcrDifferential
+            ? RecoveryScanner.Channels.OcrDifferential
+            : finding.FromCarrier
+                ? RecoveryScanner.Channels.Carrier
+                : RecoveryScanner.Channels.HiddenText;
 
     private static bool TryParseMode(string mode, out UnredactMode parsed)
     {

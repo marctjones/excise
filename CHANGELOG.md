@@ -6,6 +6,61 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Changed
+- **`excise unredact` focuses on TEXT recovery; the image and OCR channels are
+  deferred, not deleted** (#1690). Product decision by Marc Jones, 2026-09-20.
+  The attack that breaks excise's own guarantee is a text attack (the PoPETs
+  2023 glyph-shift work, #1689), and text is the only channel with crisp ground
+  truth: a recovered string either matches or it does not, and mutool and
+  pdftotext can confirm it independently.
+  - One authority, `Excise.Core.Redaction.Recovery.RecoveryChannelTiers`, keyed
+    by channel name, so the engine, the CLI and the bench cannot disagree about
+    what was graded. Tier 2 is exactly three channels: `ocr-differential`,
+    `image-layer`, and the RASTER half of covered content (`covered-image`).
+    The VECTOR half stays Tier 1.
+  - **Deferred is not deleted.** Every channel is still implemented and still
+    tested; the deferred ones are declared SKIPPED **with their reason and the
+    flag that brings them back**, never silently absent. `--include-deferred`
+    runs the image channels, `--ocr` the OCR differential; the library
+    equivalent is `RecoveryScanOptions.IncludingDeferred`, and the default is
+    the same in the library as in the CLI, deliberately (a per-caller default
+    would rebuild #1665).
+  - A deferred finding is **reported but not graded**: it appears in the
+    finding list, the per-mark summary and the JSON, and it does not move
+    `recovered` / `fullyRecoverable`. An OCR hit used to be counted there as
+    "text present" — a recognition presented with the authority of a
+    byte-for-byte recovery. The exit status is unchanged and stays paranoid.
+  - Every model finding carries its `tier` (`text` | `deferred`) in the JSON.
+  - A report that skipped a deferred channel prints **what it does not cover,
+    next to its own result** — including next to the all-clear, which is the
+    branch that matters. The wording is built from the channels actually
+    skipped, so `--ocr` alone does not claim a blind spot the run does not
+    have.
+  - ⚠️ **The blind spot is narrow, and the broad version is wrong:** the hole
+    is a page whose mark covers PIXELS with no surviving text layer beneath.
+    A scanned page whose invisible OCR text layer survives under the box **is**
+    recovered, by the Tier 1 hidden-text channel.
+  - Bench: the unredaction scorecard and confusion matrix print a graded (Tier
+    1) total and a separate, still-printed deferred block; `excise vs best
+    reference` covers Tier 1 only. The benches keep MEASURING Tier 2 — a
+    permanent zero is indistinguishable from a regression — except over the
+    real-world NEGATIVES, which are scored at the product's default, because a
+    mark holding any finding grades `candidates-only` rather than
+    `not-recovered` and running the image channels over 113 clean filings would
+    invent false positives the shipped command does not produce.
+  - `README.md` documents `excise unredact` for the first time.
+
+### Fixed
+- **A CLI test running in a git worktree spawned the MAIN checkout's `excise`**
+  (`UnredactOcrChannelTests`, `UnredactCarrierChannelTests`), so it exercised
+  whatever branch happened to be checked out there and passed on code the
+  branch under test does not contain. Build output resolves through the LOCAL
+  checkout now — the #1527 rule, applied where it had not been.
+- **`excise unredact --mode residue` declared six of fourteen channels
+  skipped** and silently omitted the rest, so a report over one channel read
+  like one over seven (the #1181 Coverage rule). The list is derived from
+  `RecoveryScanner.Channels.All` now.
+
 ## [3.10.0] - 2026-09-17
 
 Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open

@@ -1896,11 +1896,11 @@ namespace Excise.Core.Redaction.Recovery
     }
     public static class RecoveryChannelTiers
     {
-        public const string BlindSpot = @"DEFERRED (#1690): the image and OCR channels did not run, so a scanned page whose redaction box covers PIXELS — with no surviving text layer under it — is reported as holding nothing. That document class is not covered by this score. Run again with --include-deferred (and --ocr for the OCR differential) to include them.";
         public const string OptInFlag = "--include-deferred";
         public static System.Collections.Generic.IReadOnlyList<string> DeferredChannels { get; }
         public static string DeferralReason(string channel) { }
         public static bool IsDeferred(string channel) { }
+        public static System.Collections.Generic.IReadOnlyList<string> LimitationsFor(System.Collections.Generic.IEnumerable<string>? skippedChannels) { }
         public static Excise.Core.Redaction.Recovery.RecoveryTier TierOf(string channel) { }
     }
     public enum RecoveryConfidence
@@ -1981,6 +1981,7 @@ namespace Excise.Core.Redaction.Recovery
             public const string Residue = "residue";
             public const string Thumbnail = "thumbnail";
             public const string Xfa = "xfa";
+            public static System.Collections.Generic.IReadOnlyList<string> All { get; }
         }
     }
     public enum RecoveryTier

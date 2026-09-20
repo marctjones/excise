@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Graphics;
@@ -57,6 +58,18 @@ public class UnredactOcrChannelTests
 
     private static (int Exit, string Out) RunUnredact(params string[] args)
     {
+        var (exit, stdout, stderr) = RunUnredactSplit(args);
+        return (exit, stdout + stderr);
+    }
+
+    /// <summary>
+    /// stdout and stderr kept APART. The combined form above is fine for
+    /// substring assertions, but stdout alone is the only thing that parses as
+    /// JSON: tesseract writes progress lines to stderr, and concatenating them
+    /// onto a `--json` document makes it trailing garbage.
+    /// </summary>
+    private static (int Exit, string Out, string Err) RunUnredactSplit(params string[] args)
+    {
         var psi = new ProcessStartInfo("dotnet")
         {
             RedirectStandardOutput = true, RedirectStandardError = true,
@@ -71,7 +84,7 @@ public class UnredactOcrChannelTests
         var o = p.StandardOutput.ReadToEndAsync();
         var e = p.StandardError.ReadToEndAsync();
         p.WaitForExit(180_000);
-        return (p.ExitCode, o.GetAwaiter().GetResult() + e.GetAwaiter().GetResult());
+        return (p.ExitCode, o.GetAwaiter().GetResult(), e.GetAwaiter().GetResult());
     }
 
     /// <summary>
@@ -150,6 +163,48 @@ public class UnredactOcrChannelTests
             ocrOut.Should().Contain("ocr-differential", "the hit must be tagged as the OCR channel");
             (ocrOut.Contains("9876") || ocrOut.Contains("5432"))
                 .Should().BeTrue($"the hidden account digits must surface; got: {ocrOut}");
+        }
+        finally { File.Delete(path); }
+    }
+
+    /// <summary>
+    /// ⚠️ #1690 — an OCR hit is REPORTED but does not move the TEXT-recovery
+    /// headline.
+    ///
+    /// <para>This is the case the tiering is FOR. OCR read pixels, not bytes:
+    /// the reading carries its own error rate, and no independent extractor can
+    /// confirm it the way one confirms a string lifted out of the file. Before
+    /// #1690 the hit landed in the legacy <c>certain</c> list and was counted
+    /// as "text present" — a recognition presented with the same authority as a
+    /// byte-for-byte recovery.</para>
+    ///
+    /// <para>The finding itself is untouched: it is still listed, still tagged
+    /// <c>ocr-differential</c>, and the exit status still goes non-zero
+    /// (deliberately — the summary ranks, the exit code stays paranoid).</para>
+    /// </summary>
+    [Fact]
+    public void AnOcrHitIsReportedAndExitsNonZero_ButIsNotCountedAsTextRecovered()
+    {
+        Assert.SkipUnless(TesseractAvailable, "tesseract not installed");
+
+        var path = WriteScannedRedaction();
+        try
+        {
+            var (exit, output, stderr) = RunUnredactSplit(path, "--ocr", "--json");
+
+            exit.Should().Be(3, "an OCR reading is still a recovery for the exit status; " + output + stderr);
+            output.Should().Contain("ocr-differential", "the finding must still be listed");
+            output.Should().Contain("\"deferred\"",
+                "the finding carries its tier, so a machine reader can see it is not graded");
+
+            using var json = JsonDocument.Parse(output);
+            var quantification = json.RootElement.GetProperty("quantification");
+            quantification.GetProperty("findings").GetInt32().Should().BeGreaterThan(0,
+                "the OCR hits are REPORTED — deferring them must not hide them");
+            quantification.GetProperty("fullyRecoverable").GetInt32().Should().Be(0,
+                "an OCR reading is not text read from the file; it must not count as text present");
+            quantification.GetProperty("recovered").GetInt32().Should().Be(0,
+                "the headline is the TEXT-recovery score and OCR is deferred (#1690)");
         }
         finally { File.Delete(path); }
     }

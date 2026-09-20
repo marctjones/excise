@@ -19,7 +19,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// <para><b>Deferred is not deleted.</b> Every deferred channel is still
 /// implemented, still tested, and still reachable — it simply does not run
 /// unless asked for, is not counted in the headline, and is not what the bench
-/// is tuned on. See <see cref="BlindSpot"/> for what that costs, which any
+/// is tuned on. See <see cref="LimitationsFor"/> for what that costs, which any
 /// report that skips them has to say out loud.</para>
 /// </summary>
 public enum RecoveryTier
@@ -42,8 +42,17 @@ public static class RecoveryChannelTiers
     public const string OptInFlag = "--include-deferred";
 
     /// <summary>
-    /// ⚠️ #1690 — what the deferral COSTS, in one sentence, to be printed next
-    /// to the score rather than buried in a footnote.
+    /// ⚠️ #1690 — what the deferral COSTS, in one sentence per deferred
+    /// channel that did not run, to be printed next to the score rather than
+    /// buried in a footnote.
+    ///
+    /// <para><b>Built from what was SKIPPED, never asserted.</b> An earlier
+    /// version of this was a <c>const string</c> saying "the image and OCR
+    /// channels did not run", which is false the moment a user passes
+    /// <c>--ocr</c> alone — the report would have claimed a blind spot it did
+    /// not have, which is the same species of error as claiming coverage it
+    /// does not have. Pass the report's own <c>ChannelsSkipped</c> keys and
+    /// this returns a line only for the deferred channels genuinely absent.</para>
     ///
     /// <para>Worded narrowly on purpose. It is <b>not</b> "blind to scanned
     /// documents": a scanned page whose invisible OCR text layer survives under
@@ -52,11 +61,48 @@ public static class RecoveryChannelTiers
     /// page where the box covers PIXELS and no text layer survives beneath
     /// it — which is the common shape in court records.</para>
     /// </summary>
-    public const string BlindSpot =
-        "DEFERRED (#1690): the image and OCR channels did not run, so a scanned page " +
-        "whose redaction box covers PIXELS — with no surviving text layer under it — is " +
-        "reported as holding nothing. That document class is not covered by this score. " +
-        "Run again with " + OptInFlag + " (and --ocr for the OCR differential) to include them.";
+    /// <param name="skippedChannels">
+    /// The channels a report declares skipped. Non-deferred names are ignored:
+    /// a channel skipped for some other reason already carries its own reason.
+    /// </param>
+    /// <returns>
+    /// One limitation line per deferred channel that did not run, plus the
+    /// document-class sentence when an image channel is among them. Empty when
+    /// every deferred channel ran — in which case the report has no #1690
+    /// blind spot to declare.
+    /// </returns>
+    public static IReadOnlyList<string> LimitationsFor(IEnumerable<string>? skippedChannels)
+    {
+        if (skippedChannels == null) return Array.Empty<string>();
+
+        var absent = skippedChannels
+            .Where(channel => channel != null && Deferred.ContainsKey(channel))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(channel => channel, StringComparer.Ordinal)
+            .ToList();
+        if (absent.Count == 0) return Array.Empty<string>();
+
+        var lines = new List<string>(absent.Count + 1);
+
+        // The document-class sentence comes FIRST and only when an image
+        // channel is absent, because that is the coverage hole a reader has to
+        // act on. With OCR alone deferred the pixels under a box are still
+        // reported present, so the hole is narrower and the sentence would
+        // overstate it.
+        if (absent.Contains(RecoveryScanner.Channels.CoveredImage, StringComparer.Ordinal) ||
+            absent.Contains(RecoveryScanner.Channels.ImageLayer, StringComparer.Ordinal))
+        {
+            lines.Add(
+                "DEFERRED (#1690): a page whose redaction box covers PIXELS — with no surviving " +
+                "text layer beneath it — is reported as holding nothing. That document class is " +
+                "NOT covered by this report.");
+        }
+
+        foreach (var channel in absent)
+            lines.Add($"{channel}: {Deferred[channel]}");
+
+        return lines;
+    }
 
     private static readonly Dictionary<string, string> Deferred = new(StringComparer.Ordinal)
     {

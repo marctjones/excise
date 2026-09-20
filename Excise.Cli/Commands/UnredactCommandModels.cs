@@ -19,7 +19,15 @@ internal sealed record UnredactCommandInput(
     // Last, with defaults: this is a positional record and every existing
     // caller constructs it positionally.
     string? RestorePath = null,
-    bool IncludeVisibleCarriers = false);
+    bool IncludeVisibleCarriers = false,
+    /// <summary>
+    /// #1690 — run the DEFERRED (Tier 2) channels as well. Off by default:
+    /// <c>excise unredact</c> focuses on text recovery, and the image channels
+    /// report presence rather than a value, so nothing grades them. They are
+    /// deferred, not deleted — this is the flag that brings them back, and a
+    /// report that ran without it says so in its limitations.
+    /// </summary>
+    bool IncludeDeferred = false);
 
 internal enum UnredactMode { Certain, Residue, Both }
 
@@ -134,6 +142,12 @@ internal sealed record UnredactMarkSummary(
 /// </summary>
 internal sealed record UnredactModelFinding(
     string Channel,
+    /// <summary>
+    /// #1690 — <c>text</c> (graded) or <c>deferred</c> (present, measured, not
+    /// counted in the headline). On the wire as a string, not the enum's name:
+    /// renaming a C# member must not change a contract someone scripts against.
+    /// </summary>
+    string Tier,
     string Carrier,
     /// <summary>certain | candidate | present-only.</summary>
     string Confidence,
@@ -197,7 +211,22 @@ internal sealed record UnredactReport(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     IReadOnlyList<UnredactPresenceFinding>? Present = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    IReadOnlyList<UnredactCertainFinding>? VisibleDuplicates = null);
+    IReadOnlyList<UnredactCertainFinding>? VisibleDuplicates = null,
+    /// <summary>
+    /// ⚠️ #1690 — what this report does NOT cover. Built from the channels
+    /// actually skipped, so a run that opted a deferred channel back in does
+    /// not claim a blind spot it no longer has.
+    ///
+    /// <para>NULL, not an empty list, when there is nothing to declare: the key
+    /// then does not appear at all, so a report with full coverage keeps the
+    /// exact JSON shape it had before #1690 and the key's PRESENCE is itself
+    /// the signal. In the human output it is printed next to the score — and
+    /// next to the all-clear, which is the branch that matters, because a green
+    /// tick over a document whose only leak is under a deferred channel is the
+    /// false reassurance this tool exists to remove.</para>
+    /// </summary>
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<string>? Limitations = null);
 
 internal sealed record UnredactCommandOutcome(
     int ExitCode,

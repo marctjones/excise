@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Excise.Core.Redaction.Recovery;
 
 namespace Excise.Rendering.Tests.Differential;
 
@@ -58,6 +59,13 @@ public static class UnredactionScorecard
         public double ScorePct => Polarity == Polarity.NegativeControl ? 100.0 - RecallPct : RecallPct;
 
         public string Metric => Polarity == Polarity.NegativeControl ? "specificity" : "recall";
+
+        /// <summary>
+        /// #1690 — graded (Tier 1, text) or measured-only (Tier 2, deferred).
+        /// Read from the channel through the one authority, so a channel the
+        /// product defers cannot be graded here.
+        /// </summary>
+        public bool IsDeferred => RecoveryChannelTiers.IsDeferred(Channel);
     }
 
     /// <summary>What the scorecard did and did not see — never assume full coverage.</summary>
@@ -94,7 +102,11 @@ public static class UnredactionScorecard
         ExciseVsBestReference(IEnumerable<Grade> grades)
     {
         var result = new List<(string, string, double, double, string)>();
-        foreach (var byCS in grades.GroupBy(g => (g.Channel, g.Stratum)))
+        // #1690: Tier 2 is measured, not graded — and "excise vs best
+        // reference" IS the grade. A deferred channel recovers presence, not a
+        // value, so a lead or a deficit on it says nothing about text recovery
+        // and would move a comparison the product does not stand behind.
+        foreach (var byCS in grades.Where(g => !g.IsDeferred).GroupBy(g => (g.Channel, g.Stratum)))
         {
             var excise = byCS.FirstOrDefault(g => g.Tool == "excise");
             if (excise == null) continue;
@@ -118,12 +130,31 @@ public static class UnredactionScorecard
         if (coverage.MissingReferences.Count > 0)
             sb.AppendLine($"⚠ reference NOT measured (recovery uncompared): {string.Join(", ", coverage.MissingReferences)}");
         sb.AppendLine();
-        foreach (var g in grades)
-            sb.AppendLine($"  {g.Channel,-8} {g.Stratum,-14} {g.Tool,-10} " +
-                (g.Polarity == Polarity.NegativeControl
-                    ? $"specificity {g.Total - g.Recovered}/{g.Total} ({g.ScorePct,5:F1}%)  [negative control]"
-                    : $"recall {g.Recovered}/{g.Total} ({g.RecallPct,5:F1}%)") +
-                (g.MedianResidualBits > 0 ? $"  median {g.MedianResidualBits:F1} bits" : ""));
+
+        // #1690 — TWO BLOCKS, and the deferred one is still PRINTED. Excluding
+        // it from the grade is the decision; hiding it would be a different
+        // and worse one, because then nobody could see whether a deferred
+        // channel had stopped working.
+        static string Line(Grade g) =>
+            $"  {g.Channel,-8} {g.Stratum,-14} {g.Tool,-10} " +
+            (g.Polarity == Polarity.NegativeControl
+                ? $"specificity {g.Total - g.Recovered}/{g.Total} ({g.ScorePct,5:F1}%)  [negative control]"
+                : $"recall {g.Recovered}/{g.Total} ({g.RecallPct,5:F1}%)") +
+            (g.MedianResidualBits > 0 ? $"  median {g.MedianResidualBits:F1} bits" : "");
+
+        foreach (var g in grades.Where(g => !g.IsDeferred))
+            sb.AppendLine(Line(g));
+
+        var deferred = grades.Where(g => g.IsDeferred).ToList();
+        if (deferred.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("── DEFERRED (#1690) — measured, NOT graded, and NOT in the comparison below ──");
+            sb.AppendLine($"   opt in with {RecoveryChannelTiers.OptInFlag} (or --ocr); these channels report " +
+                          "presence, not a value, so there is no exact answer to grade against.");
+            foreach (var g in deferred)
+                sb.AppendLine(Line(g));
+        }
         sb.AppendLine();
         sb.AppendLine("── excise vs best reference ──");
         foreach (var (ch, st, ex, best, who) in ExciseVsBestReference(grades))

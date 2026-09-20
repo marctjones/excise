@@ -72,6 +72,19 @@ internal static class UnredactCommandOutput
                 "but it is also exactly how text is hidden deliberately, so it is reported.";
     }
 
+    /// <summary>
+    /// #1690 — what this report does NOT cover, in the reader's own terms.
+    /// Built by the engine from the channels actually skipped; the CLI only
+    /// prints it, so the wording cannot drift from the tier decision.
+    /// </summary>
+    private static void WriteLimitations(IReadOnlyList<string>? limitations, TextWriter output)
+    {
+        if (limitations is not { Count: > 0 }) return;
+        output.WriteLine("  ⚠ NOT COVERED BY THIS REPORT:");
+        foreach (var line in limitations)
+            output.WriteLine($"    • {line}");
+    }
+
     private static string CarrierLine(UnredactCertainFinding finding) =>
         $"  {Where(finding.Page, finding.Object, finding.Location)} " +
         $"[{finding.HiddenBy}]" +
@@ -140,6 +153,13 @@ internal static class UnredactCommandOutput
                 $"{quantification.WidthResidueGaps} width-residue gap(s) leaking " +
                 $"{quantification.WidthResidueBitsTotal} bits total.");
         }
+
+        // ⚠️ #1690 — ADJACENT TO THE SCORE, and to the ALL-CLEAR above it,
+        // which is the branch that matters most: a green tick over a document
+        // whose only leak is under a deferred channel is precisely the false
+        // reassurance this tool exists to remove. A footer would let a reader
+        // stop at the tick.
+        WriteLimitations(report.Limitations, output);
 
         if (report.Certain.Count > 0)
         {

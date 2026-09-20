@@ -1149,6 +1149,7 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 │   ├── RedactionCarriers.cs        # typed document-carrier scope
 │   ├── XfaXmlCarrier.cs            # safe XML/XFA carrier rewrite
 │   └── Recovery/                   # ← DE-REDACTION (#1587): the READ mirror
+│       ├── RecoveryChannelTiers.cs # #1690: WHICH channels are graded — text focus vs deferred
 │       ├── RecoveryModel.cs        # one record per finding: confidence, channel, LOCATION
 │       ├── RedactionMarkDetector.cs# the marks a document admits to — the DENOMINATOR
 │       ├── RecoveryReportBuilder.cs# links findings to marks; grades each mark

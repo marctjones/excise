@@ -51,6 +51,22 @@ public static class RecoveryScanner
         public const string Thumbnail = "thumbnail";
         public const string Attachment = "attachment";
         public const string Xfa = "xfa";
+
+        /// <summary>
+        /// Every channel name this assembly knows, so a caller declaring what
+        /// it did NOT run can derive the list instead of hand-copying it.
+        ///
+        /// <para>The CLI's residue-only path used to hand-list six of them and
+        /// silently omitted the rest, which is the #1181 Coverage failure in
+        /// miniature: a report over six declared channels read like one over
+        /// fourteen. Deriving makes adding a channel enough.</para>
+        /// </summary>
+        public static IReadOnlyList<string> All { get; } = new[]
+        {
+            HiddenText, Carrier, MarkedContent, CoveredImage, CoveredVector,
+            ImageLayer, FormField, Residue, OcrDifferential, PriorRevision,
+            MarkRegion, Thumbnail, Attachment, Xfa,
+        };
     }
 
     /// <summary>
