@@ -426,6 +426,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ExtGState_gs_AppliesFillAlphaAndLineWidth_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -1081,6 +1088,13 @@
             "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MarkedContent_BDC_WithAnOffOptionalContentGroup_HidesTheContent_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2374,6 +2388,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::LineWidth_w_ThickensTheStrokedBand_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -2686,6 +2707,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MiterLimit_M_ClampsASharpJoinToABevel_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -2887,6 +2915,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::RenderingIntent_ri_AndFlatness_i_AreOutputNeutral_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -2984,6 +3019,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::RenderingIntent_ri_AndFlatness_i_AreOutputNeutral_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3080,6 +3122,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ExtGState_gs_AppliesFillAlphaAndLineWidth_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -3385,6 +3434,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CubicBezier_c_ApexFollowsTheCurveNotTheControlPoints_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -3795,6 +3851,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::Rectangle_re_PlacesTheBoxAtTheRequestedCorner_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3995,6 +4058,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseAndStroke_s_DrawsTheClosingSegmentUnlike_S_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -4197,6 +4267,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::UppercaseFill_F_IsASynonymForLowercase_f_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -4398,6 +4475,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::FillThenStroke_B_And_BStar_DifferOnlyInTheFillRule_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -4494,6 +4578,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::FillThenStroke_B_And_BStar_DifferOnlyInTheFillRule_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -4592,6 +4683,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseFillStroke_b_StrokesTheClosingSegmentUnlike_B_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -4688,6 +4786,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseFillStroke_bStar_UsesTheEvenOddRuleUnlike_b_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -4792,6 +4897,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NoOpPathPaint_n_LeavesThePageBlank_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -6138,6 +6250,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CmykColor_k_And_K_ProduceTheRightHue_MatchesMutoolOrdering",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -6234,6 +6353,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CmykColor_k_And_K_ProduceTheRightHue_MatchesMutoolOrdering",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -7678,6 +7804,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextRise_Ts_LiftsTheBaseline_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -7774,6 +7907,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextPosition_Td_OffsetsFromTheLineStart_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -7872,6 +8012,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextPosition_TD_AlsoSetsTheLeading_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -7968,6 +8115,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextMatrix_Tm_ScalesTheGlyphInPlace_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -8170,6 +8324,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ShowText_Tj_PaintsTheRunAtTheTextOrigin_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -8266,6 +8427,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ShowTextArray_TJ_AppliesTheArrayAdjustment_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -8364,6 +8532,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NextLineShowText_Apostrophe_StepsDownByTheLeading_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -8460,6 +8635,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NextLineShowText_Quote_SetsSpacingAndStepsDown_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -8855,6 +9037,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MarkedContent_BDC_EMC_DoNotAlterRendering_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -8951,6 +9140,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MarkedContent_BDC_EMC_DoNotAlterRendering_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]

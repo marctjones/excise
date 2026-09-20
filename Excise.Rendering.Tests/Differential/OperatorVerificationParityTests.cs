@@ -41,8 +41,13 @@ namespace Excise.Rendering.Tests.Differential;
 /// confirming the capability. Reporting that honestly is the point of this
 /// file's no-self-oracle mandate — a capability is not "verified" by
 /// switching to whichever fixture happens to pass.</para>
+///
+/// <para>Split across two files: this one holds the original batch; the
+/// painting/text/marked-content operators live in
+/// <c>OperatorVerificationParityTests.PaintingAndText.cs</c> and share these
+/// fixtures and helpers rather than re-deriving their own.</para>
 /// </summary>
-public class OperatorVerificationParityTests : IDisposable
+public partial class OperatorVerificationParityTests : IDisposable
 {
     private const int Dpi = 72;
     private readonly List<string> _temp = new();

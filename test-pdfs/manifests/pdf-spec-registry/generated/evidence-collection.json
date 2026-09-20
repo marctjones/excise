@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1331,
-  "indexedContentSha256": "88a14cae5c86601e5196c4cd69ebca145cfa9d12d3bc64c93709fe56beba1ade",
+  "indexedFileCount": 1332,
+  "indexedContentSha256": "8170b2f4d40846bca935f40ffa5cc84872a9c745ba67289f4a1fe355f2ab57d4",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4063,7 +4063,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 164
+      "candidateReferenceCount": 165
     },
     {
       "id": "pdf.17.document.navigation",
@@ -8005,7 +8005,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 603
+      "candidateReferenceCount": 604
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8819,7 +8819,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 306
+      "candidateReferenceCount": 307
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -11365,7 +11365,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 170
+      "candidateReferenceCount": 171
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -13457,7 +13457,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 123
+      "candidateReferenceCount": 124
     },
     {
       "id": "pdf.17.content.text-state",
@@ -13919,6 +13919,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "character",
+            "showing"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs",
           "kind": "test",
           "matchedTerms": [
@@ -13962,7 +13970,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 37
+      "candidateReferenceCount": 38
     },
     {
       "id": "pdf.17.content.marked",
@@ -14434,6 +14442,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "marked",
+            "property"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -14562,7 +14578,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 63
+      "candidateReferenceCount": 64
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -14863,11 +14879,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::LineWidth_w_ThickensTheStrokedBand_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-004"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-005",
@@ -15100,11 +15132,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MiterLimit_M_ClampsASharpJoinToABevel_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-007"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-008",
@@ -15259,11 +15307,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::RenderingIntent_ri_AndFlatness_i_AreOutputNeutral_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-009"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-010",
@@ -15329,6 +15393,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::RenderingIntent_ri_AndFlatness_i_AreOutputNeutral_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -15401,11 +15472,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ExtGState_gs_AppliesFillAlphaAndLineWidth_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-011"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-012",
@@ -15628,11 +15715,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CubicBezier_c_ApexFollowsTheCurveNotTheControlPoints_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-014"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-015",
@@ -15933,11 +16036,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::Rectangle_re_PlacesTheBoxAtTheRequestedCorner_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-018"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-019",
@@ -16092,11 +16211,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseAndStroke_s_DrawsTheClosingSegmentUnlike_S_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-020"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-021",
@@ -16251,11 +16386,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::UppercaseFill_F_IsASynonymForLowercase_f_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-022"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-023",
@@ -16410,11 +16561,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::FillThenStroke_B_And_BStar_DifferOnlyInTheFillRule_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-024"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-025",
@@ -16480,6 +16647,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::FillThenStroke_B_And_BStar_DifferOnlyInTheFillRule_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -16552,11 +16726,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseFillStroke_b_StrokesTheClosingSegmentUnlike_B_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-026"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-027",
@@ -16622,6 +16812,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseFillStroke_bStar_UsesTheEvenOddRuleUnlike_b_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -16694,11 +16891,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NoOpPathPaint_n_LeavesThePageBlank_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-028"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-029",
@@ -17902,11 +18115,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CmykColor_k_And_K_ProduceTheRightHue_MatchesMutoolOrdering",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-041"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-042",
@@ -17972,6 +18201,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CmykColor_k_And_K_ProduceTheRightHue_MatchesMutoolOrdering",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -19108,11 +19344,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextRise_Ts_LiftsTheBaseline_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-056"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-057",
@@ -19179,11 +19431,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextPosition_Td_OffsetsFromTheLineStart_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-057"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-058",
@@ -19250,11 +19518,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextPosition_TD_AlsoSetsTheLeading_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-058"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-059",
@@ -19321,11 +19605,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextMatrix_Tm_ScalesTheGlyphInPlace_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-059"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-060",
@@ -19480,11 +19780,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ShowText_Tj_PaintsTheRunAtTheTextOrigin_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-061"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-062",
@@ -19551,11 +19867,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ShowTextArray_TJ_AppliesTheArrayAdjustment_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-062"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-063",
@@ -19622,11 +19954,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NextLineShowText_Apostrophe_StepsDownByTheLeading_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-063"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-064",
@@ -19693,11 +20041,27 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NextLineShowText_Quote_SetsSpacingAndStepsDown_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-064"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-065",
@@ -20069,6 +20433,13 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MarkedContent_BDC_EMC_DoNotAlterRendering_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -20196,6 +20567,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bdc",
+            "content-stream",
+            "operator-068"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -20213,7 +20593,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 16
+      "candidateReferenceCount": 17
     },
     {
       "id": "pdf.20.content.operator-069",
@@ -20280,6 +20660,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MarkedContent_BDC_EMC_DoNotAlterRendering_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -20416,6 +20803,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "emc"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -20425,7 +20820,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 16
+      "candidateReferenceCount": 17
     },
     {
       "id": "pdf.20.content.operator-070",
@@ -21038,6 +21433,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "tree"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs",
           "kind": "test",
           "matchedTerms": [
@@ -21055,7 +21458,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 6
+      "candidateReferenceCount": 7
     },
     {
       "id": "pdf.20.renderer.requirement-004",
@@ -21160,11 +21563,28 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ExtGState_gs_AppliesFillAlphaAndLineWidth_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "extgstate",
+            "pdf20",
+            "requirement-005"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-006",
@@ -21841,6 +22261,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "pdf20"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -21903,18 +22332,9 @@
             "colour",
             "skiarenderer"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/UncolouredTilingPatternColourTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 115
+      "candidateReferenceCount": 116
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -22287,11 +22707,27 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MarkedContent_BDC_WithAnOffOptionalContentGroup_HidesTheContent_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "optional-content",
+            "pdf20"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-013",
@@ -23545,11 +23981,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::LineWidth_w_ThickensTheStrokedBand_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-026"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-027",
@@ -23731,6 +24183,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MiterLimit_M_ClampsASharpJoinToABevel_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -23848,11 +24307,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::RenderingIntent_ri_AndFlatness_i_AreOutputNeutral_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-031"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-032",
@@ -23902,6 +24377,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::RenderingIntent_ri_AndFlatness_i_AreOutputNeutral_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -23958,11 +24440,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ExtGState_gs_AppliesFillAlphaAndLineWidth_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-033"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-034",
@@ -24137,11 +24635,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CubicBezier_c_ApexFollowsTheCurveNotTheControlPoints_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-036"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-037",
@@ -24378,11 +24892,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::Rectangle_re_PlacesTheBoxAtTheRequestedCorner_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-040"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-041",
@@ -24495,11 +25025,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseAndStroke_s_DrawsTheClosingSegmentUnlike_S_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-042"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-043",
@@ -24612,11 +25158,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::UppercaseFill_F_IsASynonymForLowercase_f_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-044"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-045",
@@ -24730,11 +25292,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::FillThenStroke_B_And_BStar_DifferOnlyInTheFillRule_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-046"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-047",
@@ -24786,11 +25364,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::FillThenStroke_B_And_BStar_DifferOnlyInTheFillRule_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bstar",
+            "pdf20"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-048",
@@ -24841,11 +25435,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseFillStroke_b_StrokesTheClosingSegmentUnlike_B_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-048"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-049",
@@ -24897,11 +25507,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CloseFillStroke_bStar_UsesTheEvenOddRuleUnlike_b_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bstar",
+            "pdf20"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-050",
@@ -24958,6 +25584,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NoOpPathPaint_n_LeavesThePageBlank_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -25761,11 +26394,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CmykColor_k_And_K_ProduceTheRightHue_MatchesMutoolOrdering",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-063"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-064",
@@ -25815,6 +26464,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::CmykColor_k_And_K_ProduceTheRightHue_MatchesMutoolOrdering",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -26671,11 +27327,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextRise_Ts_LiftsTheBaseline_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-078"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-079",
@@ -26726,11 +27398,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextPosition_Td_OffsetsFromTheLineStart_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-079"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-080",
@@ -26781,11 +27469,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextPosition_TD_AlsoSetsTheLeading_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-080"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-081",
@@ -26836,11 +27540,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::TextMatrix_Tm_ScalesTheGlyphInPlace_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-081"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-082",
@@ -26954,11 +27674,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ShowText_Tj_PaintsTheRunAtTheTextOrigin_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-083"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-084",
@@ -27009,11 +27745,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::ShowTextArray_TJ_AppliesTheArrayAdjustment_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "requirement-084"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-085",
@@ -27065,11 +27817,28 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NextLineShowText_Apostrophe_StepsDownByTheLeading_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "apostrophe",
+            "pdf20",
+            "requirement-085"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-086",
@@ -27121,11 +27890,28 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::NextLineShowText_Quote_SetsSpacingAndStepsDown_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "quote",
+            "requirement-086"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-087",
@@ -27349,11 +28135,28 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MarkedContent_BDC_EMC_DoNotAlterRendering_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bdc",
+            "pdf20",
+            "requirement-090"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-091",
@@ -27405,11 +28208,27 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs::MarkedContent_BDC_EMC_DoNotAlterRendering_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "emc",
+            "pdf20"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-092",
@@ -39997,6 +40816,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "lab",
+            "requirement-031"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -40023,18 +40850,9 @@
             "image",
             "jbig2"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 128
+      "candidateReferenceCount": 129
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -55574,6 +56392,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "parameters"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/OverprintDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -55687,17 +56513,9 @@
             "flattening",
             "preview"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/GuiWorkflowCoverageMatrixTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "preview"
-          ]
         }
       ],
-      "candidateReferenceCount": 98
+      "candidateReferenceCount": 99
     },
     {
       "id": "pdf.17.interactive.annotations",

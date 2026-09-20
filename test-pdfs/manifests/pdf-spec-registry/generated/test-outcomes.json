@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedBy": "scripts/collect-pdf-test-outcomes.py",
+  "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-15T19:00:21.970283+00:00",
-  "gitRevision": "7df4bfab51ab5f8d8554561ac59f1d85354867eb",
+  "recordedAt": "2026-09-20T18:50:02.540685+00:00",
+  "gitRevision": "c3d8949b7bd45b0edc0a861f5b35a18069193fd7",
   "dotnetVersion": "10.0.401",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -326,6 +326,11 @@
       "path": "logs/full-suite_Debug_20260915_113110/Excise.Ocr.Tests.trx",
       "modifiedAt": "2026-09-15T16:30:36.160259+00:00",
       "sha256": "ac07ec26a6241526dd556f79ba5e7ce185697c715f647324805844c624b1c077"
+    },
+    {
+      "path": "logs/pdf20-verify/batch1.trx",
+      "modifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "sha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     }
   ],
   "outcomes": [
@@ -57228,106 +57233,290 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
       "outcome": "Passed",
-      "duration": "00:00:00.0923161",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0653154",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
       "outcome": "Passed",
-      "duration": "00:00:00.0637953",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0454265",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.Clip_WStar_EvenOddConfinesSubsequentFill_MatchesIndependentRenderers",
       "outcome": "Passed",
-      "duration": "00:00:00.0585488",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0331838",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.Clip_W_NonzeroWindingConfinesSubsequentFill_MatchesIndependentRenderers",
       "outcome": "Passed",
-      "duration": "00:00:00.0570643",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0701239",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.CloseAndStroke_s_DrawsTheClosingSegmentUnlike_S_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0258343",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.CloseFillStroke_bStar_UsesTheEvenOddRuleUnlike_b_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0262160",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.CloseFillStroke_b_StrokesTheClosingSegmentUnlike_B_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0231801",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.CmykColor_k_And_K_ProduceTheRightHue_MatchesMutoolOrdering",
+      "outcome": "Passed",
+      "duration": "00:00:00.0301875",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.CubicBezier_c_ApexFollowsTheCurveNotTheControlPoints_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0174055",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.DashPattern_D_ReducesStrokeInkVsSolid_MatchesMutool",
       "outcome": "Passed",
-      "duration": "00:00:00.0732901",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0374908",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.EvenOddFill_FStar_DonutHasHole_MatchesIndependentRenderers",
       "outcome": "Passed",
-      "duration": "00:00:00.0806488",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0434005",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.ExtGState_gs_AppliesFillAlphaAndLineWidth_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0625012",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
       "outcome": "Passed",
-      "duration": "00:00:00.0586677",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0433949",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.FillThenStroke_B_And_BStar_DifferOnlyInTheFillRule_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0250486",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.HorizontalScaling_Tz_HalvesWidth_MatchesMutool",
       "outcome": "Passed",
-      "duration": "00:00:00.0817585",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0609746",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
       "outcome": "Passed",
-      "duration": "00:00:00.0324254",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0189494",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.LineCap_J_RoundExtendsPastButt_MatchesMutool",
       "outcome": "Passed",
-      "duration": "00:00:00.0464011",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0287066",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.LineWidth_w_ThickensTheStrokedBand_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0646155",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.MarkedContent_BDC_EMC_DoNotAlterRendering_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0749207",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.MarkedContent_BDC_WithAnOffOptionalContentGroup_HidesTheContent_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0126710",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.MiterLimit_M_ClampsASharpJoinToABevel_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0346990",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.NextLineShowText_Apostrophe_StepsDownByTheLeading_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0164669",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.NextLineShowText_Quote_SetsSpacingAndStepsDown_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0417982",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.NoOpPathPaint_n_LeavesThePageBlank_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0453703",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.NonzeroFill_F_DonutIsSolid_MatchesIndependentRenderers",
       "outcome": "Passed",
-      "duration": "00:00:00.0536099",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0317609",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.Rectangle_re_PlacesTheBoxAtTheRequestedCorner_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0322685",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.RenderingIntent_ri_AndFlatness_i_AreOutputNeutral_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0275768",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.ShowTextArray_TJ_AppliesTheArrayAdjustment_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0537106",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.ShowText_Tj_PaintsTheRunAtTheTextOrigin_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0981850",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
       "outcome": "Passed",
-      "duration": "00:00:00.1492989",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0442532",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.TextMatrix_Tm_ScalesTheGlyphInPlace_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0712203",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.TextPosition_TD_AlsoSetsTheLeading_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0162970",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.TextPosition_Td_OffsetsFromTheLineStart_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0170874",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.TextRenderMode_Tr3Invisible_PaintsNoInk_MatchesMutool",
       "outcome": "Passed",
-      "duration": "00:00:00.0626601",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk06.trx",
-      "resultModifiedAt": "2026-09-15T15:55:37.959014+00:00",
-      "trxSha256": "a7be6544d8651241f29ea21c93637f6a9f88f4a7adda2336dbeef91df6e74211"
+      "duration": "00:00:00.0414281",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.TextRise_Ts_LiftsTheBaseline_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0707458",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.UppercaseFill_F_IsASynonymForLowercase_f_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0394367",
+      "trx": "logs/pdf20-verify/batch1.trx",
+      "resultModifiedAt": "2026-09-20T18:49:31.828222+00:00",
+      "trxSha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OracleCropBoxParityTests.Ghostscript_RasterisesTheCropBox_NotTheMediaBox",
@@ -73163,11 +73352,11 @@
     }
   ],
   "summary": {
-    "trxFiles": 64,
-    "tests": 9104,
+    "trxFiles": 65,
+    "tests": 9127,
     "outcomes": {
       "NotExecuted": 926,
-      "Passed": 8178
+      "Passed": 8201
     },
     "status": "recorded"
   }
