@@ -201,6 +201,48 @@ while read -r doc; do
   fi
 done < <(scenario_docs)
 
+# --- resting-state validity (#1686) ---------------------------------------
+# A scenario whose LAST idle step is no longer than the app's own idle cache
+# trim delay stops measuring BEFORE the trim -- and the #1496 heap reclaim the
+# trim can request -- is due. Its final footprint is then the PRE-TRIM state
+# reported as the resting state. altona-scroll did exactly that: 20 s against a
+# 30 s trim, leaving 48-134 MB of fragmentation unreclaimed and making excise
+# look worse than it is (measured logs/gui-perf_20260920_113106).
+#
+# The threshold is DERIVED from WindowSettings.cs, never hard-coded here, so
+# changing the default cannot silently invalidate the scenarios a second time.
+IDLE_TRIM_S="$(sed -n 's/.*CacheTrimIdleSeconds[^=]*=[[:space:]]*\([0-9][0-9]*\).*/\1/p' \
+  "$ROOT/Excise.App/Models/WindowSettings.cs" 2>/dev/null | head -1)"
+if [ -z "$IDLE_TRIM_S" ]; then
+  echo "WARNING: could not read CacheTrimIdleSeconds from WindowSettings.cs;" >&2
+  echo "         resting-state validity was NOT checked." >&2
+else
+  SHORT_IDLE="$(python3 - "$SCENARIO_FILE" "$IDLE_TRIM_S" "${SELECTED[@]}" <<'PYEOF'
+import json, sys
+path, trim = sys.argv[1], int(sys.argv[2])
+want = set(sys.argv[3:])
+doc = json.load(open(path))
+scen = doc["scenarios"] if isinstance(doc, dict) and "scenarios" in doc else doc
+for s in scen:
+    if s["id"] not in want:
+        continue
+    idles = [x for x in s["steps"] if x.get("op") == "idle"]
+    if not idles:
+        continue
+    last = idles[-1]
+    sec = last.get("seconds", 0)
+    if sec <= trim:
+        print("%s (%s = %ss)" % (s["id"], last.get("label", "idle"), sec))
+PYEOF
+)"
+  if [ -n "$SHORT_IDLE" ]; then
+    echo "WARNING (#1686): these scenarios idle no longer than the app's own idle"
+    echo "  cache trim (${IDLE_TRIM_S}s), so their FINAL footprint is the PRE-TRIM"
+    echo "  state. Do not quote it as a resting or 'comes back down' figure:"
+    echo "$SHORT_IDLE" | sed 's/^/    /'
+  fi
+fi
+
 if [ "$LIST_ONLY" = "1" ]; then
   echo "scenario file : $SCENARIO_FILE"
   echo "set           : ${SCENARIO_SET:-(default: scenarios with no set)}"
