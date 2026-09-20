@@ -65,7 +65,21 @@ internal static class UnredactCommandHandler
             // and the OCR one not; a fixed sentence would have claimed a blind
             // spot this report does not have, which is the same species of
             // error as claiming coverage it does not have.
-            var limitations = RecoveryChannelTiers.LimitationsFor(recovery.ChannelsSkipped.Keys);
+            //
+            // ⚠️ Keyed on the REASON, not just the channel name. In
+            // `--mode residue` every Tier 1 channel is skipped too, and the
+            // deferred ones are skipped for THAT reason, not for #1690 —
+            // telling the reader to "opt in with --include-deferred" there
+            // would name a flag that changes nothing in that mode. That is the
+            // same error this replaced the const string to remove: a report
+            // describing a blind spot it does not have in the form stated. The
+            // far larger Tier 1 hole in residue mode is already declared,
+            // channel by channel, on the coverage line.
+            var deferredSkips = recovery.ChannelsSkipped
+                .Where(entry => RecoveryChannelTiers.IsDeferred(entry.Key) &&
+                                entry.Value == RecoveryChannelTiers.DeferralReason(entry.Key))
+                .Select(entry => entry.Key);
+            var limitations = RecoveryChannelTiers.LimitationsFor(deferredSkips);
             var report = new UnredactReport(
                 quantification, certain, residue, recovery, restore,
                 present.Count > 0 ? present : null,

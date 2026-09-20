@@ -183,6 +183,31 @@ public class UnredactDeferredChannelTests
         finally { File.Delete(path); }
     }
 
+    [Fact]
+    public void ResidueMode_DeclaresNoDEFERRALLimitation_BecauseThatIsNotWhySkipped()
+    {
+        // The same error one level down. In residue mode EVERY other channel
+        // is skipped — for the mode, not for #1690 — so telling the reader to
+        // "opt in with --include-deferred" would name a flag that changes
+        // nothing here. A report must not describe a blind spot it does not
+        // have in the form it states. The real, much larger hole is already
+        // declared channel by channel on the coverage line.
+        var dictionary = Path.Combine(Path.GetTempPath(), $"excise-dict-{Guid.NewGuid():N}.txt");
+        File.WriteAllText(dictionary, "MANAFORT\n");
+        var path = WriteFixture(ImageUnderBox());
+        try
+        {
+            var input = new UnredactCommandInput(
+                path, "residue", dictionary, Tolerance: 0.5, MaxCandidates: 200,
+                UseOcr: false, NoCorroboration: true);
+            var report = UnredactCommandHandler
+                .Execute(input, TestContext.Current.CancellationToken).Report!;
+
+            report.Limitations.Should().BeNull();
+        }
+        finally { File.Delete(path); File.Delete(dictionary); }
+    }
+
     // ── the headline is the TEXT score ──────────────────────────────────────
 
     [Fact]
@@ -251,6 +276,7 @@ public class UnredactDeferredChannelTests
             {
                 recovery.ChannelsSkipped.Should().ContainKey(channel,
                     "a channel that did not run must SAY it did not run");
+                recovery.ChannelsSkipped[channel].Should().Be("--mode residue");
             }
         }
         finally { File.Delete(path); File.Delete(dictionary); }
