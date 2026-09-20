@@ -22,6 +22,49 @@ namespace Excise.Core.Writing;
 /// </remarks>
 internal static class AtomicFileReplace
 {
+    /// <summary>
+    /// Rename the finished temporary over <paramref name="fullPath"/>.
+    /// </summary>
+    /// <remarks>
+    /// POSIX <c>rename()</c> replaces an open file without complaint, which is
+    /// the whole premise of this class. Windows does not: <c>File.Move</c> with
+    /// overwrite is <c>MoveFileEx(MOVEFILE_REPLACE_EXISTING)</c>, and it
+    /// returned <c>UnauthorizedAccessException</c> on the Windows runner
+    /// (#1683) for a destination the GUI still had open — twice on the same
+    /// commit, 1 failure of 5,185, so not environmental. The reader in that
+    /// test already permits delete sharing
+    /// (<c>FileShare.ReadWrite | FileShare.Delete</c>), so the naive
+    /// missing-share-flag explanation does not hold.
+    ///
+    /// <para><c>ReplaceFile</c> (<see cref="File.Replace(string, string, string)"/>)
+    /// is the Win32 API written for this case — replacing a file that may be
+    /// in use — and it additionally preserves the destination's attributes,
+    /// ACLs and alternate data streams, which a rename does not. That is a
+    /// bonus here: it narrows the "the target gets a NEW inode" consequence
+    /// this class documents.</para>
+    ///
+    /// <para>It is tried only on Windows and only when the destination already
+    /// exists (<c>ReplaceFile</c> requires it), and a failure falls back to the
+    /// rename so behaviour can only improve. POSIX keeps the rename untouched.
+    /// ⚠️ Whether this actually fixes #1683 is decided by the Windows runner,
+    /// not by this comment.</para>
+    /// </remarks>
+    private static void MoveIntoPlace(string temporary, string fullPath)
+    {
+        if (OperatingSystem.IsWindows() && File.Exists(fullPath))
+        {
+            try
+            {
+                File.Replace(temporary, fullPath, destinationBackupFileName: null);
+                return;
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+
+        File.Move(temporary, fullPath, overwrite: true);
+    }
+
     /// <param name="path">The target file.</param>
     /// <param name="write">Writes the whole file to the stream it is given.</param>
     /// <param name="createDirectory">Create the target's directory when it is
@@ -41,7 +84,7 @@ internal static class AtomicFileReplace
         {
             using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write))
                 write(file);
-            File.Move(temporary, fullPath, overwrite: true);
+            MoveIntoPlace(temporary, fullPath);
         }
         catch
         {
