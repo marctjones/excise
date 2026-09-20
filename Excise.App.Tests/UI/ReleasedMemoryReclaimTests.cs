@@ -358,13 +358,36 @@ public class ReleasedMemoryReclaimTests
             textIndexSession: indexSession, thumbnailPrewarmEnabled: false, memoryReclaimer: reclaimer);
         try
         {
+            // #1691. The reading BEFORE the large document opens. The assertion
+            // below subtracts two whole-heap readings, and a whole-heap reading
+            // in a full-suite run is mostly OTHER tests' live heap. Without the
+            // baseline, `withLarge` cannot distinguish "the payload was on the
+            // heap and stayed there" from "the payload was never on the heap",
+            // and those two want opposite fixes: one is a retention bug, the
+            // other means this assertion is measuring nothing.
+            long baseline = GC.GetTotalMemory(forceFullCollection: true);
+
             await vm.LoadDocumentAsync(large);
             vm.TotalPages.Should().Be(1, "fixture: the large document opens");
             long withLarge = GC.GetTotalMemory(forceFullCollection: true);
 
+            // Captured while the large document is still current: once the
+            // replace lands, SaveDocumentForTests is the small one. The strong
+            // reference stays inside the helper's frame, never in this one.
+            var weakLarge = WeakCurrentDocument(vm);
+
             await vm.LoadDocumentAsync(small);
             await PumpUntilAsync(() => triggers.Count > 0, TimeSpan.FromSeconds(30));
             await PumpForAsync(TimeSpan.FromMilliseconds(200));
+
+            // Same three-step as ReachabilityRecorder: a finalizable object is
+            // not collected until the queue has drained, so one Collect() can
+            // report a dead object as alive.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            bool documentStillAlive = weakLarge.IsAlive;
+            long heapAfterFullCollect = GC.GetTotalMemory(forceFullCollection: true);
 
             _output.WriteLine(
                 $"live heap with the large document: {withLarge / 1048576.0:F1} MB; " +
@@ -373,7 +396,40 @@ public class ReleasedMemoryReclaimTests
                 $"gen{lastGc.Generation} compacted={lastGc.Compacted} heapSize={lastGc.HeapSizeBytes / 1048576.0:F1} MB " +
                 $"committed={lastGc.TotalCommittedBytes / 1048576.0:F1} MB pause={lastGc.PauseDurations[0].TotalMilliseconds:F1} ms");
 
+            // #1691 diagnostics: which of the three outcomes this run is.
+            _output.WriteLine(
+                $"[#1691] baseline before opening: {baseline / 1048576.0:F1} MB; " +
+                $"payload accounted on the heap (withLarge - baseline): {(withLarge - baseline) / 1048576.0:F1} MB " +
+                $"of an expected {payloadBytes / 1048576.0:F1} MB; " +
+                $"replaced document still reachable after a full collect: {documentStillAlive}; " +
+                $"heap after that full collect: {heapAfterFullCollect / 1048576.0:F1} MB " +
+                $"(net vs baseline {(heapAfterFullCollect - baseline) / 1048576.0:F1} MB)");
+
             triggers.Should().Equal(HeapReclaimTrigger.DocumentReplaced);
+
+            // #1691. These two run BEFORE the heap assertion deliberately, so
+            // that when this test fails the message says WHICH thing broke
+            // rather than only that two numbers were close together. They are
+            // additions, not a relaxation: the heap assertion below is
+            // untouched, and a run that satisfies both still has to satisfy it.
+            //
+            //   this one fails      -> the payload never reached the managed
+            //                          heap under these conditions, so the heap
+            //                          assertion is comparing two readings that
+            //                          never contained it. Fix the measurement,
+            //                          not the app.
+            //   the next one fails  -> something still roots the replaced
+            //                          document. A real retention bug; find the
+            //                          root (dotnet-gcdump), do not touch this
+            //                          test.
+            //   both pass, heap one -> the bytes outlive the document that owned
+            //   fails                  them; they are held somewhere else.
+            (withLarge - baseline).Should().BeGreaterThan(payloadBytes / 2,
+                "fixture precondition: opening the large document must put its payload on the managed heap, " +
+                "or the heap comparison below cannot observe the payload being returned");
+            documentStillAlive.Should().BeFalse(
+                "the replaced document must be unreachable once the reclaim has run, or its heap cannot come back");
+
             // Half the payload, not all of it: the test host's own heap moves
             // by a few MB between the two readings, and the point is that the
             // document's bytes came back, not an exact figure.
