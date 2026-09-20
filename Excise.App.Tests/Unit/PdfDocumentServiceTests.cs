@@ -225,6 +225,44 @@ public class PdfDocumentServiceTests : IDisposable
 
     #region SaveDocument Tests
 
+    /// <summary>
+    /// #1567: the current document is read from a FileStream, not a whole-file
+    /// copy. The guarantee the copy used to give — the file stays writable and
+    /// replaceable while open — is kept by the share mode.
+    /// </summary>
+    [Fact]
+    public void LoadDocument_LeavesTheFileWritableAndReplaceable()
+    {
+        var filePath = CreateTestFile("open.pdf", path =>
+            TestPdfGenerator.CreateSimpleTextPdf(path, "Content"));
+        var replacement = CreateTestFile("replacement.pdf", path =>
+            TestPdfGenerator.CreateSimpleTextPdf(path, "Other"));
+
+        _service.LoadDocument(filePath);
+
+        var writeOpen = () => { using var _ = new FileStream(filePath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete); };
+        writeOpen.Should().NotThrow("another writer may open the file while it is our current document");
+        var replace = () => File.Move(replacement, filePath, overwrite: true);
+        replace.Should().NotThrow("a rename over the open file is how our own save lands");
+        _service.PageCount.Should().Be(1, "the document keeps reading the inode it opened");
+    }
+
+    [Fact]
+    public void SaveDocument_OntoTheOpenFile_ReloadsTheSavedContent()
+    {
+        var filePath = CreateTestFile("inplace.pdf", path =>
+            TestPdfGenerator.CreateMultiPagePdf(path, 3));
+        _service.LoadDocument(filePath);
+        _service.RemovePage(0);
+
+        _service.SaveDocument();
+
+        _service.PageCount.Should().Be(2, "the reload after the save sees the saved document");
+        var fresh = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
+        fresh.LoadDocument(filePath);
+        fresh.PageCount.Should().Be(2);
+    }
+
     [Fact]
     public void SaveDocument_WithoutPath_SavesToOriginalPath()
     {

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "49713ffe88f8459942fe2371d8377354a73beeca",
+  "sourceRevision": "7e6e86460ab797704585700e861799de27acda0c",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 197,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "49713ffe88f8459942fe2371d8377354a73beeca",
-    "oldestProductionCommit": "a405e5e95fdcf14e3b46f09c35267d9d19f8ef4f"
+    "newestProductionCommit": "7e6e86460ab797704585700e861799de27acda0c",
+    "oldestProductionCommit": "6f7e41ecae8f3fcaabdb8c988baa5a9f318db053"
   },
   "files": [
     {
@@ -210,6 +210,10 @@
       "commits": 5
     },
     {
+      "path": "Excise.App/Services/PdfDocumentService.cs",
+      "commits": 4
+    },
+    {
       "path": "Excise.App/Services/RedactionService.cs",
       "commits": 4
     },
@@ -283,10 +287,6 @@
     },
     {
       "path": "Excise.App/Services/AvaloniaUserDialogService.cs",
-      "commits": 3
-    },
-    {
-      "path": "Excise.App/Services/PdfDocumentService.cs",
       "commits": 3
     },
     {
@@ -391,6 +391,10 @@
     },
     {
       "path": "Excise.Core/Text/PdfPageTextFacade.cs",
+      "commits": 3
+    },
+    {
+      "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
       "commits": 3
     },
     {
@@ -626,10 +630,6 @@
       "commits": 2
     },
     {
-      "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
-      "commits": 2
-    },
-    {
       "path": "Excise.Core/Writing/PdfDocumentWriter.cs",
       "commits": 2
     },
@@ -694,10 +694,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.App/Services/ExciseJsonContext.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.App/Services/Host/AvaloniaFilePicker.cs",
       "commits": 1
     },
@@ -735,10 +731,6 @@
     },
     {
       "path": "Excise.App/Services/Printing/PrintPageLayout.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.App/Services/RecentFilesService.cs",
       "commits": 1
     },
     {
@@ -1054,7 +1046,15 @@
       "commits": 1
     },
     {
+      "path": "Excise.Core/Writing/AtomicFileReplace.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.Core/Writing/ImageResampler.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Writing/PdfDocumentWritingFacade.cs",
       "commits": 1
     },
     {
@@ -2408,12 +2408,6 @@
       "jaccard": 0.5
     },
     {
-      "source": "Excise.App/Services/PdfDocumentService.cs",
-      "target": "Excise.Core/Xfa/PdfXfaLayout.cs",
-      "cochanges": 2,
-      "jaccard": 0.5
-    },
-    {
       "source": "Excise.App/Services/RedactedCopyDialogFormatter.cs",
       "target": "Excise.App/Services/RedactionWorkflowService.cs",
       "cochanges": 2,
@@ -2524,6 +2518,12 @@
     {
       "source": "Excise.App/Models/AttachmentEntry.cs",
       "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
+      "cochanges": 2,
+      "jaccard": 0.4
+    },
+    {
+      "source": "Excise.App/Services/PdfDocumentService.cs",
+      "target": "Excise.Core/Xfa/PdfXfaLayout.cs",
       "cochanges": 2,
       "jaccard": 0.4
     },

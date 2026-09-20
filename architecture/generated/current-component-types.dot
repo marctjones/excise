@@ -6,7 +6,7 @@ digraph excise_architecture {
   subgraph cluster_delivery {
     label="delivery";
     color="#cbd5e1";
-    "app" [label="Excise.App project\npartial\n1341 retained symbols", fillcolor="#fff3bf"];
+    "app" [label="Excise.App project\npartial\n1342 retained symbols", fillcolor="#fff3bf"];
     "cli" [label="Excise.Cli project\npartial\n489 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
@@ -18,7 +18,7 @@ digraph excise_architecture {
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n626 retained symbols", fillcolor="#fff3bf"];
     "core-security" [label="Document conformance and structural validation\npartial\n56 retained symbols", fillcolor="#fff3bf"];
     "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n174 retained symbols", fillcolor="#d8f3dc"];
-    "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n103 retained symbols", fillcolor="#d8f3dc"];
+    "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n104 retained symbols", fillcolor="#d8f3dc"];
     "rendering" [label="Excise.Rendering project\npartial\n884 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_foundation {

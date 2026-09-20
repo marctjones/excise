@@ -133,8 +133,8 @@ public partial class PdfDocument
     /// <see cref="Save(Stream, PdfEncryptionOptions?)"/>.
     /// </summary>
     public void Save(string path, PdfEncryptionOptions? encryptionOptions)
-    {
-        using var fs = new FileStream(path, FileMode.Create, FileAccess.Write);
-        Save(fs, encryptionOptions);
-    }
+        // Sibling temp + rename (AtomicFileReplace): the target is never
+        // truncated, which matters when the document is being read from that
+        // same path — the GUI's current document is (#1567).
+        => AtomicFileReplace.Write(path, stream => Save(stream, encryptionOptions));
 }
