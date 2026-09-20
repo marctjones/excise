@@ -472,6 +472,19 @@ internal partial class RenderContext
         _resourceScope.CacheDecodedImage(imageStream, key, bitmap);
         // The bitmap is all the rest of this draw needs from the samples.
         _resourceScope.ReleaseImageSamplesEarly(imageStream);
+
+        // F3 (#1207): and nothing else needs the ENCODED bytes either. The store
+        // pins every resolved object for the document's lifetime; for a one-shot
+        // render that held ~110 MB of compressed image data at the x4 peak after
+        // F2. Forget the object: the bitmap cache is keyed by object number, so a
+        // second draw of the same image still hits it, and if anything does
+        // resolve the object again the store re-parses it from the file. Only
+        // when this render releases samples (the viewer opts out and keeps its
+        // pages warm) and only if the release actually happened — a stream still
+        // holding decoded bytes refused it, which means someone else wrote them,
+        // and that stream is not ours to forget.
+        if (_options.ReleaseDecodedImageSamples && !imageStream.IsDecoded && imageStream.ObjectNumber is { } objectNumber)
+            _page.Document.EvictFromCache(objectNumber);
         return bitmap;
     }
 

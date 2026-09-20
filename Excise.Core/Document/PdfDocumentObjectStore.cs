@@ -76,6 +76,22 @@ internal sealed class PdfDocumentObjectStore : IDisposable
         _objectCache.Remove(objectNumber);
     }
 
+    /// <summary>
+    /// F3 (#1207): forget a resolved object so its bytes can be collected, WITHOUT
+    /// touching the xref — the next resolve re-parses it from the file exactly as
+    /// the first one did (decryption, JBIG2 globals, deferred decode and the F1 hint
+    /// all run again). Unlike <see cref="RemoveObject"/> this is not document
+    /// mutation: nothing observable changes except memory. Used by a one-shot
+    /// render for an image it has finished with — its encoded bytes were the whole
+    /// of what remained on the managed heap at the x4 peak after F2 (dotnet-dump:
+    /// 110 MB of System.Byte[], every array rooted through _objectCache).
+    /// </summary>
+    internal void EvictFromCache(int objectNumber)
+    {
+        lock (_parseLock)
+            _objectCache.Remove(objectNumber);
+    }
+
     internal PdfReference? GetReferenceTo(PdfObject obj)
     {
         foreach (var (number, cached) in _objectCache)

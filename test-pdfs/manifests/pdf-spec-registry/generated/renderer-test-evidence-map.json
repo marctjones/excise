@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "b9bb281532add1ae5e17253cef28ee781a4324a5ef635e8a7a9298d09203dfa6",
+  "sourceFingerprint": "abacd29c7f70b13513d77fb1a2d0e587db6d88c93de888dd7963162947509cf8",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -23826,6 +23826,52 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs::EncodedBytesEvictionTests.AReleasingRender_ForgetsTheImageObject_AndARerenderIsIdentical",
+      "path": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs",
+      "class": "EncodedBytesEvictionTests",
+      "method": "AReleasingRender_ForgetsTheImageObject_AndARerenderIsIdentical",
+      "line": 24,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs::EncodedBytesEvictionTests.ANonReleasingRender_KeepsTheImageObject",
+      "path": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs",
+      "class": "EncodedBytesEvictionTests",
+      "method": "ANonReleasingRender_KeepsTheImageObject",
+      "line": 43,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/EncodedImageDecoderTests.cs::EncodedImageDecoderTests.EmptyAndMalformedPayloadsAreRefused",
       "path": "Excise.Rendering.Tests/EncodedImageDecoderTests.cs",
       "class": "EncodedImageDecoderTests",
@@ -43802,7 +43848,7 @@
     }
   ],
   "summary": {
-    "testMethods": 1216,
+    "testMethods": 1218,
     "facets": {
       "content-streams": 338,
       "content-strings-and-text": 7,
@@ -43810,7 +43856,7 @@
       "fonts": 203,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 315,
-      "images": 200,
+      "images": 202,
       "page-group-backdrop": 3,
       "renderer-integration-general": 38,
       "renderer-performance-and-lifetime": 12,
@@ -43828,9 +43874,9 @@
       "pdf.17.graphics.fonts:extract": 203,
       "pdf.17.graphics.fonts:parse": 203,
       "pdf.17.graphics.fonts:render": 798,
-      "pdf.17.graphics.images:extract": 200,
-      "pdf.17.graphics.images:parse": 200,
-      "pdf.17.graphics.images:render": 787,
+      "pdf.17.graphics.images:extract": 202,
+      "pdf.17.graphics.images:parse": 202,
+      "pdf.17.graphics.images:render": 789,
       "pdf.17.graphics.paths-painting:parse": 315,
       "pdf.17.graphics.paths-painting:render": 315,
       "pdf.17.graphics.patterns-shadings:parse": 53,

@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1330,
-  "indexedContentSha256": "a76a9af86de3497a1824541fc159c5ae5d2ebd4d867237fda22872bf539c941e",
+  "indexedFileCount": 1331,
+  "indexedContentSha256": "a0f2e2f6058971403a9686e72604cfc5e9123f533eee9edad800f9a72d45297e",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -9794,7 +9794,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 225
+      "candidateReferenceCount": 226
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -28308,6 +28308,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -28385,7 +28394,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 44
+      "candidateReferenceCount": 45
     },
     {
       "id": "pdf.20.image.requirement-004",
@@ -28805,6 +28814,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -28883,7 +28901,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 44
+      "candidateReferenceCount": 45
     },
     {
       "id": "pdf.20.image.requirement-005",
@@ -29313,6 +29331,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -29401,7 +29428,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 46
+      "candidateReferenceCount": 47
     },
     {
       "id": "pdf.20.image.requirement-006",
@@ -36116,7 +36143,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 168
+      "candidateReferenceCount": 169
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -36655,6 +36682,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bitspercomponent",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36812,7 +36848,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 67
+      "candidateReferenceCount": 68
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -37966,6 +38002,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -38133,7 +38178,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 62
+      "candidateReferenceCount": 63
     },
     {
       "id": "pdf.20.image.requirement-028",

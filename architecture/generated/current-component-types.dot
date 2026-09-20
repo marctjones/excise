@@ -13,7 +13,7 @@ digraph excise_architecture {
     label="engine";
     color="#cbd5e1";
     "core-content" [label="Content-stream walker and sinks\nimplemented\n281 retained symbols", fillcolor="#d8f3dc"];
-    "core-document" [label="Document model and mutation boundary\nimplemented\n556 retained symbols", fillcolor="#d8f3dc"];
+    "core-document" [label="Document model and mutation boundary\nimplemented\n558 retained symbols", fillcolor="#d8f3dc"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n195 retained symbols", fillcolor="#fff3bf"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n626 retained symbols", fillcolor="#fff3bf"];
     "core-security" [label="Document conformance and structural validation\npartial\n56 retained symbols", fillcolor="#fff3bf"];
@@ -111,10 +111,10 @@ digraph excise_architecture {
   "ocr" -> "rendering" [label="16 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core" [label="165 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-content" [label="59 refs / 8 type pairs\naccepted_exception", color="#7e22ce", style="dotted", penwidth=2];
-  "rendering" -> "core-document" [label="297 refs / 24 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "rendering" -> "core-document" [label="299 refs / 24 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-fonts" [label="58 refs / 13 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-parsing" [label="35 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "rendering" -> "core-primitives" [label="633 refs / 41 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "rendering" -> "core-primitives" [label="635 refs / 41 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-text" [label="9 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-writing" [label="2 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
 }

@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "a434ab399ca7d838ac63ad30a5fb4bcc200d047c",
+  "sourceRevision": "cdf18e2c76a49475ddd267234f744b881b9a80dd",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7805,
+    "retainedSymbols": 7807,
     "observedComponentDependencies": 70,
     "declaredDependencies": 68,
     "acceptedExceptions": 1,
@@ -945,14 +945,14 @@
     {
       "source": "rendering",
       "target": "core-document",
-      "references": 297,
+      "references": 299,
       "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Rendering.RenderContext",
           "target": "Excise.Core.Document.PdfPage",
-          "references": 63
+          "references": 64
         }
       ]
     },
@@ -987,7 +987,7 @@
     {
       "source": "rendering",
       "target": "core-primitives",
-      "references": 633,
+      "references": 635,
       "typeDependencyCount": 41,
       "classification": "declared",
       "evidence": [

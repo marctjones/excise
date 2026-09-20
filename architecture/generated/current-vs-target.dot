@@ -119,10 +119,10 @@ digraph excise_architecture {
   "ocr" -> "rendering" [label="target + observed\n16 refs", color="#15803d", style="solid", penwidth=2];
   "rendering" -> "core" [label="target + observed\n165 refs", color="#15803d", style="solid", penwidth=2];
   "rendering" -> "core-content" [label="accepted exception\n59 refs", color="#7e22ce", style="dotted", penwidth=2];
-  "rendering" -> "core-document" [label="observed via parent boundary\n297 refs", color="#2563eb", style="dashed", penwidth=1];
+  "rendering" -> "core-document" [label="observed via parent boundary\n299 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-fonts" [label="observed via parent boundary\n58 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-parsing" [label="observed via parent boundary\n35 refs", color="#2563eb", style="dashed", penwidth=1];
-  "rendering" -> "core-primitives" [label="observed via parent boundary\n633 refs", color="#2563eb", style="dashed", penwidth=1];
+  "rendering" -> "core-primitives" [label="observed via parent boundary\n635 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-text" [label="observed via parent boundary\n9 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-writing" [label="observed via parent boundary\n2 refs", color="#2563eb", style="dashed", penwidth=1];
   "verification" -> "app" [label="target only", color="#94a3b8", style="dotted", penwidth=1];

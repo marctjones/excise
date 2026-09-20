@@ -111,6 +111,10 @@ public partial class PdfDocument : IDisposable
     internal void RemoveObject(int objectNumber)
         => _objectStore.RemoveObject(objectNumber);
 
+    /// <summary>See <see cref="PdfDocumentObjectStore.EvictFromCache"/> (F3).</summary>
+    internal void EvictFromCache(int objectNumber)
+        => _objectStore.EvictFromCache(objectNumber);
+
     /// <summary>
     /// Object numbers reachable from the trailer by walking the object graph
     /// (mark phase of a mark-and-sweep). Used to confirm an inlined Form
