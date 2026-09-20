@@ -7,6 +7,7 @@ scripts/analyze-corpus-results.sh   # analysis helper over scan output
 scripts/analyze-pdf-corpus-duplicates.py   # corpus analysis helper
 scripts/architecture_artifacts.py   # body of check-architecture-artifacts.sh
 scripts/archive-bench-run.sh   # the ONE redaction-bench scorer; appends to tests/redaction-bench-history.jsonl (the report reads the history)
+scripts/archive-gui-perf-run.sh  # GUI footprint/latency trend; appends to tests/gui-perf-history.jsonl. NOT a gate — absolute numbers from one machine
 scripts/assert-fresh.sh   # freshness guard invoked by lib-runner before every --no-build
 scripts/assert_fresh_build.py   # body of assert-fresh.sh
 scripts/assert-trx-green.sh   # the trx verdict for the two ADVISORY GitHub runners (#1593/#1594): a --filter matching nothing exits 0, and the Linux Avalonia host exits 1 on native teardown after passing. Not a local gate — lib-runner's zero-test guard and report-gates.sh cover the tiers. Its own --self-test runs as a step in both workflows
