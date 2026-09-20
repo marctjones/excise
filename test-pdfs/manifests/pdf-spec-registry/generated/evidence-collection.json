@@ -14629,6 +14629,13 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::SaveRestore_RestoresFillColorAfterQ_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -14700,6 +14707,13 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::SaveRestore_RestoresFillColorAfterQ_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -14770,6 +14784,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::Translation_cm_MovesRect_MatchesIndependentRenderer",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -15000,6 +15021,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RoundLineJoin_StaysBoundedUnlikeAMiterSpike_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -18104,6 +18132,13 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1InlineImageMaskPaintsInTextColor_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -18174,6 +18209,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1InlineImageMaskPaintsInTextColor_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -18246,6 +18288,13 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1InlineImageMaskPaintsInTextColor_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -18316,6 +18365,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::ScaledAndTranslatedImage_BoundingBoxMatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -25815,6 +25871,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -25865,6 +25928,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_InlineImage_Grayscale_RendersWithoutError",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1InlineImageMaskPaintsInTextColor_MatchesMutool",
             "modes": [
               "render"
             ]
@@ -25921,6 +25991,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1InlineImageMaskPaintsInTextColor_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -25971,6 +26048,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_InlineImage_Grayscale_RendersWithoutError",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1InlineImageMaskPaintsInTextColor_MatchesMutool",
             "modes": [
               "render"
             ]
@@ -26028,6 +26112,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::ScaledAndTranslatedImage_BoundingBoxMatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -26393,6 +26484,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -26794,6 +26892,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -27071,6 +27176,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_MissingWidthsWxAdvance_MatchesGhostscript",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -27125,6 +27237,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1BBoxClip_MatchesPdftocairo",
+            "modes": [
+              "render"
             ]
           }
         ]
