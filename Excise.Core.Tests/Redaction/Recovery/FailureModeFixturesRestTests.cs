@@ -10,7 +10,10 @@ public class FailureModeFixturesRestTests
 {
     private const string Secret = "KILIMNIK";
 
-    private static RecoveryReport Scan(byte[] pdf) => RecoveryScanner.Scan(pdf);
+    // #1690: covered-image is a DEFERRED channel; these fixtures still measure
+    // it, so they ask for it. Deferred is not deleted and not untested.
+    private static RecoveryReport Scan(byte[] pdf) =>
+        RecoveryScanner.Scan(pdf, options: RecoveryScanOptions.IncludingDeferred);
     private static bool Found(byte[] pdf, string text = Secret) =>
         Scan(pdf).AllFindings.Any(f => (f.Text ?? "").Contains(text));
     private static bool OnChannel(byte[] pdf, string channel) =>

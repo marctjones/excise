@@ -19,6 +19,15 @@ namespace Excise.Core.Redaction.Recovery;
 /// <see cref="RecoveryReportBuilder.ChannelSkipped"/> instead of producing a
 /// report that silently reads like full coverage.</para>
 ///
+/// <para><b>#1690 — the TEXT focus.</b> By default this runs the Tier 1
+/// channels only: the deferred image channels (<c>covered-image</c>,
+/// <c>image-layer</c>) are declared SKIPPED with their reason, and the OCR
+/// differential is the caller's to add as it always was. They are deferred, not
+/// deleted — <see cref="RecoveryScanOptions.IncludingDeferred"/> runs them, and
+/// the bench still measures them. See <see cref="RecoveryChannelTiers"/>, whose
+/// <see cref="RecoveryChannelTiers.BlindSpot"/> is what a skipping report must
+/// say out loud.</para>
+///
 /// <para>Runs only when an audit asks. Nothing here is on the open or render
 /// path: <see cref="PdfPage.Letters"/> and one content-stream walk per page are
 /// not free, and a viewer must not pay for a tool it did not invoke.</para>
@@ -64,10 +73,12 @@ public static class RecoveryScanner
         RecoveryReportBuilder builder,
         CancellationToken cancellationToken = default,
         IReadOnlyList<string>? dictionary = null,
-        byte[]? pdfBytes = null)
+        byte[]? pdfBytes = null,
+        RecoveryScanOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(builder);
+        options ??= RecoveryScanOptions.Default;
 
         var marks = RedactionMarkDetector.Detect(document);
         builder.AddMarks(marks);
@@ -76,11 +87,11 @@ public static class RecoveryScanner
         AddMarkRegionText(document, marks, builder, cancellationToken);
         var visibleCarrierText = AddCarriers(document, builder, cancellationToken);
         AddMarkedContent(document, builder, cancellationToken);
-        AddCoveredContent(document, builder, cancellationToken);
+        AddCoveredContent(document, builder, cancellationToken, options);
         AddFormFields(document, builder, visibleCarrierText, cancellationToken);
         AddResidualArtefacts(document, builder, cancellationToken);
         AddXfaValues(document, builder, cancellationToken);
-        AddImageLayerLeaks(document, builder, cancellationToken);
+        AddImageLayerLeaks(document, builder, cancellationToken, options);
         AddMarkFits(document, marks, builder, dictionary, cancellationToken);
         AddPriorRevision(pdfBytes, builder, cancellationToken);
 
@@ -92,18 +103,24 @@ public static class RecoveryScanner
     /// because a <see cref="PdfDocument"/> cannot supply the bytes it needs.
     /// Prefer the byte overload when you have them.
     /// </summary>
-    public static RecoveryReport Scan(PdfDocument document, CancellationToken cancellationToken = default)
-        => ScanInto(document, new RecoveryReportBuilder(), cancellationToken).Build();
+    public static RecoveryReport Scan(
+        PdfDocument document,
+        CancellationToken cancellationToken = default,
+        RecoveryScanOptions? options = null)
+        => ScanInto(document, new RecoveryReportBuilder(), cancellationToken, null, null, options).Build();
 
     /// <summary>
     /// Every document-only channel INCLUDING prior-revision. This is the
     /// overload a caller with the file should use (#1665).
     /// </summary>
-    public static RecoveryReport Scan(byte[] pdfBytes, CancellationToken cancellationToken = default)
+    public static RecoveryReport Scan(
+        byte[] pdfBytes,
+        CancellationToken cancellationToken = default,
+        RecoveryScanOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(pdfBytes);
         using var document = PdfDocument.Open(pdfBytes);
-        return ScanInto(document, new RecoveryReportBuilder(), cancellationToken, null, pdfBytes).Build();
+        return ScanInto(document, new RecoveryReportBuilder(), cancellationToken, null, pdfBytes, options).Build();
     }
 
     /// <summary>
@@ -262,15 +279,29 @@ public static class RecoveryScanner
         }
     }
 
+    /// <summary>
+    /// #1690 — the VECTOR half is Tier 1 and always runs; the RASTER half is
+    /// deferred. Split by filtering what is EMITTED, not by splitting the
+    /// class: one walk finds both, the cost is paid either way, and a second
+    /// scanner would be a second thing to keep in step.
+    /// </summary>
     private static void AddCoveredContent(
-        PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken)
+        PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken,
+        RecoveryScanOptions options)
     {
-        builder.ChannelRan(Channels.CoveredImage);
         builder.ChannelRan(Channels.CoveredVector);
+        if (options.IncludeDeferredChannels)
+            builder.ChannelRan(Channels.CoveredImage);
+        else
+            builder.ChannelSkipped(Channels.CoveredImage,
+                RecoveryChannelTiers.DeferralReason(Channels.CoveredImage));
+
         foreach (var hit in CoveredContentRecovery.Scan(document))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var channel = hit.Kind == "image" ? Channels.CoveredImage : Channels.CoveredVector;
+            var isImage = hit.Kind == "image";
+            if (isImage && !options.IncludeDeferredChannels) continue;
+            var channel = isImage ? Channels.CoveredImage : Channels.CoveredVector;
             builder.AddFinding(
                 RecoveredFinding.PresentOnly(
                     channel, hit.Description,
@@ -500,8 +531,18 @@ public static class RecoveryScanner
     }
 
     private static void AddImageLayerLeaks(
-        PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken)
+        PdfDocument document, RecoveryReportBuilder builder, CancellationToken cancellationToken,
+        RecoveryScanOptions options)
     {
+        // #1690: deferred. Declared skipped with its reason, never silently
+        // absent -- ChannelWiringGateTests holds the whole file to that.
+        if (!options.IncludeDeferredChannels)
+        {
+            builder.ChannelSkipped(Channels.ImageLayer,
+                RecoveryChannelTiers.DeferralReason(Channels.ImageLayer));
+            return;
+        }
+
         builder.ChannelRan(Channels.ImageLayer);
         foreach (var leak in ImageLayerRecovery.Scan(document))
         {

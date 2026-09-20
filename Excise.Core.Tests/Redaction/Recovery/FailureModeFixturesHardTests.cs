@@ -22,10 +22,14 @@ public class FailureModeFixturesHardTests
 {
     private const string Secret = "KILIMNIK";
 
+    // #1690: this file holds the DEFERRED image-layer modes, so it asks for
+    // them explicitly. Deferred means not graded, not untested -- a fixture
+    // that stopped running would be the "code stays but rots" outcome the
+    // decision rules out.
     private static RecoveryReport Scan(byte[] pdf)
     {
         using var document = PdfDocument.Open(pdf);
-        return RecoveryScanner.Scan(document);
+        return RecoveryScanner.Scan(document, options: RecoveryScanOptions.IncludingDeferred);
     }
 
     private static bool Recovered(RecoveryReport r, string channel, string text) =>

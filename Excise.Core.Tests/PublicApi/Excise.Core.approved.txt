@@ -1894,6 +1894,15 @@ namespace Excise.Core.Redaction.Recovery
         public static Excise.Core.Redaction.Recovery.RecoveredFinding Certain(string channel, string carrier, string text, Excise.Core.Redaction.Recovery.RecoveryLocation? location, double? score = default) { }
         public static Excise.Core.Redaction.Recovery.RecoveredFinding PresentOnly(string channel, string carrier, Excise.Core.Redaction.Recovery.RecoveryLocation? location) { }
     }
+    public static class RecoveryChannelTiers
+    {
+        public const string BlindSpot = @"DEFERRED (#1690): the image and OCR channels did not run, so a scanned page whose redaction box covers PIXELS — with no surviving text layer under it — is reported as holding nothing. That document class is not covered by this score. Run again with --include-deferred (and --ocr for the OCR differential) to include them.";
+        public const string OptInFlag = "--include-deferred";
+        public static System.Collections.Generic.IReadOnlyList<string> DeferredChannels { get; }
+        public static string DeferralReason(string channel) { }
+        public static bool IsDeferred(string channel) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryTier TierOf(string channel) { }
+    }
     public enum RecoveryConfidence
     {
         Certain = 0,
@@ -1944,11 +1953,18 @@ namespace Excise.Core.Redaction.Recovery
         public Excise.Core.Redaction.Recovery.RecoveryReportBuilder ChannelRan(string channel) { }
         public Excise.Core.Redaction.Recovery.RecoveryReportBuilder ChannelSkipped(string channel, string reason) { }
     }
+    public sealed class RecoveryScanOptions : System.IEquatable<Excise.Core.Redaction.Recovery.RecoveryScanOptions>
+    {
+        public static readonly Excise.Core.Redaction.Recovery.RecoveryScanOptions Default;
+        public static readonly Excise.Core.Redaction.Recovery.RecoveryScanOptions IncludingDeferred;
+        public RecoveryScanOptions(bool IncludeDeferredChannels = false) { }
+        public bool IncludeDeferredChannels { get; init; }
+    }
     public static class RecoveryScanner
     {
-        public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(Excise.Core.Document.PdfDocument document, System.Threading.CancellationToken cancellationToken = default) { }
-        public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(byte[] pdfBytes, System.Threading.CancellationToken cancellationToken = default) { }
-        public static Excise.Core.Redaction.Recovery.RecoveryReportBuilder ScanInto(Excise.Core.Document.PdfDocument document, Excise.Core.Redaction.Recovery.RecoveryReportBuilder builder, System.Threading.CancellationToken cancellationToken = default, System.Collections.Generic.IReadOnlyList<string>? dictionary = null, byte[]? pdfBytes = null) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(Excise.Core.Document.PdfDocument document, System.Threading.CancellationToken cancellationToken = default, Excise.Core.Redaction.Recovery.RecoveryScanOptions? options = null) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(byte[] pdfBytes, System.Threading.CancellationToken cancellationToken = default, Excise.Core.Redaction.Recovery.RecoveryScanOptions? options = null) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryReportBuilder ScanInto(Excise.Core.Document.PdfDocument document, Excise.Core.Redaction.Recovery.RecoveryReportBuilder builder, System.Threading.CancellationToken cancellationToken = default, System.Collections.Generic.IReadOnlyList<string>? dictionary = null, byte[]? pdfBytes = null, Excise.Core.Redaction.Recovery.RecoveryScanOptions? options = null) { }
         public static class Channels
         {
             public const string Attachment = "attachment";
@@ -1966,6 +1982,11 @@ namespace Excise.Core.Redaction.Recovery
             public const string Thumbnail = "thumbnail";
             public const string Xfa = "xfa";
         }
+    }
+    public enum RecoveryTier
+    {
+        Text = 1,
+        Deferred = 2,
     }
     public static class RedactionFitAnalyzer
     {
