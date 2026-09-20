@@ -291,6 +291,7 @@ public class PdfStream : PdfDictionary
 
         void Write()
         {
+            Touch();
             _decodedByDeferral = false;
             _pendingDecode = null;
             if (encoded != null)
@@ -381,7 +382,14 @@ public class PdfStream : PdfDictionary
         {
             if (_decodedData == null && ReferenceEquals(_pendingDecode, deferral))
             {
+                // The store's own deferred decode publishes through
+                // SetDecodedData like any writer, but it is not an edit: the
+                // bytes it writes are what the file says. Keep the object
+                // pristine across it so a releasing render can still evict it.
+                var wasPristine = IsPristine;
                 deferral.Decode(this);
+                if (wasPristine)
+                    MarkPristine();
 
                 // Cleared only after a normal return, success or refusal — the
                 // same single attempt the eager path made. An

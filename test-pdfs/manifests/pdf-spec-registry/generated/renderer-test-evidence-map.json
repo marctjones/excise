@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "abacd29c7f70b13513d77fb1a2d0e587db6d88c93de888dd7963162947509cf8",
+  "sourceFingerprint": "568143c63dbc424f936ed973520123c8e0818ff0115223e0520fc39c7aff8f58",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -23941,6 +23941,98 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs::EvictionEditSafetyTests.APageAddedFromAnotherDocument_KeepsItsImage_ThroughARenderAndASave",
+      "path": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs",
+      "class": "EvictionEditSafetyTests",
+      "method": "APageAddedFromAnotherDocument_KeepsItsImage_ThroughARenderAndASave",
+      "line": 27,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs::EvictionEditSafetyTests.AReplacedImageObject_IsWhatGetsSaved_AfterARender",
+      "path": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs",
+      "class": "EvictionEditSafetyTests",
+      "method": "AReplacedImageObject_IsWhatGetsSaved_AfterARender",
+      "line": 42,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs::EvictionEditSafetyTests.AnImageDictionaryEditedInPlace_KeepsTheEdit_ThroughARenderAndASave",
+      "path": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs",
+      "class": "EvictionEditSafetyTests",
+      "method": "AnImageDictionaryEditedInPlace_KeepsTheEdit_ThroughARenderAndASave",
+      "line": 58,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs::EvictionEditSafetyTests.ARedactedImage_StaysRedacted_ThroughARenderAndASave",
+      "path": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs",
+      "class": "EvictionEditSafetyTests",
+      "method": "ARedactedImage_StaysRedacted_ThroughARenderAndASave",
+      "line": 72,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/ExtGStateFontTests.cs::ExtGStateFontTests.FontFromExtGState_IsUsedWhenThereIsNoTf",
       "path": "Excise.Rendering.Tests/ExtGStateFontTests.cs",
       "class": "ExtGStateFontTests",
@@ -43848,7 +43940,7 @@
     }
   ],
   "summary": {
-    "testMethods": 1218,
+    "testMethods": 1222,
     "facets": {
       "content-streams": 338,
       "content-strings-and-text": 7,
@@ -43856,7 +43948,7 @@
       "fonts": 203,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 315,
-      "images": 202,
+      "images": 206,
       "page-group-backdrop": 3,
       "renderer-integration-general": 38,
       "renderer-performance-and-lifetime": 12,
@@ -43874,9 +43966,9 @@
       "pdf.17.graphics.fonts:extract": 203,
       "pdf.17.graphics.fonts:parse": 203,
       "pdf.17.graphics.fonts:render": 798,
-      "pdf.17.graphics.images:extract": 202,
-      "pdf.17.graphics.images:parse": 202,
-      "pdf.17.graphics.images:render": 789,
+      "pdf.17.graphics.images:extract": 206,
+      "pdf.17.graphics.images:parse": 206,
+      "pdf.17.graphics.images:render": 793,
       "pdf.17.graphics.paths-painting:parse": 315,
       "pdf.17.graphics.paths-painting:render": 315,
       "pdf.17.graphics.patterns-shadings:parse": 53,

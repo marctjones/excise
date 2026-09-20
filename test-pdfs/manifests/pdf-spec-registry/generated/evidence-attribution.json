@@ -82234,6 +82234,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ObjectCacheEvictionTests.cs::ObjectCacheEvictionTests.AStaleReference_CannotEvictTheReparsedObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_ProperlyLinkedWidgetAlsoInAnnots_IsNotDoubleCounted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -83592,13 +83599,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -83702,6 +83702,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ObjectCacheEvictionTests.cs::ObjectCacheEvictionTests.AStaleReference_CannotEvictTheReparsedObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_ProperlyLinkedWidgetAlsoInAnnots_IsNotDoubleCounted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -85060,13 +85067,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -85170,6 +85170,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ObjectCacheEvictionTests.cs::ObjectCacheEvictionTests.AStaleReference_CannotEvictTheReparsedObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_ProperlyLinkedWidgetAlsoInAnnots_IsNotDoubleCounted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -86528,13 +86535,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -86654,6 +86654,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ObjectCacheEvictionTests.cs::ObjectCacheEvictionTests.AStaleReference_CannotEvictTheReparsedObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_ProperlyLinkedWidgetAlsoInAnnots_IsNotDoubleCounted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -88012,13 +88019,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -88259,6 +88259,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ObjectCacheEvictionTests.cs::ObjectCacheEvictionTests.AStaleReference_CannotEvictTheReparsedObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_ProperlyLinkedWidgetAlsoInAnnots_IsNotDoubleCounted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -89615,13 +89622,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -89718,6 +89718,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ObjectCacheEvictionTests.cs::ObjectCacheEvictionTests.AStaleReference_CannotEvictTheReparsedObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_ProperlyLinkedWidgetAlsoInAnnots_IsNotDoubleCounted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -91074,13 +91081,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -91170,6 +91170,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ObjectCacheEvictionTests.cs::ObjectCacheEvictionTests.AStaleReference_CannotEvictTheReparsedObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_ProperlyLinkedWidgetAlsoInAnnots_IsNotDoubleCounted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -92526,13 +92533,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -92622,6 +92622,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ObjectCacheEvictionTests.cs::ObjectCacheEvictionTests.AStaleReference_CannotEvictTheReparsedObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs::OrphanedWidgetPageResolutionTests.GetFormFields_ProperlyLinkedWidgetAlsoInAnnots_IsNotDoubleCounted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -93978,13 +93985,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113742,8 +113742,8 @@
     "gradeImplemented": 198,
     "gradeVerified": 681,
     "gradeUnknown": 20,
-    "testMethods": 7645,
-    "testMethodsWithCapabilityCandidate": 4747,
+    "testMethods": 7663,
+    "testMethodsWithCapabilityCandidate": 4758,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

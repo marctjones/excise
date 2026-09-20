@@ -56,6 +56,7 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
         get => _items.TryGetValue(key.Value, out var value) ? value : throw new KeyNotFoundException($"Key /{key.Value} not found");
         set
         {
+            Touch();
             if (value is null or PdfNull)
                 _items.Remove(key.Value);
             else
@@ -71,6 +72,7 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
         get => _items.TryGetValue(key, out var value) ? value : throw new KeyNotFoundException($"Key /{key} not found");
         set
         {
+            Touch();
             if (value is null or PdfNull)
                 _items.Remove(key);
             else
@@ -282,6 +284,7 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
     {
         if (value is null or PdfNull)
             return; // Don't add null values
+        Touch();
         _items.Add(key.Value, value);
     }
 
@@ -292,6 +295,7 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
     {
         if (value is null or PdfNull)
             return;
+        Touch();
         _items.Add(key, value);
     }
 
@@ -300,6 +304,7 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
     /// </summary>
     public void Set(string key, PdfObject value)
     {
+        Touch();
         if (value is null or PdfNull)
             _items.Remove(key);
         else
@@ -309,37 +314,37 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
     /// <summary>
     /// Set a name entry.
     /// </summary>
-    public void SetName(string key, string value) => _items[key] = new PdfName(value);
+    public void SetName(string key, string value) { Touch(); _items[key] = new PdfName(value); }
 
     /// <summary>
     /// Set a string entry.
     /// </summary>
-    public void SetString(string key, string value) => _items[key] = new PdfString(value);
+    public void SetString(string key, string value) { Touch(); _items[key] = new PdfString(value); }
 
     /// <summary>
     /// Set a number entry.
     /// </summary>
-    public void SetNumber(string key, double value) => _items[key] = new PdfReal(value);
+    public void SetNumber(string key, double value) { Touch(); _items[key] = new PdfReal(value); }
 
     /// <summary>
     /// Set an integer entry.
     /// </summary>
-    public void SetInt(string key, int value) => _items[key] = new PdfInteger(value);
+    public void SetInt(string key, int value) { Touch(); _items[key] = new PdfInteger(value); }
 
     /// <summary>
     /// Set a boolean entry.
     /// </summary>
-    public void SetBool(string key, bool value) => _items[key] = PdfBoolean.Get(value);
+    public void SetBool(string key, bool value) { Touch(); _items[key] = PdfBoolean.Get(value); }
 
     /// <summary>
     /// Remove an entry by name.
     /// </summary>
-    public bool Remove(PdfName key) => _items.Remove(key.Value);
+    public bool Remove(PdfName key) { Touch(); return _items.Remove(key.Value); }
 
     /// <summary>
     /// Remove an entry by string key.
     /// </summary>
-    public bool Remove(string key) => _items.Remove(key);
+    public bool Remove(string key) { Touch(); return _items.Remove(key); }
 
     /// <summary>
     /// Remove an entry.
@@ -349,7 +354,23 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
     /// <summary>
     /// Clear all entries.
     /// </summary>
-    public void Clear() => _items.Clear();
+    public void Clear() { Touch(); _items.Clear(); }
+
+    /// <summary>
+    /// True while this object is byte-for-byte what the document object store
+    /// parsed from the file: set by the store when it caches a parsed object,
+    /// cleared by every mutator here and by <see cref="PdfStream"/>'s byte
+    /// writers. Never true for a constructed object. The store's cache
+    /// eviction (F3, #1207) is allowed only on a pristine object, because the
+    /// next resolve re-parses from the file and would silently undo any edit —
+    /// the cache is the only place an edit lives before a save.
+    /// </summary>
+    internal bool IsPristine { get; private set; }
+
+    internal void MarkPristine() => IsPristine = true;
+
+    /// <summary>Every mutator calls this first.</summary>
+    private protected void Touch() => IsPristine = false;
 
     /// <summary>
     /// Check if contains an entry.
@@ -366,8 +387,11 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
     /// <summary>
     /// Remove an entry.
     /// </summary>
-    bool ICollection<KeyValuePair<PdfName, PdfObject>>.Remove(KeyValuePair<PdfName, PdfObject> item) =>
-        _items.Remove(item.Key.Value);
+    bool ICollection<KeyValuePair<PdfName, PdfObject>>.Remove(KeyValuePair<PdfName, PdfObject> item)
+    {
+        Touch();
+        return _items.Remove(item.Key.Value);
+    }
 
     /// <summary>
     /// Copy to array.

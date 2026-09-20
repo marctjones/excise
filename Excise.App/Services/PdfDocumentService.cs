@@ -125,11 +125,7 @@ public class PdfDocumentService
 
         bool replacing = DisposeIfLoaded(_currentDocument);
         XfaLayout = null;
-        // Open from bytes so the file is not held open — matches the
-        // previous file-based behavior that kept the file freely writable.
-        _currentDocument = userPassword is null
-            ? PdfDocument.Open(File.ReadAllBytes(filePath))
-            : PdfDocument.Open(File.ReadAllBytes(filePath), userPassword);
+        _currentDocument = OpenCurrent(filePath, userPassword);
         _currentFilePath = filePath;
         _currentUserPassword = userPassword;
         XfaLayout = LayOutDynamicXfa(_currentDocument);
@@ -197,6 +193,35 @@ public class PdfDocumentService
         };
 
     /// <summary>
+    /// The current document reads from the file on demand (#1567). Until this
+    /// it was opened from <c>File.ReadAllBytes</c> so the file stayed freely
+    /// writable, which cost one live array the size of the file for the life
+    /// of the document — 122 MB on the Altona suite, the largest single item on
+    /// the GUI's heap. The share mode keeps the file writable and replaceable:
+    /// a save back onto it goes through a sibling temp and a rename
+    /// (<c>AtomicFileReplace</c>), after which this stream keeps reading the old
+    /// inode until the reload. What is NOT protected is another program
+    /// rewriting the file IN PLACE while it is open — a torn read until the
+    /// next open, the same exposure Preview has through its file mapping.
+    /// </summary>
+    private static PdfDocument OpenCurrent(string path, string? userPassword)
+    {
+        var stream = new FileStream(
+            path, FileMode.Open, FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete,
+            bufferSize: 1 << 16, FileOptions.None);
+        try
+        {
+            return PdfDocument.Open(stream, userPassword, ownsStream: true);
+        }
+        catch
+        {
+            stream.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Dispose without leaving the instance in a caller's local: the release
     /// event hands off to a collection that may run while the caller's frame
     /// is still on the stack, and an unoptimised local keeps the document alive.
@@ -228,9 +253,7 @@ public class PdfDocumentService
 
         // Reload to reset in-memory state from the persisted bytes.
         _currentDocument.Dispose();
-        _currentDocument = _currentUserPassword is null
-            ? PdfDocument.Open(File.ReadAllBytes(savePath))
-            : PdfDocument.Open(File.ReadAllBytes(savePath), _currentUserPassword);
+        _currentDocument = OpenCurrent(savePath, _currentUserPassword);
         _currentFilePath = savePath;
         // #1547: the saved copy is marked (so this is a no-op re-check), or a
         // redaction removed its XFA form (so the result goes back to null).
@@ -322,7 +345,9 @@ public class PdfDocumentService
         if (_currentDocument == null)
             throw new InvalidOperationException("No document loaded");
 
-        using var sourceDocument = PdfDocument.Open(File.ReadAllBytes(sourcePdfPath));
+        // Page cloning copies every stream's bytes at Add time, so the source
+        // need not outlive this method (#918).
+        using var sourceDocument = PdfDocument.Open(sourcePdfPath);
         var indices = pageIndices?.ToList() ?? Enumerable.Range(0, sourceDocument.PageCount).ToList();
 
         foreach (var index in indices)
@@ -342,7 +367,7 @@ public class PdfDocumentService
         if (insertAtIndex < 0 || insertAtIndex > PageCount)
             throw new ArgumentOutOfRangeException(nameof(insertAtIndex));
 
-        using var sourceDocument = PdfDocument.Open(File.ReadAllBytes(sourcePdfPath));
+        using var sourceDocument = PdfDocument.Open(sourcePdfPath);
         var indices = pageIndices?.ToList() ?? Enumerable.Range(0, sourceDocument.PageCount).ToList();
 
         var cursor = insertAtIndex;

@@ -111,9 +111,9 @@ public partial class PdfDocument : IDisposable
     internal void RemoveObject(int objectNumber)
         => _objectStore.RemoveObject(objectNumber);
 
-    /// <summary>See <see cref="PdfDocumentObjectStore.EvictFromCache"/> (F3).</summary>
-    internal void EvictFromCache(int objectNumber)
-        => _objectStore.EvictFromCache(objectNumber);
+    /// <summary>See <see cref="PdfDocumentObjectStore.TryEvictFromCache"/> (F3).</summary>
+    internal bool TryEvictFromCache(PdfObject obj)
+        => _objectStore.TryEvictFromCache(obj);
 
     /// <summary>
     /// Object numbers reachable from the trailer by walking the object graph
