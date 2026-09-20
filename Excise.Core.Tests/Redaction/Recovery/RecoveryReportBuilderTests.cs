@@ -81,8 +81,17 @@ public class RecoveryReportBuilderTests
             "a width-admissible set is a constraint, never a reading");
     }
 
+    /// <summary>
+    /// ⚠️ This asserted <c>CandidatesOnly</c> until #1707, with the reason
+    /// "pixels under a box are a real leak but not a recovered VALUE". The
+    /// second half is right and the grade was wrong: <c>CandidatesOnly</c> says
+    /// the value is CONSTRAINED, and here it is not constrained at all — it is
+    /// intact in the file and merely undecoded. The tool printed a leaked
+    /// photograph as <c>~ candidates-only</c> with zero candidates anywhere in
+    /// the report, and exited 0.
+    /// </summary>
     [Fact]
-    public void PresentOnly_NeverGradesRecovered()
+    public void PresentOnly_GradesContentSurvives_NotACandidateSet()
     {
         var report = new RecoveryReportBuilder()
             .AddMarks(new[] { Mark("p1m1", 100, 160) })
@@ -91,8 +100,35 @@ public class RecoveryReportBuilderTests
                 new RecoveryLocation(1, new PdfRectangle(100, 102, 160, 114), "covered content box")))
             .Build();
 
+        report.Marks[0].Outcome.Should().Be(MarkRecoveryOutcome.ContentSurvives,
+            "material is intact under the mark; nothing about its VALUE is claimed or constrained");
+        report.MarksContentSurvives.Should().Be(1);
+        report.MarksCandidatesOnly.Should().Be(0,
+            "the old grade absorbed this case, so the count has to stop absorbing it too");
+    }
+
+    /// <summary>
+    /// The other side of #1707's boundary: a claim about the VALUE outranks
+    /// "something is here". Without this, the obvious implementation — any
+    /// present-only finding wins — would silently downgrade a mark that DOES
+    /// have a candidate set.
+    /// </summary>
+    [Fact]
+    public void PresentOnlyMixedWithACandidate_StaysCandidatesOnly()
+    {
+        var report = new RecoveryReportBuilder()
+            .AddMarks(new[] { Mark("p1m1", 100, 160) })
+            .AddFinding(RecoveredFinding.PresentOnly(
+                "covered-image", "image XObject /Im0",
+                new RecoveryLocation(1, new PdfRectangle(100, 102, 160, 114), "covered content box")))
+            .AddFinding(RecoveredFinding.Candidate(
+                "residue", "width residue", new[] { "Harper", "Hansen" }, 1.0,
+                new RecoveryLocation(1, new PdfRectangle(100, 102, 160, 114), "residue gap")))
+            .Build();
+
         report.Marks[0].Outcome.Should().Be(MarkRecoveryOutcome.CandidatesOnly,
-            "pixels under a box are a real leak but not a recovered VALUE");
+            "a constrained set is a statement about the value; presence is not");
+        report.MarksContentSurvives.Should().Be(0);
     }
 
     [Fact]

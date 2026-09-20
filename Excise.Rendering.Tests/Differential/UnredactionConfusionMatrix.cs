@@ -115,12 +115,20 @@ internal static class UnredactionConfusionMatrix
     /// same recall are not equally useful if one reads the bytes and the other
     /// returns forty candidates.
     /// </summary>
+    /// <param name="ContentSurvives">
+    /// #1707 — the mark holds INTACT material no channel decoded. Its own
+    /// bucket rather than a share of <paramref name="CandidatesOnly"/>: a
+    /// candidate set is a claim about the value and this is not, and the two
+    /// say very different things about a tool. ⚠️ Without this field a
+    /// <c>ContentSurvives</c> row would be counted by no bucket at all and
+    /// <see cref="Total"/> would silently under-count.
+    /// </param>
     internal sealed record RecoveryProfile(
         string Tool, string ModeId,
-        int Exact, int Partial, int CandidatesOnly, int DetectedButNotRead,
+        int Exact, int Partial, int CandidatesOnly, int ContentSurvives, int DetectedButNotRead,
         double MedianResidualBits, double MedianCandidateSetSize)
     {
-        public int Total => Exact + Partial + CandidatesOnly + DetectedButNotRead;
+        public int Total => Exact + Partial + CandidatesOnly + ContentSurvives + DetectedButNotRead;
     }
 
     /// <summary>A tool's declared scope, from tests/unredaction-tools.json.</summary>
@@ -237,6 +245,7 @@ internal static class UnredactionConfusionMatrix
                 rows.Count(r => r.Outcome == MarkRecoveryOutcome.Recovered),
                 rows.Count(r => r.Outcome == MarkRecoveryOutcome.PartiallyRecovered),
                 rows.Count(r => r.Outcome == MarkRecoveryOutcome.CandidatesOnly),
+                rows.Count(r => r.Outcome == MarkRecoveryOutcome.ContentSurvives),
                 rows.Count(r => r.Outcome == MarkRecoveryOutcome.NotRecovered),
                 Median(rows.Select(r => r.ResidualBits)),
                 Median(rows.Where(r => r.CandidateCount > 0).Select(r => (double)r.CandidateCount))));
@@ -354,7 +363,12 @@ internal static class UnredactionConfusionMatrix
             if (p.Total == 0) continue;
             sb.AppendLine(
                 $"  {p.Tool,-10} {p.ModeId,-32} exact {p.Exact,3}  partial {p.Partial,3}  " +
-                $"candidates {p.CandidatesOnly,3}  present-only {p.DetectedButNotRead,3}" +
+                // ⚠️ The last column was labelled "present-only" and counted
+                // NotRecovered — marks where NO channel produced anything. That
+                // was wrong before #1707 too; present-only used to be graded
+                // CandidatesOnly, so the column never held what it claimed.
+                $"candidates {p.CandidatesOnly,3}  content-survives {p.ContentSurvives,3}  " +
+                $"nothing-found {p.DetectedButNotRead,3}" +
                 (p.CandidatesOnly > 0
                     ? $"   median bits {p.MedianResidualBits:F1}, set {p.MedianCandidateSetSize:F0}"
                     : ""));

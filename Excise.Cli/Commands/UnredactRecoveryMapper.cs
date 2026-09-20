@@ -42,6 +42,7 @@ internal static class UnredactRecoveryMapper
             report.MarksRecovered,
             report.MarksPartial,
             report.MarksCandidatesOnly,
+            report.MarksContentSurvives,
             report.MarksNotRecovered,
             markSummaries,
             linked,
@@ -102,6 +103,7 @@ internal static class UnredactRecoveryMapper
         MarkRecoveryOutcome.Recovered => "recovered",
         MarkRecoveryOutcome.PartiallyRecovered => "partially-recovered",
         MarkRecoveryOutcome.CandidatesOnly => "candidates-only",
+        MarkRecoveryOutcome.ContentSurvives => "content-survives",
         MarkRecoveryOutcome.NotRecovered => "not-recovered",
         _ => "unknown",
     };

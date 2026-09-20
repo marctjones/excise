@@ -294,53 +294,15 @@ public class UnredactDeferredChannelTests
     private static IEnumerable<UnredactModelFinding> AllFindings(UnredactRecoveryModel recovery) =>
         recovery.Linked.Concat(recovery.Unlinked).Concat(recovery.DocumentLevel);
 
-    /// <summary>A 2x2 grey image, fully covered by an opaque black box.</summary>
-    private static (string Content, string? ExtraObject, string? Resources) ImageUnderBox() =>
-        ("q 120 0 0 120 72 600 cm /Im0 Do Q\n" +
-         "q 0 0 0 rg 72 600 120 120 re f Q\n",
-         "<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceGray " +
-         "/BitsPerComponent 8 /Length 4 >>\nstream\n\x00\x40\x80\xFF\nendstream",
-         "/XObject << /Im0 6 0 R >>");
+    // #1707 — the fixture BODIES moved to UnredactFixtures so the exit-status
+    // gate runs on the same documents this file does. The names stay here so
+    // the cases above read unchanged.
+    private static UnredactFixtures.Page ImageUnderBox() => UnredactFixtures.ImageUnderBox();
 
-    /// <summary>Nothing hidden and nothing redacted: the all-clear branch.</summary>
-    private static (string Content, string? ExtraObject, string? Resources) EmptyPage() =>
-        ("BT /F1 14 Tf 72 700 Td (Nothing to see here) Tj ET\n", null, null);
+    private static UnredactFixtures.Page EmptyPage() => UnredactFixtures.EmptyPage();
 
-    /// <summary>A filled vector path under an opaque black box — the Tier 1 half.</summary>
-    private static (string Content, string? ExtraObject, string? Resources) VectorUnderBox() =>
-        ("q 0 0 1 rg 80 610 100 100 re f Q\n" +
-         "q 0 0 0 rg 72 600 120 120 re f Q\n",
-         null, null);
+    private static UnredactFixtures.Page VectorUnderBox() => UnredactFixtures.VectorUnderBox();
 
-    private static string WriteFixture((string Content, string? ExtraObject, string? Resources) fixture)
-    {
-        var content = fixture.Content;
-        var objs = new List<string>
-        {
-            "<< /Type /Catalog /Pages 2 0 R >>",
-            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
-            $"/Resources << /Font << /F1 5 0 R >> {fixture.Resources} >> /Contents 4 0 R >>",
-            $"<< /Length {Encoding.Latin1.GetByteCount(content)} >>\nstream\n{content}endstream",
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
-        };
-        if (fixture.ExtraObject != null) objs.Add(fixture.ExtraObject);
-
-        var sb = new StringBuilder("%PDF-1.7\n");
-        var offsets = new int[objs.Count];
-        for (var i = 0; i < objs.Count; i++)
-        {
-            offsets[i] = Encoding.Latin1.GetByteCount(sb.ToString());
-            sb.Append(i + 1).Append(" 0 obj\n").Append(objs[i]).Append("\nendobj\n");
-        }
-        var xref = Encoding.Latin1.GetByteCount(sb.ToString());
-        sb.Append("xref\n0 ").Append(objs.Count + 1).Append("\n0000000000 65535 f \n");
-        foreach (var offset in offsets) sb.Append(offset.ToString("D10")).Append(" 00000 n \n");
-        sb.Append("trailer\n<< /Size ").Append(objs.Count + 1)
-          .Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF\n");
-
-        var path = Path.Combine(Path.GetTempPath(), $"excise-unredact-tier-{Guid.NewGuid():N}.pdf");
-        File.WriteAllBytes(path, Encoding.Latin1.GetBytes(sb.ToString()));
-        return path;
-    }
+    private static string WriteFixture(UnredactFixtures.Page fixture) =>
+        UnredactFixtures.Write(fixture);
 }

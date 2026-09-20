@@ -66,8 +66,23 @@ public enum MarkRecoveryOutcome
     /// </summary>
     PartiallyRecovered,
 
-    /// <summary>Only candidates or present-only evidence. Nothing asserted.</summary>
+    /// <summary>Only candidate evidence. A constrained set, nothing asserted.</summary>
     CandidatesOnly,
+
+    /// <summary>
+    /// #1707 — material demonstrably survives under this mark and no channel
+    /// turned it into text: image pixels, a vector drawing, an opaque
+    /// attachment. Strictly worse than <see cref="CandidatesOnly"/>, which says
+    /// the value is merely constrained; here the value is INTACT in the file and
+    /// only undecoded.
+    ///
+    /// <para>⚠️ It had no rung until #1707 and fell into
+    /// <see cref="CandidatesOnly"/>, so an intact photograph under a black box
+    /// printed as "1 candidates only" with zero candidates, and the run exited
+    /// 0. Grading a breach as a maybe is the overstatement's mirror image and
+    /// just as wrong.</para>
+    /// </summary>
+    ContentSurvives,
 
     /// <summary>No channel produced anything for this mark.</summary>
     NotRecovered,
@@ -212,5 +227,8 @@ public sealed record RecoveryReport(
     public int MarksRecovered => Marks.Count(m => m.Outcome == MarkRecoveryOutcome.Recovered);
     public int MarksPartial => Marks.Count(m => m.Outcome == MarkRecoveryOutcome.PartiallyRecovered);
     public int MarksCandidatesOnly => Marks.Count(m => m.Outcome == MarkRecoveryOutcome.CandidatesOnly);
+
+    /// <summary>#1707 — marks with intact, undecoded material under them.</summary>
+    public int MarksContentSurvives => Marks.Count(m => m.Outcome == MarkRecoveryOutcome.ContentSurvives);
     public int MarksNotRecovered => Marks.Count(m => m.Outcome == MarkRecoveryOutcome.NotRecovered);
 }

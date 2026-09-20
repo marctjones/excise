@@ -64,6 +64,15 @@ internal static class UnredactCommand
                 "orphaned/masked image originals. Off by default — they report presence, not a " +
                 "value, so nothing grades them. The OCR differential has its own flag (--ocr).",
         };
+        // #1707 — the caller picks the threshold instead of inheriting ours.
+        var failOnOption = new Option<string>("--fail-on")
+        {
+            Description =
+                "Exit non-zero at or above this evidence strength about the redacted VALUE: " +
+                "any (default), text, constrained, present. Exit 3 = text recovered, " +
+                "4 = constrained under a mark, 5 = material survives under a mark undecoded, " +
+                "0 = nothing under any mark.",
+        };
         var noCorroborationOption = new Option<bool>("--no-corroboration")
         {
             Description = "residue mode: report width candidates WITHOUT independent (mutool) corroboration",
@@ -77,7 +86,7 @@ internal static class UnredactCommand
         {
             fileArg, modeOption, dictOption, toleranceOption, maxOption,
             jsonOption, ocrOption, noCorroborationOption, restoreOption,
-            carriersOption, verboseOption, includeDeferredOption,
+            carriersOption, verboseOption, includeDeferredOption, failOnOption,
         };
 
         command.SetAction((parseResult, cancellationToken) =>
@@ -100,7 +109,8 @@ internal static class UnredactCommand
                 parseResult.GetValue(noCorroborationOption),
                 parseResult.GetValue(restoreOption)?.FullName,
                 IncludeVisibleCarriers: carriers == "all" || parseResult.GetValue(verboseOption),
-                IncludeDeferred: parseResult.GetValue(includeDeferredOption));
+                IncludeDeferred: parseResult.GetValue(includeDeferredOption),
+                FailOn: parseResult.GetValue(failOnOption));
 
             var outcome = UnredactCommandHandler.Execute(input, cancellationToken);
             UnredactCommandOutput.Write(

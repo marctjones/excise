@@ -22,6 +22,12 @@ internal static class UnredactCommandHandler
         if (!TryParseMode(input.Mode, out var mode))
             return UnredactCommandOutcome.Failure(2, "--mode must be certain, residue, or both");
 
+        // #1707 — refused, never defaulted. Silently treating a misspelt
+        // threshold as "any" would make a caller's pipeline look stricter than
+        // it is; treating it as "text" would make it silently laxer.
+        if (!TryParseFailOn(input.FailOn, out var failOn))
+            return UnredactCommandOutcome.Failure(2, "--fail-on must be any, text, constrained, or present");
+
         if (mode is UnredactMode.Residue or UnredactMode.Both &&
             (input.DictionaryPath == null || !File.Exists(input.DictionaryPath)))
         {
@@ -88,7 +94,8 @@ internal static class UnredactCommandHandler
             // The exit code reads EVERY channel, not just the two lists: a
             // model-only channel (a prior revision, an XFA value) is a recovery
             // and must not exit 0. See ExitCodeFor.
-            return new UnredactCommandOutcome(ExitCodeFor(certain, residue, recovery), report, null);
+            return new UnredactCommandOutcome(
+                ExitCodeFor(certain, residue, recovery, failOn), report, null);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -397,33 +404,152 @@ internal static class UnredactCommandHandler
     }
 
     /// <summary>
+    /// #1707 — the strongest thing this run established, as a classification.
+    ///
+    /// <para>The exit status is a function of (evidence kind × <b>mark link</b>),
+    /// never of "is it text" and never of the channel's tier. Tier is a grading
+    /// POLICY (#1690, #1708); a leak is a leak whether or not we grade the
+    /// channel that found it.</para>
+    ///
+    /// <para><b>The defect this replaced.</b> The old rule was
+    /// <c>all.Any(f =&gt; f.Confidence != "present-only") ? 4 : 0</c>, defending a
+    /// real case — a page thumbnail is furniture, and failing a caller's
+    /// pipeline over one would make the status useless — with a rule that could
+    /// not tell furniture from a breach. An intact image under an opaque box,
+    /// the commonest viewer-based "redaction", exited <b>0</b>. The
+    /// discriminator was already in the model and was never read:
+    /// <c>RecoveredFinding.MarkId</c>. Present-only with NO mark link still
+    /// exits 0, which keeps the thumbnail reasoning and spends it only where it
+    /// is true.</para>
+    ///
+    /// <para>⚠️ <b>This is a deliberate exception to #1187's "defaults
+    /// reproduce prior behaviour".</b> Material surviving under a mark now
+    /// exits 5 where it exited 0. That change IS the fix; a caller who wants
+    /// the old threshold asks for it with <c>--fail-on text</c>.</para>
+    /// </summary>
+    internal enum UnredactBreach
+    {
+        /// <summary>Nothing survives under any mark. Exit 0.</summary>
+        None = 0,
+
+        /// <summary>
+        /// Material survives under a mark and no channel decoded it — image
+        /// pixels, a vector drawing, an opaque attachment. Exit 5.
+        /// </summary>
+        ContentUnderMark = 5,
+
+        /// <summary>
+        /// The value under a mark is CONSTRAINED — a width-residue candidate
+        /// set, an OCR reading. Exit 4.
+        /// </summary>
+        ConstrainedUnderMark = 4,
+
+        /// <summary>Verbatim text was read back. Exit 3.</summary>
+        TextRecovered = 3,
+    }
+
+    /// <summary>
+    /// How much evidence about the VALUE a caller is willing to tolerate before
+    /// the run fails. The ladder is evidence strength about the value —
+    /// <c>text</c> (a reading) &gt; <c>constrained</c> (a candidate set) &gt;
+    /// <c>present</c> (intact but undecoded) — not a ranking of harm. An intact
+    /// photograph under a box may well be the worse leak; that is why the
+    /// DEFAULT is <see cref="Any"/> and a narrower threshold has to be asked
+    /// for explicitly.
+    /// </summary>
+    internal enum UnredactFailOn
+    {
+        /// <summary>Any breach under a mark fails the run. The default.</summary>
+        Any = 0,
+
+        /// <summary>Only verbatim recovered text fails the run.</summary>
+        Text,
+
+        /// <summary>Recovered text, or a constrained candidate set under a mark.</summary>
+        Constrained,
+
+        /// <summary>Anything surviving under a mark, decoded or not. Same as <see cref="Any"/> today.</summary>
+        Present,
+    }
+
+    /// <summary>
     /// Exit status over EVERY channel, not just the two legacy lists.
     ///
-    /// <para>3 = text was recovered, 4 = something is constrained or present but
-    /// nothing was read, 0 = nothing found. The channels added in #1587/#1592 —
-    /// prior revision, marked content, form fields, thumbnails, attachments —
-    /// report only into the recovery model, so a status computed from the legacy
-    /// lists alone returned 0 over a document whose redacted name this tool had
-    /// just recovered. A script checking the exit code would have called that
-    /// file clean. Measured on an incremental-update fixture before the fix;
-    /// pinned by <c>UnredactExitStatusTests</c>.</para>
+    /// <para>The channels added in #1587/#1592 — prior revision, marked
+    /// content, form fields, thumbnails, attachments — report only into the
+    /// recovery model, so a status computed from the legacy lists alone
+    /// returned 0 over a document whose redacted name this tool had just
+    /// recovered. A script checking the exit code would have called that file
+    /// clean. Measured on an incremental-update fixture before the fix; pinned
+    /// by <c>UnredactExitStatusTests</c>, and the mark-link half by
+    /// <c>UnredactMarkBreachExitTests</c>.</para>
+    ///
+    /// <para><b>Exit 6</b> — page text held by a carrier with no mark breached
+    /// — is specified in #1707 and deliberately NOT implemented here. It cannot
+    /// be classified from this data: <c>UnredactCertainFinding</c> (the legacy
+    /// list) carries no mark link, so a carrier-only document is
+    /// indistinguishable from one whose mark was breached. It belongs to
+    /// #1703's single-inventory refactor. The number is reserved rather than
+    /// reused, so the contract does not shift under a caller when it lands.</para>
     /// </summary>
     private static int ExitCodeFor(
+        IReadOnlyList<UnredactCertainFinding> certain,
+        IReadOnlyList<UnredactResidueFinding> residue,
+        UnredactRecoveryModel recovery,
+        UnredactFailOn failOn)
+    {
+        var breach = Classify(certain, residue, recovery);
+        return Tolerates(failOn, breach) ? 0 : (int)breach;
+    }
+
+    private static UnredactBreach Classify(
         IReadOnlyList<UnredactCertainFinding> certain,
         IReadOnlyList<UnredactResidueFinding> residue,
         UnredactRecoveryModel recovery)
     {
         var all = recovery.Linked.Concat(recovery.Unlinked).Concat(recovery.DocumentLevel).ToList();
-        if (certain.Count > 0 || all.Any(f => f.Confidence == "certain")) return 3;
 
-        // PRESENT-ONLY IS NOT A RECOVERY. It says material survives that this
-        // scan did not turn into text — an unopened attachment, a thumbnail,
-        // pixels under a box. Reporting it is right; giving it a "something was
-        // recovered" exit code is not, because a caller scripting on the exit
-        // code would treat every document with a thumbnail as a leak.
-        if (residue.Count > 0 || all.Any(f => f.Confidence != "present-only")) return 4;
-        return 0;
+        if (certain.Count > 0 || all.Any(f => f.Confidence == "certain"))
+            return UnredactBreach.TextRecovered;
+
+        // A width-residue gap IS the mark — an emptied region inferred from the
+        // glyph advances — so it needs no separate link to count.
+        if (residue.Count > 0 || all.Any(f => f.Confidence == "candidate"))
+            return UnredactBreach.ConstrainedUnderMark;
+
+        // The #1707 rung. PRESENT-ONLY IS NOT A RECOVERY — but present-only
+        // UNDER A MARK is a breach, and that is a different statement. A
+        // thumbnail or an attachment sitting elsewhere in the file has no mark
+        // id and stays exit 0.
+        if (all.Any(f => f.Confidence == "present-only" && !string.IsNullOrEmpty(f.MarkId)))
+            return UnredactBreach.ContentUnderMark;
+
+        return UnredactBreach.None;
     }
+
+    internal static bool TryParseFailOn(string? value, out UnredactFailOn failOn)
+    {
+        failOn = UnredactFailOn.Any;
+        if (string.IsNullOrWhiteSpace(value)) return true;
+        switch (value.Trim().ToLowerInvariant())
+        {
+            case "any": failOn = UnredactFailOn.Any; return true;
+            case "text": failOn = UnredactFailOn.Text; return true;
+            case "constrained": failOn = UnredactFailOn.Constrained; return true;
+            case "present": failOn = UnredactFailOn.Present; return true;
+            default: return false;
+        }
+    }
+
+    private static bool Tolerates(UnredactFailOn failOn, UnredactBreach breach) => breach switch
+    {
+        UnredactBreach.None => true,
+        UnredactBreach.TextRecovered => false,
+        UnredactBreach.ConstrainedUnderMark => failOn == UnredactFailOn.Text,
+        UnredactBreach.ContentUnderMark =>
+            failOn is UnredactFailOn.Text or UnredactFailOn.Constrained,
+        _ => false,
+    };
 
     /// <summary>
     /// The headline counts, over EVERY channel.

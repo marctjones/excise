@@ -155,8 +155,29 @@ excise unredact filing.pdf --mode residue --dictionary names.txt
 excise unredact filing.pdf --restore reconstructed.pdf  # draw it back in place
 ```
 
-Exit status is scriptable: **3** text was recovered, **4** something is
-constrained or present but nothing was read, **0** nothing found.
+Exit status is scriptable, and keys on **what kind of evidence** turned up
+**under a mark** — not on whether it happened to be text:
+
+| code | meaning |
+|---:|---|
+| **0** | nothing survives under any redaction mark |
+| **3** | verbatim text was recovered |
+| **4** | the value under a mark is constrained (width-residue candidates, OCR) |
+| **5** | material survives under a mark and nothing decoded it — image pixels, a vector drawing, an opaque attachment |
+| **6** | *reserved* — page text held by a carrier with no mark breached (not yet emitted; see #1703) |
+| 1 / 2 | the run failed: 1 I/O or unhandled error, 2 usage or a missing dependency |
+
+`--fail-on any|text|constrained|present` picks the threshold: `any` is the
+default, and `--fail-on text` restores the older, narrower behaviour of failing
+only on a recovered string.
+
+⚠️ Present-only material that **no mark covers** — a leftover page thumbnail, an
+attachment elsewhere in the file — stays **0**. It is reported, but it is
+furniture, not a breach, and failing a pipeline over it would make the status
+useless. Before #1707 that reasoning was applied to *every* present-only
+finding, so an intact image under an opaque black box — the commonest
+viewer-based "redaction" — was reported on screen and then graded clean with
+exit 0.
 
 ⚠️ **The reconstruction `--restore` writes CONTAINS the recovered text by
 design.** It is watermarked, and it refuses to overwrite the input. Handle it as

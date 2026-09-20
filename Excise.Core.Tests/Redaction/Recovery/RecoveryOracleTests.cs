@@ -232,6 +232,33 @@ public class RecoveryOracleTests
     /// Run a tool over <paramref name="pdf"/>. "{file}" in the arguments is
     /// replaced by the temporary path.
     /// </summary>
+    /// <summary>
+    /// #1707 — the leak is real, and a tool that is not excise says so.
+    ///
+    /// <para>The exit code this fixture drives was wrong for a reason excise
+    /// could not see about itself: excise found the image, reported it, and
+    /// then graded the document clean. A gate built only from excise's own
+    /// reading of its own fixture cannot establish that there was anything to
+    /// find. <c>pdfimages -list</c> enumerates the image XObjects a PDF
+    /// actually contains — it knows nothing about marks or redaction — so a
+    /// row here is independent evidence that an opaque box was painted OVER an
+    /// intact 2x2 image rather than in place of it.</para>
+    /// </summary>
+    [Fact]
+    public void ImageUnderBox_TheXObjectSurvives_ConfirmedByPdfimages()
+    {
+        Assert.SkipUnless(ToolAvailable("pdfimages"), "pdfimages (Poppler) is not on PATH");
+
+        var bytes = RecoveryFixtureBuilder.ImageUnderBox();
+        var (exitCode, output) = Run("pdfimages", bytes, "-list", "{file}");
+
+        exitCode.Should().Be(0, $"pdfimages must read the fixture, but said: {output}");
+        output.Should().MatchRegex(@"\bimage\b",
+            "Poppler must list an image XObject in the file the box was painted over: " + output);
+        output.Should().MatchRegex(@"\b2\s+2\b",
+            "and it is the 2x2 original, still at full size, not a blanked replacement: " + output);
+    }
+
     private static (int ExitCode, string Output) Run(string tool, byte[] pdf, params string[] arguments)
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-oracle-{Guid.NewGuid():N}.pdf");

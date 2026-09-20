@@ -19,11 +19,14 @@
       "kind": "recoverer",
       "scope": "*",
       "scopeNote": "excise claims every registered mode. A zero anywhere is a finding.",
-      "recoveryRungs": ["Recovered", "PartiallyRecovered", "CandidatesOnly", "NotRecovered"],
+      "recoveryRungs": ["Recovered", "PartiallyRecovered", "CandidatesOnly", "ContentSurvives", "NotRecovered"],
       "recoveryNote": [
         "The full ladder. `Recovered` is a READING of bytes with zero residual bits;",
         "`CandidatesOnly` is an INFERENCE carrying a candidate set and a bits figure.",
-        "Collapsing those two into 'found it' is what the matrix exists to stop."
+        "Collapsing those two into 'found it' is what the matrix exists to stop.",
+        "`ContentSurvives` (#1707) is neither: the material is INTACT under the mark",
+        "and undecoded, so nothing at all is claimed about its value. It was graded",
+        "`CandidatesOnly` until #1707, which printed a leaked photograph as a maybe."
       ]
     },
     {

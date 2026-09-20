@@ -27,7 +27,15 @@ internal sealed record UnredactCommandInput(
     /// deferred, not deleted — this is the flag that brings them back, and a
     /// report that ran without it says so in its limitations.
     /// </summary>
-    bool IncludeDeferred = false);
+    bool IncludeDeferred = false,
+    /// <summary>
+    /// #1707 — how much evidence about the redacted VALUE the caller tolerates
+    /// before the run fails: <c>any</c> (default), <c>text</c>,
+    /// <c>constrained</c>, <c>present</c>. Null means the default. An
+    /// unrecognised value is REFUSED, never defaulted — a misspelling that
+    /// silently loosened the threshold would be invisible in a pipeline.
+    /// </summary>
+    string? FailOn = null);
 
 internal enum UnredactMode { Certain, Residue, Both }
 
@@ -127,7 +135,13 @@ internal sealed record UnredactMarkSummary(
     string Kind,
     string Description,
     IReadOnlyList<double> Rect,
-    /// <summary>recovered | partially-recovered | candidates-only | not-recovered.</summary>
+    /// <summary>
+    /// recovered | partially-recovered | candidates-only | content-survives |
+    /// not-recovered. <c>content-survives</c> (#1707) is the strongest verdict
+    /// short of a reading: material is INTACT under this mark and no channel
+    /// decoded it. It used to be reported as <c>candidates-only</c>, which reads
+    /// as a maybe over what is in fact a confirmed breach.
+    /// </summary>
     string Outcome,
     int Findings,
     int CertainFindings,
@@ -178,6 +192,8 @@ internal sealed record UnredactRecoveryModel(
     int MarksRecovered,
     int MarksPartiallyRecovered,
     int MarksCandidatesOnly,
+    /// <summary>#1707 — marks with intact, undecoded material under them.</summary>
+    int MarksContentSurvives,
     int MarksNotRecovered,
     IReadOnlyList<UnredactMarkSummary> MarkSummaries,
     IReadOnlyList<UnredactModelFinding> Linked,

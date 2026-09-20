@@ -272,6 +272,7 @@ internal static class UnredactCommandOutput
                 $"{recovery.MarksRecovered} recovered, " +
                 $"{recovery.MarksPartiallyRecovered} partially recovered, " +
                 $"{recovery.MarksCandidatesOnly} candidates only, " +
+                $"{recovery.MarksContentSurvives} content survives undecoded, " +
                 $"{recovery.MarksNotRecovered} nothing recovered.");
 
             foreach (var mark in recovery.MarkSummaries)
@@ -281,6 +282,10 @@ internal static class UnredactCommandOutput
                     "recovered" => "✗",              // the redaction failed completely
                     "partially-recovered" => "✗",
                     "candidates-only" => "~",
+                    // #1707 — NOT the ✓ default. Material is intact under this
+                    // mark and only undecoded; the redaction did not hold, and
+                    // the one character a reader skims must not say it did.
+                    "content-survives" => "✗",
                     _ => "✓",                        // nothing came back: the redaction held
                 };
                 output.WriteLine(

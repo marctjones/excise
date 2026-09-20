@@ -95,12 +95,12 @@ internal static class UnredactionMatrixRun
             byte[] pdf;
             try { pdf = File.ReadAllBytes(path); } catch { continue; }
             // ⚠️ #1690 — the NEGATIVES are scored at the PRODUCT'S DEFAULT, never
-            // with the deferred channels on. RecoveryReportBuilder.Outcome()
-            // returns CandidatesOnly, not NotRecovered, for a mark holding ANY
-            // finding — present-only included — so running the image channels
-            // over 113 clean filings would manufacture false positives the
-            // shipped command does not produce, and report excise's specificity
-            // as worse than it is.
+            // with the deferred channels on. A mark holding ANY finding grades
+            // above NotRecovered — present-only included, which since #1707
+            // grades ContentSurvives rather than CandidatesOnly — so running the
+            // image channels over 113 clean filings would manufacture false
+            // positives the shipped command does not produce, and report
+            // excise's specificity as worse than it is.
             results.Add(ScoreExcise(pdf, caseId, includeDeferred: false));
             if (xrayAvailable) results.Add(ScoreXRay(pdf, caseId));
         }
