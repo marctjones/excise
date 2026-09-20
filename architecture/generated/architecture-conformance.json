@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "c40b56c1226baa8cab635cab5176a507a7b6401e",
+  "sourceRevision": "49713ffe88f8459942fe2371d8377354a73beeca",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7807,
+    "retainedSymbols": 7809,
     "observedComponentDependencies": 70,
     "declaredDependencies": 68,
     "acceptedExceptions": 1,
@@ -80,8 +80,8 @@
     {
       "source": "avalonia",
       "target": "core-primitives",
-      "references": 20,
-      "typeDependencyCount": 7,
+      "references": 19,
+      "typeDependencyCount": 6,
       "classification": "declared",
       "evidence": [
         {
@@ -416,21 +416,21 @@
     {
       "source": "core-document",
       "target": "core-parsing",
-      "references": 83,
+      "references": 87,
       "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfDocumentObjectStore",
-          "target": "Excise.Core.Parsing.PdfParser",
-          "references": 15
+          "target": "Excise.Core.Parsing.XRefEntry",
+          "references": 17
         }
       ]
     },
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1440,
+      "references": 1447,
       "typeDependencyCount": 218,
       "classification": "declared",
       "evidence": [
@@ -987,7 +987,7 @@
     {
       "source": "rendering",
       "target": "core-primitives",
-      "references": 635,
+      "references": 634,
       "typeDependencyCount": 41,
       "classification": "declared",
       "evidence": [

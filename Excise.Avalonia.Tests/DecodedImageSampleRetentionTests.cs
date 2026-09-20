@@ -89,28 +89,30 @@ public class DecodedImageSampleRetentionTests
     /// object itself is offered for eviction so its ENCODED bytes can go too —
     /// gcdump at the altona-scroll peak put ~100 MB of live Byte[] in exactly
     /// those objects. Only what was actually released is offered: a kept page's
-    /// stream, a direct (un-numbered) stream and a stream the release could not
-    /// take are not, because evicting a stream that is still drawn would just
-    /// make the next band re-parse it.
+    /// stream and a stream the release could not take are not, because
+    /// evicting a stream that is still drawn would just make the next band
+    /// re-parse it. Whether an offered object may be forgotten at all (edited
+    /// objects may not) is the object store's decision, pinned in
+    /// Excise.Core.Tests' ObjectCacheEvictionTests.
     /// </summary>
     [Fact]
-    public void ReleaseAllExcept_OffersEveryReleasedIndirectStreamForEviction_AndNothingElse()
+    public void ReleaseAllExcept_OffersEveryReleasedStreamForEviction_AndNothingElse()
     {
         var retention = new DecodedImageSampleRetention();
-        var released = DecodedStream(100); released.ObjectNumber = 41;
-        var direct = DecodedStream(50);                       // no object number: nothing to evict
-        var kept = DecodedStream(60); kept.ObjectNumber = 43;
-        var rewritten = DecodedStream(16); rewritten.ObjectNumber = 44;
-        rewritten.SetDecodedData(new byte[16]);              // cannot be released, so must not be evicted
-        retention.Record(1, [released, direct, rewritten]);
+        var released = DecodedStream(100);
+        var released2 = DecodedStream(50);
+        var kept = DecodedStream(60);
+        var rewritten = DecodedStream(16);
+        rewritten.SetDecodedData(new byte[16]);              // cannot be released, so must not be offered
+        retention.Record(1, [released, released2, rewritten]);
         retention.Record(2, [kept]);
 
-        var evicted = new List<int>();
-        var (streams, bytes) = retention.ReleaseAllExcept(new HashSet<int> { 2 }, evicted.Add);
+        var offered = new List<PdfStream>();
+        var (streams, bytes) = retention.ReleaseAllExcept(new HashSet<int> { 2 }, offered.Add);
 
-        streams.Should().Be(2, "the numbered and the direct stream both released their samples");
+        streams.Should().Be(2);
         bytes.Should().Be(150);
-        evicted.Should().Equal(new[] { 41 }, "only a released stream with an object number is offered");
+        offered.Should().BeEquivalentTo(new[] { released, released2 }, "exactly the streams whose samples were released");
         kept.IsDecoded.Should().BeTrue();
     }
 
@@ -118,7 +120,7 @@ public class DecodedImageSampleRetentionTests
     public void ReleaseAllExcept_WithoutAnEvictor_ReleasesSamplesExactlyAsBefore()
     {
         var retention = new DecodedImageSampleRetention();
-        var own = DecodedStream(100); own.ObjectNumber = 41;
+        var own = DecodedStream(100);
         retention.Record(1, [own]);
 
         retention.ReleaseAllExcept(new HashSet<int>()).Should().Be((1, 100L));

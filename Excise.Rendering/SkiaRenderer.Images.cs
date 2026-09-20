@@ -482,9 +482,11 @@ internal partial class RenderContext
         // when this render releases samples (the viewer opts out and keeps its
         // pages warm) and only if the release actually happened — a stream still
         // holding decoded bytes refused it, which means someone else wrote them,
-        // and that stream is not ours to forget.
-        if (_options.ReleaseDecodedImageSamples && !imageStream.IsDecoded && imageStream.ObjectNumber is { } objectNumber)
-            _page.Document.EvictFromCache(objectNumber);
+        // and that stream is not ours to forget. The store refuses anything
+        // that is not byte-for-byte the file's object (edited, replaced, added):
+        // the cache is where an edit lives until the save.
+        if (_options.ReleaseDecodedImageSamples && !imageStream.IsDecoded)
+            _page.Document.TryEvictFromCache(imageStream);
         return bitmap;
     }
 

@@ -690,7 +690,7 @@ public partial class PdfViewerControl
         var document = Document;
         var (streams, bytes) = _continuousImageSamples.ReleaseAllExcept(
             keep,
-            document == null ? null : document.EvictFromCache);
+            document == null ? null : stream => document.TryEvictFromCache(stream));
         ViewerMetrics.RecordDecodedSampleRelease(reason, streams, bytes);
         if (streams > 0 && TraceEnabled)
             Trace($"ImageSamplesReleased reason={reason} streams={streams} bytes={bytes} kept=[{string.Join(",", keep.Order())}]");

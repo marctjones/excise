@@ -19,6 +19,8 @@ internal sealed class PdfDocumentObjectStore : IDisposable
     private readonly bool _ownsStream;
     private readonly Dictionary<int, XRefEntry> _xref;
     private readonly Dictionary<int, PdfObject> _objectCache = new();
+    /// <summary>Slots <see cref="ReplaceIndirectObject"/> wrote: never evictable (the file holds the predecessor).</summary>
+    private readonly HashSet<int> _replacedObjects = new();
     private readonly PdfParser _parser;
 
     // Resolution seeks and reads one shared parser/lexer stream and mutates
@@ -68,7 +70,10 @@ internal sealed class PdfDocumentObjectStore : IDisposable
     }
 
     internal void ReplaceIndirectObject(int objectNumber, PdfObject obj)
-        => _objectCache[objectNumber] = obj;
+    {
+        _objectCache[objectNumber] = obj;
+        _replacedObjects.Add(objectNumber);
+    }
 
     internal void RemoveObject(int objectNumber)
     {
@@ -80,16 +85,49 @@ internal sealed class PdfDocumentObjectStore : IDisposable
     /// F3 (#1207): forget a resolved object so its bytes can be collected, WITHOUT
     /// touching the xref — the next resolve re-parses it from the file exactly as
     /// the first one did (decryption, JBIG2 globals, deferred decode and the F1 hint
-    /// all run again). Unlike <see cref="RemoveObject"/> this is not document
-    /// mutation: nothing observable changes except memory. Used by a one-shot
-    /// render for an image it has finished with — its encoded bytes were the whole
-    /// of what remained on the managed heap at the x4 peak after F2 (dotnet-dump:
-    /// 110 MB of System.Byte[], every array rooted through _objectCache).
+    /// all run again). Used by a releasing render for an image it has finished
+    /// with — its encoded bytes were the whole of what remained on the managed
+    /// heap at the x4 peak after F2 (dotnet-dump: 110 MB of System.Byte[], every
+    /// array rooted through _objectCache) — and by the continuous viewer once it
+    /// releases a page's samples.
+    ///
+    /// <para>Refused, returning false, unless the re-parse would give back exactly
+    /// what is being forgotten. This cache is the ONLY place an edit lives before a
+    /// save: <see cref="AddIndirectObject"/> and <see cref="ReplaceIndirectObject"/>
+    /// write here and nowhere else, and an in-place edit mutates the cached
+    /// instance. Evicting any of those re-parses the file's original at the next
+    /// resolve and silently undoes the edit — measured before this guard existed:
+    /// an image dictionary edited in place, rendered once with the default options
+    /// and saved, came back unedited. So the object must be the instance in the
+    /// slot (not a replacement's predecessor), the slot must never have been
+    /// replaced, the xref entry must point into the file (an added object has no
+    /// offset), and the object must still be <see cref="PdfDictionary.IsPristine"/>.
+    /// Contention on the parse lock also refuses: a viewer calls this from the UI
+    /// thread and must not wait behind a band render's parse.</para>
     /// </summary>
-    internal void EvictFromCache(int objectNumber)
+    internal bool TryEvictFromCache(PdfObject obj)
     {
-        lock (_parseLock)
+        if (obj.ObjectNumber is not { } objectNumber || obj is not PdfDictionary { IsPristine: true })
+            return false;
+        if (!Monitor.TryEnter(_parseLock))
+            return false;
+        try
+        {
+            if (!_objectCache.TryGetValue(objectNumber, out var cached) || !ReferenceEquals(cached, obj))
+                return false;
+            if (_replacedObjects.Contains(objectNumber))
+                return false;
+            if (!_xref.TryGetValue(objectNumber, out var entry) || !entry.InUse)
+                return false;
+            if (!entry.IsCompressed && entry.Offset <= 0)
+                return false;
             _objectCache.Remove(objectNumber);
+            return true;
+        }
+        finally
+        {
+            Monitor.Exit(_parseLock);
+        }
     }
 
     internal PdfReference? GetReferenceTo(PdfObject obj)
@@ -269,6 +307,9 @@ internal sealed class PdfDocumentObjectStore : IDisposable
                 }
             }
 
+            // What the file says, byte for byte — the one state F3 may forget.
+            if (obj is PdfDictionary parsed)
+                parsed.MarkPristine();
             _objectCache[objectNumber] = obj;
             return obj;
         }
