@@ -1,0 +1,3513 @@
+{
+ "schemaVersion": 1,
+ "generatedBy": "scripts/build-iso-table-checklist.py",
+ "source": {
+  "id": "arlington-pdf-model",
+  "revision": "fe4a1a8897ec07f674c73160c35d748b29052f8f",
+  "file": "Arlington-vs-ISO32K-Tables.xlsx",
+  "license": "Apache-2.0"
+ },
+ "policy": "The ISO 32000-2 table inventory with each table's caption as its obligation summary, routed to the source that must cover it. DERIVED -- regenerate, never edit. 'not-an-obligation' rows are descriptive or example tables and must be excluded from any conformance denominator.",
+ "summary": {
+  "tables": 436,
+  "coveredBy": {
+   "annex-a-operators": 21,
+   "arlington-builtin": 3,
+   "arlington-gap": 35,
+   "arlington-object-model": 331,
+   "hand-authored-syntax": 6,
+   "not-an-obligation": 36,
+   "unrouted": 4
+  }
+ },
+ "entries": [
+  {
+   "table": "1",
+   "obligation": "White-space characters",
+   "caption": "Table 1 - White-space characters",
+   "inArlington": false,
+   "reasonNotInArlington": "Lexical - prior to Arlington PDF object model",
+   "coveredBy": "hand-authored-syntax"
+  },
+  {
+   "table": "2",
+   "obligation": "Delimiter characters",
+   "caption": "Table 2 - Delimiter characters",
+   "inArlington": false,
+   "reasonNotInArlington": "Lexical - prior to Arlington PDF object model",
+   "coveredBy": "hand-authored-syntax"
+  },
+  {
+   "table": "3",
+   "obligation": "Escape sequences in literal strings",
+   "caption": "Table 3 - Escape sequences in literal strings",
+   "inArlington": false,
+   "reasonNotInArlington": "Lexical - prior to Arlington PDF object model",
+   "coveredBy": "hand-authored-syntax"
+  },
+  {
+   "table": "4",
+   "obligation": "Examples of literal names",
+   "caption": "Table 4 - Examples of literal names",
+   "inArlington": false,
+   "reasonNotInArlington": "Lexical - prior to Arlington PDF object model",
+   "coveredBy": "hand-authored-syntax"
+  },
+  {
+   "table": "5",
+   "obligation": "Entries common to all stream dictionaries",
+   "caption": "Table 5 - Entries common to all stream dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "6",
+   "obligation": "Standard filters",
+   "caption": "Table 6 - Standard filters",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "7",
+   "obligation": "Typical LZW encoding sequence",
+   "caption": "Table 7 - Typical LZW encoding sequence",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive of algorithm",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "8",
+   "obligation": "Optional parameters for LZWDecode and FlateDecode filters",
+   "caption": "Table 8 - Optional parameters for LZWDecode and FlateDecode filters",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "9",
+   "obligation": "PNG predictor algorithms",
+   "caption": "Table 9 - PNG predictor algorithms",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only. Serialized in PDF via Table 10",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "10",
+   "obligation": "Predictor values",
+   "caption": "Table 10 - Predictor values",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "11",
+   "obligation": "Optional parameters for the CCITTFaxDecode filter",
+   "caption": "Table 11 - Optional parameters for the CCITTFaxDecode filter",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "12",
+   "obligation": "Optional parameter for the JBIG2Decode filter",
+   "caption": "Table 12 - Optional parameter for the JBIG2Decode filter",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "13",
+   "obligation": "Optional parameter for the DCTDecode filter",
+   "caption": "Table 13 - Optional parameter for the DCTDecode filter",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "14",
+   "obligation": "Optional parameters for Crypt filters",
+   "caption": "Table 14 - Optional parameters for Crypt filters",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "15",
+   "obligation": "Entries in the file trailer dictionary",
+   "caption": "Table 15 - Entries in the file trailer dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "16",
+   "obligation": "Additional entries specific to an object stream dictionary",
+   "caption": "Table 16 - Additional entries specific to an object stream dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "17",
+   "obligation": "Additional entries specific to a cross-reference stream dictionary",
+   "caption": "Table 17 - Additional entries specific to a cross-reference stream dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "18",
+   "obligation": "Entries in a cross-reference stream",
+   "caption": "Table 18 - Entries in a cross-reference stream",
+   "inArlington": false,
+   "reasonNotInArlington": "Internal XRefStream stream data binary format",
+   "coveredBy": "hand-authored-syntax"
+  },
+  {
+   "table": "19",
+   "obligation": "Additional entries in a hybrid-reference file's trailer dictionary",
+   "caption": "Table 19 - Additional entries in a hybrid-reference file's trailer dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "20",
+   "obligation": "Entries common to all encryption dictionaries",
+   "caption": "Table 20 - Entries common to all encryption dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "21",
+   "obligation": "Additional encryption dictionary entries for the standard security handler",
+   "caption": "Table 21 - Additional encryption dictionary entries for the standard security handler",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "22",
+   "obligation": "Standard security handler user access permissions",
+   "caption": "Table 22 - Standard security handler user access permissions",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "23",
+   "obligation": "Additional encryption dictionary entries for public-key security handlers",
+   "caption": "Table 23 - Additional encryption dictionary entries for public-key security handlers",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "24",
+   "obligation": "Public-key security handler user access permissions",
+   "caption": "Table 24 - Public-key security handler user access permissions",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "25",
+   "obligation": "Entries common to all crypt filter dictionaries",
+   "caption": "Table 25 - Entries common to all crypt filter dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "26",
+   "obligation": "Standard crypt filter names",
+   "caption": "Table 26 - Standard crypt filter names",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "27",
+   "obligation": "Additional crypt filter dictionary entries for public-key security handlers",
+   "caption": "Table 27 - Additional crypt filter dictionary entries for public-key security handlers",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "28",
+   "obligation": "Entries in an encrypted payload dictionary",
+   "caption": "Table 28 - Entries in an encrypted payload dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "29",
+   "obligation": "Entries in the catalog dictionary",
+   "caption": "Table 29 - Entries in the catalog dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "30",
+   "obligation": "Required entries in a page tree node",
+   "caption": "Table 30 - Required entries in a page tree node",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "31",
+   "obligation": "Entries in a page object",
+   "caption": "Table 31 - Entries in a page object",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "32",
+   "obligation": "Entries in the name dictionary",
+   "caption": "Table 32 - Entries in the name dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "33",
+   "obligation": "Compatibility operators",
+   "caption": "Table 33 - Compatibility operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "34",
+   "obligation": "Entries in a resource dictionary",
+   "caption": "Table 34 - Entries in a resource dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "35",
+   "obligation": "PDF data types",
+   "caption": "Table 35 - PDF data types",
+   "inArlington": false,
+   "reasonNotInArlington": "Pre-defined Arlington types",
+   "coveredBy": "arlington-builtin"
+  },
+  {
+   "table": "36",
+   "obligation": "Entries in a name tree node dictionary",
+   "caption": "Table 36 - Entries in a name tree node dictionary",
+   "inArlington": false,
+   "reasonNotInArlington": "Pre-defined Arlington type \"name-tree\"",
+   "coveredBy": "arlington-builtin"
+  },
+  {
+   "table": "37",
+   "obligation": "Entries in a number tree node dictionary",
+   "caption": "Table 37 - Entries in a number tree node dictionary",
+   "inArlington": false,
+   "reasonNotInArlington": "Pre-defined Arlington type \"number-tree\"",
+   "coveredBy": "arlington-builtin"
+  },
+  {
+   "table": "38",
+   "obligation": "Entries common to all function dictionaries",
+   "caption": "Table 38 - Entries common to all function dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "39",
+   "obligation": "Additional entries specific to a Type 0 function dictionary",
+   "caption": "Table 39 - Additional entries specific to a Type 0 function dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "40",
+   "obligation": "Additional entries specific to a Type 2 function dictionary",
+   "caption": "Table 40 - Additional entries specific to a Type 2 function dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "41",
+   "obligation": "Additional entries specific to a Type 3 function dictionary",
+   "caption": "Table 41 - Additional entries specific to a Type 3 function dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "42",
+   "obligation": "Operators in Type 4 functions",
+   "caption": "Table 42 - Operators in Type 4 functions",
+   "inArlington": false,
+   "reasonNotInArlington": "Stream content",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "43",
+   "obligation": "Entries in a file specification dictionary",
+   "caption": "Table 43 - Entries in a file specification dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "44",
+   "obligation": "Additional entries in an embedded file stream dictionary",
+   "caption": "Table 44 - Additional entries in an embedded file stream dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "45",
+   "obligation": "Entries in an embedded file parameter dictionary",
+   "caption": "Table 45 - Entries in an embedded file parameter dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "46",
+   "obligation": "Entries in a collection item dictionary",
+   "caption": "Table 46 - Entries in a collection item dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "47",
+   "obligation": "Entries in a collection subitem dictionary",
+   "caption": "Table 47 - Entries in a collection subitem dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "48",
+   "obligation": "Entries in an extensions dictionary",
+   "caption": "Table 48 - Entries in an extensions dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "49",
+   "obligation": "Entries in a developer extensions dictionary",
+   "caption": "Table 49 - Entries in a developer extensions dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "50",
+   "obligation": "Operator categories",
+   "caption": "Table 50 - Operator categories",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "51",
+   "obligation": "Device-independent graphics state parameters",
+   "caption": "Table 51 - Device-independent graphics state parameters",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "52",
+   "obligation": "Device-dependent graphics state parameters",
+   "caption": "Table 52 - Device-dependent graphics state parameters",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "53",
+   "obligation": "Line cap styles",
+   "caption": "Table 53 - Line cap styles",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "54",
+   "obligation": "Line join styles",
+   "caption": "Table 54 - Line join styles",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "55",
+   "obligation": "Examples of line dash patterns",
+   "caption": "Table 55 - Examples of line dash patterns",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "56",
+   "obligation": "Graphics state operators",
+   "caption": "Table 56 - Graphics state operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "57",
+   "obligation": "Entries in a graphics state parameter dictionary",
+   "caption": "Table 57 - Entries in a graphics state parameter dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "58",
+   "obligation": "Path construction operators",
+   "caption": "Table 58 - Path construction operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "59",
+   "obligation": "Path-painting operators",
+   "caption": "Table 59 - Path-painting operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "60",
+   "obligation": "Clipping path operators",
+   "caption": "Table 60 - Clipping path operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "61",
+   "obligation": "Colour space families",
+   "caption": "Table 61 - Colour space families",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "62",
+   "obligation": "Entries in a CalGray colour space dictionary",
+   "caption": "Table 62 - Entries in a CalGray colour space dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "63",
+   "obligation": "Entries in a CalRGB colour space dictionary",
+   "caption": "Table 63 - Entries in a CalRGB colour space dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "64",
+   "obligation": "Entries in a Lab colour space dictionary",
+   "caption": "Table 64 - Entries in a Lab colour space dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "65",
+   "obligation": "Additional entries specific to an ICC profile stream dictionary",
+   "caption": "Table 65 - Additional entries specific to an ICC profile stream dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "66",
+   "obligation": "ICC Specification versions supported by ICC based colour spaces",
+   "caption": "Table 66 - ICC Specification versions supported by ICC based colour spaces",
+   "inArlington": false,
+   "reasonNotInArlington": "ICC stream data requirements",
+   "coveredBy": "unrouted"
+  },
+  {
+   "table": "67",
+   "obligation": "ICC profile types",
+   "caption": "Table 67 - ICC profile types",
+   "inArlington": false,
+   "reasonNotInArlington": "ICC stream data requirements",
+   "coveredBy": "unrouted"
+  },
+  {
+   "table": "68",
+   "obligation": "Ranges for typical ICC colour spaces",
+   "caption": "Table 68 - Ranges for typical ICC colour spaces",
+   "inArlington": false,
+   "reasonNotInArlington": "ICC",
+   "coveredBy": "unrouted"
+  },
+  {
+   "table": "69",
+   "obligation": "Rendering intents",
+   "caption": "Table 69 - Rendering intents",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "70",
+   "obligation": "Entries in a DeviceN colour space attributes dictionary",
+   "caption": "Table 70 - Entries in a DeviceN colour space attributes dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "71",
+   "obligation": "Entries in a DeviceN process dictionary",
+   "caption": "Table 71 - Entries in a DeviceN process dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "72",
+   "obligation": "Entries in a DeviceN mixing hints dictionary",
+   "caption": "Table 72 - Entries in a DeviceN mixing hints dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "73",
+   "obligation": "Colour operators",
+   "caption": "Table 73 - Colour operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "74",
+   "obligation": "Additional entries specific to a Type 1 pattern dictionary",
+   "caption": "Table 74 - Additional entries specific to a Type 1 pattern dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "75",
+   "obligation": "Entries in a Type 2 pattern dictionary",
+   "caption": "Table 75 - Entries in a Type 2 pattern dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "76",
+   "obligation": "Shading operator",
+   "caption": "Table 76 - Shading operator",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "77",
+   "obligation": "Entries common to all shading dictionaries",
+   "caption": "Table 77 - Entries common to all shading dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "78",
+   "obligation": "Additional entries specific to a Type 1 shading dictionary",
+   "caption": "Table 78 - Additional entries specific to a Type 1 shading dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "79",
+   "obligation": "Additional entries specific to a Type 2 shading dictionary",
+   "caption": "Table 79 - Additional entries specific to a Type 2 shading dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "80",
+   "obligation": "Additional entries specific to a Type 3 shading dictionary",
+   "caption": "Table 80 - Additional entries specific to a Type 3 shading dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "81",
+   "obligation": "Additional entries specific to a Type 4 shading dictionary",
+   "caption": "Table 81 - Additional entries specific to a Type 4 shading dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "82",
+   "obligation": "Additional entries specific to a Type 5 shading dictionary",
+   "caption": "Table 82 - Additional entries specific to a Type 5 shading dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "83",
+   "obligation": "Additional entries specific to a Type 6 shading dictionary",
+   "caption": "Table 83 - Additional entries specific to a Type 6 shading dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "84",
+   "obligation": "Data Values in a Coons Patch Mesh",
+   "caption": "Table 84 - Data Values in a Coons Patch Mesh",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "85",
+   "obligation": "Data values in a tensor-product patch mesh",
+   "caption": "Table 85 - Data values in a tensor-product patch mesh",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "86",
+   "obligation": "XObject operator",
+   "caption": "Table 86 - XObject operator",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "87",
+   "obligation": "Additional entries specific to an image dictionary",
+   "caption": "Table 87 - Additional entries specific to an image dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "88",
+   "obligation": "Default decode arrays",
+   "caption": "Table 88 - Default decode arrays",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - difficult to encode into Arlington???",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "89",
+   "obligation": "Entries in an alternate image dictionary",
+   "caption": "Table 89 - Entries in an alternate image dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "90",
+   "obligation": "Inline image operators",
+   "caption": "Table 90 - Inline image operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "91",
+   "obligation": "Entries in an inline image object",
+   "caption": "Table 91 - Entries in an inline image object",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "92",
+   "obligation": "Additional abbreviations in an inline image object",
+   "caption": "Table 92 - Additional abbreviations in an inline image object",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "93",
+   "obligation": "Additional entries specific to a Type 1 form dictionary",
+   "caption": "Table 93 - Additional entries specific to a Type 1 form dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "94",
+   "obligation": "Entries common to all group attributes dictionaries",
+   "caption": "Table 94 - Entries common to all group attributes dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "95",
+   "obligation": "Entries in a reference dictionary",
+   "caption": "Table 95 - Entries in a reference dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "96",
+   "obligation": "Entries in an optional content group dictionary",
+   "caption": "Table 96 - Entries in an optional content group dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "97",
+   "obligation": "Entries in an optional content membership dictionary",
+   "caption": "Table 97 - Entries in an optional content membership dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "98",
+   "obligation": "Entries in the optional content properties dictionary",
+   "caption": "Table 98 - Entries in the optional content properties dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "99",
+   "obligation": "Entries in an optional content configuration dictionary",
+   "caption": "Table 99 - Entries in an optional content configuration dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "100",
+   "obligation": "Entries in an optional content usage dictionary",
+   "caption": "Table 100 - Entries in an optional content usage dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "101",
+   "obligation": "Entries in a usage application dictionary",
+   "caption": "Table 101 - Entries in a usage application dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "102",
+   "obligation": "Text state parameters",
+   "caption": "Table 102 - Text state parameters",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "103",
+   "obligation": "Text state operators",
+   "caption": "Table 103 - Text state operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "104",
+   "obligation": "Text rendering modes",
+   "caption": "Table 104 - Text rendering modes",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "105",
+   "obligation": "Text object operators",
+   "caption": "Table 105 - Text object operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "106",
+   "obligation": "Text-positioning operators",
+   "caption": "Table 106 - Text-positioning operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "107",
+   "obligation": "Text-showing operators",
+   "caption": "Table 107 - Text-showing operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "108",
+   "obligation": "Font types",
+   "caption": "Table 108 - Font types",
+   "inArlington": false,
+   "reasonNotInArlington": "Summarized information only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "109",
+   "obligation": "Entries in a Type 1 font dictionary",
+   "caption": "Table 109 - Entries in a Type 1 font dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "110",
+   "obligation": "Entries in a Type 3 font dictionary",
+   "caption": "Table 110 - Entries in a Type 3 font dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "111",
+   "obligation": "Type 3 font operators",
+   "caption": "Table 111 - Type 3 font operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "112",
+   "obligation": "Entries in an encoding dictionary",
+   "caption": "Table 112 - Entries in an encoding dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "113",
+   "obligation": "Additional entries in Mac OS Roman encoding not in MacRomanEncoding",
+   "caption": "Table 113 - Additional entries in Mac OS Roman encoding not in MacRomanEncoding",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "114",
+   "obligation": "Entries in a CIDSystemInfo dictionary",
+   "caption": "Table 114 - Entries in a CIDSystemInfo dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "115",
+   "obligation": "Entries in a CIDFont dictionary",
+   "caption": "Table 115 - Entries in a CIDFont dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "116",
+   "obligation": "Predefined CJK CMap names",
+   "caption": "Table 116 - Predefined CJK CMap names",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "117",
+   "obligation": "Character collections for predefined CMaps, by PDF version",
+   "caption": "Table 117 - Character collections for predefined CMaps, by PDF version",
+   "inArlington": false,
+   "reasonNotInArlington": "Table content deleted in ISO 32000-2:2020",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "118",
+   "obligation": "Additional entries in a CMap stream dictionary",
+   "caption": "Table 118 - Additional entries in a CMap stream dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "119",
+   "obligation": "Entries in a Type 0 font dictionary",
+   "caption": "Table 119 - Entries in a Type 0 font dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "120",
+   "obligation": "Entries common to all font descriptors",
+   "caption": "Table 120 - Entries common to all font descriptors",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "121",
+   "obligation": "Font flags",
+   "caption": "Table 121 - Font flags",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "122",
+   "obligation": "Additional font descriptor entries for CIDFonts",
+   "caption": "Table 122 - Additional font descriptor entries for CIDFonts",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "123",
+   "obligation": "Glyph classes in CJK fonts",
+   "caption": "Table 123 - Glyph classes in CJK fonts",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD??",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "124",
+   "obligation": "Embedded font organisation for various font types",
+   "caption": "Table 124 - Embedded font organisation for various font types",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "125",
+   "obligation": "Additional entries in an embedded font stream dictionary",
+   "caption": "Table 125 - Additional entries in an embedded font stream dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "126",
+   "obligation": "Predefined spot functions",
+   "caption": "Table 126 - Predefined spot functions",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "127",
+   "obligation": "PDF halftone types",
+   "caption": "Table 127 - PDF halftone types",
+   "inArlington": false,
+   "reasonNotInArlington": "Summarized information only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "128",
+   "obligation": "Entries in a Type 1 halftone dictionary",
+   "caption": "Table 128 - Entries in a Type 1 halftone dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "129",
+   "obligation": "Additional entries specific to a Type 6 halftone dictionary",
+   "caption": "Table 129 - Additional entries specific to a Type 6 halftone dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "130",
+   "obligation": "Additional entries specific to a Type 10 halftone dictionary",
+   "caption": "Table 130 - Additional entries specific to a Type 10 halftone dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "131",
+   "obligation": "Additional entries specific to a Type 16 halftone dictionary",
+   "caption": "Table 131 - Additional entries specific to a Type 16 halftone dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "132",
+   "obligation": "Entries in a Type 5 halftone dictionary",
+   "caption": "Table 132 - Entries in a Type 5 halftone dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "133",
+   "obligation": "Variables used in the basic compositing formula",
+   "caption": "Table 133 - Variables used in the basic compositing formula",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "134",
+   "obligation": "Standard separable blend modes",
+   "caption": "Table 134 - Standard separable blend modes",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "135",
+   "obligation": "Standard non-separable blend modes",
+   "caption": "Table 135 - Standard non-separable blend modes",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "136",
+   "obligation": "Variables used in the source shape and opacity formulas",
+   "caption": "Table 136 - Variables used in the source shape and opacity formulas",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "137",
+   "obligation": "Variables used in the result shape and opacity formulas",
+   "caption": "Table 137 - Variables used in the result shape and opacity formulas",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "138",
+   "obligation": "Revised variables for the basic compositing formulas",
+   "caption": "Table 138 - Revised variables for the basic compositing formulas",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "139",
+   "obligation": "Arguments and results of the group compositing function",
+   "caption": "Table 139 - Arguments and results of the group compositing function",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "140",
+   "obligation": "Variables used in the group compositing formulas",
+   "caption": "Table 140 - Variables used in the group compositing formulas",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "141",
+   "obligation": "Variables used in the page group compositing formulas",
+   "caption": "Table 141 - Variables used in the page group compositing formulas",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "142",
+   "obligation": "Entries in a soft-mask dictionary",
+   "caption": "Table 142 - Entries in a soft-mask dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "143",
+   "obligation": "Restrictions on the entries in a soft-mask image dictionary",
+   "caption": "Table 143 - Restrictions on the entries in a soft-mask image dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "144",
+   "obligation": "Additional entry in a soft-mask image dictionary",
+   "caption": "Table 144 - Additional entry in a soft-mask image dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "145",
+   "obligation": "Additional entries specific to a transparency group attributes dictionary",
+   "caption": "Table 145 - Additional entries specific to a transparency group attributes dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "146",
+   "obligation": "Overprinting behaviour in the transparent imaging model",
+   "caption": "Table 146 - Overprinting behaviour in the transparent imaging model",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "147",
+   "obligation": "Entries in a viewer preferences dictionary",
+   "caption": "Table 147 - Entries in a viewer preferences dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "148",
+   "obligation": "Names defined for an Enforce array",
+   "caption": "Table 148 - Names defined for an Enforce array",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "149",
+   "obligation": "Destination syntax",
+   "caption": "Table 149 - Destination syntax",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "150",
+   "obligation": "Entries in the outline dictionary",
+   "caption": "Table 150 - Entries in the outline dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "151",
+   "obligation": "Entries in an outline item dictionary",
+   "caption": "Table 151 - Entries in an outline item dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "152",
+   "obligation": "Outline item flags",
+   "caption": "Table 152 - Outline item flags",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "153",
+   "obligation": "Entries in a collection dictionary",
+   "caption": "Table 153 - Entries in a collection dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "154",
+   "obligation": "Entries in a collection schema dictionary",
+   "caption": "Table 154 - Entries in a collection schema dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "155",
+   "obligation": "Entries in a collection field dictionary",
+   "caption": "Table 155 - Entries in a collection field dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "156",
+   "obligation": "Entries in a collection sort dictionary",
+   "caption": "Table 156 - Entries in a collection sort dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "157",
+   "obligation": "Entries in a collection colors dictionary",
+   "caption": "Table 157 - Entries in a collection colors dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "158",
+   "obligation": "Entries in a collection split dictionary",
+   "caption": "Table 158 - Entries in a collection split dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "159",
+   "obligation": "Entries in a folder dictionary",
+   "caption": "Table 159 - Entries in a folder dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "160",
+   "obligation": "Entries in a navigator dictionary",
+   "caption": "Table 160 - Entries in a navigator dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "161",
+   "obligation": "Entries in a page label dictionary",
+   "caption": "Table 161 - Entries in a page label dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "162",
+   "obligation": "Entries in a thread dictionary",
+   "caption": "Table 162 - Entries in a thread dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "163",
+   "obligation": "Entries in a bead dictionary",
+   "caption": "Table 163 - Entries in a bead dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "164",
+   "obligation": "Entries in a transition dictionary",
+   "caption": "Table 164 - Entries in a transition dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "165",
+   "obligation": "Entries in a navigation node dictionary",
+   "caption": "Table 165 - Entries in a navigation node dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "166",
+   "obligation": "Entries common to all annotation dictionaries",
+   "caption": "Table 166 - Entries common to all annotation dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "167",
+   "obligation": "Annotation flags",
+   "caption": "Table 167 - Annotation flags",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "168",
+   "obligation": "Entries in a border style dictionary",
+   "caption": "Table 168 - Entries in a border style dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "169",
+   "obligation": "Entries in a border effect dictionary",
+   "caption": "Table 169 - Entries in a border effect dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "170",
+   "obligation": "Entries in an appearance dictionary",
+   "caption": "Table 170 - Entries in an appearance dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "171",
+   "obligation": "Annotation types",
+   "caption": "Table 171 - Annotation types",
+   "inArlington": false,
+   "reasonNotInArlington": "Summarized information only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "172",
+   "obligation": "Additional entries in an annotation dictionary specific to markup annotations",
+   "caption": "Table 172 - Additional entries in an annotation dictionary specific to markup annotations",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "173",
+   "obligation": "Additional entries in markup annotation dictionaries specific to external data",
+   "caption": "Table 173 - Additional entries in markup annotation dictionaries specific to external data",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "174",
+   "obligation": "Annotation states",
+   "caption": "Table 174 - Annotation states",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "175",
+   "obligation": "Additional entries specific to a text annotation",
+   "caption": "Table 175 - Additional entries specific to a text annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "176",
+   "obligation": "Additional entries specific to a link annotation",
+   "caption": "Table 176 - Additional entries specific to a link annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "177",
+   "obligation": "Additional entries specific to a free text annotation",
+   "caption": "Table 177 - Additional entries specific to a free text annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "178",
+   "obligation": "Additional entries specific to a line annotation",
+   "caption": "Table 178 - Additional entries specific to a line annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "179",
+   "obligation": "Line ending styles",
+   "caption": "Table 179 - Line ending styles",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "180",
+   "obligation": "Additional entries specific to a square or circle annotation",
+   "caption": "Table 180 - Additional entries specific to a square or circle annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "181",
+   "obligation": "Additional entries specific to a polygon or polyline annotation",
+   "caption": "Table 181 - Additional entries specific to a polygon or polyline annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "182",
+   "obligation": "Additional entries specific to text markup annotations",
+   "caption": "Table 182 - Additional entries specific to text markup annotations",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "183",
+   "obligation": "Additional entries specific to a caret annotation",
+   "caption": "Table 183 - Additional entries specific to a caret annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "184",
+   "obligation": "Additional entries specific to a rubber stamp annotation",
+   "caption": "Table 184 - Additional entries specific to a rubber stamp annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "185",
+   "obligation": "Additional entries specific to an ink annotation",
+   "caption": "Table 185 - Additional entries specific to an ink annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "186",
+   "obligation": "Additional entries specific to a popup annotation",
+   "caption": "Table 186 - Additional entries specific to a popup annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "187",
+   "obligation": "Additional entries specific to a file attachment annotation",
+   "caption": "Table 187 - Additional entries specific to a file attachment annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "188",
+   "obligation": "Additional entries specific to a sound annotation",
+   "caption": "Table 188 - Additional entries specific to a sound annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "189",
+   "obligation": "Additional entries specific to a movie annotation",
+   "caption": "Table 189 - Additional entries specific to a movie annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "190",
+   "obligation": "Additional entries specific to a screen annotation",
+   "caption": "Table 190 - Additional entries specific to a screen annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "191",
+   "obligation": "Additional entries specific to a widget annotation",
+   "caption": "Table 191 - Additional entries specific to a widget annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "192",
+   "obligation": "Entries in an appearance characteristics dictionary",
+   "caption": "Table 192 - Entries in an appearance characteristics dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "193",
+   "obligation": "Additional entries specific to a watermark annotation",
+   "caption": "Table 193 - Additional entries specific to a watermark annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "194",
+   "obligation": "Entries in a fixed print dictionary",
+   "caption": "Table 194 - Entries in a fixed print dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "195",
+   "obligation": "Additional entries specific to a redaction annotation",
+   "caption": "Table 195 - Additional entries specific to a redaction annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "196",
+   "obligation": "Entries common to all action dictionaries",
+   "caption": "Table 196 - Entries common to all action dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "197",
+   "obligation": "Entries in an annotation's additional-actions dictionary",
+   "caption": "Table 197 - Entries in an annotation's additional-actions dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "198",
+   "obligation": "Entries in a page object's additional-actions dictionary",
+   "caption": "Table 198 - Entries in a page object's additional-actions dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "199",
+   "obligation": "Entries in a form field's additional-actions dictionary",
+   "caption": "Table 199 - Entries in a form field's additional-actions dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "200",
+   "obligation": "Entries in the document catalog's additional-actions dictionary",
+   "caption": "Table 200 - Entries in the document catalog's additional-actions dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "201",
+   "obligation": "Action types",
+   "caption": "Table 201 - Action types",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "202",
+   "obligation": "Additional entries specific to a go-to action",
+   "caption": "Table 202 - Additional entries specific to a go-to action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "203",
+   "obligation": "Additional entries specific to a remote go-to action",
+   "caption": "Table 203 - Additional entries specific to a remote go-to action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "204",
+   "obligation": "Additional entries specific to an embedded go-to action",
+   "caption": "Table 204 - Additional entries specific to an embedded go-to action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "205",
+   "obligation": "Entries specific to a target dictionary",
+   "caption": "Table 205 - Entries specific to a target dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "206",
+   "obligation": "Entries in a GoToDp dictionary",
+   "caption": "Table 206 - Entries in a GoToDp dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "207",
+   "obligation": "Additional entries specific to a launch action",
+   "caption": "Table 207 - Additional entries specific to a launch action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "208",
+   "obligation": "Entries in a Microsoft WindowsTM launch parameter dictionary",
+   "caption": "Table 208 - Entries in a Microsoft WindowsTM launch parameter dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "209",
+   "obligation": "Additional entries specific to a thread action",
+   "caption": "Table 209 - Additional entries specific to a thread action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "210",
+   "obligation": "Additional entries specific to a URI action",
+   "caption": "Table 210 - Additional entries specific to a URI action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "211",
+   "obligation": "Entry in a URI dictionary",
+   "caption": "Table 211 - Entry in a URI dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "212",
+   "obligation": "Additional entries specific to a sound action",
+   "caption": "Table 212 - Additional entries specific to a sound action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "213",
+   "obligation": "Additional entries specific to a movie action",
+   "caption": "Table 213 - Additional entries specific to a movie action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "214",
+   "obligation": "Additional entries specific to a hide action",
+   "caption": "Table 214 - Additional entries specific to a hide action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "215",
+   "obligation": "Named actions",
+   "caption": "Table 215 - Named actions",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "216",
+   "obligation": "Additional entries specific to named actions",
+   "caption": "Table 216 - Additional entries specific to named actions",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "217",
+   "obligation": "Additional entries specific to a set-OCG-state action",
+   "caption": "Table 217 - Additional entries specific to a set-OCG-state action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "218",
+   "obligation": "Additional entries specific to a rendition action",
+   "caption": "Table 218 - Additional entries specific to a rendition action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "219",
+   "obligation": "Additional entries specific to a transition action",
+   "caption": "Table 219 - Additional entries specific to a transition action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "220",
+   "obligation": "Additional entries specific to a go-to-3D-view action",
+   "caption": "Table 220 - Additional entries specific to a go-to-3D-view action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "221",
+   "obligation": "Additional entries specific to an ECMAScript action",
+   "caption": "Table 221 - Additional entries specific to an ECMAScript action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "222",
+   "obligation": "Additional entries specific to a rich-media-execute action",
+   "caption": "Table 222 - Additional entries specific to a rich-media-execute action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "223",
+   "obligation": "Entries in a RichMediaCommand dictionary",
+   "caption": "Table 223 - Entries in a RichMediaCommand dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "224",
+   "obligation": "Entries in the interactive form dictionary",
+   "caption": "Table 224 - Entries in the interactive form dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "225",
+   "obligation": "Signature flags",
+   "caption": "Table 225 - Signature flags",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "226",
+   "obligation": "Entries common to all field dictionaries",
+   "caption": "Table 226 - Entries common to all field dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "227",
+   "obligation": "Field flags common to all field types",
+   "caption": "Table 227 - Field flags common to all field types",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "228",
+   "obligation": "Additional entries common to all fields containing variable text",
+   "caption": "Table 228 - Additional entries common to all fields containing variable text",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "229",
+   "obligation": "Field flags specific to button fields",
+   "caption": "Table 229 - Field flags specific to button fields",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "230",
+   "obligation": "Additional entry specific to check box and radio button fields",
+   "caption": "Table 230 - Additional entry specific to check box and radio button fields",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "231",
+   "obligation": "Field flags specific to text fields",
+   "caption": "Table 231 - Field flags specific to text fields",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "232",
+   "obligation": "Additional entry specific to a text field",
+   "caption": "Table 232 - Additional entry specific to a text field",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "233",
+   "obligation": "Field flags specific to choice fields",
+   "caption": "Table 233 - Field flags specific to choice fields",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "234",
+   "obligation": "Additional entries specific to a choice field",
+   "caption": "Table 234 - Additional entries specific to a choice field",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "235",
+   "obligation": "Additional entries specific to a signature field",
+   "caption": "Table 235 - Additional entries specific to a signature field",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "236",
+   "obligation": "Entries in a signature field lock dictionary",
+   "caption": "Table 236 - Entries in a signature field lock dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "237",
+   "obligation": "Entries in a signature field seed value dictionary",
+   "caption": "Table 237 - Entries in a signature field seed value dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "238",
+   "obligation": "Entries in a certificate seed value dictionary",
+   "caption": "Table 238 - Entries in a certificate seed value dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "239",
+   "obligation": "Additional entries specific to a submit-form action",
+   "caption": "Table 239 - Additional entries specific to a submit-form action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "240",
+   "obligation": "Flags for submit-form actions",
+   "caption": "Table 240 - Flags for submit-form actions",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "241",
+   "obligation": "Additional entries specific to a reset-form action",
+   "caption": "Table 241 - Additional entries specific to a reset-form action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "242",
+   "obligation": "Flag for reset-form actions",
+   "caption": "Table 242 - Flag for reset-form actions",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "243",
+   "obligation": "Additional entries specific to an import-data action",
+   "caption": "Table 243 - Additional entries specific to an import-data action",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "244",
+   "obligation": "Entry in the FDF trailer dictionary",
+   "caption": "Table 244 - Entry in the FDF trailer dictionary",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "245",
+   "obligation": "Entries in the FDF catalog dictionary",
+   "caption": "Table 245 - Entries in the FDF catalog dictionary",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "246",
+   "obligation": "Entries in the FDF dictionary",
+   "caption": "Table 246 - Entries in the FDF dictionary",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "247",
+   "obligation": "Additional entry in an embedded file stream dictionary for an encrypted FDF file",
+   "caption": "Table 247 - Additional entry in an embedded file stream dictionary for an encrypted FDF file",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "248",
+   "obligation": "Entries in the ECMAScript dictionary",
+   "caption": "Table 248 - Entries in the ECMAScript dictionary",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "249",
+   "obligation": "Entries in an FDF field dictionary",
+   "caption": "Table 249 - Entries in an FDF field dictionary",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "250",
+   "obligation": "Entries in an icon fit dictionary",
+   "caption": "Table 250 - Entries in an icon fit dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "251",
+   "obligation": "Entries in an FDF page dictionary",
+   "caption": "Table 251 - Entries in an FDF page dictionary",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "252",
+   "obligation": "Entries in an FDF template dictionary",
+   "caption": "Table 252 - Entries in an FDF template dictionary",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "253",
+   "obligation": "Entries in an FDF named page reference dictionary",
+   "caption": "Table 253 - Entries in an FDF named page reference dictionary",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "254",
+   "obligation": "Additional entry for annotation dictionaries in an FDF file",
+   "caption": "Table 254 - Additional entry for annotation dictionaries in an FDF file",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "255",
+   "obligation": "Entries in a signature dictionary",
+   "caption": "Table 255 - Entries in a signature dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "256",
+   "obligation": "Entries in a signature reference dictionary",
+   "caption": "Table 256 - Entries in a signature reference dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "257",
+   "obligation": "Entries in the DocMDP transform parameters dictionary",
+   "caption": "Table 257 - Entries in the DocMDP transform parameters dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "258",
+   "obligation": "Entries in the UR transform parameters dictionary",
+   "caption": "Table 258 - Entries in the UR transform parameters dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "259",
+   "obligation": "Entries in the FieldMDP transform parameters dictionary",
+   "caption": "Table 259 - Entries in the FieldMDP transform parameters dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "260",
+   "obligation": "SubFilter value algorithm support",
+   "caption": "Table 260 - SubFilter value algorithm support",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "261",
+   "obligation": "Entries in the document security store (DSS) dictionary",
+   "caption": "Table 261 - Entries in the document security store (DSS) dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "262",
+   "obligation": "Entries in the signature validation-related information (VRI) dictionary",
+   "caption": "Table 262 - Entries in the signature validation-related information (VRI) dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "263",
+   "obligation": "Entries in a permissions dictionary",
+   "caption": "Table 263 - Entries in a permissions dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "264",
+   "obligation": "Entries in a legal attestation dictionary",
+   "caption": "Table 264 - Entries in a legal attestation dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "265",
+   "obligation": "Entries in a viewport dictionary",
+   "caption": "Table 265 - Entries in a viewport dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "266",
+   "obligation": "Entries in a measure dictionary",
+   "caption": "Table 266 - Entries in a measure dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "267",
+   "obligation": "Additional entries in a rectilinear measure dictionary",
+   "caption": "Table 267 - Additional entries in a rectilinear measure dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "268",
+   "obligation": "Entries in a number format dictionary",
+   "caption": "Table 268 - Entries in a number format dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "269",
+   "obligation": "Additional entries in a geospatial measure dictionary",
+   "caption": "Table 269 - Additional entries in a geospatial measure dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "270",
+   "obligation": "Entries in a geographic coordinate system dictionary",
+   "caption": "Table 270 - Entries in a geographic coordinate system dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "271",
+   "obligation": "Entries in a projected coordinate system dictionary",
+   "caption": "Table 271 - Entries in a projected coordinate system dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "272",
+   "obligation": "Entries in a point data dictionary",
+   "caption": "Table 272 - Entries in a point data dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "273",
+   "obligation": "Entries common to all requirement dictionaries",
+   "caption": "Table 273 - Entries common to all requirement dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "274",
+   "obligation": "Entries for specific types of requirements",
+   "caption": "Table 274 - Entries for specific types of requirements",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "275",
+   "obligation": "Requirement types",
+   "caption": "Table 275 - Requirement types",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "276",
+   "obligation": "Entries in a requirement handler dictionary",
+   "caption": "Table 276 - Entries in a requirement handler dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "277",
+   "obligation": "Entries common to all rendition dictionaries",
+   "caption": "Table 277 - Entries common to all rendition dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "278",
+   "obligation": "Entries in a rendition MH/BE dictionary",
+   "caption": "Table 278 - Entries in a rendition MH/BE dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "279",
+   "obligation": "Entries in a media criteria dictionary",
+   "caption": "Table 279 - Entries in a media criteria dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "280",
+   "obligation": "Entries in a minimum bit depth dictionary",
+   "caption": "Table 280 - Entries in a minimum bit depth dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "281",
+   "obligation": "Entries in a minimum screen size dictionary",
+   "caption": "Table 281 - Entries in a minimum screen size dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "282",
+   "obligation": "Additional entries in a media rendition dictionary",
+   "caption": "Table 282 - Additional entries in a media rendition dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "283",
+   "obligation": "Additional entries specific to a selector rendition dictionary",
+   "caption": "Table 283 - Additional entries specific to a selector rendition dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "284",
+   "obligation": "Entries common to all media clip dictionaries",
+   "caption": "Table 284 - Entries common to all media clip dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "285",
+   "obligation": "Additional entries in a media clip data dictionary",
+   "caption": "Table 285 - Additional entries in a media clip data dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "286",
+   "obligation": "Entries in a media permissions dictionary",
+   "caption": "Table 286 - Entries in a media permissions dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "287",
+   "obligation": "Entries in a media clip data MH/BE dictionary",
+   "caption": "Table 287 - Entries in a media clip data MH/BE dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "288",
+   "obligation": "Additional entries in a media clip section dictionary",
+   "caption": "Table 288 - Additional entries in a media clip section dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "289",
+   "obligation": "Entries in a media clip section MH/BE dictionary",
+   "caption": "Table 289 - Entries in a media clip section MH/BE dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "290",
+   "obligation": "Entries in a media play parameters dictionary",
+   "caption": "Table 290 - Entries in a media play parameters dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "291",
+   "obligation": "Entries in a media play parameters MH/BE dictionary",
+   "caption": "Table 291 - Entries in a media play parameters MH/BE dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "292",
+   "obligation": "Entries in a media duration dictionary",
+   "caption": "Table 292 - Entries in a media duration dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "293",
+   "obligation": "Entries in a media screen parameters dictionary",
+   "caption": "Table 293 - Entries in a media screen parameters dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "294",
+   "obligation": "Entries in a media screen parameters MH/BE dictionary",
+   "caption": "Table 294 - Entries in a media screen parameters MH/BE dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "295",
+   "obligation": "Entries in a floating window parameters dictionary",
+   "caption": "Table 295 - Entries in a floating window parameters dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "296",
+   "obligation": "Entries common to all media offset dictionaries",
+   "caption": "Table 296 - Entries common to all media offset dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "297",
+   "obligation": "Additional entries in a media offset time dictionary",
+   "caption": "Table 297 - Additional entries in a media offset time dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "298",
+   "obligation": "Additional entries in a media offset frame dictionary",
+   "caption": "Table 298 - Additional entries in a media offset frame dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "299",
+   "obligation": "Additional entries in a media offset marker dictionary",
+   "caption": "Table 299 - Additional entries in a media offset marker dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "300",
+   "obligation": "Entries in a timespan dictionary",
+   "caption": "Table 300 - Entries in a timespan dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "301",
+   "obligation": "Entries in a media players dictionary",
+   "caption": "Table 301 - Entries in a media players dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "302",
+   "obligation": "Entries in a media player info dictionary",
+   "caption": "Table 302 - Entries in a media player info dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "303",
+   "obligation": "Entries in a software identifier dictionary",
+   "caption": "Table 303 - Entries in a software identifier dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "304",
+   "obligation": "Monitor specifier values",
+   "caption": "Table 304 - Monitor specifier values",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "305",
+   "obligation": "Additional entries specific to a sound object",
+   "caption": "Table 305 - Additional entries specific to a sound object",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "306",
+   "obligation": "Entries in a movie dictionary",
+   "caption": "Table 306 - Entries in a movie dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "307",
+   "obligation": "Entries in a movie activation dictionary",
+   "caption": "Table 307 - Entries in a movie activation dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "308",
+   "obligation": "Entries in a slideshow dictionary",
+   "caption": "Table 308 - Entries in a slideshow dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "309",
+   "obligation": "Additional entries specific to a 3D annotation",
+   "caption": "Table 309 - Additional entries specific to a 3D annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "310",
+   "obligation": "Entries in a 3D activation dictionary",
+   "caption": "Table 310 - Entries in a 3D activation dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "311",
+   "obligation": "Entries in a 3D stream dictionary",
+   "caption": "Table 311 - Entries in a 3D stream dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "312",
+   "obligation": "Entries in an 3D animation style dictionary",
+   "caption": "Table 312 - Entries in an 3D animation style dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "313",
+   "obligation": "Animation styles",
+   "caption": "Table 313 - Animation styles",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "314",
+   "obligation": "Entries in a 3D reference dictionary",
+   "caption": "Table 314 - Entries in a 3D reference dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "315",
+   "obligation": "Entries in a 3D view dictionary",
+   "caption": "Table 315 - Entries in a 3D view dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "316",
+   "obligation": "Entries in a projection dictionary",
+   "caption": "Table 316 - Entries in a projection dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "317",
+   "obligation": "Entries in a 3D background dictionary",
+   "caption": "Table 317 - Entries in a 3D background dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "318",
+   "obligation": "Entries in a render mode dictionary",
+   "caption": "Table 318 - Entries in a render mode dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "319",
+   "obligation": "Render modes",
+   "caption": "Table 319 - Render modes",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "320",
+   "obligation": "Entries in a 3D lighting scheme dictionary",
+   "caption": "Table 320 - Entries in a 3D lighting scheme dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "321",
+   "obligation": "3D lighting scheme styles",
+   "caption": "Table 321 - 3D lighting scheme styles",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "322",
+   "obligation": "Entries in a 3D cross section dictionary",
+   "caption": "Table 322 - Entries in a 3D cross section dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "323",
+   "obligation": "Entries in a 3D node dictionary",
+   "caption": "Table 323 - Entries in a 3D node dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "324",
+   "obligation": "Entries in an external data dictionary used to markup 3D annotations",
+   "caption": "Table 324 - Entries in an external data dictionary used to markup 3D annotations",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "325",
+   "obligation": "Entries in a 3D units dictionary",
+   "caption": "Table 325 - Entries in a 3D units dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "326",
+   "obligation": "Entries in a 3D measurement/markup dictionary common to all markup subtypes",
+   "caption": "Table 326 - Entries in a 3D measurement/markup dictionary common to all markup subtypes",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "327",
+   "obligation": "Additional entries in a 3D measurement/markup dictionary for a 3D linear dimension measurement",
+   "caption": "Table 327 - Additional entries in a 3D measurement/markup dictionary for a 3D linear dimension measurement",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "328",
+   "obligation": "Additional entries in a 3D measurement/markup dictionary for a 3D perpendicular dimension measurement",
+   "caption": "Table 328 - Additional entries in a 3D measurement/markup dictionary for a 3D perpendicular dimension measurement",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "329",
+   "obligation": "Additional entries in a 3D measurement/markup dictionary for a 3D angular dimension measurement",
+   "caption": "Table 329 - Additional entries in a 3D measurement/markup dictionary for a 3D angular dimension measurement",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "330",
+   "obligation": "Additional entries in a 3D measurement/markup dictionary for a 3D radial dimension measurement",
+   "caption": "Table 330 - Additional entries in a 3D measurement/markup dictionary for a 3D radial dimension measurement",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "331",
+   "obligation": "Additional entries in a 3D measurement/markup dictionary for a 3D comment note",
+   "caption": "Table 331 - Additional entries in a 3D measurement/markup dictionary for a 3D comment note",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "332",
+   "obligation": "Entries in the external data dictionary of a projection annotation",
+   "caption": "Table 332 - Entries in the external data dictionary of a projection annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "333",
+   "obligation": "Additional entries specific to a RichMedia annotation",
+   "caption": "Table 333 - Additional entries specific to a RichMedia annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "334",
+   "obligation": "Entries in a RichMediaSettings dictionary",
+   "caption": "Table 334 - Entries in a RichMediaSettings dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "335",
+   "obligation": "Entries in a RichMediaActivation dictionary",
+   "caption": "Table 335 - Entries in a RichMediaActivation dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "336",
+   "obligation": "Entries in a RichMediaDeactivation dictionary",
+   "caption": "Table 336 - Entries in a RichMediaDeactivation dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "337",
+   "obligation": "Entries in a RichMediaAnimation dictionary",
+   "caption": "Table 337 - Entries in a RichMediaAnimation dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "338",
+   "obligation": "Entries in a RichMediaPresentation dictionary",
+   "caption": "Table 338 - Entries in a RichMediaPresentation dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "339",
+   "obligation": "Entries in a RichMediaWindow dictionary",
+   "caption": "Table 339 - Entries in a RichMediaWindow dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "340",
+   "obligation": "Entries in a RichMediaPosition dictionary",
+   "caption": "Table 340 - Entries in a RichMediaPosition dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "341",
+   "obligation": "Entries in a RichMediaContent dictionary",
+   "caption": "Table 341 - Entries in a RichMediaContent dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "342",
+   "obligation": "Entries in a RichMediaConfiguration dictionary",
+   "caption": "Table 342 - Entries in a RichMediaConfiguration dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "343",
+   "obligation": "Entries in a RichMediaInstance dictionary",
+   "caption": "Table 343 - Entries in a RichMediaInstance dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "344",
+   "obligation": "Additional entries in a 3D view dictionary",
+   "caption": "Table 344 - Additional entries in a 3D view dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "345",
+   "obligation": "Entries in a View Params dictionary",
+   "caption": "Table 345 - Entries in a View Params dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "346",
+   "obligation": "Predefined procedure set",
+   "caption": "Table 346 - Predefined procedure set",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "347",
+   "obligation": "Additional entries in a metadata stream dictionary",
+   "caption": "Table 347 - Additional entries in a metadata stream dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "348",
+   "obligation": "Additional entry for components having metadata",
+   "caption": "Table 348 - Additional entry for components having metadata",
+   "inArlington": false,
+   "reasonNotInArlington": "Any object can have Metadata key",
+   "coveredBy": "unrouted"
+  },
+  {
+   "table": "349",
+   "obligation": "Entries in the document information dictionary",
+   "caption": "Table 349 - Entries in the document information dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "350",
+   "obligation": "Entries in a page-piece dictionary",
+   "caption": "Table 350 - Entries in a page-piece dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "351",
+   "obligation": "Entries in a data dictionary",
+   "caption": "Table 351 - Entries in a data dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "352",
+   "obligation": "Marked-content operators",
+   "caption": "Table 352 - Marked-content operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "353",
+   "obligation": "Entries in the mark information dictionary",
+   "caption": "Table 353 - Entries in the mark information dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "354",
+   "obligation": "Entries in the structure tree root",
+   "caption": "Table 354 - Entries in the structure tree root",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "355",
+   "obligation": "Entries in a structure element dictionary",
+   "caption": "Table 355 - Entries in a structure element dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "356",
+   "obligation": "Entries in a namespace dictionary",
+   "caption": "Table 356 - Entries in a namespace dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "357",
+   "obligation": "Entries in a marked-content reference dictionary",
+   "caption": "Table 357 - Entries in a marked-content reference dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "358",
+   "obligation": "Entries in an object reference dictionary",
+   "caption": "Table 358 - Entries in an object reference dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "359",
+   "obligation": "Additional dictionary entries for structure element access",
+   "caption": "Table 359 - Additional dictionary entries for structure element access",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "360",
+   "obligation": "Entries common to all attribute object dictionaries",
+   "caption": "Table 360 - Entries common to all attribute object dictionaries",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "361",
+   "obligation": "Additional entries in an attribute object dictionary for user properties",
+   "caption": "Table 361 - Additional entries in an attribute object dictionary for user properties",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "362",
+   "obligation": "Entries in a user property dictionary",
+   "caption": "Table 362 - Entries in a user property dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "363",
+   "obligation": "Property list entries for artifacts",
+   "caption": "Table 363 - Property list entries for artifacts",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "364",
+   "obligation": "Document level structure types",
+   "caption": "Table 364 - Document level structure types",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "365",
+   "obligation": "Grouping level structure types",
+   "caption": "Table 365 - Grouping level structure types",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "366",
+   "obligation": "Block level structure types",
+   "caption": "Table 366 - Block level structure types",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "367",
+   "obligation": "Sub-block level structure type",
+   "caption": "Table 367 - Sub-block level structure type",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "368",
+   "obligation": "General inline level structure types",
+   "caption": "Table 368 - General inline level structure types",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "369",
+   "obligation": "Ruby and Warichu structure types",
+   "caption": "Table 369 - Ruby and Warichu structure types",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "370",
+   "obligation": "List standard structure types",
+   "caption": "Table 370 - List standard structure types",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "371",
+   "obligation": "Table standard structure types",
+   "caption": "Table 371 - Table standard structure types",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "372",
+   "obligation": "Standard structure type Caption",
+   "caption": "Table 372 - Standard structure type Caption",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "373",
+   "obligation": "Standard structure type Figure",
+   "caption": "Table 373 - Standard structure type Figure",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "374",
+   "obligation": "Standard structure type Formula",
+   "caption": "Table 374 - Standard structure type Formula",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "375",
+   "obligation": "standard structure type Artifact",
+   "caption": "Table 375 - standard structure type Artifact",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD - structure elements & attributes",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "376",
+   "obligation": "Standard structure attribute owners",
+   "caption": "Table 376 - Standard structure attribute owners",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "377",
+   "obligation": "Standard layout attributes",
+   "caption": "Table 377 - Standard layout attributes",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "378",
+   "obligation": "Standard layout attributes common to all standard structure types",
+   "caption": "Table 378 - Standard layout attributes common to all standard structure types",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "379",
+   "obligation": "Additional standard layout attributes specific to block-level structure elements",
+   "caption": "Table 379 - Additional standard layout attributes specific to block-level structure elements",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "380",
+   "obligation": "Standard layout attributes specific to inline-level structure elements",
+   "caption": "Table 380 - Standard layout attributes specific to inline-level structure elements",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "381",
+   "obligation": "Standard layout attributes specific to standard column attributes",
+   "caption": "Table 381 - Standard layout attributes specific to standard column attributes",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "382",
+   "obligation": "Standard list attributes",
+   "caption": "Table 382 - Standard list attributes",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "383",
+   "obligation": "PrintField attributes",
+   "caption": "Table 383 - PrintField attributes",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "384",
+   "obligation": "Standard table attributes",
+   "caption": "Table 384 - Standard table attributes",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "385",
+   "obligation": "Standard artifact attributes",
+   "caption": "Table 385 - Standard artifact attributes",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "386",
+   "obligation": "Entries in the Web Capture information dictionary",
+   "caption": "Table 386 - Entries in the Web Capture information dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "387",
+   "obligation": "Characters with special meaning in destinations and fields and their byte values",
+   "caption": "Table 387 - Characters with special meaning in destinations and fields and their byte values",
+   "inArlington": false,
+   "reasonNotInArlington": "Semantic processing of specific strings",
+   "coveredBy": "hand-authored-syntax"
+  },
+  {
+   "table": "388",
+   "obligation": "Entries common to all Web Capture content sets",
+   "caption": "Table 388 - Entries common to all Web Capture content sets",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "389",
+   "obligation": "Additional entries specific to a Web Capture page set",
+   "caption": "Table 389 - Additional entries specific to a Web Capture page set",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "390",
+   "obligation": "Additional entries specific to a Web Capture image set",
+   "caption": "Table 390 - Additional entries specific to a Web Capture image set",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "391",
+   "obligation": "Entries in a source information dictionary",
+   "caption": "Table 391 - Entries in a source information dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "392",
+   "obligation": "Entries in a URL alias dictionary",
+   "caption": "Table 392 - Entries in a URL alias dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "393",
+   "obligation": "Entries in a Web Capture command dictionary",
+   "caption": "Table 393 - Entries in a Web Capture command dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "394",
+   "obligation": "Web Capture command flags",
+   "caption": "Table 394 - Web Capture command flags",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "395",
+   "obligation": "Entries in a Web Capture command settings dictionary",
+   "caption": "Table 395 - Entries in a Web Capture command settings dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "396",
+   "obligation": "Entries in a box colour information dictionary",
+   "caption": "Table 396 - Entries in a box colour information dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "397",
+   "obligation": "Entries in a box style dictionary",
+   "caption": "Table 397 - Entries in a box style dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "398",
+   "obligation": "Additional entries specific to a printer's mark annotation",
+   "caption": "Table 398 - Additional entries specific to a printer's mark annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "399",
+   "obligation": "Additional entries specific to a printer's mark form dictionary",
+   "caption": "Table 399 - Additional entries specific to a printer's mark form dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "400",
+   "obligation": "Entries in a separation dictionary",
+   "caption": "Table 400 - Entries in a separation dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "401",
+   "obligation": "Entries in an output intent dictionary",
+   "caption": "Table 401 - Entries in an output intent dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "402",
+   "obligation": "Entries in a DestOutputProfileRef dictionary",
+   "caption": "Table 402 - Entries in a DestOutputProfileRef dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "403",
+   "obligation": "Additional entries specific to a trap network annotation",
+   "caption": "Table 403 - Additional entries specific to a trap network annotation",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "404",
+   "obligation": "Additional entries specific to a trap network appearance stream",
+   "caption": "Table 404 - Additional entries specific to a trap network appearance stream",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "405",
+   "obligation": "Entry in an OPI version dictionary",
+   "caption": "Table 405 - Entry in an OPI version dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "406",
+   "obligation": "Entries in a version 1.3 OPI dictionary",
+   "caption": "Table 406 - Entries in a version 1.3 OPI dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "407",
+   "obligation": "Entries in a version 2.0 OPI dictionary",
+   "caption": "Table 407 - Entries in a version 2.0 OPI dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "408",
+   "obligation": "Entries in a DPartRoot dictionary",
+   "caption": "Table 408 - Entries in a DPartRoot dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "409",
+   "obligation": "Entries in a DPart dictionary",
+   "caption": "Table 409 - Entries in a DPart dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "A.1",
+   "obligation": "PDF content stream operators",
+   "caption": "Table A.1 - PDF content stream operators",
+   "inArlington": false,
+   "reasonNotInArlington": "Content stream",
+   "coveredBy": "annex-a-operators"
+  },
+  {
+   "table": "C.1",
+   "obligation": "Architectural considerations",
+   "caption": "Table C.1 - Architectural considerations",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "D.1",
+   "obligation": "Latin-text encodings",
+   "caption": "Table D.1 - Latin-text encodings",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "D.2",
+   "obligation": "Latin character set and encodings",
+   "caption": "Table D.2 - Latin character set and encodings",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "D.3",
+   "obligation": "PDFDocEncoding character set",
+   "caption": "Table D.3 - PDFDocEncoding character set",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "D.4",
+   "obligation": "Expert set and MacExpert encoding",
+   "caption": "Table D.4 - Expert set and MacExpert encoding",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "D.5",
+   "obligation": "Symbol set and encoding",
+   "caption": "Table D.5 - Symbol set and encoding",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "D.6",
+   "obligation": "ZapfDingbats set and encoding",
+   "caption": "Table D.6 - ZapfDingbats set and encoding",
+   "inArlington": false,
+   "reasonNotInArlington": "Descriptive only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "F.1",
+   "obligation": "Entries in the linearization parameter dictionary",
+   "caption": "Table F.1 - Entries in the linearization parameter dictionary",
+   "inArlington": true,
+   "reasonNotInArlington": null,
+   "coveredBy": "arlington-object-model"
+  },
+  {
+   "table": "F.2",
+   "obligation": "Standard hint tables",
+   "caption": "Table F.2 - Standard hint tables",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "F.3",
+   "obligation": "Page offset hint table, header section",
+   "caption": "Table F.3 - Page offset hint table, header section",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "F.4",
+   "obligation": "Page offset hint table, per-page entry",
+   "caption": "Table F.4 - Page offset hint table, per-page entry",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "F.5",
+   "obligation": "Shared object hint table, header section",
+   "caption": "Table F.5 - Shared object hint table, header section",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "F.6",
+   "obligation": "Shared object hint table, shared object group entry",
+   "caption": "Table F.6 - Shared object hint table, shared object group entry",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "F.7",
+   "obligation": "Thumbnail hint table, header section",
+   "caption": "Table F.7 - Thumbnail hint table, header section",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "F.8",
+   "obligation": "Thumbnail hint table, per-page entry",
+   "caption": "Table F.8 - Thumbnail hint table, per-page entry",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "F.9",
+   "obligation": "Generic hint table",
+   "caption": "Table F.9 - Generic hint table",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "F.10",
+   "obligation": "Extended generic hint table",
+   "caption": "Table F.10 - Extended generic hint table",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "F.11",
+   "obligation": "Embedded file stream hint table, header section",
+   "caption": "Table F.11 - Embedded file stream hint table, header section",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "F.12",
+   "obligation": "Embedded file stream hint table, per-embedded file stream group entries",
+   "caption": "Table F.12 - Embedded file stream hint table, per-embedded file stream group entries",
+   "inArlington": false,
+   "reasonNotInArlington": "TBD with Linearization",
+   "coveredBy": "arlington-gap"
+  },
+  {
+   "table": "H.1",
+   "obligation": "Objects in minimal example",
+   "caption": "Table H.1 - Objects in minimal example",
+   "inArlington": false,
+   "reasonNotInArlington": "Example only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "H.2",
+   "obligation": "Objects in simple text string example",
+   "caption": "Table H.2 - Objects in simple text string example",
+   "inArlington": false,
+   "reasonNotInArlington": "Example only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "H.3",
+   "obligation": "Objects in simple graphics example",
+   "caption": "Table H.3 - Objects in simple graphics example",
+   "inArlington": false,
+   "reasonNotInArlington": "Example only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "H.4",
+   "obligation": "Object usage after adding four text annotations",
+   "caption": "Table H.4 - Object usage after adding four text annotations",
+   "inArlington": false,
+   "reasonNotInArlington": "Example only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "H.5",
+   "obligation": "Object usage after modifying text of one annotation",
+   "caption": "Table H.5 - Object usage after modifying text of one annotation",
+   "inArlington": false,
+   "reasonNotInArlington": "Example only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "H.6",
+   "obligation": "Object usage after deleting two text annotations",
+   "caption": "Table H.6 - Object usage after deleting two text annotations",
+   "inArlington": false,
+   "reasonNotInArlington": "Example only",
+   "coveredBy": "not-an-obligation"
+  },
+  {
+   "table": "H.7",
+   "obligation": "Object usage after adding three text annotations",
+   "caption": "Table H.7 - Object usage after adding three text annotations",
+   "inArlington": false,
+   "reasonNotInArlington": "Example only",
+   "coveredBy": "not-an-obligation"
+  }
+ ]
+}
