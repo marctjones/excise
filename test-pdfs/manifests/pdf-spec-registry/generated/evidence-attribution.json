@@ -81365,6 +81365,13 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/ArlingtonKeyObservationTests.cs::ArlingtonKeyObservationTests.ObserveArlingtonKeyExposureAcrossTheCorpus",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/AttachmentRemovalOracleTests.cs::AttachmentRemovalOracleTests.EveryRedactionFlow_RemovesPageAndDocumentAttachments_AsPopplerAndQpdfSeeIt",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82001,15 +82008,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Mutool_NoPassword_RefusesToExtractOrRender",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Qpdf_RecognizedAsEncrypted_AndNoPasswordIsRejected",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113623,8 +113621,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7685,
-    "testMethodsWithCapabilityCandidate": 4787,
+    "testMethods": 7686,
+    "testMethodsWithCapabilityCandidate": 4788,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

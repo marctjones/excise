@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1335,
-  "indexedContentSha256": "b04f4a74fb9ab12b1ac90585fb29bd7a7d4e605bebdf4a4774bcef99ddabcec3",
+  "indexedFileCount": 1336,
+  "indexedContentSha256": "dd5e7fe16b883b4e55b44b5e3389b5a30ccb8c62463509c2a695799d15659a33",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7132,6 +7132,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ArlingtonKeyObservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dictionaries",
+            "resource"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -7195,7 +7203,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 36
+      "candidateReferenceCount": 37
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -8009,7 +8017,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 605
+      "candidateReferenceCount": 606
     },
     {
       "id": "pdf.17.graphics.color",
@@ -14419,6 +14427,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ArlingtonKeyObservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "marked",
+            "property"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -14572,7 +14588,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 64
+      "candidateReferenceCount": 65
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -21800,6 +21816,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ArlingtonKeyObservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "tree"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -21849,7 +21873,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 7
+      "candidateReferenceCount": 8
     },
     {
       "id": "pdf.20.renderer.requirement-004",
@@ -23995,6 +24019,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ArlingtonKeyObservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "structure"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/EncryptedRedactionOutputIntegrityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -24019,7 +24051,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 11
+      "candidateReferenceCount": 12
     },
     {
       "id": "pdf.20.renderer.requirement-020",
@@ -36328,6 +36360,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ArlingtonKeyObservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ColorKeyMaskDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36600,7 +36641,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 71
+      "candidateReferenceCount": 72
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -37062,6 +37103,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ArlingtonKeyObservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ColorKeyMaskDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37333,7 +37383,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 71
+      "candidateReferenceCount": 72
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -42686,6 +42736,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ArlingtonKeyObservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42847,7 +42906,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 51
+      "candidateReferenceCount": 52
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -63594,7 +63653,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 170
+      "candidateReferenceCount": 171
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -66179,7 +66238,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 398
+      "candidateReferenceCount": 399
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -66922,7 +66981,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 200
+      "candidateReferenceCount": 201
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -67687,7 +67746,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 178
+      "candidateReferenceCount": 179
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -68473,7 +68532,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 654
+      "candidateReferenceCount": 655
     },
     {
       "id": "pdf.20.extension.developer",
