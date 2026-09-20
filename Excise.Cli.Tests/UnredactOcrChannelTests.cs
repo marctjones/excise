@@ -36,11 +36,23 @@ public class UnredactOcrChannelTests
         }
     }
 
-    /// <summary>#1674: the ONE shared locator. A hand walk to `.git` finds a
-    /// WORKTREE root, where gitignored corpora and tools/vendor do not exist.</summary>
+    /// <summary>
+    /// #1674: the ONE shared locator. A hand walk to `.git` finds a WORKTREE
+    /// root, where gitignored corpora and tools/vendor do not exist.
+    ///
+    /// <para>⚠️ #1700 — BUILD OUTPUT IS THE EXCEPTION, and this is build
+    /// output: the subprocess below runs `dotnet run --project Excise.Cli`
+    /// from here. The LOCAL checkout has to win, or a test running in a
+    /// worktree spawns the MAIN checkout's CLI — exercising whatever branch
+    /// happens to be checked out there and passing on code this branch does
+    /// not contain. That is the #1527 hazard exactly, and `CLAUDE.md` already
+    /// states the rule: `FindFileInLocalCheckout` exists for build output for
+    /// this reason. The main checkout stays as the fallback for a layout where
+    /// the local root cannot be resolved at all.</para>
+    /// </summary>
     private static string RepoRoot() =>
-        Excise.TestSupport.TestRepoLayout.MainCheckoutRoot
-        ?? Excise.TestSupport.TestRepoLayout.LocalCheckoutRoot
+        Excise.TestSupport.TestRepoLayout.LocalCheckoutRoot
+        ?? Excise.TestSupport.TestRepoLayout.MainCheckoutRoot
         ?? throw new System.InvalidOperationException("no checkout above the test binary");
 
     private static (int Exit, string Out) RunUnredact(params string[] args)
