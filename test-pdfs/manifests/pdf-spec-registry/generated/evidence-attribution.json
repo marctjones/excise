@@ -26726,17 +26726,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -31163,17 +31156,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -32630,17 +32616,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -37074,17 +37053,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -37612,17 +37584,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -38191,17 +38156,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -38700,17 +38658,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -40725,17 +40676,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "render"
       ]
@@ -50033,13 +49977,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
@@ -54607,13 +54544,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
@@ -54712,13 +54642,6 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AdvanceParityTests.cs::PerGlyphAdvanceParity_AgainstMutool",
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -55057,17 +54980,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "search"
       ]
@@ -55102,17 +55018,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55214,17 +55123,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55257,17 +55159,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55369,17 +55264,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55412,17 +55300,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55524,17 +55405,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55567,17 +55441,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55679,17 +55546,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55722,17 +55582,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55834,17 +55687,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55877,17 +55723,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55989,17 +55828,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56032,17 +55864,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56144,17 +55969,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56187,17 +56005,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56299,17 +56110,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56342,17 +56146,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56454,17 +56251,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56497,17 +56287,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56609,17 +56392,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56652,17 +56428,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56764,17 +56533,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56807,17 +56569,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56919,17 +56674,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56962,17 +56710,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57074,17 +56815,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57117,17 +56851,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57229,17 +56956,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57272,17 +56992,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57384,17 +57097,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57427,17 +57133,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57539,17 +57238,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57582,17 +57274,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57694,17 +57379,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57737,17 +57415,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57849,17 +57520,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57892,17 +57556,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58004,17 +57661,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58047,17 +57697,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58159,17 +57802,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58202,17 +57838,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58314,17 +57943,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58357,17 +57979,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58469,17 +58084,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58512,17 +58120,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58624,17 +58225,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58667,17 +58261,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58779,17 +58366,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58822,17 +58402,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58934,17 +58507,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -58977,17 +58543,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59089,17 +58648,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59132,17 +58684,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59244,17 +58789,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59287,17 +58825,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59399,17 +58930,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59442,17 +58966,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59554,17 +59071,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59597,17 +59107,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59709,17 +59212,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59752,17 +59248,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59864,17 +59353,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -59907,17 +59389,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60019,17 +59494,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60062,17 +59530,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60174,17 +59635,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60217,17 +59671,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60329,17 +59776,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60372,17 +59812,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60484,17 +59917,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60527,17 +59953,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60639,17 +60058,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60682,17 +60094,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60794,17 +60199,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60837,17 +60235,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60949,17 +60340,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -60992,17 +60376,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61104,17 +60481,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61147,17 +60517,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61259,17 +60622,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61302,17 +60658,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61414,17 +60763,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61457,17 +60799,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61569,17 +60904,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61612,17 +60940,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61724,17 +61045,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61767,17 +61081,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61879,17 +61186,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61922,17 +61222,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62034,17 +61327,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62077,17 +61363,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62189,17 +61468,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62232,17 +61504,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62344,17 +61609,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62387,17 +61645,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62499,17 +61750,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62542,17 +61786,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62654,17 +61891,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62697,17 +61927,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62809,17 +62032,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62852,17 +62068,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62964,17 +62173,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63007,17 +62209,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63119,17 +62314,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63162,17 +62350,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63274,17 +62455,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63317,17 +62491,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63429,17 +62596,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63472,17 +62632,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63584,17 +62737,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63627,17 +62773,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63739,17 +62878,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63782,17 +62914,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63894,17 +63019,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63937,17 +63055,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64049,17 +63160,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64092,17 +63196,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64204,17 +63301,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64247,17 +63337,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64359,17 +63442,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64402,17 +63478,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64514,17 +63583,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64557,17 +63619,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64669,17 +63724,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64712,17 +63760,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64824,17 +63865,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64867,17 +63901,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64979,17 +64006,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65022,17 +64042,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65134,17 +64147,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65177,17 +64183,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65289,17 +64288,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65332,17 +64324,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65418,17 +64403,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65461,17 +64439,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65573,17 +64544,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65616,17 +64580,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65728,17 +64685,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65771,17 +64721,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65857,17 +64800,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65900,17 +64836,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65986,17 +64915,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -66029,17 +64951,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -66115,17 +65030,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -66158,17 +65066,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -66244,17 +65145,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -66544,17 +65438,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -66642,17 +65529,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -66740,17 +65620,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -66831,17 +65704,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -67654,17 +66520,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -67752,17 +66611,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -67850,17 +66702,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -67948,17 +66793,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68046,17 +66884,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68144,17 +66975,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68242,17 +67066,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68347,17 +67164,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68445,17 +67255,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68543,17 +67346,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68641,17 +67437,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68739,17 +67528,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68837,17 +67619,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68935,17 +67710,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69033,17 +67801,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69131,17 +67892,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69229,17 +67983,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69327,17 +68074,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69425,17 +68165,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69523,17 +68256,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69621,17 +68347,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69719,17 +68438,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69817,17 +68529,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69915,17 +68620,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70013,17 +68711,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70111,17 +68802,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70209,17 +68893,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70307,17 +68984,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70412,17 +69082,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70510,17 +69173,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70608,17 +69264,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70706,17 +69355,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70804,17 +69446,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70902,17 +69537,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -71000,17 +69628,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -71098,17 +69719,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -71196,17 +69810,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -71294,17 +69901,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -71392,17 +69992,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -71490,17 +70083,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -71588,17 +70174,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -71686,17 +70265,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -71784,17 +70356,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -72134,17 +70699,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -72232,17 +70790,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -72330,17 +70881,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -72428,17 +70972,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -72526,17 +71063,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -72624,17 +71154,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -72722,17 +71245,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -72820,17 +71336,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -72918,17 +71427,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73016,17 +71518,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73114,17 +71609,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73212,17 +71700,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73310,17 +71791,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73408,17 +71882,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73506,17 +71973,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73604,17 +72064,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73702,17 +72155,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73800,17 +72246,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73898,17 +72337,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73996,17 +72428,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -74094,17 +72519,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -74166,17 +72584,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -74264,17 +72675,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -74362,17 +72766,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -74434,17 +72831,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -74506,17 +72896,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -74578,17 +72961,10 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "verified",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -114313,11 +112689,11 @@
     "modesWithExplicitContracts": 882,
     "modesWithPassingExplicitContracts": 876,
     "modesWithRecordedPassingCandidate": 646,
-    "gradeImplemented": 117,
-    "gradeVerified": 762,
+    "gradeImplemented": 346,
+    "gradeVerified": 533,
     "gradeUnknown": 20,
-    "testMethods": 7681,
-    "testMethodsWithCapabilityCandidate": 4783,
+    "testMethods": 7683,
+    "testMethodsWithCapabilityCandidate": 4785,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
