@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1334,
-  "indexedContentSha256": "64c58a73090fad4d3bc950ebe4683e4d47e7a89b873244020a2dc17eac753b72",
+  "indexedContentSha256": "a5cbd2e2dddec6080b7b84773ebff116d34464e45fcefa424544f1144d8011fe",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
