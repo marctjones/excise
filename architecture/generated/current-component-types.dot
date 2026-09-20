@@ -50,8 +50,8 @@ digraph excise_architecture {
   "app" -> "app-main-window" [label="431 refs / 31 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "app" [label="691 refs / 78 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core" [label="7 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "avalonia" -> "core-document" [label="389 refs / 24 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "avalonia" -> "core-primitives" [label="19 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "avalonia" -> "core-document" [label="391 refs / 24 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "avalonia" -> "core-primitives" [label="20 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core-text" [label="50 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "rendering" [label="28 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core" [label="38 refs / 9 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

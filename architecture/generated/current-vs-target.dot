@@ -56,8 +56,8 @@ digraph excise_architecture {
   "app-main-window" -> "avalonia" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "architecture-tooling" -> "verification" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "avalonia" -> "core" [label="target + observed\n7 refs", color="#15803d", style="solid", penwidth=2];
-  "avalonia" -> "core-document" [label="observed via parent boundary\n389 refs", color="#2563eb", style="dashed", penwidth=1];
-  "avalonia" -> "core-primitives" [label="observed via parent boundary\n19 refs", color="#2563eb", style="dashed", penwidth=1];
+  "avalonia" -> "core-document" [label="observed via parent boundary\n391 refs", color="#2563eb", style="dashed", penwidth=1];
+  "avalonia" -> "core-primitives" [label="observed via parent boundary\n20 refs", color="#2563eb", style="dashed", penwidth=1];
   "avalonia" -> "core-text" [label="observed via parent boundary\n50 refs", color="#2563eb", style="dashed", penwidth=1];
   "avalonia" -> "rendering" [label="target + observed\n28 refs", color="#15803d", style="solid", penwidth=2];
   "cli" -> "core" [label="target + observed\n38 refs", color="#15803d", style="solid", penwidth=2];

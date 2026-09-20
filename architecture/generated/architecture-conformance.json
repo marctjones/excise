@@ -2,7 +2,7 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "cdf18e2c76a49475ddd267234f744b881b9a80dd",
+  "sourceRevision": "c40b56c1226baa8cab635cab5176a507a7b6401e",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
@@ -66,22 +66,22 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 389,
+      "references": 391,
       "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 83
+          "references": 85
         }
       ]
     },
     {
       "source": "avalonia",
       "target": "core-primitives",
-      "references": 19,
-      "typeDependencyCount": 6,
+      "references": 20,
+      "typeDependencyCount": 7,
       "classification": "declared",
       "evidence": [
         {
