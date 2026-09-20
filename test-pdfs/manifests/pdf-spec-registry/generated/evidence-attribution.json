@@ -109873,7 +109873,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::StripThenSave_RemovesTheAttachment_VerifiedByQpdf",
           "recordedOutcomes": [
             "Passed"
@@ -109881,7 +109881,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -114313,8 +114313,8 @@
     "modesWithExplicitContracts": 882,
     "modesWithPassingExplicitContracts": 876,
     "modesWithRecordedPassingCandidate": 646,
-    "gradeImplemented": 118,
-    "gradeVerified": 761,
+    "gradeImplemented": 117,
+    "gradeVerified": 762,
     "gradeUnknown": 20,
     "testMethods": 7681,
     "testMethodsWithCapabilityCandidate": 4783,
