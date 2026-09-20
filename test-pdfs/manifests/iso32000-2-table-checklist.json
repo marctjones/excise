@@ -18,7 +18,12 @@
    "hand-authored-syntax": 6,
    "not-an-obligation": 36,
    "unrouted": 4
-  }
+  },
+  "arlingtonObjectsNamed": 329,
+  "modelledButNoObjectCitesTheTable": [
+   "363",
+   "377"
+  ]
  },
  "entries": [
   {
@@ -27,7 +32,8 @@
    "caption": "Table 1 - White-space characters",
    "inArlington": false,
    "reasonNotInArlington": "Lexical - prior to Arlington PDF object model",
-   "coveredBy": "hand-authored-syntax"
+   "coveredBy": "hand-authored-syntax",
+   "arlingtonObjects": []
   },
   {
    "table": "2",
@@ -35,7 +41,8 @@
    "caption": "Table 2 - Delimiter characters",
    "inArlington": false,
    "reasonNotInArlington": "Lexical - prior to Arlington PDF object model",
-   "coveredBy": "hand-authored-syntax"
+   "coveredBy": "hand-authored-syntax",
+   "arlingtonObjects": []
   },
   {
    "table": "3",
@@ -43,7 +50,8 @@
    "caption": "Table 3 - Escape sequences in literal strings",
    "inArlington": false,
    "reasonNotInArlington": "Lexical - prior to Arlington PDF object model",
-   "coveredBy": "hand-authored-syntax"
+   "coveredBy": "hand-authored-syntax",
+   "arlingtonObjects": []
   },
   {
    "table": "4",
@@ -51,7 +59,8 @@
    "caption": "Table 4 - Examples of literal names",
    "inArlington": false,
    "reasonNotInArlington": "Lexical - prior to Arlington PDF object model",
-   "coveredBy": "hand-authored-syntax"
+   "coveredBy": "hand-authored-syntax",
+   "arlingtonObjects": []
   },
   {
    "table": "5",
@@ -59,7 +68,42 @@
    "caption": "Table 5 - Entries common to all stream dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DStream",
+    "AFEmbeddedFileStream",
+    "ArrayOfCompressionFilterNames",
+    "CMapStream",
+    "EmbeddedFileStream",
+    "FontFile",
+    "FontFile2",
+    "FontFile3CIDType0",
+    "FontFile3OpenType",
+    "FontFile3Type1",
+    "FontFileType1",
+    "FunctionType0",
+    "FunctionType4",
+    "HalftoneType10",
+    "HalftoneType16",
+    "ICCProfileStream",
+    "Metadata",
+    "ObjectStream",
+    "PatternType1",
+    "ShadingType4",
+    "ShadingType5",
+    "ShadingType6",
+    "ShadingType7",
+    "SoundObject",
+    "Stream",
+    "Thumbnail",
+    "XObjectFormPS",
+    "XObjectFormPSpassthrough",
+    "XObjectFormPrinterMark",
+    "XObjectFormType1",
+    "XObjectImage",
+    "XObjectImageMask",
+    "XRefStream"
+   ]
   },
   {
    "table": "6",
@@ -67,7 +111,13 @@
    "caption": "Table 6 - Standard filters",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfCompressionFilterNames",
+    "Stream",
+    "XObjectFormType1",
+    "XRefStream"
+   ]
   },
   {
    "table": "7",
@@ -75,7 +125,8 @@
    "caption": "Table 7 - Typical LZW encoding sequence",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive of algorithm",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "8",
@@ -83,7 +134,11 @@
    "caption": "Table 8 - Optional parameters for LZWDecode and FlateDecode filters",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FilterFlateDecode",
+    "FilterLZWDecode"
+   ]
   },
   {
    "table": "9",
@@ -91,7 +146,8 @@
    "caption": "Table 9 - PNG predictor algorithms",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only. Serialized in PDF via Table 10",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "10",
@@ -99,7 +155,11 @@
    "caption": "Table 10 - Predictor values",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FilterFlateDecode",
+    "FilterLZWDecode"
+   ]
   },
   {
    "table": "11",
@@ -107,7 +167,10 @@
    "caption": "Table 11 - Optional parameters for the CCITTFaxDecode filter",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FilterCCITTFaxDecode"
+   ]
   },
   {
    "table": "12",
@@ -115,7 +178,10 @@
    "caption": "Table 12 - Optional parameter for the JBIG2Decode filter",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FilterJBIG2Decode"
+   ]
   },
   {
    "table": "13",
@@ -123,7 +189,10 @@
    "caption": "Table 13 - Optional parameter for the DCTDecode filter",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FilterDCTDecode"
+   ]
   },
   {
    "table": "14",
@@ -131,7 +200,10 @@
    "caption": "Table 14 - Optional parameters for Crypt filters",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FilterCrypt"
+   ]
   },
   {
    "table": "15",
@@ -139,7 +211,11 @@
    "caption": "Table 15 - Entries in the file trailer dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FileTrailer",
+    "XRefStream"
+   ]
   },
   {
    "table": "16",
@@ -147,7 +223,10 @@
    "caption": "Table 16 - Additional entries specific to an object stream dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ObjectStream"
+   ]
   },
   {
    "table": "17",
@@ -155,7 +234,12 @@
    "caption": "Table 17 - Additional entries specific to a cross-reference stream dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfXRefIndexIntegers",
+    "ArrayOfXRefWIntegers",
+    "XRefStream"
+   ]
   },
   {
    "table": "18",
@@ -163,7 +247,8 @@
    "caption": "Table 18 - Entries in a cross-reference stream",
    "inArlington": false,
    "reasonNotInArlington": "Internal XRefStream stream data binary format",
-   "coveredBy": "hand-authored-syntax"
+   "coveredBy": "hand-authored-syntax",
+   "arlingtonObjects": []
   },
   {
    "table": "19",
@@ -171,7 +256,10 @@
    "caption": "Table 19 - Additional entries in a hybrid-reference file's trailer dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FileTrailer"
+   ]
   },
   {
    "table": "20",
@@ -179,7 +267,11 @@
    "caption": "Table 20 - Entries common to all encryption dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "EncryptionPublicKey",
+    "EncryptionStandard"
+   ]
   },
   {
    "table": "21",
@@ -187,7 +279,10 @@
    "caption": "Table 21 - Additional encryption dictionary entries for the standard security handler",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "EncryptionStandard"
+   ]
   },
   {
    "table": "22",
@@ -195,7 +290,10 @@
    "caption": "Table 22 - Standard security handler user access permissions",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "EncryptionStandard"
+   ]
   },
   {
    "table": "23",
@@ -203,7 +301,10 @@
    "caption": "Table 23 - Additional encryption dictionary entries for public-key security handlers",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "EncryptionPublicKey"
+   ]
   },
   {
    "table": "24",
@@ -211,7 +312,10 @@
    "caption": "Table 24 - Public-key security handler user access permissions",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "EncryptionPublicKey"
+   ]
   },
   {
    "table": "25",
@@ -219,7 +323,11 @@
    "caption": "Table 25 - Entries common to all crypt filter dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CryptFilter",
+    "CryptFilterPublicKey"
+   ]
   },
   {
    "table": "26",
@@ -227,7 +335,10 @@
    "caption": "Table 26 - Standard crypt filter names",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CryptFilterMap"
+   ]
   },
   {
    "table": "27",
@@ -235,7 +346,10 @@
    "caption": "Table 27 - Additional crypt filter dictionary entries for public-key security handlers",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CryptFilterPublicKey"
+   ]
   },
   {
    "table": "28",
@@ -243,7 +357,10 @@
    "caption": "Table 28 - Entries in an encrypted payload dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "EncryptedPayload"
+   ]
   },
   {
    "table": "29",
@@ -251,7 +368,15 @@
    "caption": "Table 29 - Entries in the catalog dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfAFFileSpecifications",
+    "ArrayOfOutputIntents",
+    "ArrayOfRequirements",
+    "ArrayOfThreads",
+    "Catalog",
+    "DestsMap"
+   ]
   },
   {
    "table": "30",
@@ -259,7 +384,12 @@
    "caption": "Table 30 - Required entries in a page tree node",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfPageTreeNodeKids",
+    "PageTreeNode",
+    "PageTreeNodeRoot"
+   ]
   },
   {
    "table": "31",
@@ -267,7 +397,14 @@
    "caption": "Table 31 - Entries in a page object",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfAnnots",
+    "ArrayOfBeads",
+    "ArrayOfViewports",
+    "PageObject",
+    "PageTreeNodeRoot"
+   ]
   },
   {
    "table": "32",
@@ -275,7 +412,10 @@
    "caption": "Table 32 - Entries in the name dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Name"
+   ]
   },
   {
    "table": "33",
@@ -283,7 +423,8 @@
    "caption": "Table 33 - Compatibility operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "34",
@@ -291,7 +432,17 @@
    "caption": "Table 34 - Entries in a resource dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfNamesForProcSet",
+    "ColorSpaceMap",
+    "FontMap",
+    "GraphicsStateParameterMap",
+    "PatternMap",
+    "Resource",
+    "ShadingMap",
+    "XObjectMap"
+   ]
   },
   {
    "table": "35",
@@ -299,7 +450,8 @@
    "caption": "Table 35 - PDF data types",
    "inArlington": false,
    "reasonNotInArlington": "Pre-defined Arlington types",
-   "coveredBy": "arlington-builtin"
+   "coveredBy": "arlington-builtin",
+   "arlingtonObjects": []
   },
   {
    "table": "36",
@@ -307,7 +459,8 @@
    "caption": "Table 36 - Entries in a name tree node dictionary",
    "inArlington": false,
    "reasonNotInArlington": "Pre-defined Arlington type \"name-tree\"",
-   "coveredBy": "arlington-builtin"
+   "coveredBy": "arlington-builtin",
+   "arlingtonObjects": []
   },
   {
    "table": "37",
@@ -315,7 +468,8 @@
    "caption": "Table 37 - Entries in a number tree node dictionary",
    "inArlington": false,
    "reasonNotInArlington": "Pre-defined Arlington type \"number-tree\"",
-   "coveredBy": "arlington-builtin"
+   "coveredBy": "arlington-builtin",
+   "arlingtonObjects": []
   },
   {
    "table": "38",
@@ -323,7 +477,13 @@
    "caption": "Table 38 - Entries common to all function dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FunctionType0",
+    "FunctionType2",
+    "FunctionType3",
+    "FunctionType4"
+   ]
   },
   {
    "table": "39",
@@ -331,7 +491,10 @@
    "caption": "Table 39 - Additional entries specific to a Type 0 function dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FunctionType0"
+   ]
   },
   {
    "table": "40",
@@ -339,7 +502,10 @@
    "caption": "Table 40 - Additional entries specific to a Type 2 function dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FunctionType2"
+   ]
   },
   {
    "table": "41",
@@ -347,7 +513,10 @@
    "caption": "Table 41 - Additional entries specific to a Type 3 function dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FunctionType3"
+   ]
   },
   {
    "table": "42",
@@ -355,7 +524,8 @@
    "caption": "Table 42 - Operators in Type 4 functions",
    "inArlington": false,
    "reasonNotInArlington": "Stream content",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "43",
@@ -363,7 +533,14 @@
    "caption": "Table 43 - Entries in a file specification dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AFFileSpecEF",
+    "AFFileSpecification",
+    "FileSpecEF",
+    "FileSpecRF",
+    "FileSpecification"
+   ]
   },
   {
    "table": "44",
@@ -371,7 +548,11 @@
    "caption": "Table 44 - Additional entries in an embedded file stream dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AFEmbeddedFileStream",
+    "EmbeddedFileStream"
+   ]
   },
   {
    "table": "45",
@@ -379,7 +560,11 @@
    "caption": "Table 45 - Entries in an embedded file parameter dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AFEmbeddedFileParameter",
+    "EmbeddedFileParameter"
+   ]
   },
   {
    "table": "46",
@@ -387,7 +572,10 @@
    "caption": "Table 46 - Entries in a collection item dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CollectionItem"
+   ]
   },
   {
    "table": "47",
@@ -395,7 +583,11 @@
    "caption": "Table 47 - Entries in a collection subitem dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CollectionSubitem",
+    "Mac"
+   ]
   },
   {
    "table": "48",
@@ -403,7 +595,10 @@
    "caption": "Table 48 - Entries in an extensions dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Extensions"
+   ]
   },
   {
    "table": "49",
@@ -411,7 +606,11 @@
    "caption": "Table 49 - Entries in a developer extensions dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfDevExtensions",
+    "DevExtensions"
+   ]
   },
   {
    "table": "50",
@@ -419,7 +618,8 @@
    "caption": "Table 50 - Operator categories",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "51",
@@ -427,7 +627,8 @@
    "caption": "Table 51 - Device-independent graphics state parameters",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "52",
@@ -435,7 +636,8 @@
    "caption": "Table 52 - Device-dependent graphics state parameters",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "53",
@@ -443,7 +645,10 @@
    "caption": "Table 53 - Line cap styles",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "GraphicsStateParameter"
+   ]
   },
   {
    "table": "54",
@@ -451,7 +656,10 @@
    "caption": "Table 54 - Line join styles",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "GraphicsStateParameter"
+   ]
   },
   {
    "table": "55",
@@ -459,7 +667,11 @@
    "caption": "Table 55 - Examples of line dash patterns",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfDashPatterns",
+    "ArrayOfGSPDashPatterns"
+   ]
   },
   {
    "table": "56",
@@ -467,7 +679,8 @@
    "caption": "Table 56 - Graphics state operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "57",
@@ -475,7 +688,11 @@
    "caption": "Table 57 - Entries in a graphics state parameter dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfFontAndSize",
+    "GraphicsStateParameter"
+   ]
   },
   {
    "table": "58",
@@ -483,7 +700,8 @@
    "caption": "Table 58 - Path construction operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "59",
@@ -491,7 +709,8 @@
    "caption": "Table 59 - Path-painting operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "60",
@@ -499,7 +718,8 @@
    "caption": "Table 60 - Clipping path operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "61",
@@ -507,7 +727,8 @@
    "caption": "Table 61 - Colour space families",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "62",
@@ -515,7 +736,12 @@
    "caption": "Table 62 - Entries in a CalGray colour space dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "BlackpointArray",
+    "CalGrayDict",
+    "WhitepointArray"
+   ]
   },
   {
    "table": "63",
@@ -523,7 +749,13 @@
    "caption": "Table 63 - Entries in a CalRGB colour space dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "BlackpointArray",
+    "CalRGBDict",
+    "GammaArray",
+    "WhitepointArray"
+   ]
   },
   {
    "table": "64",
@@ -531,7 +763,11 @@
    "caption": "Table 64 - Entries in a Lab colour space dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "LabDict",
+    "LabRangeArray"
+   ]
   },
   {
    "table": "65",
@@ -539,7 +775,10 @@
    "caption": "Table 65 - Additional entries specific to an ICC profile stream dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ICCProfileStream"
+   ]
   },
   {
    "table": "66",
@@ -547,7 +786,8 @@
    "caption": "Table 66 - ICC Specification versions supported by ICC based colour spaces",
    "inArlington": false,
    "reasonNotInArlington": "ICC stream data requirements",
-   "coveredBy": "unrouted"
+   "coveredBy": "unrouted",
+   "arlingtonObjects": []
   },
   {
    "table": "67",
@@ -555,7 +795,8 @@
    "caption": "Table 67 - ICC profile types",
    "inArlington": false,
    "reasonNotInArlington": "ICC stream data requirements",
-   "coveredBy": "unrouted"
+   "coveredBy": "unrouted",
+   "arlingtonObjects": []
   },
   {
    "table": "68",
@@ -563,7 +804,8 @@
    "caption": "Table 68 - Ranges for typical ICC colour spaces",
    "inArlington": false,
    "reasonNotInArlington": "ICC",
-   "coveredBy": "unrouted"
+   "coveredBy": "unrouted",
+   "arlingtonObjects": []
   },
   {
    "table": "69",
@@ -571,7 +813,10 @@
    "caption": "Table 69 - Rendering intents",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "GraphicsStateParameter"
+   ]
   },
   {
    "table": "70",
@@ -579,7 +824,11 @@
    "caption": "Table 70 - Entries in a DeviceN colour space attributes dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ColorantsDict",
+    "DeviceNDict"
+   ]
   },
   {
    "table": "71",
@@ -587,7 +836,10 @@
    "caption": "Table 71 - Entries in a DeviceN process dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "DeviceNProcess"
+   ]
   },
   {
    "table": "72",
@@ -595,7 +847,13 @@
    "caption": "Table 72 - Entries in a DeviceN mixing hints dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfNamesForPrintingOrder",
+    "DeviceNMixingHints",
+    "DictionaryOfFunctions",
+    "Solidities"
+   ]
   },
   {
    "table": "73",
@@ -603,7 +861,8 @@
    "caption": "Table 73 - Colour operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "74",
@@ -611,7 +870,10 @@
    "caption": "Table 74 - Additional entries specific to a Type 1 pattern dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "PatternType1"
+   ]
   },
   {
    "table": "75",
@@ -619,7 +881,10 @@
    "caption": "Table 75 - Entries in a Type 2 pattern dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "PatternType2"
+   ]
   },
   {
    "table": "76",
@@ -627,7 +892,8 @@
    "caption": "Table 76 - Shading operator",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "77",
@@ -635,7 +901,16 @@
    "caption": "Table 77 - Entries common to all shading dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ShadingType1",
+    "ShadingType2",
+    "ShadingType3",
+    "ShadingType4",
+    "ShadingType5",
+    "ShadingType6",
+    "ShadingType7"
+   ]
   },
   {
    "table": "78",
@@ -643,7 +918,10 @@
    "caption": "Table 78 - Additional entries specific to a Type 1 shading dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ShadingType1"
+   ]
   },
   {
    "table": "79",
@@ -651,7 +929,10 @@
    "caption": "Table 79 - Additional entries specific to a Type 2 shading dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ShadingType2"
+   ]
   },
   {
    "table": "80",
@@ -659,7 +940,10 @@
    "caption": "Table 80 - Additional entries specific to a Type 3 shading dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ShadingType3"
+   ]
   },
   {
    "table": "81",
@@ -667,7 +951,10 @@
    "caption": "Table 81 - Additional entries specific to a Type 4 shading dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ShadingType4"
+   ]
   },
   {
    "table": "82",
@@ -675,7 +962,10 @@
    "caption": "Table 82 - Additional entries specific to a Type 5 shading dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ShadingType5"
+   ]
   },
   {
    "table": "83",
@@ -683,7 +973,11 @@
    "caption": "Table 83 - Additional entries specific to a Type 6 shading dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ShadingType6",
+    "ShadingType7"
+   ]
   },
   {
    "table": "84",
@@ -691,7 +985,8 @@
    "caption": "Table 84 - Data Values in a Coons Patch Mesh",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "85",
@@ -699,7 +994,8 @@
    "caption": "Table 85 - Data values in a tensor-product patch mesh",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "86",
@@ -707,7 +1003,8 @@
    "caption": "Table 86 - XObject operator",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "87",
@@ -715,7 +1012,14 @@
    "caption": "Table 87 - Additional entries specific to an image dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfImageAlternates",
+    "Thumbnail",
+    "XObjectImage",
+    "XObjectImageMask",
+    "XObjectImageSoftMask"
+   ]
   },
   {
    "table": "88",
@@ -723,7 +1027,8 @@
    "caption": "Table 88 - Default decode arrays",
    "inArlington": false,
    "reasonNotInArlington": "TBD - difficult to encode into Arlington???",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "89",
@@ -731,7 +1036,10 @@
    "caption": "Table 89 - Entries in an alternate image dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AlternateImage"
+   ]
   },
   {
    "table": "90",
@@ -739,7 +1047,8 @@
    "caption": "Table 90 - Inline image operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "91",
@@ -747,7 +1056,8 @@
    "caption": "Table 91 - Entries in an inline image object",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "92",
@@ -755,7 +1065,8 @@
    "caption": "Table 92 - Additional abbreviations in an inline image object",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "93",
@@ -763,7 +1074,12 @@
    "caption": "Table 93 - Additional entries specific to a Type 1 form dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "XObjectFormPrinterMark",
+    "XObjectFormTrapNet",
+    "XObjectFormType1"
+   ]
   },
   {
    "table": "94",
@@ -771,7 +1087,10 @@
    "caption": "Table 94 - Entries common to all group attributes dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "GroupAttributes"
+   ]
   },
   {
    "table": "95",
@@ -779,7 +1098,10 @@
    "caption": "Table 95 - Entries in a reference dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Reference"
+   ]
   },
   {
    "table": "96",
@@ -787,7 +1109,10 @@
    "caption": "Table 96 - Entries in an optional content group dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "OptContentGroup"
+   ]
   },
   {
    "table": "97",
@@ -795,7 +1120,12 @@
    "caption": "Table 97 - Entries in an optional content membership dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfOCG",
+    "OptContentMembership",
+    "VisibilityExpressionArray"
+   ]
   },
   {
    "table": "98",
@@ -803,7 +1133,12 @@
    "caption": "Table 98 - Entries in the optional content properties dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfOCConfig",
+    "ArrayOfOCGindirect",
+    "OptContentProperties"
+   ]
   },
   {
    "table": "99",
@@ -811,7 +1146,15 @@
    "caption": "Table 99 - Entries in an optional content configuration dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfArraysRBGroups",
+    "ArrayOfOCUsage",
+    "ArrayOfOptContentGroups",
+    "ArrayOfOptContentOrderElements",
+    "ArrayOfOptContentOrders",
+    "OptContentConfig"
+   ]
   },
   {
    "table": "100",
@@ -819,7 +1162,18 @@
    "caption": "Table 100 - Entries in an optional content usage dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "OptContentCreatorInfo",
+    "OptContentExport",
+    "OptContentLanguage",
+    "OptContentPageElement",
+    "OptContentPrint",
+    "OptContentUsage",
+    "OptContentUser",
+    "OptContentView",
+    "OptContentZoom"
+   ]
   },
   {
    "table": "101",
@@ -827,7 +1181,10 @@
    "caption": "Table 101 - Entries in a usage application dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "OptContentUsageApplication"
+   ]
   },
   {
    "table": "102",
@@ -835,7 +1192,8 @@
    "caption": "Table 102 - Text state parameters",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "103",
@@ -843,7 +1201,8 @@
    "caption": "Table 103 - Text state operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "104",
@@ -851,7 +1210,8 @@
    "caption": "Table 104 - Text rendering modes",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "105",
@@ -859,7 +1219,8 @@
    "caption": "Table 105 - Text object operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "106",
@@ -867,7 +1228,8 @@
    "caption": "Table 106 - Text-positioning operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "107",
@@ -875,7 +1237,8 @@
    "caption": "Table 107 - Text-showing operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "108",
@@ -883,7 +1246,8 @@
    "caption": "Table 108 - Font types",
    "inArlington": false,
    "reasonNotInArlington": "Summarized information only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "109",
@@ -891,7 +1255,12 @@
    "caption": "Table 109 - Entries in a Type 1 font dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FontMultipleMaster",
+    "FontTrueType",
+    "FontType1"
+   ]
   },
   {
    "table": "110",
@@ -899,7 +1268,11 @@
    "caption": "Table 110 - Entries in a Type 3 font dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CharProcMap",
+    "FontType3"
+   ]
   },
   {
    "table": "111",
@@ -907,7 +1280,8 @@
    "caption": "Table 111 - Type 3 font operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "112",
@@ -915,7 +1289,11 @@
    "caption": "Table 112 - Entries in an encoding dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfDifferences",
+    "Encoding"
+   ]
   },
   {
    "table": "113",
@@ -923,7 +1301,8 @@
    "caption": "Table 113 - Additional entries in Mac OS Roman encoding not in MacRomanEncoding",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "114",
@@ -931,7 +1310,10 @@
    "caption": "Table 114 - Entries in a CIDSystemInfo dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CIDSystemInfo"
+   ]
   },
   {
    "table": "115",
@@ -939,7 +1321,11 @@
    "caption": "Table 115 - Entries in a CIDFont dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FontCIDType0",
+    "FontCIDType2"
+   ]
   },
   {
    "table": "116",
@@ -947,7 +1333,12 @@
    "caption": "Table 116 - Predefined CJK CMap names",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CMapStream",
+    "FontType0",
+    "ToUnicodeCMapStream"
+   ]
   },
   {
    "table": "117",
@@ -955,7 +1346,8 @@
    "caption": "Table 117 - Character collections for predefined CMaps, by PDF version",
    "inArlington": false,
    "reasonNotInArlington": "Table content deleted in ISO 32000-2:2020",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "118",
@@ -963,7 +1355,10 @@
    "caption": "Table 118 - Additional entries in a CMap stream dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CMapStream"
+   ]
   },
   {
    "table": "119",
@@ -971,7 +1366,11 @@
    "caption": "Table 119 - Entries in a Type 0 font dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfDescendantFonts",
+    "FontType0"
+   ]
   },
   {
    "table": "120",
@@ -979,7 +1378,14 @@
    "caption": "Table 120 - Entries common to all font descriptors",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FontDescriptorCIDType0",
+    "FontDescriptorCIDType2",
+    "FontDescriptorTrueType",
+    "FontDescriptorType1",
+    "FontDescriptorType3"
+   ]
   },
   {
    "table": "121",
@@ -987,7 +1393,15 @@
    "caption": "Table 121 - Font flags",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CIDFontDescriptorMetrics",
+    "FontDescriptorCIDType0",
+    "FontDescriptorCIDType2",
+    "FontDescriptorTrueType",
+    "FontDescriptorType1",
+    "FontDescriptorType3"
+   ]
   },
   {
    "table": "122",
@@ -995,7 +1409,12 @@
    "caption": "Table 122 - Additional font descriptor entries for CIDFonts",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FDDict",
+    "FontDescriptorCIDType0",
+    "FontDescriptorCIDType2"
+   ]
   },
   {
    "table": "123",
@@ -1003,7 +1422,8 @@
    "caption": "Table 123 - Glyph classes in CJK fonts",
    "inArlington": false,
    "reasonNotInArlington": "TBD??",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "124",
@@ -1011,7 +1431,13 @@
    "caption": "Table 124 - Embedded font organisation for various font types",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FontDescriptorCIDType0",
+    "FontDescriptorCIDType2",
+    "FontDescriptorTrueType",
+    "FontDescriptorType1"
+   ]
   },
   {
    "table": "125",
@@ -1019,7 +1445,15 @@
    "caption": "Table 125 - Additional entries in an embedded font stream dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FontFile",
+    "FontFile2",
+    "FontFile3CIDType0",
+    "FontFile3OpenType",
+    "FontFile3Type1",
+    "FontFileType1"
+   ]
   },
   {
    "table": "126",
@@ -1027,7 +1461,8 @@
    "caption": "Table 126 - Predefined spot functions",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "127",
@@ -1035,7 +1470,8 @@
    "caption": "Table 127 - PDF halftone types",
    "inArlington": false,
    "reasonNotInArlington": "Summarized information only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "128",
@@ -1043,7 +1479,10 @@
    "caption": "Table 128 - Entries in a Type 1 halftone dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "HalftoneType1"
+   ]
   },
   {
    "table": "129",
@@ -1051,7 +1490,10 @@
    "caption": "Table 129 - Additional entries specific to a Type 6 halftone dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "HalftoneType6"
+   ]
   },
   {
    "table": "130",
@@ -1059,7 +1501,10 @@
    "caption": "Table 130 - Additional entries specific to a Type 10 halftone dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "HalftoneType10"
+   ]
   },
   {
    "table": "131",
@@ -1067,7 +1512,10 @@
    "caption": "Table 131 - Additional entries specific to a Type 16 halftone dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "HalftoneType16"
+   ]
   },
   {
    "table": "132",
@@ -1075,7 +1523,10 @@
    "caption": "Table 132 - Entries in a Type 5 halftone dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "HalftoneType5"
+   ]
   },
   {
    "table": "133",
@@ -1083,7 +1534,8 @@
    "caption": "Table 133 - Variables used in the basic compositing formula",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "134",
@@ -1091,7 +1543,39 @@
    "caption": "Table 134 - Standard separable blend modes",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Annot3D",
+    "AnnotCaret",
+    "AnnotCircle",
+    "AnnotFileAttachment",
+    "AnnotFreeText",
+    "AnnotHighlight",
+    "AnnotInk",
+    "AnnotLine",
+    "AnnotLink",
+    "AnnotMovie",
+    "AnnotPolyLine",
+    "AnnotPolygon",
+    "AnnotPopup",
+    "AnnotPrinterMark",
+    "AnnotProjection",
+    "AnnotRedact",
+    "AnnotRichMedia",
+    "AnnotScreen",
+    "AnnotSound",
+    "AnnotSquare",
+    "AnnotSquiggly",
+    "AnnotStamp",
+    "AnnotStrikeOut",
+    "AnnotText",
+    "AnnotTrapNetwork",
+    "AnnotUnderline",
+    "AnnotWatermark",
+    "AnnotWidget",
+    "ArrayOfBlendModes",
+    "GraphicsStateParameter"
+   ]
   },
   {
    "table": "135",
@@ -1099,7 +1583,39 @@
    "caption": "Table 135 - Standard non-separable blend modes",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Annot3D",
+    "AnnotCaret",
+    "AnnotCircle",
+    "AnnotFileAttachment",
+    "AnnotFreeText",
+    "AnnotHighlight",
+    "AnnotInk",
+    "AnnotLine",
+    "AnnotLink",
+    "AnnotMovie",
+    "AnnotPolyLine",
+    "AnnotPolygon",
+    "AnnotPopup",
+    "AnnotPrinterMark",
+    "AnnotProjection",
+    "AnnotRedact",
+    "AnnotRichMedia",
+    "AnnotScreen",
+    "AnnotSound",
+    "AnnotSquare",
+    "AnnotSquiggly",
+    "AnnotStamp",
+    "AnnotStrikeOut",
+    "AnnotText",
+    "AnnotTrapNetwork",
+    "AnnotUnderline",
+    "AnnotWatermark",
+    "AnnotWidget",
+    "ArrayOfBlendModes",
+    "GraphicsStateParameter"
+   ]
   },
   {
    "table": "136",
@@ -1107,7 +1623,8 @@
    "caption": "Table 136 - Variables used in the source shape and opacity formulas",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "137",
@@ -1115,7 +1632,8 @@
    "caption": "Table 137 - Variables used in the result shape and opacity formulas",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "138",
@@ -1123,7 +1641,8 @@
    "caption": "Table 138 - Revised variables for the basic compositing formulas",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "139",
@@ -1131,7 +1650,8 @@
    "caption": "Table 139 - Arguments and results of the group compositing function",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "140",
@@ -1139,7 +1659,8 @@
    "caption": "Table 140 - Variables used in the group compositing formulas",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "141",
@@ -1147,7 +1668,8 @@
    "caption": "Table 141 - Variables used in the page group compositing formulas",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "142",
@@ -1155,7 +1677,11 @@
    "caption": "Table 142 - Entries in a soft-mask dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "SoftMaskAlpha",
+    "SoftMaskLuminosity"
+   ]
   },
   {
    "table": "143",
@@ -1163,7 +1689,10 @@
    "caption": "Table 143 - Restrictions on the entries in a soft-mask image dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "XObjectImageSoftMask"
+   ]
   },
   {
    "table": "144",
@@ -1171,7 +1700,10 @@
    "caption": "Table 144 - Additional entry in a soft-mask image dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "XObjectImageSoftMask"
+   ]
   },
   {
    "table": "145",
@@ -1179,7 +1711,10 @@
    "caption": "Table 145 - Additional entries specific to a transparency group attributes dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "GroupAttributes"
+   ]
   },
   {
    "table": "146",
@@ -1187,7 +1722,8 @@
    "caption": "Table 146 - Overprinting behaviour in the transparent imaging model",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "147",
@@ -1195,7 +1731,10 @@
    "caption": "Table 147 - Entries in a viewer preferences dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ViewerPreferences"
+   ]
   },
   {
    "table": "148",
@@ -1203,7 +1742,10 @@
    "caption": "Table 148 - Names defined for an Enforce array",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfNamesForEnforce"
+   ]
   },
   {
    "table": "149",
@@ -1211,7 +1753,17 @@
    "caption": "Table 149 - Destination syntax",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Dest0Array",
+    "Dest0StructArray",
+    "Dest1Array",
+    "Dest1StructArray",
+    "Dest4Array",
+    "Dest4StructArray",
+    "DestXYZArray",
+    "DestXYZStructArray"
+   ]
   },
   {
    "table": "150",
@@ -1219,7 +1771,10 @@
    "caption": "Table 150 - Entries in the outline dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Outline"
+   ]
   },
   {
    "table": "151",
@@ -1227,7 +1782,10 @@
    "caption": "Table 151 - Entries in an outline item dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "OutlineItem"
+   ]
   },
   {
    "table": "152",
@@ -1235,7 +1793,10 @@
    "caption": "Table 152 - Outline item flags",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "OutlineItem"
+   ]
   },
   {
    "table": "153",
@@ -1243,7 +1804,10 @@
    "caption": "Table 153 - Entries in a collection dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Collection"
+   ]
   },
   {
    "table": "154",
@@ -1251,7 +1815,10 @@
    "caption": "Table 154 - Entries in a collection schema dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CollectionSchema"
+   ]
   },
   {
    "table": "155",
@@ -1259,7 +1826,10 @@
    "caption": "Table 155 - Entries in a collection field dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CollectionField"
+   ]
   },
   {
    "table": "156",
@@ -1267,7 +1837,10 @@
    "caption": "Table 156 - Entries in a collection sort dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CollectionSort"
+   ]
   },
   {
    "table": "157",
@@ -1275,7 +1848,10 @@
    "caption": "Table 157 - Entries in a collection colors dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CollectionColors"
+   ]
   },
   {
    "table": "158",
@@ -1283,7 +1859,10 @@
    "caption": "Table 158 - Entries in a collection split dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CollectionSplit"
+   ]
   },
   {
    "table": "159",
@@ -1291,7 +1870,10 @@
    "caption": "Table 159 - Entries in a folder dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "CollectionFolder"
+   ]
   },
   {
    "table": "160",
@@ -1299,7 +1881,11 @@
    "caption": "Table 160 - Entries in a navigator dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfNavigatorLayoutNames",
+    "Navigator"
+   ]
   },
   {
    "table": "161",
@@ -1307,7 +1893,10 @@
    "caption": "Table 161 - Entries in a page label dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "PageLabel"
+   ]
   },
   {
    "table": "162",
@@ -1315,7 +1904,10 @@
    "caption": "Table 162 - Entries in a thread dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Thread"
+   ]
   },
   {
    "table": "163",
@@ -1323,7 +1915,11 @@
    "caption": "Table 163 - Entries in a bead dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Bead",
+    "BeadFirst"
+   ]
   },
   {
    "table": "164",
@@ -1331,7 +1927,10 @@
    "caption": "Table 164 - Entries in a transition dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Transition"
+   ]
   },
   {
    "table": "165",
@@ -1339,7 +1938,10 @@
    "caption": "Table 165 - Entries in a navigation node dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "NavNode"
+   ]
   },
   {
    "table": "166",
@@ -1347,7 +1949,40 @@
    "caption": "Table 166 - Entries common to all annotation dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Annot3D",
+    "AnnotCaret",
+    "AnnotCircle",
+    "AnnotFileAttachment",
+    "AnnotFreeText",
+    "AnnotHighlight",
+    "AnnotInk",
+    "AnnotLine",
+    "AnnotLink",
+    "AnnotMovie",
+    "AnnotPolyLine",
+    "AnnotPolygon",
+    "AnnotPopup",
+    "AnnotPrinterMark",
+    "AnnotProjection",
+    "AnnotRedact",
+    "AnnotRichMedia",
+    "AnnotScreen",
+    "AnnotSound",
+    "AnnotSquare",
+    "AnnotSquiggly",
+    "AnnotStamp",
+    "AnnotStrikeOut",
+    "AnnotText",
+    "AnnotUnderline",
+    "AnnotWatermark",
+    "AnnotWidget",
+    "ArrayOf_2DashNumbers",
+    "ArrayOf_4AnnotBorderCharacteristics",
+    "ArrayOf_4ColourSpaceEntries",
+    "ArrayOf_4NumbersColorAnnotation"
+   ]
   },
   {
    "table": "167",
@@ -1355,7 +1990,37 @@
    "caption": "Table 167 - Annotation flags",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Annot3D",
+    "AnnotCaret",
+    "AnnotCircle",
+    "AnnotFileAttachment",
+    "AnnotFreeText",
+    "AnnotHighlight",
+    "AnnotInk",
+    "AnnotLine",
+    "AnnotLink",
+    "AnnotMovie",
+    "AnnotPolyLine",
+    "AnnotPolygon",
+    "AnnotPopup",
+    "AnnotPrinterMark",
+    "AnnotProjection",
+    "AnnotRedact",
+    "AnnotRichMedia",
+    "AnnotScreen",
+    "AnnotSound",
+    "AnnotSquare",
+    "AnnotSquiggly",
+    "AnnotStamp",
+    "AnnotStrikeOut",
+    "AnnotText",
+    "AnnotTrapNetwork",
+    "AnnotUnderline",
+    "AnnotWatermark",
+    "AnnotWidget"
+   ]
   },
   {
    "table": "168",
@@ -1363,7 +2028,10 @@
    "caption": "Table 168 - Entries in a border style dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "BorderStyle"
+   ]
   },
   {
    "table": "169",
@@ -1371,7 +2039,10 @@
    "caption": "Table 169 - Entries in a border effect dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "BorderEffect"
+   ]
   },
   {
    "table": "170",
@@ -1379,7 +2050,15 @@
    "caption": "Table 170 - Entries in an appearance dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Appearance",
+    "AppearancePrinterMark",
+    "AppearancePrinterMarkSubDict",
+    "AppearanceSubDict",
+    "AppearanceTrapNet",
+    "AppearanceTrapNetSubDict"
+   ]
   },
   {
    "table": "171",
@@ -1387,7 +2066,8 @@
    "caption": "Table 171 - Annotation types",
    "inArlington": false,
    "reasonNotInArlington": "Summarized information only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "172",
@@ -1395,7 +2075,27 @@
    "caption": "Table 172 - Additional entries in an annotation dictionary specific to markup annotations",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotCaret",
+    "AnnotCircle",
+    "AnnotFileAttachment",
+    "AnnotFreeText",
+    "AnnotHighlight",
+    "AnnotInk",
+    "AnnotLine",
+    "AnnotPolyLine",
+    "AnnotPolygon",
+    "AnnotProjection",
+    "AnnotRedact",
+    "AnnotSound",
+    "AnnotSquare",
+    "AnnotSquiggly",
+    "AnnotStamp",
+    "AnnotStrikeOut",
+    "AnnotText",
+    "AnnotUnderline"
+   ]
   },
   {
    "table": "173",
@@ -1403,7 +2103,10 @@
    "caption": "Table 173 - Additional entries in markup annotation dictionaries specific to external data",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ExDataMarkupGeo"
+   ]
   },
   {
    "table": "174",
@@ -1411,7 +2114,10 @@
    "caption": "Table 174 - Annotation states",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotText"
+   ]
   },
   {
    "table": "175",
@@ -1419,7 +2125,10 @@
    "caption": "Table 175 - Additional entries specific to a text annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotText"
+   ]
   },
   {
    "table": "176",
@@ -1427,7 +2136,11 @@
    "caption": "Table 176 - Additional entries specific to a link annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotLink",
+    "ArrayOfQuadPoints"
+   ]
   },
   {
    "table": "177",
@@ -1435,7 +2148,10 @@
    "caption": "Table 177 - Additional entries specific to a free text annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotFreeText"
+   ]
   },
   {
    "table": "178",
@@ -1443,7 +2159,10 @@
    "caption": "Table 178 - Additional entries specific to a line annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotLine"
+   ]
   },
   {
    "table": "179",
@@ -1451,7 +2170,10 @@
    "caption": "Table 179 - Line ending styles",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOf_2LineEndingsNames"
+   ]
   },
   {
    "table": "180",
@@ -1459,7 +2181,11 @@
    "caption": "Table 180 - Additional entries specific to a square or circle annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotCircle",
+    "AnnotSquare"
+   ]
   },
   {
    "table": "181",
@@ -1467,7 +2193,13 @@
    "caption": "Table 181 - Additional entries specific to a polygon or polyline annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotPolyLine",
+    "AnnotPolygon",
+    "ArrayOfArraysPaths",
+    "ArrayOfPaths"
+   ]
   },
   {
    "table": "182",
@@ -1475,7 +2207,14 @@
    "caption": "Table 182 - Additional entries specific to text markup annotations",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotHighlight",
+    "AnnotSquiggly",
+    "AnnotStrikeOut",
+    "AnnotUnderline",
+    "ArrayOfQuadPoints"
+   ]
   },
   {
    "table": "183",
@@ -1483,7 +2222,10 @@
    "caption": "Table 183 - Additional entries specific to a caret annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotCaret"
+   ]
   },
   {
    "table": "184",
@@ -1491,7 +2233,10 @@
    "caption": "Table 184 - Additional entries specific to a rubber stamp annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotStamp"
+   ]
   },
   {
    "table": "185",
@@ -1499,7 +2244,12 @@
    "caption": "Table 185 - Additional entries specific to an ink annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotInk",
+    "ArrayOfArraysPaths",
+    "ArrayOfPaths"
+   ]
   },
   {
    "table": "186",
@@ -1507,7 +2257,10 @@
    "caption": "Table 186 - Additional entries specific to a popup annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotPopup"
+   ]
   },
   {
    "table": "187",
@@ -1515,7 +2268,10 @@
    "caption": "Table 187 - Additional entries specific to a file attachment annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotFileAttachment"
+   ]
   },
   {
    "table": "188",
@@ -1523,7 +2279,10 @@
    "caption": "Table 188 - Additional entries specific to a sound annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotSound"
+   ]
   },
   {
    "table": "189",
@@ -1531,7 +2290,10 @@
    "caption": "Table 189 - Additional entries specific to a movie annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotMovie"
+   ]
   },
   {
    "table": "190",
@@ -1539,7 +2301,10 @@
    "caption": "Table 190 - Additional entries specific to a screen annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotScreen"
+   ]
   },
   {
    "table": "191",
@@ -1547,7 +2312,10 @@
    "caption": "Table 191 - Additional entries specific to a widget annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotWidget"
+   ]
   },
   {
    "table": "192",
@@ -1555,7 +2323,10 @@
    "caption": "Table 192 - Entries in an appearance characteristics dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AppearanceCharacteristics"
+   ]
   },
   {
    "table": "193",
@@ -1563,7 +2334,10 @@
    "caption": "Table 193 - Additional entries specific to a watermark annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotWatermark"
+   ]
   },
   {
    "table": "194",
@@ -1571,7 +2345,10 @@
    "caption": "Table 194 - Entries in a fixed print dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FixedPrint"
+   ]
   },
   {
    "table": "195",
@@ -1579,7 +2356,11 @@
    "caption": "Table 195 - Additional entries specific to a redaction annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotRedact",
+    "ArrayOfQuadPoints"
+   ]
   },
   {
    "table": "196",
@@ -1587,7 +2368,29 @@
    "caption": "Table 196 - Entries common to all action dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionECMAScript",
+    "ActionGoTo",
+    "ActionGoTo3DView",
+    "ActionGoToDp",
+    "ActionGoToE",
+    "ActionGoToR",
+    "ActionHide",
+    "ActionImportData",
+    "ActionLaunch",
+    "ActionMovie",
+    "ActionNamed",
+    "ActionRendition",
+    "ActionResetForm",
+    "ActionRichMediaExecute",
+    "ActionSetOCGState",
+    "ActionSound",
+    "ActionSubmitForm",
+    "ActionThread",
+    "ActionTransition",
+    "ActionURI"
+   ]
   },
   {
    "table": "197",
@@ -1595,7 +2398,11 @@
    "caption": "Table 197 - Entries in an annotation's additional-actions dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AddActionScreenAnnotation",
+    "AddActionWidgetAnnotation"
+   ]
   },
   {
    "table": "198",
@@ -1603,7 +2410,10 @@
    "caption": "Table 198 - Entries in a page object's additional-actions dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AddActionPageObject"
+   ]
   },
   {
    "table": "199",
@@ -1611,7 +2421,10 @@
    "caption": "Table 199 - Entries in a form field's additional-actions dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AddActionFormField"
+   ]
   },
   {
    "table": "200",
@@ -1619,7 +2432,10 @@
    "caption": "Table 200 - Entries in the document catalog's additional-actions dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AddActionCatalog"
+   ]
   },
   {
    "table": "201",
@@ -1627,7 +2443,10 @@
    "caption": "Table 201 - Action types",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionNamed"
+   ]
   },
   {
    "table": "202",
@@ -1635,7 +2454,10 @@
    "caption": "Table 202 - Additional entries specific to a go-to action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionGoTo"
+   ]
   },
   {
    "table": "203",
@@ -1643,7 +2465,10 @@
    "caption": "Table 203 - Additional entries specific to a remote go-to action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionGoToR"
+   ]
   },
   {
    "table": "204",
@@ -1651,7 +2476,10 @@
    "caption": "Table 204 - Additional entries specific to an embedded go-to action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionGoToE"
+   ]
   },
   {
    "table": "205",
@@ -1659,7 +2487,11 @@
    "caption": "Table 205 - Entries specific to a target dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Target",
+    "TargetEmbedded"
+   ]
   },
   {
    "table": "206",
@@ -1667,7 +2499,10 @@
    "caption": "Table 206 - Entries in a GoToDp dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionGoToDp"
+   ]
   },
   {
    "table": "207",
@@ -1675,7 +2510,10 @@
    "caption": "Table 207 - Additional entries specific to a launch action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionLaunch"
+   ]
   },
   {
    "table": "208",
@@ -1683,7 +2521,10 @@
    "caption": "Table 208 - Entries in a Microsoft WindowsTM launch parameter dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MicrosoftWindowsLaunchParam"
+   ]
   },
   {
    "table": "209",
@@ -1691,7 +2532,10 @@
    "caption": "Table 209 - Additional entries specific to a thread action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionThread"
+   ]
   },
   {
    "table": "210",
@@ -1699,7 +2543,10 @@
    "caption": "Table 210 - Additional entries specific to a URI action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionURI"
+   ]
   },
   {
    "table": "211",
@@ -1707,7 +2554,10 @@
    "caption": "Table 211 - Entry in a URI dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "URI"
+   ]
   },
   {
    "table": "212",
@@ -1715,7 +2565,10 @@
    "caption": "Table 212 - Additional entries specific to a sound action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionSound"
+   ]
   },
   {
    "table": "213",
@@ -1723,7 +2576,10 @@
    "caption": "Table 213 - Additional entries specific to a movie action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionMovie"
+   ]
   },
   {
    "table": "214",
@@ -1731,7 +2587,11 @@
    "caption": "Table 214 - Additional entries specific to a hide action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionHide",
+    "ArrayOfActionHideAnnots"
+   ]
   },
   {
    "table": "215",
@@ -1739,7 +2599,10 @@
    "caption": "Table 215 - Named actions",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionNamed"
+   ]
   },
   {
    "table": "216",
@@ -1747,7 +2610,10 @@
    "caption": "Table 216 - Additional entries specific to named actions",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionNamed"
+   ]
   },
   {
    "table": "217",
@@ -1755,7 +2621,11 @@
    "caption": "Table 217 - Additional entries specific to a set-OCG-state action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionSetOCGState",
+    "ArrayOfOCGState"
+   ]
   },
   {
    "table": "218",
@@ -1763,7 +2633,10 @@
    "caption": "Table 218 - Additional entries specific to a rendition action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionRendition"
+   ]
   },
   {
    "table": "219",
@@ -1771,7 +2644,10 @@
    "caption": "Table 219 - Additional entries specific to a transition action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionTransition"
+   ]
   },
   {
    "table": "220",
@@ -1779,7 +2655,10 @@
    "caption": "Table 220 - Additional entries specific to a go-to-3D-view action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionGoTo3DView"
+   ]
   },
   {
    "table": "221",
@@ -1787,7 +2666,10 @@
    "caption": "Table 221 - Additional entries specific to an ECMAScript action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionECMAScript"
+   ]
   },
   {
    "table": "222",
@@ -1795,7 +2677,10 @@
    "caption": "Table 222 - Additional entries specific to a rich-media-execute action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionRichMediaExecute"
+   ]
   },
   {
    "table": "223",
@@ -1803,7 +2688,11 @@
    "caption": "Table 223 - Entries in a RichMediaCommand dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RichMediaCommand",
+    "RichMediaCommandArray"
+   ]
   },
   {
    "table": "224",
@@ -1811,7 +2700,11 @@
    "caption": "Table 224 - Entries in the interactive form dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfXFA",
+    "InteractiveForm"
+   ]
   },
   {
    "table": "225",
@@ -1819,7 +2712,10 @@
    "caption": "Table 225 - Signature flags",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "InteractiveForm"
+   ]
   },
   {
    "table": "226",
@@ -1827,7 +2723,17 @@
    "caption": "Table 226 - Entries common to all field dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotWidget",
+    "Field",
+    "FieldBtnCheckbox",
+    "FieldBtnPush",
+    "FieldBtnRadio",
+    "FieldChoice",
+    "FieldSig",
+    "FieldTx"
+   ]
   },
   {
    "table": "227",
@@ -1835,7 +2741,12 @@
    "caption": "Table 227 - Field flags common to all field types",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FieldBtnCheckbox",
+    "FieldBtnPush",
+    "FieldBtnRadio"
+   ]
   },
   {
    "table": "228",
@@ -1843,7 +2754,11 @@
    "caption": "Table 228 - Additional entries common to all fields containing variable text",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FieldSig",
+    "FieldTx"
+   ]
   },
   {
    "table": "229",
@@ -1851,7 +2766,12 @@
    "caption": "Table 229 - Field flags specific to button fields",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FieldBtnCheckbox",
+    "FieldBtnPush",
+    "FieldBtnRadio"
+   ]
   },
   {
    "table": "230",
@@ -1859,7 +2779,11 @@
    "caption": "Table 230 - Additional entry specific to check box and radio button fields",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FieldBtnCheckbox",
+    "FieldBtnRadio"
+   ]
   },
   {
    "table": "231",
@@ -1867,7 +2791,10 @@
    "caption": "Table 231 - Field flags specific to text fields",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FieldTx"
+   ]
   },
   {
    "table": "232",
@@ -1875,7 +2802,10 @@
    "caption": "Table 232 - Additional entry specific to a text field",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FieldTx"
+   ]
   },
   {
    "table": "233",
@@ -1883,7 +2813,10 @@
    "caption": "Table 233 - Field flags specific to choice fields",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FieldChoice"
+   ]
   },
   {
    "table": "234",
@@ -1891,7 +2824,11 @@
    "caption": "Table 234 - Additional entries specific to a choice field",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfFieldChoiceOpt",
+    "FieldChoice"
+   ]
   },
   {
    "table": "235",
@@ -1899,7 +2836,10 @@
    "caption": "Table 235 - Additional entries specific to a signature field",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FieldSig"
+   ]
   },
   {
    "table": "236",
@@ -1907,7 +2847,10 @@
    "caption": "Table 236 - Entries in a signature field lock dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "SigFieldLock"
+   ]
   },
   {
    "table": "237",
@@ -1915,7 +2858,14 @@
    "caption": "Table 237 - Entries in a signature field seed value dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfDigestMethod",
+    "ArrayOfSignatureSubFilterNames",
+    "MDPDict",
+    "SigFieldSeedValue",
+    "TimeStampDict"
+   ]
   },
   {
    "table": "238",
@@ -1923,7 +2873,12 @@
    "caption": "Table 238 - Entries in a certificate seed value dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfSubjectDN",
+    "CertSeedValue",
+    "SubjectDN"
+   ]
   },
   {
    "table": "239",
@@ -1931,7 +2886,10 @@
    "caption": "Table 239 - Additional entries specific to a submit-form action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionSubmitForm"
+   ]
   },
   {
    "table": "240",
@@ -1939,7 +2897,10 @@
    "caption": "Table 240 - Flags for submit-form actions",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionSubmitForm"
+   ]
   },
   {
    "table": "241",
@@ -1947,7 +2908,10 @@
    "caption": "Table 241 - Additional entries specific to a reset-form action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionResetForm"
+   ]
   },
   {
    "table": "242",
@@ -1955,7 +2919,10 @@
    "caption": "Table 242 - Flag for reset-form actions",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionResetForm"
+   ]
   },
   {
    "table": "243",
@@ -1963,7 +2930,10 @@
    "caption": "Table 243 - Additional entries specific to an import-data action",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ActionImportData"
+   ]
   },
   {
    "table": "244",
@@ -1971,7 +2941,8 @@
    "caption": "Table 244 - Entry in the FDF trailer dictionary",
    "inArlington": false,
    "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "245",
@@ -1979,7 +2950,8 @@
    "caption": "Table 245 - Entries in the FDF catalog dictionary",
    "inArlington": false,
    "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "246",
@@ -1987,7 +2959,8 @@
    "caption": "Table 246 - Entries in the FDF dictionary",
    "inArlington": false,
    "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "247",
@@ -1995,7 +2968,8 @@
    "caption": "Table 247 - Additional entry in an embedded file stream dictionary for an encrypted FDF file",
    "inArlington": false,
    "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "248",
@@ -2003,7 +2977,8 @@
    "caption": "Table 248 - Entries in the ECMAScript dictionary",
    "inArlington": false,
    "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "249",
@@ -2011,7 +2986,8 @@
    "caption": "Table 249 - Entries in an FDF field dictionary",
    "inArlington": false,
    "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "250",
@@ -2019,7 +2995,10 @@
    "caption": "Table 250 - Entries in an icon fit dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "IconFit"
+   ]
   },
   {
    "table": "251",
@@ -2027,7 +3006,8 @@
    "caption": "Table 251 - Entries in an FDF page dictionary",
    "inArlington": false,
    "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "252",
@@ -2035,7 +3015,8 @@
    "caption": "Table 252 - Entries in an FDF template dictionary",
    "inArlington": false,
    "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "253",
@@ -2043,7 +3024,8 @@
    "caption": "Table 253 - Entries in an FDF named page reference dictionary",
    "inArlington": false,
    "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "254",
@@ -2051,7 +3033,8 @@
    "caption": "Table 254 - Additional entry for annotation dictionaries in an FDF file",
    "inArlington": false,
    "reasonNotInArlington": "TBD - FDF is not yet supported by Arlington",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "255",
@@ -2059,7 +3042,12 @@
    "caption": "Table 255 - Entries in a signature dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfSignatureReferences",
+    "DocTimeStamp",
+    "Signature"
+   ]
   },
   {
    "table": "256",
@@ -2067,7 +3055,13 @@
    "caption": "Table 256 - Entries in a signature reference dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "SignatureReferenceDocMDP",
+    "SignatureReferenceFieldMDP",
+    "SignatureReferenceIdentity",
+    "SignatureReferenceUR"
+   ]
   },
   {
    "table": "257",
@@ -2075,7 +3069,10 @@
    "caption": "Table 257 - Entries in the DocMDP transform parameters dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "DocMDPTransformParameters"
+   ]
   },
   {
    "table": "258",
@@ -2083,7 +3080,15 @@
    "caption": "Table 258 - Entries in the UR transform parameters dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "URTransformParamAnnotsArray",
+    "URTransformParamDocumentArray",
+    "URTransformParamEFArray",
+    "URTransformParamFormArray",
+    "URTransformParamSignatureArray",
+    "URTransformParameters"
+   ]
   },
   {
    "table": "259",
@@ -2091,7 +3096,10 @@
    "caption": "Table 259 - Entries in the FieldMDP transform parameters dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FieldMDPTransformParameters"
+   ]
   },
   {
    "table": "260",
@@ -2099,7 +3107,12 @@
    "caption": "Table 260 - SubFilter value algorithm support",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfSignatureSubFilterNames",
+    "CertSeedValue",
+    "Signature"
+   ]
   },
   {
    "table": "261",
@@ -2107,7 +3120,11 @@
    "caption": "Table 261 - Entries in the document security store (DSS) dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "DSS",
+    "VRIMap"
+   ]
   },
   {
    "table": "262",
@@ -2115,7 +3132,10 @@
    "caption": "Table 262 - Entries in the signature validation-related information (VRI) dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "VRI"
+   ]
   },
   {
    "table": "263",
@@ -2123,7 +3143,10 @@
    "caption": "Table 263 - Entries in a permissions dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Permissions"
+   ]
   },
   {
    "table": "264",
@@ -2131,7 +3154,10 @@
    "caption": "Table 264 - Entries in a legal attestation dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "LegalAttestation"
+   ]
   },
   {
    "table": "265",
@@ -2139,7 +3165,10 @@
    "caption": "Table 265 - Entries in a viewport dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Viewport"
+   ]
   },
   {
    "table": "266",
@@ -2147,7 +3176,11 @@
    "caption": "Table 266 - Entries in a measure dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MeasureGEO",
+    "MeasureRL"
+   ]
   },
   {
    "table": "267",
@@ -2155,7 +3188,11 @@
    "caption": "Table 267 - Additional entries in a rectilinear measure dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfNumberFormats",
+    "MeasureRL"
+   ]
   },
   {
    "table": "268",
@@ -2163,7 +3200,10 @@
    "caption": "Table 268 - Entries in a number format dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "NumberFormat"
+   ]
   },
   {
    "table": "269",
@@ -2171,7 +3211,12 @@
    "caption": "Table 269 - Additional entries in a geospatial measure dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOf3DTransMatrix",
+    "ArrayOf3PDUNames",
+    "MeasureGEO"
+   ]
   },
   {
    "table": "270",
@@ -2179,7 +3224,10 @@
    "caption": "Table 270 - Entries in a geographic coordinate system dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "GeographicCoordinateSystem"
+   ]
   },
   {
    "table": "271",
@@ -2187,7 +3235,10 @@
    "caption": "Table 271 - Entries in a projected coordinate system dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ProjectedCoordinateSystem"
+   ]
   },
   {
    "table": "272",
@@ -2195,7 +3246,13 @@
    "caption": "Table 272 - Entries in a point data dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfArraysXPTSValues",
+    "ArrayOfNamesInPtData",
+    "ArrayOfXPTSValues",
+    "PointData"
+   ]
   },
   {
    "table": "273",
@@ -2203,7 +3260,37 @@
    "caption": "Table 273 - Entries common to all requirement dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfRequirementsHandlers",
+    "Requirements3DMarkup",
+    "RequirementsAcroFormInteract",
+    "RequirementsAction",
+    "RequirementsAttachment",
+    "RequirementsAttachmentEditing",
+    "RequirementsCollection",
+    "RequirementsCollectionEditing",
+    "RequirementsDPartInteract",
+    "RequirementsDigSig",
+    "RequirementsDigSigMDP",
+    "RequirementsDigSigValidation",
+    "RequirementsEnableJavaScripts",
+    "RequirementsEncryption",
+    "RequirementsGeospatial2D",
+    "RequirementsGeospatial3D",
+    "RequirementsMarkup",
+    "RequirementsMultimedia",
+    "RequirementsNavigation",
+    "RequirementsOCAutoStates",
+    "RequirementsOCInteract",
+    "RequirementsPRC",
+    "RequirementsRichMedia",
+    "RequirementsSTEP",
+    "RequirementsSeparationSimulation",
+    "RequirementsTransitions",
+    "RequirementsU3D",
+    "RequirementsglTF"
+   ]
   },
   {
    "table": "274",
@@ -2211,7 +3298,13 @@
    "caption": "Table 274 - Entries for specific types of requirements",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RequirementsDigSig",
+    "RequirementsDigSigMDP",
+    "RequirementsDigSigValidation",
+    "RequirementsEncryption"
+   ]
   },
   {
    "table": "275",
@@ -2219,7 +3312,34 @@
    "caption": "Table 275 - Requirement types",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Requirements3DMarkup",
+    "RequirementsAcroFormInteract",
+    "RequirementsAction",
+    "RequirementsAttachment",
+    "RequirementsAttachmentEditing",
+    "RequirementsCollection",
+    "RequirementsCollectionEditing",
+    "RequirementsDPartInteract",
+    "RequirementsDigSig",
+    "RequirementsDigSigMDP",
+    "RequirementsDigSigValidation",
+    "RequirementsEnableJavaScripts",
+    "RequirementsEncryption",
+    "RequirementsGeospatial2D",
+    "RequirementsGeospatial3D",
+    "RequirementsMarkup",
+    "RequirementsMultimedia",
+    "RequirementsNavigation",
+    "RequirementsOCAutoStates",
+    "RequirementsOCInteract",
+    "RequirementsPRC",
+    "RequirementsRichMedia",
+    "RequirementsSeparationSimulation",
+    "RequirementsTransitions",
+    "RequirementsU3D"
+   ]
   },
   {
    "table": "276",
@@ -2227,7 +3347,10 @@
    "caption": "Table 276 - Entries in a requirement handler dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RequirementsHandler"
+   ]
   },
   {
    "table": "277",
@@ -2235,7 +3358,11 @@
    "caption": "Table 277 - Entries common to all rendition dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RenditionMedia",
+    "RenditionSelector"
+   ]
   },
   {
    "table": "278",
@@ -2243,7 +3370,11 @@
    "caption": "Table 278 - Entries in a rendition MH/BE dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RenditionBE",
+    "RenditionMH"
+   ]
   },
   {
    "table": "279",
@@ -2251,7 +3382,11 @@
    "caption": "Table 279 - Entries in a media criteria dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfSoftwareIdentifiers",
+    "MediaCriteria"
+   ]
   },
   {
    "table": "280",
@@ -2259,7 +3394,10 @@
    "caption": "Table 280 - Entries in a minimum bit depth dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MinimumBitDepth"
+   ]
   },
   {
    "table": "281",
@@ -2267,7 +3405,10 @@
    "caption": "Table 281 - Entries in a minimum screen size dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MinimumScreenSize"
+   ]
   },
   {
    "table": "282",
@@ -2275,7 +3416,10 @@
    "caption": "Table 282 - Additional entries in a media rendition dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RenditionMedia"
+   ]
   },
   {
    "table": "283",
@@ -2283,7 +3427,11 @@
    "caption": "Table 283 - Additional entries specific to a selector rendition dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfRenditions",
+    "RenditionSelector"
+   ]
   },
   {
    "table": "284",
@@ -2291,7 +3439,11 @@
    "caption": "Table 284 - Entries common to all media clip dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaClipData",
+    "MediaClipSection"
+   ]
   },
   {
    "table": "285",
@@ -2299,7 +3451,10 @@
    "caption": "Table 285 - Additional entries in a media clip data dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaClipData"
+   ]
   },
   {
    "table": "286",
@@ -2307,7 +3462,10 @@
    "caption": "Table 286 - Entries in a media permissions dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaPermissions"
+   ]
   },
   {
    "table": "287",
@@ -2315,7 +3473,10 @@
    "caption": "Table 287 - Entries in a media clip data MH/BE dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaClipDataMHBE"
+   ]
   },
   {
    "table": "288",
@@ -2323,7 +3484,10 @@
    "caption": "Table 288 - Additional entries in a media clip section dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaClipSection"
+   ]
   },
   {
    "table": "289",
@@ -2331,7 +3495,10 @@
    "caption": "Table 289 - Entries in a media clip section MH/BE dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaClipSectionMHBE"
+   ]
   },
   {
    "table": "290",
@@ -2339,7 +3506,10 @@
    "caption": "Table 290 - Entries in a media play parameters dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaPlayParameters"
+   ]
   },
   {
    "table": "291",
@@ -2347,7 +3517,11 @@
    "caption": "Table 291 - Entries in a media play parameters MH/BE dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaPlayParametersBE",
+    "MediaPlayParametersMH"
+   ]
   },
   {
    "table": "292",
@@ -2355,7 +3529,10 @@
    "caption": "Table 292 - Entries in a media duration dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaDuration"
+   ]
   },
   {
    "table": "293",
@@ -2363,7 +3540,10 @@
    "caption": "Table 293 - Entries in a media screen parameters dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaScreenParameters"
+   ]
   },
   {
    "table": "294",
@@ -2371,7 +3551,10 @@
    "caption": "Table 294 - Entries in a media screen parameters MH/BE dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaScreenParametersMHBE"
+   ]
   },
   {
    "table": "295",
@@ -2379,7 +3562,10 @@
    "caption": "Table 295 - Entries in a floating window parameters dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "FloatingWindowParameters"
+   ]
   },
   {
    "table": "296",
@@ -2387,7 +3573,12 @@
    "caption": "Table 296 - Entries common to all media offset dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaOffsetFrame",
+    "MediaOffsetMarker",
+    "MediaOffsetTime"
+   ]
   },
   {
    "table": "297",
@@ -2395,7 +3586,10 @@
    "caption": "Table 297 - Additional entries in a media offset time dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaOffsetTime"
+   ]
   },
   {
    "table": "298",
@@ -2403,7 +3597,10 @@
    "caption": "Table 298 - Additional entries in a media offset frame dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaOffsetFrame"
+   ]
   },
   {
    "table": "299",
@@ -2411,7 +3608,10 @@
    "caption": "Table 299 - Additional entries in a media offset marker dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaOffsetMarker"
+   ]
   },
   {
    "table": "300",
@@ -2419,7 +3619,10 @@
    "caption": "Table 300 - Entries in a timespan dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Timespan"
+   ]
   },
   {
    "table": "301",
@@ -2427,7 +3630,11 @@
    "caption": "Table 301 - Entries in a media players dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfMediaPlayerInfo",
+    "MediaPlayers"
+   ]
   },
   {
    "table": "302",
@@ -2435,7 +3642,10 @@
    "caption": "Table 302 - Entries in a media player info dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MediaPlayerInfo"
+   ]
   },
   {
    "table": "303",
@@ -2443,7 +3653,11 @@
    "caption": "Table 303 - Entries in a software identifier dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfSoftwareVersions",
+    "SoftwareIdentifier"
+   ]
   },
   {
    "table": "304",
@@ -2451,7 +3665,11 @@
    "caption": "Table 304 - Monitor specifier values",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MinimumBitDepth",
+    "MinimumScreenSize"
+   ]
   },
   {
    "table": "305",
@@ -2459,7 +3677,10 @@
    "caption": "Table 305 - Additional entries specific to a sound object",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "SoundObject"
+   ]
   },
   {
    "table": "306",
@@ -2467,7 +3688,10 @@
    "caption": "Table 306 - Entries in a movie dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Movie"
+   ]
   },
   {
    "table": "307",
@@ -2475,7 +3699,11 @@
    "caption": "Table 307 - Entries in a movie activation dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfDuration",
+    "MovieActivation"
+   ]
   },
   {
    "table": "308",
@@ -2483,7 +3711,10 @@
    "caption": "Table 308 - Entries in a slideshow dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "SlideShow"
+   ]
   },
   {
    "table": "309",
@@ -2491,7 +3722,10 @@
    "caption": "Table 309 - Additional entries specific to a 3D annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Annot3D"
+   ]
   },
   {
    "table": "310",
@@ -2499,7 +3733,10 @@
    "caption": "Table 310 - Entries in a 3D activation dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DActivation"
+   ]
   },
   {
    "table": "311",
@@ -2507,7 +3744,11 @@
    "caption": "Table 311 - Entries in a 3D stream dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DStream",
+    "ArrayOf3DView"
+   ]
   },
   {
    "table": "312",
@@ -2515,7 +3756,10 @@
    "caption": "Table 312 - Entries in an 3D animation style dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DAnimationStyle"
+   ]
   },
   {
    "table": "313",
@@ -2523,7 +3767,11 @@
    "caption": "Table 313 - Animation styles",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DAnimationStyle",
+    "RichMediaAnimation"
+   ]
   },
   {
    "table": "314",
@@ -2531,7 +3779,10 @@
    "caption": "Table 314 - Entries in a 3D reference dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DReference"
+   ]
   },
   {
    "table": "315",
@@ -2539,7 +3790,14 @@
    "caption": "Table 315 - Entries in a 3D view dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DView",
+    "3DViewAddEntries",
+    "ArrayOf3DCrossSection",
+    "ArrayOf3DMeasure",
+    "ArrayOf3DNode"
+   ]
   },
   {
    "table": "316",
@@ -2547,7 +3805,10 @@
    "caption": "Table 316 - Entries in a projection dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Projection"
+   ]
   },
   {
    "table": "317",
@@ -2555,7 +3816,10 @@
    "caption": "Table 317 - Entries in a 3D background dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DBackground"
+   ]
   },
   {
    "table": "318",
@@ -2563,7 +3827,10 @@
    "caption": "Table 318 - Entries in a render mode dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DRenderMode"
+   ]
   },
   {
    "table": "319",
@@ -2571,7 +3838,10 @@
    "caption": "Table 319 - Render modes",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DRenderMode"
+   ]
   },
   {
    "table": "320",
@@ -2579,7 +3849,10 @@
    "caption": "Table 320 - Entries in a 3D lighting scheme dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DLightingScheme"
+   ]
   },
   {
    "table": "321",
@@ -2587,7 +3860,10 @@
    "caption": "Table 321 - 3D lighting scheme styles",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DLightingScheme"
+   ]
   },
   {
    "table": "322",
@@ -2595,7 +3871,10 @@
    "caption": "Table 322 - Entries in a 3D cross section dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DCrossSection"
+   ]
   },
   {
    "table": "323",
@@ -2603,7 +3882,10 @@
    "caption": "Table 323 - Entries in a 3D node dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DNode"
+   ]
   },
   {
    "table": "324",
@@ -2611,7 +3893,10 @@
    "caption": "Table 324 - Entries in an external data dictionary used to markup 3D annotations",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ExData3DMarkup"
+   ]
   },
   {
    "table": "325",
@@ -2619,7 +3904,10 @@
    "caption": "Table 325 - Entries in a 3D units dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DUnits"
+   ]
   },
   {
    "table": "326",
@@ -2627,7 +3915,14 @@
    "caption": "Table 326 - Entries in a 3D measurement/markup dictionary common to all markup subtypes",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DMeasure3DC",
+    "3DMeasureAD3",
+    "3DMeasureLD3",
+    "3DMeasurePD3",
+    "3DMeasureRD3"
+   ]
   },
   {
    "table": "327",
@@ -2635,7 +3930,10 @@
    "caption": "Table 327 - Additional entries in a 3D measurement/markup dictionary for a 3D linear dimension measurement",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DMeasureLD3"
+   ]
   },
   {
    "table": "328",
@@ -2643,7 +3941,10 @@
    "caption": "Table 328 - Additional entries in a 3D measurement/markup dictionary for a 3D perpendicular dimension measurement",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DMeasurePD3"
+   ]
   },
   {
    "table": "329",
@@ -2651,7 +3952,10 @@
    "caption": "Table 329 - Additional entries in a 3D measurement/markup dictionary for a 3D angular dimension measurement",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DMeasureAD3"
+   ]
   },
   {
    "table": "330",
@@ -2659,7 +3963,10 @@
    "caption": "Table 330 - Additional entries in a 3D measurement/markup dictionary for a 3D radial dimension measurement",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DMeasureRD3"
+   ]
   },
   {
    "table": "331",
@@ -2667,7 +3974,10 @@
    "caption": "Table 331 - Additional entries in a 3D measurement/markup dictionary for a 3D comment note",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DMeasure3DC"
+   ]
   },
   {
    "table": "332",
@@ -2675,7 +3985,10 @@
    "caption": "Table 332 - Entries in the external data dictionary of a projection annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ExDataProjection"
+   ]
   },
   {
    "table": "333",
@@ -2683,7 +3996,10 @@
    "caption": "Table 333 - Additional entries specific to a RichMedia annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotRichMedia"
+   ]
   },
   {
    "table": "334",
@@ -2691,7 +4007,10 @@
    "caption": "Table 334 - Entries in a RichMediaSettings dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RichMediaSettings"
+   ]
   },
   {
    "table": "335",
@@ -2699,7 +4018,10 @@
    "caption": "Table 335 - Entries in a RichMediaActivation dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RichMediaActivation"
+   ]
   },
   {
    "table": "336",
@@ -2707,7 +4029,10 @@
    "caption": "Table 336 - Entries in a RichMediaDeactivation dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RichMediaDeactivation"
+   ]
   },
   {
    "table": "337",
@@ -2715,7 +4040,10 @@
    "caption": "Table 337 - Entries in a RichMediaAnimation dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RichMediaAnimation"
+   ]
   },
   {
    "table": "338",
@@ -2723,7 +4051,10 @@
    "caption": "Table 338 - Entries in a RichMediaPresentation dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RichMediaPresentation"
+   ]
   },
   {
    "table": "339",
@@ -2731,7 +4062,12 @@
    "caption": "Table 339 - Entries in a RichMediaWindow dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RichMediaHeight",
+    "RichMediaWidth",
+    "RichMediaWindow"
+   ]
   },
   {
    "table": "340",
@@ -2739,7 +4075,10 @@
    "caption": "Table 340 - Entries in a RichMediaPosition dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RichMediaPosition"
+   ]
   },
   {
    "table": "341",
@@ -2747,7 +4086,12 @@
    "caption": "Table 341 - Entries in a RichMediaContent dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOf3DView",
+    "ArrayOfRichMediaConfiguration",
+    "RichMediaContent"
+   ]
   },
   {
    "table": "342",
@@ -2755,7 +4099,11 @@
    "caption": "Table 342 - Entries in a RichMediaConfiguration dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfRichMediaInstances",
+    "RichMediaConfiguration"
+   ]
   },
   {
    "table": "343",
@@ -2763,7 +4111,10 @@
    "caption": "Table 343 - Entries in a RichMediaInstance dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "RichMediaInstance"
+   ]
   },
   {
    "table": "344",
@@ -2771,7 +4122,11 @@
    "caption": "Table 344 - Additional entries in a 3D view dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "3DViewAddEntries",
+    "ArrayOfViewParams"
+   ]
   },
   {
    "table": "345",
@@ -2779,7 +4134,10 @@
    "caption": "Table 345 - Entries in a View Params dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ViewParams"
+   ]
   },
   {
    "table": "346",
@@ -2787,7 +4145,10 @@
    "caption": "Table 346 - Predefined procedure set",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfNamesForProcSet"
+   ]
   },
   {
    "table": "347",
@@ -2795,7 +4156,10 @@
    "caption": "Table 347 - Additional entries in a metadata stream dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Metadata"
+   ]
   },
   {
    "table": "348",
@@ -2803,7 +4167,8 @@
    "caption": "Table 348 - Additional entry for components having metadata",
    "inArlington": false,
    "reasonNotInArlington": "Any object can have Metadata key",
-   "coveredBy": "unrouted"
+   "coveredBy": "unrouted",
+   "arlingtonObjects": []
   },
   {
    "table": "349",
@@ -2811,7 +4176,10 @@
    "caption": "Table 349 - Entries in the document information dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "DocInfo"
+   ]
   },
   {
    "table": "350",
@@ -2819,7 +4187,10 @@
    "caption": "Table 350 - Entries in a page-piece dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "PagePiece"
+   ]
   },
   {
    "table": "351",
@@ -2827,7 +4198,10 @@
    "caption": "Table 351 - Entries in a data dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Data"
+   ]
   },
   {
    "table": "352",
@@ -2835,7 +4209,8 @@
    "caption": "Table 352 - Marked-content operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "353",
@@ -2843,7 +4218,10 @@
    "caption": "Table 353 - Entries in the mark information dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MarkInfo"
+   ]
   },
   {
    "table": "354",
@@ -2851,7 +4229,16 @@
    "caption": "Table 354 - Entries in the structure tree root",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfAttributeObjects",
+    "ArrayOfNamespace",
+    "ArrayOfStructElem",
+    "ArrayOfStructElemParentTree",
+    "ClassMap",
+    "RoleMap",
+    "StructTreeRoot"
+   ]
   },
   {
    "table": "355",
@@ -2859,7 +4246,14 @@
    "caption": "Table 355 - Entries in a structure element dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfAttributeRevisions",
+    "ArrayOfClassNamesRevisions",
+    "ArrayOfStructElem",
+    "ArrayOfStructElemKids",
+    "StructElem"
+   ]
   },
   {
    "table": "356",
@@ -2867,7 +4261,12 @@
    "caption": "Table 356 - Entries in a namespace dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOf_RoleMapNS",
+    "Namespace",
+    "RoleMapNS"
+   ]
   },
   {
    "table": "357",
@@ -2875,7 +4274,10 @@
    "caption": "Table 357 - Entries in a marked-content reference dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "MarkedContentReference"
+   ]
   },
   {
    "table": "358",
@@ -2883,7 +4285,10 @@
    "caption": "Table 358 - Entries in an object reference dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ObjectReference"
+   ]
   },
   {
    "table": "359",
@@ -2891,7 +4296,43 @@
    "caption": "Table 359 - Additional dictionary entries for structure element access",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "Annot3D",
+    "AnnotCaret",
+    "AnnotCircle",
+    "AnnotFileAttachment",
+    "AnnotFreeText",
+    "AnnotHighlight",
+    "AnnotInk",
+    "AnnotLine",
+    "AnnotLink",
+    "AnnotMovie",
+    "AnnotPolyLine",
+    "AnnotPolygon",
+    "AnnotPopup",
+    "AnnotPrinterMark",
+    "AnnotProjection",
+    "AnnotRedact",
+    "AnnotRichMedia",
+    "AnnotScreen",
+    "AnnotSound",
+    "AnnotSquare",
+    "AnnotSquiggly",
+    "AnnotStamp",
+    "AnnotStrikeOut",
+    "AnnotText",
+    "AnnotTrapNetwork",
+    "AnnotUnderline",
+    "AnnotWatermark",
+    "AnnotWidget",
+    "PageObject",
+    "XObjectFormPrinterMark",
+    "XObjectFormTrapNet",
+    "XObjectFormType1",
+    "XObjectImage",
+    "XObjectImageMask"
+   ]
   },
   {
    "table": "360",
@@ -2899,7 +4340,10 @@
    "caption": "Table 360 - Entries common to all attribute object dictionaries",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "361",
@@ -2907,7 +4351,11 @@
    "caption": "Table 361 - Additional entries in an attribute object dictionary for user properties",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfUserProperty",
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "362",
@@ -2915,7 +4363,10 @@
    "caption": "Table 362 - Entries in a user property dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "UserProperty"
+   ]
   },
   {
    "table": "363",
@@ -2923,7 +4374,8 @@
    "caption": "Table 363 - Property list entries for artifacts",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": []
   },
   {
    "table": "364",
@@ -2931,7 +4383,8 @@
    "caption": "Table 364 - Document level structure types",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "365",
@@ -2939,7 +4392,8 @@
    "caption": "Table 365 - Grouping level structure types",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "366",
@@ -2947,7 +4401,8 @@
    "caption": "Table 366 - Block level structure types",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "367",
@@ -2955,7 +4410,8 @@
    "caption": "Table 367 - Sub-block level structure type",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "368",
@@ -2963,7 +4419,8 @@
    "caption": "Table 368 - General inline level structure types",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "369",
@@ -2971,7 +4428,8 @@
    "caption": "Table 369 - Ruby and Warichu structure types",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "370",
@@ -2979,7 +4437,8 @@
    "caption": "Table 370 - List standard structure types",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "371",
@@ -2987,7 +4446,8 @@
    "caption": "Table 371 - Table standard structure types",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "372",
@@ -2995,7 +4455,8 @@
    "caption": "Table 372 - Standard structure type Caption",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "373",
@@ -3003,7 +4464,8 @@
    "caption": "Table 373 - Standard structure type Figure",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "374",
@@ -3011,7 +4473,8 @@
    "caption": "Table 374 - Standard structure type Formula",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "375",
@@ -3019,7 +4482,8 @@
    "caption": "Table 375 - standard structure type Artifact",
    "inArlington": false,
    "reasonNotInArlington": "TBD - structure elements & attributes",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "376",
@@ -3027,7 +4491,10 @@
    "caption": "Table 376 - Standard structure attribute owners",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "377",
@@ -3035,7 +4502,8 @@
    "caption": "Table 377 - Standard layout attributes",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": []
   },
   {
    "table": "378",
@@ -3043,7 +4511,11 @@
    "caption": "Table 378 - Standard layout attributes common to all standard structure types",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOf_4BorderThicknessNumbers",
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "379",
@@ -3051,7 +4523,10 @@
    "caption": "Table 379 - Additional standard layout attributes specific to block-level structure elements",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "380",
@@ -3059,7 +4534,10 @@
    "caption": "Table 380 - Standard layout attributes specific to inline-level structure elements",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "381",
@@ -3067,7 +4545,10 @@
    "caption": "Table 381 - Standard layout attributes specific to standard column attributes",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "382",
@@ -3075,7 +4556,10 @@
    "caption": "Table 382 - Standard list attributes",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "383",
@@ -3083,7 +4567,10 @@
    "caption": "Table 383 - PrintField attributes",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "384",
@@ -3091,7 +4578,10 @@
    "caption": "Table 384 - Standard table attributes",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "385",
@@ -3099,7 +4589,10 @@
    "caption": "Table 385 - Standard artifact attributes",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "StructureAttributesDict"
+   ]
   },
   {
    "table": "386",
@@ -3107,7 +4600,11 @@
    "caption": "Table 386 - Entries in the Web Capture information dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfWebCaptureCommands",
+    "WebCaptureInfo"
+   ]
   },
   {
    "table": "387",
@@ -3115,7 +4612,8 @@
    "caption": "Table 387 - Characters with special meaning in destinations and fields and their byte values",
    "inArlington": false,
    "reasonNotInArlington": "Semantic processing of specific strings",
-   "coveredBy": "hand-authored-syntax"
+   "coveredBy": "hand-authored-syntax",
+   "arlingtonObjects": []
   },
   {
    "table": "388",
@@ -3123,7 +4621,14 @@
    "caption": "Table 388 - Entries common to all Web Capture content sets",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfSourceInformation",
+    "ArrayOfWebCaptureImages",
+    "ArrayOfWebCapturePages",
+    "WebCaptureImageSet",
+    "WebCapturePageSet"
+   ]
   },
   {
    "table": "389",
@@ -3131,7 +4636,10 @@
    "caption": "Table 389 - Additional entries specific to a Web Capture page set",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "WebCapturePageSet"
+   ]
   },
   {
    "table": "390",
@@ -3139,7 +4647,10 @@
    "caption": "Table 390 - Additional entries specific to a Web Capture image set",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "WebCaptureImageSet"
+   ]
   },
   {
    "table": "391",
@@ -3147,7 +4658,10 @@
    "caption": "Table 391 - Entries in a source information dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "SourceInformation"
+   ]
   },
   {
    "table": "392",
@@ -3155,7 +4669,12 @@
    "caption": "Table 392 - Entries in a URL alias dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfArraysURLStrings",
+    "ArrayOfURLStrings",
+    "URLAlias"
+   ]
   },
   {
    "table": "393",
@@ -3163,7 +4682,10 @@
    "caption": "Table 393 - Entries in a Web Capture command dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "WebCaptureCommand"
+   ]
   },
   {
    "table": "394",
@@ -3171,7 +4693,10 @@
    "caption": "Table 394 - Web Capture command flags",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "WebCaptureCommand"
+   ]
   },
   {
    "table": "395",
@@ -3179,7 +4704,10 @@
    "caption": "Table 395 - Entries in a Web Capture command settings dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "WebCaptureCommandSettings"
+   ]
   },
   {
    "table": "396",
@@ -3187,7 +4715,10 @@
    "caption": "Table 396 - Entries in a box colour information dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "BoxColorInfo"
+   ]
   },
   {
    "table": "397",
@@ -3195,7 +4726,10 @@
    "caption": "Table 397 - Entries in a box style dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "BoxStyle"
+   ]
   },
   {
    "table": "398",
@@ -3203,7 +4737,10 @@
    "caption": "Table 398 - Additional entries specific to a printer's mark annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotPrinterMark"
+   ]
   },
   {
    "table": "399",
@@ -3211,7 +4748,10 @@
    "caption": "Table 399 - Additional entries specific to a printer's mark form dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "XObjectFormPrinterMark"
+   ]
   },
   {
    "table": "400",
@@ -3219,7 +4759,11 @@
    "caption": "Table 400 - Entries in a separation dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfPages",
+    "Separation"
+   ]
   },
   {
    "table": "401",
@@ -3227,7 +4771,11 @@
    "caption": "Table 401 - Entries in an output intent dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "OutputIntents",
+    "SpectralData"
+   ]
   },
   {
    "table": "402",
@@ -3235,7 +4783,11 @@
    "caption": "Table 402 - Entries in a DestOutputProfileRef dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfURLs",
+    "DestOutputProfileRef"
+   ]
   },
   {
    "table": "403",
@@ -3243,7 +4795,11 @@
    "caption": "Table 403 - Additional entries specific to a trap network annotation",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "AnnotTrapNetwork",
+    "ArrayOfTrapNetVersionObjects"
+   ]
   },
   {
    "table": "404",
@@ -3251,7 +4807,11 @@
    "caption": "Table 404 - Additional entries specific to a trap network appearance stream",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfTrapRegions",
+    "XObjectFormTrapNet"
+   ]
   },
   {
    "table": "405",
@@ -3259,7 +4819,11 @@
    "caption": "Table 405 - Entry in an OPI version dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "OPIVersion13",
+    "OPIVersion20"
+   ]
   },
   {
    "table": "406",
@@ -3267,7 +4831,12 @@
    "caption": "Table 406 - Entries in a version 1.3 OPI dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfOPI13Color",
+    "ArrayOfTags",
+    "OPIVersion13Dict"
+   ]
   },
   {
    "table": "407",
@@ -3275,7 +4844,11 @@
    "caption": "Table 407 - Entries in a version 2.0 OPI dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfOPI2Inks",
+    "OPIVersion20Dict"
+   ]
   },
   {
    "table": "408",
@@ -3283,7 +4856,10 @@
    "caption": "Table 408 - Entries in a DPartRoot dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "DPartRoot"
+   ]
   },
   {
    "table": "409",
@@ -3291,7 +4867,12 @@
    "caption": "Table 409 - Entries in a DPart dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "ArrayOfDPartArrays",
+    "ArrayOfDParts",
+    "DPart"
+   ]
   },
   {
    "table": "A.1",
@@ -3299,7 +4880,8 @@
    "caption": "Table A.1 - PDF content stream operators",
    "inArlington": false,
    "reasonNotInArlington": "Content stream",
-   "coveredBy": "annex-a-operators"
+   "coveredBy": "annex-a-operators",
+   "arlingtonObjects": []
   },
   {
    "table": "C.1",
@@ -3307,7 +4889,8 @@
    "caption": "Table C.1 - Architectural considerations",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "D.1",
@@ -3315,7 +4898,8 @@
    "caption": "Table D.1 - Latin-text encodings",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "D.2",
@@ -3323,7 +4907,8 @@
    "caption": "Table D.2 - Latin character set and encodings",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "D.3",
@@ -3331,7 +4916,8 @@
    "caption": "Table D.3 - PDFDocEncoding character set",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "D.4",
@@ -3339,7 +4925,8 @@
    "caption": "Table D.4 - Expert set and MacExpert encoding",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "D.5",
@@ -3347,7 +4934,8 @@
    "caption": "Table D.5 - Symbol set and encoding",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "D.6",
@@ -3355,7 +4943,8 @@
    "caption": "Table D.6 - ZapfDingbats set and encoding",
    "inArlington": false,
    "reasonNotInArlington": "Descriptive only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "F.1",
@@ -3363,7 +4952,10 @@
    "caption": "Table F.1 - Entries in the linearization parameter dictionary",
    "inArlington": true,
    "reasonNotInArlington": null,
-   "coveredBy": "arlington-object-model"
+   "coveredBy": "arlington-object-model",
+   "arlingtonObjects": [
+    "LinearizationParameterDict"
+   ]
   },
   {
    "table": "F.2",
@@ -3371,7 +4963,8 @@
    "caption": "Table F.2 - Standard hint tables",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "F.3",
@@ -3379,7 +4972,8 @@
    "caption": "Table F.3 - Page offset hint table, header section",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "F.4",
@@ -3387,7 +4981,8 @@
    "caption": "Table F.4 - Page offset hint table, per-page entry",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "F.5",
@@ -3395,7 +4990,8 @@
    "caption": "Table F.5 - Shared object hint table, header section",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "F.6",
@@ -3403,7 +4999,8 @@
    "caption": "Table F.6 - Shared object hint table, shared object group entry",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "F.7",
@@ -3411,7 +5008,8 @@
    "caption": "Table F.7 - Thumbnail hint table, header section",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "F.8",
@@ -3419,7 +5017,8 @@
    "caption": "Table F.8 - Thumbnail hint table, per-page entry",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "F.9",
@@ -3427,7 +5026,8 @@
    "caption": "Table F.9 - Generic hint table",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "F.10",
@@ -3435,7 +5035,8 @@
    "caption": "Table F.10 - Extended generic hint table",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "F.11",
@@ -3443,7 +5044,8 @@
    "caption": "Table F.11 - Embedded file stream hint table, header section",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "F.12",
@@ -3451,7 +5053,8 @@
    "caption": "Table F.12 - Embedded file stream hint table, per-embedded file stream group entries",
    "inArlington": false,
    "reasonNotInArlington": "TBD with Linearization",
-   "coveredBy": "arlington-gap"
+   "coveredBy": "arlington-gap",
+   "arlingtonObjects": []
   },
   {
    "table": "H.1",
@@ -3459,7 +5062,8 @@
    "caption": "Table H.1 - Objects in minimal example",
    "inArlington": false,
    "reasonNotInArlington": "Example only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "H.2",
@@ -3467,7 +5071,8 @@
    "caption": "Table H.2 - Objects in simple text string example",
    "inArlington": false,
    "reasonNotInArlington": "Example only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "H.3",
@@ -3475,7 +5080,8 @@
    "caption": "Table H.3 - Objects in simple graphics example",
    "inArlington": false,
    "reasonNotInArlington": "Example only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "H.4",
@@ -3483,7 +5089,8 @@
    "caption": "Table H.4 - Object usage after adding four text annotations",
    "inArlington": false,
    "reasonNotInArlington": "Example only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "H.5",
@@ -3491,7 +5098,8 @@
    "caption": "Table H.5 - Object usage after modifying text of one annotation",
    "inArlington": false,
    "reasonNotInArlington": "Example only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "H.6",
@@ -3499,7 +5107,8 @@
    "caption": "Table H.6 - Object usage after deleting two text annotations",
    "inArlington": false,
    "reasonNotInArlington": "Example only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   },
   {
    "table": "H.7",
@@ -3507,7 +5116,8 @@
    "caption": "Table H.7 - Object usage after adding three text annotations",
    "inArlington": false,
    "reasonNotInArlington": "Example only",
-   "coveredBy": "not-an-obligation"
+   "coveredBy": "not-an-obligation",
+   "arlingtonObjects": []
   }
  ]
 }
