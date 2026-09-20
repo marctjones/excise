@@ -336,9 +336,17 @@ internal static class UnredactCommandOutput
         output.WriteLine($"  channels run: {string.Join(", ", recovery.ChannelsRun)}");
         if (recovery.ChannelsSkipped.Count > 0)
         {
+            // A DEFERRED channel's full reason is a sentence and a half, and it
+            // is printed in full under NOT COVERED below. Repeating it here
+            // pushed the coverage line past four hundred characters on an
+            // ordinary form, which buries the channels skipped for some OTHER
+            // reason — the ones this line exists to surface.
             output.WriteLine(
                 "  ⚠ channels NOT run (this report does not cover them): " +
-                string.Join(", ", recovery.ChannelsSkipped.Select(c => $"{c.Key} ({c.Value})")));
+                string.Join(", ", recovery.ChannelsSkipped.Select(c =>
+                    RecoveryChannelTiers.IsDeferred(c.Key)
+                        ? $"{c.Key} (deferred #1690 — see NOT COVERED below)"
+                        : $"{c.Key} ({c.Value})")));
         }
 
         output.WriteLine();
