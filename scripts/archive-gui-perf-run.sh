@@ -7,6 +7,27 @@
 # one compact JSON line per run in a COMMITTED .jsonl, so the trend survives
 # even though the run directories under logs/ are gitignored and transient.
 #
+# ⚠️ WHICH COLUMN TO TREND DEPENDS ON THE BOUNDARY. Measured 2026-09-20
+# (logs/gui-perf_20260920_162501, altona-scroll x5) against the CI spike's
+# hosted-runner data (#1699):
+#   - At a POST-CACHE-TRIM idle boundary (altona-scroll's idle-45s), the
+#     managed-heap columns win. liveHeapMB read 350.3 / 247.6 / 156.9 / 156.9 /
+#     156.7 -- a warm-up decay that CONVERGES, last three spanning 0.2 MB
+#     (CV 0.07%). rssMB at the same boundary did NOT converge (CV 13.3%).
+#   - At a CLOSE boundary, the reverse: #1699 found macOS liveHeap bimodal at
+#     after-close-1 (CV 21.64%, a 13 MB gap with nothing between the clusters)
+#     while working set held CV 2.11%.
+#   So: trend liveHeapMB/committedMB after a trim, rssMB after a close, and
+#   never assume one column is universally better.
+#
+# ⚠️ DISCARD THE WARM-UP REPS. The decay above spans the first TWO reps of a
+# five-rep run and settles at rep 3. This script takes MEDIANS, which is robust
+# to that -- but the harness's own noise floor is derived from the SPREAD of the
+# same reps, so warm-up inflates it (liveHeapMB floor 102.7 MB on that run). A
+# floor computed across a warm-up curve measures the warm-up, not the noise, and
+# would hide a real regression smaller than it. Do not trust a spread-derived
+# floor from a run whose first reps are cold.
+#
 # ⚠️ These are ABSOLUTE numbers from ONE machine under whatever load it had.
 # They are not a gate and must never become one — scripts/run-gui-perf-scenarios.sh
 # explains why at length (a gate on absolute footprint fails on load, not on
