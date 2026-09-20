@@ -60,15 +60,22 @@ public class ArlingtonKeyObservationTests
             "arlington-inventory.json (scripts/build-arlington-inventory.py)",
             "test-pdfs/manifests/arlington-inventory.json"));
 
-        var corpus = TestRepoLayout.FindDirectory("test-pdfs/smoke");
+        // Which corpus to observe. Default is the smoke set of real
+        // government documents; EXCISE_OBSERVE_CORPUS points it elsewhere,
+        // which matters because the smoke documents are all PDF 1.x-era and
+        // therefore exercise none of the 353 keys new in PDF 2.0.
+        var corpusName = Environment.GetEnvironmentVariable("EXCISE_OBSERVE_CORPUS")
+                         ?? "test-pdfs/smoke";
+        var corpus = TestRepoLayout.FindDirectory(corpusName);
         Assert.SkipWhen(corpus == null, TestRepoLayout.AbsenceReason(
-            "smoke corpus (scripts/download-smoke-corpus.sh)", "test-pdfs/smoke"));
+            $"{corpusName} corpus", corpusName));
 
         var model = LoadModel(inventoryPath!);
         var observation = new Dictionary<string, KeyObservation>(StringComparer.Ordinal);
         var visitedObjects = new Dictionary<string, int>(StringComparer.Ordinal);
         var ambiguousLinks = new Dictionary<string, int>(StringComparer.Ordinal);
-        var documents = Directory.GetFiles(corpus!, "*.pdf").OrderBy(p => p).ToList();
+        var documents = Directory.GetFiles(corpus!, "*.pdf", SearchOption.AllDirectories)
+                                 .OrderBy(p => p).ToList();
         var perDocument = new List<object>();
 
         foreach (var path in documents)
@@ -101,7 +108,7 @@ public class ArlingtonKeyObservationTests
             .ToList();
 
         var outPath = Path.Combine(Path.GetDirectoryName(inventoryPath!)!,
-                                   "arlington-observation.json");
+                                   $"arlington-observation{(corpusName == "test-pdfs/smoke" ? "" : "-" + Path.GetFileName(corpusName))}.json");
         File.WriteAllText(outPath, JsonSerializer.Serialize(new
         {
             schemaVersion = 1,
@@ -109,7 +116,7 @@ public class ArlingtonKeyObservationTests
             policy = "Observed exposure of ISO 32000-2 object-model keys by excise's own " +
                      "parser over a real-document corpus. Parse-level exposure only; not " +
                      "evidence of correct handling.",
-            corpus = new { directory = "test-pdfs/smoke", documents = documents.Count },
+            corpus = new { directory = corpusName, documents = documents.Count },
             summary = new
             {
                 modelKeys = model.Sum(kv => kv.Value.Count),
@@ -130,7 +137,12 @@ public class ArlingtonKeyObservationTests
         // excise: a run that reached nothing would write an empty file that
         // reads exactly like "excise exposes nothing", which is the #1527
         // shape. Everything else is data.
-        rows.Count(r => r.Occurrences > 0).Should_BeAtLeast(50, outPath);
+        // The floor is calibrated to the DEFAULT corpus of full real-world
+        // documents. A smaller, purpose-built fixture set legitimately
+        // exercises far fewer keys, so it only has to reach something --
+        // otherwise the guard would reject exactly the corpora worth adding.
+        var floor = corpusName == "test-pdfs/smoke" ? 50 : 1;
+        rows.Count(r => r.Occurrences > 0).Should_BeAtLeast(floor, outPath);
     }
 
     private static void Walk(

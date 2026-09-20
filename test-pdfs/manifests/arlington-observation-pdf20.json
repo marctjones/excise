@@ -1,0 +1,677 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "Excise.Rendering.Tests/Differential/ArlingtonKeyObservationTests.cs",
+  "policy": "Observed exposure of ISO 32000-2 object-model keys by excise\u0027s own parser over a real-document corpus. Parse-level exposure only; not evidence of correct handling.",
+  "corpus": {
+    "directory": "test-pdfs/pdf20",
+    "documents": 25
+  },
+  "summary": {
+    "modelKeys": 3973,
+    "objectsVisited": 4,
+    "keysSurfacedAtLeastOnce": 7,
+    "keysWithATypeMismatch": 0,
+    "ambiguousLinkSites": 0
+  },
+  "perDocument": [
+    {
+      "file": "ascii85-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "asciihex-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "brotli-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "ccitt-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "color-key-mask-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "crypt-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "dct-colotransform-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "devicecmyk-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "devicen-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "explicit-mask-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "filter-array-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "flate-predictor-png-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "flate-predictor-tiff-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "huge-image-dimensions.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "iccbased-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "image-mask.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "indexed-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "interpolate-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "jbig2-globals-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "jpx-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "lab-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "lzw-earlychange-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "runlength-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "separation-image.pdf",
+      "keysSurfaced": 7
+    },
+    {
+      "file": "soft-mask-image.pdf",
+      "keysSurfaced": 7
+    }
+  ],
+  "objectsVisited": {
+    "FileTrailer": 25,
+    "Catalog": 25,
+    "PageTreeNodeRoot": 25,
+    "ArrayOfPageTreeNodeKids": 25
+  },
+  "ambiguousLinks": {},
+  "keys": [
+    {
+      "Object": "Catalog",
+      "Key": "Pages",
+      "Type": "dictionary",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 25,
+      "Documents": 25,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Type",
+      "Type": "name",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 25,
+      "Documents": 25,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "FileTrailer",
+      "Key": "Root",
+      "Type": "dictionary",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 25,
+      "Documents": 25,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "FileTrailer",
+      "Key": "Size",
+      "Type": "integer",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 25,
+      "Documents": 25,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "PageTreeNodeRoot",
+      "Key": "Count",
+      "Type": "integer",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 25,
+      "Documents": 25,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "PageTreeNodeRoot",
+      "Key": "Kids",
+      "Type": "array",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 25,
+      "Documents": 25,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "PageTreeNodeRoot",
+      "Key": "Type",
+      "Type": "name",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 25,
+      "Documents": 25,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "ArrayOfPageTreeNodeKids",
+      "Key": "*",
+      "Type": "dictionary",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "AA",
+      "Type": "dictionary",
+      "SinceVersion": "1.4",
+      "NewInPdf20": false,
+      "AlwaysInScope": true,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "AF",
+      "Type": "array",
+      "SinceVersion": "fn:Eval(fn:Extension(ISO_19005_3,1.7) || 2.0)",
+      "NewInPdf20": false,
+      "AlwaysInScope": true,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "AcroForm",
+      "Type": "dictionary",
+      "SinceVersion": "1.2",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Collection",
+      "Type": "dictionary",
+      "SinceVersion": "1.7",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "DPartRoot",
+      "Type": "dictionary",
+      "SinceVersion": "fn:Eval(fn:Extension(PDF_VT2,1.6) || 2.0)",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "DSS",
+      "Type": "dictionary",
+      "SinceVersion": "fn:Eval(fn:Extension(ETSI_PAdES,1.7) || 2.0)",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Dests",
+      "Type": "dictionary",
+      "SinceVersion": "1.1",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Extensions",
+      "Type": "dictionary",
+      "SinceVersion": "1.7",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Lang",
+      "Type": "string-text",
+      "SinceVersion": "1.4",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Legal",
+      "Type": "dictionary",
+      "SinceVersion": "1.5",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "MarkInfo",
+      "Type": "dictionary",
+      "SinceVersion": "1.4",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Metadata",
+      "Type": "stream",
+      "SinceVersion": "1.4",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Names",
+      "Type": "dictionary",
+      "SinceVersion": "1.2",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "NeedsRendering",
+      "Type": "boolean",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "OCProperties",
+      "Type": "dictionary",
+      "SinceVersion": "1.5",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "OpenAction",
+      "Type": "array;dictionary",
+      "SinceVersion": "1.1",
+      "NewInPdf20": false,
+      "AlwaysInScope": true,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Outlines",
+      "Type": "dictionary",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "OutputIntents",
+      "Type": "array",
+      "SinceVersion": "1.4",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "PageLabels",
+      "Type": "number-tree",
+      "SinceVersion": "1.3",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "PageLayout",
+      "Type": "name",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "PageMode",
+      "Type": "name",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Perms",
+      "Type": "dictionary",
+      "SinceVersion": "1.5",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "PieceInfo",
+      "Type": "dictionary",
+      "SinceVersion": "1.4",
+      "NewInPdf20": false,
+      "AlwaysInScope": true,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Requirements",
+      "Type": "array",
+      "SinceVersion": "1.7",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "SpiderInfo",
+      "Type": "dictionary",
+      "SinceVersion": "1.3",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "StructTreeRoot",
+      "Type": "dictionary",
+      "SinceVersion": "1.3",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Threads",
+      "Type": "array",
+      "SinceVersion": "1.1",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "URI",
+      "Type": "dictionary",
+      "SinceVersion": "1.1",
+      "NewInPdf20": false,
+      "AlwaysInScope": true,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "Version",
+      "Type": "name",
+      "SinceVersion": "1.4",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "Catalog",
+      "Key": "ViewerPreferences",
+      "Type": "dictionary",
+      "SinceVersion": "1.2",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "FileTrailer",
+      "Key": "AdditionalStreams",
+      "Type": "array",
+      "SinceVersion": "fn:Extension(OpenOffice)",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "FileTrailer",
+      "Key": "AuthCode",
+      "Type": "dictionary",
+      "SinceVersion": "fn:Extension(ISO_TS_32004)",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "FileTrailer",
+      "Key": "DocChecksum",
+      "Type": "name",
+      "SinceVersion": "fn:Extension(OpenOffice)",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "FileTrailer",
+      "Key": "Encrypt",
+      "Type": "dictionary",
+      "SinceVersion": "1.1",
+      "NewInPdf20": false,
+      "AlwaysInScope": true,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "FileTrailer",
+      "Key": "ID",
+      "Type": "array",
+      "SinceVersion": "1.1",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "FileTrailer",
+      "Key": "Info",
+      "Type": "dictionary",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "FileTrailer",
+      "Key": "Prev",
+      "Type": "integer",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "FileTrailer",
+      "Key": "XRefStm",
+      "Type": "integer",
+      "SinceVersion": "1.5",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "PageTreeNodeRoot",
+      "Key": "CropBox",
+      "Type": "rectangle",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "PageTreeNodeRoot",
+      "Key": "MediaBox",
+      "Type": "rectangle",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "PageTreeNodeRoot",
+      "Key": "Resources",
+      "Type": "dictionary",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    },
+    {
+      "Object": "PageTreeNodeRoot",
+      "Key": "Rotate",
+      "Type": "integer",
+      "SinceVersion": "1.0",
+      "NewInPdf20": false,
+      "AlwaysInScope": false,
+      "Occurrences": 0,
+      "Documents": 0,
+      "TypeMismatches": 0
+    }
+  ]
+}
