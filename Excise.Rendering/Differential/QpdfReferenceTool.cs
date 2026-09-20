@@ -63,6 +63,42 @@ public sealed record QpdfAnnotation(
     IReadOnlyList<double>? LineEndpoints,
     QpdfAppearance? NormalAppearance);
 
+/// <summary>
+/// Why a <see cref="QpdfReferenceTool.FilteredStreamData"/> call produced (or
+/// did not produce) bytes. The three outcomes are kept distinct ON PURPOSE:
+/// collapsing them into a null return is exactly the #1527 failure mode, where
+/// a check that could not run and a check that ran and was refused both read
+/// as a harmless skip.
+/// </summary>
+public enum QpdfStreamDataStatus
+{
+    /// <summary>qpdf decoded the stream; <see cref="QpdfFilteredStream.Bytes"/> holds the result.</summary>
+    Ok,
+
+    /// <summary>The qpdf CLI is not on PATH, or it timed out. A test should SKIP.</summary>
+    ToolUnavailable,
+
+    /// <summary>
+    /// qpdf opened the file but would not decode that stream — its build has
+    /// no decoder for the filter (CCITTFaxDecode, JBIG2Decode and JPXDecode are
+    /// all refused by qpdf 12.3.2), or the object number names no stream. A
+    /// test should FAIL: the fixture asked an oracle a question it cannot
+    /// answer, which is a fixture-design error, not an environment gap.
+    /// </summary>
+    Refused,
+}
+
+/// <summary>
+/// The decoded bytes of one stream object as qpdf's own filter chain produced
+/// them, with the outcome that produced them (#1527 — see
+/// <see cref="QpdfStreamDataStatus"/>).
+/// </summary>
+public sealed record QpdfFilteredStream(QpdfStreamDataStatus Status, byte[] Bytes, string Diagnostics)
+{
+    /// <summary>True only when qpdf actually decoded the stream.</summary>
+    public bool IsOk => Status == QpdfStreamDataStatus.Ok;
+}
+
 public enum QpdfPasswordStatus
 {
     /// <summary>Exit 0: a password, other than as supplied, is required — i.e. the supplied (or absent) password was REJECTED.</summary>
@@ -477,6 +513,119 @@ public static class QpdfReferenceTool
         var reference = value.GetString();
         if (reference == null || !byReference.TryGetValue(reference, out var target)) return null;
         return target.ValueKind == JsonValueKind.Object ? target : null;
+    }
+
+    /// <summary>
+    /// The bytes of stream object <paramref name="objectNumber"/> after
+    /// QPDF'S OWN filter chain has decoded them
+    /// (<c>--show-object=N --filtered-stream-data</c>) — an independent
+    /// DECODER, where every other method on this class is an independent
+    /// parser or validator.
+    ///
+    /// THE POINT OF THIS METHOD: excise's own tests for FlateDecode, LZWDecode,
+    /// the PNG/TIFF predictors and the rest encode a fixture with excise (or
+    /// with .NET's zlib) and then decode it with excise. That proves the two
+    /// halves agree, which a shared misreading of the spec would not disturb.
+    /// qpdf implements those filters from the same specification and shares no
+    /// code with excise, so a byte-for-byte match here is evidence about the
+    /// FILTER, not about excise's internal consistency — CLAUDE.md's
+    /// no-self-oracle rule applied to decoding instead of to pixels.
+    ///
+    /// ⚠️ SCOPE, measured against qpdf 12.3.2 rather than assumed: the
+    /// generalized filters (ASCIIHexDecode, ASCII85Decode, FlateDecode and
+    /// LZWDecode with or without predictors, RunLengthDecode, /Crypt /Identity,
+    /// and arrays of those) decode, and so does DCTDecode (qpdf links libjpeg,
+    /// so the result is a decoded raster, lossy — compare with a tolerance, not
+    /// byte-exactly). CCITTFaxDecode, JBIG2Decode and JPXDecode are REFUSED;
+    /// those capabilities need a different oracle, and a test that asks for
+    /// them here gets <see cref="QpdfStreamDataStatus.Refused"/> and should
+    /// fail rather than skip.
+    ///
+    /// Unlike the text-returning methods on this class, stdout is copied as
+    /// RAW BYTES: the line-oriented pump they share would mangle any decoded
+    /// byte that is not valid text, and silently rewrite CR/LF.
+    /// </summary>
+    public static QpdfFilteredStream FilteredStreamData(
+        string pdfPath, int objectNumber, string? password = null, int timeoutMs = 30_000)
+    {
+        var args = new List<string> { $"--show-object={objectNumber}", "--filtered-stream-data" };
+        if (!string.IsNullOrEmpty(password)) args.Add($"--password={password}");
+        args.Add(pdfPath);
+
+        var result = RunBinary(args.ToArray(), timeoutMs);
+        if (result == null)
+            return new QpdfFilteredStream(QpdfStreamDataStatus.ToolUnavailable, Array.Empty<byte>(),
+                IsAvailable ? $"qpdf did not exit within {timeoutMs} ms" : "qpdf is not installed");
+
+        // qpdf reports "unable to filter stream data" as a warning on stderr
+        // and exits 2 with nothing on stdout. Exit code alone is not enough —
+        // it also uses 2 for warnings it recovered from — so require both a
+        // clean exit AND bytes before calling the decode a success.
+        if (result.ExitCode != 0 || result.Output.Length == 0)
+            return new QpdfFilteredStream(QpdfStreamDataStatus.Refused, Array.Empty<byte>(),
+                $"qpdf exit {result.ExitCode}, {result.Output.Length} bytes: {result.Diagnostics.Trim()}");
+
+        return new QpdfFilteredStream(QpdfStreamDataStatus.Ok, result.Output, result.Diagnostics.Trim());
+    }
+
+    private sealed record BinaryProcessResult(int ExitCode, byte[] Output, string Diagnostics);
+
+    /// <summary>
+    /// Runs qpdf and returns stdout as raw bytes. Deliberately NOT sharing
+    /// <see cref="Run"/>: that method's <c>OutputDataReceived</c> pump splits
+    /// stdout into strings at line boundaries and re-joins them with
+    /// <see cref="StringBuilder.AppendLine"/>, which corrupts binary output
+    /// two ways — every byte is put through a text decoding, and a decoded
+    /// stream's own CR/LF/CRLF bytes are rewritten to the platform newline.
+    ///
+    /// stdout is drained on a pump task while stderr keeps the line-based
+    /// pump, then both are joined before the bytes are read: the same
+    /// already-buffered-output race <see cref="Run"/> documents, which
+    /// <c>WaitForExit(int)</c> alone does not close.
+    /// </summary>
+    private static BinaryProcessResult? RunBinary(string[] args, int timeoutMs)
+    {
+        if (!IsAvailable) return null;
+
+        try
+        {
+            var psi = new ProcessStartInfo("qpdf")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            foreach (var a in args) psi.ArgumentList.Add(a);
+
+            using var p = Process.Start(psi);
+            if (p == null) return null;
+
+            var buffer = new System.IO.MemoryStream();
+            var pump = p.StandardOutput.BaseStream.CopyToAsync(buffer);
+
+            var stderr = new StringBuilder();
+            p.ErrorDataReceived += (_, e) => { if (e.Data != null) stderr.AppendLine(e.Data); };
+            p.BeginErrorReadLine();
+
+            if (!p.WaitForExit(timeoutMs))
+            {
+                try { p.Kill(entireProcessTree: true); } catch { }
+                return null;
+            }
+
+            // Kill-free path only: the process has exited, so the pipe is
+            // closed and the copy completes promptly. Bounded anyway, so a
+            // wedged pump cannot hang the suite.
+            if (!pump.Wait(timeoutMs)) return null;
+            p.WaitForExit();
+
+            return new BinaryProcessResult(p.ExitCode, buffer.ToArray(), stderr.ToString());
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string[] BuildArgs(string command, string pdfPath, string? password)

@@ -134,6 +134,7 @@ Excise.Rendering	tests-only	BBoxWidth	triage:#933 qpdf reference-oracle surface 
 Excise.Rendering	tests-only	EncryptR4	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	EndLineEnding	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	FallbackTolerancePt	#1146 residue CLI wires these
+Excise.Rendering	tests-only	FilteredStreamData	triage:reference-oracle surface, like the QpdfReferenceTool row above it; an independent DECODER exists to be compared against in tests and has no production caller by design -- excise must never route its own decoding through qpdf
 Excise.Rendering	tests-only	HitsFound	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	InkStrokeCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	LayoutGapPreserved	#1146 residue CLI wires these

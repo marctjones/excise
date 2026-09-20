@@ -22,8 +22,14 @@ namespace Excise.Rendering.Tests.Differential;
 /// independent render of the SAME bytes. A decoder bug that is self-consistent
 /// between excise's own encoder and excise's own decoder cannot pass here,
 /// because neither side of the comparison is excise's own encoder.
+///
+/// This file covers the RENDER mode: excise's raster against mutool's. The
+/// PARSE mode — excise's decoded BYTES against qpdf's independent filter
+/// chain, with no rasteriser between the decoder and the assertion — lives in
+/// the .FilterByteOracle.cs partial beside it, and shares these fixtures
+/// rather than re-deriving them.
 /// </summary>
-public class ImageRequirementVerificationDifferentialTests
+public partial class ImageRequirementVerificationDifferentialTests
 {
     private const int Dpi = 72;
 

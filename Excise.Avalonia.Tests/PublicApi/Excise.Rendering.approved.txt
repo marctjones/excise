@@ -190,6 +190,14 @@ namespace Excise.Rendering.Differential
         public double BBoxWidth { get; }
         public System.Collections.Generic.IReadOnlyList<double>? Matrix { get; init; }
     }
+    public sealed class QpdfFilteredStream : System.IEquatable<Excise.Rendering.Differential.QpdfFilteredStream>
+    {
+        public QpdfFilteredStream(Excise.Rendering.Differential.QpdfStreamDataStatus Status, byte[] Bytes, string Diagnostics) { }
+        public byte[] Bytes { get; init; }
+        public string Diagnostics { get; init; }
+        public bool IsOk { get; }
+        public Excise.Rendering.Differential.QpdfStreamDataStatus Status { get; init; }
+    }
     public enum QpdfPasswordStatus
     {
         PasswordRequired = 0,
@@ -205,11 +213,18 @@ namespace Excise.Rendering.Differential
         public static System.ValueTuple<bool, string>? Check(string pdfPath, string? password = null, int timeoutMs = 30000) { }
         public static bool Decrypt(string pdfPath, string outputPath, string? password = null, int timeoutMs = 30000, bool uncompressStreams = false) { }
         public static bool EncryptR4(string inputPath, string outputPath, string userPassword, string ownerPassword, int timeoutMs = 30000) { }
+        public static Excise.Rendering.Differential.QpdfFilteredStream FilteredStreamData(string pdfPath, int objectNumber, string? password = null, int timeoutMs = 30000) { }
         public static bool? IsEncrypted(string pdfPath, int timeoutMs = 10000) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Rendering.Differential.QpdfAnnotation>? ListAnnotations(string pdfPath, string? password = null, int timeoutMs = 30000) { }
         public static int? PageCount(string pdfPath, string? password = null, int timeoutMs = 15000) { }
         public static Excise.Rendering.Differential.QpdfPasswordStatus? RequiresPassword(string pdfPath, string? password = null, int timeoutMs = 10000) { }
         public static string? ShowEncryption(string pdfPath, string? password = null, int timeoutMs = 15000) { }
+    }
+    public enum QpdfStreamDataStatus
+    {
+        Ok = 0,
+        ToolUnavailable = 1,
+        Refused = 2,
     }
     public readonly struct ReferenceProcessResources : System.IEquatable<Excise.Rendering.Differential.ReferenceProcessResources>
     {

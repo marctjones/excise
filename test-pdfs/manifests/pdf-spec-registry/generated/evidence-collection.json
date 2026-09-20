@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1332,
-  "indexedContentSha256": "8170b2f4d40846bca935f40ffa5cc84872a9c745ba67289f4a1fe355f2ab57d4",
+  "indexedFileCount": 1333,
+  "indexedContentSha256": "c71d4906b664ac5b7db2e4a1ae764f7fb36d93fc4a4dd576c9ddab2fb6bfc253",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -514,6 +514,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "header",
+            "structure"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -636,7 +644,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 63
+      "candidateReferenceCount": 64
     },
     {
       "id": "pdf.17.syntax.objects",
@@ -1958,6 +1966,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "filters",
+            "xref"
+          ]
+        },
+        {
           "path": "Excise.Rendering/JpxImageDecoder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -2251,18 +2268,9 @@
             "parameters",
             "pdfobject"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "filters",
-            "pdfobject"
-          ]
         }
       ],
-      "candidateReferenceCount": 110
+      "candidateReferenceCount": 113
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -2648,6 +2656,7 @@
           "matchedTerms": [
             "crypt",
             "encryption",
+            "filters",
             "xref"
           ]
         },
@@ -3100,6 +3109,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "filters"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -3123,18 +3140,9 @@
             "crypt",
             "encryption"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "filters",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 109
+      "candidateReferenceCount": 110
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -8005,7 +8013,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 604
+      "candidateReferenceCount": 605
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8819,7 +8827,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 307
+      "candidateReferenceCount": 308
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9794,7 +9802,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 226
+      "candidateReferenceCount": 227
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -11365,7 +11373,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 171
+      "candidateReferenceCount": 172
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -12610,7 +12618,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 167
+      "candidateReferenceCount": 168
     },
     {
       "id": "pdf.20.content.operators",
@@ -21306,6 +21314,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "requirement-002",
+            "streams"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -21347,7 +21363,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 20
+      "candidateReferenceCount": 21
     },
     {
       "id": "pdf.20.renderer.requirement-003",
@@ -22251,6 +22267,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "requirement-006"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -22323,18 +22348,9 @@
             "colour",
             "skiarenderer"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 116
+      "candidateReferenceCount": 117
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -28475,6 +28491,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::AsciiHexStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -28594,6 +28617,19 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "asciihexdecode",
+            "image",
+            "requirement-001",
+            "stream-filter",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -28646,7 +28682,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 16
+      "candidateReferenceCount": 17
     },
     {
       "id": "pdf.20.image.requirement-002",
@@ -28704,6 +28740,13 @@
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::Ascii85EncodedRedImage_MatchesMutoolDecode",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::Ascii85Stream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -28806,6 +28849,19 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ascii85decode",
+            "image",
+            "requirement-002",
+            "stream-filter",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -28829,7 +28885,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 11
+      "candidateReferenceCount": 12
     },
     {
       "id": "pdf.20.image.requirement-003",
@@ -28887,6 +28943,13 @@
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PlainFlateEncodedGradient_MatchesMutoolDecode",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::PlainFlateStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -29216,6 +29279,19 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "requirement-003",
+            "stream-filter",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -29332,7 +29408,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 45
+      "candidateReferenceCount": 46
     },
     {
       "id": "pdf.20.image.requirement-004",
@@ -29391,6 +29467,13 @@
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::TiffPredictorFlateGradient_MatchesMutoolDecode",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::TiffPredictorFlateStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -29718,6 +29801,20 @@
             "flatedecode",
             "image",
             "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "predictor-tiff",
+            "requirement-004",
+            "stream-filter",
+            "image",
+            "jbig2",
+            "jpx"
           ]
         },
         {
@@ -29839,7 +29936,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 45
+      "candidateReferenceCount": 46
     },
     {
       "id": "pdf.20.image.requirement-005",
@@ -29898,6 +29995,13 @@
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PngPredictorFlateGradient_MatchesMutoolDecode",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::PngPredictorFlateStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -30238,6 +30342,20 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "predictor-png",
+            "requirement-005",
+            "stream-filter",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -30366,7 +30484,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 47
+      "candidateReferenceCount": 48
     },
     {
       "id": "pdf.20.image.requirement-006",
@@ -30425,6 +30543,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::PlainLzwStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -30544,6 +30669,19 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "requirement-006",
+            "stream-filter",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -30577,7 +30715,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 14
+      "candidateReferenceCount": 15
     },
     {
       "id": "pdf.20.image.requirement-007",
@@ -30630,6 +30768,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::RealEarlyChangeLzwImage_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -30750,6 +30895,20 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "early-change",
+            "image",
+            "lzwdecode",
+            "requirement-007",
+            "stream-filter",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -30783,7 +30942,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 14
+      "candidateReferenceCount": 15
     },
     {
       "id": "pdf.20.image.requirement-008",
@@ -30850,6 +31009,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::LzwWithTiffPredictorStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -30903,6 +31069,16 @@
             "image",
             "lzwdecode",
             "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "lzwdecode",
+            "predictors",
+            "jbig2",
+            "jpx"
           ]
         },
         {
@@ -30972,6 +31148,20 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "predictors",
+            "requirement-008",
+            "stream-filter",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31007,7 +31197,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 14
+      "candidateReferenceCount": 16
     },
     {
       "id": "pdf.20.image.requirement-009",
@@ -31065,6 +31255,13 @@
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::RunLengthEncodedSolidGray_MatchesMutoolDecode",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::RunLengthStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -31169,6 +31366,19 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "requirement-009",
+            "runlengthdecode",
+            "stream-filter",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31212,7 +31422,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 13
+      "candidateReferenceCount": 14
     },
     {
       "id": "pdf.20.image.requirement-010",
@@ -31367,6 +31577,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ccittfaxdecode",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31405,7 +31626,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 13
+      "candidateReferenceCount": 14
     },
     {
       "id": "pdf.20.image.requirement-011",
@@ -31777,6 +31998,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ccittfaxdecode",
+            "decodeparms",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31829,7 +32062,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 35
+      "candidateReferenceCount": 36
     },
     {
       "id": "pdf.20.image.requirement-012",
@@ -32081,6 +32314,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dctdecode",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -32182,7 +32426,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 28
+      "candidateReferenceCount": 29
     },
     {
       "id": "pdf.20.image.requirement-013",
@@ -32436,6 +32680,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dctdecode",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -32536,7 +32791,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 28
+      "candidateReferenceCount": 29
     },
     {
       "id": "pdf.20.image.requirement-014",
@@ -32779,6 +33034,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "jpxdecode",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -32841,7 +33107,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 22
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdf.20.image.requirement-015",
@@ -33110,6 +33376,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "jbig2decode",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -33212,7 +33489,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 30
+      "candidateReferenceCount": 31
     },
     {
       "id": "pdf.20.image.requirement-016",
@@ -33553,6 +33830,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "jbig2decode",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -33666,7 +33954,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 36
+      "candidateReferenceCount": 37
     },
     {
       "id": "pdf.20.image.requirement-017",
@@ -33724,6 +34012,13 @@
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::CryptIdentityFilteredImage_MatchesMutoolDecode",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::CryptIdentityStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -34047,6 +34342,19 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "image",
+            "requirement-017",
+            "stream-filter",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34182,7 +34490,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 47
+      "candidateReferenceCount": 48
     },
     {
       "id": "pdf.20.image.requirement-018",
@@ -34247,6 +34555,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::FilterChainStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -34264,6 +34579,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "requirement-018",
+            "stream-filter-arrays",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34275,7 +34602,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.image.requirement-019",
@@ -37081,7 +37408,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 169
+      "candidateReferenceCount": 170
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -37570,6 +37897,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bitspercomponent",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37786,7 +38124,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 68
+      "candidateReferenceCount": 69
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -38344,6 +38682,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -38467,7 +38816,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 53
+      "candidateReferenceCount": 54
     },
     {
       "id": "pdf.20.image.requirement-027",
@@ -38865,6 +39214,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -39116,7 +39476,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 63
+      "candidateReferenceCount": 64
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -40785,6 +41145,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -40840,19 +41211,9 @@
             "lab",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/PdftocairoOutlierClassificationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image",
-            "jbig2"
-          ]
         }
       ],
-      "candidateReferenceCount": 129
+      "candidateReferenceCount": 130
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -65076,7 +65437,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 397
+      "candidateReferenceCount": 398
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -67370,7 +67731,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 651
+      "candidateReferenceCount": 652
     },
     {
       "id": "pdf.20.extension.developer",
@@ -71685,6 +72046,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "copy",
+            "metadata",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.Text.cs",
           "kind": "source",
           "matchedTerms": [
@@ -71977,17 +72348,9 @@
             "redaction",
             "security"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "copy"
-          ]
         }
       ],
-      "candidateReferenceCount": 152
+      "candidateReferenceCount": 153
     },
     {
       "id": "pdfe.product.security.external-links",

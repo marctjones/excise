@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-20T18:50:02.540685+00:00",
-  "gitRevision": "c3d8949b7bd45b0edc0a861f5b35a18069193fd7",
+  "recordedAt": "2026-09-20T19:24:33.567375+00:00",
+  "gitRevision": "d30f7bb5af8c1c9f7c68f0a9e8204b72e5f6700c",
   "dotnetVersion": "10.0.401",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -331,6 +331,11 @@
       "path": "logs/pdf20-verify/batch1.trx",
       "modifiedAt": "2026-09-20T18:49:31.828222+00:00",
       "sha256": "b8a92f172e3f7591c727efc3ee09d57abf2f084f2c4ef3a5bbffc7ba51cbcf3f"
+    },
+    {
+      "path": "logs/pdf20-parse/image-parse.trx",
+      "modifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "sha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     }
   ],
   "outcomes": [
@@ -56977,130 +56982,250 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.Ascii85EncodedRedImage_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0155852",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0109100",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.Ascii85Stream_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0148576",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.Ascii85ThenFlateFilterChain_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0285980",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0114104",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.AsciiHexEncodedRedImage_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0394628",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0119820",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.AsciiHexStream_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0120695",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.CryptIdentityFilteredImage_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0165310",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0799070",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.CryptIdentityStream_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0593769",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.DctEncodedSolidColor_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0174128",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0131307",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.ExplicitMaskStream_PaintsSameRegionMutoolDoes",
       "outcome": "Passed",
-      "duration": "00:00:00.0200250",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0201227",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.FilterChainStream_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0162514",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.LzwWithTiffPredictorGradient_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0170012",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0368056",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.LzwWithTiffPredictorStream_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0106714",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.PlainFlateEncodedGradient_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0250250",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0109769",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.PlainFlateStream_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0108051",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.PlainLzwEncodedGradient_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0178720",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0129472",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.PlainLzwStream_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0106396",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.PngPredictorFlateGradient_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0266244",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0109793",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.PngPredictorFlateStream_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0112932",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.QpdfBinaryCapture_PreservesCrLfBytesInDecodedData",
+      "outcome": "Passed",
+      "duration": "00:00:00.0155619",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.QpdfRefusesTheImageOnlyFilters_AndSaysSoRatherThanSkipping(filterEntry: \"/Filter /CCITTFaxDecode /DecodeParms << /K -1 /Col\"\u00b7\u00b7\u00b7)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0138055",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.QpdfRefusesTheImageOnlyFilters_AndSaysSoRatherThanSkipping(filterEntry: \"/Filter /JBIG2Decode\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0119061",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.QpdfRefusesTheImageOnlyFilters_AndSaysSoRatherThanSkipping(filterEntry: \"/Filter /JPXDecode\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0158889",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.RealEarlyChangeLzwImage_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0148494",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.RunLengthEncodedSolidGray_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0291448",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0165739",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.RunLengthStream_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0110285",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.ScaledAndTranslatedImage_BoundingBoxMatchesMutool",
       "outcome": "Passed",
-      "duration": "00:00:00.0193359",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0137967",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.SoftMaskAlphaRamp_CompositesSameAsMutool",
       "outcome": "Passed",
-      "duration": "00:00:00.0319819",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0134265",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.StencilImageMask_PaintsSameRegionMutoolDoes",
       "outcome": "Passed",
-      "duration": "00:00:00.0183772",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0134124",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.StencilImageMask_WithNoExplicitBitsPerComponent_StillPaintsSameRegionMutoolDoes",
       "outcome": "Passed",
-      "duration": "00:00:00.0166290",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0121606",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.TiffPredictorFlateGradient_MatchesMutoolDecode",
       "outcome": "Passed",
-      "duration": "00:00:00.0203179",
-      "trx": "logs/full-suite_Debug_20260915_113110/Excise.Rendering.Tests.chunk05.trx",
-      "resultModifiedAt": "2026-09-15T15:55:13.088146+00:00",
-      "trxSha256": "887c48f56ac9ab6d28e8374bd94df840ca913c5a861ab090475c70a99c883bf7"
+      "duration": "00:00:00.0111202",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.TiffPredictorFlateStream_DecodesToTheSameBytesQpdfDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0118609",
+      "trx": "logs/pdf20-parse/image-parse.trx",
+      "resultModifiedAt": "2026-09-20T19:23:59.769702+00:00",
+      "trxSha256": "702ba890d0305836c16a6b4b2bea1bb16e62bb3ae22a70067edd376c703d6b51"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.Issue891SymbolicCmapCorpusTests.Bug1027533_ArialBoldSubset_RendersInk_NotBlank",
@@ -73352,11 +73477,11 @@
     }
   ],
   "summary": {
-    "trxFiles": 65,
-    "tests": 9127,
+    "trxFiles": 66,
+    "tests": 9142,
     "outcomes": {
       "NotExecuted": 926,
-      "Passed": 8201
+      "Passed": 8216
     },
     "status": "recorded"
   }

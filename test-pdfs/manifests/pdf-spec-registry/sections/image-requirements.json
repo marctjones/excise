@@ -65,6 +65,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::AsciiHexStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -166,6 +173,13 @@
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::Ascii85EncodedRedImage_MatchesMutoolDecode",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::Ascii85Stream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -269,6 +283,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::PlainFlateStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -370,6 +391,13 @@
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::TiffPredictorFlateGradient_MatchesMutoolDecode",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::TiffPredictorFlateStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -473,6 +501,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::PngPredictorFlateStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -575,6 +610,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::PlainLzwStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -669,6 +711,13 @@
             "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::LzwEarlyChangeImage_RendersNotBlank",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::RealEarlyChangeLzwImage_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -779,6 +828,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::LzwWithTiffPredictorStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -880,6 +936,13 @@
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::RunLengthEncodedSolidGray_MatchesMutoolDecode",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::RunLengthStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -1697,6 +1760,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::CryptIdentityStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -1805,6 +1875,13 @@
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::Ascii85ThenFlateFilterChain_MatchesMutoolDecode",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::FilterChainStream_DecodesToTheSameBytesQpdfDoes",
+            "modes": [
+              "parse"
             ]
           }
         ]

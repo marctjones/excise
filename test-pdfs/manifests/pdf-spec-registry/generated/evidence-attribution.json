@@ -74650,10 +74650,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::AsciiHexStream_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74724,10 +74731,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::Ascii85Stream_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74808,10 +74822,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::PlainFlateStream_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74892,10 +74913,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::TiffPredictorFlateStream_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74976,10 +75004,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::PngPredictorFlateStream_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75050,10 +75085,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::PlainLzwStream_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75134,10 +75176,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::RealEarlyChangeLzwImage_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75208,10 +75257,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::LzwWithTiffPredictorStream_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75292,10 +75348,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::RunLengthStream_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75940,10 +76003,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::CryptIdentityStream_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76040,10 +76110,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs::FilterChainStream_DecodesToTheSameBytesQpdfDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -114236,11 +114313,11 @@
     "modesWithExplicitContracts": 882,
     "modesWithPassingExplicitContracts": 876,
     "modesWithRecordedPassingCandidate": 646,
-    "gradeImplemented": 129,
-    "gradeVerified": 750,
+    "gradeImplemented": 118,
+    "gradeVerified": 761,
     "gradeUnknown": 20,
-    "testMethods": 7668,
-    "testMethodsWithCapabilityCandidate": 4770,
+    "testMethods": 7681,
+    "testMethodsWithCapabilityCandidate": 4783,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
