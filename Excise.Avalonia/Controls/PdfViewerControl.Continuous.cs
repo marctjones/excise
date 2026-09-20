@@ -687,7 +687,10 @@ public partial class PdfViewerControl
             return default;
 
         var keep = ContinuousImageSampleKeepPages(keepPages, _continuousInFlight);
-        var (streams, bytes) = _continuousImageSamples.ReleaseAllExcept(keep);
+        var document = Document;
+        var (streams, bytes) = _continuousImageSamples.ReleaseAllExcept(
+            keep,
+            document == null ? null : document.EvictFromCache);
         ViewerMetrics.RecordDecodedSampleRelease(reason, streams, bytes);
         if (streams > 0 && TraceEnabled)
             Trace($"ImageSamplesReleased reason={reason} streams={streams} bytes={bytes} kept=[{string.Join(",", keep.Order())}]");

@@ -97,7 +97,15 @@ internal sealed class DecodedImageSampleRetention
     /// record, since the kept page's own record now covers it.
     /// </summary>
     /// <returns>How many streams released samples, and how many decoded bytes.</returns>
-    public (int Streams, long Bytes) ReleaseAllExcept(IReadOnlySet<int> keepPages)
+    /// <param name="evictObject">
+    /// F3 for the viewer (#1207/#1461): called with the object number of every
+    /// stream whose samples were just released, so the caller can also forget
+    /// the object itself and let its ENCODED bytes go. gcdump at the
+    /// altona-scroll peak (2026-09-19): ~100 MB of live Byte[] were encoded
+    /// image bytes of pages no longer in the keep set, pinned only by
+    /// PdfDocumentObjectStore._objectCache. Null keeps the old behaviour.
+    /// </param>
+    public (int Streams, long Bytes) ReleaseAllExcept(IReadOnlySet<int> keepPages, Action<int>? evictObject = null)
     {
         if (_streamsByPage.Count == 0)
             return default;
@@ -113,6 +121,12 @@ internal sealed class DecodedImageSampleRetention
                 case DecodedReleaseOutcome.Released:
                     released++;
                     bytes += streamBytes;
+                    // Samples gone and nothing of this render's still reads
+                    // them: the object can go too. A later draw of that page
+                    // re-resolves it, and in the GUI that is a copy out of the
+                    // in-memory file bytes, not a disk read.
+                    if (evictObject != null && stream.ObjectNumber is { } objectNumber)
+                        evictObject(objectNumber);
                     break;
                 case DecodedReleaseOutcome.Busy:
                     busy.Add(stream);

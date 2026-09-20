@@ -84,6 +84,47 @@ public class DecodedImageSampleRetentionTests
         retention.StreamsOf(5).Should().Contain(own5);
     }
 
+    /// <summary>
+    /// F3 for the viewer (#1207/#1461): once a page's samples are released, the
+    /// object itself is offered for eviction so its ENCODED bytes can go too —
+    /// gcdump at the altona-scroll peak put ~100 MB of live Byte[] in exactly
+    /// those objects. Only what was actually released is offered: a kept page's
+    /// stream, a direct (un-numbered) stream and a stream the release could not
+    /// take are not, because evicting a stream that is still drawn would just
+    /// make the next band re-parse it.
+    /// </summary>
+    [Fact]
+    public void ReleaseAllExcept_OffersEveryReleasedIndirectStreamForEviction_AndNothingElse()
+    {
+        var retention = new DecodedImageSampleRetention();
+        var released = DecodedStream(100); released.ObjectNumber = 41;
+        var direct = DecodedStream(50);                       // no object number: nothing to evict
+        var kept = DecodedStream(60); kept.ObjectNumber = 43;
+        var rewritten = DecodedStream(16); rewritten.ObjectNumber = 44;
+        rewritten.SetDecodedData(new byte[16]);              // cannot be released, so must not be evicted
+        retention.Record(1, [released, direct, rewritten]);
+        retention.Record(2, [kept]);
+
+        var evicted = new List<int>();
+        var (streams, bytes) = retention.ReleaseAllExcept(new HashSet<int> { 2 }, evicted.Add);
+
+        streams.Should().Be(2, "the numbered and the direct stream both released their samples");
+        bytes.Should().Be(150);
+        evicted.Should().Equal(new[] { 41 }, "only a released stream with an object number is offered");
+        kept.IsDecoded.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ReleaseAllExcept_WithoutAnEvictor_ReleasesSamplesExactlyAsBefore()
+    {
+        var retention = new DecodedImageSampleRetention();
+        var own = DecodedStream(100); own.ObjectNumber = 41;
+        retention.Record(1, [own]);
+
+        retention.ReleaseAllExcept(new HashSet<int>()).Should().Be((1, 100L));
+        own.IsDecoded.Should().BeFalse();
+    }
+
     [Fact]
     public void Records_MergeAcrossRenders_AndIgnoreDuplicates()
     {
