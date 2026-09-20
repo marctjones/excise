@@ -33,10 +33,25 @@ surfaced; a key a document carried and excise dropped is indistinguishable
 from a key no document carried. Both land in `unmeasured`. So `unmeasured` is
 an upper bound on "not asked", not a measurement of it.
 
-⚠️ KEY COUNTS DO NOT PARTITION. An object is cited by several tables (Table 5,
-"Entries common to all stream dictionaries", is cited by every stream object),
-and a table names several objects. Summing the keys column double-counts. The
-column is a per-row denominator, never a total.
+⚠️ `objectKeys` IS NOT THE TABLE'S ENTRY LIST, AND CANNOT BE MADE INTO ONE.
+It counts the keys of every Arlington object encoded from the table. For a
+table describing one dictionary (Table 349, DocInfo) those coincide and the
+row reads naturally. For a table describing something SHARED they diverge
+hard: Table 5, "Entries common to all stream dictionaries", defines a handful
+of entries but is cited by 33 objects carrying 489 keys between them, so the
+row reads 489. Read the column as object scope, never as "the table defines
+this many entries".
+
+Attributing per KEY instead was measured and rejected, because it is both
+sparser and wrong. Only 693 of 3,973 keys (17.4%) carry a table citation of
+their own at all; and of the keys whose own Note cites Table 5, the distinct
+names are BitsPerCoordinate, FunctionType, N, Length1 -- which are not Table 5
+entries. Arlington's `Note` is a provenance breadcrumb ("this was encoded from
+Table N"), not an entry list, and no parse of it yields one. The entry list
+lives only in the ISO text, which this repo pins by SHA-256 and does not hold.
+
+⚠️ THE COLUMNS DO NOT PARTITION EITHER. An object is cited by several tables
+and a table names several objects, so summing any column double-counts.
 
 ⚠️ THE TABLE VIEW CANNOT SEE EVERY KEY EXCISE SURFACES. Arlington models
 objects that ISO 32000-2 does not table at all -- the Adobe _Digital Signature
@@ -132,7 +147,7 @@ def main() -> int:
             "obligation": e["obligation"],
             "coveredBy": e["coveredBy"],
             "objects": objs,
-            "keys": len(keys),
+            "objectKeys": len(keys),
             "exposed": exposed,
             "mistyped": mistyped,
             "unmeasured": len(keys) - exposed - mistyped,
@@ -165,6 +180,13 @@ def main() -> int:
     print(f"{len(obligations)} obligations, by the source that must cover them:")
     for route in sorted({r["coveredBy"] for r in obligations}):
         rs = [r for r in obligations if r["coveredBy"] == route]
+        if route != "arlington-object-model":
+            # A 0 here would read as a gap. These tables are not measured
+            # THROUGH THE OBJECT MODEL at all -- the Annex A operator tables
+            # are covered by OperatorParseRecognitionTests, which this join
+            # cannot see. Absent evidence is not evidence of absence.
+            print(f"   {len(rs):4d}  {route:<24s}    — not measurable via the object model")
+            continue
         ex = sum(1 for r in rs if r["exposed"])
         print(f"   {len(rs):4d}  {route:<24s} {ex:4d} with at least one key exposed")
 
@@ -183,9 +205,9 @@ def main() -> int:
             print(f"   Table {r['table']}: {r['obligation']}")
 
     print(f"\nrows, most keys exposed first (top {args.limit}):")
-    print(f"   {'table':<7s} {'keys':>5s} {'expo':>5s} {'mist':>5s} {'unme':>5s}  obligation")
-    for r in sorted(sel, key=lambda r: (-r["exposed"], -r["keys"]))[:args.limit]:
-        print(f"   {r['table']:<7s} {r['keys']:5d} {r['exposed']:5d} {r['mistyped']:5d} "
+    print(f"   {'table':<7s} {'objKeys':>7s} {'expo':>5s} {'mist':>5s} {'unme':>5s}  obligation")
+    for r in sorted(sel, key=lambda r: (-r["exposed"], -r["objectKeys"]))[:args.limit]:
+        print(f"   {r['table']:<7s} {r['objectKeys']:7d} {r['exposed']:5d} {r['mistyped']:5d} "
               f"{r['unmeasured']:5d}  {r['obligation'][:52]}")
 
     # Keys excise surfaced that live in an object no ISO 32000-2 table cites.
@@ -199,8 +221,13 @@ def main() -> int:
               f"cites\n(Arlington models them from other specifications), so no row above "
               f"can show them:\n   " + ", ".join(sorted({o for o, _ in orphan})))
 
-    print("\nkeys/exposed/unmeasured DO NOT SUM across rows: an object is cited by several\n"
-          "tables and a table names several objects, so the columns double-count by design.\n"
+    print("\nobjKeys counts the keys of every object ENCODED FROM the table, which is not\n"
+          "the table's own entry list: Table 5 is cited by 33 objects and reads 489. Read it\n"
+          "as object scope. Per-key attribution was measured and is worse — 17.4% of keys\n"
+          "carry any citation, and those citing Table 5 name BitsPerCoordinate and\n"
+          "FunctionType, which are not Table 5 entries. The entry list is in the ISO text,\n"
+          "which this repo pins by hash and does not contain.\n"
+          "Columns do not partition: summing any of them double-counts.\n"
           "unmeasured means no corpus document exercised the key — neither implemented nor\n"
           "missing until a fixture exists. No overall percentage is printed, on purpose.")
     return 0

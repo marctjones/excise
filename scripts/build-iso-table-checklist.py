@@ -108,7 +108,9 @@ def route(reason: str) -> str:
 #   - loosen the grammar and a pinned rejection stops being rejected  -> FAIL
 #   - a new Arlington revision cites a new foreign standard           -> FAIL
 # A new standard is a thing a human must look at, not a thing to absorb.
-TABLE_REF = re.compile(r"\bTable\s*([0-9]+[A-Za-z]?|F\.[0-9]+)\b")
+# (?!\.\d) so "Table 8.39b" cannot yield the id 8 if it ever appears behind a
+# benign prefix. The prefix pin covers today's data; this covers what it cannot.
+TABLE_REF = re.compile(r"\bTable\s*([0-9]+[A-Za-z]?|F\.[0-9]+)(?!\.\d)\b")
 
 BENIGN_PREFIX = re.compile(r"""^(?: \s | , | ; | \. | and | or | see | Text\ below | from
     | Table\s*(?:[0-9]+[A-Za-z]?|F\.[0-9]+)
@@ -120,8 +122,13 @@ BENIGN_PREFIX = re.compile(r"""^(?: \s | , | ; | \. | and | or | see | Text\ bel
 # a "(same as Table 118)" aside inside a URL: 118 is a real 32000-2 table, but
 # the note is about another object's dictionary, and dropping it costs no
 # mapping (Table 118 is cited plainly elsewhere).
+# Two prefixes that belong on this list are NOT on it, and the reason is the
+# TABLE_REF guard above: "Adobe Extension Level 3, Table 8.39b" and "see Adobe
+# PDF 1.7 reference, Table 8.103" cite DOTTED ids, which no longer tokenise at
+# all, so there is no citation left for a prefix to reject. Rejecting them
+# earlier and on their own shape is stronger than rejecting them by who wrote
+# them. Adding the guard made this pin fire, which is the pin working.
 EXPECTED_FOREIGN_PREFIXES = (
-    "Adobe Extension Level 3,",
     "Adobe _Digital Signature Build Dictionary Specification_",
     "Adobe _Digital Signature Build Dictionary Specification_ Table 2 and",
     "ISO 19593-1",
@@ -132,7 +139,6 @@ EXPECTED_FOREIGN_PREFIXES = (
     "Well-Tagged PDF v1.0",
     "Well-Tagged PDF v1.0 Table 1 and",
     "https://github.com/pdf-association/pdf-issues/issues/462 (same as",
-    "see Adobe PDF 1.7 reference,",
 )
 
 
