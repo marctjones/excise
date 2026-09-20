@@ -74,6 +74,23 @@ test-pdfs/manifests/pdf-spec-registry/generated/evidence-deficiency-report.json
 # But do commit excise-authored generated implementation-regression fixtures
 !test-pdfs/generated-regressions/
 !test-pdfs/generated-regressions/**
+# RECAP court-filing sweep: commit the MANIFESTS ONLY, never the documents.
+# ⚠️ The shape differs from every block above it, deliberately. Those
+# un-ignore a whole directory; this one must un-ignore the directory so git
+# descends into it, then re-exclude its contents, because `test-pdfs/*` does
+# NOT match `test-pdfs/recap/foo.pdf` — a `*` never crosses a `/`. Negating
+# only the directory would therefore make every fetched court document
+# trackable, which is the opposite of the intent.
+# Why track these at all (#1670): the sweep already records clean documents as
+# url+sha and DELETES the PDF, so the set is reconstructible by design via
+# --fetch-negatives. Untracked, that manifest dies with the machine that made
+# it, which is exactly why #1670 and the other 56 files from #1645 are
+# unreproducible. The columns carry no recovered text (sha/name/url/detector/
+# verdict and sha/url/size) — see the script header's #1602 note.
+!test-pdfs/recap/
+test-pdfs/recap/*
+!test-pdfs/recap/.excise-manifest.tsv
+!test-pdfs/recap/.excise-negatives.tsv
 
 # Publish output
 /publish/
