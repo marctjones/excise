@@ -13,6 +13,7 @@ scripts/assert_fresh_build.py   # body of assert-fresh.sh
 scripts/assert-trx-green.sh   # the trx verdict for the two ADVISORY GitHub runners (#1593/#1594): a --filter matching nothing exits 0, and the Linux Avalonia host exits 1 on native teardown after passing. Not a local gate — lib-runner's zero-test guard and report-gates.sh cover the tiers. Its own --self-test runs as a step in both workflows
 scripts/audit-image-feature-coverage.py   # registry audit helper
 scripts/audit-pdf20-renderer-coverage.py   # registry audit helper
+scripts/bench-width-policy.py   # measures what a redaction WIDTH POLICY does to the page (drift vs the original) and what layout still restates the width (#1715/#1725). A survey, not a gate: numbers vary with the dictionary and corpus
 scripts/build-bench-tiers.py   # regenerates tests/bench-tiers/*.tsv from corpora
 scripts/build-deb.sh   # Linux packaging; no Linux PACKAGING runner (#1596) — the advisory linux.yml builds and publishes but packages nothing
 scripts/build-image-feature-inventory.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
@@ -82,6 +83,7 @@ scripts/fix_redactarea_phase4.py   # historical one-off refactor script; candida
 scripts/fix_remaining_redactarea.sh   # historical one-off refactor script; candidate for deletion
 scripts/gen-adversarial-redaction-corpus.py   # fixture generation (bench)
 scripts/gen-redaction-corpus.py   # fixture generation (bench)
+scripts/gen-redaction-weird-corpus.py   # generates test-pdfs/redaction-weird (12 layout situations with known ground truth) for bench-width-policy.py; output is gitignored like the other synthetic corpora
 scripts/generate-encrypted-test-pdfs.sh   # fixture generation
 scripts/generate-hybrid-xrefstm-fixture.py   # fixture generation
 scripts/generate-icons.sh   # asset generation
