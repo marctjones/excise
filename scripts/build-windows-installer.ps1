@@ -3,10 +3,19 @@
     Build the Windows installer for excise (Inno Setup .exe).
 
 .DESCRIPTION
-    Runs dotnet publish in self-contained single-file mode for win-x64,
-    then invokes Inno Setup to wrap the publish output in an installer.
-    Works locally on Windows and inside the .github/workflows/release.yml
-    windows-latest job.
+    Runs dotnet publish with Native AOT for win-x64 (the same flags the macOS
+    and Linux release packages use), then invokes Inno Setup to wrap the
+    publish output in an installer. Works locally on Windows and inside the
+    .github/workflows/release.yml windows-latest job.
+
+    Native AOT needs the MSVC toolchain (Visual Studio "Desktop development
+    with C++"), which hosted windows-latest runners have. It cannot
+    cross-compile, so this only works on Windows.
+
+    The publish directory is a native executable plus native libraries
+    (libSkiaSharp.dll, libHarfBuzzSharp.dll, av_libglesv2.dll) and NO managed
+    assemblies. release.yml proves that with scripts/check-aot-payload.py on the
+    publish output, the portable zip and the installed tree.
 
 .PARAMETER Version
     The version string baked into the installer ("2.1.0-rc8"). When
@@ -64,34 +73,50 @@ if (-not $iscc) {
 }
 Write-Host "  iscc        : $iscc"
 
-# ── dotnet publish (self-contained single-file) ───────────────────────
+# ── dotnet publish (Native AOT) ───────────────────────────────────────
+# Native AOT and PublishSingleFile are mutually exclusive: AOT already emits one
+# native executable, so the flags below are the ones build-macos-app.sh and
+# build-deb.sh pass for their AOT lanes. EnableScripting and IncludeTessdataInApp
+# are already off for a Release build; they are stated here so the recipe does
+# not depend on a default.
 $publishDir = Join-Path $RepoRoot "artifacts\publish\win-x64\gui"
+$symbolsDir = Join-Path $RepoRoot "artifacts\publish\win-x64\symbols"
 if (Test-Path $publishDir) { Remove-Item -Recurse -Force $publishDir }
+if (Test-Path $symbolsDir) { Remove-Item -Recurse -Force $symbolsDir }
 New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
 
-Write-Host "▶ dotnet publish Excise.App → $publishDir"
-& dotnet publish "$RepoRoot\Excise.App\Excise.App.csproj" `
-    -c Release `
-    -r win-x64 `
-    --self-contained true `
-    -p:PublishSingleFile=true `
-    -p:IncludeNativeLibrariesForSelfExtract=true `
-    -p:DebugType=None -p:DebugSymbols=false `
-    -o $publishDir | Out-Host
+$aotArgs = @(
+    '-c', 'Release',
+    '-r', 'win-x64',
+    '--self-contained', 'true',
+    '-p:PublishAot=true',
+    '-p:PublishSingleFile=false',
+    '-p:PublishReadyToRun=false',
+    '-p:EnableScripting=false',
+    '-p:IncludeTessdataInApp=false',
+    '-p:DebugType=None', '-p:DebugSymbols=false',
+    '-o', $publishDir
+)
+
+Write-Host "▶ dotnet publish Excise.App (Native AOT) → $publishDir"
+& dotnet publish "$RepoRoot\Excise.App\Excise.App.csproj" @aotArgs | Out-Host
 if ($LASTEXITCODE -ne 0) { Write-Error "dotnet publish (GUI) failed"; exit 1 }
 
 # Also publish the CLI, dropped alongside in the same install dir so
 # the optional "Add to PATH" task makes `excise.exe` available in cmd.
-Write-Host "▶ dotnet publish Excise.Cli → $publishDir"
-& dotnet publish "$RepoRoot\Excise.Cli\Excise.Cli.csproj" `
-    -c Release `
-    -r win-x64 `
-    --self-contained true `
-    -p:PublishSingleFile=true `
-    -p:IncludeNativeLibrariesForSelfExtract=true `
-    -p:DebugType=None -p:DebugSymbols=false `
-    -o $publishDir | Out-Host
+Write-Host "▶ dotnet publish Excise.Cli (Native AOT) → $publishDir"
+& dotnet publish "$RepoRoot\Excise.Cli\Excise.Cli.csproj" @aotArgs | Out-Host
 if ($LASTEXITCODE -ne 0) { Write-Error "dotnet publish (CLI) failed"; exit 1 }
+
+# Native symbols stay out of the package. An AOT publish writes the linker's
+# .pdb beside the executable (Excise.App.pdb measured 171 MB and libSkiaSharp.pdb
+# 84 MB in windows.yml run 35562489812), and the installer below packs everything
+# under $publishDir. DebugType=None asks for none; this moves any that appear.
+New-Item -ItemType Directory -Force -Path $symbolsDir | Out-Null
+foreach ($pdb in @(Get-ChildItem -Path $publishDir -Filter *.pdb -File -Recurse)) {
+    Move-Item -Path $pdb.FullName -Destination $symbolsDir -Force
+}
+Write-Host "  symbols moved aside: $symbolsDir"
 
 if (-not (Test-Path "$publishDir\Excise.App.exe")) { Write-Error "Excise.App.exe missing from publish output"; exit 1 }
 if (-not (Test-Path "$publishDir\excise.exe"))      { Write-Error "excise.exe missing from publish output"; exit 1 }

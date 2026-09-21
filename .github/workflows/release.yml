@@ -4,11 +4,25 @@
 #
 # WHAT A TAG PRODUCES
 #   macOS   excise-<v>-macos-arm64.zip          (Native AOT, ad-hoc signed .app)
-#   Windows excise-<v>-win-x64-setup.exe        (Inno Setup installer) + portable .zip
+#   Windows excise-<v>-win-x64-setup.exe        (Inno Setup installer, Native AOT) + portable .zip (same payload)
 #   Linux   excise_<v>_amd64.deb + .tar.gz      (Native AOT, built on x64)
 #           excise_<v>_arm64.deb + .tar.gz      (Native AOT, built on arm64)
 #   plus a .sha256 per asset and one SHA256SUMS, checked against the downloaded files
 #   before anything is attached.
+#
+# EVERY PACKAGE IS NATIVE AOT, AND EVERY JOB FAILS IF ITS PACKAGE IS NOT (owner
+#   requirement). All four legs publish with the same flags
+#   (-p:PublishAot=true -p:PublishReadyToRun=false -p:PublishSingleFile=false
+#   -p:EnableScripting=false -p:IncludeTessdataInApp=false). A publish can fall back
+#   to an ordinary self-contained or single-file build and still start, so each job
+#   unpacks what it is about to ship (the .deb, the tarball, the zip, the installed
+#   tree) and runs scripts/check-aot-payload.py on it: no managed assembly (a PE
+#   file with a CLI header, judged by bytes, not by a *.dll count, because the
+#   Windows payload legitimately carries native .dll files), no runtime files, and
+#   no single-file bundle marker in the main executables. The script's --self-test
+#   runs first in every job, so the check has been seen to fail before it is trusted.
+#   The Windows job also LAUNCHES the installed app and CLI: the GUI scenario
+#   runner reports whether the running process is AOT (runtimeMode).
 #
 # UNSIGNED, BY CHOICE (#1597, #1698 is the open re-decision). No signing, no
 # notarization, no auto-update. macOS shows a Gatekeeper prompt and Windows a
@@ -19,11 +33,17 @@
 #   rendering gate and coverage-floor jobs, which are what made that CI red and
 #   ignored (#1355). The Linux legs were verified natively on hosted x64 and arm64
 #   runners (run 35550350097: publish + launch + scenario, AOT included), but only for
-#   the GUI publish. Nothing here has run end to end yet: workflow_dispatch is inert
-#   off the default branch, so the first real exercise is a dispatch after this lands.
+#   the GUI publish. A dispatch on develop built all four legs green (run
+#   35555517990) BEFORE the Windows leg became Native AOT; the AOT Windows package,
+#   its payload check and its launch smoke have not run in this workflow yet, and
+#   workflow_dispatch is inert off the default branch, so the first real exercise is
+#   a dispatch after this lands. windows.yml's advisory windows-aot job has published
+#   the GUI with Native AOT on 8 consecutive develop runs (latest 35562489812), but
+#   never launched the result, and the Windows CLI has never been AOT-published.
 #   Each job ends with a check that the package is what it claims (a .deb is
-#   installed and run, the Windows installer is installed silently, the macOS bundle
-#   is inspected), so a broken package fails the job rather than the download.
+#   installed and run, the Windows installer is installed silently and launched, the
+#   macOS bundle is inspected), so a broken package fails the job rather than the
+#   download.
 #
 # TRIGGERS
 #   push of a v* tag      builds everything and creates/updates the DRAFT release.
@@ -195,6 +215,22 @@ jobs:
           tar -C stage -czf "$out" excise
           ls -lh "$out"
 
+      # The shipped bytes, not the publish directory: unpack what the .deb and the
+      # tarball contain, and check the tree the .deb installed above.
+      - name: Prove the packages are Native AOT
+        run: |
+          set -euo pipefail
+          python3 scripts/check-aot-payload.py --self-test
+          deb=$(ls dist/excise_*_"$ARCH".deb)
+          tarball=$(ls dist/excise-*-linux-*.tar.gz)
+          x=$(mktemp -d)
+          dpkg-deb -x "$deb" "$x/deb"
+          mkdir "$x/tar"
+          tar -C "$x/tar" -xzf "$tarball"
+          python3 scripts/check-aot-payload.py --main Excise.App --main excise "$x/deb/usr/lib/excise"
+          python3 scripts/check-aot-payload.py --main Excise.App --main excise "$x/tar/excise"
+          python3 scripts/check-aot-payload.py --main Excise.App --main excise /usr/lib/excise
+
       - name: Checksums
         working-directory: dist
         run: |
@@ -230,7 +266,11 @@ jobs:
         shell: pwsh
         run: choco install innosetup --no-progress -y
 
-      - name: Build the installer
+      # Native AOT, like the other three legs (the script carries the flags). AOT needs
+      # the MSVC toolchain, which windows-latest already has, and took 3-5 minutes in
+      # windows.yml's windows-aot job. The script moves native symbols out of the
+      # publish directory so they are not packed.
+      - name: Build the installer (Native AOT)
         shell: pwsh
         run: pwsh ./scripts/build-windows-installer.ps1 -Version "$env:VERSION" -OutputDir dist
 
@@ -258,6 +298,77 @@ jobs:
           $app = Join-Path $dir "Excise.App.exe"
           if (-not (Test-Path $app)) { Get-ChildItem $dir | Format-Table; throw "installed payload has no Excise.App.exe" }
           Write-Host "installed: $app ($((Get-Item $app).Length) bytes)"
+
+      - name: Unpack the portable zip
+        shell: pwsh
+        run: |
+          $zip = (Get-ChildItem dist\*.zip | Select-Object -First 1)
+          if (-not $zip) { throw "no portable zip in dist" }
+          Expand-Archive -Path $zip.FullName -DestinationPath (Join-Path $env:RUNNER_TEMP "excise-zip") -Force
+
+      # The publish directory, the unpacked portable zip and the installed tree are
+      # the same files three ways, and each is checked: the first names where a
+      # fallback happened, the other two are what users get. `python` before
+      # `python3`: on a Windows runner python3 can be the Microsoft Store stub.
+      - name: Prove the shipped payload is Native AOT
+        shell: bash
+        run: |
+          set -euo pipefail
+          py=$(command -v python || command -v python3)
+          "$py" scripts/check-aot-payload.py --self-test
+          for d in artifacts/publish/win-x64/gui "$RUNNER_TEMP/excise-zip/excise" "$RUNNER_TEMP/excise-install"; do
+            "$py" scripts/check-aot-payload.py --main Excise.App.exe --main excise.exe "$d"
+          done
+
+      # The static check reads bytes; this asks the RUNNING process. The installed CLI
+      # renders a committed PDF (SkiaSharp's native load and the font stack), and the
+      # installed GUI runs the perf-scenario runner (the `null` scenario windows.yml
+      # smokes on its Debug build), whose result file states whether the process is
+      # JIT or AOT. Neither Windows AOT binary had been launched anywhere before this
+      # step. Blocking, not continue-on-error: a smoke that cannot fail is not a smoke
+      # (#1527).
+      - name: Smoke the installed Native AOT CLI and GUI
+        shell: pwsh
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP "excise-install"
+          $out = "artifacts/aot-smoke"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $pdf = "Excise.App.Tests/Resources/sample-pdfs/birth-certificate-request-scrambled.pdf"
+          if (-not (Test-Path $pdf)) { throw "smoke fixture missing: $pdf" }
+
+          $cli = Join-Path $dir "excise.exe"
+          & $cli --version
+          if ($LASTEXITCODE -ne 0) { throw "the installed AOT CLI did not run" }
+          & $cli info $pdf | Out-Host
+          if ($LASTEXITCODE -ne 0) { throw "the installed AOT CLI could not read the fixture" }
+          & $cli render $pdf -o "$out/page1.png" --dpi 72 --ignore-permissions
+          if ($LASTEXITCODE -ne 0) { throw "the installed AOT CLI could not render" }
+          $png = (Get-Item "$out/page1.png").Length
+          Write-Host "rendered -> $png bytes"
+          if ($png -le 5000) { throw "the render produced a trivial file" }
+
+          $env:EXCISE_PERF_SCENARIO = "tests/gui-perf-scenarios.json"
+          $env:EXCISE_PERF_SCENARIO_ID = "null"
+          $env:EXCISE_PERF_SCENARIO_OUT = $out
+          $env:EXCISE_PERF_SCENARIO_SAMPLE_MS = "250"
+          $exe = Join-Path $dir "Excise.App.exe"
+          $p = Start-Process -FilePath $exe -ArgumentList $pdf -PassThru `
+                 -RedirectStandardOutput "$out/app.out.log" `
+                 -RedirectStandardError  "$out/app.err.log"
+          if (-not $p.WaitForExit(180000)) {
+            $p.Kill(); throw "the installed app did not quit within 180s; the scenario runner shuts it down itself"
+          }
+          Get-Content "$out/app.out.log","$out/app.err.log" -ErrorAction SilentlyContinue
+          $resultFile = Join-Path $out "scenario-result.json"
+          if (-not (Test-Path $resultFile)) {
+            throw "no scenario-result.json: the app died before the runner finished (exit $($p.ExitCode))"
+          }
+          $r = Get-Content $resultFile -Raw | ConvertFrom-Json
+          Write-Host "scenario=$($r.scenario) steps=$($r.steps) failures=$($r.failures) runtimeMode=$($r.configuration.runtimeMode)"
+          if ($r.configuration.runtimeMode -ne "aot") { throw "the installed app reports runtimeMode=$($r.configuration.runtimeMode), not aot" }
+          if ($r.steps -lt 1)    { throw "the scenario ran no steps" }
+          if ($r.failures -ne 0) { throw "$($r.failures) scenario step(s) failed" }
+          if ($p.ExitCode -ne 0) { throw "the app exited $($p.ExitCode) after a clean scenario" }
 
       - name: Checksums
         shell: pwsh
@@ -325,6 +436,16 @@ jobs:
           for lib in libSkiaSharp.dylib libHarfBuzzSharp.dylib libAvaloniaNative.dylib; do
             test -f "dist/excise.app/Contents/MacOS/$lib" || { echo "missing native component: $lib"; exit 1; }
           done
+
+      # The shipped bytes: unpack the zip that is about to be attached and check it.
+      # macOS ships the GUI only, so one executable is required.
+      - name: Prove the shipped bundle is Native AOT
+        run: |
+          set -euo pipefail
+          python3 scripts/check-aot-payload.py --self-test
+          x=$(mktemp -d)
+          ditto -x -k "dist/excise-${VERSION}-macos-arm64.zip" "$x"
+          python3 scripts/check-aot-payload.py --main Excise.App "$x/excise.app"
 
       # #1389: a different SDK produced a binary that wrote different PDF bytes. The
       # zip is not byte-reproducible (timestamps), so this records the checksum as
