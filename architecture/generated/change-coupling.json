@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "92d64429f1a9a8eb25e129b974416b5189c500e2",
+  "sourceRevision": "c56907cc69a3c144e8295c4106c9e4407d8c2adf",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 197,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "1629573dcc0182c43f7527a9d6fba000c3e7646f",
-    "oldestProductionCommit": "59e1f643942be5235990a15ebcdd20cbb3d27841"
+    "newestProductionCommit": "d2f5ad66faaf3d197d172520f527d4bb4db2a3c2",
+    "oldestProductionCommit": "172c54765274176db070bf6d0a609d7081c3e770"
   },
   "files": [
     {
@@ -94,19 +94,19 @@
       "commits": 10
     },
     {
-      "path": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "commits": 10
-    },
-    {
-      "path": "Excise.Rendering/SkiaRenderer.cs",
-      "commits": 10
-    },
-    {
       "path": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
       "commits": 9
     },
     {
       "path": "Excise.App/Views/PreferencesWindow.axaml",
+      "commits": 9
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "commits": 9
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.cs",
       "commits": 9
     },
     {
@@ -358,6 +358,10 @@
       "commits": 3
     },
     {
+      "path": "Excise.Core/Redaction/Recovery/RecoveryChannelTiers.cs",
+      "commits": 3
+    },
+    {
       "path": "Excise.Core/Redaction/Recovery/RestoredCopyBuilder.cs",
       "commits": 3
     },
@@ -590,10 +594,6 @@
       "commits": 2
     },
     {
-      "path": "Excise.Core/Redaction/Recovery/RecoveryChannelTiers.cs",
-      "commits": 2
-    },
-    {
       "path": "Excise.Core/Redaction/Recovery/RedactionFitAnalyzer.cs",
       "commits": 2
     },
@@ -623,10 +623,6 @@
     },
     {
       "path": "Excise.Core/Writing/PdfDocumentWriter.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.Rendering/DctImageDecoder.cs",
       "commits": 2
     },
     {
@@ -1086,6 +1082,10 @@
       "commits": 1
     },
     {
+      "path": "Excise.Rendering/DctImageDecoder.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.Rendering/Differential/MutoolReferenceRenderer.cs",
       "commits": 1
     },
@@ -1317,7 +1317,7 @@
       "source": "Excise.Rendering/SkiaRenderer.XObjects.cs",
       "target": "Excise.Rendering/SkiaRenderer.cs",
       "cochanges": 5,
-      "jaccard": 0.3846
+      "jaccard": 0.4167
     },
     {
       "source": "Excise.App/Models/WindowSettings.cs",
@@ -1446,26 +1446,20 @@
       "jaccard": 0.25
     },
     {
-      "source": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "target": "Excise.Rendering/SkiaRenderer.cs",
-      "cochanges": 4,
-      "jaccard": 0.25
-    },
-    {
       "source": "Excise.App/Composition/ApplicationComposition.cs",
       "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 4,
       "jaccard": 0.2353
     },
     {
-      "source": "Excise.Cli/Commands/UnredactCommandModels.cs",
-      "target": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
-      "cochanges": 4,
-      "jaccard": 0.2222
-    },
-    {
       "source": "Excise.Core/Primitives/PdfStream.cs",
       "target": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "cochanges": 4,
+      "jaccard": 0.2353
+    },
+    {
+      "source": "Excise.Cli/Commands/UnredactCommandModels.cs",
+      "target": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
       "cochanges": 4,
       "jaccard": 0.2222
     },
@@ -1680,6 +1674,12 @@
       "jaccard": 0.2727
     },
     {
+      "source": "Excise.Rendering/RenderOptions.cs",
+      "target": "Excise.Rendering/SkiaRenderer.cs",
+      "cochanges": 3,
+      "jaccard": 0.2727
+    },
+    {
       "source": "Excise.App/ViewModels/ThumbnailSidebarSession.cs",
       "target": "Excise.App/Views/PreferencesWindow.axaml",
       "cochanges": 3,
@@ -1704,22 +1704,16 @@
       "jaccard": 0.25
     },
     {
+      "source": "Excise.Core/Document/PdfDocumentObjectStore.cs",
+      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "cochanges": 3,
+      "jaccard": 0.25
+    },
+    {
       "source": "Excise.Core/Primitives/PdfStream.cs",
       "target": "Excise.Core/Redaction/ImageRegionRedactor.cs",
       "cochanges": 3,
       "jaccard": 0.25
-    },
-    {
-      "source": "Excise.Rendering/RenderOptions.cs",
-      "target": "Excise.Rendering/SkiaRenderer.cs",
-      "cochanges": 3,
-      "jaccard": 0.25
-    },
-    {
-      "source": "Excise.Core/Document/PdfDocumentObjectStore.cs",
-      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "cochanges": 3,
-      "jaccard": 0.2308
     },
     {
       "source": "Excise.Cli/Commands/UnredactCommandOutput.cs",
@@ -1772,6 +1766,12 @@
     {
       "source": "Excise.Cli/Commands/UnredactCommandOutput.cs",
       "target": "Excise.Core/Redaction/Recovery/RecoveryModel.cs",
+      "cochanges": 3,
+      "jaccard": 0.2
+    },
+    {
+      "source": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "target": "Excise.Rendering/SkiaRenderer.cs",
       "cochanges": 3,
       "jaccard": 0.2
     },
@@ -2916,6 +2916,12 @@
       "jaccard": 0.2222
     },
     {
+      "source": "Excise.Cli/Commands/RenderPageHandler.cs",
+      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "cochanges": 2,
+      "jaccard": 0.2222
+    },
+    {
       "source": "Excise.Core/Redaction/Recovery/RecoveryReportBuilder.cs",
       "target": "Excise.Core/Redaction/Recovery/RedactionMarkDetector.cs",
       "cochanges": 2,
@@ -3042,12 +3048,6 @@
       "jaccard": 0.2
     },
     {
-      "source": "Excise.Cli/Commands/RenderPageHandler.cs",
-      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "cochanges": 2,
-      "jaccard": 0.2
-    },
-    {
       "source": "Excise.Cli/Commands/UnredactCommandModels.cs",
       "target": "Excise.Core/Redaction/Recovery/RedactionFitAnalyzer.cs",
       "cochanges": 2,
@@ -3086,6 +3086,12 @@
     {
       "source": "Excise.Core/Redaction/Recovery/RecoveryModel.cs",
       "target": "Excise.Core/Redaction/Recovery/RedactionMarkDetector.cs",
+      "cochanges": 2,
+      "jaccard": 0.2
+    },
+    {
+      "source": "Excise.Rendering/Excise.Rendering.csproj",
+      "target": "Excise.Rendering/SkiaRenderer.cs",
       "cochanges": 2,
       "jaccard": 0.2
     },
@@ -3252,7 +3258,7 @@
       "jaccard": 0.1818
     },
     {
-      "source": "Excise.Rendering/Excise.Rendering.csproj",
+      "source": "Excise.Rendering/RenderResourceScope.cs",
       "target": "Excise.Rendering/SkiaRenderer.cs",
       "cochanges": 2,
       "jaccard": 0.1818
@@ -3342,20 +3348,14 @@
       "jaccard": 0.1667
     },
     {
-      "source": "Excise.Core/Redaction/Recovery/RecoveryChannelTiers.cs",
-      "target": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
-      "cochanges": 2,
-      "jaccard": 0.1667
-    },
-    {
       "source": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
       "target": "Excise.Core/Redaction/Recovery/RedactionFitAnalyzer.cs",
       "cochanges": 2,
       "jaccard": 0.1667
     },
     {
-      "source": "Excise.Rendering/RenderResourceScope.cs",
-      "target": "Excise.Rendering/SkiaRenderer.cs",
+      "source": "Excise.Rendering/RawSampleImageDecoder.cs",
+      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
       "cochanges": 2,
       "jaccard": 0.1667
     },
@@ -3462,8 +3462,8 @@
       "jaccard": 0.1538
     },
     {
-      "source": "Excise.Rendering/RawSampleImageDecoder.cs",
-      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "source": "Excise.Core/Redaction/Recovery/RecoveryChannelTiers.cs",
+      "target": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
       "cochanges": 2,
       "jaccard": 0.1538
     },
@@ -3744,6 +3744,12 @@
       "jaccard": 0.1333
     },
     {
+      "source": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "target": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+      "cochanges": 2,
+      "jaccard": 0.1333
+    },
+    {
       "source": "Excise.App/App.axaml.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Diagnostics.cs",
       "cochanges": 2,
@@ -3824,12 +3830,6 @@
     {
       "source": "Excise.Core/Redaction/HiddenTextDetector.cs",
       "target": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
-      "cochanges": 2,
-      "jaccard": 0.125
-    },
-    {
-      "source": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "target": "Excise.Rendering/SkiaRenderer.XObjects.cs",
       "cochanges": 2,
       "jaccard": 0.125
     },
@@ -4062,6 +4062,12 @@
       "jaccard": 0.1053
     },
     {
+      "source": "Excise.Core/Primitives/PdfStream.cs",
+      "target": "Excise.Rendering/SkiaRenderer.cs",
+      "cochanges": 2,
+      "jaccard": 0.1053
+    },
+    {
       "source": "Excise.App/ViewModels/ThumbnailSidebarSession.cs",
       "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 2,
@@ -4080,14 +4086,14 @@
       "jaccard": 0.1
     },
     {
-      "source": "Excise.Core/Primitives/PdfStream.cs",
-      "target": "Excise.Rendering/SkiaRenderer.cs",
-      "cochanges": 2,
-      "jaccard": 0.1
-    },
-    {
       "source": "Excise.App/Services/ViewerCacheTrimCoordinator.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
+      "cochanges": 2,
+      "jaccard": 0.0952
+    },
+    {
+      "source": "Excise.Core/Document/PdfDocument.cs",
+      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
       "cochanges": 2,
       "jaccard": 0.0952
     },
@@ -4118,12 +4124,6 @@
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "target": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
-      "cochanges": 2,
-      "jaccard": 0.0909
-    },
-    {
-      "source": "Excise.Core/Document/PdfDocument.cs",
-      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
       "cochanges": 2,
       "jaccard": 0.0909
     },
