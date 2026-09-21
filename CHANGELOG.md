@@ -7,6 +7,16 @@ semantic versioning.
 ## [Unreleased]
 
 ### Changed
+- **The Windows installer and portable zip are Native AOT, like the macOS and
+  Linux packages, and every release job proves its package is.** The Windows
+  build was a single-file self-contained publish. `scripts/build-windows-installer.ps1`
+  now publishes `Excise.App` and `Excise.Cli` with `PublishAot`, and
+  `scripts/check-aot-payload.py` (run by every `release.yml` job on the unpacked
+  package) fails the release on a managed assembly, the .NET runtime files, or a
+  single-file bundle marker in the main executables. The Windows job also
+  launches the installed CLI and GUI. Scripting is off in every shipped build
+  (it already was for Release) and OCR still shells out to the system `tesseract`,
+  so no shipped feature changes.
 - **`excise unredact` focuses on TEXT recovery; the image and OCR channels are
   deferred, not deleted** (#1690). Product decision by Marc Jones, 2026-09-20.
   The attack that breaks excise's own guarantee is a text attack (the PoPETs

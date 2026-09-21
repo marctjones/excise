@@ -684,13 +684,19 @@ Explorer → right-click a PDF → **Open with** → **Choose another app** → 
 ### Release automation
 
 `.github/workflows/release.yml` builds installers/app bundles and attaches them
-to a GitHub Release whenever a `v*` tag is pushed (or a release is published
-manually):
+to a **draft** GitHub Release whenever a `v*` tag is pushed (publishing stays a
+manual click; a manual `workflow_dispatch` is a dry run that uploads run
+artifacts and never touches a release):
 
-1. `linux-deb` job (ubuntu-latest) → `excise_<version>_amd64.deb` + portable `.tar.gz`
-2. `windows-exe` job (windows-latest) → `excise-<version>-win-x64-setup.exe` + portable `.zip`
-3. `macos-app` job (macos-latest) → arm64 `.app` bundle `.zip`
-4. `publish` job uploads all artifacts with `.sha256` files; tags containing `-rc`/`-beta`/`-alpha` are flagged as pre-releases.
+1. `preflight` job: the version matches the tree, the changelog has notes for it, doc claims and the license manifest are current
+2. `linux` job (ubuntu-latest and ubuntu-24.04-arm) → `excise_<version>_{amd64,arm64}.deb` + portable `.tar.gz`
+3. `windows` job (windows-latest) → `excise-<version>-win-x64-setup.exe` + portable `.zip`
+4. `macos` job (macos-latest) → arm64 `.app` bundle `.zip`
+5. `release` job checks every asset against its `.sha256` and creates the draft; tags containing `-rc`/`-beta`/`-alpha` are flagged as pre-releases.
+
+All four packages are Native AOT, and each job unpacks what it ships and fails
+if it is not (`scripts/check-aot-payload.py`: no managed assemblies, no runtime,
+no single-file bundle marker).
 
 Before tagging, run the release checklist in
 [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md). The repeatable local
