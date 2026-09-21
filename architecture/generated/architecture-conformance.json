@@ -2,7 +2,7 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "456c5c76080dec92a2470be3615414348c51835b",
+  "sourceRevision": "5c253ea31af9209be0d95a3fbcfa21c8fa1851d6",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
