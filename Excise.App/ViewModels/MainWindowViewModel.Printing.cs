@@ -15,8 +15,9 @@ namespace Excise.App.ViewModels;
 /// edits applied, printed through the platform <see cref="IDocumentPrinter"/>,
 /// and deleted afterwards (<see cref="DocumentPrintWorkflowService"/>). macOS
 /// prints through PDFKit and the system print sheet; Windows through the
-/// system print dialog and excise's own rendering (#1546); other platforms
-/// show an honest explanation (Linux printing is out of scope).
+/// system print dialog and excise's own rendering (#1546); Linux through CUPS
+/// and excise's own printer chooser (#1710); other platforms show an honest
+/// explanation.
 /// </summary>
 public partial class MainWindowViewModel
 {

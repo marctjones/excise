@@ -63,9 +63,9 @@ internal sealed record DocumentPrintRequest(
 /// The platform half of printing (#1545). The view model and
 /// <see cref="DocumentPrintWorkflowService"/> are platform-neutral; each OS
 /// supplies one of these. macOS is <see cref="MacPdfKitDocumentPrinter"/>,
-/// Windows is <see cref="WindowsDocumentPrinter"/> (#1546), and every other
-/// platform gets <see cref="UnsupportedDocumentPrinter"/> (Linux printing is
-/// out of scope).
+/// Windows is <see cref="WindowsDocumentPrinter"/> (#1546), Linux is
+/// <see cref="LinuxCupsDocumentPrinter"/> (#1710), and every other platform
+/// gets <see cref="UnsupportedDocumentPrinter"/>.
 /// </summary>
 internal interface IDocumentPrinter
 {
@@ -91,7 +91,7 @@ internal interface IDocumentPrinter
 internal sealed class UnsupportedDocumentPrinter : IDocumentPrinter
 {
     internal const string DefaultReason =
-        "Printing is available on macOS and Windows. Linux printing is not planned; use " +
+        "Printing is available on macOS, Windows and Linux (through CUPS). On this platform, use " +
         "File > Save As and print the PDF from your system's PDF viewer.";
 
     public bool IsSupported => false;
@@ -116,6 +116,11 @@ internal static class DocumentPrinterFactory
             return new MacPdfKitDocumentPrinter(loggerFactory.CreateLogger<MacPdfKitDocumentPrinter>());
         if (OperatingSystem.IsWindows())
             return WindowsDocumentPrinter.CreateNative(loggerFactory.CreateLogger<WindowsDocumentPrinter>());
+        // Linux prints through CUPS (#1710): no native dependency, so no
+        // platform attribute is needed here — only the OS check that keeps a
+        // CUPS printer off macOS and Windows.
+        if (OperatingSystem.IsLinux())
+            return LinuxCupsDocumentPrinter.CreateNative(loggerFactory.CreateLogger<LinuxCupsDocumentPrinter>());
         return new UnsupportedDocumentPrinter();
     }
 }
