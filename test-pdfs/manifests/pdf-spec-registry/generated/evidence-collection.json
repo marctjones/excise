@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1343,
-  "indexedContentSha256": "b520c67f86383792a5fe11e88fd27a313bb493d03e447f0b58212939f978d3b8",
+  "indexedContentSha256": "5b11f91c292cd18e92d20c60ec36b4af0e12da503a9fc1c5b35f7d807d0d4548",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -73585,6 +73585,7 @@
           "matchedTerms": [
             "pdfe",
             "safe",
+            "ocr",
             "redaction",
             "security"
           ]
@@ -74909,6 +74910,7 @@
           "matchedTerms": [
             "pdfe",
             "signature",
+            "ocr",
             "redaction",
             "security"
           ]
@@ -75718,6 +75720,17 @@
           ]
         },
         {
+          "path": "tests/milestones-baseline.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "ocr",
+            "pdfe",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "tests/reader-bench/bench.json",
           "kind": "test",
           "matchedTerms": [
@@ -75774,19 +75787,9 @@
             "ocr",
             "redaction"
           ]
-        },
-        {
-          "path": "docs/architecture/decisions.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "documents",
-            "pdfe",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 81
+      "candidateReferenceCount": 82
     },
     {
       "id": "pdfe.product.security.audit-log",
@@ -76822,6 +76825,7 @@
             "pdfe",
             "platform",
             "printing",
+            "ocr",
             "redaction",
             "security"
           ]
@@ -77285,6 +77289,7 @@
             "forms",
             "javascript",
             "pdfe",
+            "ocr",
             "redaction",
             "security"
           ]
