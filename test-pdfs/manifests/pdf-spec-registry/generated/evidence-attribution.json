@@ -1176,13 +1176,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsXObject",
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_RGOperator_StrokingRGB_ParsesAllOperands",
@@ -2603,13 +2601,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsXObject",
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_RGOperator_StrokingRGB_ParsesAllOperands",
@@ -4030,13 +4026,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsXObject",
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_RGOperator_StrokingRGB_ParsesAllOperands",
@@ -5457,13 +5451,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsXObject",
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_RGOperator_StrokingRGB_ParsesAllOperands",
@@ -6920,13 +6912,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsXObject",
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_RGOperator_StrokingRGB_ParsesAllOperands",
@@ -9810,13 +9800,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsXObject",
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_RGOperator_StrokingRGB_ParsesAllOperands",
@@ -17171,13 +17159,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsXObject",
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_RGOperator_StrokingRGB_ParsesAllOperands",
@@ -18598,13 +18584,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsXObject",
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_RGOperator_StrokingRGB_ParsesAllOperands",
@@ -20077,13 +20061,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsXObject",
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_RGOperator_StrokingRGB_ParsesAllOperands",
@@ -43855,6 +43837,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_RawByteString_InPdfDocEncodingRemapRange_RoundTripsExactByte",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -45148,15 +45137,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_EmbedsFarLessThanTheFullFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_TagsTheFontName",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -45336,6 +45316,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_RawByteString_InPdfDocEncodingRemapRange_RoundTripsExactByte",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46629,15 +46616,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_EmbedsFarLessThanTheFullFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_TagsTheFontName",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -46799,6 +46777,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0_d1_ClassifiedAsType3GlyphMetrics",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_RawByteString_InPdfDocEncodingRemapRange_RoundTripsExactByte",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -48092,15 +48077,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_EmbedsFarLessThanTheFullFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_TagsTheFontName",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
