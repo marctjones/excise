@@ -14,9 +14,11 @@ scripts/assert-trx-green.sh   # the trx verdict for the two ADVISORY GitHub runn
 scripts/audit-image-feature-coverage.py   # registry audit helper
 scripts/audit-pdf20-renderer-coverage.py   # registry audit helper
 scripts/bench-width-policy.py   # measures what a redaction WIDTH POLICY does to the page (drift vs the original) and what layout still restates the width (#1715/#1725). A survey, not a gate: numbers vary with the dictionary and corpus
+scripts/build-arlington-inventory.py   # derives arlington-inventory.json from the pinned Arlington model (#1709); needs the downloaded model, so not a t0 gate
 scripts/build-bench-tiers.py   # regenerates tests/bench-tiers/*.tsv from corpora
 scripts/build-deb.sh   # Linux packaging; no Linux PACKAGING runner (#1596) — the advisory linux.yml builds and publishes but packages nothing
 scripts/build-image-feature-inventory.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-iso-table-checklist.py   # derives iso32000-2-table-checklist.json from Arlington's ISO mapping (#1709); needs the downloaded model, output is byte-stable
 scripts/build-macos-app.sh   # packaging (release-smoke package gate)
 scripts/build-gui-interaction-registry.py   # invoked by check-gui-interaction-registry.sh (row gui-interaction-registry, #1374)
 scripts/build-pdf-atomic-fixture-map.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
@@ -54,6 +56,7 @@ scripts/curate-pdf20-requirements.py   # registry curation
 scripts/demo-excise-cli.sh   # demo
 scripts/diff-behavior.sh   # ad-hoc behavioural diff between two builds
 scripts/displaylink-preflight.py   # #1497 asks CoreVideo whether a display link can be created right now, so an unattended GUI run refuses to launch into the -6661 state instead of burning launches (AvaloniaUI/Avalonia#18895); invoked by run-gui-perf-scenarios.sh
+scripts/download-arlington-model.sh   # fetches the pinned Arlington model, revision + tarball SHA-256 (#1709); network, run via corpus.sh
 scripts/download-dlib-slovenia.sh   # fetches an optional corpus/tool; prerequisites are declared per row
 scripts/download-federal-corpus.sh   # fetches an optional corpus/tool; prerequisites are declared per row
 scripts/download-govdocs1.sh   # fetches an optional corpus/tool; prerequisites are declared per row
@@ -71,6 +74,7 @@ scripts/download-standards-image-corpora.sh   # fetches an optional corpus/tool;
 scripts/download-tessdata.ps1   # fetches an optional corpus/tool; prerequisites are declared per row
 scripts/download-tessdata.sh   # fetches an optional corpus/tool; prerequisites are declared per row
 scripts/download-test-pdfs.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-verapdf-arlington.sh   # pulls the veraPDF-Arlington container image pinned by digest (#1709); needs network and a container engine
 scripts/download-xray.sh   # fetches an optional corpus/tool; prerequisites are declared per row
 scripts/enrich-pdf-capability-registry.py   # registry curation
 scripts/extract-pdf20-requirements.py   # registry curation
@@ -97,6 +101,7 @@ scripts/lib-runner.sh   # library sourced by every runner
 scripts/make-reader-bench-scan.py   # #1543 builds the reader benchmark's scanned-document fixture (no local corpus holds a real multi-page scan); a generator, not a check
 scripts/mine-hard-redaction-cases.py   # bench corpus mining
 scripts/monitor-exploratory-corpus.sh   # progress monitor for a running corpus scan
+scripts/observe-arlington-keys.sh   # regenerates the read-side Arlington observation (#1709); a recorder over a corpus, not a gate
 scripts/pre-push-hook.sh   # the pre-push hook BODY (#1600); installed as a stub by test-tier.sh --install-hook, pinned by the gate-asymmetry-selftest row
 scripts/profile-render.sh   # dotnet-trace hotspot workflow for one CLI render (#1351); a diagnostic, not a gate
 scripts/profile_render_analyze.py   # body of profile-render.sh: self/inclusive time from an evented speedscope profile
@@ -104,10 +109,13 @@ scripts/profile-test-rss-by-filter.sh   # measurement helper (#861)
 scripts/reader_bench.py   # #1543 live excise vs Preview vs Acrobat memory/CPU benchmark. NOT a gate: it drives three GUI apps by keystroke on ONE machine and absolute footprint moves with load (see run-gui-perf-scenarios.sh); it also needs a display, an unlocked screen, and Preview/Acrobat installed
 scripts/reader_speed_bench.py   # #1544 live excise vs Preview vs Acrobat responsiveness benchmark (time to first change / fully drawn, speed index, scroll frame gaps). NOT a gate for the same reasons as reader_bench.py: three GUI apps, one machine, a display and Screen Recording access required
 scripts/release-smoke.sh   # RUNNER: t2
+scripts/report-arlington-status.py   # prints per-key Arlington status from the observation (#1709); a report with no verdict
 scripts/report-hotspots.sh   # invoked at the end of run-full-suite
+scripts/report-iso-table-status.py   # prints per-ISO-table status from the checklist join (#1709); a report with no verdict
 scripts/report-save-size-ratios.sh   # measurement helper
 scripts/rescan-all-corpora.sh   # manual re-scan helper
 scripts/rescan-all-pages.sh   # manual re-scan helper
+scripts/run-arlington-check.sh   # runs the veraPDF-Arlington container over PDFs, one JSON report each (#1709); needs the container, not a t0 gate
 scripts/run-bounded.sh   # wall-clock bound + worker diagnostics wrapped around a gate row by runner_step_cmdline; not a gate itself (#1283)
 scripts/run-conformance.sh   # dispatcher over conformance suites for humans; the gates it wraps are rows
 scripts/run-copy-unicode-quality-harness.sh   # convenience over tests already run by Excise.Core.Tests / Excise.Avalonia.Tests / app-tests-unchunked-evidence; its --parity lane IS row copy-whitespace-parity
