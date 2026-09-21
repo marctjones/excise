@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1343,
-  "indexedContentSha256": "a3dac2365e0804416aa027c03cbdb91f394df8ab186e83484d565f97dca514d1",
+  "indexedContentSha256": "b520c67f86383792a5fe11e88fd27a313bb493d03e447f0b58212939f978d3b8",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4071,7 +4071,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 165
+      "candidateReferenceCount": 167
     },
     {
       "id": "pdf.17.document.navigation",
@@ -8017,7 +8017,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 610
+      "candidateReferenceCount": 611
     },
     {
       "id": "pdf.17.graphics.color",
@@ -14304,6 +14304,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/FormatCompatibility/FormatCompatibilitySuiteEvidenceGateTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "artifacts",
+            "property"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -14422,6 +14430,7 @@
           "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
           "kind": "test",
           "matchedTerms": [
+            "artifacts",
             "marked",
             "property"
           ]
@@ -14456,6 +14465,14 @@
           "kind": "test",
           "matchedTerms": [
             "marked",
+            "property"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/PdfA1SerialisationConformanceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "artifacts",
             "property"
           ]
         },
@@ -14517,6 +14534,14 @@
           "kind": "test",
           "matchedTerms": [
             "marked",
+            "property"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/HostSeamTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "artifacts",
             "property"
           ]
         },
@@ -14596,7 +14621,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 66
+      "candidateReferenceCount": 69
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -21879,9 +21904,17 @@
             "tree",
             "skiarenderer"
           ]
+        },
+        {
+          "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "tree"
+          ]
         }
       ],
-      "candidateReferenceCount": 8
+      "candidateReferenceCount": 9
     },
     {
       "id": "pdf.20.renderer.requirement-004",
@@ -76441,17 +76474,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "local",
-            "log",
-            "ocr",
-            "redaction",
-            "security"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -76495,9 +76517,18 @@
             "audit",
             "log"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/RedactedCopySafetyPolicyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "audit",
+            "log",
+            "redaction"
+          ]
         }
       ],
-      "candidateReferenceCount": 145
+      "candidateReferenceCount": 149
     },
     {
       "id": "pdfe.product.platform.printing",
