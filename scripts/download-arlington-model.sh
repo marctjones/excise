@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fetch the Arlington PDF Model at the revision pinned in the capability
-# registry (#1703).
+# registry (#1709).
 #
 # WHY THIS IS A DOWNLOAD AND NOT A VENDORED COPY: the model is 36 MB and
 # regenerating the inventory from it is deterministic, so the repo tracks the

@@ -12,7 +12,7 @@ namespace Excise.Rendering.Tests.Differential;
 /// <summary>
 /// RECORDS what excise's own object API exposes for every ISO 32000-2 key the
 /// Arlington model defines, over a corpus of real documents. It asserts almost
-/// nothing on purpose (#1703).
+/// nothing on purpose (#1709).
 ///
 /// WHY A RECORDER AND NOT A TEST. The capability registry says what excise
 /// supports because a person wrote a row saying so and cited a test they also

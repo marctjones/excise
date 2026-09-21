@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Derive a PDF 2.0 object-model inventory from the Arlington PDF Model (#1703).
+"""Derive a PDF 2.0 object-model inventory from the Arlington PDF Model (#1709).
 
 WHY THIS EXISTS. The capability registry's 282 capabilities were migrated from
 four of excise's own internal matrices (see legacy-sources.json), so the

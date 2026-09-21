@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""What excise does with the ISO 32000-2 object model: done / partial / not done (#1703).
+"""What excise does with the ISO 32000-2 object model: done / partial / not done (#1709).
 
 Joins the DERIVED spec inventory (build-arlington-inventory.py) with the
 OBSERVED behaviour (ArlingtonKeyObservationTests) and prints a status per key.

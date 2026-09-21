@@ -155,11 +155,19 @@ registry.
 
 Gaps, found 2026-09-20:
 
-- **No per-file index.** The registry and governance manifest are per corpus.
-  Per-file SHA-256 exists only behind `build-pdf-corpus-governance.py
-  --hash-files`, off by default and not committed. There is no single table of
-  every PDF with its corpus, licence, PDF version, producer and validation
-  result.
+- **No unified per-file index, but the pieces exist and are fragmented.** Per-file
+  records today: a SHA-256 and size for six corpora (pdfjs 682, pdfua 428,
+  ghent 98, poppler 81, itext 29, altona 7) in six differently named manifests;
+  URL, agency, licence and SHA-256 for `federal` (12) and title and licence for
+  `local-real-world` (3); an **expected render status** for 3,915 files
+  (`tests/corpus-expectations*.tsv`: path, page, status, which is a ratchet and
+  not a purpose note); and prose triage contracts with root cause for 3,712 pages
+  (`test-pdfs/rendering-contracts/`). Per-file *purpose* is implicit: the veraPDF,
+  Isartor and PDF/UA filenames encode the clause tested and the expected verdict
+  (`6-2-2-t01-fail-a.pdf`), which is parseable but not parsed. There is no single
+  table, the formats differ, and `smoke` and `redaction-*` have no per-file record
+  beyond the download script. The governance manifest's per-file hashing
+  (`build-pdf-corpus-governance.py --hash-files`) is off by default.
 - **Five directories are unregistered:** `pdf20`, `generated-regressions`,
   `sample-pdfs` (all git-tracked, 36 files, 2.9 MB), plus `redaction-adversarial`
   (generated) and `reader-bench`. The registry cannot hold tracked directories
@@ -189,10 +197,41 @@ cannot provide, and stay small and unambiguous:
 | Public-domain documents under ~100 KB with clear provenance | yes, with source URL, SHA-256 and licence in a tracked manifest | otherwise fetched |
 | Everything else, including all real-world documents | no. Manifest of URL, pinned revision, SHA-256, licence; fetched by script | licensing, size, and no history bloat |
 
-## 6. To build, in order
+## 6. Where it lives, and what is generic
+
+**Generic core, thin excise adapter, in a top-level `conformance/` directory with
+its own solution, outside `excise.sln`.** Nothing in the core knows excise exists.
+
+| part | knows about excise? |
+|---|---|
+| Arlington TSV loader and predicate parser | no |
+| byte-level fixture emitter and variant generator | no |
+| validator adapters (veraPDF-Arlington today) | no |
+| per-ISO-table report | no |
+| **excise adapter** (open, expose the object model, save) | **yes, the only project referencing `Excise.Core`, through its public API** |
+| the known-failures baseline and the writer-delta operation list | yes, they are excise's data |
+
+Why generic: Arlington is implementation-neutral, no .NET implementation of it
+exists (searched 2026-09-20), and the generator's independence from excise is
+the property that makes it an oracle. The cost of the abstraction is one small
+interface. Running the harness against a second .NET PDF library is a cheap test
+that the tool is not excise-shaped. Not planned: a multi-implementation runner,
+or anything generic beyond what the excise adapter needs.
+
+Why a subdirectory: it is a separate tool with a separate dependency direction.
+It also keeps the generated corpus and the harness from being mistaken for excise
+tests, which are gated by `tests/gates.tsv` and attributed by the registry.
+
+**Existing conformance-related tests do not move.** They are xunit tests coupled
+to excise internals (`Excise.Rendering.Tests/Differential/`, `Excise.Core.Tests/`),
+wired into `tests/gates.tsv` and cited by path in the evidence registry; moving
+them churns both for no gain. `docs/CONFORMANCE.md` is the index that maps them to
+layers. Download and run scripts stay in `scripts/`, per the existing convention.
+
+## 7. To build, in order
 
 Each item leads with what it costs and what failure it closes. Nothing below
-starts until a decision in §7 is made.
+starts until a decision in §8 is made.
 
 1. **Pin the two unpinned core downloaders** (veraPDF corpus, Isartor). Small.
    Closes: baselines that silently drift when upstream `master` moves.
@@ -219,7 +258,7 @@ starts until a decision in §7 is made.
 
 Not planned: FDF; Annex L until the XLSX is in hand.
 
-## 7. Decisions
+## 8. Decisions
 
 1. Remove or replace `sample-pdfs/acc-global-compensation-report.pdf`?
 2. Bulk runs of a `linux/amd64` container emulated on Apple Silicon are slow.
