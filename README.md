@@ -341,7 +341,21 @@ All 15 conformance phases shipped:
 
 ### From releases
 
-Download the latest from [GitHub Releases](https://github.com/marctjones/excise/releases) and run the executable for your platform.
+Download from [GitHub Releases](https://github.com/marctjones/excise/releases). A release's packages are built by [`release.yml`](.github/workflows/release.yml) when a version tag is pushed; releases v3.9.2 through v3.10.0 attached only the macOS zip (releases up to v3.9.1 also carried Windows and Linux x64 packages, and there was no Linux arm64 build before now).
+
+| Platform | Asset | Install |
+|---|---|---|
+| macOS (Apple Silicon) | `excise-<version>-macos-arm64.zip` | Unzip and move `excise.app` to Applications. There is no Intel build. |
+| Windows 10/11 (x64) | `excise-<version>-win-x64-setup.exe`, or the portable `excise-<version>-win-x64.zip` | Run the installer, or unzip and run `Excise.App.exe`. |
+| Ubuntu / Debian (x64) | `excise_<version>_amd64.deb` | `sudo apt install ./excise_<version>_amd64.deb` |
+| Ubuntu / Debian (arm64) | `excise_<version>_arm64.deb` | `sudo apt install ./excise_<version>_arm64.deb` |
+| Any Linux | `excise-<version>-linux-x64.tar.gz`, `excise-<version>-linux-arm64.tar.gz` | Extract and run `Excise.App` (GUI) or `excise` (CLI). |
+
+The packages are self-contained: no .NET runtime is needed. The `.deb` recommends `tesseract-ocr` for OCR.
+
+**The builds are unsigned and not notarized, by choice, and there is no auto-update.** On macOS, Gatekeeper refuses the first launch: right-click the app and choose Open, or run `xattr -dr com.apple.quarantine /Applications/excise.app`. On Windows, SmartScreen shows a "Windows protected your PC" warning: choose More info, then Run anyway. Because nothing is signed, check what you downloaded: every asset has a `.sha256` file (and each release attaches a `SHA256SUMS`), and `shasum -a 256 -c <asset>.sha256` (macOS) or `sha256sum -c <asset>.sha256` (Linux) verifies it.
+
+Printing is implemented on macOS and Windows; there is no Linux printer yet (#1710).
 
 ### From source
 
