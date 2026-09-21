@@ -1818,7 +1818,8 @@ namespace Excise.Core.Redaction.Recovery
         Recovered = 0,
         PartiallyRecovered = 1,
         CandidatesOnly = 2,
-        NotRecovered = 3,
+        ContentSurvives = 3,
+        NotRecovered = 4,
     }
     public static class MarkRegionTextRecovery
     {
@@ -1938,6 +1939,7 @@ namespace Excise.Core.Redaction.Recovery
         public int MarkCount { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.MarkSummary> Marks { get; init; }
         public int MarksCandidatesOnly { get; }
+        public int MarksContentSurvives { get; }
         public int MarksNotRecovered { get; }
         public int MarksPartial { get; }
         public int MarksRecovered { get; }
