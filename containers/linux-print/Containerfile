@@ -1,0 +1,49 @@
+# End-to-end CUPS printing for excise (#1710).
+#
+# WHY THIS EXISTS. The Linux print path ends in a subprocess talking to a
+# scheduler. Unit tests with a fake runner pin the command line and every
+# failure branch, and they cannot tell you that CUPS ACCEPTS that command
+# line — only a real cupsd can. This image is the smallest thing that gives
+# one: ubuntu 24.04, cups + cups-pdf, a queue, and two independent tools
+# (qpdf, mutool) to count the pages of what comes out.
+#
+# NO SDK HERE, DELIBERATELY — the same choice containers/linux-perf makes.
+# Excise.App.Tests is an xUnit v3 project, so it publishes to a standalone
+# executable; the host publishes it self-contained and mounts it in. The image
+# stays small and independent of the toolchain version.
+#
+# ⚠️ Three things the #1710 CI spike measured that this image encodes:
+#   1. `printer-driver-cups-pdf` no longer auto-creates a queue on 24.04, so
+#      one is created with lpadmin at run time.
+#   2. cups-pdf writes to ${HOME}/PDF by default, NOT /var/spool/cups-pdf.
+#      The spike looked in the spool directory, found nothing and reported a
+#      false negative while the job had actually succeeded. run-print-test.sh
+#      therefore SETS `Out` to a known path rather than guessing one.
+#   3. AppArmor denials from cups-pdf (net_admin, a unix-socket inherit) are
+#      visible and non-fatal. Do not chase them.
+FROM docker.io/library/ubuntu:24.04
+
+# cups          the scheduler, lp and lpstat (the tools under test)
+# cups-pdf      a queue that needs no hardware and writes a PDF we can count
+# cups-filters  the pdftopdf filter chain that applies -n and page-ranges
+# qpdf, mupdf-tools  the INDEPENDENT page-count oracles. excise must never be
+#               the tool that verifies excise's own output.
+# libicu74      .NET globalization for the self-contained build
+# fontconfig/fonts  SkiaSharp needs a usable font; Excise.App.Tests loads it
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        cups cups-client cups-pdf cups-filters \
+        qpdf mupdf-tools \
+        libicu74 ca-certificates procps \
+        libfontconfig1 libfreetype6 fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
+# A non-root user to submit the job from. Printing as root is not how anyone
+# prints, and cups-pdf treats the job owner as the output owner. UID 1000 is
+# kept because that is what the podman machine maps the host user to, and a
+# mismatch makes the writable /out mount unwritable; Ubuntu 24.04 ships its
+# own UID-1000 'ubuntu' user, so that has to go first.
+RUN userdel -r ubuntu 2>/dev/null || true; \
+    useradd -m -u 1000 excise; \
+    usermod -a -G lpadmin excise
+
+ENTRYPOINT ["/bin/bash"]

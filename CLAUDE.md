@@ -1099,11 +1099,12 @@ and cost real planning time.
    assembly (bit 11) is now gated on the CLI `merge`/`split` commands (#677,
    `DocumentAction.AssembleDocument` → `CanAssemble`); still NOT gated: bit 11
    in the GUI page-organization surface (reorder/rotate/delete in the app).
-   GUI printing (macOS #1545, Windows #1546) is gated on bit 3 AND bit 12:
-   excise prints full-quality (PDFKit on macOS, its own 600 DPI-capped raster
-   through `System.Drawing.Printing` on Windows) and cannot produce the
-   degraded output a bit-12-clear document allows, so such a document does
-   not print either. ⚠️ **Only `PrintDlgExW` is still unexercised**, and
+   GUI printing (macOS #1545, Windows #1546, Linux #1710) is gated on bit 3
+   AND bit 12: excise prints full-quality (PDFKit on macOS, its own 600
+   DPI-capped raster through `System.Drawing.Printing` on Windows, the PDF
+   handed to CUPS unchanged on Linux) and cannot produce the degraded output a
+   bit-12-clear document allows, so such a document does not print either.
+   ⚠️ **Only `PrintDlgExW` is still unexercised**, and
    this entry claimed much more than that until 2026-09-20. `PrintDocument`,
    the printer DC and a **real driver** ARE exercised on Windows: `windows.yml`
    provisions "Microsoft Print to PDF" and
@@ -1114,6 +1115,20 @@ and cost real planning time.
    manual check. The rest of `WindowsDocumentPrinterTests` still uses a scripted
    dialog and a fake spooler by design, so "the tests fake it" is true of most
    of the file and NOT of the two that matter here.
+   ⚠️ **Linux printing is no longer "out of scope"** (#1710) — that wording
+   stood in `UnsupportedDocumentPrinter.DefaultReason`, the README and this
+   file until 2026-09-21. `LinuxCupsDocumentPrinter` enumerates queues with
+   `lpstat` and submits with `lp`; excise draws its own chooser because Linux
+   offers no system print dialog it can call. What is EXERCISED, and what is
+   not: the queue parsing, the `lp` command line, permission gating and every
+   failure branch run on every platform against a fake process runner
+   (`LinuxCupsDocumentPrinterTests`, `LinuxPrintPermissionGatingTests`, row
+   `Excise.App.Tests`); a REAL `cupsd` + `lpadmin` queue is driven by
+   `scripts/run-linux-print-test.sh` in a podman container, with the produced
+   PDF counted by qpdf/mutool rather than by excise, and `--demo-failure`
+   proves that harness can go red. **Physical hardware and the chooser window
+   itself are unexercised**, the Linux counterparts of the `PrintDlgExW` gap
+   above.
 
 **Previously listed here and now FIXED — do not re-add:**
 - ~~Inline images `BI...ID...EI` not handled~~ → **parsed and re-serialised**

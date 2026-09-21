@@ -237,7 +237,7 @@ portfolio workflows, or certificate-authority trust decisions.
 Current release-quality limitations are tracked in GitHub Issues and surfaced in
 release notes:
 
-- **Printing — macOS and Windows** (#1545, superseding #621; #1546).
+- **Printing — macOS, Windows and Linux** (#1545, superseding #621; #1546; #1710).
   File → Print… (⌘P / Ctrl+P) prints the document **as currently edited**:
   unsaved page changes, filled form fields, pending type-over text, and
   pending redactions, which are *removed* from the printed copy rather than
@@ -266,8 +266,25 @@ release notes:
     (*NoView* + *Print*) is printed even though the viewer does not show it.
     ⚠️ The Windows path was built and unit-tested on macOS and
     has not yet been checked on a Windows machine.
-  - **Linux** printing is not planned — Print… explains this, and you can
-    Save As and print from another viewer.
+  - **Linux** prints through CUPS (#1710). Linux gives excise no system print
+    dialog — Avalonia has no printing support, and GTK's and Qt's dialogs
+    belong to their own toolkits — so excise shows its own small chooser:
+    the CUPS queues, with your system default preselected, copies with
+    collation, and a page range. The PDF is handed to `lp` unchanged, which is
+    CUPS's native spool format, so the printout is your document as the
+    printer's own filters render it. Paper, orientation and duplex come from
+    the queue's defaults (set them in your desktop's printer settings, or with
+    `lpoptions`); *Fit to page* is passed through as CUPS's `fit-to-page` and
+    the other two scaling modes leave placement to the queue, because CUPS has
+    no shrink-only mode. When CUPS is not installed, the scheduler is not
+    running, there are no queues, or `lp` refuses the job, Print… says so and
+    quotes CUPS's own message — it never reports a job it did not submit.
+    **What is tested:** the queue parsing, the `lp` command line, permission
+    gating and every failure path run on every platform in the normal test
+    suite; `scripts/run-linux-print-test.sh` prints a real multi-page PDF to a
+    real `cupsd` in a container and checks the page count with qpdf/mutool, not
+    with excise. Printing to physical hardware has not been checked, and there
+    is no print preview.
 - **Digital signatures** — excise checks ByteRange structure, verifies the
   detached CMS signature/digest over the signed bytes, and evaluates the signer
   certificate chain against the OS trust store, reporting a consolidated state
