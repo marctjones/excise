@@ -233,35 +233,37 @@ layers. Download and run scripts stay in `scripts/`, per the existing convention
 Each item leads with what it costs and what failure it closes. Nothing below
 starts until a decision in §8 is made.
 
-1. **Pin the two unpinned core downloaders** (veraPDF corpus, Isartor). Small.
+1. **Pin the two unpinned core downloaders** (veraPDF corpus, Isartor), and every other downloader (#1727). Small.
    Closes: baselines that silently drift when upstream `master` moves.
-2. **Per-file corpus index** (`corpus.sh index`): path, SHA-256, bytes, corpus,
+2. **Per-file corpus index** (`corpus.sh index`, #1728; the bulk validation run is #1733): path, SHA-256, bytes, corpus,
    licence, PDF version, producer, pages, encrypted, and the Arlington result.
    Small script, then a long emulated run (hours for ~4,800 files; a native
    veraPDF install would be far faster). Closes: not knowing which PDFs exercise
    which spec features, and the untracked owned corpus.
-3. **Writer-delta script** (`arlington-delta`): run an excise operation over a set
+3. **Writer-delta script** (`arlington-delta`, #1732): run an excise operation over a set
    of inputs, validate both sides, fail on any introduced rule. Small, and mostly
    done by hand above. Closes: excise emitting non-conformant structure without
    anything noticing, the class of the PDF/UA `/Artifact` defect found by
    veraPDF in #1586. Must be shown to go red on a planted violation.
-4. **The C# conformance tool**, separate from excise (own directory and solution,
+4. **The C# conformance tool** (#1734 loader, #1735 emitter, #1736 variants, #1737 predicates, #1738 excise adapter and reader harness), separate from excise (own directory and solution,
    referencing excise only through its public API behind an adapter interface):
    a loader for every TSV column, a byte-level fixture emitter that is not
    excise's writer, valid and invalid variants per row, and a reader harness.
    Start with the predicate-free 72% and add predicates by frequency. Medium.
    Closes: the reader claim, which is untested at 3.4% key coverage.
-5. **Report per ISO table**, replacing the corpus-observation input of
+5. **Report per ISO table** (#1739), replacing the corpus-observation input of
    `report-iso-table-status.py` with test results, and retiring the registry
    percentages.
-6. **Hand-authored syntax fixtures** for the six lexical and xref tables.
+6. **Hand-authored syntax fixtures** for the six lexical and xref tables (#1740).
 
-Not planned: FDF; Annex L until the XLSX is in hand.
+Not planned: FDF; Annex L until the XLSX is in hand (decision: #1741).
+
+Also tracked: register the owned fixtures (#1729); the `pdf20/` fixtures are not valid 2.0 (#1730); the tracked third-party report (#1731); TestGrammar deferred with its RCA (#1742). Umbrella: #1709. What is already done is recorded and closed in #1743 to #1748.
 
 ## 8. Decisions
 
-1. Remove or replace `sample-pdfs/acc-global-compensation-report.pdf`?
-2. Bulk runs of a `linux/amd64` container emulated on Apple Silicon are slow.
+1. Remove or replace `sample-pdfs/acc-global-compensation-report.pdf` (#1731)?
+2. (#1733) Bulk runs of a `linux/amd64` container emulated on Apple Silicon are slow.
    For the per-file index, keep the container, or fetch veraPDF's native
    installer zip (GPG-signed, needs the Homebrew JDK)?
 3. Where does the generated-fixture corpus live once it exists: tracked if under
