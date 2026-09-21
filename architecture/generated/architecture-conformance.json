@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "5c253ea31af9209be0d95a3fbcfa21c8fa1851d6",
+  "sourceRevision": "b916d07eb1e9e77e680340f00c4ba900df5e7288",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7812,
+    "retainedSymbols": 7827,
     "observedComponentDependencies": 70,
     "declaredDependencies": 68,
     "acceptedExceptions": 1,
@@ -192,14 +192,14 @@
     {
       "source": "cli",
       "target": "core-redaction",
-      "references": 234,
-      "typeDependencyCount": 51,
+      "references": 255,
+      "typeDependencyCount": 57,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Cli.Commands.UnredactCommandHandler",
           "target": "Excise.Core.Redaction.Recovery.RecoveryScanner.Channels",
-          "references": 19
+          "references": 18
         }
       ]
     },
