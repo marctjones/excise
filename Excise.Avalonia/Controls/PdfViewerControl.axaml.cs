@@ -387,6 +387,13 @@ public partial class PdfViewerControl : UserControl
     public event EventHandler<FormFieldEditedEventArgs>? FormFieldEdited;
 
     /// <summary>
+    /// Fired when a field refuses an edit because it cannot represent the text
+    /// (#1671) — the value was NOT stored and the input reverts to the stored
+    /// value. The host must tell the user; nothing else will.
+    /// </summary>
+    public event EventHandler<FormFieldEditRejectedEventArgs>? FormFieldEditRejected;
+
+    /// <summary>
     /// Fired when the user finishes drawing a new field rect in
     /// FormAuthoring mode. Carries the rect in PDF points (bottom-left
     /// origin) plus the host page number.
@@ -884,12 +891,12 @@ public partial class PdfViewerControl : UserControl
         {
             if (e.Key == Key.Enter && !field.IsMultiline)
             {
-                CommitFieldEdit(field, box.Text);
+                CommitTextBox();
                 e.Handled = true;
             }
             else if (e.Key == Key.Enter && field.IsMultiline && e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
-                CommitFieldEdit(field, box.Text);
+                CommitTextBox();
                 e.Handled = true;
             }
             else if (e.Key == Key.Escape)
@@ -898,8 +905,15 @@ public partial class PdfViewerControl : UserControl
                 e.Handled = true;
             }
         };
-        box.LostFocus += (_, _) => CommitFieldEdit(field, box.Text);
+        box.LostFocus += (_, _) => CommitTextBox();
         return box;
+
+        // A refused value must not stay on screen as if it had been stored.
+        void CommitTextBox()
+        {
+            if (!CommitFieldEdit(field, box.Text))
+                box.Text = field.Value ?? string.Empty;
+        }
     }
 
     private Control CreateChoiceFieldInput(Excise.Core.Document.PdfField field, double w, double h)
@@ -1005,19 +1019,30 @@ public partial class PdfViewerControl : UserControl
         }
     }
 
-    private void CommitFieldEdit(Excise.Core.Document.PdfField field, string? newValue)
+    /// <returns>
+    /// False when the field refused the value (the input should show the stored
+    /// value again); true when it was stored or was already the value.
+    /// </returns>
+    private bool CommitFieldEdit(Excise.Core.Document.PdfField field, string? newValue)
     {
         // Skip a no-op assignment so we don't fire spurious re-render events.
-        if (string.Equals(field.Value, newValue, StringComparison.Ordinal)) return;
+        if (string.Equals(field.Value, newValue, StringComparison.Ordinal)) return true;
         try
         {
             field.SetValue(newValue);
         }
-        catch (InvalidOperationException) { return; } // read-only / signature
-        catch (ArgumentException)        { return; } // choice value not in /Opt
+        catch (InvalidOperationException) { return false; } // read-only / signature
+        catch (ArgumentException ex)
+        {
+            // Choice value not in /Opt, or (#1671) text the field's font cannot
+            // represent. Either way the value was not stored: say so.
+            FormFieldEditRejected?.Invoke(this, new FormFieldEditRejectedEventArgs(field.FullName, ex.Message));
+            return false;
+        }
 
         FormFieldEdited?.Invoke(this,
             new FormFieldEditedEventArgs(field.FullName, newValue, CurrentPage));
+        return true;
     }
 
     private static (Color Fill, Color Stroke) AnnotationColors(Excise.Core.Document.PdfAnnotation a)

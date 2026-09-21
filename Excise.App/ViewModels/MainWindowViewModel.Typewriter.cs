@@ -107,7 +107,41 @@ public partial class MainWindowViewModel
             RefreshTypewriterEditState();
         });
         SetActiveTypewriterOperation(operationId); // #781: typing targets the inspector
+        WarnIfTypewriterTextUnencodable(operationId);
         _logger.LogDebug("Edited typewriter text on page {Page}", pageNumber);
+    }
+
+    // Boxes already warned about, so one box gets one warning per stretch of
+    // unencodable text rather than one per keystroke.
+    private readonly HashSet<Guid> _typewriterUnencodableWarned = new();
+
+    /// <summary>
+    /// #1671: typewriter text is written with a base-14 font, and a character
+    /// outside its encoding is refused at save/print time. Say so when it is
+    /// typed, while the user can still fix it, instead of at save.
+    /// </summary>
+    private void WarnIfTypewriterTextUnencodable(Guid operationId)
+    {
+        var index = IndexOfTypewriterOperation(operationId);
+        if (index < 0)
+            return;
+
+        var operation = TypewriterTextOperations[index];
+        var font = operation.Style.CreateFont();
+        var listed = font.DescribeUnencodable(operation.Text);
+        if (listed == null)
+        {
+            _typewriterUnencodableWarned.Remove(operationId);
+            return;
+        }
+
+        if (!_typewriterUnencodableWarned.Add(operationId))
+            return;
+
+        _toastService.ShowWarning(
+            "This text cannot be saved as typed",
+            $"The font '{font.BaseFont}' has no character for {listed}. Remove them, or saving " +
+            "will be refused rather than writing '?' in their place.");
     }
 
     public void OnTypewriterTextBoundsChanged(Guid operationId, PdfRectangle rect, int pageNumber)
@@ -199,6 +233,7 @@ public partial class MainWindowViewModel
     {
         if (TypewriterTextOperations.Count > 0)
             TypewriterTextOperations.Clear();
+        _typewriterUnencodableWarned.Clear();
         ClearActiveTypewriterOperation(); // #781
         RefreshTypewriterEditState();
     }

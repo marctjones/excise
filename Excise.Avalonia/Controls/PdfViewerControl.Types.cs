@@ -165,6 +165,22 @@ public class FormFieldEditedEventArgs : EventArgs
     }
 }
 
+/// <summary>
+/// Event arguments for an AcroForm field edit the field REFUSED (#1671): the
+/// value was NOT stored. <see cref="Message"/> names the characters and says
+/// why, so the host can show it — the edit must never fail silently.
+/// </summary>
+public class FormFieldEditRejectedEventArgs : EventArgs
+{
+    public string FieldName { get; }
+    public string Message { get; }
+    public FormFieldEditRejectedEventArgs(string fieldName, string message)
+    {
+        FieldName = fieldName;
+        Message = message;
+    }
+}
+
 public class TypewriterTextCreatedEventArgs : EventArgs
 {
     public PdfRectangle Rect { get; }

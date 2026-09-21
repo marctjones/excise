@@ -23,8 +23,15 @@ public class BatesNumberingService
     /// <summary>
     /// Apply Bates numbers to a document
     /// </summary>
+    /// <exception cref="ArgumentException">
+    /// The prefix or suffix has a character the stamp font cannot represent
+    /// (#1671). Thrown before any page is touched — the alternative is a '?' in
+    /// every Bates number of an evidence set.
+    /// </exception>
     public void ApplyBatesNumbers(Excise.Core.Document.PdfDocument document, BatesOptions options)
     {
+        EnsurePrefixAndSuffixDrawable(options);
+
         _logger.LogInformation(
             "Applying Bates numbers: Prefix={Prefix}, Start={Start}, Digits={Digits}, Position={Position}",
             options.Prefix, options.StartNumber, options.NumberOfDigits, options.Position);
@@ -152,6 +159,10 @@ public class BatesNumberingService
         }
         return startNumber + totalPages;
     }
+
+    private static void EnsurePrefixAndSuffixDrawable(BatesOptions options)
+        => MapToStandardFont(options.FontName, options.FontSize)
+            .EnsureCanEncode(options.Prefix + options.Suffix, "the Bates prefix and suffix");
 
     private void ApplyBatesNumberToPage(PdfPage page, string batesNumber, BatesOptions options)
     {

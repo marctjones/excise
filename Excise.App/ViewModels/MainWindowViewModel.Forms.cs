@@ -329,6 +329,21 @@ public partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(StatusBarText));
     }
 
+    /// <summary>
+    /// A field refused a typed value (#1671) — the text has characters the
+    /// field's font cannot represent. The viewer has already put the stored
+    /// value back, so what is on screen is what will be saved; this is the
+    /// only place the user is told the typed value was NOT kept.
+    /// </summary>
+    public void OnFormFieldEditRejected(string fieldName, string message)
+    {
+        var shownName = Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(fieldName);
+        _logger.LogWarning("Form field '{Field}' refused an edit: {Message}", shownName, message);
+        _toastService.ShowError(
+            $"Value for '{shownName}' was NOT saved",
+            message);
+    }
+
     private void SyncFormFieldValueToServiceDocument(string fieldName, string? value)
     {
         var serviceForm = _documentService.GetCurrentDocument()?.GetAcroForm();
@@ -344,6 +359,12 @@ public partial class MainWindowViewModel
         {
             _logger.LogWarning(ex, "Failed to synchronize form field '{Field}' to save document",
                 Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(fieldName));
+
+            // #1671: an ArgumentException here is the field refusing text it
+            // cannot represent — the saved file will hold the OLD value, and a
+            // log line is not telling the user that.
+            if (ex is ArgumentException)
+                OnFormFieldEditRejected(fieldName, ex.Message);
         }
     }
 

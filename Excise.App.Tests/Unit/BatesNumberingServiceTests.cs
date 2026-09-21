@@ -527,4 +527,57 @@ public class BatesNumberingServiceTests
         result.NextBatesNumber.Should().Be(11);
         result.TotalPages.Should().Be(10);
     }
+    // ========================================================================
+    // #1671: A PREFIX THE STAMP FONT CANNOT DRAW
+    // ========================================================================
+
+    [Fact]
+    public void ApplyBatesNumbers_PrefixOutsideTheFontEncoding_IsRefused_BeforeAnyPageIsStamped()
+    {
+        using var document = Excise.Core.Document.PdfDocument.CreateNew();
+        document.Pages.AddBlank(300, 400);
+        document.Pages.AddBlank(300, 400);
+
+        var act = () => _service.ApplyBatesNumbers(document, new BatesOptions { Prefix = "ŁÓDŹ-" });
+
+        act.Should().Throw<ArgumentException>().Which.Message
+            .Should().Contain("U+0141").And.Contain("Bates prefix and suffix");
+        document.GetPage(1).GetContentStreamBytes().Should().BeEmpty();
+        document.GetPage(2).GetContentStreamBytes().Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ApplyBatesNumbers_LatinOneAccentedPrefix_StillStamps()
+    {
+        using var document = Excise.Core.Document.PdfDocument.CreateNew();
+        document.Pages.AddBlank(300, 400);
+
+        _service.ApplyBatesNumbers(document, new BatesOptions { Prefix = "MÜLLER-JOSÉ-" });
+
+        System.Text.Encoding.Latin1.GetString(document.GetPage(1).GetContentStreamBytes())
+            .Should().Contain("(M\\334LLER-JOS\\311-000001)").And.NotContain("?");
+    }
+
+    [Fact]
+    public void ApplyBatesNumbersToSet_PrefixOutsideTheFontEncoding_RecordsAFailureThatNamesTheCharacter()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"excise-bates-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var document = Excise.Core.Document.PdfDocument.CreateNew())
+            {
+                document.Pages.AddBlank(300, 400);
+                document.Save(path);
+            }
+
+            var result = _service.ApplyBatesNumbersToSet(new[] { path }, new BatesOptions { Prefix = "Ł-" });
+
+            result.Documents.Should().ContainSingle().Which.Success.Should().BeFalse();
+            result.Documents[0].ErrorMessage.Should().Contain("U+0141");
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+        }
+    }
 }

@@ -346,6 +346,32 @@ public class PdfFont
     }
 
     /// <summary>
+    /// The unencodable characters of <paramref name="text"/> as a short
+    /// human-readable list — <c>'Ł' (U+0141), 'Д' (U+0414)</c>, at most five,
+    /// then "and N more" — or <c>null</c> when the font can encode all of it.
+    /// Display-escaped, so a document- or user-supplied string cannot smuggle
+    /// bidi or control characters into a message.
+    /// </summary>
+    internal string? DescribeUnencodable(string? text)
+    {
+        if (string.IsNullOrEmpty(text) || CanEncodeFully(text)) return null;
+
+        const int shown = 5;
+        var missing = FindUnencodableCharacters(text);
+        var listed = string.Join(", ", missing.Take(shown).Select(DescribeCharacter));
+        return missing.Count > shown ? listed + $" and {missing.Count - shown} more" : listed;
+
+        static string DescribeCharacter(string scalar)
+        {
+            if (scalar.Length == 1 && char.IsSurrogate(scalar[0]))
+                return $"an unpaired surrogate (U+{(int)scalar[0]:X4})";
+            var value = char.ConvertToUtf32(scalar, 0);
+            var shownText = Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(scalar);
+            return $"'{shownText}' (U+{value:X4})";
+        }
+    }
+
+    /// <summary>
     /// Refuse to author <paramref name="text"/> this font cannot represent
     /// (#1671). <see cref="EncodeString"/> would write a <c>?</c> for each such
     /// character, so a form field or typewriter edit would look filled while
@@ -359,27 +385,14 @@ public class PdfFont
     /// </exception>
     internal void EnsureCanEncode(string? text, string what)
     {
-        if (string.IsNullOrEmpty(text) || CanEncodeFully(text)) return;
+        var listed = DescribeUnencodable(text);
+        if (listed == null) return;
 
-        const int shown = 5;
-        var missing = FindUnencodableCharacters(text);
-        var listed = string.Join(", ", missing.Take(shown).Select(DescribeCharacter));
-        if (missing.Count > shown) listed += $" and {missing.Count - shown} more";
         throw new ArgumentException(
             $"Cannot write {what}: the font '{BaseFont}' has no glyph mapping for {listed}. " +
-            "Writing '?' in their place would silently change the text. " +
-            "Use an embedded Unicode font (an appearance font or PdfDocumentBuilder.DefaultFont), " +
-            "or remove those characters.",
+            "Writing '?' in their place would silently change the text, so nothing was written. " +
+            "Remove those characters or use a font that has them.",
             nameof(text));
-
-        static string DescribeCharacter(string scalar)
-        {
-            if (scalar.Length == 1 && char.IsSurrogate(scalar[0]))
-                return $"an unpaired surrogate (U+{(int)scalar[0]:X4})";
-            var value = char.ConvertToUtf32(scalar, 0);
-            var shownText = Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(scalar);
-            return $"'{shownText}' (U+{value:X4})";
-        }
     }
 
     /// <summary>
