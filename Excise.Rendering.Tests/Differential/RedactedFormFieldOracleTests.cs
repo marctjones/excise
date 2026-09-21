@@ -94,15 +94,9 @@ public sealed class RedactedFormFieldOracleTests
         finally { try { File.Delete(path); } catch { /* best effort */ } }
     }
 
-    private static string RepoRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory != null
-               && !Directory.Exists(Path.Combine(directory.FullName, ".git"))
-               && !File.Exists(Path.Combine(directory.FullName, ".git")))
-        {
-            directory = directory.Parent;
-        }
-        return directory?.FullName ?? throw new InvalidOperationException("repository root unavailable");
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln. LOCAL
+    // checkout, deliberately: this reads THIS worktree's own source / writes its
+    // own artifacts, and the main checkout may be on a different branch.
+    private static string RepoRoot() =>
+        TestRepoLayout.LocalCheckoutRoot ?? throw new InvalidOperationException("repository root unavailable");
 }

@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using SkiaSharp;
 using Xunit;
 
@@ -57,15 +58,17 @@ public class BlankPageRecoveryTests
     public void PageThatRenderedBlank_NowInksWithinBandOfTheOracles(
         string relativePath, double minRatio, double maxRatio)
     {
-        var path = Path.Combine(FindRepoRoot(), "test-pdfs", relativePath);
-        Assert.SkipUnless(File.Exists(path), $"corpus fixture not present: {relativePath}");
+        // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
+        var path = TestRepoLayout.FindFile("test-pdfs", relativePath);
+        Assert.SkipUnless(path != null,
+            TestRepoLayout.AbsenceReason("corpus fixture", "test-pdfs/" + relativePath));
         Assert.SkipUnless(
             MutoolReferenceRenderer.IsAvailable || PdftocairoReferenceRenderer.IsAvailable,
             "no independent renderer installed (mutool or pdftocairo)");
 
         const int dpi = 150;
 
-        using var doc = PdfDocument.Open(path);
+        using var doc = PdfDocument.Open(path!);
         using var ours = new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions { Dpi = dpi });
         var ourInk = InkedPixels(ours);
 
@@ -77,13 +80,13 @@ public class BlankPageRecoveryTests
         var oracleInk = new List<(string Name, long Ink)>();
         if (MutoolReferenceRenderer.IsAvailable)
         {
-            using var m = MutoolReferenceRenderer.RenderPage(path, 1, dpi);
+            using var m = MutoolReferenceRenderer.RenderPage(path!, 1, dpi);
             if (SameBox(m, ours)) oracleInk.Add(("mutool", InkedPixels(m!)));
         }
 
         if (PdftocairoReferenceRenderer.IsAvailable)
         {
-            using var c = PdftocairoReferenceRenderer.RenderPage(path, 1, dpi);
+            using var c = PdftocairoReferenceRenderer.RenderPage(path!, 1, dpi);
             if (SameBox(c, ours)) oracleInk.Add(("pdftocairo", InkedPixels(c!)));
         }
 
@@ -255,11 +258,4 @@ public class BlankPageRecoveryTests
         return inked;
     }
 
-    private static string FindRepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !File.Exists(Path.Combine(d.FullName, "excise.sln")))
-            d = d.Parent;
-        return d?.FullName ?? AppContext.BaseDirectory;
-    }
 }

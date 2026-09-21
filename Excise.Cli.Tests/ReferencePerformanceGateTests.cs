@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Xunit;
+using Excise.TestSupport;
 
 using RenderProgram = Excise.RenderTools.Program;
 
@@ -197,12 +198,11 @@ public class ReferencePerformanceGateTests
         gate.passed.Should().BeTrue("render time is unchanged and the RSS baseline is not a measurement");
     }
 
-    private static string RepositoryRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "excise.sln"))) dir = dir.Parent;
-        return dir?.FullName ?? Directory.GetCurrentDirectory();
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln. LOCAL
+    // checkout, deliberately: this reads THIS worktree's own source / writes its
+    // own artifacts, and the main checkout may be on a different branch.
+    private static string RepositoryRoot() =>
+        TestRepoLayout.LocalCheckoutRoot ?? Directory.GetCurrentDirectory();
 
     private static IReadOnlyList<RenderProgram.ReferencePerformanceRun> Runs(
         string fixture, double renderMs, long oracleMs, string? mode,

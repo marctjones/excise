@@ -371,19 +371,16 @@ public class PdfDocumentRedactionExtensionsTests
     [Fact]
     public void RedactText_RealCanvasFixture_RemovesVisuallyOrderedWord()
     {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git")))
-            dir = dir.Parent;
-        Assert.SkipWhen(dir == null, "repository root unavailable");
-
-        var fixture = Path.Combine(dir!.FullName, "test-pdfs", "pdfjs", "canvas.pdf");
-        Assert.SkipWhen(!File.Exists(fixture), "canvas.pdf corpus fixture not present");
+        // #1706 — the shared locator, not a hand-rolled walk to .git.
+        var fixture = TestRepoLayout.FindFile("test-pdfs", "pdfjs", "canvas.pdf");
+        Assert.SkipWhen(fixture == null,
+            TestRepoLayout.AbsenceReason("canvas.pdf corpus fixture", "test-pdfs/pdfjs/canvas.pdf"));
         Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
 
-        MutoolTextOracle.ExtractAllPages(File.ReadAllBytes(fixture)).Should().Contain("styles",
+        MutoolTextOracle.ExtractAllPages(File.ReadAllBytes(fixture!)).Should().Contain("styles",
             "the independent oracle must see the regression term before redaction");
 
-        using var doc = PdfDocument.Open(fixture);
+        using var doc = PdfDocument.Open(fixture!);
         var raw = doc.Pages.Sum(page => PdfDocumentRedactionExtensions
             .FindTextMatches(page.Letters, "styles", false).Count);
         raw.Should().Be(2,
@@ -401,14 +398,12 @@ public class PdfDocumentRedactionExtensionsTests
     [Fact]
     public void FindTextMatches_RealFreecultureFixture_DoesNotInventWordBreakInsideVisibleThat()
     {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
-        Assert.SkipWhen(dir == null, "repository root unavailable");
+        // #1706 — the shared locator, not a hand-rolled walk to .git.
+        var fixture = TestRepoLayout.FindFile("test-pdfs", "pdfjs", "freeculture.pdf");
+        Assert.SkipWhen(fixture == null,
+            TestRepoLayout.AbsenceReason("freeculture.pdf corpus fixture", "test-pdfs/pdfjs/freeculture.pdf"));
 
-        var fixture = Path.Combine(dir!.FullName, "test-pdfs", "pdfjs", "freeculture.pdf");
-        Assert.SkipWhen(!File.Exists(fixture), "freeculture.pdf corpus fixture not present");
-
-        using var doc = PdfDocument.Open(fixture);
+        using var doc = PdfDocument.Open(fixture!);
         var letters = doc.GetPage(201).Letters;
 
         // 244.70 (was 243.02 before #1391). The old number was excise's own

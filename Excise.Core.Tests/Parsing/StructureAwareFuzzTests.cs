@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Parsing;
@@ -423,25 +424,16 @@ public class StructureAwareFuzzTests
 
     private static List<(string Name, byte[] Bytes)> LoadFixtures()
     {
-        var root = RepoRoot();
+        // #1706 — the shared locator, not a hand-rolled walk to excise.sln.
         var loaded = new List<(string, byte[])>();
         foreach (var relative in FixtureRelativePaths)
         {
-            var path = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
-            File.Exists(path).Should().BeTrue(
+            var path = TestRepoLayout.FindFile(relative);
+            path.Should().NotBeNull(
                 $"{relative} is checked into git; a missing fixture means a broken checkout, not an " +
                 "environment this suite may quietly skip on");
-            loaded.Add((Path.GetFileName(path), File.ReadAllBytes(path)));
+            loaded.Add((Path.GetFileName(path!), File.ReadAllBytes(path!)));
         }
         return loaded;
-    }
-
-    private static string RepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "excise.sln")))
-            dir = dir.Parent;
-        dir.Should().NotBeNull("the test binary must sit under the repository");
-        return dir!.FullName;
     }
 }

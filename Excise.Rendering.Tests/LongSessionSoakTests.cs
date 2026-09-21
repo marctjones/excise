@@ -6,6 +6,7 @@ using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests;
@@ -204,16 +205,12 @@ public class LongSessionSoakTests
     /// </summary>
     private static byte[] LoadFixture()
     {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "excise.sln")))
-            dir = dir.Parent;
-        dir.Should().NotBeNull("the test binary must sit under the repository");
-
-        var path = Path.Combine(dir!.FullName, "test-pdfs", "sample-pdfs",
-            "birth-certificate-request-scrambled.pdf");
-        File.Exists(path).Should().BeTrue(
+        // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
+        var path = TestRepoLayout.FindFile(
+            "test-pdfs", "sample-pdfs", "birth-certificate-request-scrambled.pdf");
+        path.Should().NotBeNull(
             "this fixture is checked into git; a missing one means a broken checkout, not an " +
             "environment this suite may quietly skip on");
-        return File.ReadAllBytes(path);
+        return File.ReadAllBytes(path!);
     }
 }

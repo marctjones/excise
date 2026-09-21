@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Excise.TestSupport;
 
 namespace Excise.App.Tests.UI.InteractionCoverage;
 
@@ -251,18 +252,12 @@ public static class GuiInteractionRecorder
     /// <c>.claude/worktrees/*</c> wrote its coverage into the main checkout's
     /// <c>artifacts/</c> and <c>check-gui-interaction-coverage.sh</c> found none.
     /// </summary>
-    internal static string? FindRepoRoot(string start)
-    {
-        var dir = new DirectoryInfo(start);
-        while (dir != null)
-        {
-            var git = Path.Combine(dir.FullName, ".git");
-            if (Directory.Exists(git) || File.Exists(git))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
-        return null;
-    }
+    // #1706 — TestRepoLayout's own discovery, not a second hand-rolled walk to
+    // .git. LOCAL root, deliberately (a worktree's artifacts belong to that
+    // worktree); GuiInteractionRecorderRepoRootTests builds synthetic worktree
+    // and plain-checkout trees and pins that.
+    internal static string? FindRepoRoot(string start) =>
+        TestRepoLayout.DiscoverRoots(start).Local;
 
     private sealed class AnonymousObserver<T>(Action<T> onNext) : IObserver<T>
     {

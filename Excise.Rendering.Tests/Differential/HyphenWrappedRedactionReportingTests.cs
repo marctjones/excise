@@ -1,10 +1,10 @@
-using System;
 using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -37,14 +37,6 @@ namespace Excise.Rendering.Tests.Differential;
 /// </summary>
 public class HyphenWrappedRedactionReportingTests
 {
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
-    }
-
     [Fact]
     public void AHyphenWrappedTerm_SurvivesRedaction_AndIsReportedRatherThanCalledClean()
     {
@@ -53,15 +45,17 @@ public class HyphenWrappedRedactionReportingTests
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
             "mutool not installed [requires: tool:mutool]");
 
-        var source = Path.Combine(RepoRoot(), "test-pdfs", "smoke", "scotus-trump-v-anderson.pdf");
-        Assert.SkipUnless(File.Exists(source), "smoke corpus absent [requires: corpus:smoke]");
+        // #1706 — the shared locator, not a hand-rolled walk to .git.
+        var source = TestRepoLayout.FindFile("test-pdfs", "smoke", "scotus-trump-v-anderson.pdf");
+        Assert.SkipUnless(source != null, TestRepoLayout.AbsenceReason(
+            "scotus-trump-v-anderson.pdf", "test-pdfs/smoke/scotus-trump-v-anderson.pdf"));
 
         var output = Path.Combine(Path.GetTempPath(), $"excise-1372-{Guid.NewGuid():N}.pdf");
         try
         {
             RedactionReport report;
             int pageCount;
-            using (var doc = PdfDocument.Open(File.ReadAllBytes(source)))
+            using (var doc = PdfDocument.Open(File.ReadAllBytes(source!)))
             {
                 report = doc.RedactText("Anderson");
                 pageCount = doc.PageCount;

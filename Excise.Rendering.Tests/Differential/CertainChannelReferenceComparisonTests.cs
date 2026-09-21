@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,6 +6,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -30,27 +30,23 @@ public class CertainChannelReferenceComparisonTests
     private readonly ITestOutputHelper _out;
     public CertainChannelReferenceComparisonTests(ITestOutputHelper o) => _out = o;
 
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
-    }
-
     [Fact]
     public void ExciseCertainChannel_RecoversUnderBoxText_AtLeastAsWellAsXRay()
     {
-        var corpus = Path.Combine(RepoRoot(), "test-pdfs", "redaction-synthetic");
-        var manifest = Path.Combine(corpus, "manifest.jsonl");
-        Assert.SkipUnless(File.Exists(manifest),
-            "constructed corpus absent — run scripts/gen-redaction-corpus.py [requires: corpus:redaction-synthetic]");
+        // #1706 — this was excise-vs-x-ray reference comparison, the test that
+        // tells us whether `unredact` is any good, silently not running in a
+        // worktree: the hand-rolled walk stopped at the worktree's .git FILE,
+        // short of the main checkout where this synthetic corpus lives.
+        var corpus = TestRepoLayout.FindDirectory("test-pdfs", "redaction-synthetic");
+        var manifest = corpus == null ? null : Path.Combine(corpus, "manifest.jsonl");
+        Assert.SkipUnless(manifest != null && File.Exists(manifest), TestRepoLayout.AbsenceReason(
+            "constructed corpus — run scripts/gen-redaction-corpus.py", "test-pdfs/redaction-synthetic"));
 
-        var cases = File.ReadAllLines(manifest).Where(l => l.Length > 0)
+        var cases = File.ReadAllLines(manifest!).Where(l => l.Length > 0)
             .Select(l => JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(l)!)
             .Where(m => m["method"].GetString() == "under-box")
             .Select(m => (Id: m["id"].GetString()!, Answer: m["answer"].GetString()!, Colour: m["colour"].GetString()!))
-            .Where(c => File.Exists(Path.Combine(corpus, c.Id + ".pdf")))
+            .Where(c => File.Exists(Path.Combine(corpus!, c.Id + ".pdf")))
             .ToList();
         cases.Should().NotBeEmpty("the under-box band is the certain channel's ground truth");
 
@@ -74,7 +70,7 @@ public class CertainChannelReferenceComparisonTests
 
         foreach (var c in cases)
         {
-            var path = Path.Combine(corpus, c.Id + ".pdf");
+            var path = Path.Combine(corpus!, c.Id + ".pdf");
             var cls = Class(c.Colour);
             total[cls] = total.GetValueOrDefault(cls) + 1;
 

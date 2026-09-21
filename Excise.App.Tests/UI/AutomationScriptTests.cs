@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.App.Services;
 using Excise.App.ViewModels;
 using Xunit;
+using Excise.TestSupport;
 namespace Excise.App.Tests.UI;
 
 /// <summary>
@@ -76,27 +77,12 @@ public class AutomationScriptTests
     }
 
     /// <summary>
-    /// Helper to find the repository root directory.
+    /// Helper to find the repository root directory. #1706: TestRepoLayout's
+    /// own discovery instead of a second hand-rolled walk to .git. LOCAL root —
+    /// automation-scripts/ is tracked, and this worktree's copy is the one to run.
     /// </summary>
-    private string? FindRepositoryRoot(string startPath)
-    {
-        var dir = new DirectoryInfo(startPath);
-
-        while (dir != null)
-        {
-            // Look for .git (a directory, or a file in a worktree) or automation-scripts directory
-            if (Directory.Exists(Path.Combine(dir.FullName, ".git")) ||
-                File.Exists(Path.Combine(dir.FullName, ".git")) ||
-                Directory.Exists(Path.Combine(dir.FullName, "automation-scripts")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        return null;
-    }
+    private string? FindRepositoryRoot(string startPath) =>
+        TestRepoLayout.DiscoverRoots(startPath).Local;
 
     [Fact]
     public async Task AutomationScript_LoadDocument_ExecutesSuccessfully()

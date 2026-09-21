@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AwesomeAssertions;
+using Excise.TestSupport;
 
 namespace Excise.Core.Tests.FormatCompatibility;
 
@@ -293,19 +294,9 @@ public class FormatCompatibilitySuiteEvidenceGateTests
         return (mode & (UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute)) != 0;
     }
 
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "excise.sln")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Could not find repository root (no excise.sln above test base directory).");
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln. LOCAL
+    // checkout, deliberately: this reads THIS worktree's own source / writes its
+    // own artifacts, and the main checkout may be on a different branch.
+    private static string FindRepoRoot() =>
+        TestRepoLayout.LocalCheckoutRoot ?? throw new DirectoryNotFoundException("Could not find repository root (no excise.sln above test base directory).");
 }

@@ -643,18 +643,14 @@ public sealed class AdversarialRedactionRegressionTests
         reopened.PageCount.Should().BeGreaterThan(0);
     }
 
-    private static string RepoRoot()
-    {
-        var d = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
-        // A linked Git worktree has a .git FILE pointing at the shared Git
-        // directory, while a primary checkout has a .git directory. Tests that
-        // opt into a local corpus must support both layouts.
-        while (d != null &&
-               !System.IO.Directory.Exists(System.IO.Path.Combine(d.FullName, ".git")) &&
-               !System.IO.File.Exists(System.IO.Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new System.InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + System.AppContext.BaseDirectory);
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk. The old comment here
+    // explained the .git-FILE-vs-directory distinction correctly but still
+    // stopped AT the worktree, short of the main checkout where these
+    // gitignored corpora live.
+    private static string RepoRoot() =>
+        TestRepoLayout.MainCheckoutRoot
+        ?? throw new System.InvalidOperationException(
+            "repository root not found above " + System.AppContext.BaseDirectory);
 
     [Fact]
     public void RedactText_DoesNotMatchAcrossAWordGap_NoSpaceGlyph()

@@ -6,6 +6,7 @@ using System.Text.Json;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -42,29 +43,29 @@ public sealed class AdvanceParityTests
     private static readonly string[] CorpusDirs =
         { "test-pdfs/smoke", "test-pdfs/sample-pdfs", "test-pdfs/redaction-synthetic" };
 
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? AppContext.BaseDirectory;
-    }
-
     private sealed record PageDrift(string Key, int Aligned, double MeanDriftPt, double MaxDriftPt, string Status);
 
     [Fact]
     public void PerGlyphAdvanceParity_AgainstMutool()
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "needs mutool [requires: tool:mutool]");
-        var root = RepoRoot();
 
+        // #1706 — the shared locator, so a worktree's .git FILE does not stop
+        // the search short of the main checkout, where these corpora live.
         var pdfs = CorpusDirs
-            .Select(d => Path.Combine(root, d))
-            .Where(Directory.Exists)
-            .SelectMany(d => Directory.GetFiles(d, "*.pdf"))
+            .Select(d => TestRepoLayout.FindDirectory(d))
+            .Where(d => d != null)
+            .SelectMany(d => Directory.GetFiles(d!, "*.pdf"))
             .Where(f => !f.Contains("redaction-synthetic") || Path.GetFileName(f).Contains("-original-"))
             .OrderBy(p => p, StringComparer.Ordinal)
             .ToList();
-        Assert.SkipWhen(pdfs.Count == 0, "corpus absent [requires: corpus:smoke]");
+        Assert.SkipWhen(pdfs.Count == 0, TestRepoLayout.AbsenceReason("corpus", CorpusDirs));
+
+        // baseline.json is TRACKED (checked in) and updated in place by
+        // --update, so it reads from and writes to the LOCAL checkout, not
+        // wherever the gitignored corpora happen to live.
+        var root = TestRepoLayout.LocalCheckoutRoot
+            ?? throw new InvalidOperationException("no repository checkout found above " + AppContext.BaseDirectory);
 
         var drifts = new List<PageDrift>();
         foreach (var pdf in pdfs)

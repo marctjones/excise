@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
 using Excise.Rendering.Fonts;
+using Excise.TestSupport;
 using SkiaSharp;
 using Xunit;
 
@@ -142,16 +143,13 @@ public class FreeTextComplexScriptDifferentialTests
         return path!;
     }
 
+    // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
     private static string? FindPdfjsFixture()
     {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "excise.sln")))
-            dir = dir.Parent;
-        if (dir == null) return null;
-
-        var corpus = Path.Combine(dir.FullName, "test-pdfs", "pdfjs");
-        if (!Directory.Exists(corpus)) return null;
-        return Directory.EnumerateFiles(corpus, FixtureName, SearchOption.AllDirectories).FirstOrDefault();
+        var corpus = TestRepoLayout.FindDirectory("test-pdfs", "pdfjs");
+        return corpus == null
+            ? null
+            : Directory.EnumerateFiles(corpus, FixtureName, SearchOption.AllDirectories).FirstOrDefault();
     }
 
     private static void RequireArabicSystemFont()

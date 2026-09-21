@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,6 +6,7 @@ using AwesomeAssertions;
 using Excise.Core.Content;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Content;
@@ -33,14 +33,6 @@ public class WalkedGlyphByteOffsetTests
         public void OnTjAdjustment(double adjustment) { }
     }
 
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
-    }
-
     private static List<List<WalkedGlyph>> Walk(PdfPage page)
     {
         var sink = new RunSink { Runs = new List<List<WalkedGlyph>>() };
@@ -53,10 +45,13 @@ public class WalkedGlyphByteOffsetTests
     [Fact]
     public void CidFont_ByteOffsetTracksRawBytes_NotTheCharacterIndex()
     {
-        var path = Path.Combine(RepoRoot(), "test-pdfs", "pdfjs", "cid_cff.pdf");
-        Assert.SkipUnless(File.Exists(path), "CID fixture absent [requires: corpus:pdfjs]");
+        // #1706 — the shared locator, so a worktree's .git FILE does not stop
+        // the search short of the main checkout, where this corpus lives.
+        var path = TestRepoLayout.FindFile("test-pdfs", "pdfjs", "cid_cff.pdf");
+        Assert.SkipUnless(path != null,
+            TestRepoLayout.AbsenceReason("CID fixture", "test-pdfs/pdfjs/cid_cff.pdf"));
 
-        using var doc = PdfDocument.Open(File.ReadAllBytes(path));
+        using var doc = PdfDocument.Open(File.ReadAllBytes(path!));
         var runs = Walk(doc.GetPage(1)).Where(r => r.Count > 0).ToList();
         runs.Should().NotBeEmpty();
 

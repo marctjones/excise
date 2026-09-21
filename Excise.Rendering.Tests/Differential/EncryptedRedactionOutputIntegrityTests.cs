@@ -6,6 +6,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -34,14 +35,6 @@ namespace Excise.Rendering.Tests.Differential;
 /// </summary>
 public class EncryptedRedactionOutputIntegrityTests
 {
-    private static string RepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git")))
-            dir = dir.Parent;
-        return dir?.FullName ?? AppContext.BaseDirectory;
-    }
-
     private static readonly string[] Corpora =
     {
         "test-pdfs/pdfjs", "test-pdfs/pdfium", "test-pdfs/poppler",
@@ -49,23 +42,17 @@ public class EncryptedRedactionOutputIntegrityTests
         "test-pdfs/itext",
     };
 
-    private static string? Resolve(string fileName)
-    {
-        var root = RepoRoot();
-        foreach (var c in Corpora)
-        {
-            var p = Path.Combine(root, c, fileName);
-            if (File.Exists(p)) return p;
-        }
-        return null;
-    }
+    // #1706 — the shared locator: a hand-rolled walk to .git stops at a
+    // worktree's .git FILE, short of the main checkout where these live.
+    private static string? Resolve(string fileName) =>
+        Corpora.Select(c => TestRepoLayout.FindFile(c, fileName)).FirstOrDefault(p => p != null);
 
     /// <summary>Every (fixture, password) pair the manifest documents.</summary>
     public static TheoryData<string, string> EncryptedFixtures()
     {
         var data = new TheoryData<string, string>();
-        var manifest = Path.Combine(RepoRoot(), "tests/corpus-passwords.tsv");
-        if (!File.Exists(manifest)) return data;
+        var manifest = TestRepoLayout.FindFile("tests/corpus-passwords.tsv");
+        if (manifest == null) return data;
 
         foreach (var line in File.ReadAllLines(manifest))
         {

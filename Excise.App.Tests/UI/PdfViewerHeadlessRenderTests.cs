@@ -7,6 +7,7 @@ using AwesomeAssertions;
 using Excise.Avalonia.Controls;
 using Excise.Avalonia.Imaging;
 using Excise.Core.Parsing;
+using Excise.TestSupport;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -830,19 +831,18 @@ public class PdfViewerHeadlessRenderTests
         return Path.Combine(dir.FullName, "UI", "baselines", $"{testName}.png");
     }
 
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "excise.sln")) &&
-                Directory.Exists(Path.Combine(dir.FullName, "test-pdfs")))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Could not locate repository root.");
-    }
+    // #1706 — TestRepoLayout, not a hand-rolled walk requiring excise.sln AND
+    // a test-pdfs directory at the same level. That second condition made the
+    // defect WORSE here than a plain .git/excise.sln anchor: a worktree often
+    // has a PARTIAL test-pdfs (the tracked subdirectories only — pdf20,
+    // generated-regressions, manifests, rendering-contracts, sample-pdfs), so
+    // the walk stopped at the worktree root believing it had found a complete
+    // corpus, and any gitignored fixture a rendering contract pointed at then
+    // read as silently absent from a sweep that is supposed to cover the GUI
+    // display surface.
+    private static string FindRepoRoot() =>
+        TestRepoLayout.MainCheckoutRoot
+        ?? throw new InvalidOperationException("Could not locate repository root.");
 
     private static string FindRepoFile(params string[] pathParts)
     {

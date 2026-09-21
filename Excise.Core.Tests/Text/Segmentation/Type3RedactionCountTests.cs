@@ -1,9 +1,8 @@
-using System;
-using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -18,23 +17,15 @@ namespace Excise.Core.Tests.Text.Segmentation;
 /// </summary>
 public sealed class Type3RedactionCountTests
 {
-    private static string RepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null &&
-               !Directory.Exists(Path.Combine(d.FullName, ".git")) &&
-               !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d?.FullName ?? throw new InvalidOperationException(
-            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
-    }
-
     [Fact]
     public void Type3Text_RedactionReportsTheRemoval_NotZero()
     {
-        var path = Path.Combine(RepoRoot(), "test-pdfs", "poppler", "tests", "type3.pdf");
-        Assert.SkipUnless(File.Exists(path), "type3.pdf absent [requires: corpus:poppler]");
+        // #1706 — the shared locator, not a hand-rolled walk to .git.
+        var path = TestRepoLayout.FindFile("test-pdfs", "poppler", "tests", "type3.pdf");
+        Assert.SkipUnless(path != null,
+            TestRepoLayout.AbsenceReason("type3.pdf", "test-pdfs/poppler/tests/type3.pdf"));
 
-        using (var geo = PdfDocument.Open(path))
+        using (var geo = PdfDocument.Open(path!))
         {
             // Root-cause guard: the Type3 glyph cell must sit WITHIN the page, not
             // hundreds of units above it (the off-page centre #1190 was about).
@@ -48,7 +39,7 @@ public sealed class Type3RedactionCountTests
             }
         }
 
-        using var doc = PdfDocument.Open(path);
+        using var doc = PdfDocument.Open(path!);
         doc.RedactText("ababab", drawBlackRect: false).VerifiedRemovals
             .Should().BeGreaterThan(0, "Type3 redaction must REPORT the removal, not 0 (#1190)");
     }

@@ -24,8 +24,9 @@ public class GuiInteractionRecorderRepoRootTests
             var worktree = Path.Combine(main, ".claude", "worktrees", "wt");
             var binary = Path.Combine(worktree, "Excise.App.Tests", "bin", "Debug", "net10.0");
             Directory.CreateDirectory(binary);
-            File.WriteAllText(Path.Combine(worktree, ".git"),
-                "gitdir: " + Path.Combine(main, ".git", "worktrees", "wt") + "\n");
+            // One line on purpose: scripts/check-fixture-locators.sh exempts a line
+            // that CREATES an anchor (a synthetic checkout is a builder, not a walker).
+            File.WriteAllText(Path.Combine(worktree, ".git"), "gitdir: " + Path.Combine(main, ".git", "worktrees", "wt") + "\n");
 
             GuiInteractionRecorder.FindRepoRoot(binary).Should().Be(worktree);
         }

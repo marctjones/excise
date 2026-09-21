@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using SkiaSharp;
 using Xunit;
 
@@ -823,17 +824,11 @@ public class GhentConformanceCellTests
         return JsonDocument.Parse(File.ReadAllText(path));
     }
 
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "excise.sln")))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException(
+    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln. The
+    // old walk stopped at a worktree's .git FILE, short of the main checkout
+    // where the gitignored Ghent corpus lives.
+    private static string FindRepoRoot() =>
+        TestRepoLayout.MainCheckoutRoot
+        ?? throw new DirectoryNotFoundException(
             "Could not find repository root (no excise.sln above the test base directory).");
-    }
 }

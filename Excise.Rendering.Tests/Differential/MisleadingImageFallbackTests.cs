@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using SkiaSharp;
 using Xunit;
 
@@ -31,20 +32,22 @@ public class MisleadingImageFallbackTests
     [Fact]
     public void DctComponentCountContradictingTheColorSpace_DrawsNothingAndIsDiagnosed()
     {
-        var path = Path.Combine(FindRepoRoot(), "test-pdfs", "pdfium", "pixel", "bug_603518.pdf");
-        Assert.SkipUnless(File.Exists(path), "corpus fixture not present: pdfium/pixel/bug_603518.pdf");
+        // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
+        var path = TestRepoLayout.FindFile("test-pdfs", "pdfium", "pixel", "bug_603518.pdf");
+        Assert.SkipUnless(path != null,
+            TestRepoLayout.AbsenceReason("corpus fixture", "test-pdfs/pdfium/pixel/bug_603518.pdf"));
 
         // The premise, read from the file rather than from excise: the image
         // dictionary claims DeviceCMYK (4 components) and the JPEG's own SOF
         // header declares 3.
-        var bytes = File.ReadAllBytes(path);
+        var bytes = File.ReadAllBytes(path!);
         SofComponentCount(bytes).Should().Be(3,
             "this fixture's value is that its JPEG and its dictionary disagree; " +
             "if the embedded JPEG ever became 4-component the test below would " +
             "be pinning nothing");
 
         var diagnostics = new List<string>();
-        using var doc = PdfDocument.Open(path);
+        using var doc = PdfDocument.Open(path!);
         using var bitmap = new SkiaRenderer().RenderPage(
             doc.GetPage(1), new RenderOptions { Dpi = 150, Diagnostics = diagnostics });
 
@@ -112,11 +115,13 @@ public class MisleadingImageFallbackTests
     [Fact]
     public void UndecodableJbig2_DrawsNothingAndNamesTheCause()
     {
-        var path = Path.Combine(FindRepoRoot(), "test-pdfs", "pdfium", "pixel", "bug_867501.pdf");
-        Assert.SkipUnless(File.Exists(path), "corpus fixture not present: pdfium/pixel/bug_867501.pdf");
+        // #1706 — the shared locator, not a hand-rolled walk to .git/excise.sln.
+        var path = TestRepoLayout.FindFile("test-pdfs", "pdfium", "pixel", "bug_867501.pdf");
+        Assert.SkipUnless(path != null,
+            TestRepoLayout.AbsenceReason("corpus fixture", "test-pdfs/pdfium/pixel/bug_867501.pdf"));
 
         var diagnostics = new List<string>();
-        using var doc = PdfDocument.Open(path);
+        using var doc = PdfDocument.Open(path!);
         using var bitmap = new SkiaRenderer().RenderPage(
             doc.GetPage(1), new RenderOptions { Dpi = 150, Diagnostics = diagnostics });
 
@@ -235,11 +240,4 @@ public class MisleadingImageFallbackTests
         return ms.ToArray();
     }
 
-    private static string FindRepoRoot()
-    {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !File.Exists(Path.Combine(d.FullName, "excise.sln")))
-            d = d.Parent;
-        return d?.FullName ?? AppContext.BaseDirectory;
-    }
 }
