@@ -48,6 +48,26 @@ have.
 | **altona / ghent** | 576M | print/colour and PDF/X; rendering fidelity only |
 | **dlib-slovenia** | ~14M | dLib.si digitised scans with an invisible OCR text layer (render mode 3) — a redaction *leak carrier* for `HiddenTextDetector` / `audit`; Public Domain Mark only |
 
+## What is tracked in git (excise-owned) — and what is not indexed
+
+Three directories under `test-pdfs/` are committed rather than fetched: `pdf20/`
+(25 image-filter probes), `generated-regressions/` (8 render probes) and
+`sample-pdfs/` (3 real-world documents), 36 files and 2.9 MB in all. They are
+**not in `tests/corpora.tsv`**, because `corpus.sh verify` requires every
+registered destination to be gitignored, so the owned corpus currently has no
+index, no provenance record and no per-file hashes. `redaction-adversarial/`
+(generated) and `reader-bench/` are also unregistered.
+
+Two things to know before adding to them: the `pdf20/` and
+`generated-regressions/` files are render probes, not valid PDF 2.0 (all 32 lack
+the trailer `/ID`; measured with the Arlington checker on 2026-09-20), and
+`sample-pdfs/acc-global-compensation-report.pdf` is a third-party report whose
+licence is not recorded here.
+
+What belongs in git, how the corpora should be indexed and pinned, and the
+conformance tooling that consumes them are in
+[`CONFORMANCE.md`](CONFORMANCE.md).
+
 ## What we should add, and why
 
 Chosen from the [PDF Association's index of 46 corpora](https://github.com/pdf-association/pdf-corpora)
