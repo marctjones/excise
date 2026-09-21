@@ -408,7 +408,7 @@ jobs:
 
           Portable `.tar.gz` archives are attached for Linux. Every asset has a `.sha256`, and `SHA256SUMS` covers all of them.
 
-          **These builds are unsigned.** macOS will show a Gatekeeper prompt (right-click, Open, or `xattr -dr com.apple.quarantine excise.app`) and Windows SmartScreen will warn on first run. There is no auto-update. Linux printing is not implemented.
+          **These builds are unsigned.** macOS will show a Gatekeeper prompt (right-click, Open, or `xattr -dr com.apple.quarantine excise.app`) and Windows SmartScreen will warn on first run. There is no auto-update. Linux printing goes through CUPS (#1710) and has been verified against a CUPS scheduler in a container, not against physical hardware.
           EOF
           } > notes.md
           test "$(grep -c '[^[:space:]]' notes.md)" -gt 12 || { echo "release notes are suspiciously short"; exit 1; }
