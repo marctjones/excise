@@ -98,6 +98,7 @@ scripts/generate_change_coupling.py   # architecture analysis helper
 scripts/gui.sh   # launches the GUI for manual review
 scripts/import-github-issues.sh   # one-time issue import
 scripts/lib-runner.sh   # library sourced by every runner
+scripts/lib-git-env.sh   # library sourced (never executed) by any script that builds a scratch git repo: scrub_inherited_git_env drops the GIT_* variables a hook exports (#1673); its use is enforced by scripts/test-check-gate-asymmetry.sh
 scripts/make-reader-bench-plans.sh   # #1543 builds the reader benchmark's vector-density fixture (20 copies of a dense CAD drawing, so it stresses path rasterisation where the scan stresses image decode); a generator, not a check
 scripts/make-reader-bench-scan.py   # #1543 builds the reader benchmark's scanned-document fixture (no local corpus holds a real multi-page scan); a generator, not a check
 scripts/mine-hard-redaction-cases.py   # bench corpus mining
