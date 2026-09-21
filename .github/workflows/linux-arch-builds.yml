@@ -1,0 +1,190 @@
+# Linux x64 AND arm64 builds, R2R and Native AOT: publish natively, start, run a scenario.
+#
+# WHY. RELEASE_CHECKLIST.md's AOT support matrix lists linux-x64 as "Shipped through
+# v3.8.0; unverifiable since 2026-09-04" (the release workflow that produced the
+# evidence was deleted with Actions) and has no linux-arm64 row. linux.yml builds and
+# starts x64 only, R2R only. This is the evidence for the other legs: each shape is
+# published on a runner of ITS OWN architecture (ubuntu-latest is x64;
+# ubuntu-24.04-arm is GitHub's hosted arm64 Linux runner, free for public repos --
+# if a repo cannot use it, its jobs sit "queued" forever with no error), launched
+# under Xvfb, and the same altona-scroll scenario is run.
+#
+# Verified on hosted runners 2026-09-20 (run 35550350097, all six jobs): binary
+# architecture read from `file -b`, AOT reports runtimeMode "aot" with 0 managed
+# .dll sidecars. That is publish + launch + one scenario. It is NOT evidence for
+# .deb packaging or the old CLI smoke.
+#
+# TRIGGERS. workflow_dispatch, and a pull_request that changes THIS file (so an edit
+# is exercised where it is reviewed). Deliberately NOT on push: six jobs, a 128 MB
+# download each, ~20-25 min, and linux.yml already covers every develop push.
+#
+# HARD failures (the job goes red): publish fails; the binary is not the requested
+# architecture; the app does not start or exits non-zero; no scenario result; an AOT
+# build that reports a runtime mode other than "aot".
+# NOT hard failures, reported as warnings: waitIdle timeouts. #1712 found the viewer's
+# in-flight render counter can stick on hosted runners (macOS 3/3, Linux x64 3 of 6,
+# arm64 0 of 3 so far); a job that goes red for a known, unexplained, non-build
+# reason is how the previous Linux CI ended up ignored (#1355).
+#
+# The scenario document comes from eci.org and is sha256-verified before use; a
+# mismatch fails the job. A third-party host is a dependency of this workflow.
+#
+# Not a gate. Touches none of linux.yml, windows.yml or macos.yml. Evidence and the
+# runner facts: #1594.
+name: Linux arch builds (manual)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/linux-arch-builds.yml'
+
+concurrency:
+  group: linux-arch-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NUGET_SIGNATURE_VERIFICATION: false
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+  SCENARIO_FILE: tests/gui-perf-scenarios.json
+  SCENARIO_ID: altona-scroll
+  DOC_URL: https://eci.org/lib/exe/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf
+  DOC_PATH: test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf
+  DOC_SHA256: 22a86029dcc30cf817265d4035a1a76e373da3f449ce8deabd9606d121d1da5a
+
+jobs:
+  linux:
+    name: ${{ matrix.arch }} ${{ matrix.shape }} rep ${{ matrix.rep }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64,   rid: linux-x64,   runner: ubuntu-latest,    shape: r2r, rep: 1 }
+          - { arch: x64,   rid: linux-x64,   runner: ubuntu-latest,    shape: r2r, rep: 2 }
+          - { arch: arm64, rid: linux-arm64, runner: ubuntu-24.04-arm, shape: r2r, rep: 1 }
+          - { arch: arm64, rid: linux-arm64, runner: ubuntu-24.04-arm, shape: r2r, rep: 2 }
+          - { arch: x64,   rid: linux-x64,   runner: ubuntu-latest,    shape: aot, rep: 1 }
+          - { arch: arm64, rid: linux-arm64, runner: ubuntu-24.04-arm, shape: aot, rep: 1 }
+    env:
+      ARCH: ${{ matrix.arch }}
+      RID: ${{ matrix.rid }}
+      SHAPE: ${{ matrix.shape }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install a virtual display (and the AOT toolchain for aot)
+        run: |
+          set -uo pipefail
+          sudo apt-get update -qq
+          PKGS="xvfb openbox x11-utils fontconfig"
+          [ "$SHAPE" = aot ] && PKGS="$PKGS clang zlib1g-dev"
+          # shellcheck disable=SC2086
+          sudo apt-get install -y -qq $PKGS
+          mkdir -p artifacts/lin
+
+      - name: Record the machine
+        run: |
+          set +e
+          {
+            echo "arch_requested=$ARCH shape=$SHAPE rid=$RID rep=${{ matrix.rep }}"
+            echo "uname_m=$(uname -m)  kernel=$(uname -r)  os=$(. /etc/os-release && echo "$PRETTY_NAME")"
+            echo "cores=$(nproc)  memKB=$(awk '/MemTotal/{print $2}' /proc/meminfo)  pagesize=$(getconf PAGESIZE)"
+            echo "cpu=$(lscpu | awk -F: '/Model name/{gsub(/^ +/,"",$2);print $2}')"
+            echo "head=$(git rev-parse HEAD)"
+          } | tee artifacts/lin/env.txt
+          Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp > /tmp/xvfb.log 2>&1 &
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+          export DISPLAY=:99
+          for _ in $(seq 1 20); do xdpyinfo >/dev/null 2>&1 && break; sleep 0.5; done
+          openbox > /tmp/openbox.log 2>&1 &
+          sleep 2
+
+      - name: Fetch the document and verify its bytes
+        run: |
+          set -uo pipefail
+          mkdir -p "$(dirname "$DOC_PATH")"
+          curl -L -f -sS --retry 3 --connect-timeout 20 --max-time 900 -o "$DOC_PATH" "$DOC_URL" || { echo "DOWNLOAD FAILED"; exit 1; }
+          GOT="$(openssl dgst -sha256 -r "$DOC_PATH" | cut -d' ' -f1)"
+          echo "doc_bytes=$(stat -c%s "$DOC_PATH")  sha256=$GOT" | tee -a artifacts/lin/env.txt
+          [ "$GOT" = "$DOC_SHA256" ] || { echo "SHA MISMATCH: expected $DOC_SHA256"; exit 1; }
+
+      - name: Publish (${{ matrix.shape }}, ${{ matrix.rid }})
+        # A failure here is a real build failure and must turn the job red.
+        run: |
+          set -uo pipefail
+          ARGS=(Excise.App/Excise.App.csproj -c Release -r "$RID" --self-contained true -p:PublishSingleFile=false -o publish)
+          if [ "$SHAPE" = aot ]; then
+            # The same flags scripts/build-macos-app.sh passes for its AOT lane.
+            ARGS+=(-p:PublishAot=true -p:PublishReadyToRun=false -p:EnableScripting=false -p:IncludeTessdataInApp=false)
+          fi
+          dotnet publish "${ARGS[@]}"
+          {
+            echo "publish_size_mb=$(du -sm publish | cut -f1)"
+            echo "managed_dll_sidecars=$(find publish -maxdepth 1 -name '*.dll' | wc -l)"
+            echo "binary=$(file -b publish/Excise.App | cut -c1-110)"
+          } | tee -a artifacts/lin/env.txt
+
+      - name: Run the scenario
+        timeout-minutes: 12
+        run: |
+          set +e
+          set -uo pipefail
+          OUT="$GITHUB_WORKSPACE/artifacts/lin/run"
+          mkdir -p "$OUT" "$GITHUB_WORKSPACE/artifacts/lin/home"
+          TIMEBIN="$(command -v /usr/bin/time || true)"
+          echo "gnu_time=${TIMEBIN:-ABSENT}" | tee -a artifacts/lin/env.txt
+          HOME="$GITHUB_WORKSPACE/artifacts/lin/home" \
+          EXCISE_TRACE_VIEWER="$OUT/metrics.jsonl" \
+          EXCISE_PERF_SCENARIO="$SCENARIO_FILE" EXCISE_PERF_SCENARIO_ID="$SCENARIO_ID" \
+          EXCISE_PERF_SCENARIO_OUT="$OUT" EXCISE_PERF_SCENARIO_SAMPLE_MS=250 \
+            ${TIMEBIN:+$TIMEBIN -v} publish/Excise.App > "$OUT/app.log" 2> "$OUT/time.log"
+          echo "rc=$?" | tee -a artifacts/lin/env.txt
+          tail -5 "$OUT/app.log"; grep -E "Maximum resident" "$OUT/time.log"
+
+      - name: Verdict (hard failures vs warnings)
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, re, sys
+          env = open("artifacts/lin/env.txt", errors="ignore").read()
+          arch, shape = os.environ["ARCH"], os.environ["SHAPE"]
+          hard, warn = [], []
+          # `file -b` names the ELF machine: "x86-64" for x64, "ARM aarch64" for arm64.
+          bl = re.search(r"^binary=(.*)$", env, re.M)
+          bin_desc = (bl.group(1) if bl else "").lower()
+          marker = {"x64": "x86-64", "arm64": "aarch64"}[arch]
+          if marker not in bin_desc:
+              hard.append(f"binary is not {arch} (expected '{marker}'): {bin_desc or 'no binary line'}")
+          if not re.search(r"^rc=0$", env, re.M): hard.append("app did not exit 0")
+          try:
+              r = json.load(open("artifacts/lin/run/scenario-result.json"))
+              mode = r["configuration"]["runtimeMode"]
+              if shape == "aot" and mode != "aot": hard.append(f"AOT build reports runtimeMode={mode}")
+              if r["steps"] != 7: hard.append(f"scenario ran {r['steps']} steps, expected 7")
+              if r["failures"]: warn.append(f"{r['failures']} scenario step(s) failed (waitIdle timeouts are #1712)")
+              print(f"runtimeMode={mode} steps={r['steps']} failures={r['failures']} cores_seen={r['configuration']['processorCount']}")
+          except Exception as e:
+              hard.append(f"no scenario-result.json: {e}")
+          if shape == "aot" and int(re.search(r"managed_dll_sidecars=(\d+)", env).group(1)) != 0:
+              warn.append("AOT publish still has managed .dll sidecars")
+          for w in warn: print(f"::warning::{w}")
+          for h in hard: print(f"::error::{h}")
+          sys.exit(1 if hard else 0)
+          PY
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: lin-${{ matrix.arch }}-${{ matrix.shape }}-rep${{ matrix.rep }}
+          path: artifacts/lin/
+          retention-days: 14
