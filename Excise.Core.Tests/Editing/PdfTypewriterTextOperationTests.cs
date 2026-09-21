@@ -95,4 +95,35 @@ public class PdfTypewriterTextOperationTests
         applied.Should().BeEmpty();
         document.GetPage(1).Text.Should().BeEmpty();
     }
+    /// <summary>
+    /// #1671: text the typewriter font cannot represent used to be flattened
+    /// into the page as '?'. It is refused, and — because each edit is flushed to
+    /// its page as it is applied — before ANY edit is drawn, so a refusal never
+    /// leaves the earlier edits baked into a document the save then abandons.
+    /// </summary>
+    [Fact]
+    public void Apply_TextOutsideTheFontEncoding_IsRefused_BeforeAnyEditIsDrawn()
+    {
+        using var document = PdfDocument.CreateNew();
+        document.Pages.AddBlank(300, 400);
+        var fine = PdfTypewriterTextOperation.Create(1, new PdfRectangle(40, 250, 260, 290), "Fine first edit");
+        var bad = PdfTypewriterTextOperation.Create(1, new PdfRectangle(40, 150, 260, 190), "Łukasz Дмитрий");
+
+        var act = () => PdfTypewriterTextApplier.Apply(document, new[] { fine, bad });
+
+        act.Should().Throw<ArgumentException>().Which.Message.Should().Contain("U+0141").And.Contain("page 1");
+        document.GetPage(1).Text.Should().BeEmpty("the first edit must not have been drawn");
+    }
+
+    [Fact]
+    public void Apply_Latin1AccentedText_StillFlattens()
+    {
+        using var document = PdfDocument.CreateNew();
+        document.Pages.AddBlank(300, 400);
+        var operation = PdfTypewriterTextOperation.Create(1, new PdfRectangle(40, 250, 260, 290), "José Müller");
+
+        PdfTypewriterTextApplier.Apply(document, operation);
+
+        document.GetPage(1).Text.Should().Contain("José Müller");
+    }
 }

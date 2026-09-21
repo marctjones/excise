@@ -977,6 +977,7 @@ namespace Excise.App.ViewModels
         public System.Threading.Tasks.Task OnAnnotationPathDrawnAsync([System.Runtime.CompilerServices.TupleElementNames(new string[] {
                 "X",
                 "Y"})] System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>> strokes, int pageNumber) { }
+        public void OnFormFieldEditRejected(string fieldName, string message) { }
         public void OnFormFieldEdited(string fieldName, string? newValue) { }
         public void OnFormFieldRectDrawn(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
         public void OnTypewriterTextBoundsChanged(System.Guid operationId, Excise.Core.Document.PdfRectangle rect, int pageNumber) { }

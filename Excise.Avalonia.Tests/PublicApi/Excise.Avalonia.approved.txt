@@ -26,6 +26,12 @@ namespace Excise.Avalonia.Controls
         public ExternalLinkClickedEventArgs(string uri) { }
         public string Uri { get; }
     }
+    public class FormFieldEditRejectedEventArgs : System.EventArgs
+    {
+        public FormFieldEditRejectedEventArgs(string fieldName, string message) { }
+        public string FieldName { get; }
+        public string Message { get; }
+    }
     public class FormFieldEditedEventArgs : System.EventArgs
     {
         public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber) { }
@@ -163,6 +169,7 @@ namespace Excise.Avalonia.Controls
         public event System.EventHandler<Excise.Avalonia.Controls.AnnotationPathDrawnEventArgs>? AnnotationPathDrawn;
         public event System.EventHandler<Excise.Avalonia.Controls.DangerousLinkClickedEventArgs>? DangerousLinkClicked;
         public event System.EventHandler<Excise.Avalonia.Controls.ExternalLinkClickedEventArgs>? ExternalLinkClicked;
+        public event System.EventHandler<Excise.Avalonia.Controls.FormFieldEditRejectedEventArgs>? FormFieldEditRejected;
         public event System.EventHandler<Excise.Avalonia.Controls.FormFieldEditedEventArgs>? FormFieldEdited;
         public event System.EventHandler<Excise.Avalonia.Controls.FormFieldRectDrawnEventArgs>? FormFieldRectDrawn;
         public event System.EventHandler<Excise.Avalonia.Controls.LinkClickedEventArgs>? LinkClicked;

@@ -1494,6 +1494,7 @@
                                                LinkHovered="OnLinkHovered"
                                                AnnotationHovered="OnAnnotationHovered"
                                                FormFieldEdited="OnFormFieldEdited"
+                                               FormFieldEditRejected="OnFormFieldEditRejected"
                                                FormFieldRectDrawn="OnFormFieldRectDrawn"
                                                AnnotationPathDrawn="OnAnnotationPathDrawn"
                                                PathCaptureKind="{Binding PathCaptureKind}"

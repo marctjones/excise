@@ -149,8 +149,11 @@ internal static class DctImageDecoder
         {
             throw;
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
+            // #1679: a JPEG that cannot be decoded is refused (and stays eligible
+            // for the generic decode); an out-of-memory must not be laundered
+            // into that path, which would draw a different picture.
             return null;
         }
         finally

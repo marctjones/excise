@@ -52,6 +52,7 @@ public static class AcroFormAuthoring
         Graphics.PdfFont? appearanceFont = null)
     {
         ValidateName(fieldName);
+        EnsureDefaultValueDrawable(appearanceFont, defaultValue, fieldName);
 
         var widget = NewWidgetDict(rect);
         widget.SetName("FT", "Tx");
@@ -111,6 +112,7 @@ public static class AcroFormAuthoring
         Graphics.PdfFont? appearanceFont = null)
     {
         ValidateName(fieldName);
+        EnsureDefaultValueDrawable(appearanceFont, defaultValue, fieldName);
 
         var widget = NewWidgetDict(rect);
         widget.SetName("FT", "Tx");
@@ -183,6 +185,7 @@ public static class AcroFormAuthoring
         Graphics.PdfFont? appearanceFont = null)
     {
         ValidateName(fieldName);
+        EnsureDefaultValueDrawable(appearanceFont, defaultValue, fieldName);
         var optList = options?.ToList() ?? new List<string>();
         if (optList.Count == 0)
             throw new ArgumentException("Choice fields require at least one option.", nameof(options));
@@ -384,6 +387,38 @@ public static class AcroFormAuthoring
         return true;
     }
 
+    /// <summary>
+    /// #1671 — refuse, before the document is touched, a default value the
+    /// appearance font cannot draw. The font used mirrors
+    /// <see cref="DefaultAppearance"/>: a non-standard-14 font as given, otherwise
+    /// the base-14 Helvetica.
+    /// </summary>
+    private static void EnsureDefaultValueDrawable(Graphics.PdfFont? appearanceFont, string? defaultValue, string fieldName)
+    {
+        if (string.IsNullOrEmpty(defaultValue)) return;
+        var font = appearanceFont == null || appearanceFont.IsStandard14
+            ? Graphics.PdfFont.Helvetica(10)
+            : appearanceFont;
+        font.EnsureCanEncode(defaultValue, DescribeField(fieldName));
+    }
+
+    /// <summary>
+    /// #1671 — refuse, before <c>/V</c> is written, a new value the widget's
+    /// authored appearance font cannot draw. Only a widget excise authored in
+    /// this session has a font to encode with; every other widget falls back to
+    /// NeedAppearances and never reaches <see cref="Graphics.PdfFont.EncodeString"/>.
+    /// </summary>
+    internal static void EnsureValueDrawable(PdfDocument document, PdfDictionary widget, string? value, string fieldName)
+    {
+        if (string.IsNullOrEmpty(value)) return;
+        if (!document.TryGetAuthoredWidgetAppearance(widget, out var authored)) return;
+        if (authored.Kind != AuthoredWidgetKind.Text || authored.Font == null) return;
+        authored.Font.EnsureCanEncode(value, DescribeField(fieldName));
+    }
+
+    private static string DescribeField(string fieldName)
+        => $"the value of form field '{Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(fieldName)}'";
+
     private static PdfReference BuildTextAppearanceStream(
         PdfDocument document, PdfRectangle rect, string? value, AuthoredWidgetAppearance authored)
     {
@@ -391,6 +426,10 @@ public static class AcroFormAuthoring
         var height = Math.Abs(rect.Height);
         var font = authored.Font!;
         var resourceName = authored.ResourceName!;
+
+        // Backstop for the encode below: the callers validate first (so nothing
+        // has been mutated when this refuses), but this is where '?' would land.
+        font.EnsureCanEncode(value, "the form field value");
 
         var content = new System.Text.StringBuilder("/Tx BMC\n");
         if (!string.IsNullOrEmpty(value))

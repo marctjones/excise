@@ -344,12 +344,20 @@ public class PdfGraphics : IDisposable
     /// <param name="brush">The brush for text color.</param>
     /// <param name="x">X coordinate (in PDF coordinates, bottom-left origin).</param>
     /// <param name="y">Y coordinate (in PDF coordinates, bottom-left origin).</param>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="text"/> contains a character <paramref name="font"/> cannot
+    /// represent (#1671). Nothing is written; use an embedded font for such text.
+    /// </exception>
     public void DrawString(string text, PdfFont font, PdfBrush brush, double x, double y)
     {
         ThrowIfDisposed();
 
         if (string.IsNullOrEmpty(text))
             return;
+
+        // #1671: EncodeString writes '?' for a character the font cannot
+        // represent. Refuse instead, before anything is emitted.
+        font.EnsureCanEncode(text, "text");
 
         // Ensure font is registered in page resources
         var fontName = _page.AddFont(font);
@@ -485,6 +493,11 @@ public class PdfGraphics : IDisposable
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(font);
         ArgumentNullException.ThrowIfNull(brush);
+
+        // #1671: check the whole text before drawing any of it. Dispose flushes
+        // whatever was emitted, so a line-by-line refusal would leave the lines
+        // before the bad one written into the page.
+        font.EnsureCanEncode(text, "text");
 
         double lineHeight = font.Size * lineSpacing;
         var lines = TextWrapper.Wrap(text ?? string.Empty, font, bounds.Width).ToList();

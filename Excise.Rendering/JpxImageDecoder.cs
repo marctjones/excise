@@ -55,8 +55,10 @@ internal static class JpxImageDecoder
         {
             throw;
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
+            // #1679: refuse a stream that cannot be decoded; let an
+            // out-of-memory reach the caller instead of drawing nothing.
             return null;
         }
     }

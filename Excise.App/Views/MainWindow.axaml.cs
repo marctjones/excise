@@ -1475,6 +1475,12 @@ public partial class MainWindow : Window
         viewModel.OnFormFieldEdited(e.FieldName, e.NewValue);
     }
 
+    private void OnFormFieldEditRejected(object? sender, FormFieldEditRejectedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        viewModel.OnFormFieldEditRejected(e.FieldName, e.Message);
+    }
+
     /// <summary>
     /// User finished drag-defining a new form-field rect in authoring mode.
     /// </summary>

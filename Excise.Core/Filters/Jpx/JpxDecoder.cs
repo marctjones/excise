@@ -120,8 +120,11 @@ internal static class JpxDecoder
                 ComponentDefinitions = componentDefinitions,
             };
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
+            // A codestream the managed codec cannot decode is a refusal. An
+            // OutOfMemoryException is not: it says nothing about the stream, and
+            // returning null would draw a wrong picture with a success exit (#1679).
             return null;
         }
     }
@@ -198,8 +201,10 @@ internal static class JpxDecoder
                 ComponentsAreDisplayRgb = components.Length == 3,
             };
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
+            // Reading the decoded PNM back allocates the whole image; an
+            // out-of-memory there is not "opj_decompress failed" (#1679).
             return null;
         }
         finally

@@ -249,7 +249,9 @@ public sealed class PdfField
     ///
     /// Throws InvalidOperationException if the field is read-only or is a
     /// Signature field. Throws ArgumentException if the value isn't valid
-    /// for the field's type (e.g. a Choice field's options).
+    /// for the field's type (e.g. a Choice field's options), or — for a widget
+    /// authored in this session with a non-embedded font — contains a character
+    /// that font cannot represent (#1671; the field is left unchanged).
     /// </summary>
     public void SetValue(string? value)
     {
@@ -269,6 +271,18 @@ public sealed class PdfField
                 SetButtonAppearanceState("Off");
             RefreshAppearances(null);
             return;
+        }
+
+        // #1671: an authored text widget redraws its appearance through its font,
+        // and a character that font cannot represent would be written as '?'.
+        // Refuse here, before /V changes, so a refusal leaves the field as it was.
+        if (FieldType != PdfFieldType.Button)
+        {
+            IReadOnlyList<PdfDictionary> targets = WidgetDictionaries.Count > 0
+                ? WidgetDictionaries
+                : new[] { RawDictionary };
+            foreach (var widget in targets)
+                AcroFormAuthoring.EnsureValueDrawable(_document, widget, value, FullName);
         }
 
         switch (FieldType)

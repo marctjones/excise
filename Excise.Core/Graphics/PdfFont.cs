@@ -323,6 +323,79 @@ public class PdfFont
     }
 
     /// <summary>
+    /// The distinct characters of <paramref name="text"/> this font cannot
+    /// represent — exactly the ones <see cref="CanEncodeFully"/> would refuse.
+    /// Each entry is one whole Unicode scalar (a surrogate pair stays together).
+    /// </summary>
+    internal virtual IReadOnlyList<string> FindUnencodableCharacters(string text)
+    {
+        var found = new List<string>();
+        if (string.IsNullOrEmpty(text)) return found;
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c is '(' or ')' or '\\' or '\n' or '\r' or '\t') continue;
+            if (c >= 32 && c <= 126) continue;
+            if (TryMapToWinAnsi(c, out _)) continue;
+            var pair = char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]);
+            var s = pair ? text.Substring(i, 2) : c.ToString();
+            if (pair) i++;
+            if (!found.Contains(s)) found.Add(s);
+        }
+        return found;
+    }
+
+    /// <summary>
+    /// The unencodable characters of <paramref name="text"/> as a short
+    /// human-readable list — <c>'Ł' (U+0141), 'Д' (U+0414)</c>, at most five,
+    /// then "and N more" — or <c>null</c> when the font can encode all of it.
+    /// Display-escaped, so a document- or user-supplied string cannot smuggle
+    /// bidi or control characters into a message.
+    /// </summary>
+    internal string? DescribeUnencodable(string? text)
+    {
+        if (string.IsNullOrEmpty(text) || CanEncodeFully(text)) return null;
+
+        const int shown = 5;
+        var missing = FindUnencodableCharacters(text);
+        var listed = string.Join(", ", missing.Take(shown).Select(DescribeCharacter));
+        return missing.Count > shown ? listed + $" and {missing.Count - shown} more" : listed;
+
+        static string DescribeCharacter(string scalar)
+        {
+            if (scalar.Length == 1 && char.IsSurrogate(scalar[0]))
+                return $"an unpaired surrogate (U+{(int)scalar[0]:X4})";
+            var value = char.ConvertToUtf32(scalar, 0);
+            var shownText = Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(scalar);
+            return $"'{shownText}' (U+{value:X4})";
+        }
+    }
+
+    /// <summary>
+    /// Refuse to author <paramref name="text"/> this font cannot represent
+    /// (#1671). <see cref="EncodeString"/> would write a <c>?</c> for each such
+    /// character, so a form field or typewriter edit would look filled while
+    /// holding text the user never typed, and nothing would say so. Throws
+    /// before the caller has changed anything.
+    /// </summary>
+    /// <param name="text">The text about to be written.</param>
+    /// <param name="what">What is being written, for the message ("form field 'Name'").</param>
+    /// <exception cref="ArgumentException">
+    /// The font has no encoding for one or more characters of <paramref name="text"/>.
+    /// </exception>
+    internal void EnsureCanEncode(string? text, string what)
+    {
+        var listed = DescribeUnencodable(text);
+        if (listed == null) return;
+
+        throw new ArgumentException(
+            $"Cannot write {what}: the font '{BaseFont}' has no glyph mapping for {listed}. " +
+            "Writing '?' in their place would silently change the text, so nothing was written. " +
+            "Remove those characters or use a font that has them.",
+            nameof(text));
+    }
+
+    /// <summary>
     /// Map a char to its WinAnsi (CP1252) byte, if representable.
     ///
     /// <para>The table moved to <see cref="Fonts.WinAnsiEncoding"/> for #1644:

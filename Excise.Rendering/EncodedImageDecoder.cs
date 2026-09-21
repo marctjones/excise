@@ -33,7 +33,7 @@ internal static class EncodedImageDecoder
         {
             throw;
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             // Unsupported codecs and malformed/truncated image payloads are
             // refused by returning null. The caller owns the PDF-specific
