@@ -6,6 +6,39 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Printing on Linux, through CUPS** (#1710). `DocumentPrinterFactory`
+  returned `UnsupportedDocumentPrinter` on Linux, so File → Print… could not
+  print at all there; the README and `CLAUDE.md` both said Linux printing was
+  "not planned". It now prints.
+  - PDF is CUPS's native spool format and the print workflow already writes
+    one per job (with pending redactions *removed* from the printed copy), so
+    `LinuxCupsDocumentPrinter` enumerates queues with `lpstat` and hands the
+    file to `lp`. No native dependency, nothing reflection-heavy for Native
+    AOT.
+  - Linux offers no system print dialog excise can call, so excise draws its
+    own chooser: the queues with the system default preselected, copies with
+    collation, and a page range that is validated against the document rather
+    than silently turned into a different job.
+  - `/P` gating is unchanged and platform-neutral — bit 3 and bit 12 both
+    gate Print…, and a denied document causes no `lpstat` or `lp` subprocess
+    at all.
+  - Every failure is user-visible and distinct: CUPS tools missing, scheduler
+    unreachable (quoting CUPS's own message), no queues, chooser failed, `lp`
+    refused the job. A job that was not submitted is never reported as printed.
+  - Scaling: *Fit to page* becomes CUPS's `fit-to-page`; *Actual size* and
+    *Shrink oversized* send no scaling option, because CUPS has no shrink-only
+    mode and claiming one would be inventing behaviour excise cannot deliver.
+  - **What is tested.** Queue parsing, the `lp` command line, permission
+    gating and every failure branch run on every platform against a fake
+    process runner (`LinuxCupsDocumentPrinterTests`,
+    `LinuxPrintPermissionGatingTests`). A real `cupsd` with an `lpadmin` queue
+    is driven by `scripts/run-linux-print-test.sh` in a podman container, and
+    the PDF the queue produces is counted by **qpdf/mutool, never by excise**;
+    `--demo-failure` points that harness at a queue that does not exist, so it
+    is known to be able to go red. Physical printer hardware and the chooser
+    window itself are unexercised.
+
 ### Changed
 - **The Windows installer and portable zip are Native AOT, like the macOS and
   Linux packages, and every release job proves its package is.** The Windows

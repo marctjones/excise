@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "695c97b695c21d02822bfac2c6e0ea5d3fe38490bccf5d31d0358e0718132ed0",
+  "sourceFingerprint": "a36000228a179bdda6fd575bef97b26ff8386fc8646d041988026c6cc19e89bf",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -7887,6 +7887,26 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Services/Printing/CupsPrintQueues.cs",
+      "path": "Excise.App/Services/Printing/CupsPrintQueues.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Printing/CupsProcessRunner.cs",
+      "path": "Excise.App/Services/Printing/CupsProcessRunner.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Services/Printing/DocumentPrintWorkflowService.cs",
       "path": "Excise.App/Services/Printing/DocumentPrintWorkflowService.cs",
       "kind": "source-file",
@@ -7899,6 +7919,26 @@
     {
       "id": "Excise.App/Services/Printing/IDocumentPrinter.cs",
       "path": "Excise.App/Services/Printing/IDocumentPrinter.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Printing/LinuxCupsDocumentPrinter.cs",
+      "path": "Excise.App/Services/Printing/LinuxCupsDocumentPrinter.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/Printing/LinuxPrintChooserDialog.cs",
+      "path": "Excise.App/Services/Printing/LinuxPrintChooserDialog.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -8467,6 +8507,16 @@
     {
       "id": "Excise.App/ViewModels/DocumentViewportSession.cs",
       "path": "Excise.App/ViewModels/DocumentViewportSession.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/ViewModels/LinuxPrintDialogViewModel.cs",
+      "path": "Excise.App/ViewModels/LinuxPrintDialogViewModel.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -9207,6 +9257,16 @@
     {
       "id": "Excise.App/Views/DocumentTabStrip.axaml.cs",
       "path": "Excise.App/Views/DocumentTabStrip.axaml.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Views/LinuxPrintDialog.axaml.cs",
+      "path": "Excise.App/Views/LinuxPrintDialog.axaml.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -10551,7 +10611,7 @@
     }
   ],
   "summary": {
-    "records": 523,
+    "records": 529,
     "facets": {
       "annotations": 11,
       "content-and-graphics": 19,
@@ -10559,7 +10619,7 @@
       "fonts": 31,
       "forms": 9,
       "images": 32,
-      "product-integration-general": 295,
+      "product-integration-general": 301,
       "redaction": 81,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 20,
@@ -10638,7 +10698,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 20,
       "pdfe.product.security.signature-and-permission-warning:write": 20
     },
-    "fallbackRecords": 295,
+    "fallbackRecords": 301,
     "allRecordsMapped": true
   }
 }

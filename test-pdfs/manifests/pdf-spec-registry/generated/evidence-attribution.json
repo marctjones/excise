@@ -11546,13 +11546,11 @@
           ]
         },
         {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
+          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -13016,13 +13014,11 @@
           ]
         },
         {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
+          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -14479,13 +14475,11 @@
           ]
         },
         {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
+          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -15943,13 +15937,11 @@
           ]
         },
         {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
+          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -110591,13 +110583,11 @@
           ]
         },
         {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
+          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -112069,13 +112059,11 @@
           ]
         },
         {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
+          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -113524,13 +113512,11 @@
           ]
         },
         {
-          "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.ApplyClick_OnUnencryptedDocumentWithPassword_RunsApplyAndShowsResult",
+          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -113597,8 +113583,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7725,
-    "testMethodsWithCapabilityCandidate": 4820,
+    "testMethods": 7757,
+    "testMethodsWithCapabilityCandidate": 4824,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

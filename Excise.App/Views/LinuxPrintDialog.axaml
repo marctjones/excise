@@ -1,0 +1,70 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Excise.App.ViewModels"
+        x:Class="Excise.App.Views.LinuxPrintDialog"
+        x:DataType="vm:LinuxPrintDialogViewModel"
+        Title="Print"
+        Width="440" Height="330"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Grid Margin="18" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
+
+        <TextBlock Grid.Row="0"
+                   Text="Printer"
+                   FontWeight="SemiBold" FontSize="13"
+                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+        <ComboBox x:Name="LinuxPrintQueueBox" Grid.Row="1"
+                  Margin="0,6,0,0"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding Queues}"
+                  SelectedItem="{Binding SelectedQueue}"
+                  AutomationProperties.Name="Printer queue"/>
+
+        <Grid Grid.Row="2" Margin="0,14,0,0" ColumnDefinitions="Auto,90,Auto,*">
+            <TextBlock Grid.Column="0" Text="Copies" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBox x:Name="LinuxPrintCopiesBox" Grid.Column="1"
+                     Margin="10,0,0,0"
+                     Text="{Binding CopiesText}"
+                     AutomationProperties.Name="Number of copies"/>
+            <CheckBox x:Name="LinuxPrintCollateBox" Grid.Column="2"
+                      Margin="16,0,0,0" Content="Collate"
+                      IsChecked="{Binding Collate}"
+                      AutomationProperties.Name="Collate copies"/>
+        </Grid>
+
+        <TextBlock Grid.Row="3" Margin="0,14,0,0"
+                   Text="Pages"
+                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+        <TextBox x:Name="LinuxPrintPageRangeBox" Grid.Row="4"
+                 Margin="0,6,0,0"
+                 Text="{Binding PageRangeText}"
+                 PlaceholderText="{Binding PageRangePlaceholder}"
+                 AutomationProperties.Name="Page range"/>
+
+        <TextBlock Grid.Row="5" Margin="0,6,0,0"
+                   TextWrapping="Wrap" FontSize="11"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   Text="Leave empty to print every page, or type page numbers like 1-3,7."/>
+
+        <TextBlock x:Name="LinuxPrintValidationText" Grid.Row="6"
+                   Margin="0,10,0,0"
+                   TextWrapping="Wrap" FontSize="12"
+                   Foreground="#D32F2F"
+                   IsVisible="{Binding ValidationError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   Text="{Binding ValidationError}"/>
+
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Margin="0,14,0,0" Spacing="8">
+            <Button x:Name="LinuxPrintCancelButton" Content="Cancel" Padding="20,5"
+                    IsCancel="True" Click="OnCancel"
+                    AutomationProperties.Name="Cancel printing"/>
+            <Button x:Name="LinuxPrintConfirmButton" Content="Print" Padding="20,5"
+                    IsDefault="True" Click="OnPrint"
+                    AutomationProperties.Name="Send the job to the printer"/>
+        </StackPanel>
+    </Grid>
+</Window>

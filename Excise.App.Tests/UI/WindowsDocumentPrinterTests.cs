@@ -454,7 +454,8 @@ public class WindowsDocumentPrinterTests : IDisposable
         }
 
         printer.Should().NotBeOfType<WindowsDocumentPrinter>();
-        printer.IsSupported.Should().Be(OperatingSystem.IsMacOS(), "Linux printing is out of scope");
+        printer.IsSupported.Should().Be(OperatingSystem.IsMacOS() || OperatingSystem.IsLinux(),
+            "macOS prints through PDFKit and Linux through CUPS (#1710); anything else has no printer");
         AppDomain.CurrentDomain.GetAssemblies()
             .Select(a => a.GetName().Name)
             .Should().NotContain("System.Drawing.Common",
