@@ -288,14 +288,19 @@ public class LinuxCupsPrintIntegrationTests : IDisposable
             using var process = Process.Start(startInfo);
             if (process == null)
                 return null;
-            var output = new StringBuilder();
-            output.Append(process.StandardOutput.ReadToEnd());
-            output.Append(process.StandardError.ReadToEnd());
+            // #1068/#1516: drain both redirected pipes concurrently and bound the WAIT.
+            // A synchronous ReadToEnd() runs before WaitForExit, so its timeout would be
+            // unreachable if the pipe never reaches EOF.
+            var stdoutTask = process.StandardOutput.ReadToEndAsync();
+            var stderrTask = process.StandardError.ReadToEndAsync();
             if (!process.WaitForExit(30_000))
             {
                 try { process.Kill(entireProcessTree: true); } catch (SystemException) { }
                 return null;
             }
+            var output = new StringBuilder();
+            output.Append(stdoutTask.GetAwaiter().GetResult());
+            output.Append(stderrTask.GetAwaiter().GetResult());
             return process.ExitCode == 0 ? output.ToString() : null;
         }
         catch (SystemException)

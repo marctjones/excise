@@ -499,7 +499,7 @@ public class DocumentPrintingTests : IDisposable
     }
 
     [Fact]
-    public void Factory_PicksPdfKitOnMacOs_GdiOnWindows_AndTheHonestRefusalElsewhere()
+    public void Factory_PicksPdfKitOnMacOs_GdiOnWindows_CupsOnLinux_AndTheHonestRefusalElsewhere()
     {
         var printer = DocumentPrinterFactory.CreateForCurrentPlatform(NullLoggerFactory.Instance);
         if (OperatingSystem.IsMacOS())
@@ -512,6 +512,12 @@ public class DocumentPrintingTests : IDisposable
             // #1546. Not executed on the macOS dev box.
             printer.Should().BeOfType<WindowsDocumentPrinter>();
             printer.IsSupported.Should().Be(Environment.Is64BitProcess);
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            // #1710: Linux prints through CUPS. IsSupported depends on `lp` being installed,
+            // so only the type is asserted here; the container test proves the printing.
+            printer.Should().BeOfType<LinuxCupsDocumentPrinter>();
         }
         else
         {

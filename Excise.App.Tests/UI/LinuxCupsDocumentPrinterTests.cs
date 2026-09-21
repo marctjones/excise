@@ -191,7 +191,7 @@ public class LinuxCupsDocumentPrinterTests : IDisposable
     public void LpArguments_ClampCopies_AndStripControlCharactersFromTheTitle()
     {
         var request = new DocumentPrintRequest(
-            Path.Combine(_dir, "t.pdf"), "ti\ntle", PrintScalingMode.ActualSize, null);
+            Path.Combine(_dir, "t.pdf"), "ti\ntle\u0007", PrintScalingMode.ActualSize, null);
         var arguments = LinuxCupsDocumentPrinter.BuildLpArguments(
             request, LinuxPrintTicket.Print("Q", copies: 99999));
 
