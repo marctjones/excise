@@ -16,7 +16,14 @@
 # scripts/assert-trx-green.sh entry in tests/gates-tooling.txt).
 set -uo pipefail
 
-QUEUE="${EXCISE_CUPS_TEST_QUEUE:-ExcisePDF}"
+# Two names, deliberately. CREATE_QUEUE is what lpadmin makes; TEST_QUEUE is
+# what the tests are told to print to, and defaults to it. --demo-failure sets
+# only TEST_QUEUE, so the tests aim at a queue that was never created — the
+# first draft used one variable for both, cheerfully CREATED the "missing"
+# queue, and reported a green demo-failure run. A falsifiability check that
+# cannot fail is the thing it is there to prevent (#1012).
+CREATE_QUEUE="${EXCISE_CUPS_CREATE_QUEUE:-ExcisePDF}"
+QUEUE="${EXCISE_CUPS_TEST_QUEUE:-$CREATE_QUEUE}"
 OUT_PDF="/out/pdf"
 RESULTS="/out/results.xml"
 TESTS="${EXCISE_TEST_BINARY:-/opt/tests/Excise.App.Tests}"
@@ -38,7 +45,18 @@ sed -i -E "s|^#?[[:space:]]*Out[[:space:]].*|Out ${OUT_PDF}|" "$CONF"
 sed -i -E "s|^#?[[:space:]]*AnonDirName[[:space:]].*|AnonDirName ${OUT_PDF}|" "$CONF"
 grep -qE "^Out ${OUT_PDF}$" "$CONF" || echo "Out ${OUT_PDF}" >> "$CONF"
 grep -qE "^AnonDirName ${OUT_PDF}$" "$CONF" || echo "AnonDirName ${OUT_PDF}" >> "$CONF"
-say "cups-pdf output: $(grep -E '^(Out|AnonDirName) ' "$CONF" | tr '\n' ' ')"
+# cups-pdf's default umask makes the output owner-only, and the tests run as
+# uid 1000 while the backend runs as root, so qpdf/mutool could not read what
+# the queue produced. Both umasks: a job whose owner cups-pdf cannot resolve
+# takes the anonymous one. (Observed: cups-pdf does not apply these uniformly
+# — some files still came out 0600 and the oracles read them anyway, because
+# the podman mount is permissive. If a stricter host ever blocks a read, the
+# test FAILS; it cannot turn into a false green.)
+for key in UserUMask AnonUMask; do
+  sed -i -E "s|^#?[[:space:]]*${key}[[:space:]].*|${key} 0000|" "$CONF"
+  grep -qE "^${key} 0000$" "$CONF" || echo "${key} 0000" >> "$CONF"
+done
+say "cups-pdf output: $(grep -E '^(Out|AnonDirName|UserUMask|AnonUMask) ' "$CONF" | tr '\n' ' ')"
 
 # ── 2. cupsd, no systemd ────────────────────────────────────────────────
 say "starting cupsd"
@@ -58,20 +76,20 @@ say "$(lpstat -r)"
 # between cups-pdf packagings, and a wrong one fails lpadmin outright.
 MODEL="$(lpinfo -m 2>/dev/null | grep -i 'cups-pdf' | head -1 | awk '{print $1}')"
 if [ -n "$MODEL" ]; then
-  say "queue $QUEUE from model $MODEL"
-  lpadmin -p "$QUEUE" -v cups-pdf:/ -m "$MODEL" -E -o printer-is-shared=false
+  say "queue $CREATE_QUEUE from model $MODEL"
+  lpadmin -p "$CREATE_QUEUE" -v cups-pdf:/ -m "$MODEL" -E -o printer-is-shared=false
 elif [ -f /usr/share/ppd/cups-pdf/CUPS-PDF_noopt.ppd ]; then
-  say "queue $QUEUE from the shipped CUPS-PDF_noopt.ppd (lpinfo listed no cups-pdf model)"
-  lpadmin -p "$QUEUE" -v cups-pdf:/ -P /usr/share/ppd/cups-pdf/CUPS-PDF_noopt.ppd -E -o printer-is-shared=false
+  say "queue $CREATE_QUEUE from the shipped CUPS-PDF_noopt.ppd (lpinfo listed no cups-pdf model)"
+  lpadmin -p "$CREATE_QUEUE" -v cups-pdf:/ -P /usr/share/ppd/cups-pdf/CUPS-PDF_noopt.ppd -E -o printer-is-shared=false
 else
   echo "FAIL: no cups-pdf model and no shipped PPD; cannot create a queue" >&2
   lpinfo -m 2>&1 | head -20 >&2
   exit 1
 fi
-lpadmin -d "$QUEUE"
-cupsaccept "$QUEUE"
-cupsenable "$QUEUE"
-say "$(lpstat -p "$QUEUE" 2>&1 | head -1)  /  $(lpstat -d)"
+lpadmin -d "$CREATE_QUEUE"
+cupsaccept "$CREATE_QUEUE"
+cupsenable "$CREATE_QUEUE"
+say "$(lpstat -p "$CREATE_QUEUE" 2>&1 | head -1)  /  $(lpstat -d)"
 
 # ── 4. the tests, as a non-root user ────────────────────────────────────
 # EXCISE_CUPS_TEST_QUEUE may name a queue that does NOT exist: that is the

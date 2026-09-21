@@ -245,10 +245,14 @@ internal sealed class LinuxCupsDocumentPrinter : IDocumentPrinter
             {
                 var detail = submitted.Diagnostics();
                 _logger.LogError("lp exited {Exit}: {Detail}", submitted.ExitCode, detail);
+                // The queue name is ours to add, and it has to be: CUPS's own
+                // refusal for an unknown destination is "lp: Error - The
+                // printer or class does not exist." — which printer, it does
+                // not say. Measured in the container gate (#1710).
                 return DocumentPrintResult.Fail(
                     detail.Length > 0
-                        ? $"The printer did not accept the job: {detail}"
-                        : $"The printer did not accept the job (lp exited with code {submitted.ExitCode}).");
+                        ? $"The printer '{ticket.QueueName}' did not accept the job: {detail}"
+                        : $"The printer '{ticket.QueueName}' did not accept the job (lp exited with code {submitted.ExitCode}).");
             }
 
             var jobId = CupsPrintQueues.ParseRequestId(submitted.StandardOutput);

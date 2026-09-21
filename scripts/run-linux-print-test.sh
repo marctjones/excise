@@ -56,14 +56,22 @@ done
 
 command -v podman >/dev/null 2>&1 || { echo "FAIL: podman is not installed" >&2; exit 77; }
 
-# ── publish the tests, self-contained (the slow step) ───────────────────
+# ── publish the tests (the slow step) ───────────────────────────────────
+#
+# ⚠️ --self-contained FALSE, measured rather than preferred: a self-contained
+# publish of this project makes the xUnit v3 in-process runner die before the
+# first test with `MissingMethodException:
+# Xunit.v3.ITestPipelineStartup.StopAsync()`, with every xunit assembly
+# byte-identical to the framework-dependent output, and it reproduces on macOS
+# too — so it is self-contained publishing, not Linux. The image carries the
+# .NET runtime instead. See containers/linux-print/Containerfile.
 PUB="$ROOT/artifacts/linux-print/$RID"
 mkdir -p "$ROOT/artifacts/linux-print"
 if [ "$SKIP_PUBLISH" -eq 0 ]; then
-  echo "==> publishing Excise.App.Tests self-contained for $RID"
+  echo "==> publishing Excise.App.Tests for $RID (framework-dependent)"
   rm -rf "$PUB"
   dotnet publish "$ROOT/Excise.App.Tests/Excise.App.Tests.csproj" \
-      -c Debug -r "$RID" --self-contained true -p:PublishSingleFile=false \
+      -c Debug -r "$RID" --self-contained false -p:PublishSingleFile=false \
       -o "$PUB" >"$ROOT/artifacts/linux-print/publish.log" 2>&1 \
     || { echo "FAIL: publish failed; see artifacts/linux-print/publish.log" >&2
          tail -25 "$ROOT/artifacts/linux-print/publish.log" >&2; exit 1; }

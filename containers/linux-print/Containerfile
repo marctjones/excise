@@ -9,8 +9,18 @@
 #
 # NO SDK HERE, DELIBERATELY — the same choice containers/linux-perf makes.
 # Excise.App.Tests is an xUnit v3 project, so it publishes to a standalone
-# executable; the host publishes it self-contained and mounts it in. The image
-# stays small and independent of the toolchain version.
+# executable; the host publishes it and mounts it in, and this image carries
+# only the .NET RUNTIME to run it with.
+#
+# ⚠️ FRAMEWORK-DEPENDENT, NOT SELF-CONTAINED, and that is a measured decision
+# rather than a preference. A self-contained publish of this project makes the
+# xUnit v3 in-process runner die before the first test with
+#   MissingMethodException: Xunit.v3.ITestPipelineStartup.StopAsync()
+# — every xunit assembly byte-identical to the working framework-dependent
+# output, reproduced on macOS as well as in this container, so it is
+# self-contained publishing and not Linux or the container. The same publish
+# with --self-contained false runs the suite normally. Do not "simplify" this
+# back to self-contained to drop the runtime download.
 #
 # ⚠️ Three things the #1710 CI spike measured that this image encodes:
 #   1. `printer-driver-cups-pdf` no longer auto-creates a queue on 24.04, so
@@ -28,14 +38,27 @@ FROM docker.io/library/ubuntu:24.04
 # cups-filters  the pdftopdf filter chain that applies -n and page-ranges
 # qpdf, mupdf-tools  the INDEPENDENT page-count oracles. excise must never be
 #               the tool that verifies excise's own output.
-# libicu74      .NET globalization for the self-contained build
+# libicu74      .NET globalization
 # fontconfig/fonts  SkiaSharp needs a usable font; Excise.App.Tests loads it
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         cups cups-client cups-pdf cups-filters \
         qpdf mupdf-tools \
-        libicu74 ca-certificates procps \
+        libicu74 ca-certificates curl procps \
         libfontconfig1 libfreetype6 fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
+
+# The .NET 10 runtime, from Microsoft's own installer — the same source
+# CLAUDE.md requires on the dev box, and for the same reason: a distro-built
+# .NET is not the runtime excise is developed against. Runtime only, no SDK;
+# /usr/share/dotnet is where an apphost looks by default.
+ENV DOTNET_ROOT=/usr/share/dotnet \
+    PATH=/usr/share/dotnet:$PATH \
+    DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_NOLOGO=1
+RUN curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
+    && bash /tmp/dotnet-install.sh --channel 10.0 --runtime dotnet --install-dir "$DOTNET_ROOT" --no-path \
+    && rm -f /tmp/dotnet-install.sh \
+    && "$DOTNET_ROOT/dotnet" --list-runtimes
 
 # A non-root user to submit the job from. Printing as root is not how anyone
 # prints, and cups-pdf treats the job owner as the output owner. UID 1000 is

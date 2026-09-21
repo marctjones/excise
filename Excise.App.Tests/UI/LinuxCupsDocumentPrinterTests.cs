@@ -285,7 +285,7 @@ public class LinuxCupsDocumentPrinterTests : IDisposable
             .PrintAsync(Request(CreatePdf("refused.pdf")));
 
         result.Outcome.Should().Be(DocumentPrintOutcome.Failed);
-        result.Error.Should().Be("The printer did not accept the job: lp: Error - scheduler not responding.");
+        result.Error.Should().Be("The printer 'Cups-PDF' did not accept the job: lp: Error - scheduler not responding.");
     }
 
     [Fact]

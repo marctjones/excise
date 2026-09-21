@@ -189,8 +189,11 @@ public class LinuxCupsPrintIntegrationTests : IDisposable
 
         result.Outcome.Should().Be(DocumentPrintOutcome.Failed,
             "an unknown destination must never be reported as a successful print");
-        result.Error.Should().StartWith("The printer did not accept the job:");
+        // CUPS's own refusal is "lp: Error - The printer or class does not
+        // exist." and names no printer, so excise adds the queue: measured
+        // here, then fixed in LinuxCupsDocumentPrinter.
         result.Error.Should().Contain("excise-no-such-queue-1710", "the message must name the queue CUPS rejected");
+        result.Error.Should().Contain("did not accept the job");
         Snapshot().Except(before).Should().BeEmpty("a refused job produces no output");
     }
 
