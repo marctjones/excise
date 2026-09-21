@@ -22,7 +22,8 @@ A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 
 > implemented in this repository — `Excise.Core` (parser/writer),
 > `Excise.Rendering` (Skia), and `Excise.Ocr` — with no PdfPig, PDFsharp, or
 > PDFtoImage package dependency in the current stack. The source-provenance
-> review is tracked by [#1240](https://github.com/marctjones/excise/issues/1240).
+> review is not currently scheduled ([#1240](https://github.com/marctjones/excise/issues/1240)
+> was closed as not planned on 2026-09-21).
 > See [CHANGELOG.md](CHANGELOG.md) for full release notes.
 
 ## What's in the box
@@ -746,9 +747,10 @@ MIT License. See [LICENSES.md](LICENSES.md) for the complete dependency-license 
 ## Contributing
 
 Contributions are tracked in GitHub Issues and milestones rather than a second
-roadmap in this file. The current structural program is
-[RC20](https://github.com/marctjones/excise/milestone/104), with architecture
-authority, measured decomposition, provenance, and implementation assurance
-under [program epic #1257](https://github.com/marctjones/excise/issues/1257).
+roadmap in this file. The roadmap is the [D1 to D11
+milestones](https://github.com/marctjones/excise/milestones), ordered by what
+matters most to a daily-driver reader: redaction trust, data-loss bugs and
+Mac-style GUI behaviour come first, then performance, rendering, text and
+forms, and PDF 2.0 conformance measurement last.
 Start with an issue whose acceptance criteria name the relevant behavior,
 security, performance, and compatibility gates.

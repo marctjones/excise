@@ -8,7 +8,8 @@ cd "$ROOT"
 # Roslyn's out-of-process MSBuild host even when the workspace sets
 # NuGetAudit=false. Refresh that generated state explicitly: architecture
 # analysis is offline/deterministic, while the repository's network-capable
-# vulnerability audit remains independently owned by #1238.
+# vulnerability audit is out of scope here (#1238 was closed as not planned on
+# 2026-09-21).
 dotnet restore excise.sln \
   -p:NuGetAudit=false \
   --force-evaluate \

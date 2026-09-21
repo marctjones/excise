@@ -495,7 +495,7 @@
         "MainWindowViewModel.cs is 3,223 lines and the 22 MainWindowViewModel*.cs partials total 8,488 lines (wc -l, 2026-09-15; MainWindowViewModel.cs was 2,985 at the 2026-08-31 review, so it grew); search-index and search-execution lifecycles, annotation mutation and page-image export transactions, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, page/view/zoom viewport ownership, and one required composition contract are complete, but other workflow ownership remains concentrated.",
         "Production uses an explicit validated service factory, tests use a named factory with explicit overrides and production-matching contracts, and design-time XAML no longer creates a second service graph.",
         "Document, editing, redaction, security, and background work still share mutable state; thumbnail, search-request, annotation-mutation, and page/view/zoom viewport lifetimes now have explicit owners, with same-page and same-mode feedback made idempotent.",
-        "Every issue in issueIds is closed (re-checked with gh 2026-09-15) while the concentration above remains, so no open issue tracks the rest of this work; it needs a scoped follow-up issue or an explicit accepted_exception decision (#1356)."
+        "Every issue in issueIds except #1500 is closed (re-checked with gh 2026-09-21); #1500 (design first, then an incremental refactor) tracks the rest of this work. #1356, filed to find an owner for it, was closed as not planned on 2026-09-21 once #1500 existed."
       ],
       "deterministicDiscovery": [
         "wc -l Excise.App/ViewModels/MainWindowViewModel*.cs",
@@ -522,7 +522,8 @@
         1286,
         1287,
         1288,
-        1293
+        1293,
+        1500
       ]
     },
     {

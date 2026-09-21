@@ -11,8 +11,8 @@ signature inspection through shared domain libraries.
 This document describes the intended architecture. Implementation status,
 known gaps, and proof belong in the architecture registries rather than prose.
 The current dependency graph contains no PdfPig, PDFsharp, or PDFtoImage package
-dependency. Source provenance and independent-implementation assurance remain
-subject to the review tracked by issue #1240.
+dependency. A source-provenance and independent-implementation review is not currently
+scheduled (issue #1240 was closed as not planned on 2026-09-21).
 
 ## Principles
 

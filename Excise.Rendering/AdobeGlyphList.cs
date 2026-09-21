@@ -74,7 +74,7 @@ internal static class AdobeGlyphList
         // single-code-point mapping is accepted — Core also decodes AGL
         // component-joined ligature names ("f_i" -> "fi", #1423), which a
         // `char` cannot carry; those keep falling through as before.
-        // Full consolidation of the two tables is #1440.
+        // Full consolidation of the two tables was #1440 (closed as not planned 2026-09-21).
         var core = Excise.Core.Text.AdobeGlyphList.ToUnicode(glyphName);
         if (core is { Length: 1 })
         {

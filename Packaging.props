@@ -43,11 +43,11 @@
       All are suppressed here rather than left to fail a real build, since
       fixing ~200 broken comments and writing ~745 missing ones (Excise.Core
       alone; Rendering/Avalonia not yet counted) is separate, larger, tracked
-      work (#1440), not something to block this on.
+      work (#1440, closed as not planned), not something to block this on.
 
-      Remove this suppression once #1440 lands, so a NEW undocumented or
-      malformed public doc comment starts failing the build instead of
-      silently shipping broken or absent.
+      This suppression is kept deliberately: #1440 was closed as not planned
+      on 2026-09-21, so a NEW undocumented or malformed public doc comment
+      will not fail the build. Reopen #1440 to change that.
     -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591;CS1570;CS1572;CS1573;CS1574;CS1587;CS0419;CS1734</NoWarn>
