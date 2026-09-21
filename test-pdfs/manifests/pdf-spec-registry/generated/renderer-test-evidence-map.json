@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "c89797b54baaf61afa27897ac6ddabd153afba735ddf502110ae59975a6b3449",
+  "sourceFingerprint": "7141801345eae89fce766221291b9a819c29825faf8376d720fff77df44bba1f",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -28969,6 +28969,98 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/ImageCodecOutOfMemoryTests.cs::ImageCodecOutOfMemoryTests.ManagedJpxDecode_OutOfMemory_Propagates",
+      "path": "Excise.Rendering.Tests/ImageCodecOutOfMemoryTests.cs",
+      "class": "ImageCodecOutOfMemoryTests",
+      "method": "ManagedJpxDecode_OutOfMemory_Propagates",
+      "line": 38,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageCodecOutOfMemoryTests.cs::ImageCodecOutOfMemoryTests.JpxImageDecode_OutOfMemory_Propagates",
+      "path": "Excise.Rendering.Tests/ImageCodecOutOfMemoryTests.cs",
+      "class": "ImageCodecOutOfMemoryTests",
+      "method": "JpxImageDecode_OutOfMemory_Propagates",
+      "line": 47,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageCodecOutOfMemoryTests.cs::ImageCodecOutOfMemoryTests.DctCmykDecode_OutOfMemory_Propagates",
+      "path": "Excise.Rendering.Tests/ImageCodecOutOfMemoryTests.cs",
+      "class": "ImageCodecOutOfMemoryTests",
+      "method": "DctCmykDecode_OutOfMemory_Propagates",
+      "line": 69,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageCodecOutOfMemoryTests.cs::ImageCodecOutOfMemoryTests.DctDecode_OrdinaryFailure_IsStillARecoverableNull",
+      "path": "Excise.Rendering.Tests/ImageCodecOutOfMemoryTests.cs",
+      "class": "ImageCodecOutOfMemoryTests",
+      "method": "DctDecode_OrdinaryFailure_IsStillARecoverableNull",
+      "line": 90,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/ImageColorConverterTests.cs::ImageColorConverterTests.GetImageColorConverter_DeviceGray_UsesExactByteTable",
       "path": "Excise.Rendering.Tests/ImageColorConverterTests.cs",
       "class": "ImageColorConverterTests",
@@ -45759,7 +45851,7 @@
     }
   ],
   "summary": {
-    "testMethods": 1264,
+    "testMethods": 1268,
     "facets": {
       "content-streams": 366,
       "content-strings-and-text": 7,
@@ -45767,7 +45859,7 @@
       "fonts": 206,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 320,
-      "images": 219,
+      "images": 223,
       "page-group-backdrop": 3,
       "renderer-integration-general": 38,
       "renderer-performance-and-lifetime": 12,
@@ -45785,9 +45877,9 @@
       "pdf.17.graphics.fonts:extract": 206,
       "pdf.17.graphics.fonts:parse": 206,
       "pdf.17.graphics.fonts:render": 840,
-      "pdf.17.graphics.images:extract": 219,
-      "pdf.17.graphics.images:parse": 219,
-      "pdf.17.graphics.images:render": 835,
+      "pdf.17.graphics.images:extract": 223,
+      "pdf.17.graphics.images:parse": 223,
+      "pdf.17.graphics.images:render": 839,
       "pdf.17.graphics.paths-painting:parse": 320,
       "pdf.17.graphics.paths-painting:render": 320,
       "pdf.17.graphics.patterns-shadings:parse": 53,

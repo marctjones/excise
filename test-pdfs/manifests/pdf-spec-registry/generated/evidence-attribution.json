@@ -44235,6 +44235,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_TextOutsideTheFontEncoding_IsRefused_BeforeAnyEditIsDrawn",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreJoinedLigatureName_ReturnsDecomposedConcatenation",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -45126,15 +45133,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_EmbedsFarLessThanTheFullFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -45714,6 +45712,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_TextOutsideTheFontEncoding_IsRefused_BeforeAnyEditIsDrawn",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreJoinedLigatureName_ReturnsDecomposedConcatenation",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46605,15 +46610,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_EmbedsFarLessThanTheFullFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -47175,6 +47171,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_TextOutsideTheFontEncoding_IsRefused_BeforeAnyEditIsDrawn",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreJoinedLigatureName_ReturnsDecomposedConcatenation",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -48066,15 +48069,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs::EmbeddedFontSubsetTests.Subset_EmbedsFarLessThanTheFullFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -83321,6 +83315,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -83439,13 +83440,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -84789,6 +84783,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -84907,13 +84908,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -86257,6 +86251,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -86375,13 +86376,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -87741,6 +87735,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -87859,13 +87860,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -89346,6 +89340,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -89462,13 +89463,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -90805,6 +90799,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -90921,13 +90922,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -92257,6 +92251,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -92373,13 +92374,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -93709,6 +93703,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -93825,13 +93826,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113583,8 +113577,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7757,
-    "testMethodsWithCapabilityCandidate": 4824,
+    "testMethods": 7781,
+    "testMethodsWithCapabilityCandidate": 4844,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

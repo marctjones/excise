@@ -2,18 +2,18 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "0762bd85d275ed67de7e406f26f288348dc955ac",
+  "sourceRevision": "9467d6b01faae23002fda06516533d45043b5880",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7832,
-    "observedComponentDependencies": 70,
-    "declaredDependencies": 68,
+    "retainedSymbols": 7895,
+    "observedComponentDependencies": 72,
+    "declaredDependencies": 69,
     "acceptedExceptions": 1,
-    "undeclaredDependencies": 1,
+    "undeclaredDependencies": 2,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
     "unownedShippingSymbols": 0,
@@ -24,21 +24,21 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 431,
+      "references": 433,
       "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Views.MainWindow",
           "target": "Excise.App.ViewModels.MainWindowViewModel",
-          "references": 147
+          "references": 149
         }
       ]
     },
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 691,
+      "references": 693,
       "typeDependencyCount": 78,
       "classification": "declared",
       "evidence": [
@@ -290,14 +290,14 @@
     {
       "source": "core",
       "target": "core-fonts",
-      "references": 41,
+      "references": 43,
       "typeDependencyCount": 5,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Graphics.PdfTrueTypeFont",
           "target": "Excise.Core.Fonts.TrueTypeFontFile",
-          "references": 31
+          "references": 33
         }
       ]
     },
@@ -326,6 +326,20 @@
           "source": "Excise.Core.Xfa.XfaPackets",
           "target": "Excise.Core.Operations.XfaXmlCarrier",
           "references": 4
+        }
+      ]
+    },
+    {
+      "source": "core",
+      "target": "core-text",
+      "references": 2,
+      "typeDependencyCount": 1,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Graphics.PdfFont",
+          "target": "Excise.Core.Text.UnicodeTextSafety",
+          "references": 2
         }
       ]
     },
@@ -388,14 +402,14 @@
     {
       "source": "core-document",
       "target": "core",
-      "references": 71,
-      "typeDependencyCount": 19,
+      "references": 78,
+      "typeDependencyCount": 20,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Document.AcroFormAuthoring",
           "target": "Excise.Core.Graphics.PdfFont",
-          "references": 16
+          "references": 22
         }
       ]
     },
@@ -430,7 +444,7 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1447,
+      "references": 1449,
       "typeDependencyCount": 218,
       "classification": "declared",
       "evidence": [
@@ -438,6 +452,20 @@
           "source": "Excise.Core.Document.PdfAnnotationAuthoring",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 95
+        }
+      ]
+    },
+    {
+      "source": "core-document",
+      "target": "core-text",
+      "references": 2,
+      "typeDependencyCount": 1,
+      "classification": "undeclared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Document.AcroFormAuthoring",
+          "target": "Excise.Core.Text.UnicodeTextSafety",
+          "references": 2
         }
       ]
     },
