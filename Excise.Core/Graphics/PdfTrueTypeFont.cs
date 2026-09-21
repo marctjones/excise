@@ -67,6 +67,39 @@ internal sealed class PdfTrueTypeFont : PdfFont
     public override double Descender => -_ttf.Descent * _scale * Size;
     public override double LineHeight => (_ttf.Ascent - _ttf.Descent) * _scale * Size;
 
+    /// <summary>
+    /// True when the font program has a glyph for every character (#1671). The
+    /// base answer is the WinAnsi one, which is wrong here: this font is
+    /// Identity-H and draws any code point its cmap covers, and it silently
+    /// draws .notdef (gid 0) for one it does not — the same lossy shape as the
+    /// base font's <c>?</c>. Line-break and tab characters are not glyphs and
+    /// never were checked.
+    /// </summary>
+    public override bool CanEncodeFully(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return true;
+        foreach (var cp in Codepoints(text))
+        {
+            if (cp is '\n' or '\r' or '\t') continue;
+            if (_ttf.GidForCodepoint(cp) == 0) return false;
+        }
+        return true;
+    }
+
+    internal override IReadOnlyList<string> FindUnencodableCharacters(string text)
+    {
+        var found = new List<string>();
+        if (string.IsNullOrEmpty(text)) return found;
+        foreach (var cp in Codepoints(text))
+        {
+            if (cp is '\n' or '\r' or '\t') continue;
+            if (_ttf.GidForCodepoint(cp) != 0) continue;
+            var s = cp is >= 0xD800 and <= 0xDFFF ? ((char)cp).ToString() : char.ConvertFromUtf32(cp);
+            if (!found.Contains(s)) found.Add(s);
+        }
+        return found;
+    }
+
     /// <summary>Encode as a hex string of 2-byte glyph ids: <c>&lt;00410042&gt;</c>.</summary>
     public override string EncodeString(string text)
     {
