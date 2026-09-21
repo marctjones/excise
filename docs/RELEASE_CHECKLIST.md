@@ -22,8 +22,9 @@ mismatch ships a binary whose About window names a different release. That is
 **What a tag builds.** Pushing the tag runs `.github/workflows/release.yml`, which
 builds the macOS arm64 zip, the Windows installer and portable zip, and the Linux
 `amd64` and `arm64` `.deb` and `.tar.gz` packages, checks each one is what it claims
-(a `.deb` is installed and run, the Windows installer is installed silently, the macOS
-bundle is inspected), verifies every asset against its `.sha256`, and attaches them to
+(a `.deb` is installed and run, the Windows installer is installed silently and launched,
+the macOS bundle is inspected, and every package is proven Native AOT by unpacking it and
+running `scripts/check-aot-payload.py`), verifies every asset against its `.sha256`, and attaches them to
 a **draft** release with notes taken from `CHANGELOG.md`. Nothing is published:
 publishing is a manual click. The builds are unsigned by choice (#1597; #1698 is the
 open re-decision), and the release notes say so. `workflow_dispatch` is a dry run: it
@@ -147,7 +148,7 @@ The decisions no row can make:
   | RID | Status | Reason |
   |-----|--------|--------|
   | `osx-arm64` | **Shipped** | Validated by the `aot` row (`run-aot-smoke.sh` evidence); the per-PR Native AOT CI lane that used to corroborate it was removed with Actions on 2026-09-04. |
-  | `win-x64` | Deferred (#703) | Not yet probed as AOT: the Windows package is a single-file self-contained publish (`scripts/build-windows-installer.ps1`), not AOT. A Windows runner exists now (#1593); the AOT probe itself is still to do. |
+  | `win-x64` | **Ships from the next tag; unproven until `release.yml` has run** | Native AOT GUI publish on a hosted `windows-latest` runner: 8 consecutive green `windows-aot` jobs (latest run 35562489812, 3-5 min each), producing a native `Excise.App.exe` beside `libSkiaSharp.dll`, `libHarfBuzzSharp.dll` and `av_libglesv2.dll` and no managed assembly. That job never launched the result, and the Windows AOT **CLI** has never been published. `release.yml` now builds the installer and portable zip from an AOT publish (`scripts/build-windows-installer.ps1`), runs `scripts/check-aot-payload.py` on the publish directory, the unpacked zip and the installed tree, then launches the installed CLI (render) and GUI (scenario runner, which reports `runtimeMode`). The single-file build it replaces was last built by the dry run 35555517990. |
   | `linux-x64` | Shipped through v3.8.0; **re-verified 2026-09-20** | Native AOT GUI publish, launch and scenario on a hosted x64 runner, 0 managed `.dll` sidecars (run 35550350097, #1594). `release.yml` rebuilds the AOT `.deb` on every tag, installs it and smokes the CLI. Not verified before that workflow first runs: the `.deb` itself on a runner. |
   | `linux-arm64` | **Ships from the next tag; unproven until `release.yml` has run** | Native AOT GUI publish, launch and scenario on a hosted arm64 runner (`ubuntu-24.04-arm`), 0 managed `.dll` sidecars (run 35550350097, #1594). The arm64 AOT **CLI** and the `.deb` had not been built anywhere before `release.yml`, which builds and smokes them natively on arm64. |
   | `osx-x64` | Deferred (#705) | Not yet probed; needs an Intel-mac (or Rosetta-verified) publish + smoke. |

@@ -3,9 +3,14 @@
 ;
 ; Built by scripts/build-windows-installer.ps1, which first runs
 ;   dotnet publish -c Release -r win-x64 --self-contained true
-;     -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-; and then invokes iscc.exe with /DMyAppVersion=… and /DPublishDir=…
-; pointing at the publish output.
+;     -p:PublishAot=true -p:PublishSingleFile=false -p:PublishReadyToRun=false
+; for Excise.App and Excise.Cli into one directory, and then invokes iscc.exe
+; with /DMyAppVersion=… and /DPublishDir=… pointing at it.
+;
+; The publish directory is Native AOT: Excise.App.exe and excise.exe plus native
+; libraries (libSkiaSharp.dll, libHarfBuzzSharp.dll, av_libglesv2.dll), no managed
+; assemblies and no .pdb files. The [Files] rule below packs the whole directory,
+; so nothing here may assume a single-file layout.
 ;
 ; Targets: Windows 10 1809+ / Windows 11. Self-contained — no .NET 10
 ; runtime required on the target machine.

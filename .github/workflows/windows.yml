@@ -341,10 +341,12 @@ jobs:
   #    Separate because a Windows AOT publish drives the MSVC linker over the
   #    whole app and can take as long as everything above it put together; in
   #    the same job it would eat the ~20 minute budget and make the useful
-  #    signal wait behind the optional one. Non-blocking because #1593 asks for
-  #    it that way: AOT is a validated opt-in lane on osx-arm64 (#590), other
-  #    RIDs are #595, and win-x64 is not claimed to work yet. A red here means
-  #    "still not ready", not "this push is broken".
+  #    signal wait behind the optional one. Non-blocking because it is an early
+  #    warning, not a gate: the Windows package that ships is built, checked and
+  #    launched by release.yml (Native AOT, scripts/build-windows-installer.ps1),
+  #    and this job publishes the GUI only, without the CLI and without launching
+  #    the result. A red here means "the release's Windows build will probably
+  #    fail", not "this push is broken".
   # ─────────────────────────────────────────────────────────────────────────
   windows-aot:
     name: Native AOT (win-x64, non-blocking)
