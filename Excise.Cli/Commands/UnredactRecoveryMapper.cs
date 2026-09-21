@@ -42,6 +42,7 @@ internal static class UnredactRecoveryMapper
             report.MarksRecovered,
             report.MarksPartial,
             report.MarksCandidatesOnly,
+            report.MarksContentSurvives,
             report.MarksNotRecovered,
             markSummaries,
             linked,
@@ -53,6 +54,7 @@ internal static class UnredactRecoveryMapper
 
     private static UnredactModelFinding Finding(RecoveredFinding finding) => new(
         finding.Channel,
+        TierOf(finding.Channel),
         finding.Carrier,
         ConfidenceOf(finding.Confidence),
         finding.Text,
@@ -84,11 +86,24 @@ internal static class UnredactRecoveryMapper
         _ => "unknown",
     };
 
+    /// <summary>
+    /// #1690 — the finding's tier on the wire. Read from the one authority
+    /// (<see cref="RecoveryChannelTiers"/>) rather than a list here, so a
+    /// channel cannot be Tier 1 to the engine and Tier 2 to the report.
+    /// </summary>
+    internal static string TierOf(string channel) =>
+        RecoveryChannelTiers.TierOf(channel) switch
+        {
+            RecoveryTier.Deferred => "deferred",
+            _ => "text",
+        };
+
     internal static string OutcomeOf(MarkRecoveryOutcome outcome) => outcome switch
     {
         MarkRecoveryOutcome.Recovered => "recovered",
         MarkRecoveryOutcome.PartiallyRecovered => "partially-recovered",
         MarkRecoveryOutcome.CandidatesOnly => "candidates-only",
+        MarkRecoveryOutcome.ContentSurvives => "content-survives",
         MarkRecoveryOutcome.NotRecovered => "not-recovered",
         _ => "unknown",
     };

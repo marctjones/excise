@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Excise.Core.Redaction.Recovery;
 using Excise.TestSupport;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -40,7 +41,33 @@ internal static class UnredactionBenchAxes
         /// is a PASS that must be promoted, not a silent improvement.
         /// </summary>
         public bool ExpectedRecoverable => Status == "covered";
+
+        /// <summary>
+        /// #1690 — is this axis GRADED (Tier 1, text) or merely MEASURED
+        /// (Tier 2, deferred)? Read from the channel through the one authority,
+        /// so the bench cannot grade a channel the product defers.
+        ///
+        /// <para>A mode with no channel is Tier 1 on purpose: it is an
+        /// unimplemented TEXT gap whose zero is the point of the row, and
+        /// hiding it under "deferred" would lose that.</para>
+        /// </summary>
+        public RecoveryTier Tier => Channel == null
+            ? RecoveryTier.Text
+            : RecoveryChannelTiers.TierOf(Channel);
+
+        public bool IsDeferred => Tier == RecoveryTier.Deferred;
     }
+
+    /// <summary>
+    /// #1690 — the tier of a failure MODE, by its registry channel. Unknown
+    /// mode → Tier 1, matching <see cref="RecoveryChannelTiers.TierOf"/>: a row
+    /// nobody classified is graded, which is the failure that gets noticed.
+    /// </summary>
+    public static RecoveryTier TierOfMode(string modeId) =>
+        All.FirstOrDefault(a => a.Id == modeId)?.Tier ?? RecoveryTier.Text;
+
+    public static bool IsDeferredMode(string modeId) =>
+        TierOfMode(modeId) == RecoveryTier.Deferred;
 
     private static readonly Lazy<IReadOnlyList<Axis>> Cached = new(Load);
 

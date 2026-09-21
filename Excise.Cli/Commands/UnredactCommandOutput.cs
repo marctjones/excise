@@ -72,6 +72,19 @@ internal static class UnredactCommandOutput
                 "but it is also exactly how text is hidden deliberately, so it is reported.";
     }
 
+    /// <summary>
+    /// #1690 — what this report does NOT cover, in the reader's own terms.
+    /// Built by the engine from the channels actually skipped; the CLI only
+    /// prints it, so the wording cannot drift from the tier decision.
+    /// </summary>
+    private static void WriteLimitations(IReadOnlyList<string>? limitations, TextWriter output)
+    {
+        if (limitations is not { Count: > 0 }) return;
+        output.WriteLine("  ⚠ NOT COVERED BY THIS REPORT:");
+        foreach (var line in limitations)
+            output.WriteLine($"    • {line}");
+    }
+
     private static string CarrierLine(UnredactCertainFinding finding) =>
         $"  {Where(finding.Page, finding.Object, finding.Location)} " +
         $"[{finding.HiddenBy}]" +
@@ -140,6 +153,13 @@ internal static class UnredactCommandOutput
                 $"{quantification.WidthResidueGaps} width-residue gap(s) leaking " +
                 $"{quantification.WidthResidueBitsTotal} bits total.");
         }
+
+        // ⚠️ #1690 — ADJACENT TO THE SCORE, and to the ALL-CLEAR above it,
+        // which is the branch that matters most: a green tick over a document
+        // whose only leak is under a deferred channel is precisely the false
+        // reassurance this tool exists to remove. A footer would let a reader
+        // stop at the tick.
+        WriteLimitations(report.Limitations, output);
 
         if (report.Certain.Count > 0)
         {
@@ -252,6 +272,7 @@ internal static class UnredactCommandOutput
                 $"{recovery.MarksRecovered} recovered, " +
                 $"{recovery.MarksPartiallyRecovered} partially recovered, " +
                 $"{recovery.MarksCandidatesOnly} candidates only, " +
+                $"{recovery.MarksContentSurvives} content survives undecoded, " +
                 $"{recovery.MarksNotRecovered} nothing recovered.");
 
             foreach (var mark in recovery.MarkSummaries)
@@ -261,6 +282,10 @@ internal static class UnredactCommandOutput
                     "recovered" => "✗",              // the redaction failed completely
                     "partially-recovered" => "✗",
                     "candidates-only" => "~",
+                    // #1707 — NOT the ✓ default. Material is intact under this
+                    // mark and only undecoded; the redaction did not hold, and
+                    // the one character a reader skims must not say it did.
+                    "content-survives" => "✗",
                     _ => "✓",                        // nothing came back: the redaction held
                 };
                 output.WriteLine(
@@ -316,9 +341,17 @@ internal static class UnredactCommandOutput
         output.WriteLine($"  channels run: {string.Join(", ", recovery.ChannelsRun)}");
         if (recovery.ChannelsSkipped.Count > 0)
         {
+            // A DEFERRED channel's full reason is a sentence and a half, and it
+            // is printed in full under NOT COVERED below. Repeating it here
+            // pushed the coverage line past four hundred characters on an
+            // ordinary form, which buries the channels skipped for some OTHER
+            // reason — the ones this line exists to surface.
             output.WriteLine(
                 "  ⚠ channels NOT run (this report does not cover them): " +
-                string.Join(", ", recovery.ChannelsSkipped.Select(c => $"{c.Key} ({c.Value})")));
+                string.Join(", ", recovery.ChannelsSkipped.Select(c =>
+                    RecoveryChannelTiers.IsDeferred(c.Key)
+                        ? $"{c.Key} (deferred #1690 — see NOT COVERED below)"
+                        : $"{c.Key} ({c.Value})")));
         }
 
         output.WriteLine();

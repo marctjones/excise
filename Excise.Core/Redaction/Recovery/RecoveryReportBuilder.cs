@@ -231,7 +231,20 @@ public sealed class RecoveryReportBuilder
             .Where(f => f.Confidence == RecoveryConfidence.Certain && f.Location != null)
             .Select(f => f.Location!.Rect.Normalize())
             .ToList();
-        if (certain.Count == 0) return MarkRecoveryOutcome.CandidatesOnly;
+        if (certain.Count == 0)
+        {
+            // #1707 — "constrained" and "intact but undecoded" are different
+            // verdicts and only one of them is a maybe. A mark whose findings
+            // are ALL present-only has material surviving under it that no
+            // channel read; calling that "candidates only" printed a leaked
+            // photograph as `~ candidates-only — 1 finding(s), 0 certain`, with
+            // no candidates anywhere in the report. Mixed evidence stays
+            // CandidatesOnly: a candidate set is a claim about the VALUE, and
+            // the stronger claim about the value wins.
+            return findings.All(f => f.Confidence == RecoveryConfidence.PresentOnly)
+                ? MarkRecoveryOutcome.ContentSurvives
+                : MarkRecoveryOutcome.CandidatesOnly;
+        }
 
         return CoveredWidthFraction(mark.Rect, certain) >= FullRecoveryWidthFraction
             ? MarkRecoveryOutcome.Recovered

@@ -22,9 +22,23 @@ public sealed class FlattenOcrRedactionTests
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
         Assert.SkipUnless(GhostscriptReferenceRenderer.IsAvailable, "ghostscript not installed");
-        var input = Path.Combine(RepoRoot(), "test-pdfs", "redaction-adversarial",
-            "image-baked-text--IMAGEBAKEDSECRET.pdf");
-        Assert.SkipWhen(!File.Exists(input), "image-baked-text fixture not present");
+        // ⚠️ #1702 — the SHARED locator, and a CHECKABLE absence claim.
+        //
+        // This used to walk upward to the first `.git` and join `test-pdfs`
+        // onto it. A worktree's `.git` is a FILE, which that walk accepted, so
+        // it stopped at the WORKTREE root — where this gitignored corpus is
+        // not — and skipped, claiming the fixture was "not present" while it
+        // sat in the main checkout. Measured 2026-09-20: the main checkout ran
+        // this test and all three worktrees skipped it, so a redaction
+        // differential was silently absent from every worktree session that
+        // day. TestRepoLayout reaches the MAIN checkout through git's own
+        // worktree plumbing, which is the right answer for a gitignored
+        // corpus.
+        var input = TestRepoLayout.FindFile(
+            "test-pdfs", "redaction-adversarial", "image-baked-text--IMAGEBAKEDSECRET.pdf");
+        Assert.SkipWhen(input == null, TestRepoLayout.AbsenceReason(
+            "image-baked-text redaction fixture",
+            Path.Combine("test-pdfs", "redaction-adversarial", "image-baked-text--IMAGEBAKEDSECRET.pdf")));
         var cli = FindCliAssembly();
         Assert.SkipWhen(cli == null, "Excise.Cli binary unavailable");
         var output = Path.Combine(Path.GetTempPath(), $"excise-flatten-ocr-{Guid.NewGuid():N}.pdf");
@@ -50,14 +64,6 @@ public sealed class FlattenOcrRedactionTests
                 "a Ghostscript render OCR-ed by tesseract must not reveal the baked secret");
         }
         finally { try { File.Delete(output); } catch { } }
-    }
-
-    private static string RepoRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory != null && !Directory.Exists(Path.Combine(directory.FullName, ".git")) && !File.Exists(Path.Combine(directory.FullName, ".git")))
-            directory = directory.Parent;
-        return directory?.FullName ?? throw new InvalidOperationException("repository root unavailable");
     }
 
     /// <summary>

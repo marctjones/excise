@@ -7,11 +7,13 @@ scripts/analyze-corpus-results.sh   # analysis helper over scan output
 scripts/analyze-pdf-corpus-duplicates.py   # corpus analysis helper
 scripts/architecture_artifacts.py   # body of check-architecture-artifacts.sh
 scripts/archive-bench-run.sh   # the ONE redaction-bench scorer; appends to tests/redaction-bench-history.jsonl (the report reads the history)
+scripts/archive-gui-perf-run.sh  # GUI footprint/latency trend; appends to tests/gui-perf-history.jsonl. NOT a gate — absolute numbers from one machine
 scripts/assert-fresh.sh   # freshness guard invoked by lib-runner before every --no-build
 scripts/assert_fresh_build.py   # body of assert-fresh.sh
 scripts/assert-trx-green.sh   # the trx verdict for the two ADVISORY GitHub runners (#1593/#1594): a --filter matching nothing exits 0, and the Linux Avalonia host exits 1 on native teardown after passing. Not a local gate — lib-runner's zero-test guard and report-gates.sh cover the tiers. Its own --self-test runs as a step in both workflows
 scripts/audit-image-feature-coverage.py   # registry audit helper
 scripts/audit-pdf20-renderer-coverage.py   # registry audit helper
+scripts/bench-width-policy.py   # measures what a redaction WIDTH POLICY does to the page (drift vs the original) and what layout still restates the width (#1715/#1725). A survey, not a gate: numbers vary with the dictionary and corpus
 scripts/build-bench-tiers.py   # regenerates tests/bench-tiers/*.tsv from corpora
 scripts/build-deb.sh   # Linux packaging; no Linux PACKAGING runner (#1596) — the advisory linux.yml builds and publishes but packages nothing
 scripts/build-image-feature-inventory.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
@@ -81,6 +83,7 @@ scripts/fix_redactarea_phase4.py   # historical one-off refactor script; candida
 scripts/fix_remaining_redactarea.sh   # historical one-off refactor script; candidate for deletion
 scripts/gen-adversarial-redaction-corpus.py   # fixture generation (bench)
 scripts/gen-redaction-corpus.py   # fixture generation (bench)
+scripts/gen-redaction-weird-corpus.py   # generates test-pdfs/redaction-weird (12 layout situations with known ground truth) for bench-width-policy.py; output is gitignored like the other synthetic corpora
 scripts/generate-encrypted-test-pdfs.sh   # fixture generation
 scripts/generate-hybrid-xrefstm-fixture.py   # fixture generation
 scripts/generate-icons.sh   # asset generation
@@ -111,6 +114,7 @@ scripts/run-copy-unicode-quality-harness.sh   # convenience over tests already r
 scripts/run-exploratory-corpus-tmux.sh   # tmux wrapper over the corpus-scan rows for humans
 scripts/run-full-suite.sh   # RUNNER: full
 scripts/run-gui-display-sweep.sh   # manual sharded fallback for the 144-page sweep that every full App.Tests pass already runs (PdfViewerHeadlessRenderTests self-shards); docs/RELEASE_CHECKLIST.md
+scripts/run-gui-perf-linux.sh   # #1720 the same live GUI measurement inside a local podman container, so Linux memory questions do not depend on hosted runners (machine class varies there, so CPU and wall-clock are not gateable — only a within-run ratio, #1699). NOT a gate, for the reasons run-gui-perf-scenarios.sh gives AND one more: these numbers are a Linux-over-time series that is NOT comparable to the macOS ones (/proc VmRSS is not macOS footprint, different allocator and kernel, and Xvfb has no compositor — so any frame-pacing number from it is an artefact). Needs podman and the altona corpus. What IS gated is the machine-independent half, the same PerfScenarioTests row the macOS harness leans on.
 scripts/run-gui-perf-scenarios.sh   # #1497 live GUI memory/CPU measurement. NOT a gate on purpose: its numbers are absolute footprint on ONE machine under whatever load it had, and tests/reference-performance already records why that cannot be gated (two identical 3-run passes minutes apart moved every fixture 1.27-2.24x in the same direction). It also needs a display (Avalonia -6661) and the altona/smoke corpora. What IS gated is the machine-independent half, in Excise.App.Tests/Automation/PerfScenarioTests.cs (row Excise.App.Tests): the scenario file parses, a typo'd op/id fails loudly, steps run in order, and a wedged step becomes a reported timeout rather than a hang. #1497 says add a GRADE row with a skip prereq only if the harness proves useful first.
 scripts/run-local-real-world-gui-display.sh   # restricted local corpus, self-oracle, >=30 min; the property is already a BLOCK gate on 144 pages
 scripts/run-packaged-gui-smoke.sh   # invoked by release-smoke run_packaged_gui_gate (row packaged-gui)

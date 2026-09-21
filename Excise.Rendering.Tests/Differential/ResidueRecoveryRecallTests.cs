@@ -52,6 +52,13 @@ public sealed class ResidueRecoveryRecallTests
     // discrimination, and defeats the negative controls.
     private static IReadOnlyList<string> DictionaryFor(string kind) => SyntheticCorpusDictionaries.For(kind);
 
+    /// <summary>
+    /// The manifest methods residue recovery is scored on. <c>original</c> is an
+    /// unredacted control and <c>under-box</c> belongs to the certain channel.
+    /// </summary>
+    internal static bool ScoresResidue(string method) =>
+        method is "width-preserving" or "width-closing" or "defended";
+
     [Fact]
     public void RecallAtN_PerBand_AgainstConstructedGroundTruth()
     {
@@ -78,6 +85,20 @@ public sealed class ResidueRecoveryRecallTests
         // width rung produced it, so an "exact" band cannot be inflated by
         // fallback cases sneaking in.
         var scored = new List<(Case C, int Rank, double Bits, string Metric)>();
+
+        // ⚠️ #1714 — the comment above said "score residue on the gap-leaving
+        // methods" and NOTHING enforced it: every manifest row was scored, so the
+        // 108 unredacted `original` controls (no redaction, no gap, nothing to
+        // recover) and the 40 `under-box` cases (a different channel) sat in the
+        // denominators. Every populated band therefore printed exactly 50%,
+        // because each has an equal-sized original arm (B1: 48 + 48 = 96).
+        // Measured through the shipped CLI on the same cases, scored only on
+        // gap-bearing rows: 80/80 within rank 5, not 50%.
+        //
+        // width-closing (B8) and defended (B9) stay IN: they are the negative
+        // controls this test asserts must stay near zero, and they only mean
+        // something if the engine is actually run on them.
+        cases = cases.Where(c => ScoresResidue(c.Method)).ToList();
 
         foreach (var c in cases)
         {
@@ -121,6 +142,13 @@ public sealed class ResidueRecoveryRecallTests
         }
 
         scored.Should().NotBeEmpty("the corpus must produce cases to score");
+
+        // The guard for #1714: the filter above is one deleted line from being
+        // silently gone, and the failure is a plausible-looking number (50%), not
+        // a red test.
+        scored.Should().OnlyContain(s => ScoresResidue(s.C.Method),
+            "unredacted controls and under-box cases have no gap to recover; scoring them " +
+            "halves every band's recall (#1714)");
 
         // ── report recall@N AND median residual bits per band (#1135's two
         //    numbers: recall = "caught in a shortlist", bits = "how much the

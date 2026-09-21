@@ -131,6 +131,34 @@ public class UnredactionConfusionMatrixTests
     }
 
     /// <summary>
+    /// #1707 — a <c>ContentSurvives</c> row gets its own bucket and counts
+    /// toward the total.
+    ///
+    /// <para>⚠️ Without the bucket this row is counted by NOTHING: the profile
+    /// sums four named rungs, so a new rung silently shrinks <c>Total</c> and
+    /// the bench under-reports how a tool answered. Asserting the bucket alone
+    /// would not catch that, so the total is asserted with it.</para>
+    /// </summary>
+    [Fact]
+    public void AContentSurvivesRowIsItsOwnBucketAndCountsInTheTotal()
+    {
+        var cases = new[] { Leak("m", "read"), Leak("m", "intact"), Leak("m", "guess") };
+        var results = new[]
+        {
+            new ToolResult("excise", "read", true, MarkRecoveryOutcome.Recovered),
+            new ToolResult("excise", "intact", true, MarkRecoveryOutcome.ContentSurvives),
+            new ToolResult("excise", "guess", true, MarkRecoveryOutcome.CandidatesOnly, ResidualBits: 3.0, CandidateCount: 8),
+        };
+
+        var p = Profile(cases, results, new[] { ExciseScope }).Single();
+
+        p.ContentSurvives.Should().Be(1);
+        p.CandidatesOnly.Should().Be(1,
+            "intact-but-undecoded must not be folded into the inference rung");
+        p.Total.Should().Be(3, "every rung the engine can emit has to land in a bucket");
+    }
+
+    /// <summary>
     /// A tool with no candidate rung must not be scored as though the missing
     /// rung were a weakness. x-ray is exact-or-nothing by construction.
     /// </summary>

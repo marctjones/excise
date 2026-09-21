@@ -85,6 +85,10 @@ public class ContinuousImageSampleReleaseTests
             pair.IsDecoded.Should().BeFalse("both pages that drew it are unrealized");
             viewer.ContinuousImageSamplesForTests.RecordsForTests.Keys.Should().OnlyContain(p => realized.Contains(p),
                 "a page that is no longer realized keeps no record");
+            XObject(doc, 1, "Logo").Should().BeSameAs(logo,
+                "#1207: an object is evicted only when its samples are released, and page 12 still draws the logo");
+            XObject(doc, 1, "Own").Should().NotBeSameAs(own1,
+                "#1207: page 1's own image was released, so the object was evicted and this resolve re-parsed it");
 
             // Drop every tile so page 1 has to render again, from re-decoded samples.
             viewer.TrimCaches(PdfViewerCacheTrimLevel.Critical);
@@ -92,7 +96,13 @@ public class ContinuousImageSampleReleaseTests
             viewer.CurrentPage = 1;
             var rebuilt = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             viewer.ContinuousRenderStartCount.Should().BeGreaterThan(startsBefore, "fixture: page 1 rendered again");
-            own1.IsDecoded.Should().BeTrue("page 1's render decoded its image again");
+            // #1207/#1461 (F3 for the viewer): releasing page 1's samples also
+            // evicted the object, so its ENCODED bytes went too. The re-render
+            // resolved a re-parsed instance; the one this test held stays cold.
+            var own1Again = XObject(doc, 1, "Own");
+            own1Again.Should().NotBeSameAs(own1, "the released page's image object was evicted and re-parsed on the next draw");
+            own1Again.IsDecoded.Should().BeTrue("page 1's render decoded its image again");
+            own1.IsDecoded.Should().BeFalse("nothing draws the evicted instance any more");
 
             var actual = PixelCopy.Of(rebuilt);
             actual.Width.Should().Be(reference.Width, "same band, same DPI");

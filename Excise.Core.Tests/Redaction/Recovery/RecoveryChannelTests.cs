@@ -116,7 +116,9 @@ public class RecoveryChannelTests
         // produced; grading it a candidate would imply a guess that was never
         // made.
         using var doc = PdfDocument.Open(RecoveryFixtureBuilder.ImageUnderBox());
-        var report = RecoveryScanner.Scan(doc);
+        // #1690: covered-image is the DEFERRED raster half of this channel; the
+        // vector half above is Tier 1. The test asks for it rather than losing it.
+        var report = RecoveryScanner.Scan(doc, options: RecoveryScanOptions.IncludingDeferred);
 
         var finding = report.AllFindings
             .Single(f => f.Channel == RecoveryScanner.Channels.CoveredImage);
@@ -157,7 +159,8 @@ public class RecoveryChannelTests
             resourcesExtra: "/XObject << /Im0 7 0 R >>");
 
         using var doc = PdfDocument.Open(bytes);
-        RecoveryScanner.Scan(doc).AllFindings
+        // #1690: opts in, or the negative control passes by not running.
+        RecoveryScanner.Scan(doc, options: RecoveryScanOptions.IncludingDeferred).AllFindings
             .Should().NotContain(f => f.Channel == RecoveryScanner.Channels.CoveredImage);
     }
 
@@ -172,9 +175,12 @@ public class RecoveryChannelTests
             RecoveryScanner.Channels.HiddenText,
             RecoveryScanner.Channels.Carrier,
             RecoveryScanner.Channels.MarkedContent,
-            RecoveryScanner.Channels.CoveredImage,
             RecoveryScanner.Channels.CoveredVector,
             RecoveryScanner.Channels.FormField,
         });
+
+        // #1690: and the deferred one is SKIPPED with a reason, not absent.
+        report.ChannelsRun.Should().NotContain(RecoveryScanner.Channels.CoveredImage);
+        report.ChannelsSkipped.Should().ContainKey(RecoveryScanner.Channels.CoveredImage);
     }
 }

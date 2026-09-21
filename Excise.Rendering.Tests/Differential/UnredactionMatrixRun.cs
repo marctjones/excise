@@ -69,7 +69,7 @@ internal static class UnredactionMatrixRun
             }
 
             cases.Add(new Case(modeId, caseId, variant.ContainsLeak));
-            results.Add(ScoreExcise(pdf, caseId));
+            results.Add(ScoreExcise(pdf, caseId, UnredactionBenchAxes.IsDeferredMode(modeId)));
             if (xrayAvailable) results.Add(ScoreXRay(pdf, caseId));
         }
 
@@ -94,7 +94,14 @@ internal static class UnredactionMatrixRun
 
             byte[] pdf;
             try { pdf = File.ReadAllBytes(path); } catch { continue; }
-            results.Add(ScoreExcise(pdf, caseId));
+            // ⚠️ #1690 — the NEGATIVES are scored at the PRODUCT'S DEFAULT, never
+            // with the deferred channels on. A mark holding ANY finding grades
+            // above NotRecovered — present-only included, which since #1707
+            // grades ContentSurvives rather than CandidatesOnly — so running the
+            // image channels over 113 clean filings would manufacture false
+            // positives the shipped command does not produce, and report
+            // excise's specificity as worse than it is.
+            results.Add(ScoreExcise(pdf, caseId, includeDeferred: false));
             if (xrayAvailable) results.Add(ScoreXRay(pdf, caseId));
         }
 
@@ -125,10 +132,25 @@ internal static class UnredactionMatrixRun
     /// wrong, the tool is wrong and the tool's tests say so — rather than the
     /// bench quietly disagreeing with the thing it measures.</para>
     /// </summary>
-    private static ToolResult ScoreExcise(byte[] pdf, string caseId)
+    /// <param name="includeDeferred">
+    /// #1690 — run the Tier 2 channels for this case. True only for a case
+    /// whose own failure MODE is deferred: that mode has to keep being
+    /// measured (a permanent zero is indistinguishable from a regression), and
+    /// the confusion matrix keeps its row out of the graded total. Every other
+    /// case — and every real-world negative — is scored at the product's
+    /// default, because that is what the command a user runs actually does.
+    /// </param>
+    private static ToolResult ScoreExcise(byte[] pdf, string caseId, bool includeDeferred)
     {
         RecoveryReport report;
-        try { report = RecoveryScanner.Scan(pdf); }
+        try
+        {
+            report = RecoveryScanner.Scan(
+                pdf,
+                options: includeDeferred
+                    ? RecoveryScanOptions.IncludingDeferred
+                    : RecoveryScanOptions.Default);
+        }
         catch { return new ToolResult("excise", caseId, false); }
 
         var counted = report.AllFindings

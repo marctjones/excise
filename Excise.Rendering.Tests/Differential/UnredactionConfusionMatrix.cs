@@ -115,12 +115,20 @@ internal static class UnredactionConfusionMatrix
     /// same recall are not equally useful if one reads the bytes and the other
     /// returns forty candidates.
     /// </summary>
+    /// <param name="ContentSurvives">
+    /// #1707 — the mark holds INTACT material no channel decoded. Its own
+    /// bucket rather than a share of <paramref name="CandidatesOnly"/>: a
+    /// candidate set is a claim about the value and this is not, and the two
+    /// say very different things about a tool. ⚠️ Without this field a
+    /// <c>ContentSurvives</c> row would be counted by no bucket at all and
+    /// <see cref="Total"/> would silently under-count.
+    /// </param>
     internal sealed record RecoveryProfile(
         string Tool, string ModeId,
-        int Exact, int Partial, int CandidatesOnly, int DetectedButNotRead,
+        int Exact, int Partial, int CandidatesOnly, int ContentSurvives, int DetectedButNotRead,
         double MedianResidualBits, double MedianCandidateSetSize)
     {
-        public int Total => Exact + Partial + CandidatesOnly + DetectedButNotRead;
+        public int Total => Exact + Partial + CandidatesOnly + ContentSurvives + DetectedButNotRead;
     }
 
     /// <summary>A tool's declared scope, from tests/unredaction-tools.json.</summary>
@@ -237,6 +245,7 @@ internal static class UnredactionConfusionMatrix
                 rows.Count(r => r.Outcome == MarkRecoveryOutcome.Recovered),
                 rows.Count(r => r.Outcome == MarkRecoveryOutcome.PartiallyRecovered),
                 rows.Count(r => r.Outcome == MarkRecoveryOutcome.CandidatesOnly),
+                rows.Count(r => r.Outcome == MarkRecoveryOutcome.ContentSurvives),
                 rows.Count(r => r.Outcome == MarkRecoveryOutcome.NotRecovered),
                 Median(rows.Select(r => r.ResidualBits)),
                 Median(rows.Where(r => r.CandidateCount > 0).Select(r => (double)r.CandidateCount))));
@@ -284,6 +293,11 @@ internal static class UnredactionConfusionMatrix
             sb.AppendLine("    mode                              TP  FP  FN  TN   prec  recall  spec    F1");
             foreach (var c in tool)
             {
+                // #1690 — a deferred mode's row is PRINTED (it is still
+                // measured; a row that vanished could not show a regression)
+                // and MARKED, so it is legible next to the graded rows and
+                // visibly outside the total below them.
+                var deferred = UnredactionBenchAxes.IsDeferredMode(c.ModeId) ? "  [deferred #1690]" : "";
                 if (c.Scored == 0 && c.OutOfScope > 0)
                 {
                     sb.AppendLine($"    {c.ModeId,-32}  —   —   —   —    out of declared scope ({c.OutOfScope} case(s))");
@@ -291,15 +305,25 @@ internal static class UnredactionConfusionMatrix
                 }
                 sb.AppendLine(
                     $"    {c.ModeId,-32} {c.TruePositive,3} {c.FalsePositive,3} {c.FalseNegative,3} {c.TrueNegative,3}" +
-                    $"   {Pct(c.Precision)} {Pct(c.Recall)}  {Pct(c.Specificity)} {Pct(c.F1)}");
+                    $"   {Pct(c.Precision)} {Pct(c.Recall)}  {Pct(c.Specificity)} {Pct(c.F1)}{deferred}");
                 if (c.BeyondDeclaredScope > 0)
                     sb.AppendLine($"       ⚠ {c.BeyondDeclaredScope} hit(s) BEYOND declared scope — " +
                                   "the tool does more than tests/unredaction-tools.json claims, or that file is stale");
             }
 
-            var totals = tool.ToList();
-            sb.AppendLine($"    {"TOTAL",-32} {totals.Sum(c => c.TruePositive),3} {totals.Sum(c => c.FalsePositive),3} " +
+            // ⚠️ #1690 — the TOTAL is the GRADED total: Tier 1 modes only. A
+            // deferred channel reports presence, not a value, so folding its
+            // cells in would move the headline with findings that recovered no
+            // text — in either direction. The deferred cells are totalled
+            // separately, never dropped.
+            var totals = tool.Where(c => !UnredactionBenchAxes.IsDeferredMode(c.ModeId)).ToList();
+            sb.AppendLine($"    {"TOTAL (graded, tier 1)",-32} {totals.Sum(c => c.TruePositive),3} {totals.Sum(c => c.FalsePositive),3} " +
                           $"{totals.Sum(c => c.FalseNegative),3} {totals.Sum(c => c.TrueNegative),3}");
+            var deferredCells = tool.Where(c => UnredactionBenchAxes.IsDeferredMode(c.ModeId)).ToList();
+            if (deferredCells.Count > 0)
+                sb.AppendLine($"    {"deferred (#1690, not graded)",-32} {deferredCells.Sum(c => c.TruePositive),3} " +
+                              $"{deferredCells.Sum(c => c.FalsePositive),3} {deferredCells.Sum(c => c.FalseNegative),3} " +
+                              $"{deferredCells.Sum(c => c.TrueNegative),3}");
         }
 
         if (falsePositives.Count > 0)
@@ -339,7 +363,12 @@ internal static class UnredactionConfusionMatrix
             if (p.Total == 0) continue;
             sb.AppendLine(
                 $"  {p.Tool,-10} {p.ModeId,-32} exact {p.Exact,3}  partial {p.Partial,3}  " +
-                $"candidates {p.CandidatesOnly,3}  present-only {p.DetectedButNotRead,3}" +
+                // ⚠️ The last column was labelled "present-only" and counted
+                // NotRecovered — marks where NO channel produced anything. That
+                // was wrong before #1707 too; present-only used to be graded
+                // CandidatesOnly, so the column never held what it claimed.
+                $"candidates {p.CandidatesOnly,3}  content-survives {p.ContentSurvives,3}  " +
+                $"nothing-found {p.DetectedButNotRead,3}" +
                 (p.CandidatesOnly > 0
                     ? $"   median bits {p.MedianResidualBits:F1}, set {p.MedianCandidateSetSize:F0}"
                     : ""));

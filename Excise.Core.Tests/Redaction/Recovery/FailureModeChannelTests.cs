@@ -148,7 +148,7 @@ public class FailureModeChannelTests
         // qpdf --qdf recovers it whole.
         using var doc = PdfDocument.Open(RecoveryFixtureBuilder.OrphanedOriginalImage());
 
-        var finding = RecoveryScanner.Scan(doc).AllFindings
+        var finding = RecoveryScanner.Scan(doc, options: RecoveryScanOptions.IncludingDeferred).AllFindings
             .Single(f => f.Channel == RecoveryScanner.Channels.ImageLayer);
 
         finding.Confidence.Should().Be(RecoveryConfidence.PresentOnly);
@@ -161,7 +161,7 @@ public class FailureModeChannelTests
     {
         using var doc = PdfDocument.Open(RecoveryFixtureBuilder.FullyMaskedImage());
 
-        var finding = RecoveryScanner.Scan(doc).AllFindings
+        var finding = RecoveryScanner.Scan(doc, options: RecoveryScanOptions.IncludingDeferred).AllFindings
             .Single(f => f.Channel == RecoveryScanner.Channels.ImageLayer);
 
         finding.Confidence.Should().Be(RecoveryConfidence.PresentOnly);
@@ -176,7 +176,7 @@ public class FailureModeChannelTests
         // would be worse than no channel.
         using var doc = PdfDocument.Open(RecoveryFixtureBuilder.ImageUnderBox());
 
-        RecoveryScanner.Scan(doc).AllFindings
+        RecoveryScanner.Scan(doc, options: RecoveryScanOptions.IncludingDeferred).AllFindings
             .Should().NotContain(f => f.Channel == RecoveryScanner.Channels.ImageLayer,
                 "an ordinary image under a box is the covered-image channel's subject");
     }
@@ -192,7 +192,10 @@ public class FailureModeChannelTests
             "BT /F1 14 Tf 72 700 Td (AFTER) Tj ET\n");
 
         using var doc = PdfDocument.Open(bytes);
-        RecoveryScanner.Scan(doc).AllFindings
+        // #1690: the negative control OPTS IN deliberately. With the deferred
+        // channel off it would pass without running anything -- a check that
+        // cannot fail.
+        RecoveryScanner.Scan(doc, options: RecoveryScanOptions.IncludingDeferred).AllFindings
             .Should().NotContain(f => f.Channel == RecoveryScanner.Channels.ImageLayer);
     }
 

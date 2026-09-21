@@ -1819,7 +1819,8 @@ namespace Excise.Core.Redaction.Recovery
         Recovered = 0,
         PartiallyRecovered = 1,
         CandidatesOnly = 2,
-        NotRecovered = 3,
+        ContentSurvives = 3,
+        NotRecovered = 4,
     }
     public static class MarkRegionTextRecovery
     {
@@ -1895,6 +1896,15 @@ namespace Excise.Core.Redaction.Recovery
         public static Excise.Core.Redaction.Recovery.RecoveredFinding Certain(string channel, string carrier, string text, Excise.Core.Redaction.Recovery.RecoveryLocation? location, double? score = default) { }
         public static Excise.Core.Redaction.Recovery.RecoveredFinding PresentOnly(string channel, string carrier, Excise.Core.Redaction.Recovery.RecoveryLocation? location) { }
     }
+    public static class RecoveryChannelTiers
+    {
+        public const string OptInFlag = "--include-deferred";
+        public static System.Collections.Generic.IReadOnlyList<string> DeferredChannels { get; }
+        public static string DeferralReason(string channel) { }
+        public static bool IsDeferred(string channel) { }
+        public static System.Collections.Generic.IReadOnlyList<string> LimitationsFor(System.Collections.Generic.IEnumerable<string>? skippedChannels) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryTier TierOf(string channel) { }
+    }
     public enum RecoveryConfidence
     {
         Certain = 0,
@@ -1930,6 +1940,7 @@ namespace Excise.Core.Redaction.Recovery
         public int MarkCount { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.MarkSummary> Marks { get; init; }
         public int MarksCandidatesOnly { get; }
+        public int MarksContentSurvives { get; }
         public int MarksNotRecovered { get; }
         public int MarksPartial { get; }
         public int MarksRecovered { get; }
@@ -1945,11 +1956,18 @@ namespace Excise.Core.Redaction.Recovery
         public Excise.Core.Redaction.Recovery.RecoveryReportBuilder ChannelRan(string channel) { }
         public Excise.Core.Redaction.Recovery.RecoveryReportBuilder ChannelSkipped(string channel, string reason) { }
     }
+    public sealed class RecoveryScanOptions : System.IEquatable<Excise.Core.Redaction.Recovery.RecoveryScanOptions>
+    {
+        public static readonly Excise.Core.Redaction.Recovery.RecoveryScanOptions Default;
+        public static readonly Excise.Core.Redaction.Recovery.RecoveryScanOptions IncludingDeferred;
+        public RecoveryScanOptions(bool IncludeDeferredChannels = false) { }
+        public bool IncludeDeferredChannels { get; init; }
+    }
     public static class RecoveryScanner
     {
-        public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(Excise.Core.Document.PdfDocument document, System.Threading.CancellationToken cancellationToken = default) { }
-        public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(byte[] pdfBytes, System.Threading.CancellationToken cancellationToken = default) { }
-        public static Excise.Core.Redaction.Recovery.RecoveryReportBuilder ScanInto(Excise.Core.Document.PdfDocument document, Excise.Core.Redaction.Recovery.RecoveryReportBuilder builder, System.Threading.CancellationToken cancellationToken = default, System.Collections.Generic.IReadOnlyList<string>? dictionary = null, byte[]? pdfBytes = null) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(Excise.Core.Document.PdfDocument document, System.Threading.CancellationToken cancellationToken = default, Excise.Core.Redaction.Recovery.RecoveryScanOptions? options = null) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryReport Scan(byte[] pdfBytes, System.Threading.CancellationToken cancellationToken = default, Excise.Core.Redaction.Recovery.RecoveryScanOptions? options = null) { }
+        public static Excise.Core.Redaction.Recovery.RecoveryReportBuilder ScanInto(Excise.Core.Document.PdfDocument document, Excise.Core.Redaction.Recovery.RecoveryReportBuilder builder, System.Threading.CancellationToken cancellationToken = default, System.Collections.Generic.IReadOnlyList<string>? dictionary = null, byte[]? pdfBytes = null, Excise.Core.Redaction.Recovery.RecoveryScanOptions? options = null) { }
         public static class Channels
         {
             public const string Attachment = "attachment";
@@ -1966,7 +1984,13 @@ namespace Excise.Core.Redaction.Recovery
             public const string Residue = "residue";
             public const string Thumbnail = "thumbnail";
             public const string Xfa = "xfa";
+            public static System.Collections.Generic.IReadOnlyList<string> All { get; }
         }
+    }
+    public enum RecoveryTier
+    {
+        Text = 1,
+        Deferred = 2,
     }
     public static class RedactionFitAnalyzer
     {

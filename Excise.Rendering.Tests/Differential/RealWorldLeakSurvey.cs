@@ -73,6 +73,14 @@ internal static class RealWorldLeakSurvey
         RedactionMarkKind Kind,
         MarkRecoveryOutcome Outcome,
         bool Leaks,
+        /// <summary>
+        /// #1690 — does this mark leak through a GRADED (Tier 1, text) channel?
+        /// The survey runs every channel including the deferred ones, so
+        /// <see cref="Leaks"/> alone would credit a mark whose only finding is
+        /// raster content reported present-only — real, worth reporting, and
+        /// not what the shipped default would say about the same document.
+        /// </summary>
+        bool LeaksGradedChannel,
         int FindingCount,
         int CertainFindingCount,
         IReadOnlyList<string> Channels,
@@ -108,7 +116,13 @@ internal static class RealWorldLeakSurvey
         // #1665: the BYTE overload, so the prior-revision channel actually runs.
         // This used to call Scan(PdfDocument), which silently omitted it — the
         // bench's own real-world driver was blind to a registered mode.
-        var report = RecoveryScanner.Scan(File.ReadAllBytes(pdfPath));
+        // #1690: the survey MEASURES every channel, deferred ones included —
+        // this is a description of what survives in real documents, not the
+        // graded headline, and a channel nobody measures is a channel that
+        // rots. Each row records whether a GRADED channel found it, so the
+        // shipped default's view of the same document stays readable.
+        var report = RecoveryScanner.Scan(
+            File.ReadAllBytes(pdfPath), options: RecoveryScanOptions.IncludingDeferred);
 
         var xrayHits = XRayBadRedactionDetector.Inspect(pdfPath);
 
@@ -118,6 +132,7 @@ internal static class RealWorldLeakSurvey
             // The ONLY place a recovered string is touched. It is tested for
             // existence and discarded; nothing below this line can see it.
             var leaks = mark.Findings.Count > 0;
+            var leaksGraded = mark.Findings.Any(f => !RecoveryChannelTiers.IsDeferred(f.Channel));
 
             rows.Add(new MarkRow(
                 document.Id,
@@ -127,6 +142,7 @@ internal static class RealWorldLeakSurvey
                 mark.Mark.Kind,
                 mark.Outcome,
                 leaks,
+                leaksGraded,
                 mark.Findings.Count,
                 mark.Findings.Count(f => f.Confidence == RecoveryConfidence.Certain),
                 mark.Findings.Select(f => f.Channel).Distinct().OrderBy(c => c, StringComparer.Ordinal).ToList(),
@@ -177,9 +193,17 @@ internal static class RealWorldLeakSurvey
         {
             var marks = doc.ToList();
             var leaking = marks.Count(m => m.Leaks);
+            var leakingGraded = marks.Count(m => m.LeaksGradedChannel);
             sb.AppendLine();
             sb.AppendLine($"  {doc.Key.DocumentId}  [tier {doc.Key.Tier}]");
             sb.AppendLine($"    marks {marks.Count}   leaking {leaking}   held {marks.Count - leaking}");
+            // #1690: what `excise unredact` would say about this document at
+            // its DEFAULT, printed beside the all-channels figure. The two
+            // differ exactly by the marks whose only leak is deferred, which
+            // is the coverage the default gives up.
+            if (leakingGraded != leaking)
+                sb.AppendLine($"      of which {leakingGraded} leak through a GRADED (tier 1) channel; " +
+                              $"{leaking - leakingGraded} only through a deferred one (#1690)");
 
             foreach (var kind in marks.GroupBy(m => m.Kind).OrderBy(g => g.Key.ToString(), StringComparer.Ordinal))
                 sb.AppendLine($"      kind {kind.Key,-22} {kind.Count(m => m.Leaks)}/{kind.Count()} leaking");

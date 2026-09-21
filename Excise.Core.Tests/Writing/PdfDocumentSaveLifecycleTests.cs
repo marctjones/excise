@@ -10,6 +10,76 @@ namespace Excise.Core.Tests.Writing;
 
 public class PdfDocumentSaveLifecycleTests
 {
+    /// <summary>
+    /// #1567: the GUI reads its current document from a shared FileStream
+    /// rather than a whole-file copy, so a save back onto that path must not
+    /// truncate the file the writer is still copying unmodified streams from.
+    /// Save(path) therefore writes a sibling temp and renames over the target;
+    /// the reader keeps the old inode. With FileMode.Create on the target this
+    /// test's save reads its own truncation and the result is not a document.
+    /// </summary>
+    [Fact]
+    public void SaveToPath_OverTheFileTheDocumentIsReadingFrom_WritesACompleteDocument()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"excise-inplace-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var seed = PdfDocument.CreateNew())
+            {
+                seed.Pages.AddBlank(200, 200);
+                seed.Save(path);
+            }
+
+            using (var reader = new FileStream(path, FileMode.Open, FileAccess.Read,
+                       FileShare.ReadWrite | FileShare.Delete))
+            using (var document = PdfDocument.Open(reader, ownsStream: false))
+            {
+                document.Pages.AddBlank(100, 100);
+                document.Save(path);
+                document.PageCount.Should().Be(2, "the open document still reads the old inode");
+            }
+
+            using var saved = PdfDocument.Open(path);
+            saved.PageCount.Should().Be(2, "the file on disk is the complete new document");
+            Directory.GetFiles(Path.GetDirectoryName(path)!, $".{Path.GetFileName(path)}.*.tmp")
+                .Should().BeEmpty("the temporary was renamed away");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SaveToPath_WhenTheWriteFails_LeavesTheOriginalFileAndNoTemporary()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"excise-atomic-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var seed = PdfDocument.CreateNew())
+            {
+                seed.Pages.AddBlank(200, 200);
+                seed.Save(path);
+            }
+            var original = File.ReadAllBytes(path);
+
+            using (var document = PdfDocument.Open(path))
+            {
+                document.RegisterPreSaveAction(() => throw new InvalidOperationException("simulated writer failure"));
+                var save = () => document.Save(path);
+                save.Should().Throw<InvalidOperationException>();
+            }
+
+            File.ReadAllBytes(path).Should().Equal(original, "a failed save must not touch the target");
+            Directory.GetFiles(Path.GetDirectoryName(path)!, $".{Path.GetFileName(path)}.*.tmp")
+                .Should().BeEmpty("the temporary is cleaned up on failure");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     [Fact]
     public void QueriesAndWriterConstruction_DoNotRunPreSaveActions()
     {

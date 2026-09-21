@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "6185c9eae0c99efe58463280451d05ba6dba65b49e27feb97f863d03a73e232a",
+  "sourceFingerprint": "c89797b54baaf61afa27897ac6ddabd153afba735ddf502110ae59975a6b3449",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -20000,7 +20000,7 @@
       "path": "Excise.Rendering.Tests/Differential/ResidueRecoveryRecallTests.cs",
       "class": "ResidueRecoveryRecallTests",
       "method": "RecallAtN_PerBand_AgainstConstructedGroundTruth",
-      "line": 56,
+      "line": 63,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -24291,11 +24291,52 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Differential/UnredactionConfusionMatrixTests.cs::UnredactionConfusionMatrixTests.AContentSurvivesRowIsItsOwnBucketAndCountsInTheTotal",
+      "path": "Excise.Rendering.Tests/Differential/UnredactionConfusionMatrixTests.cs",
+      "class": "UnredactionConfusionMatrixTests",
+      "method": "AContentSurvivesRowIsItsOwnBucketAndCountsInTheTotal",
+      "line": 143,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Differential/UnredactionConfusionMatrixTests.cs::UnredactionConfusionMatrixTests.ADetectorWithNoInferenceRungReportsOnlyExact",
       "path": "Excise.Rendering.Tests/Differential/UnredactionConfusionMatrixTests.cs",
       "class": "UnredactionConfusionMatrixTests",
       "method": "ADetectorWithNoInferenceRungReportsOnlyExact",
-      "line": 138,
+      "line": 166,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -24334,7 +24375,7 @@
       "path": "Excise.Rendering.Tests/Differential/UnredactionConfusionMatrixTests.cs",
       "class": "UnredactionConfusionMatrixTests",
       "method": "TheToolRegistryDeclaresExciseEverywhereAndXRayOnOneMode",
-      "line": 156,
+      "line": 184,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -25701,6 +25742,98 @@
       "class": "EncodedImageDecoderTests",
       "method": "CancellationIsPropagatedInsteadOfReportedAsMalformedData",
       "line": 39,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs::EvictionEditSafetyTests.APageAddedFromAnotherDocument_KeepsItsImage_ThroughARenderAndASave",
+      "path": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs",
+      "class": "EvictionEditSafetyTests",
+      "method": "APageAddedFromAnotherDocument_KeepsItsImage_ThroughARenderAndASave",
+      "line": 27,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs::EvictionEditSafetyTests.AReplacedImageObject_IsWhatGetsSaved_AfterARender",
+      "path": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs",
+      "class": "EvictionEditSafetyTests",
+      "method": "AReplacedImageObject_IsWhatGetsSaved_AfterARender",
+      "line": 42,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs::EvictionEditSafetyTests.AnImageDictionaryEditedInPlace_KeepsTheEdit_ThroughARenderAndASave",
+      "path": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs",
+      "class": "EvictionEditSafetyTests",
+      "method": "AnImageDictionaryEditedInPlace_KeepsTheEdit_ThroughARenderAndASave",
+      "line": 58,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs::EvictionEditSafetyTests.ARedactedImage_StaysRedacted_ThroughARenderAndASave",
+      "path": "Excise.Rendering.Tests/EvictionEditSafetyTests.cs",
+      "class": "EvictionEditSafetyTests",
+      "method": "ARedactedImage_StaysRedacted_ThroughARenderAndASave",
+      "line": 72,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -45626,15 +45759,15 @@
     }
   ],
   "summary": {
-    "testMethods": 1259,
+    "testMethods": 1264,
     "facets": {
-      "content-streams": 365,
+      "content-streams": 366,
       "content-strings-and-text": 7,
-      "differential-rendering": 697,
+      "differential-rendering": 698,
       "fonts": 206,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 320,
-      "images": 215,
+      "images": 219,
       "page-group-backdrop": 3,
       "renderer-integration-general": 38,
       "renderer-performance-and-lifetime": 12,
@@ -45642,8 +45775,8 @@
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 7,
-      "pdf.17.content.streams:parse": 372,
-      "pdf.17.content.streams:render": 844,
+      "pdf.17.content.streams:parse": 373,
+      "pdf.17.content.streams:render": 845,
       "pdf.17.content.text-state:extract": 7,
       "pdf.17.content.text-state:parse": 7,
       "pdf.17.content.text-state:render": 7,
@@ -45651,10 +45784,10 @@
       "pdf.17.graphics.color:render": 53,
       "pdf.17.graphics.fonts:extract": 206,
       "pdf.17.graphics.fonts:parse": 206,
-      "pdf.17.graphics.fonts:render": 839,
-      "pdf.17.graphics.images:extract": 215,
-      "pdf.17.graphics.images:parse": 215,
-      "pdf.17.graphics.images:render": 830,
+      "pdf.17.graphics.fonts:render": 840,
+      "pdf.17.graphics.images:extract": 219,
+      "pdf.17.graphics.images:parse": 219,
+      "pdf.17.graphics.images:render": 835,
       "pdf.17.graphics.paths-painting:parse": 320,
       "pdf.17.graphics.paths-painting:render": 320,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -45662,7 +45795,7 @@
       "pdf.17.graphics.state:parse": 320,
       "pdf.17.graphics.state:render": 320,
       "pdf.17.transparency.model:parse": 81,
-      "pdf.17.transparency.model:render": 731
+      "pdf.17.transparency.model:render": 732
     },
     "unclassified": 38,
     "allTestsMapped": true

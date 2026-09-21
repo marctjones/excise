@@ -1,0 +1,47 @@
+# Linux GUI performance measurement for excise (#1720).
+#
+# WHY THIS EXISTS. Linux perf numbers came only from GitHub-hosted runners,
+# which is a poor instrument: machine class varies, so CPU and wall-clock are
+# not gateable there (only a within-run memory ratio is, #1699), and every
+# iteration costs a push. #1712 reproduced on hosted macOS and Linux but NOT in
+# a local arm64 container (0 of 7) — telling an environment property from a
+# product bug is exactly what a local container is for.
+#
+# NO SDK HERE, DELIBERATELY. The app is published self-contained on the host
+# and mounted in. That keeps the image small, makes the image independent of
+# the toolchain version, and means a rebuild of the app does not rebuild the
+# image.
+#
+# ⚠️ Xvfb has no compositor. That is fine for MEMORY and for open/close/scroll
+# totals, and it is NOT fine for frame pacing or vsync — Avalonia's render loop
+# behaves differently against a real compositor. Any frame-pacing number from
+# this image would be an artefact. The Wayland variant (weston --backend=
+# headless) is the one to add when #1718 needs pacing.
+FROM docker.io/library/ubuntu:24.04
+
+# Avalonia's X11 backend plus SkiaSharp's and HarfBuzzSharp's native
+# dependencies. fontconfig and a font package are not optional: without a
+# usable font, text rendering silently produces blanks and every render
+# measurement becomes a measurement of nothing.
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        xvfb \
+        libx11-6 libxext6 libxrender1 libxi6 libxcursor1 libxrandr2 \
+        libice6 libsm6 \
+        libfontconfig1 libfreetype6 fonts-dejavu-core \
+        libglib2.0-0 libgdiplus \
+        ca-certificates procps python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# A non-root user: running the GUI as root changes XDG defaults and is not how
+# anyone runs the app. Ubuntu 24.04 ships its own UID-1000 'ubuntu' user, so
+# that has to go first — UID 1000 is kept deliberately, because it is what the
+# podman machine maps the host user to, and a mismatch makes the writable /out
+# mount unwritable.
+RUN userdel -r ubuntu 2>/dev/null || true; \
+    useradd -m -u 1000 excise
+USER excise
+WORKDIR /home/excise
+
+# The app and the repo are mounted at run time, not copied, so the image does
+# not need rebuilding when either changes.
+ENTRYPOINT ["/bin/bash"]

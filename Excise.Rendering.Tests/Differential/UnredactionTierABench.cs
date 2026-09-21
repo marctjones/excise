@@ -94,7 +94,14 @@ internal static class UnredactionTierABench
         try
         {
             using var document = PdfDocument.Open(bytes);
-            var report = RecoveryScanner.Scan(document);
+            // #1690: the bench MEASURES every channel, including the deferred
+            // ones — deferring them from the product's headline must not stop
+            // them being exercised, or they rot. The tier split happens in the
+            // scorecard's rendering, where the graded total is computed; a
+            // scan that omitted them would leave the Tier 2 axes unable to
+            // score anything but zero, which is indistinguishable from a
+            // regression.
+            var report = RecoveryScanner.Scan(document, options: RecoveryScanOptions.IncludingDeferred);
             var hit = report.AllFindings.FirstOrDefault(f =>
                 (f.Text != null && f.Text.Contains(answer, StringComparison.Ordinal)) ||
                 f.Candidates.Any(c => c.Contains(answer, StringComparison.Ordinal)) ||

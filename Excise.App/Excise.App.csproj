@@ -65,6 +65,29 @@
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
+  <!--
+    #1207 / #1461: the GUI's memory at the altona-scroll peak is mostly GC
+    slack, not live data — gcdump 2026-09-19: 330 MB live against 767 MB
+    committed. ConserveMemory=5 makes the GC decommit what it would otherwise
+    keep. Measured on the Release bundle with scripts/run-gui-perf-scenarios.sh
+    (altona-scroll, 3 repeats per arm, mean, 2026-09-19):
+
+                          committed@scroll-17   RSS@scroll-17   band p99   CPU
+        control                    775 MiB        1067 MiB       638 ms   6208 ms
+        ConserveMemory=5           593 MiB         898 MiB       626 ms   6205 ms
+        ConserveMemory=9 (1 rep)   434 MiB         749 MiB       719 ms   7622 ms
+
+    5 buys 182 MiB of committed heap for no CPU and no band-latency cost, and
+    cuts the run-to-run RSS spread from 266 to 76 MiB. 9 buys more memory but
+    charges 23% CPU and 13% p99 — a scroll that hitches is not the trade.
+    Excise.Cli carries the same value with its own measurement; the test
+    runner measured the OPPOSITE (Excise.Cli.csproj), so this stays per-host
+    and out of Directory.Build.props.
+  -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
+  </ItemGroup>
+
   <!-- Native AOT publish lane (#590). Enable with `dotnet publish -p:PublishAot=true
        -r <rid>` (or scripts/run-aot-smoke.sh). Validated: the GUI AOT-compiles and
        passes the packaged GUI smoke on osx-arm64. First-party Excise.* code is

@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "cdf18e2c76a49475ddd267234f744b881b9a80dd",
+  "sourceRevision": "15c018e7bbd81bb4ef4175b5a41425ae9768a44e",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7807,
+    "retainedSymbols": 7832,
     "observedComponentDependencies": 70,
     "declaredDependencies": 68,
     "acceptedExceptions": 1,
@@ -66,14 +66,14 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 389,
+      "references": 391,
       "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 83
+          "references": 85
         }
       ]
     },
@@ -192,14 +192,14 @@
     {
       "source": "cli",
       "target": "core-redaction",
-      "references": 234,
-      "typeDependencyCount": 51,
+      "references": 255,
+      "typeDependencyCount": 57,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Cli.Commands.UnredactCommandHandler",
           "target": "Excise.Core.Redaction.Recovery.RecoveryScanner.Channels",
-          "references": 19
+          "references": 18
         }
       ]
     },
@@ -416,21 +416,21 @@
     {
       "source": "core-document",
       "target": "core-parsing",
-      "references": 83,
+      "references": 87,
       "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfDocumentObjectStore",
-          "target": "Excise.Core.Parsing.PdfParser",
-          "references": 15
+          "target": "Excise.Core.Parsing.XRefEntry",
+          "references": 17
         }
       ]
     },
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1440,
+      "references": 1447,
       "typeDependencyCount": 218,
       "classification": "declared",
       "evidence": [
@@ -987,7 +987,7 @@
     {
       "source": "rendering",
       "target": "core-primitives",
-      "references": 635,
+      "references": 634,
       "typeDependencyCount": 41,
       "classification": "declared",
       "evidence": [

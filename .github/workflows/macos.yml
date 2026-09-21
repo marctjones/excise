@@ -1,4 +1,4 @@
-# macOS runner — ADVISORY on develop, EVIDENCE on a tag (#1595)
+# macOS runner — ADVISORY on develop (#1595). The v* tag path moved to release.yml.
 #
 # WHAT THIS IS FOR
 #
@@ -11,11 +11,12 @@
 #      six reference renderers and whatever else accumulated there. A clean
 #      runner is the only check that the build does not silently depend on any
 #      of it.
-#   2. On a v* tag: can the release .app be built from the tagged tree alone,
-#      and does the result match what was built locally? #1389 is the reason
-#      this matters — a different SDK (Homebrew's) produced a binary that wrote
-#      DIFFERENT PDF BYTES. A second, independent build of the same tag is the
-#      cheapest detector for that class of problem.
+#   2. (moved) On a v* tag, can the release .app be built from the tagged tree
+#      alone, and does the result match what was built locally? #1389 is why it
+#      matters: a different SDK (Homebrew's) produced a binary that wrote
+#      DIFFERENT PDF BYTES. That job, with the same checks, now lives in
+#      release.yml, so a tag builds macOS once and attaches the result to the
+#      draft release instead of leaving it as a build artifact.
 #
 # WHAT THIS IS NOT
 #
@@ -24,11 +25,10 @@
 # #1355 reasoning the Linux workflow's header spells out. This runner has no
 # corpus, no oracles, no coverage floors and no pixel baselines.
 #
-# It also does not PUBLISH anything. The tag job uploads its .app as a build
-# artifact; attaching assets to a GitHub release is #1596, and publishing stays
-# a human decision. The builds are unsigned and not notarized by choice
-# (MEMORY: "Signing/notarization declined"); the tag job only ad-hoc signs, the
-# same as scripts/build-macos-app.sh does locally (#635).
+# It also does not PUBLISH anything. release.yml attaches the packages to a DRAFT
+# release (#1596) and publishing stays a human decision. The builds are unsigned
+# and not notarized by choice (MEMORY: "Signing/notarization declined"); they are
+# only ad-hoc signed, the same as scripts/build-macos-app.sh does locally (#635).
 
 name: macOS (advisory)
 
@@ -36,8 +36,6 @@ on:
   push:
     branches:
       - develop
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 concurrency:
@@ -153,76 +151,3 @@ jobs:
           path: artifacts/trx/
           retention-days: 7
           if-no-files-found: warn
-
-  release-app:
-    name: macOS release .app (tag only)
-    runs-on: macos-latest
-    timeout-minutes: 30
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: macos
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: The tag names the version the tree declares
-        # #1627: a tagged build stamps the assemblies from the TREE, so a tag
-        # that disagrees ships a binary whose About window names a different
-        # release. That shipped once, for a whole cycle. Checked BEFORE the
-        # build, so the failure is one line rather than a bad artifact.
-        run: scripts/check-version-consistency.sh --tag "$GITHUB_REF_NAME"
-
-      - name: Build the .app from the tag
-        # The same script the local release uses, so the comparison below is
-        # between two runs of one recipe rather than between two recipes.
-        run: |
-          set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "building $VERSION"
-          scripts/build-macos-app.sh --version "$VERSION" --output dist
-
-      - name: The built app is the tagged version, signed and self-contained
-        # A zip that unpacks is not a build that shipped correctly. There is no
-        # CLI inside the .app (CFBundleExecutable is Excise.App and the bundle
-        # carries no `excise` binary), and launching the GUI needs a window
-        # server the runner does not have — a launch there fails with Avalonia's
-        # -6661 for reasons that have nothing to do with the build (MEMORY:
-        # "-6661 is display state"). So this checks what CAN be checked without
-        # a display: the version the tag asked for, the ad-hoc signature (#635)
-        # and the native components that must travel with it.
-        run: |
-          set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
-          plutil -p "dist/excise.app/Contents/Info.plist" | grep -F "$VERSION"
-          codesign -dv "dist/excise.app" 2>&1 | grep -F 'Signature=adhoc'
-          test -x "dist/excise.app/Contents/MacOS/Excise.App"
-          for lib in libSkiaSharp.dylib libHarfBuzzSharp.dylib libAvaloniaNative.dylib; do
-            test -f "dist/excise.app/Contents/MacOS/$lib" || {
-              echo "missing native component: $lib"; exit 1; }
-          done
-
-      - name: Record the checksum for comparison with the local build
-        # #1389: a different SDK produced a binary that wrote different PDF
-        # bytes. Two independent builds of one tag are the cheap detector. The
-        # zip itself is not byte-reproducible (timestamps), so this records the
-        # checksum as evidence rather than asserting equality — compare the
-        # unpacked payload when a mismatch matters.
-        run: |
-          set -euo pipefail
-          shasum -a 256 dist/excise-*-macos-*.zip | tee dist/ci-build.sha256
-
-      - name: Upload the build
-        # Artifact only. Attaching to the GitHub release is #1596, and
-        # publishing stays a human decision.
-        uses: actions/upload-artifact@v7
-        with:
-          name: macos-app-${{ github.ref_name }}
-          path: |
-            dist/excise-*-macos-*.zip
-            dist/excise-*-macos-*.zip.sha256
-            dist/ci-build.sha256
-          retention-days: 14
-          if-no-files-found: error

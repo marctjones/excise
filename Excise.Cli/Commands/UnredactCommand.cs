@@ -1,5 +1,7 @@
 using System.CommandLine;
 
+using Excise.Core.Redaction.Recovery;
+
 namespace Excise.Cli.Commands;
 
 /// <summary>
@@ -52,6 +54,25 @@ internal static class UnredactCommand
         {
             Description = "Same as --carriers all",
         };
+        // #1690 — the deferred channels are OPT-IN, not gone. Without this
+        // flag `covered-image` and `image-layer` are declared skipped with
+        // their reason; with it they run exactly as before.
+        var includeDeferredOption = new Option<bool>(RecoveryChannelTiers.OptInFlag)
+        {
+            Description =
+                "Also run the DEFERRED channels (#1690): raster content under a mark and " +
+                "orphaned/masked image originals. Off by default — they report presence, not a " +
+                "value, so nothing grades them. The OCR differential has its own flag (--ocr).",
+        };
+        // #1707 — the caller picks the threshold instead of inheriting ours.
+        var failOnOption = new Option<string>("--fail-on")
+        {
+            Description =
+                "Exit non-zero at or above this evidence strength about the redacted VALUE: " +
+                "any (default), text, constrained, present. Exit 3 = text recovered, " +
+                "4 = constrained under a mark, 5 = material survives under a mark undecoded, " +
+                "0 = nothing under any mark.",
+        };
         var noCorroborationOption = new Option<bool>("--no-corroboration")
         {
             Description = "residue mode: report width candidates WITHOUT independent (mutool) corroboration",
@@ -59,11 +80,13 @@ internal static class UnredactCommand
 
         var command = new Command(
             "unredact",
-            "Recover or estimate text a redaction leaked (audit; reports constraints, not asserted secrets)")
+            "Recover or estimate TEXT a redaction leaked (audit; reports constraints, not asserted secrets). " +
+            "#1690: focused on text recovery — the image channels are deferred behind " +
+            RecoveryChannelTiers.OptInFlag + " and the OCR differential behind --ocr.")
         {
             fileArg, modeOption, dictOption, toleranceOption, maxOption,
             jsonOption, ocrOption, noCorroborationOption, restoreOption,
-            carriersOption, verboseOption,
+            carriersOption, verboseOption, includeDeferredOption, failOnOption,
         };
 
         command.SetAction((parseResult, cancellationToken) =>
@@ -85,7 +108,9 @@ internal static class UnredactCommand
                 parseResult.GetValue(ocrOption),
                 parseResult.GetValue(noCorroborationOption),
                 parseResult.GetValue(restoreOption)?.FullName,
-                IncludeVisibleCarriers: carriers == "all" || parseResult.GetValue(verboseOption));
+                IncludeVisibleCarriers: carriers == "all" || parseResult.GetValue(verboseOption),
+                IncludeDeferred: parseResult.GetValue(includeDeferredOption),
+                FailOn: parseResult.GetValue(failOnOption));
 
             var outcome = UnredactCommandHandler.Execute(input, cancellationToken);
             UnredactCommandOutput.Write(

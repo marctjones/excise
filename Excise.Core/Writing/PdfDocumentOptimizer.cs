@@ -79,26 +79,9 @@ public static class PdfDocumentOptimizer
         var result = Optimize(copy, options, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var directory = Path.GetDirectoryName(fullPath);
-        if (!string.IsNullOrEmpty(directory))
-            Directory.CreateDirectory(directory);
-        var temporary = Path.Combine(
-            directory ?? string.Empty,
-            $".{Path.GetFileName(fullPath)}.{Guid.NewGuid():N}.tmp");
-        try
-        {
-            using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write))
-            {
-                new PdfDocumentWriter(copy, encryptionOptions) { OptimizeForSize = true }.Write(file);
-            }
-
-            File.Move(temporary, fullPath, overwrite: true);
-        }
-        catch
-        {
-            TryDelete(temporary);
-            throw;
-        }
+        AtomicFileReplace.Write(fullPath, file =>
+            new PdfDocumentWriter(copy, encryptionOptions) { OptimizeForSize = true }.Write(file),
+            createDirectory: true);
 
         return result with { OutputSizeBytes = new FileInfo(fullPath).Length };
     }
@@ -671,21 +654,6 @@ public static class PdfDocumentOptimizer
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return null;
-        }
-    }
-
-    private static void TryDelete(string path)
-    {
-        try
-        {
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
         }
     }
 

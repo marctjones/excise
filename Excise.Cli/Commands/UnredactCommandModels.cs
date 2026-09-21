@@ -19,7 +19,23 @@ internal sealed record UnredactCommandInput(
     // Last, with defaults: this is a positional record and every existing
     // caller constructs it positionally.
     string? RestorePath = null,
-    bool IncludeVisibleCarriers = false);
+    bool IncludeVisibleCarriers = false,
+    /// <summary>
+    /// #1690 — run the DEFERRED (Tier 2) channels as well. Off by default:
+    /// <c>excise unredact</c> focuses on text recovery, and the image channels
+    /// report presence rather than a value, so nothing grades them. They are
+    /// deferred, not deleted — this is the flag that brings them back, and a
+    /// report that ran without it says so in its limitations.
+    /// </summary>
+    bool IncludeDeferred = false,
+    /// <summary>
+    /// #1707 — how much evidence about the redacted VALUE the caller tolerates
+    /// before the run fails: <c>any</c> (default), <c>text</c>,
+    /// <c>constrained</c>, <c>present</c>. Null means the default. An
+    /// unrecognised value is REFUSED, never defaulted — a misspelling that
+    /// silently loosened the threshold would be invisible in a pipeline.
+    /// </summary>
+    string? FailOn = null);
 
 internal enum UnredactMode { Certain, Residue, Both }
 
@@ -119,7 +135,13 @@ internal sealed record UnredactMarkSummary(
     string Kind,
     string Description,
     IReadOnlyList<double> Rect,
-    /// <summary>recovered | partially-recovered | candidates-only | not-recovered.</summary>
+    /// <summary>
+    /// recovered | partially-recovered | candidates-only | content-survives |
+    /// not-recovered. <c>content-survives</c> (#1707) is the strongest verdict
+    /// short of a reading: material is INTACT under this mark and no channel
+    /// decoded it. It used to be reported as <c>candidates-only</c>, which reads
+    /// as a maybe over what is in fact a confirmed breach.
+    /// </summary>
     string Outcome,
     int Findings,
     int CertainFindings,
@@ -134,6 +156,12 @@ internal sealed record UnredactMarkSummary(
 /// </summary>
 internal sealed record UnredactModelFinding(
     string Channel,
+    /// <summary>
+    /// #1690 — <c>text</c> (graded) or <c>deferred</c> (present, measured, not
+    /// counted in the headline). On the wire as a string, not the enum's name:
+    /// renaming a C# member must not change a contract someone scripts against.
+    /// </summary>
+    string Tier,
     string Carrier,
     /// <summary>certain | candidate | present-only.</summary>
     string Confidence,
@@ -164,6 +192,8 @@ internal sealed record UnredactRecoveryModel(
     int MarksRecovered,
     int MarksPartiallyRecovered,
     int MarksCandidatesOnly,
+    /// <summary>#1707 — marks with intact, undecoded material under them.</summary>
+    int MarksContentSurvives,
     int MarksNotRecovered,
     IReadOnlyList<UnredactMarkSummary> MarkSummaries,
     IReadOnlyList<UnredactModelFinding> Linked,
@@ -197,7 +227,22 @@ internal sealed record UnredactReport(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     IReadOnlyList<UnredactPresenceFinding>? Present = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    IReadOnlyList<UnredactCertainFinding>? VisibleDuplicates = null);
+    IReadOnlyList<UnredactCertainFinding>? VisibleDuplicates = null,
+    /// <summary>
+    /// ⚠️ #1690 — what this report does NOT cover. Built from the channels
+    /// actually skipped, so a run that opted a deferred channel back in does
+    /// not claim a blind spot it no longer has.
+    ///
+    /// <para>NULL, not an empty list, when there is nothing to declare: the key
+    /// then does not appear at all, so a report with full coverage keeps the
+    /// exact JSON shape it had before #1690 and the key's PRESENCE is itself
+    /// the signal. In the human output it is printed next to the score — and
+    /// next to the all-clear, which is the branch that matters, because a green
+    /// tick over a document whose only leak is under a deferred channel is the
+    /// false reassurance this tool exists to remove.</para>
+    /// </summary>
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<string>? Limitations = null);
 
 internal sealed record UnredactCommandOutcome(
     int ExitCode,

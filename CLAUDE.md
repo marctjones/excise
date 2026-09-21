@@ -1103,9 +1103,17 @@ and cost real planning time.
    excise prints full-quality (PDFKit on macOS, its own 600 DPI-capped raster
    through `System.Drawing.Printing` on Windows) and cannot produce the
    degraded output a bit-12-clear document allows, so such a document does
-   not print either. ⚠️ The Windows printer was written and tested on macOS
-   only (fake dialog and spooler); `PrintDlgExW`, `PrintDocument` and a real
-   driver have not been exercised on Windows.
+   not print either. ⚠️ **Only `PrintDlgExW` is still unexercised**, and
+   this entry claimed much more than that until 2026-09-20. `PrintDocument`,
+   the printer DC and a **real driver** ARE exercised on Windows: `windows.yml`
+   provisions "Microsoft Print to PDF" and
+   `WindowsDocumentPrinterTests.GdiSpooler_PrintsEveryPage_ToMicrosoftPrintToPdf`
+   / `GdiSpooler_AbortsACancelledJob` drive the real
+   `System.Drawing.Printing` path through it — both observed PASSING (2 s / 1 s)
+   on develop. The **modal dialog** cannot be driven headlessly and stays a
+   manual check. The rest of `WindowsDocumentPrinterTests` still uses a scripted
+   dialog and a fake spooler by design, so "the tests fake it" is true of most
+   of the file and NOT of the two that matter here.
 
 **Previously listed here and now FIXED — do not re-add:**
 - ~~Inline images `BI...ID...EI` not handled~~ → **parsed and re-serialised**
@@ -1149,6 +1157,7 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 │   ├── RedactionCarriers.cs        # typed document-carrier scope
 │   ├── XfaXmlCarrier.cs            # safe XML/XFA carrier rewrite
 │   └── Recovery/                   # ← DE-REDACTION (#1587): the READ mirror
+│       ├── RecoveryChannelTiers.cs # #1690: WHICH channels are graded — text focus vs deferred
 │       ├── RecoveryModel.cs        # one record per finding: confidence, channel, LOCATION
 │       ├── RedactionMarkDetector.cs# the marks a document admits to — the DENOMINATOR
 │       ├── RecoveryReportBuilder.cs# links findings to marks; grades each mark
@@ -1174,7 +1183,7 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── MutoolReferenceRenderer.cs        # 358 uses in Differential tests
+    ├── MutoolReferenceRenderer.cs        # 418 uses in Differential tests
     ├── GhostscriptReferenceRenderer.cs   #  116
     ├── PdftocairoReferenceRenderer.cs    #  83
     ├── PdftoppmReferenceRenderer.cs      #  18
