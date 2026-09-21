@@ -1,0 +1,442 @@
+# Release packages: on a v* tag, build macOS, Windows and Linux (x64 + arm64) packages
+# and attach them to a DRAFT GitHub release. Publishing stays a manual click (#1596,
+# and Marc's standing decision).
+#
+# WHAT A TAG PRODUCES
+#   macOS   excise-<v>-macos-arm64.zip          (Native AOT, ad-hoc signed .app)
+#   Windows excise-<v>-win-x64-setup.exe        (Inno Setup installer) + portable .zip
+#   Linux   excise_<v>_amd64.deb + .tar.gz      (Native AOT, built on x64)
+#           excise_<v>_arm64.deb + .tar.gz      (Native AOT, built on arm64)
+#   plus a .sha256 per asset and one SHA256SUMS, checked against the downloaded files
+#   before anything is attached.
+#
+# UNSIGNED, BY CHOICE (#1597, #1698 is the open re-decision). No signing, no
+# notarization, no auto-update. macOS shows a Gatekeeper prompt and Windows a
+# SmartScreen warning on first run, and the release notes say so.
+#
+# HOW IT WAS ASSEMBLED, AND WHAT IS AND IS NOT VERIFIED
+#   Reused from the release workflow deleted with Actions (eeff1aa7) minus the
+#   rendering gate and coverage-floor jobs, which are what made that CI red and
+#   ignored (#1355). The Linux legs were verified natively on hosted x64 and arm64
+#   runners (run 35550350097: publish + launch + scenario, AOT included), but only for
+#   the GUI publish. Nothing here has run end to end yet: workflow_dispatch is inert
+#   off the default branch, so the first real exercise is a dispatch after this lands.
+#   Each job ends with a check that the package is what it claims (a .deb is
+#   installed and run, the Windows installer is installed silently, the macOS bundle
+#   is inspected), so a broken package fails the job rather than the download.
+#
+# TRIGGERS
+#   push of a v* tag      builds everything and creates/updates the DRAFT release.
+#   workflow_dispatch     DRY RUN: builds everything for the version in the tree and
+#                         uploads run artifacts. It never touches a release. It needs
+#                         no tag, so use it before tagging.
+#
+# Not a gate. macos.yml (develop advisory) and linux.yml/windows.yml are unaffected;
+# macos.yml's old tag-only job moved here so a tag does not build macOS twice.
+name: Release packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, without the v (must equal the version in the tree). Dry run: nothing is released.'
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NUGET_SIGNATURE_VERIFICATION: false
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+
+jobs:
+  preflight:
+    name: Preflight (version, changelog, docs, licenses)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      prerelease: ${{ steps.ver.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Resolve the version
+        id: ver
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = workflow_dispatch ]; then v="${INPUT_VERSION#v}"; else v="${GITHUB_REF_NAME#v}"; fi
+          [ -n "$v" ] || { echo "no version resolved"; exit 1; }
+          case "$v" in *-rc*|*-beta*|*-alpha*) pre=true ;; *) pre=false ;; esac
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$pre" >> "$GITHUB_OUTPUT"
+          echo "version: $v (prerelease=$pre)"
+
+      # #1627: a tagged build stamps the assemblies from the TREE, so a tag that
+      # disagrees ships a binary whose About window names a different release.
+      # Checked before any build so the failure is one line, not a bad artifact.
+      - name: The version names what the tree declares
+        run: scripts/check-version-consistency.sh --tag "v${{ steps.ver.outputs.version }}"
+
+      - name: The changelog has notes for this version
+        run: |
+          set -euo pipefail
+          v="${{ steps.ver.outputs.version }}"
+          n=$(awk -v v="$v" '$0 ~ "^## \\[" v "\\]"{f=1;next} /^## \[/{f=0} f' CHANGELOG.md | grep -c '[^[:space:]]' || true)
+          echo "changelog lines for $v: $n"
+          test "$n" -gt 0 || { echo "CHANGELOG.md has no section for [$v]"; exit 1; }
+
+      - name: Documentation claims are current
+        run: scripts/check-doc-claim-freshness.sh
+
+      # VERIFY, do not regenerate (#1082): the attribution users see must be the
+      # attribution that was reviewed, not whatever the NuGet cache produced today.
+      - name: The license manifest matches the dependencies
+        run: scripts/verify-license-manifest.sh
+
+  linux:
+    name: Linux ${{ matrix.arch }} (.deb + .tar.gz)
+    needs: preflight
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: amd64, rid: linux-x64,   runner: ubuntu-latest }
+          - { arch: arm64, rid: linux-arm64, runner: ubuntu-24.04-arm }
+    env:
+      VERSION: ${{ needs.preflight.outputs.version }}
+      ARCH: ${{ matrix.arch }}
+      RID: ${{ matrix.rid }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # Native AOT on Linux shells out to clang and needs zlib headers; without them
+      # `dotnet publish -p:PublishAot=true` fails inside the linker with a message
+      # that does not name the missing package. AOT cannot cross-compile, which is why
+      # each architecture builds on a runner of its own.
+      - name: Install the Native AOT prerequisites
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends clang zlib1g-dev
+
+      - name: Build the .deb (Native AOT)
+        run: ./scripts/build-deb.sh --version "$VERSION" --arch "$ARCH" --aot --output dist/
+
+      # AOT's failure modes are runtime-only (trimmed reflection, native asset
+      # loading), so a successful publish proves little. The CLI needs no display and
+      # `render` exercises SkiaSharp's native load and the font stack, which the GUI
+      # shares. This does NOT verify the GUI on Linux; that gap is real.
+      - name: Smoke the AOT CLI binary
+        run: |
+          set -euo pipefail
+          cli="artifacts/publish/$RID/cli/excise"
+          test -x "$cli" || { echo "AOT CLI binary missing at $cli"; exit 1; }
+          file -b "$cli"
+          # No managed sidecars is the signature of a real AOT publish; a silent
+          # fallback to the ordinary self-contained build would still pass --version.
+          dlls=$(find "artifacts/publish/$RID/cli" -maxdepth 1 -name '*.dll' | wc -l)
+          echo "managed dll sidecars: $dlls (expect 0)"
+          test "$dlls" -eq 0 || { echo "not an AOT publish"; exit 1; }
+          "$cli" --version
+          # A COMMITTED fixture: test-pdfs/ is gitignored, and pointing this at the
+          # corpus would degrade to "no PDF found" while the step still passed.
+          pdf="Excise.App.Tests/Resources/sample-pdfs/birth-certificate-request-scrambled.pdf"
+          test -f "$pdf" || { echo "smoke fixture missing: $pdf"; exit 1; }
+          "$cli" info "$pdf"
+          "$cli" render "$pdf" -o /tmp/aot-smoke.png --dpi 72 --ignore-permissions
+          bytes=$(stat -c%s /tmp/aot-smoke.png)
+          echo "rendered -> $bytes bytes"
+          test "$bytes" -gt 5000 || { echo "render produced a trivial file"; exit 1; }
+
+      # The package is what users get, so install IT: dependency resolution, file
+      # layout and the /usr/bin symlink are all things the publish smoke cannot see.
+      - name: Install the .deb and run the installed CLI
+        run: |
+          set -euo pipefail
+          deb=$(ls dist/excise_*_"$ARCH".deb)
+          echo "package: $deb"
+          dpkg-deb --info "$deb" | grep -E "Package:|Version:|Architecture:"
+          test "$(dpkg-deb --field "$deb" Architecture)" = "$ARCH" || { echo "wrong Architecture field"; exit 1; }
+          sudo apt-get install -y "./$deb"
+          command -v excise
+          excise --version
+
+      - name: Build the portable tarball
+        run: |
+          set -euo pipefail
+          src="artifacts/publish/$RID"
+          out="dist/excise-$VERSION-linux-${ARCH/amd64/x64}.tar.gz"
+          mkdir -p stage/excise
+          cp -a "$src/gui/." stage/excise/
+          cp -a "$src/cli/." stage/excise/
+          cp README.md LICENSE LICENSES.md stage/excise/ 2>/dev/null || true
+          tar -C stage -czf "$out" excise
+          ls -lh "$out"
+
+      - name: Checksums
+        working-directory: dist
+        run: |
+          for f in *.deb *.tar.gz; do sha256sum "$f" > "$f.sha256"; done
+          ls -la
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-${{ matrix.arch }}
+          path: |
+            dist/*.deb
+            dist/*.deb.sha256
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
+          if-no-files-found: error
+
+  windows:
+    name: Windows x64 (installer + portable zip)
+    needs: preflight
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      VERSION: ${{ needs.preflight.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build the installer
+        shell: pwsh
+        run: pwsh ./scripts/build-windows-installer.ps1 -Version "$env:VERSION" -OutputDir dist
+
+      - name: Build the portable zip
+        shell: pwsh
+        run: |
+          $src = "artifacts\publish\win-x64\gui"
+          New-Item -ItemType Directory -Force -Path "stage\excise" | Out-Null
+          Copy-Item "$src\*" "stage\excise" -Recurse -Force
+          Copy-Item README.md, LICENSE, LICENSES.md "stage\excise" -ErrorAction SilentlyContinue
+          $zip = "dist\excise-$env:VERSION-win-x64.zip"
+          if (Test-Path $zip) { Remove-Item $zip }
+          Compress-Archive -Path stage\excise -DestinationPath $zip
+
+      # A silent install is the cheapest proof the installer is an installer: the
+      # wizard, the file layout and the uninstaller registration all have to work.
+      - name: Install the installer silently and check the payload
+        shell: pwsh
+        run: |
+          $exe = (Get-ChildItem dist\*.exe | Select-Object -First 1)
+          if (-not $exe) { throw "no installer .exe in dist" }
+          $dir = Join-Path $env:RUNNER_TEMP "excise-install"
+          $p = Start-Process -FilePath $exe.FullName -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$dir" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "installer exited $($p.ExitCode)" }
+          $app = Join-Path $dir "Excise.App.exe"
+          if (-not (Test-Path $app)) { Get-ChildItem $dir | Format-Table; throw "installed payload has no Excise.App.exe" }
+          Write-Host "installed: $app ($((Get-Item $app).Length) bytes)"
+
+      - name: Checksums
+        shell: pwsh
+        run: |
+          # LF, not Out-File: `Out-File -Encoding ascii` writes CRLF, which makes
+          # `sha256sum -c` read the filename as "name\r" and fail, both in the release
+          # job below and for a Linux user verifying the attached .sha256 file.
+          Get-ChildItem dist\* -Include *.exe,*.zip | ForEach-Object {
+            $sha = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+            [System.IO.File]::WriteAllText("$($_.FullName).sha256", "$sha  $($_.Name)`n", [System.Text.Encoding]::ASCII)
+          }
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows-x64
+          path: |
+            dist/*.exe
+            dist/*.exe.sha256
+            dist/*.zip
+            dist/*.zip.sha256
+          if-no-files-found: error
+
+  macos:
+    name: macOS arm64 (.app zip)
+    needs: preflight
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      VERSION: ${{ needs.preflight.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install librsvg (for the .icns icon; best effort)
+        continue-on-error: true
+        run: brew install librsvg
+
+      # --aot: what the checklist's support matrix says osx-arm64 ships, and what
+      # v3.10.0 actually attached (26 MB; a non-AOT bundle is ~69 MB zipped). It is
+      # 55 MB against 175 MB unpacked. Native AOT cannot cross-compile, which is why
+      # macOS builds here on macos-latest.
+      - name: Build the .app (arm64, Native AOT)
+        run: scripts/build-macos-app.sh --version "$VERSION" --rid osx-arm64 --aot --output dist
+
+      - name: The built app is the tagged version, signed and self-contained
+        # A zip that unpacks is not a build that shipped correctly. This step does
+        # NOT launch the app, and the reason it once gave was wrong: a hosted
+        # macos-latest runner DOES have a window server (measured 2026-09-20,
+        # #1724, #1595: WindowServer, managername Aqua, a non-black screencapture,
+        # the published GUI ran perf scenarios with no -6661). What is untested is
+        # launching the BUNDLE: those runs used the bare publish binary, so how
+        # Gatekeeper and quarantine treat the ad-hoc-signed .app on a runner is
+        # unknown. So this checks the version, the ad-hoc signature (#635) and the
+        # native components that must travel with it.
+        run: |
+          set -euo pipefail
+          plutil -p "dist/excise.app/Contents/Info.plist" | grep -F "$VERSION"
+          codesign -dv "dist/excise.app" 2>&1 | grep -F 'Signature=adhoc'
+          test -x "dist/excise.app/Contents/MacOS/Excise.App"
+          for lib in libSkiaSharp.dylib libHarfBuzzSharp.dylib libAvaloniaNative.dylib; do
+            test -f "dist/excise.app/Contents/MacOS/$lib" || { echo "missing native component: $lib"; exit 1; }
+          done
+
+      # #1389: a different SDK produced a binary that wrote different PDF bytes. The
+      # zip is not byte-reproducible (timestamps), so this records the checksum as
+      # evidence for comparison with a local build rather than asserting equality.
+      - name: Record the checksum for comparison with the local build
+        run: shasum -a 256 dist/excise-*-macos-*.zip | tee dist/ci-build.sha256
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos-arm64
+          path: |
+            dist/excise-*-macos-*.zip
+            dist/excise-*-macos-*.zip.sha256
+            dist/ci-build.sha256
+          if-no-files-found: error
+
+  release:
+    name: Draft GitHub release
+    needs: [preflight, linux, windows, macos]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Only a real tag creates a release. A dispatch is a dry run.
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
+      VERSION: ${{ needs.preflight.outputs.version }}
+      PRERELEASE: ${{ needs.preflight.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - name: Gather the assets and check them against their checksums
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          # ci-build.sha256 is comparison evidence, not a release asset.
+          find artifacts -type f ! -name ci-build.sha256 -exec cp {} assets/ \;
+          cd assets
+          ls -la
+          # One SHA256SUMS from the per-asset files, then verify every downloaded
+          # asset against it, so a truncated or mixed-up upload fails HERE and not on
+          # a user's machine.
+          cat ./*.sha256 | tr -d '\r' | sort -k2 > SHA256SUMS   # tr: defensive against CRLF from any producer
+          cat SHA256SUMS
+          sha256sum -c SHA256SUMS
+          echo "assets: $(find . -maxdepth 1 -type f ! -name '*.sha256' | wc -l | tr -d ' ')"
+
+      - name: Expect exactly the packages this release promises
+        run: |
+          set -euo pipefail
+          cd assets
+          # Globs, not exact names: build-deb.sh writes an -rc version as ~rc in the
+          # package file name, so an exact match would fail on every rc tag.
+          for pat in 'excise_*_amd64.deb' 'excise_*_arm64.deb' 'excise-*-macos-arm64.zip' 'excise-*-win-x64.zip' 'excise-*.exe' 'excise-*-linux-x64.tar.gz' 'excise-*-linux-arm64.tar.gz'; do
+            compgen -G "$pat" >/dev/null || { echo "MISSING expected asset: $pat"; ls; exit 1; }
+          done
+
+      - name: Release notes from the changelog
+        run: |
+          set -euo pipefail
+          {
+            awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]"{f=1;next} /^## \[/{f=0} f' CHANGELOG.md
+            cat <<'EOF'
+
+          ---
+
+          ### Installing
+
+          | Platform | Asset |
+          |---|---|
+          | macOS (Apple Silicon) | `excise-<version>-macos-arm64.zip`: unzip, move `excise.app` to Applications |
+          | Windows 10/11 (x64) | `excise-<version>-win-x64-setup.exe`, or the portable `.zip` |
+          | Ubuntu / Debian (x64) | `excise_<version>_amd64.deb`: `sudo apt install ./excise_<version>_amd64.deb` |
+          | Ubuntu / Debian (arm64) | `excise_<version>_arm64.deb` |
+
+          Portable `.tar.gz` archives are attached for Linux. Every asset has a `.sha256`, and `SHA256SUMS` covers all of them.
+
+          **These builds are unsigned.** macOS will show a Gatekeeper prompt (right-click, Open, or `xattr -dr com.apple.quarantine excise.app`) and Windows SmartScreen will warn on first run. There is no auto-update. Linux printing is not implemented.
+          EOF
+          } > notes.md
+          test "$(grep -c '[^[:space:]]' notes.md)" -gt 12 || { echo "release notes are suspiciously short"; exit 1; }
+          # GitHub rejects a release body over 125,000 characters, and that would fail
+          # here at the LAST step, after every package built. v3.10.0's changelog
+          # section alone is 86,000 bytes (the body its human editor published was
+          # 6,600). So cap it, at a line boundary, and say so. The release is a draft:
+          # someone reads and trims it before publishing anyway.
+          if [ "$(wc -c < notes.md)" -gt 100000 ]; then
+            head -c 100000 notes.md | sed '$d' > notes.cut
+            printf '\n\n> Release notes truncated to fit GitHub'"'"'s 125,000-character limit. The full text is in CHANGELOG.md at this tag.\n' >> notes.cut
+            mv notes.cut notes.md
+            echo "notes truncated to $(wc -c < notes.md) bytes"
+          fi
+          wc -lc notes.md
+
+      # `gh` rather than a third-party action: one fewer dependency in the release
+      # path. --draft is explicit: publishing stays a manual click.
+      - name: Create the DRAFT release (or add to one that already exists)
+        run: |
+          set -euo pipefail
+          files=(assets/*)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release $TAG already exists; uploading assets to it"
+            gh release upload "$TAG" "${files[@]}" --clobber
+          else
+            flags=(--draft --verify-tag --title "excise $TAG" --notes-file notes.md)
+            [ "$PRERELEASE" = true ] && flags+=(--prerelease)
+            gh release create "$TAG" "${files[@]}" "${flags[@]}"
+          fi
+          gh release view "$TAG" --json isDraft,assets --jq '{draft: .isDraft, assets: [.assets[].name]}'

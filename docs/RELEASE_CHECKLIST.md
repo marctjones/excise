@@ -14,10 +14,22 @@ git push origin v<version>
 `set-version.sh` is the only thing that changes the version, and it writes both
 places a human would otherwise edit by hand. Skipping it is not a shortcut: the
 pre-push hook refuses a `v*` tag whose version disagrees with
-`Directory.Build.props`, and the macOS release job checks the same thing before
-it builds — because a tagged build stamps the assemblies from the TREE, so a
+`Directory.Build.props`, and `release.yml`'s preflight checks the same thing before
+it builds anything — because a tagged build stamps the assemblies from the TREE, so a
 mismatch ships a binary whose About window names a different release. That is
 #1627, which shipped "version 1.0.0" for a whole release cycle.
+
+**What a tag builds.** Pushing the tag runs `.github/workflows/release.yml`, which
+builds the macOS arm64 zip, the Windows installer and portable zip, and the Linux
+`amd64` and `arm64` `.deb` and `.tar.gz` packages, checks each one is what it claims
+(a `.deb` is installed and run, the Windows installer is installed silently, the macOS
+bundle is inspected), verifies every asset against its `.sha256`, and attaches them to
+a **draft** release with notes taken from `CHANGELOG.md`. Nothing is published:
+publishing is a manual click. The builds are unsigned by choice (#1597; #1698 is the
+open re-decision), and the release notes say so. `workflow_dispatch` is a dry run: it
+builds everything for the version in the tree and never touches a release, so run it
+before tagging. It has not run end to end yet, so treat the first real tag as its test
+and read the draft before publishing it.
 
 Beyond that there is no evidence-checking wrapper and no enforced trailer.
 
@@ -135,8 +147,9 @@ The decisions no row can make:
   | RID | Status | Reason |
   |-----|--------|--------|
   | `osx-arm64` | **Shipped** | Validated by the `aot` row (`run-aot-smoke.sh` evidence); the per-PR Native AOT CI lane that used to corroborate it was removed with Actions on 2026-09-04. |
-  | `win-x64` | Deferred (#703) | Not yet probed; needs a Windows publish + native-asset load check, and there is no Windows runner. |
-  | `linux-x64` | Shipped through v3.8.0; **unverifiable since 2026-09-04** | The evidence was the deleted release workflow's Native AOT `.deb` build plus CLI smoke and a `0` managed `.dll` sidecars check. There is no Linux runner today (`LOCAL_GATES.md`) — do not claim it in new release notes until the packaging issue lands. |
+  | `win-x64` | Deferred (#703) | Not yet probed as AOT: the Windows package is a single-file self-contained publish (`scripts/build-windows-installer.ps1`), not AOT. A Windows runner exists now (#1593); the AOT probe itself is still to do. |
+  | `linux-x64` | Shipped through v3.8.0; **re-verified 2026-09-20** | Native AOT GUI publish, launch and scenario on a hosted x64 runner, 0 managed `.dll` sidecars (run 35550350097, #1594). `release.yml` rebuilds the AOT `.deb` on every tag, installs it and smokes the CLI. Not verified before that workflow first runs: the `.deb` itself on a runner. |
+  | `linux-arm64` | **Ships from the next tag; unproven until `release.yml` has run** | Native AOT GUI publish, launch and scenario on a hosted arm64 runner (`ubuntu-24.04-arm`), 0 managed `.dll` sidecars (run 35550350097, #1594). The arm64 AOT **CLI** and the `.deb` had not been built anywhere before `release.yml`, which builds and smokes them natively on arm64. |
   | `osx-x64` | Deferred (#705) | Not yet probed; needs an Intel-mac (or Rosetta-verified) publish + smoke. |
 - **macOS only.** This release is validated on this machine; Linux and
   Windows are untested this release. `t3` prints that reminder after `t2`;
