@@ -61,12 +61,16 @@ unset GATE_ASYMMETRY_BASE GATE_ASYMMETRY_HEAD GATE_ASYMMETRY_ALLOW_NO_BASE
 # So this sweeps the WHOLE GIT_* family rather than the two that happened to
 # bite. A synthetic repo must start from a clean git environment; there is no
 # GIT_* variable an outer process could set that this script wants to inherit.
-for _inherited in $(env | sed -n 's/^\(GIT_[A-Za-z0-9_]*\)=.*/\1/p'); do
-    unset "$_inherited"
-done
-unset _inherited
-
+#
+# The sweep lives in scripts/lib-git-env.sh so every script that builds a
+# scratch repository shares ONE definition; the "#1673 sweep" case at the
+# bottom of this file requires each such script to call it before its first
+# repository-creating command, and plants an offender to prove that can fail.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=scripts/lib-git-env.sh
+source "$ROOT/scripts/lib-git-env.sh"
+scrub_inherited_git_env
+
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -358,30 +362,122 @@ ok
 # RECREATE that environment or it is theatre: point GIT_DIR at a throwaway
 # repository, re-invoke this script, and prove that repository is untouched.
 #
-# Verified by planting: with the GIT_* sweep at the top removed, this is the
-# one check that reddens, and it reddens for the real reason — the inner run
+# Verified by planting: with the sweep call at the top removed, this is the one
+# check that reddens, and it reddens for the real reason — the inner run
 # re-inits the victim and writes Selftest into its config.
+#
+# What is compared is the victim's whole config (hash) AND the three keys that
+# hurt when they change, each read back through git rather than trusted to the
+# hash: core.bare (the visible half — it kills every checkout at once) and
+# user.name / user.email (the dangerous half — commits get authored by a fake
+# identity and nothing warns).
+#
+# The inner run must ALSO complete. A run that died before touching anything
+# leaves the victim untouched too, so "config unchanged" alone would pass for
+# the wrong reason; requiring the inner run to reach its own final OK proves it
+# went through every `git init` / `git config` above under the hostile
+# environment and each one landed in ITS repo.
+victim_state() {
+    printf 'config=%s bare=%s name=%s email=%s\n' \
+        "$(shasum "$1/.git/config" | cut -d' ' -f1)" \
+        "$(git -C "$1" config --local --get core.bare || echo '<unset>')" \
+        "$(git -C "$1" config --local --get user.name || echo '<unset>')" \
+        "$(git -C "$1" config --local --get user.email || echo '<unset>')"
+}
+
 if [ -z "${GATE_ASYMMETRY_INNER-}" ]; then
     victim="$WORK/victim"
     git init -q -b main "$victim"
-    before="$(shasum "$victim/.git/config" | cut -d' ' -f1)"
+    before="$(victim_state "$victim")"
 
-    # Failure is fine and deliberately ignored — this case is about the SIDE
-    # EFFECT on $victim, not about the inner run's verdict.
-    GATE_ASYMMETRY_INNER=1 GIT_DIR="$victim/.git" \
-        bash "$ROOT/scripts/test-check-gate-asymmetry.sh" >/dev/null 2>&1 || true
+    inner_rc=0
+    GATE_ASYMMETRY_INNER=1 GIT_DIR="$victim/.git" GIT_INDEX_FILE="$victim/.git/index" \
+        bash "$ROOT/scripts/test-check-gate-asymmetry.sh" >"$WORK/inner.out" 2>&1 || inner_rc=$?
 
-    after="$(shasum "$victim/.git/config" | cut -d' ' -f1)"
+    after="$(victim_state "$victim")"
     [ "$before" = "$after" ] \
         || fail "#1673: run with GIT_DIR inherited, this script rewrote that repository's config
+    before: $before
+    after:  $after
     (that is how core.bare=true and user.name=Selftest reached the shared
      config from the pre-push hook, breaking six worktrees at once)"
 
-    # The identity is the dangerous half, so name it rather than trusting the
-    # hash to have covered it.
-    ! git -C "$victim" config --local --get user.name >/dev/null 2>&1 \
-        || fail "#1673: a fake commit identity was written into the inherited repository"
+    { [ "$inner_rc" -eq 0 ] && grep -q '^test-check-gate-asymmetry: OK' "$WORK/inner.out"; } \
+        || fail "#1673: the run under an inherited GIT_DIR did not complete (exit $inner_rc):
+$(tail -5 "$WORK/inner.out")"
     ok
 fi
+
+# ───────── #1673: every script that creates a scratch repo sweeps first ─────
+#
+# The case above proves ONE script safe. The defect was a CLASS — any script
+# that builds a repository for a fixture is exposed to the same inherited
+# GIT_DIR, and t0 runs them all from the hook — so the class is checked, not
+# audited: a script under scripts/ whose non-comment code runs `git init` must
+# source scripts/lib-git-env.sh and call scrub_inherited_git_env on an EARLIER
+# line. Order matters: a sweep after the init protects nothing. (`git clone`
+# is deliberately not in scope: the only clone under scripts/ is a corpus
+# downloader a person runs, never a fixture built under the hook.)
+#
+# It is line-order, not control flow, so it is a tripwire and not a proof; what
+# it cannot see (a sweep hidden behind a function call, a repository created by
+# a non-shell helper) is the reason the runtime case above stays.
+scratch_repo_offenders() {
+    local f
+    for f in "$1"/*.sh; do
+        [ -e "$f" ] || continue
+        awk -v file="$f" '
+            /^[[:space:]]*#/ { next }
+            /^[[:space:]]*(source|\.)[[:space:]].*lib-git-env\.sh/ { if (!src) src = NR }
+            /^[[:space:]]*scrub_inherited_git_env([[:space:]]|$)/ { if (!sweep) sweep = NR }
+            /(^|[^[:alnum:]_.\/-])git[[:space:]]+([^#|;&]*[[:space:]])?init([[:space:]]|$)/ { if (!init) init = NR }
+            END {
+                if (!init) exit 0
+                if (!src)   { print file ": creates a repository (line " init ") but never sources lib-git-env.sh"; exit 0 }
+                if (!sweep) { print file ": sources lib-git-env.sh but never calls scrub_inherited_git_env"; exit 0 }
+                if (sweep > init) print file ": scrub_inherited_git_env (line " sweep ") comes AFTER the first git init (line " init ")"
+            }' "$f"
+    done
+}
+
+plant="$WORK/plant"
+mkdir -p "$plant/control" "$plant/no-source" "$plant/no-call" "$plant/late" "$plant/quiet"
+cat > "$plant/control/ok.sh" <<'EOF'
+source "$ROOT/scripts/lib-git-env.sh"
+scrub_inherited_git_env
+git init -q "$WORK/repo"
+EOF
+cat > "$plant/no-source/bad.sh" <<'EOF'
+cd "$WORK"
+git init -q repo
+EOF
+cat > "$plant/no-call/bad.sh" <<'EOF'
+source "$ROOT/scripts/lib-git-env.sh"
+git -C "$WORK" init -q repo
+EOF
+cat > "$plant/late/bad.sh" <<'EOF'
+source "$ROOT/scripts/lib-git-env.sh"
+git init -q "$WORK/repo"
+scrub_inherited_git_env
+EOF
+cat > "$plant/quiet/ok.sh" <<'EOF'
+# git init is only mentioned in this comment
+git rev-parse --show-toplevel
+git ls-files -- init.txt
+EOF
+[ -z "$(scratch_repo_offenders "$plant/control")" ] \
+    || fail "#1673 sweep: a script that sweeps before its git init was flagged (the check rejects everything)"
+[ -z "$(scratch_repo_offenders "$plant/quiet")" ] \
+    || fail "#1673 sweep: a comment mentioning git init, or non-creating git calls, were flagged"
+for shape in no-source no-call late; do
+    [ -n "$(scratch_repo_offenders "$plant/$shape")" ] \
+        || fail "#1673 sweep: planted offender '$shape' (git init without a prior sweep) was NOT caught"
+done
+offenders="$(scratch_repo_offenders "$ROOT/scripts")"
+[ -z "$offenders" ] \
+    || fail "#1673 sweep: these scripts create a scratch repository without first sweeping inherited GIT_* variables
+    (source scripts/lib-git-env.sh and call scrub_inherited_git_env before the first git init):
+$offenders"
+ok
 
 echo "test-check-gate-asymmetry: OK ($CHECKS checks)"
