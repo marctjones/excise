@@ -764,7 +764,7 @@
       "path": "Excise.Rendering.Tests/Corpus/IsartorRoundTripTests.cs",
       "class": "IsartorRoundTripTests",
       "method": "RoundTripsThroughWriter",
-      "line": 103,
+      "line": 104,
       "xunitKind": "theory",
       "evidenceKind": "corpus-candidate",
       "facets": [
@@ -1353,7 +1353,7 @@
       "path": "Excise.Rendering.Tests/Differential/AdvanceParityTests.cs",
       "class": "AdvanceParityTests",
       "method": "PerGlyphAdvanceParity_AgainstMutool",
-      "line": 55,
+      "line": 49,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -3416,7 +3416,7 @@
       "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
       "class": "AnnotationSynthesisPolicyGateTests",
       "method": "PolicyRows_AreWellFormed",
-      "line": 64,
+      "line": 65,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -3455,7 +3455,7 @@
       "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
       "class": "AnnotationSynthesisPolicyGateTests",
       "method": "EveryRow_MatchesWhatExciseDraws",
-      "line": 217,
+      "line": 218,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -3494,7 +3494,7 @@
       "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
       "class": "AnnotationSynthesisPolicyGateTests",
       "method": "EveryRowsEvidence_StillHoldsAgainstTheOracles",
-      "line": 242,
+      "line": 243,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -3533,7 +3533,7 @@
       "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
       "class": "AnnotationSynthesisPolicyGateTests",
       "method": "EverySynthesisSiteInTheRenderer_IsNamedByARow",
-      "line": 328,
+      "line": 329,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -3931,7 +3931,7 @@
       "path": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs",
       "class": "BlankPageRecoveryTests",
       "method": "PageThatRenderedBlank_NowInksWithinBandOfTheOracles",
-      "line": 57,
+      "line": 58,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -3970,7 +3970,7 @@
       "path": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs",
       "class": "BlankPageRecoveryTests",
       "method": "GlyphNamesOutsideTheRendererSubset_ResolveThroughCore",
-      "line": 124,
+      "line": 127,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4012,7 +4012,7 @@
       "path": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs",
       "class": "BlankPageRecoveryTests",
       "method": "TextOperatorsOutsideATextObject_DrawWhatTheOraclesDraw",
-      "line": 150,
+      "line": 153,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4211,7 +4211,7 @@
       "path": "Excise.Rendering.Tests/Differential/CertainChannelReferenceComparisonTests.cs",
       "class": "CertainChannelReferenceComparisonTests",
       "method": "ExciseCertainChannel_RecoversUnderBoxText_AtLeastAsWellAsXRay",
-      "line": 42,
+      "line": 34,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4414,7 +4414,7 @@
       "path": "Excise.Rendering.Tests/Differential/CompetitorAdapterTests.cs",
       "class": "CompetitorAdapterTests",
       "method": "RasterBaseline_LeavesNoExtractableTextAnywhere_TheAnchor",
-      "line": 57,
+      "line": 50,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4455,7 +4455,7 @@
       "path": "Excise.Rendering.Tests/Differential/CompetitorAdapterTests.cs",
       "class": "CompetitorAdapterTests",
       "method": "ItextPdfSweep_RemovesTheTerm_ButKeepsItsNeighbours",
-      "line": 82,
+      "line": 84,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -6247,7 +6247,7 @@
       "path": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs",
       "class": "DifferentialRenderingTests",
       "method": "RendersSimilarlyToMutool",
-      "line": 151,
+      "line": 152,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -6678,7 +6678,7 @@
       "path": "Excise.Rendering.Tests/Differential/EncryptedCorpusPasswordCoverageTests.cs",
       "class": "was",
       "method": "EveryEncryptedFixture_EitherOpensFreely_OrHasAKnownPassword",
-      "line": 90,
+      "line": 91,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -6717,7 +6717,7 @@
       "path": "Excise.Rendering.Tests/Differential/EncryptedCorpusPasswordCoverageTests.cs",
       "class": "was",
       "method": "EveryManifestPassword_ActuallyDecryptsItsFixture",
-      "line": 141,
+      "line": 143,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -6756,7 +6756,7 @@
       "path": "Excise.Rendering.Tests/Differential/EncryptedCorpusPasswordCoverageTests.cs",
       "class": "was",
       "method": "NoManifestEntry_MatchesMoreThanOneCorpusFile",
-      "line": 191,
+      "line": 194,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -6795,7 +6795,7 @@
       "path": "Excise.Rendering.Tests/Differential/EncryptedRedactionOutputIntegrityTests.cs",
       "class": "EncryptedRedactionOutputIntegrityTests",
       "method": "RedactedEncryptedOutput_IsValidAndActuallyRedacted",
-      "line": 123,
+      "line": 110,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -7582,7 +7582,7 @@
       "path": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs",
       "class": "EncryptionPreservationInteropTests",
       "method": "Redact_R6Source_OutputSameR6AndPermissions_SecretUnrecoverableByQpdfAndMutool",
-      "line": 51,
+      "line": 52,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -7621,7 +7621,7 @@
       "path": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs",
       "class": "EncryptionPreservationInteropTests",
       "method": "Redact_R4AesSource_OutputSameR4_SecretUnrecoverableByQpdfAndMutool",
-      "line": 81,
+      "line": 82,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -7660,7 +7660,7 @@
       "path": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs",
       "class": "EncryptionPreservationInteropTests",
       "method": "Redact_Rc4Fixture_UpgradesToR6_PermissionsSurvive_SecretUnrecoverable",
-      "line": 107,
+      "line": 108,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -7699,7 +7699,7 @@
       "path": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs",
       "class": "EncryptionPreservationInteropTests",
       "method": "Preserve_EncryptMetadataFalse_SurvivesRoundTrip",
-      "line": 143,
+      "line": 144,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9059,7 +9059,7 @@
       "path": "Excise.Rendering.Tests/Differential/FreeTextComplexScriptDifferentialTests.cs",
       "class": "FreeTextComplexScriptDifferentialTests",
       "method": "ExciseDrawsTheArabicContents_InsideRect_WithinABandOfMutool",
-      "line": 48,
+      "line": 49,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9100,7 +9100,7 @@
       "path": "Excise.Rendering.Tests/Differential/FreeTextComplexScriptDifferentialTests.cs",
       "class": "FreeTextComplexScriptDifferentialTests",
       "method": "ExciseDrawsEveryLine_NotJustTheFirst",
-      "line": 75,
+      "line": 76,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9141,7 +9141,7 @@
       "path": "Excise.Rendering.Tests/Differential/FreeTextComplexScriptDifferentialTests.cs",
       "class": "FreeTextComplexScriptDifferentialTests",
       "method": "Pdfium_AlsoDrawsTheContentsInsideRect",
-      "line": 101,
+      "line": 102,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9724,7 +9724,7 @@
       "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
       "class": "GhentConformanceCellTests",
       "method": "Cell_MatchesIndependentRenderers",
-      "line": 179,
+      "line": 180,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9763,7 +9763,7 @@
       "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
       "class": "GhentConformanceCellTests",
       "method": "Manifest_IsWellFormed",
-      "line": 316,
+      "line": 317,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9802,7 +9802,7 @@
       "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
       "class": "open",
       "method": "EveryContractedGhentPage_IsGatedOrDeclaredUngated",
-      "line": 408,
+      "line": 409,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9841,7 +9841,7 @@
       "path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
       "class": "open",
       "method": "MeasureEveryCell_PrintsTheOracleSpread",
-      "line": 475,
+      "line": 476,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -10780,7 +10780,7 @@
       "path": "Excise.Rendering.Tests/Differential/HyphenWrappedRedactionReportingTests.cs",
       "class": "HyphenWrappedRedactionReportingTests",
       "method": "AHyphenWrappedTerm_SurvivesRedaction_AndIsReportedRatherThanCalledClean",
-      "line": 49,
+      "line": 41,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -11576,7 +11576,7 @@
       "path": "Excise.Rendering.Tests/Differential/Issue891SymbolicCmapCorpusTests.cs",
       "class": "Issue891SymbolicCmapCorpusTests",
       "method": "Bug1027533_ArialBoldSubset_RendersInk_NotBlank",
-      "line": 35,
+      "line": 36,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -11618,7 +11618,7 @@
       "path": "Excise.Rendering.Tests/Differential/Issue891SymbolicCmapCorpusTests.cs",
       "class": "Issue891SymbolicCmapCorpusTests",
       "method": "Bug1151216_Ttf9t00Subset_RendersInk_NotBlank",
-      "line": 41,
+      "line": 42,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -11914,7 +11914,7 @@
       "path": "Excise.Rendering.Tests/Differential/MisleadingImageFallbackTests.cs",
       "class": "MisleadingImageFallbackTests",
       "method": "DctComponentCountContradictingTheColorSpace_DrawsNothingAndIsDiagnosed",
-      "line": 32,
+      "line": 33,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -11956,7 +11956,7 @@
       "path": "Excise.Rendering.Tests/Differential/MisleadingImageFallbackTests.cs",
       "class": "MisleadingImageFallbackTests",
       "method": "OrdinaryDctImage_StillDecodes",
-      "line": 72,
+      "line": 75,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -11998,7 +11998,7 @@
       "path": "Excise.Rendering.Tests/Differential/MisleadingImageFallbackTests.cs",
       "class": "MisleadingImageFallbackTests",
       "method": "UndecodableJbig2_DrawsNothingAndNamesTheCause",
-      "line": 113,
+      "line": 116,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -12210,7 +12210,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperandSplitImprovementTests.cs",
       "class": "OperandSplitImprovementTests",
       "method": "OperandSplit_Fires_AndDestroysNoMoreThanReconstruction",
-      "line": 79,
+      "line": 71,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -13263,7 +13263,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfA1SerialisationConformanceTests.cs",
       "class": "PdfA1SerialisationConformanceTests",
       "method": "AttributeFormPdfA1_KeepsItsConformanceThroughASave",
-      "line": 45,
+      "line": 46,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -13302,7 +13302,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfA1SerialisationConformanceTests.cs",
       "class": "PdfA1SerialisationConformanceTests",
       "method": "ElementFormPdfA1_KeepsItsConformanceThroughASave",
-      "line": 55,
+      "line": 56,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -13692,7 +13692,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfJsFontFallbackDifferentialTests.cs",
       "class": "PdfJsFontFallbackDifferentialTests",
       "method": "HighlightsPage5_LoadsEmbeddedUrwType1FontFile",
-      "line": 14,
+      "line": 15,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -13734,7 +13734,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfJsFontFallbackDifferentialTests.cs",
       "class": "PdfJsFontFallbackDifferentialTests",
       "method": "Issue16316_LoadsEmbeddedRawType1FontFile",
-      "line": 43,
+      "line": 44,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -14649,7 +14649,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
       "class": "RedactionBenchmarkRunner",
       "method": "RunBenchmark",
-      "line": 422,
+      "line": 411,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -15321,7 +15321,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionRenderAxesTests.cs",
       "class": "RedactionRenderAxesTests",
       "method": "SurvivingRenderDelta_MasksEveryOccurrence_NotJustTheFirst",
-      "line": 68,
+      "line": 69,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -15363,7 +15363,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionRenderAxesTests.cs",
       "class": "RedactionRenderAxesTests",
       "method": "CleanGlyphRemoval_LeavesSurvivingRenderIntact_AndTheSecretUnreadable",
-      "line": 98,
+      "line": 99,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -15405,7 +15405,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionRenderAxesTests.cs",
       "class": "RedactionRenderAxesTests",
       "method": "Jbig2Scan_RegionRedaction_PreservesPixelsOutsideTheRequestedTerm",
-      "line": 131,
+      "line": 132,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -15447,7 +15447,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionRenderAxesTests.cs",
       "class": "RedactionRenderAxesTests",
       "method": "VisualReadableAxis_DetectsATermStillLegibleInPixels",
-      "line": 172,
+      "line": 173,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -15486,7 +15486,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs",
       "class": "RedactionRoundTripTests",
       "method": "RedactedWordIsGoneAfterSaveAndReopen",
-      "line": 102,
+      "line": 103,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -15525,7 +15525,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs",
       "class": "than",
       "method": "RedactedWordIsNotRecoverableByAnIndependentExtractor",
-      "line": 207,
+      "line": 208,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -20646,7 +20646,7 @@
       "path": "Excise.Rendering.Tests/Differential/TextExtractionDifferentialTests.cs",
       "class": "TextExtractionDifferentialTests",
       "method": "TextMatchesMutool",
-      "line": 107,
+      "line": 108,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -20731,7 +20731,7 @@
       "path": "Excise.Rendering.Tests/Differential/ToolResistanceComparisonTests.cs",
       "class": "ToolResistanceComparisonTests",
       "method": "ResistancePerBand_ExciseVsPyMuPdf",
-      "line": 114,
+      "line": 107,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -27822,7 +27822,7 @@
       "path": "Excise.Rendering.Tests/LongSessionSoakTests.cs",
       "class": "LongSessionSoakTests",
       "method": "RepeatedOpenRenderRedactCloseCycles_DoNotGrowTheManagedHeap",
-      "line": 113,
+      "line": 114,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -43940,7 +43940,7 @@
       "path": "Excise.Rendering.Tests/Visual/TamReviewCffSubsetTests.cs",
       "class": "TamReviewCffSubsetTests",
       "method": "TamReviewPage17_BodyParagraphTextProducesInk",
-      "line": 64,
+      "line": 65,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
