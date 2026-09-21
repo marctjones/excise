@@ -1898,7 +1898,6 @@ namespace Excise.Core.Redaction.Recovery
     public static class RecoveryChannelTiers
     {
         public const string OptInFlag = "--include-deferred";
-        public static System.Collections.Generic.IReadOnlyList<string> DeferredChannels { get; }
         public static string DeferralReason(string channel) { }
         public static bool IsDeferred(string channel) { }
         public static System.Collections.Generic.IReadOnlyList<string> LimitationsFor(System.Collections.Generic.IEnumerable<string>? skippedChannels) { }

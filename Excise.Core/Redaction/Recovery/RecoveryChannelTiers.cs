@@ -128,9 +128,6 @@ public static class RecoveryChannelTiers
             "against. Still implemented and tested; opt in with " + OptInFlag + ".",
     };
 
-    /// <summary>Every deferred channel, in declaration order.</summary>
-    public static IReadOnlyList<string> DeferredChannels => Deferred.Keys.ToList();
-
     /// <summary>
     /// The tier of a channel. An unknown name is <see cref="RecoveryTier.Text"/>:
     /// a channel added without a tier decision is graded, which is the failure
@@ -161,7 +158,7 @@ public static class RecoveryChannelTiers
 /// default that differed by caller would rebuild that.</para>
 /// </summary>
 /// <param name="IncludeDeferredChannels">
-/// Run the Tier 2 channels too (<see cref="RecoveryChannelTiers.DeferredChannels"/>).
+/// Run the Tier 2 channels too (<see cref="RecoveryTier.Deferred"/>).
 /// When false they are declared SKIPPED with their reason, never silently
 /// omitted.
 /// </param>
