@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1334,
-  "indexedContentSha256": "6551abe14ee3d7bd1b3299ba622ed308b3cdf09192670a853aa81de77925e21c",
+  "indexedContentSha256": "7197da8066c908a18a0a7da38245a2b69ae05b8fa2fef4cf248a33236d51ef8e",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -8819,7 +8819,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 306
+      "candidateReferenceCount": 307
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9794,7 +9794,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 228
+      "candidateReferenceCount": 229
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -36196,7 +36196,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 171
+      "candidateReferenceCount": 172
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -36892,6 +36892,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/ReleasedMemoryReclaimTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bitspercomponent",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/Unit/RedactedCopySafetyPolicyTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36919,7 +36928,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 70
+      "candidateReferenceCount": 71
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -38249,6 +38258,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/ReleasedMemoryReclaimTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/Unit/RevealHiddenTextTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -38267,7 +38285,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 65
+      "candidateReferenceCount": 66
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -40004,7 +40022,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 128
+      "candidateReferenceCount": 129
     },
     {
       "id": "pdf.20.image.requirement-032",

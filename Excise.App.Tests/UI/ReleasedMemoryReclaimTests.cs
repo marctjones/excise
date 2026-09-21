@@ -317,10 +317,22 @@ public class ReleasedMemoryReclaimTests
     [FixedAvaloniaFact(Timeout = 120_000)]
     public async Task ReplacingALargeDocument_TheCollectionReturnsItsHeap_AndRecordsTheMetric()
     {
-        // The document keeps its file bytes (it is opened from a byte[]), so a
-        // 64 MB content stream is at least 64 MB of live heap while it is open.
-        const int payloadBytes = 64_000_000;
-        var large = WriteLargePdf(payloadBytes);
+        // #1691. This fixture used to be a 64 MB content stream, on the premise
+        // that "the document keeps its file bytes (it is opened from a byte[])".
+        // #1567 deleted that: OpenCurrent now opens a FileStream and the
+        // document holds no file bytes, so the old fixture put 0.2 MB of an
+        // expected 61 MB on the managed heap and the assertion below was
+        // subtracting two readings that never contained the payload.
+        //
+        // What the reclaim actually returns is render-derived. The #1713 heap
+        // dump, before and after one reclaim: Byte[] 223 -> 124 MB,
+        // ContentOperator 8.3 -> 0, LOH 312 -> 130 MB. So the fixture decodes a
+        // large image instead, and the window is SHOWN, because the viewer is
+        // the caching path (PageImageRenderer is documented as the uncached
+        // export boundary and would leave nothing behind).
+        const int imageSide = 4000;
+        const int payloadBytes = imageSide * imageSide * 3;   // ~48 MB decoded
+        var large = WriteLargeImagePdf(imageSide);
         var small = TempMultiPagePdf(1);
 
         long heapBeforeCollect = 0, heapAfterCollect = 0;
@@ -356,6 +368,8 @@ public class ReleasedMemoryReclaimTests
         using var indexSession = IdleIndexSession();
         var vm = MainWindowViewModelTestFactory.Create(
             textIndexSession: indexSession, thumbnailPrewarmEnabled: false, memoryReclaimer: reclaimer);
+        var window = new MainWindow { DataContext = vm, Width = 1024, Height = 768 };
+        window.Show();
         try
         {
             // #1691. The reading BEFORE the large document opens. The assertion
@@ -369,6 +383,12 @@ public class ReleasedMemoryReclaimTests
 
             await vm.LoadDocumentAsync(large);
             vm.TotalPages.Should().Be(1, "fixture: the large document opens");
+            // The viewer renders on a pool thread; opening alone decodes
+            // nothing. Pump until the decode has actually landed on the heap,
+            // rather than sleeping a guessed interval.
+            await PumpUntilAsync(
+                () => GC.GetTotalMemory(forceFullCollection: false) - baseline > payloadBytes / 2,
+                TimeSpan.FromSeconds(30));
             long withLarge = GC.GetTotalMemory(forceFullCollection: true);
 
             // Captured while the large document is still current: once the
@@ -451,6 +471,7 @@ public class ReleasedMemoryReclaimTests
         finally
         {
             await vm.CloseDocumentCommand.Execute();
+            window.Close();
             TestPdfGenerator.CleanupTestFile(large);
             TestPdfGenerator.CleanupTestFile(small);
         }
@@ -566,6 +587,71 @@ public class ReleasedMemoryReclaimTests
             for (int i = 1; i <= 4; i++)
                 Write($"{offsets[i]:D10} 00000 n \n");
             Write($"trailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        }
+        return path;
+    }
+
+    /// <summary>
+    /// One page drawing a <paramref name="side"/>x<paramref name="side"/> raw
+    /// DeviceRGB image (#1691). Deliberately NOT a big content stream: after
+    /// #1567 the document reads from a FileStream and holds no file bytes, and
+    /// a stream of PDF comments materialises nothing when parsed. What the
+    /// idle/replace reclaim actually returns is render-derived — the heap dump
+    /// on #1713 shows Byte[] 223 -> 124 MB and the LOH 312 -> 130 MB — so the
+    /// fixture has to make the app DECODE something.
+    ///
+    /// The image is uncompressed so its decoded size is predictable, and it is
+    /// drawn small on purpose: per #1677 decode cost tracks SOURCE pixels, not
+    /// output, so a 4000x4000 source costs ~48 MB however little of the page it
+    /// covers. Rows are written one at a time — buffering the whole image here
+    /// would put the payload on the TEST's heap, which is the heap being
+    /// measured.
+    /// </summary>
+    private static string WriteLargeImagePdf(int side)
+    {
+        int payload = side * side * 3;
+        var path = Path.Combine(Path.GetTempPath(), $"excise-reclaim-image-{Guid.NewGuid():N}.pdf");
+        var offsets = new long[6];
+        using (var stream = File.Create(path))
+        {
+            void Write(string text)
+            {
+                var bytes = Encoding.ASCII.GetBytes(text);
+                stream.Write(bytes, 0, bytes.Length);
+            }
+
+            Write("%PDF-1.4\n");
+            offsets[1] = stream.Position;
+            Write("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+            offsets[2] = stream.Position;
+            Write("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+            offsets[3] = stream.Position;
+            Write("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+                + "/Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\nendobj\n");
+            offsets[4] = stream.Position;
+            var content = Encoding.ASCII.GetBytes("q 612 0 0 792 0 0 cm /Im0 Do Q\n");
+            Write($"4 0 obj\n<< /Length {content.Length} >>\nstream\n");
+            stream.Write(content, 0, content.Length);
+            Write("endstream\nendobj\n");
+            offsets[5] = stream.Position;
+            Write($"5 0 obj\n<< /Type /XObject /Subtype /Image /Width {side} /Height {side} "
+                + $"/ColorSpace /DeviceRGB /BitsPerComponent 8 /Length {payload} >>\nstream\n");
+            var row = new byte[side * 3];
+            for (int y = 0; y < side; y++)
+            {
+                // Vary per row so nothing downstream can collapse it to a
+                // constant: a uniform image is exactly what a clever decoder
+                // would store as one value, and the fixture would measure zero.
+                for (int x = 0; x < row.Length; x++)
+                    row[x] = (byte)((x + y) & 0xFF);
+                stream.Write(row, 0, row.Length);
+            }
+            Write("\nendstream\nendobj\n");
+            long xref = stream.Position;
+            Write("xref\n0 6\n0000000000 65535 f \n");
+            for (int i = 1; i <= 5; i++)
+                Write($"{offsets[i]:D10} 00000 n \n");
+            Write($"trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
         }
         return path;
     }
