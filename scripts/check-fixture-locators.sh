@@ -110,6 +110,66 @@ if [ -n "$DOTDOT" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 3b. No hand-rolled ANCHOR walk: the literal ".git" / "excise.sln" in test code.
+#
+#    Checks 2 and 3 forbid a walk that is BOUNDED. #1706 is the walk that is
+#    UNBOUNDED and still wrong: it stops at the FIRST ".git" or "excise.sln",
+#    and in a git worktree that is the WORKTREE root -- which holds only the
+#    tracked subset, not the gitignored corpora. Both marks the CLAUDE.md
+#    warning ("neither is anchoring on .git or excise.sln") named; for a month
+#    the gate enforced only the loop's shape, so 57 files grew under it and a
+#    redaction differential, an unredaction reference comparison and two
+#    competitor-adapter tests skipped in every worktree behind a false
+#    "not present". Checks 2 and 3 tested boundedness when the property that
+#    mattered was the anchor.
+#
+#    ⚠️ Keyed on the ANCHOR LITERAL, not on loop syntax, because loop syntax is
+#    exactly what let #1706 hide. The population was first derived twice by
+#    shape and undercounted both times: once by a `.Parent` traversal (missing
+#    a walk written with Directory.GetParent) and once by the `test-pdfs`
+#    corpus name (missing a walk that joined the gitignored tools/vendor/).
+#    A walk must TEST FOR the anchor to know where to stop, whatever loop it
+#    uses, so the literal is the invariant.
+#
+#    Exempt, by construction rather than by allowlist: the locator itself and
+#    its own tests (the one place that legitimately knows what a checkout looks
+#    like); comment lines; and lines that CREATE an anchor
+#    (CreateDirectory / WriteAll*), because a test that builds a synthetic
+#    worktree to exercise a locator is a builder, not a walker.
+#
+#    Limits, stated rather than hidden: an anchor assembled from parts at
+#    runtime ("." + "git") or read from a constant in another file evades
+#    this. Nothing in the repo does either today.
+# ---------------------------------------------------------------------------
+ANCHOR=$(grep -rnE '"(\.git|excise\.sln)"' --include='*.cs' "${TEST_PROJECTS[@]}" 2>/dev/null \
+  | grep -vE 'TestSupport/TestRepoLayout(Tests)?\.cs:' \
+  | grep -vE '^[^:]+:[0-9]+:[[:space:]]*(//|/\*|\*)' \
+  | grep -vE 'CreateDirectory|WriteAll' || true)
+
+if [ -n "$ANCHOR" ]; then
+  echo
+  echo "FAIL: a hand-rolled upward walk anchored on \".git\" or \"excise.sln\" in test code."
+  echo "      This is #1706. Both anchors mark the CHECKOUT you are running in, and in a git"
+  echo "      worktree that checkout holds only the TRACKED subset: the gitignored corpora"
+  echo "      (test-pdfs/smoke, pdfjs, ...) and tool directories (tools/vendor) live in the"
+  echo "      MAIN checkout. A walk that stops at the first anchor either misses them and"
+  echo "      skips with a false \"not present\", or finds a partial test-pdfs and believes"
+  echo "      it has a complete corpus. It does not matter that the walk is unbounded."
+  echo
+  echo "      Use the ONE shared locator instead:"
+  echo "        TestRepoLayout.FindFile(\"test-pdfs\", \"smoke\", \"x.pdf\")     gitignored OR tracked data"
+  echo "        TestRepoLayout.FindDirectory(\"tools\", \"vendor\", \"itext\")"
+  echo "        TestRepoLayout.AbsenceReason(what, paths...)                 a skip reason a checker can falsify"
+  echo "        TestRepoLayout.LocalCheckoutRoot                             THIS worktree's own source / artifacts"
+  echo "        TestRepoLayout.FindFileInLocalCheckout(...)                  BUILD OUTPUT ONLY"
+  echo
+  echo "      Building a synthetic checkout to test a locator? Put the anchor on a"
+  echo "      CreateDirectory/WriteAll* line and it is exempt. Do NOT add an exception here."
+  echo "$ANCHOR" | sed 's/^/        /'
+  FAIL=1
+fi
+
+# ---------------------------------------------------------------------------
 # 4. Every class that enumerates a GITIGNORED corpus into a theory must have a
 #    declared collected-row floor.
 #
