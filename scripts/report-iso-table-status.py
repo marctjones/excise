@@ -180,15 +180,17 @@ def main() -> int:
     print(f"{len(obligations)} obligations, by the source that must cover them:")
     for route in sorted({r["coveredBy"] for r in obligations}):
         rs = [r for r in obligations if r["coveredBy"] == route]
+        own = checklist["summary"].get("tracking", {}).get(route, {}).get("issues", [])
+        owner = ("  -> " + ", ".join(f"#{i}" for i in own)) if own else ""
         if route != "arlington-object-model":
             # A 0 here would read as a gap. These tables are not measured
             # THROUGH THE OBJECT MODEL at all -- the Annex A operator tables
             # are covered by OperatorParseRecognitionTests, which this join
             # cannot see. Absent evidence is not evidence of absence.
-            print(f"   {len(rs):4d}  {route:<24s}    — not measurable via the object model")
+            print(f"   {len(rs):4d}  {route:<24s}    — not measurable via the object model{owner}")
             continue
         ex = sum(1 for r in rs if r["exposed"])
-        print(f"   {len(rs):4d}  {route:<24s} {ex:4d} with at least one key exposed")
+        print(f"   {len(rs):4d}  {route:<24s} {ex:4d} with at least one key exposed{owner}")
 
     mis = [r for r in obligations if r["mistyped"]]
     if mis:

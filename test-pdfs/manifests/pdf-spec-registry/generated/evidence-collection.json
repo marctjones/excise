@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1336,
-  "indexedContentSha256": "0e6c9ba9e9e0c8fdbe5039f9c73f98ce5b5b2ee705907d3974525a11b2063b12",
+  "indexedContentSha256": "757d94aa93d6a681766992ab64e374400ad83ce22e4805726cb21d77ced47e95",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1502,7 +1502,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 190
+      "candidateReferenceCount": 191
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -8829,7 +8829,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 308
+      "candidateReferenceCount": 309
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -11373,7 +11373,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 172
+      "candidateReferenceCount": 173
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -12616,7 +12616,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 169
+      "candidateReferenceCount": 170
     },
     {
       "id": "pdf.20.content.operators",
@@ -23861,6 +23861,14 @@
           ]
         },
         {
+          "path": "tests/milestones-baseline.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "synthesis"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -23893,7 +23901,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 29
+      "candidateReferenceCount": 30
     },
     {
       "id": "pdf.20.renderer.requirement-019",
@@ -43888,7 +43896,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 90
+      "candidateReferenceCount": 91
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -56939,7 +56947,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 204
+      "candidateReferenceCount": 205
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -57677,7 +57685,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 99
+      "candidateReferenceCount": 100
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -63653,7 +63661,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 171
+      "candidateReferenceCount": 172
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -66981,7 +66989,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 201
+      "candidateReferenceCount": 202
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -68532,7 +68540,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 655
+      "candidateReferenceCount": 656
     },
     {
       "id": "pdf.20.extension.developer",
@@ -70475,6 +70483,15 @@
           ]
         },
         {
+          "path": "tests/milestones-baseline.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "accessibility",
+            "conformance",
+            "conformance"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -70512,7 +70529,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 46
+      "candidateReferenceCount": 47
     },
     {
       "id": "pdf.20.profile.pdfx",
@@ -74266,7 +74283,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 131
+      "candidateReferenceCount": 132
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -77045,6 +77062,7 @@
           "kind": "test",
           "matchedTerms": [
             "forms",
+            "javascript",
             "pdfe",
             "redaction",
             "security"

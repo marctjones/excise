@@ -231,7 +231,7 @@ layers. Download and run scripts stay in `scripts/`, per the existing convention
 ## 7. To build, in order
 
 Each item leads with what it costs and what failure it closes. Nothing below
-starts until a decision in §8 is made.
+starts until a decision in §8 is made. Tracked in milestone **P3.2**.
 
 1. **Pin the two unpinned core downloaders** (veraPDF corpus, Isartor), and every other downloader (#1727). Small.
    Closes: baselines that silently drift when upstream `master` moves.
@@ -258,7 +258,11 @@ starts until a decision in §8 is made.
 
 Not planned: FDF; Annex L until the XLSX is in hand (decision: #1741).
 
-Also tracked: register the owned fixtures (#1729); the `pdf20/` fixtures are not valid 2.0 (#1730); the tracked third-party report (#1731); TestGrammar deferred with its RCA (#1742). Umbrella: #1709. What is already done is recorded and closed in #1743 to #1748.
+Also tracked: the `pdf20/` fixtures are not valid 2.0 (#1730); the tracked third-party report (#1731). Umbrella: #1709, milestone **P3.2**. What is already done is recorded and closed in #1743 to #1748.
+
+**Closed, not planned** (2026-09-20, on Marc's direction, because they account for something rather than change what excise does): registering the owned fixtures (#1729), and the TestGrammar deferral (#1742, a dead end; its RCA is in §4 and in the issue, reopen criteria there). What #1729 gave up: the 36 tracked fixtures keep no per-file SHA-256 or stated purpose and `corpus.sh verify` cannot see them. That is partly recovered because the index in #1728 covers every PDF under `test-pdfs/`, tracked or not, and the licence risk it named has one known instance, tracked as #1731.
+
+The route each ISO table belongs to, and the issue that owns its work, are recorded in the checklist data itself (`summary.tracking` in `iso32000-2-table-checklist.json`) and printed by `scripts/report-iso-table-status.py`.
 
 ## 8. Decisions
 

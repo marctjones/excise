@@ -70,6 +70,21 @@ ROUTE = [
 ]
 
 
+# Which issue owns the work for each route, recorded IN THE DATA so the next
+# reader of the checklist finds the plan without going to GitHub. Update this
+# and regenerate when the plan changes; nothing derives it. Milestone P3.2.
+ROUTE_TRACKING = {
+    "arlington-object-model": {"issues": [1734, 1735, 1736, 1737, 1738, 1732],
+        "note": "reader: generated fixtures (#1734-#1738); writer: delta check (#1732)"},
+    "arlington-builtin": {"issues": [1735], "note": "name/number-tree primitives, exercised by the object-model fixtures"},
+    "annex-a-operators": {"issues": [], "note": "covered by existing tests (OperatorParseRecognitionTests, renderer differentials); no open work"},
+    "hand-authored-syntax": {"issues": [1740], "note": "hand-authored fixtures"},
+    "arlington-gap": {"issues": [1741], "note": "decision: FDF, linearization, Annex L structure elements"},
+    "unrouted": {"issues": [1741], "note": "decision: ICC (Tables 66-68) and Metadata (Table 348)"},
+    "not-an-obligation": {"issues": [], "note": "descriptive or example tables; excluded from every denominator"},
+}
+
+
 def column(ref: str) -> int:
     n = 0
     for ch in re.match(r"([A-Z]+)", ref).group(1):
@@ -253,6 +268,7 @@ def main() -> int:
         "summary": {
             "tables": len(entries),
             "coveredBy": dict(sorted(counts.items())),
+            "tracking": ROUTE_TRACKING,
             "arlingtonObjectsNamed": sum(1 for e in entries if e["arlingtonObjects"]),
             "modelledButNoObjectCitesTheTable": unmapped,
         },

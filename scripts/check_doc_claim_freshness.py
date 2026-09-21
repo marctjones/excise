@@ -290,7 +290,10 @@ def update_milestones_baseline():
     try:
         out = subprocess.run(
             [
-                "gh", "api", "repos/marctjones/excise/milestones?state=all&per_page=100",
+                # --paginate: without it per_page=100 silently TRUNCATES the
+                # snapshot once there are more than 100 milestones (138 exist),
+                # dropping rows a doc may legitimately cite.
+                "gh", "api", "--paginate", "repos/marctjones/excise/milestones?state=all&per_page=100",
                 "--jq", '.[] | [(.number|tostring), .title, .state] | @tsv',
             ],
             check=True, capture_output=True, text=True, cwd=ROOT,
