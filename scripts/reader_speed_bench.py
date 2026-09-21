@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Responsiveness benchmark: excise vs Preview vs Adobe Acrobat (#1544).
+"""Responsiveness benchmark: excise vs Preview vs Chrome vs Adobe Acrobat (#1544).
 
 TOOLING, not a gate (tests/gates-tooling.txt). The companion of
 reader_bench.py (#1543, memory/CPU), sharing its launch, window and
@@ -72,6 +72,10 @@ PAGE_REGION = {
     "excise":  (219, 90, 951, 753),
     "preview": (215, 52, 1195, 795),
     "acrobat": (352, 120, 752, 795),
+    # Chrome: below its PDF toolbar (ends ~143 pt), right of the thumbnail sidebar
+    # divider (300 pt), inside the window. Measured 2026-09-21 by drawing the box on a
+    # saved 1200x800 window screenshot (a red rectangle framed exactly the page pane).
+    "chrome":  (305, 150, 1185, 795),
 }
 
 # excise-tabs only: the tab strip (#1554) sits above the viewer once a window
@@ -241,6 +245,17 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
 
         rb.set_window(pid, cfg["window"])
         rb.wait_settled(tracker, cfg["settle"])
+        if app.get("clickToFocus"):
+            # Chrome opens with keyboard focus outside the page pane (see the DRIVING
+            # NOTES in reader_bench.py); one click in the page margin, before any
+            # recording starts, is what a user does. The title must not change.
+            focus = app["clickToFocus"]
+            title_before = rb.window_title(pid)
+            rb.front(pid)
+            rb.click_in_window(cfg["window"], focus["xFraction"], focus["yFraction"])
+            time.sleep(1.0)
+            if rb.window_title(pid) != title_before:
+                raise rb.RunFailed("the focus click changed the window title")
         page, evidence = rb.read_page(app_id, pid, run_dir, "start", cfg["window"])
         if page != 1 and not (app_id == "preview" and page == 2):
             raise rb.RunFailed(f"not at page 1 before the test: {evidence!r}")
@@ -257,7 +272,9 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
             log["events"].append({"kind": "turn", "i": i, "tick": post_key(nk["keyCode"], nk["modifiers"])})
             time.sleep(TURN_GAP_S)
         page, evidence = rb.read_page(app_id, pid, run_dir, "after-turns", cfg["window"])
-        expect = 1 + turns if not (app_id == "preview" and doc["id"] == "altona") else None
+        # Preview and Chrome do not step exactly one page per key on Altona (a mix of 16
+        # tiny pages and one large one), so the page count is not checked there.
+        expect = 1 + turns if not (app_id in ("preview", "chrome") and doc["id"] == "altona") else None
         if expect is not None and page != expect:
             log["failures"].append(f"after turns: expected page {expect}, read {page!r}")
         log["events"].append({"kind": "marker", "what": "screenshot", "tick": mach_now()})
@@ -588,7 +605,7 @@ def summarize(out):
         notes += [f"- {r['app']} {r['doc']} r{r['repeat']}: {f}" for f in r["failures"]]
         keyed.setdefault((r["doc"], r["app"]), []).append(r)
     for doc in [d for d in SPEED_DOCS if any(k[0] == d for k in keyed)]:
-        present = [a for a in ("excise", "preview", "acrobat") if (doc, a) in keyed]
+        present = [a for a in ("excise", "preview", "chrome", "acrobat") if (doc, a) in keyed]
         if not present:
             continue
         lines += [f"## {doc}", "",
@@ -700,7 +717,7 @@ def calibrate(out, cfg, docs, excise_app, repeats):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--apps", default="excise,preview,acrobat")
+    ap.add_argument("--apps", default="excise,preview,chrome,acrobat")
     ap.add_argument("--docs", default=",".join(SPEED_DOCS))
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--excise-app", default=str(ROOT / "logs/reader-bench-bundle/excise.app"))
@@ -708,6 +725,7 @@ def main():
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--calibrate", action="store_true")
     ap.add_argument("--analyze")
+    ap.add_argument("--resume", action="store_true", help="skip runs whose run.json already exists in --out (continue a paused run)")
     ap.add_argument("--multi", action="store_true",
                     help="run the multi-document set (bench.json multiDocument) instead of the single-document runs")
     ap.add_argument("--configs", help="multi-document configs to run (default: all in bench.json)")
@@ -741,6 +759,9 @@ def main():
         return
     print(f"==> {len(runs)} runs -> {out}", flush=True)
     for r, d, app in runs:
+        if a.resume and (out / app / d / f"r{r}" / "run.json").exists():
+            print(f"  {app:8} {d:7} r{r}  skipped (already done: --resume)", flush=True)
+            continue
         one_run(app, apps[app], docs[d], r, out, cfg, a.excise_app)
     summarize(out)
 

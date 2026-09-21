@@ -98,6 +98,7 @@ scripts/generate_change_coupling.py   # architecture analysis helper
 scripts/gui.sh   # launches the GUI for manual review
 scripts/import-github-issues.sh   # one-time issue import
 scripts/lib-runner.sh   # library sourced by every runner
+scripts/make-reader-bench-plans.sh   # #1543 builds the reader benchmark's vector-density fixture (20 copies of a dense CAD drawing, so it stresses path rasterisation where the scan stresses image decode); a generator, not a check
 scripts/make-reader-bench-scan.py   # #1543 builds the reader benchmark's scanned-document fixture (no local corpus holds a real multi-page scan); a generator, not a check
 scripts/mine-hard-redaction-cases.py   # bench corpus mining
 scripts/monitor-exploratory-corpus.sh   # progress monitor for a running corpus scan
@@ -106,8 +107,8 @@ scripts/pre-push-hook.sh   # the pre-push hook BODY (#1600); installed as a stub
 scripts/profile-render.sh   # dotnet-trace hotspot workflow for one CLI render (#1351); a diagnostic, not a gate
 scripts/profile_render_analyze.py   # body of profile-render.sh: self/inclusive time from an evented speedscope profile
 scripts/profile-test-rss-by-filter.sh   # measurement helper (#861)
-scripts/reader_bench.py   # #1543 live excise vs Preview vs Acrobat memory/CPU benchmark. NOT a gate: it drives three GUI apps by keystroke on ONE machine and absolute footprint moves with load (see run-gui-perf-scenarios.sh); it also needs a display, an unlocked screen, and Preview/Acrobat installed
-scripts/reader_speed_bench.py   # #1544 live excise vs Preview vs Acrobat responsiveness benchmark (time to first change / fully drawn, speed index, scroll frame gaps). NOT a gate for the same reasons as reader_bench.py: three GUI apps, one machine, a display and Screen Recording access required
+scripts/reader_bench.py   # #1543 live excise vs Preview vs Chrome vs Acrobat memory/CPU benchmark. NOT a gate: it drives four GUI apps by keystroke on ONE machine and absolute footprint moves with load (see run-gui-perf-scenarios.sh); it also needs a display, an unlocked screen, and Preview/Chrome/Acrobat installed
+scripts/reader_speed_bench.py   # #1544 live excise vs Preview vs Chrome vs Acrobat responsiveness benchmark (time to first change / fully drawn, speed index, scroll frame gaps). NOT a gate for the same reasons as reader_bench.py: four GUI apps, one machine, a display and Screen Recording access required
 scripts/release-smoke.sh   # RUNNER: t2
 scripts/report-arlington-status.py   # prints per-key Arlington status from the observation (#1709); a report with no verdict
 scripts/report-hotspots.sh   # invoked at the end of run-full-suite

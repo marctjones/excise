@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Like-for-like memory/CPU benchmark: excise vs Preview vs Adobe Acrobat (#1543).
+"""Like-for-like memory/CPU benchmark: excise vs Preview vs Chrome vs Adobe Acrobat (#1543).
 
 TOOLING, not a gate (tests/gates-tooling.txt): it drives three GUI apps on one
 machine, and absolute footprint is a property of that machine and its load.
@@ -22,10 +22,14 @@ HOW IT STAYS FAIR
     path-based guess was tried first and charged excise for CGPDFService and
     SafariPlatformSupport, which macOS started to index the copied PDF.
   * Every step is VERIFIED: the page indicator is read back (window title for
-    Preview, OCR of the status bar for excise, OCR for Acrobat) and a step that
+    Preview, OCR of the status bar for excise, OCR for Acrobat and for Chrome's
+    toolbar page box) and a step that
     did not reach its page is marked failed, not averaged in.
+  * Chrome (its PDF viewer is PDFium) opens with a FRESH --user-data-dir and
+    keyboard focus outside the page pane, so it gets one click in the page pane
+    before paging (bench.json `clickToFocus`); no other app is clicked.
   * Apps are interleaved within each repeat so slow drift in machine state
-    lands on all three, and the run refuses to start beside a test host.
+    lands on all of them, and the run refuses to start beside a test host.
 
     scripts/reader_bench.py --list
     scripts/reader_bench.py --apps excise,preview --docs w9 --repeats 1
@@ -52,6 +56,80 @@ measure the same thing.
 
 The estimate is ~3 min per run: launch and three settles (up to 60 s each,
 usually 5-15 s), 30 s idle, 45 s after the close, quit.
+
+DRIVING NOTES: how each app must be driven and read (learned 2026-09-21; do not relearn)
+  GENERAL
+  * A run that fails verification is EXCLUDED from the medians, so the "Failed runs"
+    list at the foot of SUMMARY.md is part of the result. Before believing a number OR
+    blaming an app, open the run's saved <step>.png and <step>.pagebox.png: on
+    2026-09-21 most "failures" were our OCR, not the app.
+  * If two runs at DIFFERENT settings give the identical wrong reading, the harness is
+    misjudging, not the app: check the DOCUMENT (page labels, forms, sizes) before
+    tuning the app.
+  * OCR: enlarge FIRST, threshold AFTER (thresholding the small crop and enlarging
+    turned 455 into 459). A lone "1" has no base serif and reads as i / l / | ; a digit
+    whitelist turns that into EMPTY text. Read several variants and take the majority
+    (ocr_chrome_page_box); 5/9 are the confusable pair in three-digit numbers.
+  * The keys go to whichever app is frontmost and every number is a footprint, so
+    NOTHING else may run: no tests, no builds, no other GUI run. Keep the screen
+    unlocked (`caffeinate -d -i` plus a `caffeinate -u -t 3` pulse every ~45 s); a
+    locked screen makes every window lookup fail ("Invalid index", "no window") and
+    wasted the whole 2026-09-18 run.
+  * A failed run still has samples. Its footprints are real but UNVERIFIED (the
+    step did not do what it claims); quote them only labelled as such.
+  * When editing bench.json keep the hand formatting (json.dump reflows the whole file).
+
+  ADOBE ACROBAT (the app that needs the most care)
+  * Reading the page: white digits in a bordered box on the right rail
+    (ocr_acrobat_page_box, geometry for the 1200x800 window at 2x). Acrobat titles its
+    window with the PDF's /Title, never the file name.
+  * NOT INTERACTIVE right after a slow open, and the slowness is INTERMITTENT. Acrobat
+    normally goes CPU-quiet ~17 s after launch on every document (the others take
+    4-9 s), but the FIRST open of the 10 MB, 20-page, 200 dpi scan in a sweep took
+    >60 s (step `opened` fails) and every key sent meanwhile was IGNORED (still page 1
+    after 30 presses); the second open of the same scan settled in 16 s. Same pattern
+    on 2026-09-16 (acrobat scan r1 failed, r2-r5 passed), so it is a cold-first-open
+    effect of Acrobat's, not noise and not a fixed property of the file. Adjustment:
+    `settleByDoc` gives it 240 s on scan. It only lengthens the wait; a run that
+    settles in 16 s is unaffected.
+  * PAGE LABELS, NOT PAGE NUMBERS. Acrobat's page box shows the label from the PDF's
+    /PageLabels. The 455-page book's labels run i, ii, i, ii, iii ... then restart per
+    chapter, so physical page 1 shows "i", physical 31 shows "7" and page 455 shows
+    "446". The harness compared those against physical numbers and marked three
+    CORRECT Acrobat runs as failures. I first read this as "Acrobat drops keys at 4/s"
+    and slowed the cadence; that was WRONG: the outcome was identical at 0.25 s and
+    1.0 s (the tell), and computing the labels from the PDF gave 1 / 7 / 446 exactly.
+    Expected values for Acrobat now come from the document (shown_page); other apps
+    show physical numbers (Preview, Chrome and excise read 455 of 455 on the book).
+    `--revalidate DIR` re-judges saved Acrobat results against the labels (originals
+    kept as result.orig.json). The "i" the box shows on that book is the ROMAN label,
+    not a thin "1": Acrobat reads 1 correctly on every unlabelled document.
+  * Its LEFT/RIGHT ARROWS ARE CONSUMED by a focused AcroForm field: on the passport
+    form, 30 Right presses left it on page 1 while End and Home worked. Adjustment:
+    `nextPageByDoc` uses Page Down for that document.
+  * Per-document adjustments (bench.json settleByDoc, nextPageByDoc) exist only where a
+    failure was reproduced, and each run records what it used in result.json
+    `overrides`. nextPageByDoc (Page Down on the form) is CONFIRMED by a passing retry.
+    settleByDoc on scan is precautionary: the scan's slow open did not recur on the
+    second open, so a passing retry does not prove it. Extend the knobs per document,
+    never the shared defaults.
+  * ~25 processes (AcroCEF plus system WebKit helpers) are all charged to Acrobat by
+    macOS responsibility. A crash processor and a resource synchronizer (a login item
+    that runs for days) also appear; they are not the run's.
+  * Its first launch after a self-update is slower than later ones.
+
+  GOOGLE CHROME (its PDF viewer is PDFium)
+  * Fresh --user-data-dir every run, or it restores tabs and PDF state.
+  * It opens with keyboard focus OUTSIDE the page pane: arrow keys then step the
+    thumbnails and Home/End/Up/PageUp do nothing. One click in the page pane fixes it
+    (bench.json clickToFocus, the left page margin so a form field or link is never
+    hit; the title is checked unchanged afterwards).
+  * Cmd+Q only shows a "hold to quit" bubble: quit through the menu.
+  * Its page label names the page dominating the viewport, so where the last page is
+    much larger than the rest (Altona) the label reads pages-1 at the end (`endLabelLag`,
+    per document, recorded in the step note).
+  * Closing the document closes Chrome's window, so its "closed" columns are not
+    comparable to an app that keeps an empty window open.
 """
 import argparse, json, os, pathlib, re, shutil, signal, statistics, subprocess, sys, threading, time
 
@@ -179,6 +257,19 @@ def park_pointer():
     pt = (main.size.width - 2, main.size.height - 2)
     Quartz.CGEventPost(Quartz.kCGHIDEventTap,
                        Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventMouseMoved, pt, 0))
+
+
+def click_in_window(win, x_frac, y_frac):
+    """One left click at a fraction of the bench window (screen points). Chrome's
+    PDF viewer opens with keyboard focus outside the page pane; this is the click
+    a user makes before scrolling."""
+    import Quartz
+    x = win["x"] + int(win["width"] * x_frac)
+    y = win["y"] + int(win["height"] * y_frac)
+    for t in (Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp):
+        Quartz.CGEventPost(Quartz.kCGHIDEventTap,
+                           Quartz.CGEventCreateMouseEvent(None, t, (x, y), Quartz.kCGMouseButtonLeft))
+        time.sleep(0.1)
 
 
 def main_window_id(pid):
@@ -335,6 +426,68 @@ def footprints(pids):
     return res
 
 
+# ------------------------------------------------------------ page labels
+# Acrobat's page box shows the page LABEL (/PageLabels), not the physical index. The
+# 455-page book's labels run i, ii, i, ii, iii ... then restart per chapter, so
+# physical page 1 shows "i", physical 31 shows "7" and the last page (455) shows "446".
+# The harness compared those against physical numbers and marked three correct Acrobat
+# runs as failures (2026-09-21). Expected values for Acrobat now come from the PDF.
+
+def _roman(n):
+    out = ""
+    for v, r in [(1000, "m"), (900, "cm"), (500, "d"), (400, "cd"), (100, "c"), (90, "xc"),
+                 (50, "l"), (40, "xl"), (10, "x"), (9, "ix"), (5, "v"), (4, "iv"), (1, "i")]:
+        while n >= v:
+            out += r
+            n -= v
+    return out
+
+
+def _roman_value(text):
+    vals = {"i": 1, "v": 5, "x": 10, "l": 50, "c": 100, "d": 500, "m": 1000}
+    if not text or any(ch not in vals for ch in text):
+        return None
+    total = 0
+    for i, ch in enumerate(text):
+        v = vals[ch]
+        total += -v if i + 1 < len(text) and vals[text[i + 1]] > v else v
+    return total if _roman(total) == text else None
+
+
+def page_label_ranges(path):
+    """The document's /PageLabels ranges (sorted), or None when it has none."""
+    r = sh(["qpdf", "--json", "--json-key=pagelabels", str(path)])
+    try:
+        ranges = json.loads(r.stdout).get("pagelabels") or []
+    except ValueError:
+        return None
+    return sorted(ranges, key=lambda x: x["index"]) or None
+
+
+def page_label(ranges, physical):
+    """The label string for a 1-based physical page."""
+    i = physical - 1
+    r = [x for x in ranges if x["index"] <= i][-1]
+    lab = r["label"]
+    prefix = lab.get("/P", "")
+    prefix = prefix[2:] if prefix[:2] in ("u:", "b:") else prefix
+    n = lab.get("/St", 1) + (i - r["index"])
+    style = lab.get("/S")
+    body = {"/D": str(n), "/r": _roman(n), "/R": _roman(n).upper()}.get(style, "")
+    return prefix + body
+
+
+def shown_page(app_id, doc, physical):
+    """The number the app's page box will DISPLAY for a physical page. Only Acrobat
+    shows labels; the others show physical numbers (verified: Preview, Chrome, excise
+    read 455 of 455 on the book). None when the label has no numeric value."""
+    ranges = doc.get("labelRanges") if doc else None
+    if app_id != "acrobat" or not ranges:
+        return physical
+    label = page_label(ranges, physical)
+    return int(label) if label.isdigit() else _roman_value(label.lower())
+
+
 def ocr_page(png, region):
     """Read 'Page N' (or 'N of M' / 'N / M') out of a window screenshot region."""
     crop = png.with_suffix(".page.png")
@@ -367,7 +520,52 @@ def ocr_acrobat_page_box(png, win):
     im.save(out)
     text = sh(["tesseract", str(out), "-", "--psm", "7",
                "-c", "tessedit_char_whitelist=0123456789"]).stdout.strip()
+    if not text.isdigit():
+        # On a document with roman page labels (the 455-page book: physical page 1
+        # is labelled "i") the box shows a lowercase roman numeral, and the digit
+        # whitelist above turns it into NOTHING. Read it without the whitelist and
+        # accept only "i" (value 1). NOT a thin "1" (I first misdiagnosed it as
+        # that): Acrobat reads 1 correctly on every unlabelled document.
+        raw = sh(["tesseract", str(out), "-", "--psm", "7"]).stdout.strip()
+        if raw in ("i", "I", "l", "|", "!", "1"):
+            return 1, f"1 (read as {raw!r})"
     return (int(text) if text.isdigit() else None), text
+
+
+def ocr_chrome_page_box(png):
+    """Chrome's current-page input in its PDF toolbar: light digits on a dark
+    field. Read OFF the 1200x800 bench window at 2x (retina px); the PDF toolbar
+    sits at a fixed offset under the tab strip and address bar. Reading the whole
+    "N / M" strip returned "1 1126 -" (2026-09-21); this box alone, inverted,
+    enlarged and digit-whitelisted, read 4, 7 and 7 correctly against screenshots."""
+    from PIL import Image, ImageOps
+    from collections import Counter
+    base = ImageOps.invert(Image.open(png).convert("L").crop((772, 204, 846, 258)))
+    # Hard black-on-white: a lone "1" in the grey-on-grey inverted box read as
+    # NOTHING (w9 verify-start and back-at-start, 2026-09-21) while "6" and "7"
+    # read fine. One reading is not enough either: the 455-page book's last page
+    # read "459" once (a 5 taken for a 9) on a document that has no page 459, so
+    # the box is read at several thresholds and sizes and the MAJORITY wins.
+    reads = []
+    for thr in (110, 90, 130):
+        for scale in (5, 7):
+            # Enlarge FIRST (smooth), threshold after: thresholding the small
+            # crop and then enlarging turns anti-aliased edges into blocks and
+            # made 455 read as 459.
+            im = base.resize((base.width * scale, base.height * scale), Image.LANCZOS)
+            im = im.point(lambda v, t=thr: 0 if v < t else 255)
+            im = ImageOps.expand(im, border=40, fill=255)
+            out = png.with_suffix(f".pagebox.{thr}.{scale}.png")
+            im.save(out)
+            text = sh(["tesseract", str(out), "-", "--psm", "7",
+                       "-c", "tessedit_char_whitelist=0123456789"]).stdout.strip()
+            out.unlink(missing_ok=True)
+            if text.isdigit():
+                reads.append(int(text))
+    if not reads:
+        return None, ""
+    (page, votes), = Counter(reads).most_common(1)
+    return page, f"{page} ({votes}/{len(reads)} readings agree; all: {reads})"
 
 
 def collect_app_area(run_dir):
@@ -505,6 +703,13 @@ def launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env=None, sett
         for k, v in (extra_env or {}).items():
             args += ["--env", f"{k}={v}"]
         match = bundle + "/Contents/MacOS/Excise.App"
+    elif app_id == "chrome":
+        # A fresh profile per run, inside the deleted-after-run app area, so no
+        # tab, zoom or PDF state carries between runs (or from the user's Chrome).
+        profile = app_area(run_dir) / "chrome-profile"
+        args += ["-a", app["bundlePath"], "--args", f"--user-data-dir={profile}",
+                 "--no-first-run", "--no-default-browser-check"]
+        match = None
     else:
         args += ["-a", app["bundlePath"]]
         match = None
@@ -538,7 +743,13 @@ def wait_window(pid, timeout=60):
 
 def quit_app(app, pid):
     try:
-        keystroke(pid, "q")
+        if app["name"] == "Google Chrome":
+            # Cmd+Q only shows Chrome's "hold Cmd+Q to quit" bubble.
+            osa('tell application "System Events" to tell (first process whose unix id is '
+                f'{pid}) to click menu item "Quit Google Chrome" of menu 1 of menu bar item '
+                '"Chrome" of menu bar 1')
+        else:
+            keystroke(pid, "q")
     except RuntimeError:
         pass
     for _ in range(40):
@@ -564,6 +775,8 @@ def read_page(app_id, pid, run_dir, label, win_cfg):
     if app_id == "excise":
         # status bar page indicator, bottom right (retina pixels)
         region = (int((win_cfg["width"] - 350) * scale), int((win_cfg["height"] - 45) * scale), 350 * scale, 45 * scale)
+    elif app_id == "chrome":
+        return ocr_chrome_page_box(png)
     else:
         return ocr_acrobat_page_box(png, win_cfg)
     return ocr_page(png, region)
@@ -578,6 +791,16 @@ def tolerated_start(app_id, label, page):
     return app_id == "preview" and label == "verify-start" and page == 2
 
 
+def tolerated_end(app_id, page, expect, doc):
+    """Chrome labels the page dominating the viewport. Altona ends in one large
+    landscape page after sixteen tiny ones, so at the very end the label reads 16
+    of 17 (2026-09-21: End -> 16). A document opts in with `endLabelLag` in
+    bench.json (app -> pages), so a one-page under-step on any other document
+    still FAILS. The tolerated step is recorded in the step's note."""
+    lag = (doc.get("endLabelLag") or {}).get(app_id, 0)
+    return bool(lag) and expect == doc["pages"] and page is not None and 0 < expect - page <= lag
+
+
 def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
     run_dir = out / app_id / (doc["id"] if doc else "empty") / f"r{repeat}"
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -588,6 +811,14 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
         shutil.copyfile(ROOT / doc["path"], doc_copy)
 
     steps, failures = [], []
+    # Per-app, per-document adjustments (bench.json settleByDoc / pageStepSecondsByDoc):
+    # they only ever GIVE AN APP MORE TIME on a document where it demonstrably could
+    # not keep up (Acrobat never went quiet within 60 s of opening the 10 MB scan, and
+    # dropped page-turn keys sent 4 per second on the 455-page book), so nothing is
+    # tuned to flatter an app. A run that used an override records it in result.json.
+    settle = {**cfg["settle"], **((app.get("settleByDoc") or {}).get(doc["id"], {}) if doc else {})}
+    nk = app["nextPage"]              # replaced below for a document with a nextPageByDoc override
+    step_gap = ((app.get("pageStepSecondsByDoc") or {}).get(doc["id"], cfg["pageStepSeconds"])) if doc else cfg["pageStepSeconds"]
     park_pointer()
     pid, before, t0 = launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env)
     tracker = Tracker(app, pid, before, t0)
@@ -618,6 +849,13 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
                 str(png), "--out", str(crop)])
             evidence = sh(["tesseract", str(crop), "-", "--psm", "7"]).stdout.strip()
             ok = "No document" not in evidence and stem.split("-")[0] in evidence
+        elif app_id == "chrome":
+            # The tab is titled with the PDF's /Title (or the file name); a failed
+            # load or a blank tab reads "New Tab" / "Untitled" or shows the URL.
+            title = window_title(pid)
+            ok = bool(title) and not title.startswith(("New Tab", "Untitled")) and stem not in ("",) \
+                and "chrome://" not in title
+            evidence = title
         else:
             # Acrobat titles the window with the PDF's /Title, not the file name,
             # and names its Home window "Acrobat".
@@ -629,10 +867,17 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
             raise RunFailed(f"{label}: document not open")
 
     def verify(label, expect):
+        physical = expect
+        expect = shown_page(app_id, doc, physical)
+        if expect is None:
+            boundary(label, ok=False, note=f"physical page {physical} has a label with no numeric value; cannot verify")
+            return
         page, evidence = read_page(app_id, pid, run_dir, label, cfg["window"])
-        ok = page == expect or tolerated_start(app_id, label, page)
+        tolerated = page != expect and tolerated_end(app_id, page, expect, doc)
+        ok = page == expect or tolerated_start(app_id, label, page) or tolerated
         boundary(label, ok=ok, page=page, expect=expect,
-                 note=None if ok else f"expected page {expect}, read {page!r} from {evidence[:80]!r}")
+                 note=("tolerated: end-of-document label reads pages-%d (endLabelLag)" % (expect - page)) if tolerated
+                 else None if ok else f"expected page {expect}, read {page!r} from {evidence[:80]!r}")
 
     try:
         # An EMPTY launch is each app's natural empty state, whatever that is:
@@ -648,30 +893,45 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
                 raise RunFailed(f"could not size the window: {e}")
         else:
             time.sleep(5)
-        settled = wait_settled(tracker, cfg["settle"])
+        settled = wait_settled(tracker, settle)
         boundary("opened", ok=settled, note=None if settled else "never settled")
 
         if doc is None:
             time.sleep(30); boundary("idle-30s")
         else:
             verify_open("document-open")
+            if app.get("clickToFocus"):
+                # Left page margin: a click on page content can hit a form field
+                # (ds11) or a link (business) and move focus or the tab. The title
+                # must be unchanged afterwards, or the run is void.
+                focus = app["clickToFocus"]
+                title_before = window_title(pid)
+                front(pid)
+                click_in_window(cfg["window"], focus["xFraction"], focus["yFraction"])
+                time.sleep(1.0)
+                if window_title(pid) != title_before:
+                    raise RunFailed("the focus click changed the window title")
             verify("verify-start", 1)
-            nk = app["nextPage"]
-            key(pid, nk["keyCode"], nk["modifiers"], repeat=30, gap=cfg["pageStepSeconds"])
-            wait_settled(tracker, cfg["settle"])
+            # A per-document key where the app's normal one is consumed by the page:
+            # Acrobat's Right arrow moves inside a focused AcroForm field instead of
+            # turning the page (ds11: still page 1 after 30 presses, while End and
+            # Home worked), so `nextPageByDoc` swaps in Page Down for that document.
+            nk = (app.get("nextPageByDoc") or {}).get(doc["id"], app["nextPage"])
+            key(pid, nk["keyCode"], nk["modifiers"], repeat=30, gap=step_gap)
+            wait_settled(tracker, settle)
             verify("paged-30", 31 if doc["pages"] >= 31 else doc["pages"])
             time.sleep(20); boundary("idle-20s-after-paging")
 
             key(pid, 119)                               # End
-            wait_settled(tracker, cfg["settle"])
+            wait_settled(tracker, settle)
             verify("at-end", doc["pages"])
             key(pid, 115)                               # Home
-            wait_settled(tracker, cfg["settle"])
+            wait_settled(tracker, settle)
             verify("back-at-start", 1)
             time.sleep(30); boundary("idle-30s")
 
             keystroke(pid, "w")                         # close the document
-            wait_settled(tracker, cfg["settle"])
+            wait_settled(tracker, settle)
             time.sleep(20); boundary("closed-idle-20s")
             # A second, later after-close sample: Altona's 20 s figure caught the
             # idle trim mid-flight on 2026-09-17 (render-ahead lane), so 20 s alone
@@ -717,6 +977,9 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
         "ownedButOutlivedApp": excluded,
         "samples": tracker.samples, "quitAt": quit_t,
         "load1": os.getloadavg()[0],
+        "overrides": {"settle": settle if settle != cfg["settle"] else None,
+                      "pageStepSeconds": step_gap if step_gap != cfg["pageStepSeconds"] else None,
+                      "nextPage": nk if doc and nk != app["nextPage"] else None},
     }
     (run_dir / "result.json").write_text(json.dumps(result, indent=1))
     print(f"  {app_id:8} {result['doc']:7} r{repeat}  "
@@ -989,12 +1252,14 @@ def summarize(out):
         return (max(xs) - min(xs)) if len(xs) > 1 else None
 
     summary = {"generated": time.strftime("%Y-%m-%dT%H:%M:%S"), "rows": []}
-    lines = ["# Reader benchmark: excise vs Preview vs Adobe Acrobat (#1543)", "",
+    lines = ["# Reader benchmark: excise vs Preview vs Chrome vs Adobe Acrobat (#1543)", "",
              f"Run: `{out}`", "",
              "Footprint = macOS physical footprint, summed over every process the app owns "
              "(main + children + per-app helper services that exit with it). Medians over "
              "successful repeats; ± is the min–max spread. MB.", ""]
-    order = ["empty", "w9", "irs", "altona", "scan"]
+    # EVERY document in bench.json, in its order: a hard-coded list here silently
+    # dropped the three documents added on 2026-09-21 from the summary tables.
+    order = ["empty"] + [d["id"] for d in json.loads(CONFIG.read_text())["documents"]]
     labels = ["opened", "paged-30", "idle-20s-after-paging", "idle-30s", "closed-idle-20s", "closed-idle-45s"]
     for doc in order:
         present = [(a, d) for (a, d) in rows if d == doc]
@@ -1003,7 +1268,7 @@ def summarize(out):
         lines += [f"## {doc}", "",
                   "| app | runs ok | procs | " + " | ".join(labels) + " | peak (all) | peak (main) | CPU s | idle CPU % |",
                   "|---|---|---:|" + "---:|" * len(labels) + "---:|---:|---:|---:|"]
-        for app in ["excise", "preview", "acrobat"]:
+        for app in ["excise", "preview", "chrome", "acrobat"]:
             row = rows.get((app, doc))
             if not row:
                 continue
@@ -1064,6 +1329,51 @@ def preflight(apps, multi=False):
         print("WARNING: no caffeinate running; the screen may lock and block keystrokes", flush=True)
 
 
+def revalidate(out):
+    """Re-judge saved Acrobat results against the PDF's page labels. Runs marked
+    failed only because the page box showed a LABEL ("446") where the harness expected
+    the physical number (455) are corrected; the original is kept as result.orig.json
+    and every changed step says so in its note."""
+    cfg = json.loads(CONFIG.read_text())
+    docs = {d["id"]: d for d in cfg["documents"]}
+    fixed = 0
+    for f in sorted(pathlib.Path(out).glob("**/result.json")):
+        r = json.loads(f.read_text())
+        d = dict(docs.get(r["doc"]) or {})
+        if r["app"] != "acrobat" or not r["failures"] or not d:
+            continue
+        d["labelRanges"] = page_label_ranges(ROOT / d["path"])
+        if not d["labelRanges"]:
+            continue
+        changed = []
+        for st in r["steps"]:
+            if st["ok"] or st.get("expectPage") is None:
+                continue
+            shown = shown_page("acrobat", d, st["expectPage"])
+            read = st.get("page")
+            png = f.parent / f"{st['step']}.png"
+            if read is None and png.exists():
+                # Recorded as "no reading": look at the saved screenshot again with
+                # the current reader (a roman label such as "i" read as nothing before).
+                read = ocr_acrobat_page_box(png, cfg["window"])[0]
+                st["page"] = read
+            if shown is not None and read == shown:
+                st["ok"] = True
+                st["note"] = (f"revalidated: physical page {st['expectPage']} is labelled "
+                              f"{page_label(d['labelRanges'], st['expectPage'])!r}, Acrobat showed {shown}")
+                changed.append(st["step"])
+        if changed:
+            orig = f.with_name("result.orig.json")
+            if not orig.exists():
+                shutil.copyfile(f, orig)
+            still_bad = {st["step"] for st in r["steps"] if not st["ok"]}
+            r["failures"] = [x for x in r["failures"] if x in still_bad or x not in {st["step"] for st in r["steps"]}]
+            f.write_text(json.dumps(r, indent=1))
+            fixed += 1
+            print(f"  revalidated {f.parent.relative_to(out)}: {changed}; failures now {r['failures'] or 'none'}")
+    print(f"{fixed} result(s) corrected")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--apps", default="excise,preview,acrobat")
@@ -1073,11 +1383,15 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--summarize")
+    ap.add_argument("--resume", action="store_true", help="skip runs whose result.json already exists in --out (continue a paused run)")
+    ap.add_argument("--revalidate", help="re-judge saved Acrobat results in this directory against the PDF page labels, then summarize")
     ap.add_argument("--multi", action="store_true",
                     help="run the multi-document set (bench.json multiDocument) instead of the single-document rows")
     ap.add_argument("--configs", help="multi-document configs to run (default: all in bench.json)")
     a = ap.parse_args()
 
+    if a.revalidate:
+        revalidate(pathlib.Path(a.revalidate).resolve()); summarize(pathlib.Path(a.revalidate).resolve()); return
     if a.summarize:
         summarize(pathlib.Path(a.summarize)); return
 
@@ -1093,6 +1407,7 @@ def main():
         if not p.exists():
             sys.exit(f"missing fixture {p}" + (f" (run {d['make']})" if d.get("make") else ""))
         d["pages"] = int(sh(["qpdf", "--show-npages", str(p)], check=True).stdout)
+        d["labelRanges"] = page_label_ranges(p)
     plan_docs = ([None] if "empty" in want else []) + docs
     runs = [(r, d, app) for r in range(1, repeats + 1) for d in plan_docs for app in apps]
     if a.list:
@@ -1111,6 +1426,9 @@ def main():
     (out / "run-meta.json").write_text(json.dumps(run_meta(cfg), indent=1))
     print(f"==> {len(runs)} runs -> {out}", flush=True)
     for r, d, app in runs:
+        if a.resume and (out / app / (d["id"] if d else "empty") / f"r{r}" / "result.json").exists():
+            print(f"  {app:8} {d['id'] if d else 'empty':7} r{r}  skipped (already done: --resume)", flush=True)
+            continue
         one_run(app, apps[app], d, r, out, cfg, a.excise_app)
     summarize(out)
 
@@ -1122,6 +1440,7 @@ def run_meta(cfg, **extra):
             "macOS": sh(["sw_vers", "-productVersion"]).stdout.strip(),
             "preview": sh(["defaults", "read", "/System/Applications/Preview.app/Contents/Info", "CFBundleShortVersionString"]).stdout.strip(),
             "acrobat": sh(["defaults", "read", "/Applications/Adobe Acrobat DC/Adobe Acrobat.app/Contents/Info", "CFBundleShortVersionString"]).stdout.strip(),
+            "chrome": sh(["defaults", "read", "/Applications/Google Chrome.app/Contents/Info", "CFBundleShortVersionString"]).stdout.strip(),
             "config": cfg, "started": time.strftime("%Y-%m-%dT%H:%M:%S"), **extra}
 
 

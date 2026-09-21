@@ -56,6 +56,7 @@ VM_MEM=$(podman machine inspect --format '{{.Resources.Memory}}' 2>/dev/null | h
 echo "==> podman VM: ${VM_CPUS:-?} cpus, ${VM_MEM:-?} MiB; container: $CPUS cpus, $MEMORY"
 
 PUB="$ROOT/artifacts/linux-perf/$RID"
+mkdir -p "$ROOT/artifacts/linux-perf"   # the logs below live here; nothing else creates it
 if [ "$SKIP_PUBLISH" -eq 0 ]; then
   echo "==> publishing Excise.App self-contained for $RID (this is the slow step)"
   rm -rf "$PUB"
