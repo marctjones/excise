@@ -2271,12 +2271,14 @@ public class ContentStreamParserTests
     }
 
     [Fact]
-    public void Parse_d0_d1_ClassifiedAsXObject()
+    public void Parse_d0_d1_ClassifiedAsType3GlyphMetrics()
     {
-        // d0/d1 are Type 3 glyph procedures — categorised under XObject in our scheme.
-        // (They could legitimately go under their own Font category; current taxonomy chooses XObject.)
-        new ContentOperator("d0", new System.Collections.Generic.List<PdfObject>()).Category
-            .Should().BeOneOf(OperatorCategory.Unknown, OperatorCategory.XObject, OperatorCategory.GraphicsState);
+        // d0/d1 are the Type 3 glyph-metric operators (ISO 32000-2 §9.6.5). They used to
+        // report Unknown — indistinguishable from an operator excise has never heard of —
+        // and now have their own category.
+        foreach (var name in new[] { "d0", "d1" })
+            new ContentOperator(name, new System.Collections.Generic.List<PdfObject>()).Category
+                .Should().Be(OperatorCategory.Type3GlyphMetrics, because: $"{name} is a Type 3 glyph-metric operator");
     }
 
     #endregion
