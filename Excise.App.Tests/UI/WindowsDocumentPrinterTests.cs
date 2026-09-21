@@ -26,9 +26,19 @@ namespace Excise.App.Tests.UI;
 /// copy, the sheet order, auto-rotate, placement, and excise's rasteriser.
 /// </summary>
 /// <remarks>
-/// ⚠️ Nothing here runs on Windows. <c>PrintDlgExW</c>, <c>PrintDocument</c>,
-/// the printer DC and the driver are exercised only by a manual check on a
-/// Windows machine (see the #1546 PR description).
+/// ⚠️ Most of this file fakes both Win32 halves on every platform — but the
+/// two <c>GdiSpooler_*</c> tests below do NOT. They skip off Windows and, on
+/// Windows, drive the real <c>System.Drawing.Printing.PrintDocument</c>
+/// path, the printer DC and a real driver via "Microsoft Print to PDF", which
+/// <c>.github/workflows/windows.yml</c> provisions. Both were observed passing
+/// there on 2026-09-20.
+/// <para>
+/// So <c>PrintDlgExW</c> — the modal dialog — is the only piece still
+/// unexercised by any automated run; it cannot be driven headlessly and stays
+/// a manual check (see the #1546 PR description). This remark said "nothing
+/// here runs on Windows" until 2026-09-20, which was true when written and
+/// has not been since the runner started provisioning a printer.
+/// </para>
 /// </remarks>
 [Collection("AvaloniaTests")]
 public class WindowsDocumentPrinterTests : IDisposable
