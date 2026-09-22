@@ -331,6 +331,51 @@ public class RedactCommandTests : IDisposable
             "the wrapped name must genuinely still be present, not just flagged on faith");
     }
 
+    /// <summary>
+    /// #1372's hyphen-wrap case shares the SAME exit-code path as #1750's
+    /// plain-wrap case (<c>HasUnremovedWrappedOccurrence</c> is true for
+    /// either candidate list) — verified directly rather than left as an
+    /// inference from the word-wrap test above, since it is a distinct,
+    /// user-visible claim (the hyphen case used to exit 0 too, silently).
+    /// </summary>
+    [Fact]
+    public async Task RunAsync_RedactHyphenWrappedTerm_ExitsThree_AndPrintsTheNote()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        // "Ander-" / "son", 14pt apart — the #1372 fixture shape.
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage(
+            "Reported by Ander-",
+            fontSize: 12, x: 72, y: 700,
+            contentSuffix: "BT /F1 12 Tf 72 686 Td (son on the record) Tj ET"));
+
+        var previousOut = Console.Out;
+        var captured = new StringWriter();
+        Console.SetOut(captured);
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "Anderson"
+            });
+        }
+        finally
+        {
+            Console.SetOut(previousOut);
+        }
+
+        exitCode.Should().Be(3,
+            "the pre-existing hyphen-wrap case (#1372) must exit non-zero too, not just the " +
+            "new plain-wrap case -- both share HasUnremovedWrappedOccurrence");
+        var stdout = captured.ToString();
+        stdout.Should().Contain("Redacted 0 occurrence(s)");
+        stdout.Should().Contain("NOT REMOVED (hyphen-wrapped)");
+
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "Ander").Should().NotBeEmpty(
+            "the wrapped name must genuinely still be present, not just flagged on faith");
+    }
+
     [Fact]
     public void RunRedact_CaseInsensitive_MatchesDifferentCase()
     {
