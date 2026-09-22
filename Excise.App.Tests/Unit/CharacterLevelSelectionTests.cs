@@ -41,36 +41,6 @@ public class CharacterLevelSelectionTests : IDisposable
     }
 
     /// <summary>
-    /// Helper to get character positions from a PDF using Excise.Core.
-    /// Returns positions in PDF coordinates (bottom-left origin).
-    /// </summary>
-    private List<(char character, double left, double bottom, double right, double top)>
-        GetCharacterPositions(string pdfPath, int pageIndex = 0)
-    {
-        var result = new List<(char, double, double, double, double)>();
-
-        using var stream = File.OpenRead(pdfPath);
-        using var document = PdfDocument.Open(stream);
-        var page = document.GetPage(pageIndex + 1);
-
-        foreach (var word in page.GetWords())
-        {
-            foreach (var letter in word.Letters)
-            {
-                result.Add((
-                    letter.Value[0],
-                    letter.GlyphRectangle.Left,
-                    letter.GlyphRectangle.Bottom,
-                    letter.GlyphRectangle.Right,
-                    letter.GlyphRectangle.Top
-                ));
-            }
-        }
-
-        return result;
-    }
-
-    /// <summary>
     /// Converts PDF coordinates to image coordinates for selection testing.
     /// PDF uses bottom-left origin, image uses top-left origin at 150 DPI.
     /// </summary>
@@ -100,17 +70,6 @@ public class CharacterLevelSelectionTests : IDisposable
         var pdfPath = Path.Combine(_tempDir, "sentence_test.pdf");
         TestPdfGenerator.CreateSimpleTextPdf(pdfPath, "It can therefore affect the result");
 
-        // Get character positions to find exact bounds for "can therefore"
-        var chars = GetCharacterPositions(pdfPath);
-
-        // Find the positions of 'c' in "can" and 'e' at end of "therefore"
-        // Words: "It" "can" "therefore" "affect" "the" "result"
-        var canStart = chars.FirstOrDefault(c => c.character == 'c' &&
-            chars.Any(c2 => c2.character == 'a' && Math.Abs(c2.left - c.right) < 10));
-        var thereforeEnd = chars.LastOrDefault(c => c.character == 'e' &&
-            chars.Any(c2 => c2.character == 'r' && Math.Abs(c.left - c2.right) < 10));
-
-        // If we can't find exact positions, use approximate bounds
         using var stream1 = File.OpenRead(pdfPath);
         using var doc = PdfDocument.Open(stream1);
         var page = doc.GetPage(1);
@@ -272,26 +231,12 @@ public class CharacterLevelSelectionTests : IDisposable
         var secondLineWord = words.FirstOrDefault(w => w.Text == "line" &&
             words.Any(w2 => w2.Text == "Second" && Math.Abs(w2.BoundingBox.Bottom - w.BoundingBox.Bottom) < 5));
 
-        if (firstLineWord == null || secondLineWord == null)
-        {
-            // Fallback: select the entire text area
-            var allWords = words.ToList();
-            var minLeft = allWords.Min(w => w.BoundingBox.Left);
-            var maxRight = allWords.Max(w => w.BoundingBox.Right);
-            var minBottom = allWords.Min(w => w.BoundingBox.Bottom);
-            var maxTop = allWords.Max(w => w.BoundingBox.Top);
-
-            var selection = PdfCoordsToImageSelection(minLeft - 1, minBottom - 1, maxRight + 1, maxTop + 1, page.Height);
-            var result = _service.ExtractTextFromArea(pdfPath, 0, selection);
-
-            result.Should().Contain("First");
-            result.Should().Contain("Second");
-            return;
-        }
+        firstLineWord.Should().NotBeNull("the fixture lays out \"First line here\" as its own line");
+        secondLineWord.Should().NotBeNull("the fixture lays out \"Second line here\" as its own line");
 
         // Create selection spanning both lines but only partial text
         var selection2 = PdfCoordsToImageSelection(
-            Math.Min(firstLineWord.BoundingBox.Left, secondLineWord.BoundingBox.Left) - 1,
+            Math.Min(firstLineWord!.BoundingBox.Left, secondLineWord!.BoundingBox.Left) - 1,
             secondLineWord.BoundingBox.Bottom - 1, // Bottom of lower line
             Math.Max(firstLineWord.BoundingBox.Right, secondLineWord.BoundingBox.Right) + 1,
             firstLineWord.BoundingBox.Top + 1, // Top of upper line

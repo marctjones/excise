@@ -131,8 +131,7 @@ public class FilenameSuggestionServiceTests
     public void SuggestWithAutoIncrement_WhenExists_AddsNumber()
     {
         // Arrange
-        var tempFile = Path.GetTempFileName();
-        tempFile = Path.ChangeExtension(tempFile, ".pdf");
+        var tempFile = Path.Combine(Path.GetTempPath(), $"excise-filename-{Guid.NewGuid():N}.pdf");
         try
         {
             File.WriteAllText(tempFile, "test");
