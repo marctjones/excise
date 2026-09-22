@@ -15,7 +15,7 @@ using Excise.Rendering;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-namespace Excise.App.Tests.Integration;
+namespace Excise.App.Tests.Benchmarks;
 
 /// <summary>
 /// Report-only heap retention measurement for #1481 / #1469. It asserts nothing:

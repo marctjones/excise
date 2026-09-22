@@ -20,7 +20,7 @@ using Excise.App.Views;
 using SkiaSharp;
 using Xunit;
 
-namespace Excise.App.Tests.UI;
+namespace Excise.App.Tests.Benchmarks;
 
 /// <summary>
 /// Report-only measurement of the switch from continuous view into an editing

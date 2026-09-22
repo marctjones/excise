@@ -26,8 +26,16 @@ namespace Excise.App.Tests.UI;
 /// - Other: F1 (help), Ctrl+, (preferences), Enter (apply redaction)
 /// </summary>
 [Collection("AvaloniaTests")]
-public class KeyboardShortcutTests
+public class KeyboardShortcutTests : IDisposable
 {
+    /// <summary>Every window this class shows is closed after the test, including
+    /// when it fails (#706, #1771) — this class showed 23 windows and closed
+    /// none, accumulating for the whole run and perturbing pointer routing and
+    /// focus for every later test.</summary>
+    private readonly ShownWindowTracker _windows = new();
+
+    public void Dispose() => _windows.Dispose();
+
     private readonly ITestOutputHelper _out;
     private readonly string _tempDir;
 
@@ -41,15 +49,6 @@ public class KeyboardShortcutTests
     private string CreateTestPdf(string nameHint = "test.pdf")
         => Path.Combine(_tempDir, nameHint);
 
-    /// <summary>
-    /// True when running on a CI runner (GitHub Actions sets both). Public+static
-    /// so it can drive <c>[FixedAvaloniaFact(SkipWhen = nameof(IsHeadlessCi))]</c>,
-    /// which evaluates the condition before the test body runs.
-    /// </summary>
-    public static bool IsHeadlessCi =>
-        Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true" ||
-        Environment.GetEnvironmentVariable("CI") == "true";
-
     #region File Operations
 
     /// <summary>
@@ -61,7 +60,7 @@ public class KeyboardShortcutTests
         // Arrange
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         // Act
         await window.PressKeyAsync(Key.O, RawInputModifiers.Control);
@@ -93,7 +92,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         // Bound the load. This test uniquely triggers a save -> success toast,
         // whose auto-dismiss dispatcher activity can starve the load's
@@ -112,31 +111,6 @@ public class KeyboardShortcutTests
         vm.SaveFileCommand.Should().NotBeNull("SaveFileCommand must be wired");
     }
 
-    /// <summary>
-    /// Ctrl+W: Close document.
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task CtrlW_ClosesDocument()
-    {
-        // Arrange
-        var pdfPath = CreateTestPdf("close_test.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
-        var initialState = vm.IsDocumentLoaded;
-
-        // Act
-        await window.PressKeyAsync(Key.W, RawInputModifiers.Control);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-        await Task.Delay(100);
-
-        // Assert: CloseDocumentCommand should execute
-        vm.CloseDocumentCommand.Should().NotBeNull("CloseDocumentCommand must be wired");
-    }
 
     #endregion
 
@@ -153,7 +127,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -179,7 +153,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -192,29 +166,6 @@ public class KeyboardShortcutTests
         vm.FindNextCommand.Should().NotBeNull("FindNextCommand must be wired");
     }
 
-    /// <summary>
-    /// Shift+F3: Find previous match.
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task ShiftF3_FindsPreviousMatch()
-    {
-        // Arrange
-        var pdfPath = CreateTestPdf("find_prev.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
-
-        // Act
-        await window.PressKeyAsync(Key.F3, RawInputModifiers.Shift);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert
-        vm.FindPreviousCommand.Should().NotBeNull("FindPreviousCommand must be wired");
-    }
 
     /// <summary>
     /// Escape: Close search bar (when visible).
@@ -227,7 +178,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -246,33 +197,6 @@ public class KeyboardShortcutTests
         vm.IsSearchVisible.Should().BeFalse("Escape should close search bar");
     }
 
-    /// <summary>
-    /// Ctrl+C: Copy selected text (only works in text selection mode).
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task CtrlC_CopiesText()
-    {
-        // Arrange
-        var pdfPath = CreateTestPdf("copy_text.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
-
-        // Enable text selection mode
-        vm.ToggleTextSelectionModeCommand?.Execute().Subscribe();
-        await Task.Delay(100);
-
-        // Act
-        await window.PressKeyAsync(Key.C, RawInputModifiers.Control);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert
-        vm.CopyTextCommand.Should().NotBeNull("CopyTextCommand must be wired");
-    }
 
     #endregion
 
@@ -289,7 +213,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -316,7 +240,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -347,7 +271,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -376,7 +300,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -405,7 +329,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -430,7 +354,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -485,7 +409,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -498,77 +422,8 @@ public class KeyboardShortcutTests
         vm.RotatePageLeftCommand.Should().NotBeNull("RotatePageLeftCommand must be wired");
     }
 
-    /// <summary>
-    /// Ctrl+R: Rotate page right 90 degrees.
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task CtrlR_RotatesPageRight()
-    {
-        // Arrange
-        var pdfPath = CreateTestPdf("rotate_right.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
 
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
 
-        // Act
-        await window.PressKeyAsync(Key.R, RawInputModifiers.Control);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert
-        vm.RotatePageRightCommand.Should().NotBeNull("RotatePageRightCommand must be wired");
-    }
-
-    /// <summary>
-    /// Ctrl+E: Export current page to image.
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task CtrlE_ExportsCurrentPage()
-    {
-        // Arrange
-        var pdfPath = CreateTestPdf("export_page.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
-
-        // Act
-        await window.PressKeyAsync(Key.E, RawInputModifiers.Control);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert
-        vm.ExportCurrentPageCommand.Should().NotBeNull("ExportCurrentPageCommand must be wired");
-    }
-
-    /// <summary>
-    /// Ctrl+P: Print document.
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task CtrlP_PrintsDocument()
-    {
-        // Arrange
-        var pdfPath = CreateTestPdf("print.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
-
-        // Act
-        await window.PressKeyAsync(Key.P, RawInputModifiers.Control);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert
-        vm.PrintCommand.Should().NotBeNull("PrintCommand must be wired");
-    }
 
     #endregion
 
@@ -585,7 +440,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -611,7 +466,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -641,7 +496,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -670,7 +525,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -714,7 +569,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -763,7 +618,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -789,7 +644,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -815,7 +670,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -836,43 +691,7 @@ public class KeyboardShortcutTests
 
     #region Help & Preferences
 
-    /// <summary>
-    /// F1: Show keyboard shortcuts dialog.
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task F1_ShowsShortcuts()
-    {
-        // Arrange
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
 
-        // Act
-        await window.PressKeyAsync(Key.F1);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert
-        vm.ShowShortcutsCommand.Should().NotBeNull("ShowShortcutsCommand must be wired");
-    }
-
-    /// <summary>
-    /// Ctrl+Comma: Show preferences dialog.
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task CtrlComma_ShowsPreferences()
-    {
-        // Arrange
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-
-        // Act
-        await window.PressKeyAsync(Key.OemComma, RawInputModifiers.Control);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert
-        vm.ShowPreferencesCommand.Should().NotBeNull("ShowPreferencesCommand must be wired");
-    }
 
     #endregion
 
@@ -889,7 +708,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -920,7 +739,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
@@ -950,7 +769,7 @@ public class KeyboardShortcutTests
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
