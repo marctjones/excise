@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -193,6 +194,13 @@ public class PdfViewerHeadlessRenderTests
                 .Where(testCase => testCase.Id.Contains(caseFilter, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
+        // #1772. Default to the PLUMBING-COVERING subset; set
+        // EXCISE_GUI_DISPLAY_COVERING_SET=0 for every discovered page.
+        var coveringSet = Environment.GetEnvironmentVariable("EXCISE_GUI_DISPLAY_COVERING_SET") != "0"
+                          && !includeAllContractPages;
+        var casesBeforeCovering = cases.Count;
+        if (coveringSet)
+            cases = SelectPlumbingCoveringCases(cases).ToList();
         var discoveredCaseCount = cases.Count;
         if (shardCount > 1)
         {
@@ -233,6 +241,7 @@ public class PdfViewerHeadlessRenderTests
         _output.WriteLine(
             $"GUI display sweep: {cases.Count} page(s), " +
             $"{discoveredCaseCount} discovered before shard/range, " +
+            $"{(coveringSet ? $"plumbing-covering subset of {casesBeforeCovering}, " : "every discovered page, ")}" +
             $"{(includeAllContractPages ? "all contracted pages" : "representative contracted pages")}, " +
             $"{(includeAllContractGroups ? "all contract groups" : "renderer contract groups")}" +
             $"{(requestedContractGroups.Count == 0 ? "" : $", groups {string.Join(",", requestedContractGroups)}")}" +
@@ -285,6 +294,8 @@ public class PdfViewerHeadlessRenderTests
                 includeAllContractGroups,
                 requestedContractGroups,
                 caseFilter,
+                coveringSet,
+                casesBeforeCovering,
                 discoveredCaseCount,
                 cases.Count,
                 shardCount,
@@ -417,26 +428,25 @@ public class PdfViewerHeadlessRenderTests
                 results.Add(result);
             }
 
-            await WriteGuiDisplayReport(
-                reportPath,
-                includeAllContractPages,
-                includeAllContractGroups,
-                requestedContractGroups,
-                caseFilter,
-                discoveredCaseCount,
-                cases.Count,
-                shardCount,
-                shardIndex,
-                pageOffset,
-                pageLimit,
-                suiteSw.ElapsedMilliseconds,
-                results,
-                current: null);
-            CollectGuiDisplaySweepGarbage();
+            // #1772: the per-case report used to be written TWICE — once here
+            // and once at the top of the next iteration. The second write is
+            // superseded microseconds later by the first, and the one after the
+            // loop covers the final case, so only the pre-case write (the
+            // host-death breadcrumb, which names the page in flight) is kept.
+            // #1772: every 10th page and the last, on the same cadence as the
+            // progress line below, instead of after every page. A full blocking
+            // gen2 costs ~48 ms in a 200-600 MB chunk and ~270 ms in a
+            // multi-GiB process, and 147 of them buy nothing that 15 do not:
+            // the large buffers are already released by the `using`s in the
+            // loop body, and the collection only decides WHEN their native
+            // wrappers are finalised.
             if ((i + 1) % 10 == 0 || i + 1 == cases.Count)
+            {
+                CollectGuiDisplaySweepGarbage();
                 _output.WriteLine(
                     $"  {i + 1}/{cases.Count} checked, " +
                     $"{failures.Count} failure(s), elapsed {suiteSw.Elapsed:mm\\:ss}");
+            }
         }
 
         suiteSw.Stop();
@@ -446,6 +456,8 @@ public class PdfViewerHeadlessRenderTests
             includeAllContractGroups,
             requestedContractGroups,
             caseFilter,
+            coveringSet,
+            casesBeforeCovering,
             discoveredCaseCount,
             cases.Count,
             shardCount,
@@ -477,6 +489,13 @@ public class PdfViewerHeadlessRenderTests
     /// Sanity test: render the same PDF directly via SkiaRenderer, bypassing the
     /// PdfViewerControl, to isolate whether a failure is in the renderer or the
     /// UI plumbing.
+    ///
+    /// <para>⚠️ This asserted only <c>Width &gt; 100</c> and <c>Height &gt; 100</c>
+    /// until #1772 — true of a renderer that drew nothing at all, and true of one
+    /// that put the text on the wrong half of the page. It now pins the exact
+    /// pixel size the page geometry implies and the BAND the one line of text
+    /// occupies, so "the renderer produced a bitmap" and "the renderer drew the
+    /// text where the content stream said" are different results.</para>
     /// </summary>
     [Fact]
     public void SkiaRenderer_RendersSimpleText_ProducesExpectedBitmap()
@@ -489,8 +508,42 @@ public class PdfViewerHeadlessRenderTests
         using var bitmap = renderer.RenderPage(page, new Excise.Rendering.RenderOptions { Dpi = 200 });
 
         _output.WriteLine($"Direct SkiaRenderer output: {bitmap.Width}x{bitmap.Height}");
-        bitmap.Width.Should().BeGreaterThan(100, "US Letter @ 200 DPI should be ~1700px wide");
-        bitmap.Height.Should().BeGreaterThan(100);
+
+        // /MediaBox [0 0 612 792] at 200 DPI. Exact, not a floor: a size that is
+        // merely "over 100" cannot distinguish the page box from a default.
+        bitmap.Width.Should().Be(1700, "612 pt at 200 DPI is exactly 1700 px");
+        bitmap.Height.Should().Be(2200, "792 pt at 200 DPI is exactly 2200 px");
+
+        // `100 700 Td` puts the baseline 92 pt below the top edge, so a 24 pt
+        // line lives between roughly 75 pt and 97 pt from the top — px 208 to
+        // 269 at 200 DPI. Assert ink INSIDE that band and none outside it: the
+        // page carries exactly one line of text, so anything else is a defect.
+        const int BandTop = 190;
+        const int BandBottom = 290;
+        var inkInBand = 0;
+        var inkOutsideBand = 0;
+        for (var y = 0; y < bitmap.Height; y++)
+        {
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                var luminance = 0.2126 * pixel.Red + 0.7152 * pixel.Green + 0.0722 * pixel.Blue;
+                if (luminance > 200)
+                    continue;
+                if (y >= BandTop && y < BandBottom)
+                    inkInBand++;
+                else
+                    inkOutsideBand++;
+            }
+        }
+
+        _output.WriteLine($"ink in band [{BandTop},{BandBottom}): {inkInBand}, outside: {inkOutsideBand}");
+        inkInBand.Should().BeGreaterThan(500,
+            "'Hello, World!' at 24 pt / 200 DPI is several thousand dark pixels — " +
+            "a blank page would pass every assertion this test used to make");
+        inkOutsideBand.Should().Be(0,
+            "the content stream draws one line of text and nothing else, so ink " +
+            "anywhere else means the text landed in the wrong place");
     }
 
     private async Task<SKBitmap> RenderViaViewerControl(byte[] pdfBytes, int pageNumber = 1, string? password = null)
@@ -1105,6 +1158,110 @@ public class PdfViewerHeadlessRenderTests
             yield return page;
     }
 
+    /// <summary>
+    /// Reduce the discovered pages to a set that still covers every branch of
+    /// what this sweep actually tests — the VIEWER PLUMBING, i.e. that the
+    /// bitmap <c>Image.Source</c> ends up holding is the bitmap
+    /// <c>SkiaRenderer</c> produced. Rendering CORRECTNESS is not tested here;
+    /// it belongs to <c>Excise.Rendering.Tests/Differential</c> and the
+    /// five-oracle corpus rendering scan, which between them cover thousands of
+    /// pages this sweep could never afford.
+    ///
+    /// <para><b>Two reductions, in order of how obviously they are free.</b></para>
+    ///
+    /// <para>1. <b>Identical BYTES at the same page number.</b> Rendering the
+    /// same file twice cannot disagree with itself. <c>test-pdfs/smoke/*</c> is
+    /// a byte-for-byte copy of <c>test-pdfs/federal/*</c> and both have contract
+    /// files, so the sweep rendered those documents twice under two paths:
+    /// measured 2026-09-21, that alone was 47 of 147 cases. This drops nothing
+    /// a sha256 cannot prove identical.</para>
+    ///
+    /// <para>2. <b>One page per DOCUMENT.</b> The plumbing branches — the render
+    /// plan and its DPI, the pixel-budget clamp, page rotation, the password
+    /// path, a small page centred in a larger viewport, whether the page is
+    /// expected to be non-renderable — are properties of the DOCUMENT, so
+    /// keeping a page of every document keeps every branch. The 3–5 further
+    /// representative pages of one document re-run the same branch with
+    /// different ink. Two exceptions are kept explicitly: a page whose contract
+    /// classifies it differently from the document's first page (a different
+    /// branch of the semantic-status policy), and the last page of any document
+    /// with five or more selected pages, so "page 1" and "page N" — which are
+    /// different viewer state — are both exercised.</para>
+    ///
+    /// <para>Measured on the same 147 cases: 147 → 100 after (1) → 62 after (2),
+    /// and 64.8 s of case time → 22.9 s, sha256 pass included. <c>EXCISE_GUI_DISPLAY_COVERING_SET=0</c>
+    /// runs every discovered page; that is what a <c>full</c>-tier row should
+    /// pass, and what to set before believing a bisect that lands here.</para>
+    /// </summary>
+    private static IReadOnlyList<GuiDisplayCase> SelectPlumbingCoveringCases(
+        IReadOnlyList<GuiDisplayCase> cases)
+    {
+        var contentByPath = new Dictionary<string, string>(StringComparer.Ordinal);
+        string ContentKey(GuiDisplayCase testCase)
+        {
+            if (contentByPath.TryGetValue(testCase.AbsolutePath, out var cached))
+                return cached;
+
+            string key;
+            try
+            {
+                using var stream = File.OpenRead(testCase.AbsolutePath);
+                key = Convert.ToHexString(SHA256.HashData(stream));
+            }
+            catch (Exception)
+            {
+                // An unreadable fixture is a case this sweep must still run —
+                // it is how a missing or broken file is reported. Fall back to
+                // the path so it is never merged with another case.
+                key = testCase.AbsolutePath;
+            }
+
+            contentByPath[testCase.AbsolutePath] = key;
+            return key;
+        }
+
+        var byDocument = new Dictionary<string, List<GuiDisplayCase>>(StringComparer.Ordinal);
+        var documentOrder = new List<string>();
+        var seenPages = new HashSet<(string Content, int Page)>();
+        foreach (var testCase in cases)
+        {
+            var content = ContentKey(testCase);
+            if (!seenPages.Add((content, testCase.PageNumber)))
+                continue;
+
+            if (!byDocument.TryGetValue(content, out var pages))
+            {
+                byDocument[content] = pages = new List<GuiDisplayCase>();
+                documentOrder.Add(content);
+            }
+            pages.Add(testCase);
+        }
+
+        var kept = new List<GuiDisplayCase>();
+        foreach (var content in documentOrder)
+        {
+            var pages = byDocument[content].OrderBy(c => c.PageNumber).ToList();
+            var first = pages[0];
+            var keptForDocument = new List<GuiDisplayCase> { first };
+
+            foreach (var testCase in pages.Skip(1))
+            {
+                if (testCase.Contract?.ExpectedRawStatus != first.Contract?.ExpectedRawStatus ||
+                    testCase.Contract?.QualityStatus != first.Contract?.QualityStatus)
+                {
+                    keptForDocument.Add(testCase);
+                }
+            }
+
+            if (pages.Count >= 5 && !keptForDocument.Contains(pages[^1]))
+                keptForDocument.Add(pages[^1]);
+
+            kept.AddRange(keptForDocument);
+        }
+
+        return kept;
+    }
+
     private static IReadOnlyList<int> SelectRepresentativePages(IReadOnlyList<int> pages)
     {
         if (pages.Count <= 8)
@@ -1171,6 +1328,8 @@ public class PdfViewerHeadlessRenderTests
         bool includeAllContractGroups,
         IReadOnlyCollection<string> requestedContractGroups,
         string? caseFilter,
+        bool plumbingCoveringSet,
+        int casesBeforeCovering,
         int discoveredTotal,
         int expectedTotal,
         int shardCount,
@@ -1188,6 +1347,8 @@ public class PdfViewerHeadlessRenderTests
             allContractGroups = includeAllContractGroups,
             contractGroups = requestedContractGroups,
             caseFilter = caseFilter,
+            plumbingCoveringSet = plumbingCoveringSet,
+            casesBeforeCovering = casesBeforeCovering,
             discoveredPages = discoveredTotal,
             total = expectedTotal,
             shardCount = shardCount,
@@ -1282,6 +1443,14 @@ public class PdfViewerHeadlessRenderTests
         public bool allContractGroups { get; set; }
         public IReadOnlyCollection<string> contractGroups { get; set; } = Array.Empty<string>();
         public string? caseFilter { get; set; }
+        // #1772: plumbingCoveringSet says the universe was reduced, and
+        // casesBeforeCovering is what it was reduced FROM. Without both, "we
+        // checked everything" cannot be told from "we checked the subset" by
+        // reading the report. It is the count AFTER any
+        // EXCISE_GUI_DISPLAY_CASE_FILTER, which is why it is named for cases
+        // and not for discovery.
+        public bool plumbingCoveringSet { get; set; }
+        public int casesBeforeCovering { get; set; }
         public int discoveredPages { get; set; }
         public int total { get; set; }
         public int shardCount { get; set; }

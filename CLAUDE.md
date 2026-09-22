@@ -129,6 +129,12 @@ There is no CI gate on `develop`; running the tier is on you. Rules that keep th
 - Prefer `scripts/t.sh <project> [args]` over raw `dotnet test --no-build`; a `--no-build` run
   must prove the binary is fresh (`scripts/assert-fresh.sh`).
 - Never commit or edit sourced scripts while a tier is running.
+- **A test-only static can pin memory for the process lifetime.** `GuiInteractionRecorder
+  .SeenSurfaces` was a strong `HashSet` nothing ever removed from; every window that got an
+  input event stayed reachable, tile caches and all. Fixed weak (#1772): App.Tests peak RSS
+  4869 → 1949 MB, wall 756 → 356 s. Sample the RSS shape before theorising about a peak — a
+  sawtooth on a rising floor is retention, a flat sawtooth is GC high-water. Full record:
+  `docs/performance-baselines/2026-09-21-app-testhost-memory/`.
 - Test PDF corpora are gitignored under `test-pdfs/`. `scripts/check-test-prereqs.sh` reports
   what is present; fetch with `download-test-pdfs.sh`, `download-pdfjs-corpus.sh`,
   `download-pdfium-corpus.sh`. Never pin a corpus-scan result without
