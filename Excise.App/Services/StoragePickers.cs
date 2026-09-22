@@ -21,8 +21,8 @@ namespace Excise.App.Services;
 /// Every call therefore schedules <see cref="MacFilePanelAccessoryCleanup"/> in
 /// a <c>finally</c>, so the teardown runs after a chosen file, a cancel, and an
 /// exception alike. Unfiltered pickers go through here too. The cleanup finds
-/// nothing to do for them, and a single route keeps the source-scan test
-/// (<c>StoragePickerRoutingTests</c>) a simple rule: no direct
+/// nothing to do for them, and a single route keeps the source-scan gate
+/// (<c>scripts/check-viewmodel-seams.sh</c>, #1773) a simple rule: no direct
 /// <c>OpenFilePickerAsync</c>/<c>SaveFilePickerAsync</c> call outside this file.
 /// </para>
 /// </remarks>

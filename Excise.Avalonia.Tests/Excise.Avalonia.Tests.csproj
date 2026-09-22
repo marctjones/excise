@@ -28,6 +28,11 @@
          plain [Fact]s, deliberately avoiding Avalonia.Headless.XUnit's
          [AvaloniaFact] and its xunit.v3 TestContext bug (#337). -->
     <PackageReference Include="Avalonia.Headless" Version="12.1.2" />
+    <!-- Gives a stock ScrollViewer its ControlTheme so ITS OWN template (the
+         ScrollContentPresenter that reports Extent) actually applies; see
+         HeadlessTestApp's remarks (#1773). Still no rendering: nothing here
+         reads pixels. -->
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.2" />
     <!-- The viewer tests instantiate Skia-backed rendering objects.  Keep the
          Linux native asset explicit: it is not pulled into this test output
          by the managed SkiaSharp reference alone on a fresh CI runner. -->

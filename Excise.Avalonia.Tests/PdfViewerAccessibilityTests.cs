@@ -12,6 +12,7 @@ using Excise.Avalonia.Automation;
 using Excise.Avalonia.Controls;
 using Excise.Core.Authoring;
 using Excise.Core.Document;
+using Excise.Core.Graphics;
 using Excise.Core.Primitives;
 using Xunit;
 
@@ -231,6 +232,38 @@ public class PdfViewerAccessibilityTests
             Normalized(PageTextChild(peer).GetName())
                 .Should().Contain("Alpha page one", "page 1 text must be screen-reader visible")
                 .And.NotContain("Beta", "page 2 content must not bleed into page 1");
+            return true;
+        });
+    }
+
+    [Fact]
+    public async Task PageTextPeer_ExposesTextInReadingOrder_NotContentStreamOrder()
+    {
+        // Moved from Excise.App.Tests/Controls/PdfViewerContentAccessibilityTests
+        // (#1773), which drew the top line first, so content-stream order and
+        // reading order coincided and a peer that skipped the sort still passed.
+        // Here the BOTTOM line is drawn first: only a reading-order sort puts
+        // the heading ahead of the body line.
+        await OnUiThread(() =>
+        {
+            using var builder = PdfDocument.CreateNew();
+            var page = builder.Pages.AddBlank();
+            using (var g = page.GetGraphics())
+            {
+                // PDF space is Y-up: larger Y = higher on the page, i.e. read first.
+                g.DrawString("Beta body line", PdfFont.Helvetica(12), PdfBrush.Black, 100, 650);
+                g.DrawString("Alpha heading line", PdfFont.Helvetica(12), PdfBrush.Black, 100, 700);
+                g.Flush();
+            }
+
+            var (_, peer) = CreateViewerWithPeer(PdfDocument.Open(builder.SaveToBytes()));
+
+            var name = PageTextChild(peer).GetName();
+            name.Should().Contain("Alpha heading line").And.Contain("Beta body line");
+            name!.IndexOf("Alpha heading line", StringComparison.Ordinal)
+                .Should().BeLessThan(
+                    name.IndexOf("Beta body line", StringComparison.Ordinal),
+                    "page text must be exposed in reading order (top line first), whatever order it was drawn in");
             return true;
         });
     }

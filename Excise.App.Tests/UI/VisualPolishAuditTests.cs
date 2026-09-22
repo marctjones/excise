@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
@@ -14,106 +12,19 @@ using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using Xunit;
-using Excise.TestSupport;
 
 namespace Excise.App.Tests.UI;
 
+/// <summary>
+/// Screenshot capture for the UX/icon audit (<c>scripts/run-ux-icon-audit.sh</c>).
+/// The three .axaml source-text audits that used to sit beside it (vector icons in
+/// the toolbar/menu, every PathIcon resource resolving, the toolbar CommandIds and
+/// tooltips) moved to <c>scripts/check-shell-xaml.sh</c>, a t0 gate (#1773): they
+/// read three files and need no headless Avalonia session.
+/// </summary>
 [Collection("AvaloniaTests")]
 public class VisualPolishAuditTests
 {
-    private static readonly string RepoRoot = FindRepoRoot();
-
-    [Fact]
-    public void MainShell_UsesVectorIconsForToolbarAndMenuAffordances()
-    {
-        var mainWindow = Read("Excise.App/Views/MainWindow.axaml");
-        var iconResources = Read("Excise.App/Styles/Icons.axaml");
-        var styles = Read("Excise.App/Styles/Controls.axaml");
-
-        mainWindow.Should().Contain("IconFolderOpen");
-        mainWindow.Should().Contain("IconRedact");
-        mainWindow.Should().Contain("PathIcon Classes=\"toolbar-icon\"");
-        mainWindow.Should().Contain("PathIcon Classes=\"menu-icon\"");
-        mainWindow.Should().NotContain("Content=\"📁");
-        mainWindow.Should().NotContain("Content=\"💾");
-        mainWindow.Should().NotContain("Content=\"🔍");
-        mainWindow.Should().NotContain("Content=\"📋");
-        mainWindow.Should().NotContain("Text=\"📄");
-
-        iconResources.Should().Contain("IconFolderOpen");
-        iconResources.Should().Contain("IconSave");
-        iconResources.Should().Contain("IconSearch");
-        iconResources.Should().Contain("IconRedact");
-        iconResources.Should().Contain("IconPage");
-        styles.Should().Contain("PathIcon.toolbar-icon");
-        styles.Should().Contain("PathIcon.menu-icon");
-    }
-
-    [Fact]
-    public void MainShell_PathIconResources_AllResolve()
-    {
-        var mainWindow = Read("Excise.App/Views/MainWindow.axaml");
-        var iconResources = Read("Excise.App/Styles/Icons.axaml");
-
-        var referencedKeys = Regex.Matches(
-                mainWindow,
-                "PathIcon\\b[^>]*\\bData=\"\\{StaticResource (?<key>Icon[A-Za-z0-9_]+)\\}\"",
-                RegexOptions.Singleline)
-            .Select(match => match.Groups["key"].Value)
-            .Distinct(StringComparer.Ordinal)
-            .Order(StringComparer.Ordinal)
-            .ToArray();
-        var definedKeys = Regex.Matches(
-                iconResources,
-                "x:Key=\"(?<key>Icon[A-Za-z0-9_]+)\"")
-            .Select(match => match.Groups["key"].Value)
-            .ToHashSet(StringComparer.Ordinal);
-
-        referencedKeys.Should().NotBeEmpty("the main shell should use vector icon resources");
-        referencedKeys.Where(key => !definedKeys.Contains(key)).Should().BeEmpty(
-            "every menu and toolbar PathIcon StaticResource must resolve at runtime");
-    }
-
-    [Fact]
-    public void ToolbarIconButtons_HaveTooltipsAndAccessibilityCommandIds()
-    {
-        var mainWindow = Read("Excise.App/Views/MainWindow.axaml");
-        var requiredCommands = new[]
-        {
-            "view.toggleOutline",
-            "view.toggleThumbnails",
-            "view.toggleContinuous",
-            "app.open",
-            "app.save",
-            "form.saveFlattenedCopy",
-            "edit.selectTextMode",
-            "edit.typewriterMode",
-            "annotation.addHighlight",
-            "annotation.addStickyNote",
-            "redaction.toggleMode",
-            "redaction.apply",
-            "form.toggleAuthoring",
-            "form.autoDetectFields",
-            "search.open",
-            "document.rotateLeft",
-            "document.rotateRight",
-            "view.zoomOut",
-            "view.zoomIn",
-            "view.zoomFitWidth",
-        };
-
-        foreach (var command in requiredCommands)
-        {
-            mainWindow.Should().Contain($"CommandId=\"{command}\"",
-                $"{command} should remain part of the audited toolbar/menu surface");
-        }
-
-        mainWindow.Should().Contain("ToolTip.Tip=\"Open PDF (Ctrl+O)\"");
-        mainWindow.Should().Contain("ToolTip.Tip=\"Redaction Mode (R)\"");
-        mainWindow.Should().Contain("ToolTip.Tip=\"Form Authoring Mode");
-        mainWindow.Should().Contain("ToolTip.Tip=\"Find Text (Ctrl+F)\"");
-    }
-
     [FixedAvaloniaFact]
     public async Task CoreWorkflowScreenshots_AreCapturedForUxIconAudit()
     {
@@ -251,13 +162,4 @@ public class VisualPolishAuditTests
 
         return Path.Combine(AppContext.BaseDirectory, "UI", "test-output", "ux-icon-audit");
     }
-
-    private static string Read(string relativePath)
-        => File.ReadAllText(Path.Combine(RepoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
-
-    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln. LOCAL
-    // checkout, deliberately: this reads THIS worktree's own source / writes its
-    // own artifacts, and the main checkout may be on a different branch.
-    private static string FindRepoRoot() =>
-        TestRepoLayout.LocalCheckoutRoot ?? throw new InvalidOperationException("Could not find repository root.");
 }

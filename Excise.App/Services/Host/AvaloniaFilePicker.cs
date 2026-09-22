@@ -16,7 +16,7 @@ namespace Excise.App.Services.Host;
 /// File Open and Save go through <see cref="StoragePickers"/>, which is
 /// mandatory (#1477) — a picker that skips it leaves Avalonia's macOS
 /// file-type accessory looping in AppKit layout, and
-/// <c>StoragePickerRoutingTests</c> scans the source to keep it that way.
+/// <c>scripts/check-viewmodel-seams.sh</c> scans the source to keep it that way.
 /// The FOLDER picker deliberately does not: it was never routed through the
 /// helper, and routing it there now would newly schedule the macOS accessory
 /// cleanup after every folder pick — a behaviour change that does not belong
