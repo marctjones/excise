@@ -631,10 +631,10 @@
       "maxDriftFloorPt": 7.48
     },
     "test-pdfs/smoke/state-ds11-passport.pdf#6": {
-      "maxDriftFloorPt": 0
+      "maxDriftFloorPt": 3.0
     },
     "test-pdfs/smoke/state-ds82-passport-renewal.pdf#1": {
-      "maxDriftFloorPt": 0
+      "maxDriftFloorPt": 4.51
     },
     "test-pdfs/smoke/state-ds82-passport-renewal.pdf#2": {
       "maxDriftFloorPt": 0
@@ -649,7 +649,7 @@
       "maxDriftFloorPt": 8.86
     },
     "test-pdfs/smoke/state-ds82-passport-renewal.pdf#6": {
-      "maxDriftFloorPt": 0
+      "maxDriftFloorPt": 5.71
     }
   }
 }

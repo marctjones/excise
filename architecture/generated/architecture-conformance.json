@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "86fa11376cc7232b30c2fa82938bd31d7ffb6009",
+  "sourceRevision": "57c9622074082607580ab204f69c4e3dad7cd5a0",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7895,
+    "retainedSymbols": 7939,
     "observedComponentDependencies": 72,
     "declaredDependencies": 69,
     "acceptedExceptions": 1,
@@ -24,28 +24,28 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 433,
+      "references": 460,
       "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Views.MainWindow",
           "target": "Excise.App.ViewModels.MainWindowViewModel",
-          "references": 149
+          "references": 170
         }
       ]
     },
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 693,
-      "typeDependencyCount": 78,
+      "references": 709,
+      "typeDependencyCount": 79,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.App.Services.PdfDocumentService",
-          "references": 116
+          "references": 118
         }
       ]
     },
@@ -66,14 +66,14 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 391,
-      "typeDependencyCount": 24,
+      "references": 405,
+      "typeDependencyCount": 25,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 85
+          "references": 86
         }
       ]
     },
@@ -192,8 +192,8 @@
     {
       "source": "cli",
       "target": "core-redaction",
-      "references": 255,
-      "typeDependencyCount": 57,
+      "references": 259,
+      "typeDependencyCount": 58,
       "classification": "declared",
       "evidence": [
         {
@@ -444,14 +444,14 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1449,
+      "references": 1458,
       "typeDependencyCount": 218,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfAnnotationAuthoring",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 95
+          "references": 101
         }
       ]
     },
@@ -561,7 +561,7 @@
     {
       "source": "core-redaction",
       "target": "core-content",
-      "references": 279,
+      "references": 280,
       "typeDependencyCount": 46,
       "classification": "declared",
       "evidence": [
@@ -575,7 +575,7 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1191,
+      "references": 1199,
       "typeDependencyCount": 145,
       "classification": "declared",
       "evidence": [
@@ -631,14 +631,14 @@
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 143,
+      "references": 147,
       "typeDependencyCount": 21,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
           "target": "Excise.Core.Text.Letter",
-          "references": 38
+          "references": 42
         }
       ]
     },

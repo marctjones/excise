@@ -632,7 +632,7 @@
           },
           {
             "kind": "differential",
-            "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
+            "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsGoneAfterSaveAndReopen",
             "modes": [
               "render",
               "preserve",

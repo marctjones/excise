@@ -4,15 +4,15 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "5559c4e6492df258679053247ec5a7eb06497854",
+  "sourceRevision": "57c9622074082607580ab204f69c4e3dad7cd5a0",
   "summary": {
-    "interactions": 196,
-    "menuItems": 110,
+    "interactions": 197,
+    "menuItems": 111,
     "buttons": 77,
     "mouseGestures": 9,
     "keyboardShortcuts": 28,
-    "declaredCommandIds": 115,
-    "commandIdsReachableFromTheGui": 106,
+    "declaredCommandIds": 116,
+    "commandIdsReachableFromTheGui": 107,
     "commandIdsWithNoGuiPath": 0,
     "cliOnlyCommandIds": 9,
     "controlsWithNoCommandId": 0,
@@ -982,6 +982,15 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "annotation.togglePolygonMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Place Sticky Note (click page)",
+      "label": "Place Sticky Note (click page)",
+      "command": "ToggleStickyNoteToolCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleStickyNoteTool"
     },
     {
       "kind": "menu",

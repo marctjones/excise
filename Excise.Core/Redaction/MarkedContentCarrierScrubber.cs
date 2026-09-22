@@ -95,14 +95,6 @@ internal static class MarkedContentCarrierScrubber
         HashSet<ContentOperator> affectedSpans,
         IReadOnlyCollection<string> removedText,
         PdfDocument doc,
-        PdfDictionary? properties = null)
-        => Scrub(ops, affectedSpans, removedText, doc, out _, properties);
-
-    internal static bool Scrub(
-        IReadOnlyList<ContentOperator> ops,
-        HashSet<ContentOperator> affectedSpans,
-        IReadOnlyCollection<string> removedText,
-        PdfDocument doc,
         out IReadOnlyList<string> unscrubbedSharedCarriers,
         PdfDictionary? properties = null)
     {

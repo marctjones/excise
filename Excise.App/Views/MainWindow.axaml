@@ -1741,13 +1741,30 @@
                          routed-event handling — see OnDocumentAreaPointerPressedTunnel
                          in the code-behind. Positioned in code-behind from
                          PdfViewerControl.GetViewerPositionForPageRect whenever
-                         StickyNotePopup changes. -->
+                         StickyNotePopup changes.
+
+                         The ContentControl (not a plain child) is deliberate:
+                         with StickyNotePopup null (no popup open, the default
+                         state) it realises NO visual/logical child at all, so
+                         StickyNotePopupView's "Done" button does not exist in
+                         MainWindow's logical tree for CommandBindingSweepTests
+                         to walk — the same "swept when realised" exemption
+                         #1789 already relies on for the floating palette,
+                         rather than a plain Border+IsVisible=False, which
+                         would still contain a live Button whose Command binds
+                         to a null DataContext. -->
                     <Border x:Name="StickyNotePopupHost"
                             IsVisible="{Binding StickyNotePopup, Converter={x:Static ObjectConverters.IsNotNull}}"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
                             ZIndex="30">
-                        <views:StickyNotePopupView DataContext="{Binding StickyNotePopup}"/>
+                        <ContentControl Content="{Binding StickyNotePopup}">
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <views:StickyNotePopupView/>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
                     </Border>
                 </Grid>
             </Border>

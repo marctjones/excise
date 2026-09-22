@@ -206,6 +206,8 @@ namespace Excise.Core.Automation
         public const string SignDocument = "app.signDocument";
         public const string SplitDocument = "document.split";
         public const string ToggleAnnotationAuditMode = "view.toggleAnnotationAuditMode";
+        public const string ToggleAnnotationPalette = "view.toggleAnnotationPalette";
+        public const string ToggleAnnotationToolbar = "view.toggleAnnotationToolbar";
         public const string ToggleAnnotations = "view.toggleAnnotations";
         public const string ToggleArrowMode = "annotation.toggleArrowMode";
         public const string ToggleAttachments = "view.toggleAttachments";
