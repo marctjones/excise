@@ -149,16 +149,6 @@ public class RedactionWorkflowManagerTests
     }
 
     [Fact]
-    public void RemovePending_EmptyList_ReturnsFalse()
-    {
-        // Act
-        var result = _manager.RemovePending(Guid.NewGuid());
-
-        // Assert
-        result.Should().BeFalse();
-    }
-
-    [Fact]
     public void RemovePending_RaisesPropertyChanged()
     {
         // Arrange
@@ -194,17 +184,6 @@ public class RedactionWorkflowManagerTests
         _manager.PendingRedactions.Should().BeEmpty();
         _manager.PendingCount.Should().Be(0);
         _manager.HasPendingRedactions.Should().BeFalse();
-    }
-
-    [Fact]
-    public void ClearPending_EmptyList_NoException()
-    {
-        // Act
-        Action act = () => _manager.ClearPending();
-
-        // Assert
-        act.Should().NotThrow();
-        _manager.PendingCount.Should().Be(0);
     }
 
     [Fact]
@@ -247,17 +226,6 @@ public class RedactionWorkflowManagerTests
         _manager.AppliedRedactions.Should().HaveCount(2);
         _manager.AppliedCount.Should().Be(2);
         _manager.AppliedRedactions.Select(a => a.Id).Should().BeEquivalentTo(originalIds);
-    }
-
-    [Fact]
-    public void MoveToApplied_EmptyPending_NoException()
-    {
-        // Act
-        Action act = () => _manager.MoveToApplied();
-
-        // Assert
-        act.Should().NotThrow();
-        _manager.AppliedCount.Should().Be(0);
     }
 
     [Fact]
@@ -306,16 +274,6 @@ public class RedactionWorkflowManagerTests
         page4Items.Should().BeEmpty();
     }
 
-    [Fact]
-    public void GetPendingForPage_EmptyList_ReturnsEmpty()
-    {
-        // Act
-        var result = _manager.GetPendingForPage(1);
-
-        // Assert
-        result.Should().BeEmpty();
-    }
-
     #endregion
 
     #region GetAppliedForPage Tests
@@ -338,16 +296,6 @@ public class RedactionWorkflowManagerTests
 
         page2Items.Should().HaveCount(1);
         page2Items.First().PageNumber.Should().Be(2);
-    }
-
-    [Fact]
-    public void GetAppliedForPage_EmptyList_ReturnsEmpty()
-    {
-        // Act
-        var result = _manager.GetAppliedForPage(1);
-
-        // Assert
-        result.Should().BeEmpty();
     }
 
     #endregion
@@ -379,16 +327,6 @@ public class RedactionWorkflowManagerTests
     }
 
     [Fact]
-    public void Reset_EmptyState_NoException()
-    {
-        // Act
-        Action act = () => _manager.Reset();
-
-        // Assert
-        act.Should().NotThrow();
-    }
-
-    [Fact]
     public void Reset_RaisesPropertyChanged()
     {
         // Arrange
@@ -410,89 +348,85 @@ public class RedactionWorkflowManagerTests
 
     #region HasPendingRedactions Tests
 
-    [Fact]
-    public void HasPendingRedactions_InitiallyFalse()
+    [Theory]
+    [InlineData("Initially", false)]
+    [InlineData("AfterMark", true)]
+    [InlineData("AfterRemove", false)]
+    [InlineData("AfterMoveToApplied", false)]
+    public void HasPendingRedactions_FollowsThePendingList(string step, bool expected)
     {
-        // Assert
-        _manager.HasPendingRedactions.Should().BeFalse();
-    }
+        if (step != "Initially")
+        {
+            _manager.MarkArea(1, new Rect(0, 0, 100, 50), "Test");
+        }
 
-    [Fact]
-    public void HasPendingRedactions_TrueAfterMark()
-    {
-        // Arrange
-        _manager.MarkArea(1, new Rect(0, 0, 100, 50), "Test");
+        if (step == "AfterRemove")
+        {
+            _manager.RemovePending(_manager.PendingRedactions.First().Id);
+        }
 
-        // Assert
-        _manager.HasPendingRedactions.Should().BeTrue();
-    }
+        if (step == "AfterMoveToApplied")
+        {
+            _manager.MoveToApplied();
+        }
 
-    [Fact]
-    public void HasPendingRedactions_FalseAfterRemove()
-    {
-        // Arrange
-        _manager.MarkArea(1, new Rect(0, 0, 100, 50), "Test");
-        var id = _manager.PendingRedactions.First().Id;
-
-        // Act
-        _manager.RemovePending(id);
-
-        // Assert
-        _manager.HasPendingRedactions.Should().BeFalse();
-    }
-
-    [Fact]
-    public void HasPendingRedactions_FalseAfterMoveToApplied()
-    {
-        // Arrange
-        _manager.MarkArea(1, new Rect(0, 0, 100, 50), "Test");
-
-        // Act
-        _manager.MoveToApplied();
-
-        // Assert
-        _manager.HasPendingRedactions.Should().BeFalse();
+        _manager.HasPendingRedactions.Should().Be(expected);
     }
 
     #endregion
 
     #region Edge Cases
 
-    [Fact]
-    public void MarkArea_ZeroSizeArea_StillAdded()
+    [Theory]
+    [InlineData("RemovePending")]
+    [InlineData("ClearPending")]
+    [InlineData("MoveToApplied")]
+    [InlineData("Reset")]
+    [InlineData("GetPendingForPage")]
+    [InlineData("GetAppliedForPage")]
+    public void OperationsOnAnEmptyManager_DoNothingAndDoNotThrow(string operation)
     {
-        // Arrange
-        var zeroArea = new Rect(100, 100, 0, 0);
+        switch (operation)
+        {
+            case "RemovePending":
+                _manager.RemovePending(Guid.NewGuid()).Should().BeFalse();
+                break;
+            case "ClearPending":
+                _manager.ClearPending();
+                break;
+            case "MoveToApplied":
+                _manager.MoveToApplied();
+                break;
+            case "Reset":
+                _manager.Reset();
+                break;
+            case "GetPendingForPage":
+                _manager.GetPendingForPage(1).Should().BeEmpty();
+                break;
+            case "GetAppliedForPage":
+                _manager.GetAppliedForPage(1).Should().BeEmpty();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(operation), operation, null);
+        }
 
-        // Act
-        _manager.MarkArea(1, zeroArea, "Zero size");
-
-        // Assert
-        _manager.PendingCount.Should().Be(1);
+        _manager.PendingCount.Should().Be(0);
+        _manager.AppliedCount.Should().Be(0);
     }
 
-    [Fact]
-    public void MarkArea_NegativeCoordinates_StillAdded()
+    [Theory]
+    [InlineData(100, 100, 0, 0, "Zero size")]
+    [InlineData(-100, -50, 200, 100, "Negative coords")]
+    [InlineData(0, 0, 100, 50, "")]
+    public void MarkArea_UnusualAreaOrText_IsStillAddedAsGiven(
+        double x, double y, double width, double height, string previewText)
     {
-        // Arrange
-        var negativeArea = new Rect(-100, -50, 200, 100);
+        _manager.MarkArea(1, new Rect(x, y, width, height), previewText);
 
-        // Act
-        _manager.MarkArea(1, negativeArea, "Negative coords");
-
-        // Assert
         _manager.PendingCount.Should().Be(1);
-    }
-
-    [Fact]
-    public void MarkArea_EmptyPreviewText_StillAdded()
-    {
-        // Act
-        _manager.MarkArea(1, new Rect(0, 0, 100, 50), "");
-
-        // Assert
-        _manager.PendingCount.Should().Be(1);
-        _manager.PendingRedactions.First().PreviewText.Should().BeEmpty();
+        var pending = _manager.PendingRedactions.Single();
+        pending.Area.Should().Be(new Rect(x, y, width, height));
+        pending.PreviewText.Should().Be(previewText);
     }
 
     [Fact]
