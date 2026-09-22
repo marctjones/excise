@@ -170,6 +170,96 @@ if [ -n "$ANCHOR" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 3c. Two hand-rolled corpus locators that checks 2, 3 and 3b do not match (#1768).
+#
+#    Checks 2-3b test the SHAPE of a bounded walk, or a literal anchor. Two more
+#    shapes resolve a gitignored corpus by hand and matched none of them:
+#
+#      a. an UNBOUNDED ancestor walk (`while (dir != null) ... dir = dir.Parent`,
+#         Directory.GetParent, Path.GetDirectoryName reassigned) in a file that
+#         then names a gitignored corpus and never asks TestRepoLayout.
+#         DocumentTextIndexCompactWordsTests.ParityCorpus() stopped at the first
+#         ancestor holding the TRACKED test-pdfs/sample-pdfs, which in a worktree
+#         is the worktree root -- where the gitignored test-pdfs/smoke is absent --
+#         so 13 corpus files silently became 3, in every worktree. That is #1527
+#         with a different anchor, in a class that was 87% of Unit/ part A's time.
+#      b. Path.Combine(..., "..", "..", ...): '..'-counting again, in the
+#         Path.Combine spelling instead of Repeat("..", n).
+#
+#    ⚠️ (a) is qualified, and the qualification is the honest part. An unbounded
+#    walk is NOT wrong in itself (TestRepoLayout is one, and a walk that probes the
+#    exact target at every level finds it correctly). What is wrong is a walk
+#    hand-rolled to reach a corpus by a file that does not use the ONE locator, so
+#    (a) needs all three: a walk step, a corpus name, and no reference to
+#    TestRepoLayout. Avalonia visual-tree walks (`x.Parent as Control`) are not
+#    directory walks and are excluded.
+#
+#    ⚠️ ENFORCED PER PROJECT, and only in the projects listed below. The same scan
+#    over the OTHER test projects finds ~50 files that were never migrated; they
+#    are counted and printed on every run, never hidden, and tracked in #1775.
+#    Each project joins STRICT_PROJECTS when it is clean. This is a phase-in and
+#    not an allowlist: no FILE is exempt, and a project is either enforced or
+#    counted. Flip STRICT_PROJECTS to "${TEST_PROJECTS[@]}" to enforce everywhere.
+# ---------------------------------------------------------------------------
+STRICT_PROJECTS=(Excise.App.Tests)
+CORPUS_NAME='(smoke|federal|pdfjs|pdfium|verapdf-corpus|itext|poppler|isartor|altona|ghent|pdfua|samples|local-real-world|redaction-adversarial|redaction-synthetic|baselines)'
+# A walk step REASSIGNS: `d = d.Parent`, `d = Directory.GetParent(d)`, `d = Path.GetDirectoryName(d)`
+# (a bare reassignment: a `var x = ...` declaration is not a step).
+DIR_WALK_STEP='=[[:space:]]*[A-Za-z_][A-Za-z0-9_.]*\.Parent[[:space:];)]|Directory\.GetParent\(|^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*[[:space:]]*=[[:space:]]*Path\.GetDirectoryName\('
+
+# scan_locators <project...>: one "chain <file>:<line>:<text>" per '..' chain and
+# one "walk <file>:<line>:<text>" per file with a corpus-resolving walk.
+scan_locators() {
+  local f
+  grep -rnE '"\.\."[[:space:]]*,[[:space:]]*"\.\."|"\.\./\.\."' --include='*.cs' "$@" 2>/dev/null \
+    | grep -vE 'TestSupport/TestRepoLayout(Tests)?\.cs:' \
+    | grep -vE '^[^:]+:[0-9]+:[[:space:]]*(//|/\*|\*)' \
+    | sed 's/^/chain /' || true
+  while IFS= read -r f; do
+    case "$f" in */TestSupport/TestRepoLayout.cs|*/TestSupport/TestRepoLayoutTests.cs) continue ;; esac
+    grep -q 'TestRepoLayout' "$f" && continue
+    grep -qE "\"$CORPUS_NAME\"|test-pdfs/$CORPUS_NAME" "$f" || continue
+    grep -nE "$DIR_WALK_STEP" "$f" \
+      | grep -vE '\.Parent as ' \
+      | grep -vE '^[0-9]+:[[:space:]]*(//|/\*|\*)' \
+      | sed "s|^|walk $f:|" | head -1 || true
+  done < <(grep -rlE "$DIR_WALK_STEP" --include='*.cs' "$@" 2>/dev/null | sort) || true
+}
+
+STRICT_HITS=""
+if [ ${#STRICT_PROJECTS[@]} -gt 0 ]; then
+  STRICT_HITS=$(scan_locators "${STRICT_PROJECTS[@]}")
+fi
+if [ -n "$STRICT_HITS" ]; then
+  echo
+  echo "FAIL: a hand-rolled corpus locator the older checks do not match (#1768)."
+  echo "      'chain' = Path.Combine(..., \"..\", \"..\", ...): '..'-counting from the working"
+  echo "      directory. 'walk' = an unbounded ancestor walk in a file that names a"
+  echo "      gitignored corpus and does not use TestRepoLayout: it stops at the first"
+  echo "      TRACKED marker, which in a git worktree is the worktree root, and the"
+  echo "      gitignored siblings are not there (13 corpus files became 3)."
+  echo
+  echo "      Use the ONE shared locator, and TestRepoLayout.AbsenceReason for the skip:"
+  echo "        var dir = TestRepoLayout.FindDirectory(\"test-pdfs\", \"smoke\");"
+  echo "        Assert.SkipWhen(dir == null, TestRepoLayout.AbsenceReason(\"smoke corpus\", \"test-pdfs/smoke\"));"
+  echo "      Do NOT add an exception here."
+  echo "$STRICT_HITS" | sed 's/^/        /'
+  FAIL=1
+fi
+
+OTHER_PROJECTS=()
+for p in "${TEST_PROJECTS[@]}"; do
+  is_strict=0
+  for sp in "${STRICT_PROJECTS[@]}"; do [ "$p" = "$sp" ] && is_strict=1; done
+  [ "$is_strict" -eq 1 ] || OTHER_PROJECTS+=("$p")
+done
+UNENFORCED=0
+if [ ${#OTHER_PROJECTS[@]} -gt 0 ]; then
+  UNENFORCED=$(scan_locators "${OTHER_PROJECTS[@]}" | grep -c . || true)
+fi
+echo "==> 3c enforced in: ${STRICT_PROJECTS[*]}; $UNENFORCED hand-rolled locator(s) counted but NOT yet enforced in: ${OTHER_PROJECTS[*]:-(none)} (#1775)"
+
+# ---------------------------------------------------------------------------
 # 4. Every class that enumerates a GITIGNORED corpus into a theory must have a
 #    declared collected-row floor.
 #
