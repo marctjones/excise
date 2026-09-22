@@ -606,9 +606,14 @@ failure is silent — no crash, no error, the name is just still in the file.
 The redaction gate is therefore non-negotiable at every tier that produces a
 binary anyone could redact with, including a purely local build: `t0`
 includes the near-free static redaction-architecture guard
-(`verify-true-redaction.sh`); `t1`'s redaction test suites run unconditionally
-and there is no flag to skip them — their rows are `checkpoint=never` in the
-manifest, so `--resume` re-runs them too.
+(`verify-true-redaction.sh`). `t1` reaches a redaction verdict over every
+`~Redaction` test with no flag to skip it — `redaction-suites-union` reads
+the trx of the rows that already ran those assemblies and refuses any trx
+not produced by this run (#1767: the old `redaction-suites` row re-executed
+1898 already-run tests for 435-454s and caught nothing unique; the
+re-execution itself now runs in `t2`, where none of those producers do).
+Both rows are `checkpoint=never` in the manifest, so `--resume` re-runs them
+too.
 
 ### Restartable full runs — `scripts/run-full-suite.sh`
 
