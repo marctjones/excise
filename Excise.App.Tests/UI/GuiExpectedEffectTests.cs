@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using AwesomeAssertions;
 using Excise.Avalonia.Controls;
 using Excise.App.Tests.Utilities;
@@ -287,7 +288,7 @@ public class GuiExpectedEffectTests
                 var visBefore = new Dictionary<Panel, bool>();
                 await Dispatcher_InvokeCapture(window, viewer, panels, ink => inkBefore = ink, visBefore);
 
-                await Dispatcher_Execute(window, cmd);
+                await Dispatcher_Execute(window, viewer, cmd);
 
                 double inkAfter = 0;
                 var visAfter = new Dictionary<Panel, bool>();
@@ -413,7 +414,7 @@ public class GuiExpectedEffectTests
                 var visBefore = new Dictionary<Panel, bool>();
                 await Dispatcher_InvokeCapture(window, viewer, panels, ink => inkBefore = ink, visBefore);
 
-                await Dispatcher_Execute(window, cmd);
+                await Dispatcher_Execute(window, viewer, cmd);
 
                 var orderAfter = PageOrderSignature(vm);
                 var countAfter = vm.TotalPages;
@@ -476,30 +477,54 @@ public class GuiExpectedEffectTests
 
     // ── per-step helpers ────────────────────────────────────────────────────────
 
-    private static async Task Dispatcher_Execute(Window window, ICommand cmd)
+    /// <summary>
+    /// Executes <paramref name="cmd"/>, then pumps until the viewer reports
+    /// quiescent (or a bounded number of pumps have run — some commands have no
+    /// viewer-visible effect at all, so quiescence is never guaranteed to be the
+    /// stopping condition). Checks BEFORE sleeping: most of the ~85 commands this
+    /// runs against have no rendering effect and are already quiescent on the
+    /// first check, so the old unconditional 4x40ms cost the full 160ms on every
+    /// one of them regardless (#1771).
+    /// </summary>
+    private static async Task Dispatcher_Execute(Window window, PdfViewerControl viewer, ICommand cmd)
     {
         cmd.Execute(null);
-        for (int i = 0; i < 4; i++) { await Task.Delay(40); window.UpdateLayout(); }
+        for (int i = 0; i < 4; i++)
+        {
+            // RunJobs first: a command that flags IsLoading via a POSTED dispatcher
+            // job (rather than synchronously inside Execute) has not set it yet
+            // until something drains the queue — checking before this would read
+            // stale state and return before the render even starts (#1771).
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            if (!viewer.IsLoading && viewer.ContinuousInFlightCount == 0) return;
+            await Task.Delay(40);
+        }
     }
 
     /// <summary>Capture the page-surface ink (settled) and each panel's effective
     /// visibility in one settled sample. Waits for the viewer to finish loading
     /// (a page-mutating command such as rotate re-renders asynchronously) before
-    /// sampling, so a mid-render blank frame is never mistaken for a blanked page.</summary>
+    /// sampling, so a mid-render blank frame is never mistaken for a blanked page.
+    /// Checks BEFORE sleeping (#1771): a frame already inked pays no delay.</summary>
     private async Task Dispatcher_InvokeCapture(
         Window window, PdfViewerControl viewer, Dictionary<Panel, Control> panels,
         Action<double> setInk, Dictionary<Panel, bool> vis)
     {
         double ink = 0;
         var deadline = Environment.TickCount64 + 20000;
-        while (Environment.TickCount64 < deadline)
+        while (true)
         {
-            await Task.Delay(80);
+            Dispatcher.UIThread.RunJobs();
             window.UpdateLayout();
-            if (viewer.IsLoading) continue;              // let the (re-)render finish
-            using var bmp = Capture(viewer);
-            ink = InkFraction(bmp);
-            if (ink > 0.002) break;                       // settled into an inked frame
+            if (!viewer.IsLoading)                        // let the (re-)render finish
+            {
+                using var bmp = Capture(viewer);
+                ink = InkFraction(bmp);
+                if (ink > 0.002) break;                   // settled into an inked frame
+            }
+            if (Environment.TickCount64 >= deadline) break;
+            await Task.Delay(80);
         }
         setInk(ink);
         foreach (var (p, c) in panels)
@@ -524,13 +549,15 @@ public class GuiExpectedEffectTests
     {
         var deadline = Environment.TickCount64 + timeoutMs;
         SKBitmap? last = null;
-        while (Environment.TickCount64 < deadline)
+        while (true)
         {
-            await Task.Delay(100);
+            Dispatcher.UIThread.RunJobs();
             window.UpdateLayout();
             last?.Dispose();
             last = Capture(viewer);
             if (InkFraction(last) > 0.002) return last;
+            if (Environment.TickCount64 >= deadline) break;
+            await Task.Delay(100);
         }
         last.Should().NotBeNull("viewer produced no capture");
         return last!;
