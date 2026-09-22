@@ -110,1229 +110,113 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Changed
-- **Redaction output profiles: Standard is the new default everywhere, and
-  Maximum is an explicit choice** (#1586). Product decision by Marc Jones,
-  2026-09-17; it supersedes the "defaults were deliberately not flipped" note
-  for these carriers (#1169/#1187). Every path — GUI, `excise redact`, batch
-  `redaction.apply`, scripting, and the library's
-  `RedactText`/`RedactArea`/`RedactAreas` — now removes the hidden machinery a
-  term scrub cannot make safe, and REPORTS each removal:
-  - **all JavaScript** (the document name tree, `/OpenAction`, and
-    catalog/page/annotation/field `/A` and `/AA`, including `/JS` held as a
-    STREAM) and every **external-effect action** (`/Launch`, `/SubmitForm`,
-    `/ImportData`, `/GoToR`, `/GoToE`). Internal `/GoTo` and `/Named`
-    navigation is kept. Found by walking the reachable object graph, with the
-    `/Next` chain of each surviving action pruned — enumerating known
-    locations is what #1581 was.
-  - **`/PieceInfo`** (catalog, pages and form XObjects), **page `/Thumb`**
-    images (a picture of the page *before* the redaction, which nothing
-    regenerates), and the **appearance stream of any hidden annotation or
-    widget** (`/F` Hidden/NoView, or on an OFF layer).
-  - **content in optional-content groups that are OFF by default**, those
-    groups' definitions, and annotations on them. The most destructive Standard
-    step on a real document — a hidden layer is often a watermark — so every
-    removal is counted in the report. Gated on `IncludeHiddenLayers`: a caller
-    who asked not to reach into hidden layers does not get them deleted
-    instead.
-  - the document **`/Info` dictionary and XMP `/Metadata` packet, wholesale**,
-    keeping only the PDF/A and PDF/UA identification. This is what makes the
-    library, CLI and batch paths match the GUI safe copy, and it closes #1583's
-    custom-`/Info`-key leak by construction: §14.3.3 lets a producer use any
-    key, so a targeted scrub must know names it cannot know.
-  - Accessibility and navigation carriers are **KEPT** and term-scrubbed:
-    `/TU`, `/Alt`, `/ActualText`, `/E`, structure-element `/T`, field names,
-    bookmark titles and link targets.
-  - **Maximum** (`--profile maximum`, batch `profile: maximum`, Preferences ›
-    Redaction › Output Profile) adds: remove-whole on every kept carrier, and
-    strips bookmarks, link annotations, comments/markup and field names, and
-    flattens forms and annotations. The report, the CLI and the redacted-copy
-    dialog all say the output is **no longer accessible or interactive**.
-  - Opt out per removal with `RedactionOptions.RemoveScripts`,
-    `.RemoveExternalActions`, `.RemovePieceInfo`, `.RemoveThumbnails`,
-    `.RemoveHiddenLayerContent`, `.RemoveHiddenAnnotationAppearances` and
-    `.StripDocumentMetadata`. The engine reads only these flags;
-    `RedactionOptions.Profile` is a label for the report, so a hand-built option
-    set cannot misreport what ran.
-  - ⚠️ **Behaviour changes for existing callers.** A `RedactText` or
-    `RedactArea` call that used to keep `/Title`, `/Author`, the XMP packet,
-    every custom schema, all JavaScript, `/PieceInfo`, thumbnails and hidden
-    layers now loses them. `StripDocumentMetadata = false` restores the old
-    surgical metadata scrub.
-  - `RedactArea`/`RedactAreas` gained report-returning overloads
-    (`RedactAreaWithReport`, `RedactAreasWithReport`); the area path previously
-    had no return channel at all.
-- **PDF/UA identification survives the metadata strip** (#1586, extending
-  #1507). Measured with veraPDF 1.28 `-f ua1` on
-  `test-pdfs/pdfua/7.1-t01-pass-a.pdf`, which passes as shipped: removing the
-  catalog `/Metadata` fails clause 7.1 test 8; re-emitting `pdfuaid:part` alone
-  fails 7.1 test 9 (`dc:title` is required); `pdfuaid:part` plus a
-  **synthesised** `dc:title` passes. The identity-only packet now carries both
-  identifications and a fixed placeholder title, so no document-derived text
-  rides back in. This supersedes `PdfAIdentityXmp`'s "a PDF/UA claim is
-  deliberately NOT preserved" note, whose premise — that the strip deletes the
-  title — is no longer true.
-- **`PdfDocument.ScrubMetadata` now clears EVERY `/Info` key**, not the
-  §14.3.3 Table 349 list (#1583). A producer's `/CaseName (…)` survived the
-  call the API described as removing "all document-level metadata", and the
-  carrier-trap survey measured it leaking to qpdf afterwards. Use
-  `ScrubInfoKeys` to name what goes instead.
-- **The carrier-scrub 3-character floor applies to `Strip` and not to
-  `RemoveWhole`** (#1586). Stripping "of" out of every `/Alt` corrupts
-  unrelated values, which is what the floor is for; dropping the whole value is
-  destruction the caller chose, and it is Maximum's mode. Applying the floor
-  there left a 2-character term sitting in a carrier under the one profile
-  whose promise is that no carrier keeps it. `ScrubTerms` now reports the floor
-  per carrier instead of skipping the whole pass.
+- **Redaction output profiles: Standard is the new default everywhere, and Maximum is an explicit choice** (#1586).
+- **PDF/UA identification survives the metadata strip** (#1586, extending #1507).
+- **`PdfDocument.ScrubMetadata` now clears EVERY `/Info` key**, not the §14.3.3 Table 349 list (#1583).
+- **The carrier-scrub 3-character floor applies to `Strip` and not to `RemoveWhole`** (#1586).
 
-- **Redacted output carries no attachments by default** (#1572). Product
-  decision by Marc Jones, 2026-09-17. Before, only the GUI's redacted-copy flow
-  removed attachments; `excise redact`, batch `redaction.apply`, scripting and
-  the library's `RedactText`/`RedactArea` removed only files whose name,
-  description or content matched the term, so an attachment excise could not
-  read (an image, a spreadsheet) always shipped. Every redaction entry point now
-  removes every embedded file and names each one with its size: the CLI prints
-  `ATTACHMENT REMOVED:` notes, batch results carry an `attachments` array,
-  `RedactionReport.Attachments` and `RedactedCopySafetyReport.Attachments` list
-  them, and the redacted-copy dialog names them. Opt out with
-  `--keep-attachments`, batch `keepAttachments: true`,
-  `RedactionOptions.KeepAttachments` or Preferences › Redaction › Attachments.
-  Kept attachments are still examined: text files (txt, csv, xml, html, json,
-  md, or a `text/*` type) have the term cut out and their `/CheckSum` dropped;
-  nested PDFs are redacted with the same options, and an unreadable or
-  password-protected one refuses the whole redaction
-  (`AttachmentRedactionRefusedException`, batch `ATTACHMENT_REFUSED`); anything
-  else is reported as not checked and the redaction is not a clean success.
-  A kept file listed in the attachment name tree under a key holding the term
-  is removed, as one whose `/F` or `/UF` holds it already was; files attached
-  only through a page `/AF` are examined too (#1582's attachment carriers). A
-  PDF portfolio (`/Collection`) is refused rather than stripped unless
-  attachments are kept (`PdfPortfolioRedactionException`, batch
-  `PORTFOLIO_REFUSED`). This reverses the "defaults reproduce prior behaviour"
-  rule of #1187 for this one option, deliberately.
-- **Any redaction of a document with an XFA form removes the XFA packet**
-  (#1574). #1547 phase 2 did this for forms excise laid out itself; a STATIC
-  XFA form (the IRS W-4, W-9 and 1040 shape) kept its `datasets` packet through
-  area redaction, which has no term to scrub it by, and Acrobat merges those
-  values back onto the page. `RedactArea`, `RedactAreas` and `RedactText` now
-  remove `/AcroForm /XFA` (and `/NeedsRendering`) from any document, report it
-  as an `/XFA` carrier row (and a "XFA form" line in the redacted-copy dialog),
-  and keep the AcroForm fields, which every non-XFA viewer already uses.
-- **The thumbnail sidebar no longer pre-renders the whole document while you
-  are waiting for the first page** (#1565). The background pre-warm used to
-  start with the document: on the 126-page IRS instructions it held a CPU busy
-  for 5.0 s from the moment the file opened (measured from the app's own log in
-  the 2026-09-17 release-baseline run: open complete at +0.1 s, search index at
-  +2.0 s, "pre-warm complete" at +5.0 s), which is what #1544 saw as a window
-  still changing 5.6 s after launch where Preview settles in 1.4 s. It now
-  waits for a quiet period in which nothing has opened a document, turned a
-  page, changed the zoom, scrolled the sidebar or reported search-index
-  progress — and any of those starts the wait again, so a reader who keeps
-  working never has 126 background page renders started underneath them. The
-  `ThumbnailPrewarm` preference is unchanged and now means "warm when idle",
-  as it always said.
-- **The background thumbnail pre-render is OFF by default** (#1565). Marc's
-  decision, 2026-09-17, taken on the measurement rather than ahead of it. On
-  irs-1040-instructions.pdf (126 pages) the whole-document pre-warm costs
-  ~110 MB of peak footprint and ~80 MB that no compacting collect returns, plus
-  5 s of one CPU, for a DISK cache whose benefit lands on a later re-open of
-  the same file. Deferring it to an idle period (the first attempt) did not pay:
-  the #1543 re-run moved the work into the measured idle window instead, taking
-  idle CPU from 0.10% to 5.18% and the 30 s-idle footprint from 671 MB to
-  775 MB. Sidebar scrolling never depended on it — demand loads plus the
-  12-page prefetch margin already cover it, and the pre-warm never put a bitmap
-  in the sidebar at all. The setting stays (Preferences › Performance ›
-  "Render thumbnails in the background") and the Fast preset still turns it on,
-  because that preset is exactly this trade.
-- **The quiet period IS the existing idle delay** (#1565) — Preferences ›
-  Performance › "Idle delay (seconds)", 30 s by default, formerly labelled
-  "Idle delay before releasing caches". There is one definition of idle in the
-  app rather than a second number nobody can find, so **lowering it also makes
-  thumbnails warm sooner** and raising it holds them back longer; the help text
-  on both controls says so. It applies whether or not "Drop scroll-back caches
-  when the window is deactivated, minimized, or idle" is on — it is a duration,
-  not a trim trigger, and a user who turned trimming off did not ask for the
-  pre-warm to run during their first page — so that box no longer disables it.
-  Changing it re-queues a pending pre-warm, so a lower value takes effect at
-  once instead of after the old period would have expired.
-- **Pre-warming a thumbnail no longer builds three bitmaps to throw them all
-  away** (#1565). The pre-warm wants the WebP on disk and nothing else, but it
-  went through the on-demand path, which produced the rendered master, a copy
-  for the caller and a second copy for the cache write — and on a re-open
-  decoded every cached WebP only to dispose the pixels. It now renders straight
-  to the cache file (`ThumbnailCacheService.WarmAsync`) and skips any page
-  already on disk without decoding it.
-- **The search-index status no longer redraws the status bar once per page**
-  (#1565). A 126-page document reported progress 126 times in ~2 s; reports are
-  now throttled to 250 ms, and the final one (which clears the text) is never
-  throttled.
+- **Redacted output carries no attachments by default** (#1572).
+- **Any redaction of a document with an XFA form removes the XFA packet** (#1574).
+- **The thumbnail sidebar no longer pre-renders the whole document while you are waiting for the first page** (#1565).
+- **The background thumbnail pre-render is OFF by default** (#1565).
+- **The quiet period IS the existing idle delay** (#1565) — Preferences › Performance › "Idle delay (seconds)", 30 s by default, formerly labelled "Idle delay before releasing caches".
+- **Pre-warming a thumbnail no longer builds three bitmaps to throw them all away** (#1565).
+- **The search-index status no longer redraws the status bar once per page** (#1565).
 
 ### Fixed
-- **`unredact` saw NOTHING on the Manafort filing: both detectors treated an
-  unset fill colour as white rather than §8.6.8 black** (#1617). The first
-  real-world document put in front of the tool defeated it completely. *USA v.
-  Manafort*, D.D.C. 1:17-cr-00201, docket entry 471 (2019-01-08) — the most
-  cited failed PDF redaction there is, black bars over whole lines with the text
-  still underneath — produced **0 marks and 0 findings**. Not a wrong answer: no
-  mark at all, on a page whose bars are plainly visible and whose covered text
-  `pdftotext` reads straight out.
-
-  `RedactionMarkDetector` and `HiddenTextDetector` both started their fill
-  colour at white, the first skipping any fill drawn before a colour operator.
-  The comment saying so named the spec and then set it aside: *"§8.6.8: the
-  initial colour is black, but a producer that never sets one is not drawing a
-  redaction"*. Every bar in that filing is `72 499.19 468 -13.8 re f` with no
-  colour operator in scope, relying on exactly the initial black that was set
-  aside — so the mark detector skipped all of them and the hidden-text detector,
-  the half that decides whether a leak is SEEN, scored each as non-obstructive.
-  After the fix: 25 marks, 24 recovered, 31 certain findings.
-
-  It is not an eager detector. The CORRECTED filing (entry 472) — same case,
-  same producer, same day, redaction properly applied — yields 24 marks and
-  nothing recovered, before and after. What keeps page furniture out is SIZE,
-  which was already there and is the right gate: the same file's underlines are
-  0.48–1.2pt and `MinSidePt` is 2.0, while the bars are 13.8pt.
-
-  ⚠️ **Why nothing caught it.** The synthetic generator writes `0 0 0 rg` before
-  every box, because that is what a person writing a fixture does. Every band of
-  the bench scored 100% on the same day this document scored zero. A gate built
-  from fixtures its authors wrote cannot see an assumption those authors share —
-  it took one real document, which is the entire argument for tier B.
+- **`unredact` saw NOTHING on the Manafort filing: both detectors treated an unset fill colour as white rather than §8.6.8 black** (#1617).
 
 - **A long dialog message pushed its own buttons off the window** (#1622).
-  Every dialog in `AvaloniaUserDialogService` was a fixed-size
-  `CanResize=false` window holding a `StackPanel` of message plus buttons, and
-  a StackPanel gives its children unbounded height — so a message taller than
-  the window simply overflowed, buttons and all. Measured on the #1586
-  redacted-copy report in the shipped app: the text laid out 400x420 inside a
-  450x228 window with the OK button at y=493. A reader could see down to "so
-  the file remains PDF/A" and no further — the `Output profile:` line, the
-  per-removal lines and the "this copy is NO LONGER accessible or interactive"
-  warning were all below the bottom edge, and the report was only recoverable
-  through the accessibility tree. Marc hit this independently.
-  The content is now a `*,Auto` grid — the footer row is measured first, so it
-  cannot be displaced — inside a `SizeToContent.Height` window with a 640 px
-  cap, and the message sits in a ScrollViewer for whatever still does not fit.
-  Applies to all five dialogs (message, confirm, unsaved-changes, text prompt,
-  password prompt); the prompts keep their input field in the footer so it
-  cannot scroll away either.
-  ⚠️ The floor that keeps a SHORT message the size it always was lives on the
-  CONTENT, not the window: measured the same day, `Window.MinHeight` is not
-  applied under `SizeToContent` (a one-line dialog laid out 90 px tall with
-  MinHeight 200 set, and raising it to 520 changed nothing).
-  Gate: `DialogMessageLayoutTests`, on real laid-out bounds. Both of its
-  assertions were verified by planting defects: restoring the fixed height and
-  StackPanel reddens the long-message case, dropping the content floor or
-  inflating it reddens the short-message case, and — found this way, not
-  assumed — swapping the grid back for a StackPanel passed every first-draft
-  assertion, because the headless window honours neither MinHeight nor
-  MaxHeight under SizeToContent and simply grew. The test now also arranges
-  the content at a size smaller than the message and checks the button there.
 - **The attachments warning is a persistent banner, not a 5 s toast** (#1619).
-  The notices row sits above the document, so the toast's auto-dismiss re-laid
-  out the window and jumped the page under the reader five seconds after the
-  document opened. Measured on `irs-1040-instructions.pdf` — the one
-  reader-bench document with an embedded file — that dismissal WAS the whole
-  remaining #1544 `launch drawn` tail (5.6 s): the process used 0.0% of a core
-  from 3.0 s until the timer fired at STEP 13 + 5.002 s, in every repeat, and
-  removing the attachment removed the event. The banner now behaves like the
-  XFA notice beside it: it stays until the reader closes it or the document
-  changes. The wording and the pointer to the Attachments pane are unchanged,
-  and the generic toast surface (and its 5 s timer) is untouched. A warning
-  about a carrier the page view cannot show — one that can hold a full copy of
-  the data the page was redacted of — should not expire on a timer either.
-- **The hidden-layer removal stopped at the page** (#1586). Standard removes
-  content in optional-content groups that are OFF by default — but the pass
-  walked only the PAGE content stream, and for a `Do` it asked whether the
-  XObject *itself* carried a hidden `/OC`. A hidden `/OC … BDC … EMC` span
-  inside a **visible** form XObject (whose `/Properties` live in the form's own
-  resources) was left in place, while the report still said hidden spans had
-  been removed. A guarantee that holds one level deep is the failure mode this
-  project treats as worse than promising nothing. The pass now recurses into
-  visible form XObjects (bounded at depth 8) and both levels share one span
-  filter so they cannot drift. Trap: `ocg-hidden-in-form`.
-- **An `/Alt` describing a redacted image could not be checked, and was not
-  reported** (#1586). `StructureTreeRedactionScrubber` has two passes and both
-  are blind to a `/Figure` whose `/Alt` describes an image an AREA redaction
-  blacked out: pass 1 needs an `/MCID`/`/OBJR` link to the area, and pass 2
-  content-matches the carrier against text the glyph pass removed — an image
-  redaction removes none. The area report now raises a `structure-tree /Alt`
-  carrier refusal naming the count (so `IsCleanSuccess` goes false), and
-  Maximum drops the whole value and reports the removal. It is deliberately
-  **not** stripped under Standard: an image can be blacked out in one corner
-  and correctly described everywhere else, and an `/Alt` is all a blind reader
-  gets.
-  ⚠️ **The refusal reaches the GUI dialog through the ledger, not the return
-  value.** `Excise.App/Services/RedactionService.RedactArea` calls the `void`
-  `page.RedactArea(rect, options)` overload and discards the `RedactionReport`,
-  so the engine computed the carrier row and threw it away. The count is now
-  recorded on `PdfDocumentRedactionLedger` — the mechanism created for exactly
-  this in #1572 — and `RedactedCopySafetyPolicy` reads it, so the redacted-copy
-  dialog carries the warning. A report nobody receives is not one.
+- **The hidden-layer removal stopped at the page** (#1586).
+- **An `/Alt` describing a redacted image could not be checked, and was not reported** (#1586).
 - **Maximum could take an attachment the caller asked to keep** (#1586).
-  `FileAttachment`, `Sound` and `Movie` are markup annotations, so Maximum's
-  annotation strip removed the only reference to a file the caller had kept
-  with `KeepAttachments` — the same defect the `/GoToE` action strip had, by a
-  different door. Such a file specification is now re-anchored on the catalog
-  `/AF` (§7.11.4) and the re-anchoring is reported; a `Sound` annotation, whose
-  clip is a bare stream rather than a file specification and so cannot be
-  re-anchored, is KEPT instead of silently emptied.
-- **The redaction covering box was untagged content** (#1586). A filled
-  rectangle appended to a TAGGED page is neither tagged as real content nor
-  marked as an artifact, so every excise redaction of a tagged PDF produced a
-  file that fails PDF/UA-1 clause 7.1 — silently, in the core feature, and no
-  existing test could see it. Found by #1586's new veraPDF accessibility gate on
-  its first run, while looking for a different defect. The box is now wrapped in
-  `/Artifact BMC … EMC` (§14.8.2.2), which is what it is: it carries no meaning,
-  and a screen reader announcing it would be reading the redaction rather than
-  the document.
-- **Redaction leaks in interactive carriers** (#1581), each confirmed with
-  qpdf's object dump after redaction and each now clean: a widget's `/AA /K`
-  JavaScript, a widget's `/AA /F` JavaScript held as a **stream**, a
-  non-terminal field's `/A` JavaScript, a `/Launch` action's file target, the
-  appearance stream of a widget flagged hidden, and a text field's **`/RV`**
-  rich value. `/RV` is the one the profile's removals do not cover: it needs no
-  `/V`, and the measured trap put the widget at `[72 600 272 620]` while the
-  term was drawn at y 680, so no match box ever overlapped it — `/RV` therefore
-  joins `/V` and `/DV` in the **document-level** field scrub. mutool *draws*
-  `/RV`, so the redacted name was still on the page in another reader, not only
-  in the bytes.
-- **Redaction leaks in document-level carriers** (#1583): custom `/Info` keys,
-  structure-element `/T`, and `/PieceInfo` private data. Structure-element text
-  carriers are now their own list (`/ActualText`, `/Alt`, `/E`, `/T`), kept
-  separate from the marked-content property-list carriers, which have no title.
+- **The redaction covering box was untagged content** (#1586).
+- **Redaction leaks in interactive carriers** (#1581), each confirmed with qpdf's object dump after redaction and each now clean: a widget's `/AA /K` JavaScript, a widget's `/AA /F` JavaScript held as a **stream**, a non-terminal field's `/A` JavaScript, a `/Launch` action's file target, the appearance stream of a widget flagged hidden, and a text field's **`/RV`** rich value.
+- **Redaction leaks in document-level carriers** (#1583): custom `/Info` keys, structure-element `/T`, and `/PieceInfo` private data.
 - **`KeepAttachments` silently lost a file to the action strip** (#1586).
-  Removing a `/GoToE` action drops the only reference to the embedded file it
-  targets, so a caller who explicitly asked to keep attachments got one fewer
-  with nothing saying which or why (6 files → 5 on the all-routes fixture).
-  Such a file specification is now re-anchored on the catalog `/AF` and
-  reported.
-- **Ctrl+Tab switches document tabs on macOS** (#1598). It never did: the
-  gesture was handled by a tunnelling `KeyDown` handler in `MainWindow`, and
-  AppKit takes Control-Tab as a key-view / key-equivalent keystroke, so Avalonia
-  was never told. Found by `reader_speed_bench.py --multi --configs excise-tabs`
-  with a real CGEvent (2 of 2 runs, the front document never changed); every
-  in-app test passed throughout, because a synthetic key event reaches the
-  handler on every platform. The native Window menu now carries **Show Previous
-  Tab** (Ctrl+Shift+Tab) and **Show Next Tab** (Ctrl+Tab) — Safari's own key
-  equivalents — acting on the document tabs of the window whose menu it is,
-  enabled only while that window has more than one tab. The `KeyDown` path is
-  unchanged for Windows and Linux (and still serves Ctrl+PgDn/PgUp and
-  Cmd+Shift+] / [ on macOS). macOS's own window-tab actions, which move through
-  a merged NSWindow tab group rather than one window's document tabs, are
-  retitled **Show Previous/Next Window Tab** so the two pairs are
-  distinguishable in one menu.
+- **Ctrl+Tab switches document tabs on macOS** (#1598).
 - **Windows printing now honours each annotation's `/Print` flag** (#1573).
-  The renderer had no print mode, so sheets were rastered with the VIEWER's
-  §12.5.3 rule — Hidden and NoView suppressed, everything else drawn — and that
-  is wrong on paper in both directions: review markup with no `/F` at all (the
-  common producer shape; excise's own authoring stamps `/F Print`, most others
-  do not) was printed although Acrobat and PDFKit leave it off, and a print-only
-  watermark (`NoView` + `Print`) was dropped although it is the one thing the
-  author meant for paper. `RenderOptions.PrintIntent` (new, public — the
-  Excise.Rendering API baseline changed) selects the print rule instead: Hidden
-  suppresses paper too, NoView says nothing about paper, and nothing prints
-  without the Print flag. `PrintSheetSource` sets it. Audit mode
-  (`RevealHiddenAnnotations`) is deliberately ignored under print intent — it
-  must never reach an export path, and a print raster is one. macOS is
-  unaffected: PDFKit prints the saved file and applies §12.5.3 itself.
-  The rule is pinned per annotation against Ghostscript, whose
-  `-dPrinted` switch makes it a print oracle and a view oracle on the same
-  fixture (`AnnotationPrintIntentTests`, plus `GhostscriptReferenceRenderer`
-  gains `TryRenderPageForViewIntent`).
-- **The pre-push gate checked the wrong commit range on a stepped push**
-  (#1600). git hands a `pre-push` hook `<local ref> <local sha> <remote ref>
-  <remote sha>` per pushed ref; the hook exported the remote sha as
-  `GATE_ASYMMETRY_BASE` and discarded the local one, while
-  `scripts/check-gate-asymmetry.sh` always evaluated `base...HEAD`. So
-  `git push origin <sha>:develop` from a checkout that had moved on judged
-  commits nobody was pushing — and reported green, with only `base=` in its
-  output to go on, which made the gate's own advice ("two pushes, not two
-  commits") impossible to follow from one checkout. The checker now takes a
-  head (`GATE_ASYMMETRY_HEAD`, or a second argument; default `HEAD`), prints it
-  resolved next to the base, and fails hard rather than silently falling back
-  when it does not resolve. The hook passes the pushed sha, and — because every
-  test row still builds the WORKING TREE — prints the pushed and tested commits
-  side by side on a stepped push and refuses a pushed commit that is not an
-  ancestor of HEAD, naming the temporary-worktree route instead. The hook body
-  moved to the tracked `scripts/pre-push-hook.sh` (`--install-hook` now writes a
-  two-line stub, and resolves the hook path through `git rev-parse --git-path`,
-  which a linked worktree needs), so it is testable:
-  `scripts/test-check-gate-asymmetry.sh` is a new t0 selftest row. ⚠️ **A hook
-  installed before this must be re-installed once**: `scripts/test-tier.sh
-  --install-hook`.
-- **Closing a document after an idle trim kept the whole document in memory**
-  (#1564, #1543). A cache trim — the idle trim, a window switch or OS
-  pressure — recorded the open document in render-ahead's single-page plan,
-  in either view, and nothing cleared that plan when the document closed. The
-  closed document, with every image it had decoded, stayed reachable, so the
-  close-time heap reclaim freed nothing: the #1543 bench on develop beed1e8b
-  held Altona at 705–713 MB 20 s and 45 s after Close Document, against
-  322–332 MB before render-ahead. Document changes now forget the plan, and
-  the close test covers both views with and without a trim first. Page-turn
-  render-ahead is unchanged.
+- **The pre-push gate checked the wrong commit range on a stepped push** (#1600).
+- **Closing a document after an idle trim kept the whole document in memory** (#1564, #1543).
 - **Opening a second document as a tab crashed excise on macOS** (#1584).
-  Each tab had its own native menu, and switching tabs gave the window a
-  different menu object. Avalonia's macOS menu code only accepts the first menu
-  a window is given, so it threw "The menu being updated does not match" and
-  the app quit. Each window now keeps one menu for its whole life. A tab
-  switch replaces the entries in that menu with the new tab's entries, so
-  every menu item acts on the tab you are looking at. A closed tab's entries
-  are still released with it (#1551).
-- **On macOS, excise ignored PDFs opened from Finder** (#1585). Double-click,
-  "Open With" and `open -a` did nothing, whether excise was already running or
-  was started by the open. Avalonia delivers those requests through an
-  application feature, but excise only looked for them on the desktop
-  lifetime, which never carries them. So excise never received them. It now
-  gets them from the application feature, and each PDF opens the way the Open
-  Documents In preference says.
-- **Attachments on page annotations survived "attachments scrubbed"**
-  (#1572). `PdfDocument.ScrubEmbeddedFiles()` removed only
-  `/Catalog/Names/EmbeddedFiles` and `/Catalog/AF`, so a file attached through
-  a `/FileAttachment` annotation — its payload, `/Desc` and the annotation's
-  `/Contents` — was still in the redacted copy the dialog called scrubbed. It
-  now removes page and annotation `/AF` arrays, FileAttachment, RichMedia and
-  Sound annotations, Screen and Movie annotations with embedded media, and
-  detaches any other embedded file specification (actions, form XObjects,
-  structure elements); an annotation a structure element still references is
-  reduced to a stub. New `PdfDocument.RemoveAllAttachments()` returns what it
-  removed. Verified with poppler's `pdfdetach`, qpdf's object graph and the
-  decompressing saved-byte scanner. The redacted-copy dialog used to print
-  "none found" for attachments the area pass had already removed; it now names
-  them. The Attachments pane's Remove All now removes page attachments too, and
-  undo restores them.
-- **A failed open left the previous document's attachments listed** (#1563),
-  and opening another document kept the old list on screen until the new one
-  finished loading. Both now clear.
-- **Remove All Attachments claimed removals it had not made** (#1563). It
-  strips the document-level tree, which does not include files carried by page
-  annotations, yet reported every listed attachment as removed. The count and
-  the toast now come from the list as re-read after the strip, and say how many
-  page attachments remain. Removing those is #1572.
-- **Area redaction deleted the `pdfaid` XMP, so it could never produce a
-  PDF/A-conformant file** (#1507). `RedactArea` — the click-to-redact path, and
-  the default for `page.RedactArea(rect)` — strips the positionless document
-  carriers wholesale (#897), correctly, because an area redaction has only a
-  rectangle and no term to scrub them by. That strip removed the catalog
-  `/Metadata` stream outright, which on a PDF/A input is the XMP packet carrying
-  `pdfaid:part`. Every part of ISO 19005 requires that stream and that
-  identification (veraPDF `containsMetadata`, `containsPDFAIdentification`), so
-  every archival document came out of an area redaction no longer conforming —
-  with no error, no warning, and nothing in the file to say so until someone
-  validated it months later. On a PDF/A-1 input it cost conformance twice: the
-  writer decides whether to emit the object streams PDF/A-1 forbids by reading
-  `pdfaid:part` back out of that same packet, and with the packet gone it wrote
-  them.
+- **On macOS, excise ignored PDFs opened from Finder** (#1585).
+- **Attachments on page annotations survived "attachments scrubbed"** (#1572).
+- **A failed open left the previous document's attachments listed** (#1563), and opening another document kept the old list on screen until the new one finished loading.
+- **Remove All Attachments claimed removals it had not made** (#1563).
+- **Area redaction deleted the `pdfaid` XMP, so it could never produce a PDF/A-conformant file** (#1507).
 
-  The packet is still removed — every schema in it, including ones excise has
-  never heard of, since any of them can restate a redacted term (#608). What is
-  written back is an identification-ONLY packet carrying at most
-  `pdfaid:part`, `pdfaid:conformance` and `pdfaid:rev`, each validated against a
-  closed set of tokens first, so no text from the original can ride back into
-  the document. The asymmetry the fix rests on: with no term, stripping the
-  packet buys real security against a carrier whose contents excise cannot name,
-  while the identification it also deleted is a part number and a letter — it
-  cannot hold a redacted name. PDF/A-4's own rules are honoured as found
-  (`pdfaid:rev` kept, no `pdfaid:conformance` invented, and an Info dictionary
-  the strip emptied is dropped rather than left present and empty, which ISO
-  19005-4 6.1.3 forbids). An unreadable or out-of-range identification is
-  withdrawn rather than repaired. The GUI redacted-copy safety pass, which runs
-  after the engine and scrubs metadata by default, uses the same call, so it no
-  longer undoes the fix — and it now REPORTS the exception
-  (`RedactedCopySafetyReport.PdfAIdentificationPreserved`), because the
-  redacted-copy dialog used to say a flat "XMP metadata removed" and that is no
-  longer the whole truth for an archival document. It reads "XMP metadata
-  removed except the PDF/A identification (pdfaid), which is kept so the file
-  remains PDF/A". Overstating a scrub in a redaction dialog is the same class of
-  problem as a carrier that silently keeps a term. Non-PDF/A documents lose their whole XMP packet exactly
-  as before, and a PDF/UA claim is deliberately not preserved (PDF/UA requires a
-  `dc:title` the strip deletes). Gated by veraPDF on excise-authored PDF/A-1b
-  and -2b output and on the real PDF/A-2b and PDF/A-4 corpus fixtures
-  (flavour conservation); the removal is asserted by the saved-bytes leak
-  scanner on every row and by mutool on the authored fixture, whose embedded
-  Identity-H font puts the page glyphs beyond the scanner's reach.
-- **A PDF/A-1 file whose XMP declares `pdfaid:part` as an ATTRIBUTE was not
-  recognised as PDF/A-1, so every save path wrote object streams into it —
-  which ISO 19005-1 forbids** (#1524). The writer decided whether it may use
-  object streams and a cross-reference stream by grepping the XMP packet for
-  one exact spelling, `<pdfaid:part>1</pdfaid:part>`. XMP permits the same
-  simple property as an attribute of the `rdf:Description`
-  (`pdfaid:part="1"`), which Adobe tooling emits, and such a file — valid
-  PDF/A-1, accepted by veraPDF — came out of excise carrying constructs
-  PDFA-1B rejects (ISO 19005-1 6.1.4#3, `containsXRefStream == false`). This
-  was in the WRITER, so it was never specific to redaction: open-and-save,
-  merge, split, form fill and every CLI command inherited it. Measured on four
-  fixtures (`%PDF-1.4`/`%PDF-1.7` × element/attribute), only the attribute form
-  with a header of at least 1.5 leaked one, because the compression gate also
-  requires 1.5 — but that pair is not hypothetical: PDFA-1B pins no version in
-  its header rule (`/%PDF-\d\.\d/`), and excise's own authored documents carry
-  a 1.7 header, so a PDF/A-1 file out of the builder is exactly this shape.
-- **The four independent readers of the PDF/A identification were consolidated
-  onto one parser, with presence and value kept as separate, named questions**
-  (#1526, the cause of #1524). `PdfDocumentWriter.IsPdfA1`,
-  `PdfAStructuralValidator` and `PdfDocument.TargetsPdfA` were each a one-line
-  substring match in a different project, and two of them disagreed about the
-  same file. All three now read through `PdfAIdentityXmp`, which parses both
-  serialisations: `DeclaresAnyIdentification` answers "does this file claim
-  PDF/A at all" (the presence semantics `TargetsPdfA` needs to avoid emitting
-  something PDF/A forbids — a claim excise cannot validate must still count as
-  a claim), `ReadDeclaredPart` answers "which part does it claim", and
-  `TryParse` remains the fully validated read, the only one allowed to re-emit
-  a claim. The structural validator gains the same attribute-form fix as a side
-  effect, and its conformance-level check became exact rather than a substring.
-- **excise signed PDFs with a BER-encoded CMS object where ISO 32000 requires
-  DER, and its verifier could not locate that object inside the padded
-  `/Contents` value** (#1494) — two halves of one defect, both in the
-  signature path. ISO 32000-1 and ISO 32000-2 12.8.3.3.1 both say the value of
-  `/Contents` "shall be a DER-encoded" PKCS#7 / CMS binary data object;
-  BouncyCastle's `CmsSignedDataGenerator` defaults to BER, building its
-  certificate and signerInfo SETs as `BerSet`, which makes `SignedData` and the
-  enclosing `ContentInfo` a `BerSequence` — so excise's signatures began
-  `30 80`, indefinite length, terminated by an end-of-contents marker instead
-  of carrying a length. The signer now sets
-  `UseDefiniteLength` and encodes DER. On the verifier side, `/Contents` is a
-  fixed-width placeholder that 12.8.3.3.1 requires to be "padded with zeros",
-  and the CMS object was sized by hand-decoding its outer tag/length bytes —
-  which understands definite length only and silently gave up on indefinite
-  length, handing BouncyCastle the whole padded 8 KiB value. BouncyCastle
-  2.6.2 read the first ASN.1 object and ignored the rest, so this never
-  showed; 2.7.0 routes `CmsSignedData`'s `byte[]` constructors through
-  `Asn1Object.FromByteArray`, which throws `extra data found after object`,
-  and excise's own signatures started verifying as invalid. The extent is now
-  found with an ASN.1 reader (`SignatureContentsReader`), which handles both
-  encodings identically, so documents signed before and after this change both
-  verify. Non-zero bytes after the CMS object — unauthenticated by both the
-  `/ByteRange` digest and the CMS object — are now reported
-  (`UnsignedTrailingContentBytes`, and a line in the verification summary)
-  rather than silently ignored.
-- **A signer certificate that was outside its validity window at the claimed
-  signing time was reported as a digest mismatch** (#1494) — BouncyCastle
-  throws before computing the digest, so the report claimed tampering that was
-  never tested for. Integrity now stays unchecked and the message names the
-  real cause. Likewise, the underlying reason for a failed CMS parse is no
-  longer dropped on the way out: the message said only "BouncyCastle
-  verification failed", which is what made #1494's `extra data found after
-  object` look like a mystery.
-- **Redacting a form field value cost the file its PDF/A conformance**
-  (#1499) — the interactive scrub ended with `/NeedAppearances true` whenever
-  anything changed, and PDF/A forbids that entry (ISO 19005-2 6.4.1#3,
-  ISO 19005-1 6.9#1), so a redacted PDF/A form stopped being PDF/A while its
-  XMP went on claiming it was. The
-  flag was also self-contradictory: #1098 had just rewritten the widget's
-  appearance to remove the term's glyphs, and the flag tells the viewer to
-  discard that appearance and re-typeset from `/V`. The decision is now made
-  per widget — an appearance that survived the rewrite needs no flag at all
-  (true for every document, not only archival ones); a widget left without one
-  gets an EMPTY appearance when the document targets PDF/A (19005-2 6.3.3#1,
-  19005-1 6.9#2 require one), and the flag as before when it does not. Zero-size widgets stay appearance-less, per #623. PDF/A intent
-  is read from the XMP `pdfaid` identifier, or from `PdfDocumentBuilder.PdfA()`
-  before the save that writes it. Verified by veraPDF — not by excise — on a
-  redacted PDF/A-1b and -2b form, together with a `SavedPdfLeakScanner` scan of
-  the saved bytes and a mutool read of the rewritten appearance.
-- **`PdfA()` plus a date field produced a file veraPDF rejected** (#1498) —
-  `AddDateField` writes Acrobat `AFDate` format and keystroke actions, and
-  PDF/A forbids JavaScript actions outright (19005-1 6.6.1#1, 19005-2 6.5.1#1).
-  The PDF/A save pass now removes the actions PDF/A rejects, with the scope
-  read out of veraPDF's own validation profiles rather than from memory:
-  `/AA` goes wholesale from the catalog and from every field and widget
-  dictionary, and `/A` goes wholesale from every widget — PDF/A bans the KEYS
-  there, not merely JavaScript in them (19005-1 6.6.1#3 and 6.6.2, 19005-2
-  6.4.1#1 and #2) — while elsewhere (a Link's `/A`, a page's `/AA`,
-  `/OpenAction`) only JavaScript is removed and legal navigation survives.
-  The document-level `/Names/JavaScript` tree goes too. ⚠️ **A date field
-  in a PDF/A document is therefore an ordinary text field: the viewer no longer
-  validates or reformats what the user types.** The field, its name, flags,
-  appearance and tooltip are unchanged, and the builder's date-field tooltip
-  already names the expected format, so the hint survives. The loss is not
-  reported: `Excise.Core` has no save-path diagnostic channel to report it
-  through, tracked by #1509. Non-PDF/A output is
-  untouched — the strip runs only inside the PDF/A pass, so call order does not
-  matter.
-- **A FreeText annotation with Arabic `/Contents` and no `/AP` rendered
-  blank** (#1363) — the synthesised appearance refused any string that needs
-  complex-script shaping, and drew only the first line of the rest. Such
-  `/Contents` now go through a typesetter in `Excise.Rendering`. It uses
-  HarfBuzz shaping through the new `SkiaSharp.HarfBuzz` dependency (MIT, which
-  brings the native HarfBuzzSharp), tries the `/DA` font first and then system
-  fonts per run, orders each paragraph right-to-left or left-to-right, and draws
-  every line wrapped to and clipped at `/Rect`. It still draws nothing when no
-  font covers the text or shaping is unavailable, because unshaped Arabic reads
-  as plausible wrong text. The appearance is render-only and is never written
-  to a saved file. Before the fix, pdf.js `freetext_no_appearance.pdf` at
-  150 dpi inked 20,152 px in mutool and 4,926 in pdfium, both inside `/Rect`,
-  and 0 in excise. Full Unicode bidi stays with #632.
-- **The TJ array adjustment was applied raw instead of composed through the
-  text matrix** (#1391) — §9.4.3's horizontal branch did `_tm_e -= tx` with no
-  `·_tm_a` and no effect on `_tm_f`, three lines below an already-correct
-  §9.4.4 glyph advance. This is the surviving branch of the defect #942 fixed
-  for §9.4.2 line stepping, and because `ContentStreamWalker` is the single
-  state machine behind both sinks, it displaced the letter stream `RedactText`
-  matches on and the operator bounds `GlyphRemover` removes on together.
-  Every TJ-kerned document under a scaled `Tm` — most professionally typeset
-  PDFs — had systematically misplaced letters. Measured against mutool on a
-  scale-10 fixture: excise placed the kerned glyphs at 26.2/32.4 where mutool
-  and the spec say 17.22/14.44, wrong by the matrix factor and marching in the
-  opposite direction; under a rotated matrix it moved the wrong axis entirely.
-  Extraction parity holds at 100.0% aggregate over 332 pages and the
-  collateral ratchets are unchanged.
-- **The saved-PDF leak scanner scanned the trailer `/ID`** (#1295) — a random
-  16-byte file identifier written as uppercase hex, which no page text can
-  leak into, so a short ASCII needle collided with it and made short-term
-  redaction assertions intermittently red (observed four times with a provably
-  clean redacted page). The exclusion existed before and #1049's migration
-  dropped it; it is now one shared policy applied by both scanner entry
-  points, scoped to the `/ID` array only so a hex string in a content stream
-  is still scanned.
+- **A PDF/A-1 file whose XMP declares `pdfaid:part` as an ATTRIBUTE was not recognised as PDF/A-1, so every save path wrote object streams into it — which ISO 19005-1 forbids** (#1524).
+- **The four independent readers of the PDF/A identification were consolidated onto one parser, with presence and value kept as separate, named questions** (#1526, the cause of #1524).
+- **excise signed PDFs with a BER-encoded CMS object where ISO 32000 requires DER, and its verifier could not locate that object inside the padded `/Contents` value** (#1494) — two halves of one defect, both in the signature path.
+- **A signer certificate that was outside its validity window at the claimed signing time was reported as a digest mismatch** (#1494) — BouncyCastle throws before computing the digest, so the report claimed tampering that was never tested for.
+- **Redacting a form field value cost the file its PDF/A conformance** (#1499) — the interactive scrub ended with `/NeedAppearances true` whenever anything changed, and PDF/A forbids that entry (ISO 19005-2 6.4.1#3, ISO 19005-1 6.9#1), so a redacted PDF/A form stopped being PDF/A while its XMP went on claiming it was.
+- **`PdfA()` plus a date field produced a file veraPDF rejected** (#1498) — `AddDateField` writes Acrobat `AFDate` format and keystroke actions, and PDF/A forbids JavaScript actions outright (19005-1 6.6.1#1, 19005-2 6.5.1#1).
+- **A FreeText annotation with Arabic `/Contents` and no `/AP` rendered blank** (#1363) — the synthesised appearance refused any string that needs complex-script shaping, and drew only the first line of the rest.
+- **The TJ array adjustment was applied raw instead of composed through the text matrix** (#1391) — §9.4.3's horizontal branch did `_tm_e -= tx` with no `·_tm_a` and no effect on `_tm_f`, three lines below an already-correct §9.4.4 glyph advance.
+- **The saved-PDF leak scanner scanned the trailer `/ID`** (#1295) — a random 16-byte file identifier written as uppercase hex, which no page text can leak into, so a short ASCII needle collided with it and made short-term redaction assertions intermittently red (observed four times with a provably clean redacted page).
 
 ### Added
-- **`excise unredact` reads every carrier a redaction can leave behind.** The
-  certain channel used to read only structure-tree `/ActualText`/`/Alt`/`/E` and
-  annotation `/Contents`/`/RC`. It now also reports, each finding labelled with
-  its carrier, page, object number and location:
-  - AcroForm `/V`, `/DV`, `/RV`, `/TU`, both halves of `/Opt` export/display
-    pairs, widget `/MK` captions (`/CA`, `/RC`, `/AC`), and the text every
-    annotation's appearance streams paint (decoded through the one content
-    walker);
-  - JavaScript (string or stream) and `/URI`, `/Launch`, `/GoToR`,
-    `/SubmitForm` targets from every action location — document name tree,
-    `/OpenAction`, `/AA` on the catalog, pages, annotations, non-terminal
-    fields, and outline items;
-  - XFA datasets values and template default values, captions, list items,
-    tooltips and scripts (safe XML loading, datasets-only forms included);
-  - attachments from the name tree, `/FileAttachment` annotations, and `/AF`
-    on the catalog, pages and annotations: name, `/F`, `/UF`, `/Desc`,
-    text-like payloads, and attached PDFs scanned recursively (page text and
-    every carrier, three levels deep);
-  - `/Info` and XMP content properties (tool-written producer, dates, ids and
-    history are filtered out), outline titles, markup-annotation authors,
-    `/Subj`, `/OverlayText`, structure-element `/T`, `/PieceInfo` private data,
-    and text in optional content that is hidden by default;
-  - unreferenced (orphan) objects, including a dropped content stream, and
-    text an incremental update superseded: each earlier revision is opened
-    from the file prefix and only what the current revision no longer shows is
-    reported.
+- **`excise unredact` reads every carrier a redaction can leave behind.** The certain channel used to read only structure-tree `/ActualText`/`/Alt`/`/E` and annotation `/Contents`/`/RC`.
 
-  **Only hidden text is a finding by default.** A carrier that restates text
-  the reader already sees is a *visible duplicate*. The visible text is: each
-  page's drawn text (not counting hidden layers or text under a dark box), the
-  painted appearance of every annotation and widget not flagged hidden, and the
-  title and bookmark titles. Comparison ignores case and whitespace. So a filled
-  form whose widgets show their values, or a titled document, reports nothing.
-  A field whose appearance was redacted while `/V` still holds the value is a
-  hidden finding. For a carrier its own widget owns (`/V`, `/DV`, `/RV`,
-  `/Opt` export values, `/MK` captions), "visible" means *that widget's*
-  appearance shows it, not that the text appears somewhere in the document: a
-  redacted field whose value also occurs in a page header is still reported.
-  An annotation's normal appearance is visible exactly when the annotation is
-  not flagged hidden. Hidden findings are ranked by how close they sit to a
-  redaction mark (a dark filled box, a `/Redact` annotation, covered text), and
-  the output says "overlaps redaction mark" or "page has redaction marks".
-  Duplicates do not set exit code 3 and are listed only with `--carriers all`
-  (or `--verbose`), under a `visibleDuplicates` JSON array and a "VISIBLE
-  DUPLICATES" section. Known gap: the walker does not tag render mode, so text
-  drawn invisibly (render mode 3) counts as visible.
-
-  Content that is present but not decoded — an opaque attachment, a page
-  `/Thumb`, an unreadable packet, a nested PDF past the depth limit — is listed
-  under a new `present` JSON array and a "PRESENT" section, and does not set the
-  certain exit code. The scan is bounded (findings, text length, payload size,
-  revisions, nesting) and cancellable, and runs only in `unredact`.
-  `CarrierTextRecovery.CarrierText` gains `ObjectNumber`, `Kind`, `Location`,
-  `VisibleElsewhere`, `NearRedaction` and `Area`; `Scan` gains a cancellable
-  overload.
-- **Carrier traps for the unredaction scorecard and the redaction bench.**
-  `CarrierTrapFixtures` generates one synthetic PDF per carrier above in
-  memory. Each finding is corroborated by qpdf (`--json` object dump, `--check`,
-  `--show-attachment`) and mutool (`show -b` of the object excise names, page
-  text of an earlier revision) — excise does not vouch for itself. The
-  unredaction scorecard grades a new `carrier` channel against qpdf's object
-  dump, and `RedactionBenchmarkRunner` redacts every trap with each tool
-  (`redaction-carrier-traps` corpus) and records which carriers the unredact
-  channel still reads in the output (`unredactCarriers`, `carrier-recovery`).
-  An opt-in excise-only survey (`CARRIER_TRAP_SURVEY=1`,
-  `CarrierTrapExciseRedactionSurveyTests`) found `RedactText` leaving the term
-  in 12 of 47 traps, each confirmed with qpdf and mutool: field/annotation
-  JavaScript, `/RV`, hidden-widget appearances and `/Launch` targets (#1581);
-  attachment name-tree keys, page `/AF` files and PDFs nested in attachments
-  (#1582); custom `/Info` keys, structure-element `/T` and `/PieceInfo` (#1583).
+- **Carrier traps for the unredaction scorecard and the redaction bench.** `CarrierTrapFixtures` generates one synthetic PDF per carrier above in memory.
 - **Several documents at once, in separate windows** (#1463, #1551–#1553).
-  Opening a PDF while a window already shows one now opens it in a new
-  window (File → Open, Open Recent, drag and drop, Finder or Explorer, and the
-  command line). File → Open accepts several files, and a drop opens every
-  PDF it carries. A window with no document takes the file itself, and a file
-  that is already open is brought to the front instead of being opened twice.
-  Preferences → Documents → "Open Documents In" chooses Automatic (the
-  default), NewWindow, NewTab, or ReplaceCurrent (the old single-document
-  behaviour, with its unsaved-changes prompt).
-  - **In-app tabs** (#1554, NewTab): a tab strip above the document, shown
-    once a window holds two documents. Each tab has a close button (middle
-    click also closes), drags to reorder, and a context menu (Close Tab,
-    Close Other Tabs, Move Tab to New Window, Copy Path, Reveal in
-    Finder/Explorer); a button at the right lists every tab, so the strip
-    never scrolls or wraps. Ctrl+Tab / Ctrl+Shift+Tab and Ctrl+PgDn /
-    Ctrl+PgUp switch tabs (also ⌘⇧] / ⌘⇧[ on macOS). Window → Merge All
-    Windows gathers every window's documents as tabs, and Move Tab to New
-    Window splits one out, with its undo history and unsaved edits. A window
-    has one viewer, so an inactive tab holds no page tiles; switching
-    re-renders the visible page and restores that tab's scroll position.
-    Under memory pressure an inactive tab's thumbnails are released first.
-    Tabs are announced with their position and unsaved state.
-  - **macOS:** document windows use native window tabbing. With System
-    Settings → Desktop & Dock → "Prefer tabs when opening documents" set to
-    Always, a new document opens as a tab of the current window. The Window
-    menu has Show Previous/Next Tab, Move Tab to New Window, Merge All
-    Windows, Show or Hide Tab Bar, and the list of open documents.
-  - **Windows and Linux:** a Window menu lists the open documents, and
-    opening a PDF from Explorer or a file manager while excise runs hands it to
-    the running process instead of starting a second one
-    (`EXCISE_SINGLE_INSTANCE=0` turns that off).
-  - Each window is one document session with its own undo history, search,
-    selection, redaction marks, unsaved-changes state, toasts and dialogs.
-    Close Document (⌘W / Ctrl+W) closes the window when another document is
-    open; the last window stays open and empty, as before. Quit asks about
-    every document with unsaved changes, in turn, and a Cancel keeps all of
-    them open. The window title names the document and says when it has
-    unsaved edits.
-  - Preferences are app-wide: a Preferences save applies to every open
-    window, so the redaction carrier policies and whole-word rule can never
-    differ between two windows. Recent files are one list for the whole
-    application.
-  - Memory: closing a window releases its document, its caches and its view
-    model. All windows share ONE tile-cache budget (Preferences →
-    Performance) rather than one each (`PdfViewerTileBudget`): when it is
-    exceeded, background windows give up render-ahead tiles first, then
-    scroll-back tiles, and only for the focused window their band tiles
-    (already composited, so nothing on screen changes). The focused window
-    never gives tiles to a background one, and a lone window evicts exactly
-    as before. The idle heap reclaim (#1496) runs once per app idle period,
-    not once per window.
-- **Attachments pane in the sidebar, visible by default** (#1563). Embedded
-  files used to be reachable only through a Document ▸ Attachments… dialog.
-  They are now listed under Outline and Thumbnails as soon as a document opens:
-  file name, decoded size, description, modified date, and — for a file carried
-  by a page's `/FileAttachment` annotation — the page, which selecting the row
-  jumps to. Both carriers are listed (`/Names/EmbeddedFiles` and page
-  annotations; catalog `/AF` too). The pane has Save…, Save All… (into a chosen
-  folder, never overwriting; names are cut to one portable file name, so a
-  declared `../../x` or `C:\x` cannot write outside the folder) and Remove All,
-  which is now undoable. Rows are announced as "name, size", and file names
-  show invisible format controls as `[U+XXXX]` so a right-to-left override
-  cannot disguise an executable. When a document has none the pane says "No
-  attachments" and stays visible. View ▸ Show Attachments (also in the macOS
-  menu) hides it, and the choice is remembered in `window.json`. Document ▸
-  Attachments now reveals and focuses the pane; the dialog is gone. Saving is
-  refused with a toast when the document's `/P` flags forbid extraction
-  (bit 5). excise still never opens or runs an attachment.
-  `PdfEmbeddedFile.PageNumber` is new public API.
-- **Dynamic XFA forms are displayed** (#1547, phase 2). A dynamic XFA form
-  used to open as its "Please wait..." placeholder page. excise now lays the
-  form out when it opens and shows the result as ordinary pages, so page view,
-  thumbnails, search, text selection, printing and redaction all work on it.
-  The layout covers subforms (positioned, top-to-bottom, left-to-right and
-  table layouts), draws and fields with captions, borders and fills, fonts
-  mapped to the base-14 families, page areas and content areas with
-  pagination and page breaks, repeating subforms (`occur`), and data from the
-  form's datasets (normal, global and `dataRef` binding). Scripts do not run
-  (#1570, #1571), so the banner now says excise shows the form's initial
-  layout and still points to Acrobat Reader or Firefox for filling it in. When
-  a form cannot be laid out, the placeholder and the phase-1 warning stay.
-  Images (#1575), barcodes (#1576) and text outside WinAnsi (#1577) are not
-  drawn yet, and gradient and pattern fills are drawn as their base colour
-  (#1578). Myriad Pro, the Designer default, is drawn as Helvetica at 90% width
-  to match its metrics. The layout runs only for documents that
-  `DetectXfaForm()` classifies as dynamic and that set `/NeedsRendering true`
-  (a document with real page content keeps its pages), and it is bounded in size, depth,
-  pages and time. The XML parser prohibits DTDs and never resolves external
-  references. Saving keeps the XFA form, and the saved pages are marked, so
-  reopening the file shows the same pages. **Any redaction of a laid-out form
-  removes the XFA form whole**, because it restates every value on the pages
-  and XFA viewers would regenerate the redacted values from it. Library API:
-  `PdfDocument.ApplyXfaLayout()`, `HasXfaLayoutPages()` and `RemoveXfaForm()`
-  in `Excise.Core.Xfa`. Design: `docs/architecture/xfa-rendering.md`.
-- **Reduce File Size** (#1550). Document ▸ Reduce File Size… (also in the
-  macOS menu bar) and `excise optimize <in> <out> --preset
-  lossless|high|standard|screen [--password] [--allow-decrypt] [--json]` write
-  a smaller **copy**. The command never overwrites the input, and the GUI
-  refuses while there are unsaved edits. Both show the size before and after.
-  - **Lossless** (the default): re-encodes uncompressed and weakly compressed
-    streams with the strongest Flate level and keeps the result only when it
-    is smaller; points byte-identical images, form XObjects and font programs
-    at one copy; and drops page thumbnails and `/PieceInfo`. The copy is also
-    written for size: form-field, font and Info dictionaries go into object
-    streams (an ordinary save keeps them greppable, #1431), object streams
-    hold 200 objects, and the xref stream uses minimal widths and a PNG
-    predictor. Pages render pixel-identically (mutool).
-  - **High / Standard / Screen**: also downsample images above 375 / 188 /
-    120 dpi, measured at their largest placed size, to 300 / 150 / 96 dpi
-    (JPEG quality 85 / 75 / 60).
-  - **What is skipped, and reported with the reason**: images the optimizer
-    cannot measure (drawn inside a form XObject) or that it cannot re-encode
-    faithfully (masks, `/Decode`, colour spaces other than gray/RGB/ICC 1-3,
-    not 8 bpc, CCITT/JBIG2/JPX).
-  - **Redaction**: the optimizer works on a copy reopened from an ordinary
-    save, so a redacted document stays redacted (saved-bytes leak scanner and
-    mutool, every preset). Encrypted inputs stay encrypted with the same
-    settings. Signed inputs get a warning that their signatures will no longer
-    validate. Already-embedded fonts are not subset.
-  - **Measured on the smoke corpus, Lossless** (input → output):
-    - irs-w4 208,845 → 181,149 (−13%)
-    - irs-1040 220,237 → 190,241 (−14%); qpdf's own optimizer gets 199,086
-    - irs-1040-instructions 4,434,643 → 4,383,765 (−1%)
-    - state-ds11 2,568,395 → 2,223,367 (−13%)
-    - irs-pub509 1,195,405 → 1,189,086 (−0.5%)
-    - every output passes `qpdf --check`
-  - **Measured on the 20-page 200 dpi scan** (`reader-bench/scan-irs-20p-200dpi.pdf`,
-    10,392,181 bytes):
-    - Standard → 5,551,763 (−47%)
-    - Screen → 2,295,485 (−78%)
-    - Lossless and High leave it as it is: its JPEGs are already compact and
-      below High's threshold
-  - **Measured with the lossy presets on the two heavy fixtures** (each run
-    under 3 s; every output passes `qpdf --check`, keeps its page count, and
-    renders page 1 pixel-identically in mutool):
-    - irs-1040-instructions: High, Standard and Screen all give 4,383,765
-      (−1%, the same as Lossless). Its two images, both large CMYK JPEGs, are
-      drawn inside form XObjects, so they are reported as skipped.
-    - Altona (17 pages, 127,724,771 bytes): High → 124,590,100, Standard →
-      124,558,758, Screen → 124,553,723 (−2.5%), 0.6 s. One image is
-      downsampled (Screen changes only page 2: mean difference 0.7 of 255 in
-      mutool); 86 images are inside forms and 3–6 are in colour spaces the
-      optimizer does not re-encode, and all of those are reported.
-- **XFA forms are detected and explained on open** (#1547, phase 1). A
-  dynamic XFA form (catalog `/NeedsRendering true`, or no AcroForm field with a
-  widget) now opens with a warning banner saying excise cannot display it yet
-  and to use Adobe Acrobat Reader or Firefox; a static XFA form gets an
-  informational banner saying excise fills the standard form fields. The
-  banner stays until closed or the document changes. `excise info` prints the
-  classification and `info --json` adds `"xfaForm": "none" | "static" |
-  "dynamic"`. Detection is `PdfDocument.DetectXfaForm()` in Excise.Core.
-  (Phase 1 did not render XFA; phase 2 above does.)
-- **Printing on Windows** (#1546). File → Print… and Ctrl+P open the
-  Windows common print dialog (`PrintDlgExW`, owned by the excise window):
-  printer, page ranges, copies and collation, and the driver's Preferences.
-  Each chosen page is rasterised by excise's own renderer at the printer's
-  resolution (capped at 600 DPI and 48 million pixels a page) and sent through
-  .NET's `System.Drawing.Printing.PrintDocument`, placed from the page DC's
-  own geometry with the Preferences → Printing scaling, and turned to the
-  paper orientation that fits it (the equivalent of PDFKit's auto-rotate).
-  Copies the driver cannot make are produced by excise, collated or not.
-  Rasterising and spooling run off the UI thread; closing the window aborts a
-  job still being sent. It uses the same platform-neutral print copy as macOS
-  — pending redactions applied, owner-only, deleted afterwards — and the same
-  /P bits 3 + 12 gate. The WinForms `PrintDialog` was not used because it
-  would bring WinForms into an Avalonia app for a wrapper around the same
-  call; the WinRT print manager would need a separate Windows target
-  framework. New dependency: System.Drawing.Common 10.0.12 (MIT, managed),
-  referenced for every RID but only ever loaded on Windows. To make that
-  guard checkable, Excise.App no longer suppresses the platform-compatibility
-  analyzer (CA1416) project-wide: the suppression hid nothing (0 warnings
-  without it), and a planted unguarded `PrinterSettings` call now warns. What prints is
-  what the viewer shows: the per-annotation `/Print` flag is not consulted
-  yet (#1573). ⚠️ Built and tested on macOS only — the page geometry, sheet order,
-  scaling, rasterising and the view-model path run against a fake dialog and
-  spooler; the Win32 dialog, `PrintDocument` and real drivers still need a
-  check on Windows. Linux printing remains out of scope.
-- **Printing on macOS** (#1545, superseding #621's won't-fix). File → Print…
-  and ⌘P open the standard macOS print sheet, attached to the excise window,
-  through PDFKit (`PDFDocument printOperationForPrintInfo:scalingMode:autoRotate:`
-  run with `runOperationModalForWindow:`), called through the Objective-C
-  runtime like the other macOS interop. What prints is the document as
-  currently edited: the live document is serialised by the normal writer into
-  a private copy, and on that copy — never the live document — pending
-  type-over text is flattened and PENDING redactions are applied by the same
-  glyph-removal engine Apply All uses, so a marked-but-unapplied redaction is
-  removed from the printout, not covered. Tests prove it with the saved-bytes
-  leak scanner and mutool, plus a planted-leak control. The copy is written
-  plaintext (the /P gate has already run, PDFKit would otherwise enforce /P
-  itself and defeat the scripting override, and the print spooler stores the
-  job unencrypted anyway), owner-only, under the app cache folder, and is
-  deleted when the sheet finishes on every outcome; a crash leftover is swept
-  on the next print. Print… is enabled only with a document open whose /P
-  allows full-quality printing (bits 3 and 12). Page scaling is a new
-  Preferences → Printing setting (shrink oversized, the default; fit to page;
-  actual size). Known limitation: pages are rasterised by Apple's renderer.
-  Other platforms keep an honest explanation (Windows is #1546).
-- **`unredact` covers every redaction failure mode the matrix names** (#1592,
-  #1606, #1607, #1608, #1609). `tests/unredaction-failure-modes.json` is the
-  list — 20 modes, each with the channel that recovers it, the evidence that
-  the channel works, and, while any remained, the issue tracking the gap. It
-  went from 10 covered / 6 gap to **15 covered / 5 partial / 0 gap**, and the
-  gate that reads it DERIVES the channel list from the code and checks both
-  directions: a row may not name a channel that does not exist, and a channel
-  may not exist without a row.
+- **Attachments pane in the sidebar, visible by default** (#1563).
+- **Dynamic XFA forms are displayed** (#1547, phase 2).
+- **Reduce File Size** (#1550).
+- **XFA forms are detected and explained on open** (#1547, phase 1).
+- **Printing on Windows** (#1546).
+- **Printing on macOS** (#1545, superseding #621's won't-fix).
+- **`unredact` covers every redaction failure mode the matrix names** (#1592, #1606, #1607, #1608, #1609).
 
-  Five channels were added. **Prior revision**: an incremental update (§7.5.6)
-  leaves the pre-redaction document whole at the front of the file, and
-  truncating at an earlier `%%EOF` yields it. **Thumbnail and attachment**:
-  `/Thumb` holds a pre-rendered picture of the page from before the redaction,
-  and an embedded file is a whole document a page redaction never touches.
-  **Mark region**: text still inside an annotation-derived mark, read from the
-  page instead of from draw order. **Image layer**: an original image left
-  unreferenced by a replace-rather-than-remove edit, or hidden behind a fully
-  transparent `/SMask`. **XFA**: field values in the `/AcroForm /XFA` datasets
-  packet — the read mirror of a carrier `XfaXmlCarrier` has scrubbed for some
-  time, so the audit could not see what the scrubber removes.
+- **`unredact` says what could fit each redaction that HELD** (#1589) — character range from the font's narrowest and widest glyphs, pattern classes that fit (SSN, phone, date, amount, each tested by MEASURING a sample, since in a proportional font "ten digits" and "ten letters" are very different widths), dictionary candidates ranked by width error, and bits leaked as log2 of the admissible set, with plain wording — "fits exactly", "narrowed", "wide open".
 
-  ⚠️ Two of these were found because a gate caught excise overstating itself.
-  The tier-A bench failed on `redact-annotation-unapplied`, which the registry
-  called covered on the strength of a test that only asserted the MARK was
-  detected. And `Tr` — the §9.3.6 text render mode — was parsed by
-  `ContentStreamWalker` and **discarded** as "write-only state", so no sink
-  could tell a painted glyph from an invisible one. Text drawn with `3 Tr` is
-  fully extractable and never appears on the page; it is how every OCR layer in
-  every searchable-image PDF is written. The walker now carries render mode
-  through the `q`/`Q` snapshot to its sinks and `HiddenTextDetector` gained a
-  fourth pairing for text hidden by render mode rather than by anything drawn
-  over it.
+- **The unredaction bench's real-world documents: a committed vetting record, a manifest-driven fetcher, and a gate** (#1591).
 
-  The dangerous shape closed here: a covering box drawn as an **annotation**,
-  or inside a **Form XObject**, produced a mark the report graded
-  `not-recovered` — reading as *this redaction held* while mutool read the text
-  underneath. Silence would have been better. Text inside a Form XObject was
-  never the problem (`TextExtractor` already recurses, so `page.Letters` has
-  it); finding the MARK was, and `RedactionMarkDetector` now descends into
-  forms composing the `/Matrix` with the CTM at the `Do`.
-- **`unredact` says what could fit each redaction that HELD** (#1589) —
-  character range from the font's narrowest and widest glyphs, pattern classes
-  that fit (SSN, phone, date, amount, each tested by MEASURING a sample, since
-  in a proportional font "ten digits" and "ten letters" are very different
-  widths), dictionary candidates ranked by width error, and bits leaked as
-  log2 of the admissible set, with plain wording — "fits exactly", "narrowed",
-  "wide open".
+- **A tier-A unredaction bench** (#1590), generated at run time with exact ground truth, whose axes are DERIVED from the failure-mode registry so a mode cannot be silently omitted.
+- **`unredact` has ONE recovery model, and it reports coverage rather than a finding count** (#1587).
 
-  It is measurement, never recovery: even at one surviving candidate the output
-  is "one candidate fits, 0 bits", never "the answer is X", and the finding is
-  a candidate rather than a certainty. A mark whose text came back carries no
-  fit analysis at all, so a candidate list never sits beside a recovered value
-  inviting them to be read as competing answers.
-
-  ⚠️ The first cut treated a mark's width as an equality and reported "0 of 5
-  dictionary words fit" on a fixture whose answer was in the list. A redaction
-  box is drawn AROUND the run it covers, so its width is an upper bound on the
-  removed text. The bound is now asymmetric — a candidate may be narrower by a
-  padding allowance but never wider — because the strict reading silently
-  rejects the right answer and reports "nothing fits", which UNDERSTATES the
-  leak.
-
-  The budget is now an INTERVAL with a provenance, and #1589's neighbour-shift
-  half (Bland et al., PETS 2023) supplies a second, independent bound on the
-  same span: the gap between the surviving glyphs either side of the mark. A
-  pixel attacker can measure the box; only a tool reading the content stream can
-  say where the next glyph starts and whether the SPACE beside the removed word
-  survived — and where it did, the gap is an equality rather than a bound.
-  Intersecting the two narrowed the leak on the constructed corpus with no
-  engine change: 11 candidates and 3.46 bits down to 2 and 1.00, 17 and 4.09
-  down to 3 and 1.58, and a false "exactly 6 digit(s)" pattern claim withdrawn.
-  Two details are load-bearing: charging a space allowance for a space that is
-  visibly still there threw the exact measurement away, and the intersection
-  needs an epsilon because the box (a content-stream `re`) and the gap
-  (accumulated advances) describe the same edge by different arithmetic and land
-  0.04pt apart — without it the commonest case in the corpus read as a
-  CONTRADICTION and fell back to the loose bound exactly when the tight one was
-  right. A real contradiction still falls back and says so, because narrowing to
-  an interval derived from a disagreement would drop the true answer. The gap is
-  corroborated against mutool's own glyph positions, not a second excise
-  opinion.
-- **The unredaction bench's real-world documents: a committed vetting record,
-  a manifest-driven fetcher, and a gate** (#1591). `tests/unredaction-bench/
-  manifest.tsv` carries id, tier, status, url, sha256, source, public basis,
-  ground-truth pointer and — the column that matters — the ASSESSMENT. Four
-  statuses, and the distinctions are load-bearing: `vetted`, `excluded`
-  (checked, and the answer is no), `blocked` (checked, wanted, something is in
-  the way) and `unvetted` (nobody has looked). Collapsing any of them loses
-  exactly what a later reader needs.
-
-  The schema is CLOSED: there is no column a recovered value could live in, and
-  the gate fails if one is added. Ground truth for tier B is a gitignored local
-  file the script explains but never writes — transcribing a value by hand is
-  the moment to re-read the vetting line and decide again.
-  `scripts/download-unredaction-bench.sh` fetches only `vetted` rows (no
-  `--all`, no `--force`), verifies sha256 and DELETES a mismatch, uses no
-  credentials and no paid PACER, and never runs in t0/t1. Registered in
-  `tests/corpora.tsv` rather than as a parallel mechanism, so `corpus.sh verify`
-  already checks the destination is gitignored.
-- **A tier-A unredaction bench** (#1590), generated at run time with exact
-  ground truth, whose axes are DERIVED from the failure-mode registry so a mode
-  cannot be silently omitted. Modes with no channel get an axis too: that zero
-  distinguishes "measured and recovered nothing" from "never looked", and only
-  an axis that exists can tell them apart. Modes it cannot yet pose are reported
-  as bench holes rather than as zero scores.
-- **`unredact` has ONE recovery model, and it reports coverage rather than a
-  finding count** (#1587). Every channel now produces the same record — recovered
-  text or candidate set, a confidence class (`certain` / `candidate` /
-  `present-only`), the source channel and carrier, and a LOCATION — and the
-  redaction marks a document admits to (opaque dark fills, `/Redact`
-  annotations, dark shape annotations, and emptied regions inferred from the
-  residue channel) are enumerated INDEPENDENTLY of what any channel found.
-  That separation is the change. A report assembled from channel output can say
-  "8 findings" over a document with 40 redactions and read as success; marks are
-  the denominator, and a mark nothing recovered — the part of the redaction that
-  held — is a row in the report only because it is counted on its own. Each mark
-  is graded recovered / partially recovered / candidates only / nothing, and the
-  grade is geometric and deliberately under-claims: a carrier recovers a whole
-  string but its location is only the stub glyphs its span enclosed, and nothing
-  establishes the carrier restates everything the mark removed.
-
-  Five channels were missing and are added, all in `Excise.Core.Redaction.Recovery`:
-  inline marked-content `/ActualText`, `/Alt` and `/E` (§14.9.4 — the carrier a
-  structure-tree walk never reaches, #1182/#1185), located from the glyphs its
-  span painted; image pixels and vector content surviving under a mark, reported
-  `present-only` because the channel establishes that content is there and where
-  without decoding it into a value; AcroForm field `/V` behind a blanked
-  appearance, located at its widget `/Rect`; and the OCR differential routed
-  through the model as a candidate rather than a certainty, because OCR reads
-  pixels and a recognition asserted as certain is a lie with a confidence score
-  attached. `CarrierTextRecovery` gained locations (annotation `/Rect`;
-  structure-tree text through the `/MCID` bridge), and `HiddenTextRecord` now
-  carries the obstruction rectangle it was found under, so mark linkage is exact
-  rather than re-derived geometrically. Findings matching no mark are kept as
-  `unlinked` rather than dropped or bound to the nearest box — a carrier the
-  redactor never scrubbed, on a page with no box near it, is the commonest real
-  leak. Channels that did NOT run are named with a reason, so a report over four
-  channels cannot be read as one over nine.
-
-  Two things were MEASURED against independent engines and are not what the
-  design assumed. Poppler honours inline `/ActualText` and prints a name MuPDF
-  does not, so whether a page reads as clean depends on which extractor an
-  auditor happened to pick — the #1372 lesson on the recovery side. And MuPDF
-  regenerates a widget appearance from `/V`, so a form-field leak is not latent
-  bytes but a value re-painted onto the page by a mainstream reader. Both are
-  pinned in `RecoveryOracleTests`, where qpdf checks the fixtures are real PDFs
-  and mutool's `stext` glyph positions check the LOCATION excise reports —
-  planting a bottom-left/top-left flip in the location reddens that oracle test
-  and no excise-versus-excise test, which is the no-self-oracle rule doing its
-  job.
-- **Safe-redacted-copy refusal for unresolved `/Redact` annotations** (#1430)
-  — the `redactionReviewDrafts.safeRedactedCopy` product-policy rule was
-  unimplemented, so excise would produce output treated as safely redacted
-  while content a reviewer had explicitly flagged was still fully present.
-  Enforced in the shared `RedactedCopySafetyPolicy` — the one place the GUI,
-  scripting and CLI surfaces all route through — as a typed refusal, so a
-  surface added later cannot fail open. The check runs before the policy
-  mutates anything, so a refusal never leaves a half-scrubbed document.
-- **Hyphen-wrapped occurrences are now reported instead of silently missed**
-  (#1372) — a term wrapped across a line (`Ander-` / `son`) is never matched
-  and never removed, and excise used to report a clean success over it. It is
-  now surfaced in `RedactionReport` and printed by the CLI, and
-  `IsCleanSuccess` is false while any remain. Removal behaviour is unchanged:
-  the redacted output is byte-identical to before. **This does not close the
-  leak** — joining across the break makes a match span two lines and its
-  removal box destroy everything between them (#942), so a real fix needs a
-  wrapped match to produce two boxes, one per line. #1372 stays open.
-- **Queryable live performance metrics** (#1491) — the `Excise.Viewer` and
-  `Excise.App` meters publish band and single-page render times, composite
-  sizes, per-viewer cache bytes and counts, document-open phase timings,
-  text-index progress and thumbnail renders. Read them with
-  `dotnet-counters monitor --counters Excise.Viewer,Excise.App,System.Runtime`
-  or set `EXCISE_TRACE_VIEWER=<path>` to append them as JSONL, with periodic
-  GC, working-set and CPU snapshots. `EXCISE_TRACE_VIEWER=1` still means the
-  stdout text trace. Off by default: with nothing listening, the recording
-  sites neither record nor allocate. See `docs/AUTOMATION_API.md`.
-- **Preferences → Performance** — trade memory and CPU against scroll-back
-  speed from the GUI. A preset (LowMemory / Balanced / Fast; Balanced is the
-  previous behaviour exactly) and an Advanced section with the individual
-  limits: continuous tile-cache budget (32–1024 MB), single-page cached pages
-  (1–24), background thumbnail rendering, thumbnail keep margin, background/idle
-  cache trims and their idle delay (10–600 s), and render threads. Editing a
-  field shows Custom. Saved values apply to the open document at once — a
-  lowered budget evicts immediately, never the visible band or the page on
-  screen — and are written to `window.json` on Save rather than when the window
-  closes. A live readout (working set, managed heap, tile cache) refreshes
-  once a second only while the dialog is open. `PdfViewerControl` gains
-  `ContinuousTileCacheByteBudget`, `ContinuousTileCacheResidentBytes`,
-  `SinglePageCacheCapacity` and `ContinuousRenderConcurrency`.
+- **Safe-redacted-copy refusal for unresolved `/Redact` annotations** (#1430) — the `redactionReviewDrafts.safeRedactedCopy` product-policy rule was unimplemented, so excise would produce output treated as safely redacted while content a reviewer had explicitly flagged was still fully present.
+- **Hyphen-wrapped occurrences are now reported instead of silently missed** (#1372) — a term wrapped across a line (`Ander-` / `son`) is never matched and never removed, and excise used to report a clean success over it.
+- **Queryable live performance metrics** (#1491) — the `Excise.Viewer` and `Excise.App` meters publish band and single-page render times, composite sizes, per-viewer cache bytes and counts, document-open phase timings, text-index progress and thumbnail renders.
+- **Preferences → Performance** — trade memory and CPU against scroll-back speed from the GUI.
 
 ### Fixed
-- **Preferences applied on a thread-pool thread and could be reverted on
-  close.** The dialog's Save ran through `ShowDialog(...).ContinueWith`, off the
-  UI thread; and `window.json` had two whole-file writers (window close saved
-  its startup snapshot, document close did load/modify/save), so the last one
-  silently reverted the other. Save now runs on the UI thread, and every writer
-  goes through `WindowSettings.Update`, which changes only its own fields under
-  one lock.
+- **Preferences applied on a thread-pool thread and could be reverted on close.** The dialog's Save ran through `ShowDialog(...).ContinueWith`, off the UI thread; and `window.json` had two whole-file writers (window close saved its startup snapshot, document close did load/modify/save), so the last one silently reverted the other.
 
 ### Notes
-- #1180 (unredact certain channel missing visible-but-readable failed
-  redactions) does not reproduce and was closed. Its reopened symptom —
-  inverted-box 0/8 — was a test-harness defect fixed by #1361; re-measured
-  2026-09-09 the channel recovers occluded 16/16 and inverted-box 8/8, against
-  the x-ray reference's 8/32 overall.
+- #1180 (unredact certain channel missing visible-but-readable failed redactions) does not reproduce and was closed.
 
 ### Added
-- **Per-carrier redaction scrub scope and mode** (#1188, #1169). A PDF
-  restates page text in carriers you never see, and one policy is wrong for
-  all of them: cutting the redacted term out of a KNOWN string can REVEAL
-  it — strip `your` from `https://www.irs.gov/your-account` and the
-  leftover `https://www.irs.gov/-account` tells anyone who knows the site
-  what was removed. Each carrier now takes a mode: `Strip` (the default and
-  the previous behaviour), `RemoveWhole` (drop the entire value, leaving no
-  surrounding structure to infer from), or `ReportOnly` (change nothing and
-  report the hit). CLI: `--carrier-policy <carrier>=<mode>`, repeatable; an
-  unrecognised carrier or mode is an error, never an ignored spec. GUI:
-  Preferences → Redaction, for link URLs and document metadata. A
-  `ReportOnly` carrier that holds the term is reported as holding it, and
-  the run is not a clean success.
-  ⚠️ **The safety default is deliberately NOT flipped.** #1169 argues URLs
-  and structured metadata should default to `RemoveWhole`; #1187 requires
-  defaults to reproduce prior behaviour. That conflict is a product
-  decision, not something this change makes silently.
-- **Whole-word matching as an explicit option** (#1052, `--whole-word`,
-  Preferences → Redaction → Match Rule). #1000 decided substring matching
-  stays the default because no single rule can be right — it is correct for
-  a case number inside a longer citation and wrong for `Lee` inside
-  `Sleeman`. The alternative is now an explicit choice, applied to page
-  content AND the document-carrier scrub together, and the rule that ran is
-  reported in the result rather than only known at the moment of clicking.
-- **`WidthPolicy.OvershootPreserveLayout`** (#1189, `--overshoot-box`,
-  Preferences → Redaction → Covering Box Width). A covering box drawn to
-  the exact extent of the removed run is a ruler for the removed string's
-  length. Overshoot rounds the box width up to a whole em, growing into the
-  space beside it without covering neighbouring text, so similar-length
-  candidates stop being separable by measuring it.
-  ⚠️ This blurs only the RENDERED width. Preserving layout means the
-  content stream still carries the removed run's advance, so a reader of
-  the FILE can still measure it; `--close-width` is what destroys that, at
-  the cost of reflowing the line. Both limits are pinned by tests against
-  an independent renderer rather than described and hoped for.
+- **Per-carrier redaction scrub scope and mode** (#1188, #1169).
+- **Whole-word matching as an explicit option** (#1052, `--whole-word`, Preferences → Redaction → Match Rule).
+- **`WidthPolicy.OvershootPreserveLayout`** (#1189, `--overshoot-box`, Preferences → Redaction → Covering Box Width).
 - **Unicode control diagnostics at every identifier display** (#1205).
-  `UnicodeTextSafety` moved from `Excise.App` to `Excise.Core.Text` so the
-  CLI and the reusable viewer control can use the same policy instead of
-  growing their own. Invisible and text-direction control characters are
-  now made explicit — as `[U+XXXX]` — wherever excise shows document-authored
-  text as a name a user acts on: bookmark labels, the open-link
-  confirmation and link hover target, annotation authors, form-field name
-  tooltips, signature and signer identity, CLI `info` metadata output, and
-  security-relevant log lines. The open-link dialog and the signer summary
-  additionally raise an explicit warning when a bidi control is present,
-  because those are where a trust decision is made. Page text, search
-  results, redaction previews, annotation note bodies and copied values are
-  left byte-exact: this is a display policy, never a normalisation.
 
 ### Fixed
-- **The `Annotations` carrier was silently overriding the `ActionUris`
-  carrier.** A link annotation's `/A /URI` was scrubbed under the
-  annotation carrier's scope and mode (a leftover from #1155 that #1168's
-  complete URI walk made redundant). Turning the URI carrier off still
-  stripped the URI while the report claimed it was disabled, and setting it
-  to a different mode did nothing. Found while building #1169; reverting
-  the fix reddens four tests.
-- **Redaction policy preferences now persist across launches.** A security
-  preference that silently reset to the less-safe default on every launch
-  is worse than no preference at all.
-
-Milestone **P1.6 — Writer output validity: what save destroys or invalidates**.
+- **The `Annotations` carrier was silently overriding the `ActionUris` carrier.** A link annotation's `/A /URI` was scrubbed under the annotation carrier's scope and mode (a leftover from #1155 that #1168's complete URI walk made redundant).
+- **Redaction policy preferences now persist across launches.** A security preference that silently reset to the less-safe default on every launch is worse than no preference at all.
 
 ### Fixed
-- **A form field made a `PdfA()` document non-conformant by embedding no font
-  for its own appearance** (#1435). A widget's `/DA` default-appearance string
-  named the base-14 `/Helv` unconditionally, so every AcroForm field carried a
-  non-embedded `/BaseFont /Helvetica` dictionary — including in a document that
-  called `PdfA()` and embedded its body font. A viewer generates the field's
-  appearance from that string, so the file's PDF/A claim was false for anything
-  typed into it. `PdfDocumentBuilder.DefaultFont` now flows into the widget
-  `/DA` the same way it already flows into every other text block, `/Helv` is
-  added to `/DR` only when a `/DA` actually names it, and the `/DR` entry shares
-  the page's font object so the program is embedded once. The subset keeps
-  printable ASCII and Latin-1 as well, because a `/DA` font's glyphs are chosen
-  by the viewer from typed input rather than by our writer.
-  ⚠️ `PdfA()` plus a form field is still not PDF/A for three other reasons the
-  veraPDF profile does report — the widget has no `/AP`, no `/F`, and
-  `NeedAppearances` is true (#1444).
+- **A form field made a `PdfA()` document non-conformant by embedding no font for its own appearance** (#1435).
 
 ### Changed
-- **BouncyCastle.Cryptography 2.6.2 -> 2.7.0** (#1494). Blocked since the
-  2026-09-14 dependency refresh because six `SignatureVerificationService`
-  tests failed under it; the cause was excise's own CMS handling, not a
-  library regression, and is described under Fixed above. 2.7.0 also emits the
-  RFC 6211 `cmsAlgorithmProtect` signed attribute by default and verifies it
-  when present, so excise's signatures now carry algorithm protection.
+- **BouncyCastle.Cryptography 2.6.2 -> 2.7.0** (#1494).
 
 - **Redaction no longer rewrites the operators it did not touch** (#1093).
-  Editing one operator used to put the WHOLE content stream back through
-  `ContentStreamWriter` — its string escaping, its number formatting, its
-  inline-image reconstruction. Each of those has silently corrupted content an
-  edit never targeted (#354, #762, PDFDocEncoding octal escapes), and each was
-  found by a leak rather than by a gate. The parser now records the contiguous
-  source span of every operator and the writer copies those bytes back
-  verbatim, serializing only what actually changed; an unedited stream
-  round-trips byte-identically. Wired into the Core redaction write-backs
-  (`RedactArea`/`RedactAreas`, the covering box, the obstruction stripper).
-  ⚠️ A span is copied only when the operator still hashes to what it hashed to
-  at parse time, so an operand mutated in place — as the marked-content carrier
-  scrubber does when it removes an `/ActualText`, #636's leak carrier — is
-  re-serialized rather than restored from the original bytes. The GUI's own
-  `RedactionService` write-back and the `/Contents`-array structure (still
-  collapsed to a single stream on write) are not covered.
-
-Milestone **P1.4 — "wired to nothing"**: capabilities that existed, were
-tested, and had no way for a user to reach them — plus one that lost data
-silently.
 
 ### Fixed
-- **Closing, quitting, Ctrl+W, or opening another file discarded unsaved
-  changes with no prompt** (#1233). `MainWindow.Closing` persisted window
-  geometry and returned; it never read `FileState.HasUnsavedChanges` and never
-  set `e.Cancel` — there was no `e.Cancel` anywhere in `Excise.App`. Every
-  pending redaction, page edit, form value, typewriter box and annotation was
-  lost with no prompt, toast or log line. Now a Save / Discard / Cancel prompt
-  guards the native close, Cmd/Ctrl+W, application quit, File ▸ Open, Recent
-  Files, macOS Finder file activation, and drag-drop. **Save writes a COPY** —
-  it reuses the existing save routing, so an original with pending redactions
-  goes through the redacted-copy workflow and an original with any other edit
-  through Save As; the source is never overwritten. A cancelled picker, a
-  declined signed-document warning and a failed write all leave the document
-  open and still dirty, because "we tried to save and couldn't" is exactly
-  where proceeding destroys the most work. Verified against the unmodified
-  code first: 8 of 11 new tests failed, including one where the window closed
-  after the user asked to save and then backed out of the picker.
-- **Ctrl+Z / Ctrl+Y / Ctrl+Shift+C were menu labels with nothing behind them**
-  (#1170). In Avalonia a `MenuItem.InputGesture` is display text only, and
-  these three had no branch in `MainWindow_KeyDown` — the menus advertised
-  shortcuts that did nothing on Windows/Linux (macOS was fine; its native menu
-  carries real gestures). Ctrl+Shift+C is ordered before the Ctrl+C copy
-  branch, which did not exclude Shift, so the view toggle cannot be swallowed
-  in text-selection mode; all three skip a focused text box so a window-level
-  Ctrl+Z never steals the search field's own undo.
+- **Closing, quitting, Ctrl+W, or opening another file discarded unsaved changes with no prompt** (#1233).
+- **Ctrl+Z / Ctrl+Y / Ctrl+Shift+C were menu labels with nothing behind them** (#1170).
 
 ### Added
-- **Drag a PDF onto the window to open it** (#1002). The feature did not exist
-  — zero references to `DragDrop`/`AllowDrop`/`DragEventArgs` in the whole GUI.
-  The file-selection rule is now shared with the command-line and macOS
-  file-association paths rather than copied, so a mixed selection behaves the
-  same however it arrives.
-- **Attachments panel** (#1414) — Document ▸ Attachments… lists files embedded
-  in the PDF (name, decoded size, description), saves one to a chosen path, and
-  strips them all. A warning appears on open when a document carries
-  attachments, because they are invisible on the page and can hold a full copy
-  of the document's data (ZUGFeRD/Factur-X). excise never opens or runs an
-  attachment. Stripping is a pending edit, so the original is preserved by the
-  normal save routing. Removal is confirmed by `qpdf --list-attachments`, not by
-  excise reading its own output.
-- **Bates numbering reached the UI** (#1306) — Document ▸ Bates Numbering…
-  stamps a sequential number on every page (prefix, suffix, start, padding,
-  position, size, with a live preview). README had advertised this for a long
-  time while the service had no command, menu item or CLI verb behind it. The
-  stamped numbers are read back by `pdftotext`, and page 1 is asserted not to
-  contain page 2's number, so a stamp that wrote one number everywhere cannot
-  pass.
+- **Drag a PDF onto the window to open it** (#1002).
+- **Attachments panel** (#1414) — Document ▸ Attachments… lists files embedded in the PDF (name, decoded size, description), saves one to a chosen path, and strips them all.
+- **Bates numbering reached the UI** (#1306) — Document ▸ Bates Numbering… stamps a sequential number on every page (prefix, suffix, start, padding, position, size, with a live preview).
 
 ### Removed
-- **`RecentFilesService`** (#1307), a dormant duplicate. Recent files ships from
-  `MainWindowViewModel`; the service was a second implementation writing the
-  *same* `recent.txt` in an incompatible format (JSON vs newline-delimited
-  text). The only thing it added was pinning, which was advertised nowhere.
-- **`FdfSerializer` / `XfdfSerializer`** (#921), 1,782 lines reachable from no
-  shipping surface. The issue's case for wiring rather than deleting assumed
-  they carried AcroForm field *data* ("fill a form, export the data rather
-  than a flattened copy") — they don't; both serializers handle annotations
-  only, and the FDF `/Fields` form-data section is explicitly out of scope in
-  their own docstrings. What's left is an annotation *importer*, which is
-  frozen: annotation authoring has taken no new creation surface since v3.8.0
-  (all 15 types already reachable from the Annotate menu), and FDF/XFDF
-  import exists only to create new annotations from an external file. There
-  is also no independent tool on this machine that reads FDF/XFDF to oracle a
-  round-trip against — the issue's own acceptance criterion. Also removed:
-  `PdfAnnotationAuthoring.AttachImported`, an internal helper with no other
-  caller.
+- **`RecentFilesService`** (#1307), a dormant duplicate.
+- **`FdfSerializer` / `XfdfSerializer`** (#921), 1,782 lines reachable from no shipping surface.
 
 ## [3.9.4] - 2026-09-09
 
@@ -1347,61 +231,15 @@ reading the [3.9.3] entry first: skip its "Closed as not-reproducing" note
 for these three, the entry here is the current, accurate one.
 
 ### Fixed
-- **`/TU` tooltip, embedded font name, and `/Widget` annotations invisible
-  to a raw-byte scan of the saved file** (#1431/#1432/#1434, one root
-  cause). #923 (this changelog's own [3.9.2] era) turned on PDF
-  object-stream compression by default for any PDF 1.5+, unencrypted,
-  non-PDF/A-1 save, and already carved out `/Title`/`/Author`/`/Subject`/
-  etc. so those stay out of a compressed `/ObjStm` and remain findable by a
-  plain grep — but did not extend that carve-out to AcroForm field/widget
-  dictionaries or font dictionaries, so those started landing in a
-  compressed container. Not a data-loss bug — `qpdf --qdf` always showed
-  the data — but invisible to exactly the kind of raw-byte inspection a
-  downstream consumer's own test suite (and any external QA tooling) is
-  liable to do. Fixed in two passes: first by dictionary type/subtype
-  markers, then hardened to match by carrier key presence (`/T`, `/TU`,
-  `/BaseFont`, `/FontName`) after that first pass was found to still miss a
-  non-terminal AcroForm field-tree node (§12.7.3.2 — real, not
-  hypothetical: 30 such nodes in the `irs-1040.pdf` smoke fixture alone)
-  and a font dictionary lacking `/Type /Font`.
-- **The size-budget gate didn't watch its own worst case.**
-  `Pdf15Save_SmokeCorpusCompressedOutputStaysUnderSourceSizeBudget` held
-  three fixtures to a 1.20 compressed/source-size ratio, but the fixture
-  most affected by the fix above — `irs-1040.pdf`, the corpus's most
-  form-heavy document — wasn't in the list, and had silently reached 1.33×
-  once the AcroForm carve-out landed. Added to the gate with its own,
-  wider 1.40 budget (a form-heavy document costing more for greppability
-  is accepted; both budgets stay far below the 2.05×–2.79× inflation #923
-  itself measured pre-compression).
-- **No packable project shipped its XML doc file.** `Excise.Core`,
-  `Excise.Rendering`, and `Excise.Avalonia` now set
-  `GenerateDocumentationFile`, so a `///` comment actually reaches a NuGet
-  consumer's IntelliSense instead of being silently dropped at compile
-  time. Turning this on for real surfaced ~200 pre-existing malformed doc
-  comments and ~745 missing ones in `Excise.Core` alone (mostly
-  `///`-on-a-primary-constructor-parameter, never a valid placement) —
-  suppressed for now, tracked as #1440, not fixed in this release.
+- **`/TU` tooltip, embedded font name, and `/Widget` annotations invisible to a raw-byte scan of the saved file** (#1431/#1432/#1434, one root cause).
+- **The size-budget gate didn't watch its own worst case.** `Pdf15Save_SmokeCorpusCompressedOutputStaysUnderSourceSizeBudget` held three fixtures to a 1.20 compressed/source-size ratio, but the fixture most affected by the fix above — `irs-1040.pdf`, the corpus's most form-heavy document — wasn't in the list, and had silently reached 1.33× once the AcroForm carve-out landed.
+- **No packable project shipped its XML doc file.** `Excise.Core`, `Excise.Rendering`, and `Excise.Avalonia` now set `GenerateDocumentationFile`, so a `///` comment actually reaches a NuGet consumer's IntelliSense instead of being silently dropped at compile time.
 
 ### Added
-- **`ContentTransform.TransformPoint(x, y)` is public** (#1436), a follow-up to
-  #1433. The struct and its `A`–`F` fields were already public, but the method
-  that applies the matrix was `internal`, so every caller resolving page-space
-  coordinates from `ContentOperator.GraphicsTransform` had to reimplement
-  `(x·A + y·C + E, x·B + y·D + F)` itself.
+- **`ContentTransform.TransformPoint(x, y)` is public** (#1436), a follow-up to #1433.
 
 ### Investigated, no code change
-- **#1437** (direct embedded-image extraction, for OCR input) — measured
-  rather than assumed: `SkiaRenderer.RenderPage()` is bit-exact at a scanned
-  page's native resolution (120,000/120,000 pixels identical, max
-  per-channel delta 0, across RGB/1-bpc-bilevel/DCT fixtures), and that
-  resolution is derivable from existing public API
-  (`page.GetXObject(name).GetInt("Width")`). A separate extraction API
-  would return bytes `RenderPage()` already returns. Closed as moot, with
-  the derivation recipe and pinning tests
-  (`FullPageImageRenderFidelityTests`) so a future regression here fails
-  loudly. Below 1:1 the pipeline point-samples rather than resamples, and
-  that minification behavior differs by image codec — filed separately as
-  #1438, not a regression, not yet a confirmed defect.
+- **#1437** (direct embedded-image extraction, for OCR input) — measured rather than assumed: `SkiaRenderer.RenderPage()` is bit-exact at a scanned page's native resolution (120,000/120,000 pixels identical, max per-channel delta 0, across RGB/1-bpc-bilevel/DCT fixtures), and that resolution is derivable from existing public API (`page.GetXObject(name).GetInt("Width")`).
 
 ## [3.9.3] - 2026-09-09
 
@@ -1415,74 +253,24 @@ rebuild from `v3.9.2` will still show it — the fix is here, on `develop`,
 not on that lineage. `v3.9.3` is cut directly from current `develop`.
 
 ### Fixed — security
-- **Four real redaction-content-carrier leaks**, each independently
-  oracle-verified (qpdf/mutool), each with a `CanaryInjectionLeakTests`
-  regression pin: AGL underscore-joined ligature names weren't decoded
-  before matching, so a redacted term survived under an affected font
-  (#1423); annotation `/Subj` and `/Redact` annotations' `/OverlayText`
-  weren't in the document-carrier scrub list at all (#1427);
-  `/FileAttachment` annotations' own `/FS` was invisible to
-  `GetEmbeddedFiles()`/redaction — only catalog-level `/Names/EmbeddedFiles`
-  and `/AF` were ever walked (#1428); annotation `/AP` appearance-stream
-  text (Stamp, Watermark, and others) was rendered but not extracted, so it
-  survived a redaction that removed the same text from the page body
-  (#1429).
+- **Four real redaction-content-carrier leaks**, each independently oracle-verified (qpdf/mutool), each with a `CanaryInjectionLeakTests` regression pin: AGL underscore-joined ligature names weren't decoded before matching, so a redacted term survived under an affected font (#1423); annotation `/Subj` and `/Redact` annotations' `/OverlayText` weren't in the document-carrier scrub list at all (#1427); `/FileAttachment` annotations' own `/FS` was invisible to `GetEmbeddedFiles()`/redaction — only catalog-level `/Names/EmbeddedFiles` and `/AF` were ever walked (#1428); annotation `/AP` appearance-stream text (Stamp, Watermark, and others) was rendered but not extracted, so it survived a redaction that removed the same text from the page body (#1429).
 - **A decompression-bomb guard on Flate/LZW decode** (#1408).
-- **`Tc`/`Tw` (character/word spacing) silently dropped or blown off-canvas
-  within a `Tj` string** (#1392) — two distinct bugs in
-  `SkiaRenderer.Text.cs`: with no `/Widths` array (the common case for
-  base-14 fonts, which aren't required to carry one), spacing had zero
-  effect on glyph layout; with `/Widths` present, spacing was incorrectly
-  scaled by font size a second time, pushing glyphs off-page under a large
-  `Tw`. A visual-rendering bug, not a redaction-security one — the
-  extraction/redaction sink was unaffected and confirmed so directly.
-- **`/ImageMask true` stencils with no explicit `/BitsPerComponent` rendered
-  as a blank page.** Per ISO 32000-2 §8.9.6.2 the key "shall not be
-  specified" for a stencil mask (implicitly 1) and real producers commonly
-  omit it; the renderer defaulted the missing key to 8 before checking
-  `/ImageMask`, so the 1-bit decode path never triggered.
+- **`Tc`/`Tw` (character/word spacing) silently dropped or blown off-canvas within a `Tj` string** (#1392) — two distinct bugs in `SkiaRenderer.Text.cs`: with no `/Widths` array (the common case for base-14 fonts, which aren't required to carry one), spacing had zero effect on glyph layout; with `/Widths` present, spacing was incorrectly scaled by font size a second time, pushing glyphs off-page under a large `Tw`.
+- **`/ImageMask true` stencils with no explicit `/BitsPerComponent` rendered as a blank page.** Per ISO 32000-2 §8.9.6.2 the key "shall not be specified" for a stencil mask (implicitly 1) and real producers commonly omit it; the renderer defaulted the missing key to 8 before checking `/ImageMask`, so the 1-bit decode path never triggered.
 
 ### Fixed — performance
-- Three DeviceCMYK rendering hot-path fixes: reading the ICC profile PCS
-  field so XYZ-PCS lut16 profiles decode correctly instead of as Lab
-  (#1424); caching the vector CMYK→RGB conversion through the image lattice
-  instead of per-pixel ICC (#1425); converting a per-pixel `GetPixel` call
-  in the CMYK backdrop sync to raw spans (#1426).
+- Three DeviceCMYK rendering hot-path fixes: reading the ICC profile PCS field so XYZ-PCS lut16 profiles decode correctly instead of as Lab (#1424); caching the vector CMYK→RGB conversion through the image lattice instead of per-pixel ICC (#1425); converting a per-pixel `GetPixel` call in the CMYK backdrop sync to raw spans (#1426).
 
 ### Added
-- **Outline (bookmark) and embedded-file (attachment) authoring APIs**
-  (#1412, #1413) — `PdfOutlineAuthoring`/`PdfOutlineParser` and the
-  embedded-file authoring surface. `PdfDocument.HasEmbeddedFiles` now
-  delegates to `GetEmbeddedFiles().Count > 0` (was an independent,
-  drifted check — the same drift that let #1428 ship).
-- **A save-warning before overwriting a digitally signed document's edits**
-  (#1415).
-- **`ContentOperator.GraphicsTransform` now populates for every content-stream
-  operator**, not only text-showing ones, and is public along with the
-  `ContentTransform` struct it uses (#1433). A caller wanting page-space
-  coordinates for a path-construction operator (`m`/`l`/`c`/`v`/`y`/`h`/`re`)
-  applies the transform to the operator's raw `Operands` directly, instead of
-  reimplementing CTM tracking outside the library.
+- **Outline (bookmark) and embedded-file (attachment) authoring APIs** (#1412, #1413) — `PdfOutlineAuthoring`/`PdfOutlineParser` and the embedded-file authoring surface.
+- **A save-warning before overwriting a digitally signed document's edits** (#1415).
+- **`ContentOperator.GraphicsTransform` now populates for every content-stream operator**, not only text-showing ones, and is public along with the `ContentTransform` struct it uses (#1433).
 
 ### Registry
-- The PDF capability registry's independently-oracled evidence grew
-  substantially this cycle: **verified capability/mode pairs 71 → 209
-  (7.9% → 23.3% of 898 target modes)**, via a large parallel verification
-  pass (six concurrent audits, one per registry section) plus the earlier
-  RC22 milestone. "Verified" means an independent tool (qpdf, mutool,
-  pdftotext, or a reference renderer) confirmed the behavior — not just an
-  excise test checking excise's own output. See `CLAUDE.md`'s no-self-oracle
-  section for why that distinction is load-bearing: three of this project's
-  worst historical leaks (#636, #608, #637) passed a fully green
-  self-testing suite for months.
+- The PDF capability registry's independently-oracled evidence grew substantially this cycle: **verified capability/mode pairs 71 → 209 (7.9% → 23.3% of 898 target modes)**, via a large parallel verification pass (six concurrent audits, one per registry section) plus the earlier RC22 milestone.
 
 ### Closed as not-reproducing
-- #1431 (`/TU` tooltip not written), #1432 (PDF/A archival output not
-  embedding a Unicode font), #1434 (exported fillable PDF missing `/Widget`
-  annotations entirely) — all three were real regressions on the orphaned
-  `v3.9.2` lineage described above, but do not reproduce on `develop`;
-  verified with real repros against excise's actual public API before
-  closing, not assumed fixed by association.
+- #1431 (`/TU` tooltip not written), #1432 (PDF/A archival output not embedding a Unicode font), #1434 (exported fillable PDF missing `/Widget` annotations entirely) — all three were real regressions on the orphaned `v3.9.2` lineage described above, but do not reproduce on `develop`; verified with real repros against excise's actual public API before closing, not assumed fixed by association.
 
 ## [3.9.2] - 2026-09-05
 
@@ -1491,282 +279,81 @@ release is testing infrastructure, one GUI capability that was implemented but
 unreachable, and the measurement work that found several real defects.
 
 ### Added
-- **Sign Document** in the File menu (#1308). The signature service existed and
-  was tested but no production code could reach it — deterministic reachability
-  found it callable only from the test project. It signs the file on disk and
-  refuses while edits are unsaved, because excise saves by full rewrite and that
-  invalidates any signature already present.
-- **A registry of every interactive GUI function** (#1374): 93 menu items, 45
-  toolbar buttons, 9 viewer mouse gestures and 28 keyboard shortcuts, each joined
-  to the command it invokes, and gated so a command cannot silently become
-  unreachable.
-- **Every control now carries an automation identity** (#1375), including the
-  parameterised ones — 15 stamp items and 8 colour swatches share a verb and
-  record their parameter values.
-
-Nothing user-facing has shipped since 3.9.1. The 137 commits on `develop` are
-tooling, architecture registries, and CLI refactors — with three exceptions
-noted under Fixed.
+- **Sign Document** in the File menu (#1308).
+- **A registry of every interactive GUI function** (#1374): 93 menu items, 45 toolbar buttons, 9 viewer mouse gestures and 28 keyboard shortcuts, each joined to the command it invokes, and gated so a command cannot silently become unreachable.
+- **Every control now carries an automation identity** (#1375), including the parameterised ones — 15 stamp items and 8 colour swatches share a verb and record their parameter values.
 
 ### Build and verification
-- **GitHub Actions was removed.** All gates now run locally on macOS
-  (`LOCAL_GATES.md`); `CI_GATES.md` is gone and `tests/coverage-floors.tsv`
-  keeps only the `full` profile. Releases are locally-built unsigned macOS
-  apps until GitHub is reinstated for Linux/Windows packaging only (#1355).
+- **GitHub Actions was removed.** All gates now run locally on macOS (`LOCAL_GATES.md`); `CI_GATES.md` is gone and `tests/coverage-floors.tsv` keeps only the `full` profile.
 - **Every gate is one row of `tests/gates.tsv`** (#1358).
-  `scripts/test-tier.sh {t0|t1|full|t2|t3}` is the one front door;
-  `run-full-suite.sh` and `release-smoke.sh` derive their plans from the same
-  manifest, so no runner carries a step list that can drift (#1362 was one
-  such drift). `--list <tier>` prints a tier's rows without running them;
-  `LOCAL_GATES.md` documents the columns and how to add or accept a gate.
-- **The report decides every runner's exit** (`scripts/report-gates.sh`): a
-  NEW red blocks, a KNOWN one (an OPEN issue cited in the row's `knownIssue`
-  cell) does not, and a cited issue that has CLOSED reads STALE and blocks
-  until the acceptance is deleted. NOT RUN and SKIPPED rows are counted and
-  never read as green. The same report prints the conformance grades — the
-  four corpus scans, extraction parity, the redaction bench and render
-  performance against the reference tools — with a delta against the prior
-  run of the same tier.
-- **The registry gate reads its test evidence instead of regenerating it**
-  (#1366): the t0 `pdf-capability-registry` row regenerates from committed
-  inputs and reads the test-outcomes snapshot, so a run's own trx files can
-  no longer redden it; a full-tier GRADE row, `pdf-registry-outcomes`,
-  imports the run's trx from its ledger, prints the report's `test evidence`
-  line and stashes the regenerated snapshot for `--adopt` and commit.
-- **The `--no-build` freshness guard reads solution files** (#1367): it
-  crashed on `excise.sln`'s backslash project paths, and the runner read the
-  crash as "stale", so the redaction suites did not run in the first
-  manifest-driven full run. Fixed and covered by its selftest.
-- **Check-gates leave mtimes alone.** `verify-license-manifest.sh` restored
-  the reviewed licence file with a fresh mtime on every pass, and the guard
-  then refused every later `--no-build` row that reaches `Excise.App` — all
-  sixteen App rows of the first full run failed on a file whose bytes had
-  not changed. The gate now preserves the mtime (`cp -p`).
-- **What the first full run (2026-09-05, 4h01m) accepted or re-tuned:** the
-  #1361 acceptance now also covers the chunked `Excise.Rendering.Tests` row
-  (one defect must not read KNOWN on one row and NEW on another); the
-  Rendering skip allowlist is re-tuned to this machine (two entries added
-  with their reasons, one deleted because the test runs again, one count
-  corrected); two PDFium corpus pages moved PASS_ONE → PASS and are
-  accepted; `render-quality-scan` cites #1370 for its 47 contract
-  departures and records its 2h28m cost.
-- **`--resume` keeps trx consumers pointed at the evidence.** A row that reads
-  another row's trx (`{TRX:x}`, `{TRXARGS:x}`: test counts, skip budgets,
-  oracle floors) resolved it under the new run's log directory even when the
-  producer had been taken from a checkpoint, so every such row failed on the
-  first resumed full run. The expansion now follows a checkpointed producer
-  to the trx beside its evidence log; pinned by a t0 selftest.
-- **PDFium never runs inside our process** (#1369). Its API is not
-  thread-safe and it was the only reference oracle we linked, so four
-  concurrent renders killed a test host and lost a four-hour run. Every
-  call is now serialised, and the renderer spawns a host process rather
-  than loading the library, so a crash costs one child instead of the run.
-- **The redaction bench measures with two engines on every axis** (#1372):
-  leaked text by mutool and pdftotext, mark geometry by pdftocairo and
-  PDFBox, visual survival by Ghostscript and pdftocairo. A term counts as
-  leaked when either extractor reads it. The second engine immediately
-  found 14 terms surviving in excise's own output that the previous single
-  oracle could not see, moving the security grade from 0.969 A- to
-  0.924 B+ — a measurement that was previously impossible, not a
-  regression.
-- **`--suite` presets** name a slice of tier full (`redaction`,
-  `rendering`, `benches`, `suites`, `gates`) as patterns over manifest row
-  names, so a new row joins its suite automatically.
-- **Silent skips are closed.** A gate that cannot run exits 77 and is
-  reported SKIPPED or FAIL according to its `prereqPolicy`; five scripts
-  that exited 0 on a missing prerequisite (accessibility, visual, perf
-  budgets, copy-whitespace parity, bench tiers) no longer do.
-- **Removed** the eight legacy runners (`run-all-tests`, `run-atomic-tests`,
-  `run-passing-tests`, `run-avalonia-tests-linux`, `run-coverage`,
-  `run-long-tests`, `run-corpus-tests`, `run-automation-tests`); what they
-  ran is now manifest rows.
-- **The macOS NativeAOT publish builds again.** Homebrew keeps OpenSSL and
-  brotli keg-only, so the ilcompiler link line could not resolve `-lssl` or
-  `-lbrotlienc`; the AOT release gate had been red on this since the toolchain
-  bump.
+- **The report decides every runner's exit** (`scripts/report-gates.sh`): a NEW red blocks, a KNOWN one (an OPEN issue cited in the row's `knownIssue` cell) does not, and a cited issue that has CLOSED reads STALE and blocks until the acceptance is deleted.
+- **The registry gate reads its test evidence instead of regenerating it** (#1366): the t0 `pdf-capability-registry` row regenerates from committed inputs and reads the test-outcomes snapshot, so a run's own trx files can no longer redden it; a full-tier GRADE row, `pdf-registry-outcomes`, imports the run's trx from its ledger, prints the report's `test evidence` line and stashes the regenerated snapshot for `--adopt` and commit.
+- **The `--no-build` freshness guard reads solution files** (#1367): it crashed on `excise.sln`'s backslash project paths, and the runner read the crash as "stale", so the redaction suites did not run in the first manifest-driven full run.
+- **Check-gates leave mtimes alone.** `verify-license-manifest.sh` restored the reviewed licence file with a fresh mtime on every pass, and the guard then refused every later `--no-build` row that reaches `Excise.App` — all sixteen App rows of the first full run failed on a file whose bytes had not changed.
+- **What the first full run (2026-09-05, 4h01m) accepted or re-tuned:** the #1361 acceptance now also covers the chunked `Excise.Rendering.Tests` row (one defect must not read KNOWN on one row and NEW on another); the Rendering skip allowlist is re-tuned to this machine (two entries added with their reasons, one deleted because the test runs again, one count corrected); two PDFium corpus pages moved PASS_ONE → PASS and are accepted; `render-quality-scan` cites #1370 for its 47 contract departures and records its 2h28m cost.
+- **`--resume` keeps trx consumers pointed at the evidence.** A row that reads another row's trx (`{TRX:x}`, `{TRXARGS:x}`: test counts, skip budgets, oracle floors) resolved it under the new run's log directory even when the producer had been taken from a checkpoint, so every such row failed on the first resumed full run.
+- **PDFium never runs inside our process** (#1369).
+- **The redaction bench measures with two engines on every axis** (#1372): leaked text by mutool and pdftotext, mark geometry by pdftocairo and PDFBox, visual survival by Ghostscript and pdftocairo.
+- **`--suite` presets** name a slice of tier full (`redaction`, `rendering`, `benches`, `suites`, `gates`) as patterns over manifest row names, so a new row joins its suite automatically.
+- **Silent skips are closed.** A gate that cannot run exits 77 and is reported SKIPPED or FAIL according to its `prereqPolicy`; five scripts that exited 0 on a missing prerequisite (accessibility, visual, perf budgets, copy-whitespace parity, bench tiers) no longer do.
+- **Removed** the eight legacy runners (`run-all-tests`, `run-atomic-tests`, `run-passing-tests`, `run-avalonia-tests-linux`, `run-coverage`, `run-long-tests`, `run-corpus-tests`, `run-automation-tests`); what they ran is now manifest rows.
+- **The macOS NativeAOT publish builds again.** Homebrew keeps OpenSSL and brotli keg-only, so the ilcompiler link line could not resolve `-lssl` or `-lbrotlienc`; the AOT release gate had been red on this since the toolchain bump.
 
 ### Architecture and registries
-- A checked architecture registry with Roslyn-derived code topology,
-  member-level reachability, XAML structural resolution, and observed boundary
-  drift (#1234, #1247, #1248, #1300-#1304, #1316).
-- PDF capability evidence scorecards, implementation-evidence progress
-  scoring, and test/benchmark attribution.
+- A checked architecture registry with Roslyn-derived code topology, member-level reachability, XAML structural resolution, and observed boundary drift (#1234, #1247, #1248, #1300-#1304, #1316).
+- PDF capability evidence scorecards, implementation-evidence progress scoring, and test/benchmark attribution.
 
 ### Fixed
-- **Encrypted assembly output is preserved** through CLI `merge`/`split`
-  (#1343).
+- **Encrypted assembly output is preserved** through CLI `merge`/`split` (#1343).
 - **Mutation-derived state is invalidated** rather than served stale (#1326).
 - **Editing-mode cleanup is idempotent** (#1268).
 
 ### Known problems at this point
-- The redaction bench segfaults the test host (exit 139) 13 minutes in under
-  the full tier, so the `redaction` grade restates the 2026-08-27 history
-  (#1369).
-- The t0 registry gate still depends on four inputs that are not committed
-  sources: a gitignored index file, the installed-tool probe, a test that
-  reads `logs/`, and a solution-wide trx that keeps one project's results
-  (#1368).
-- 47 render-quality contract expectations depart under the full tier's
-  five-oracle set; triage decides whether the pins or the oracle set change
-  (#1370).
-- The capability registry measures whether evidence paperwork exists, not what
-  is implemented: its `testRefs` cannot join to real test names at all
-  (#1344), and 929 of 964 modes read `unknown` because nobody filled a form
-  (#1345). Tracked under milestone RC22.
-- Rendering is 3.5-7x slower than mutool on heavy pages; 72% of the Altona
-  render is per-pixel colour conversion (#1350).
+- The redaction bench segfaults the test host (exit 139) 13 minutes in under the full tier, so the `redaction` grade restates the 2026-08-27 history (#1369).
+- The t0 registry gate still depends on four inputs that are not committed sources: a gitignored index file, the installed-tool probe, a test that reads `logs/`, and a solution-wide trx that keeps one project's results (#1368).
+- 47 render-quality contract expectations depart under the full tier's five-oracle set; triage decides whether the pins or the oracle set change (#1370).
+- The capability registry measures whether evidence paperwork exists, not what is implemented: its `testRefs` cannot join to real test names at all (#1344), and 929 of 964 modes read `unknown` because nobody filled a form (#1345).
+- Rendering is 3.5-7x slower than mutool on heavy pages; 72% of the Altona render is per-pixel colour conversion (#1350).
 
 ## [3.9.1] - 2026-08-29
 
 ### Security and redaction
-- **Redaction now handles image-only OCR overlays and region-level JBIG2/image
-  redaction**, with independent extractor, rendered-ink, carrier, and
-  save/reopen assurance gates. The expanded benchmark records a versioned
-  Security × Fidelity scorecard rather than trusting excise to grade itself.
-- **Encryption identity crypt filters and non-display carriers are preserved or
-  scrubbed according to explicit policy**, preventing previously unexamined
-  secret-bearing paths from being reported clean.
+- **Redaction now handles image-only OCR overlays and region-level JBIG2/image redaction**, with independent extractor, rendered-ink, carrier, and save/reopen assurance gates.
+- **Encryption identity crypt filters and non-display carriers are preserved or scrubbed according to explicit policy**, preventing previously unexamined secret-bearing paths from being reported clean.
 
 ### Text, copy, and accessibility
-- **Copy/selection quality has new reading-order and Unicode-safety coverage**,
-  including multi-column text and unsafe display-control diagnostics.
-- **Automation and accessibility release smoke remains CLI-first and
-  platform-neutral**, with no runtime scripting compiler in shipped AOT builds.
+- **Copy/selection quality has new reading-order and Unicode-safety coverage**, including multi-column text and unsafe display-control diagnostics.
+- **Automation and accessibility release smoke remains CLI-first and platform-neutral**, with no runtime scripting compiler in shipped AOT builds.
 
 ### Performance and verification
-- **A fresh-process renderer benchmark now compares Excise with independent
-  renderers** and records wall time, RSS, and fidelity separately, including
-  ACC and Altona stress fixtures.
-- **Release documentation no longer embeds a stale version number in command
-  examples.**
+- **A fresh-process renderer benchmark now compares Excise with independent renderers** and records wall time, RSS, and fidelity separately, including ACC and Altona stress fixtures.
+- **Release documentation no longer embeds a stale version number in command examples.**
 
 ### Fixed
-- **An unsigned `/FT /Sig` widget no longer gets a placeholder border**
-  (#1005). #885 stroked a neutral blue rectangle over the whole `/Rect` so the
-  field would read as "sign here". Of the three engines that vote on a Widget
-  row, poppler and Ghostscript draw nothing at all and mutool draws a 23x5 mark
-  in the field's top-left corner — not a border. So excise elected an outlier
-  (the #875 trap) and then drew something the outlier does not draw: 520 inked
-  px where the majority draws 0. A `/FT /Sig` that carries `/MK` still gets
-  that styling; flagging an unsigned field for the user is an editor overlay,
-  not ink in the rendered page.
+- **An unsigned `/FT /Sig` widget no longer gets a placeholder border** (#1005).
 
-- **A `/MK` with a background and no border colour no longer gets an invented
-  border** (#1005, same code path). mutool, pdftocairo, pdftoppm and
-  Ghostscript each ink exactly the fill and nothing else; excise added the same
-  blue stroke the signature placeholder used. The border is now drawn only
-  where `/MK /BC` states one, and excise's ink is pixel-identical to all four
-  (new row `widget.mk.bg-only`).
+- **A `/MK` with a background and no border colour no longer gets an invented border** (#1005, same code path).
 
 - **`/DA` auto-size (`0 Tf`) fits the value to the field** (#1003).
-  `RenderTextFieldValue` used `min(rect.Height × 0.75, 16)` — height-only,
-  capped, blind to both the value and the field width — and drew `/V (Mountain)`
-  64 px wide in a 100 pt field where mutool draws it 94, pdftocairo 92 and
-  Ghostscript 90. `AutoFitFontSize` now takes the smaller of two limits read off
-  the resolved typeface: the string's own advance must fit the width, and the
-  font's own line box (ascent + descent) must fit the height. What settles the
-  rule is a 100x100 field, where mutool and poppler draw the value at exactly
-  the size they use in a 30 pt-tall one — the fit is bounded by WIDTH, with no
-  absolute cap.
 
-- **A synthesized `/Highlight` overshoots its quad by the quad's height ÷ 5,
-  not by half its height** (#1004). Every engine that draws a highlight rounds
-  its ends past the `/QuadPoints`, and the overshoot scales with the quad's
-  height: at heights 8/10/20/40 px, mutool and poppler overshoot 2/2/4/8,
-  pdfbox 2/2/5/8, Ghostscript 1/2/3/5, pdfium 0. excise used
-  `min(height,width)/2` — 10 px on a 20 px quad, 6 px wider than every oracle
-  at both ends — and on a narrow quad shrank it with the WIDTH, which no engine
-  does. Its bbox now matches mutool's and pdftocairo's exactly.
+- **A synthesized `/Highlight` overshoots its quad by the quad's height ÷ 5, not by half its height** (#1004).
 
-- **A link with no `/Border` and no `/BS` gets the §12.5.6.5 default 1 pt
-  border** (#987). Poppler and Ghostscript both stroke it; excise drew nothing.
-  The old rule required the file to state a width explicitly, and was decided on
-  a fixture that did state one — so the common case, a link with neither key,
-  was never measured. `EffectiveLinkBorderWidth` now resolves the whole ladder:
-  a stated width, `/BS` with no `/W` → 1 (Table 168), a `/Border` present but
-  malformed → nothing (which is also what the oracles draw for it), neither key
-  → 1.
+- **A link with no `/Border` and no `/BS` gets the §12.5.6.5 default 1 pt border** (#987).
 
-- **A negative `Tf` size in a widget's `/DA` is a real size, not "auto-size"**
-  (#991). Zero means auto-size; negative mirrors the glyphs through the
-  text-space origin, exactly as in a page content stream (#970). excise rendered
-  the value upright at an unrelated size — an output no engine produces. The
-  alignment width now carries the size's sign, which reproduces mutool's and
-  pdftocairo's placement to the pixel in all three `/Q` cases.
+- **A negative `Tf` size in a widget's `/DA` is a real size, not "auto-size"** (#991).
 
 - **A synthesized field value is clipped to its widget's `/Rect`** (#991).
-  mutool and pdftocairo stop at the rect; excise ran off the page.
 
 ### Added
-- **`tests/annotation-synthesis-policy.json` — appearance synthesis as data,
-  with its evidence attached** (#993). 45 rows, one per (subtype, state,
-  condition), each carrying the decision, the shape drawn, the fixture in full,
-  per-oracle evidence as **bbox + shape rather than a bare count**, and the
-  majority verdict with the size of the pool it was taken over.
-  `AnnotationSynthesisPolicyGateTests` re-measures all of it and fails when the
-  table and the renderer disagree, when a row's evidence stops supporting its
-  decision, or when a synthesis site has no row.
-
-  Three shipped defects came from decisions made from a scalar that cannot
-  represent the thing being decided: #885's blue box (those 233 px were a check
-  mark), #987's link border (measured on the wrong fixture), and #972's first
-  fix (a caret with a tick's pixel count and bbox). The table's rules encode
-  what each cost: majority never a single oracle; votes counted per ENGINE, so
-  poppler does not get two of four for shipping two binaries; **an abstention is
-  not a "no"** — every fixture is printable because Ghostscript renders only
-  printable annotations, and pdfium abstains structurally (#1007); and shape
-  assertions wherever count and bbox cannot discriminate.
-
-  Two rows contradict their own majority and each names an issue rather than
-  being quietly kept (both #1015). The table shipped with four such rows and
-  two more carrying magnitude divergences; #1007/#1009 grew the pool from three
-  engines to five and reversed one, #1015 resolved two, and #1003/#1004/#1005
-  closed the rest by changing the renderer rather than the row.
-
-  A row may also pin its GEOMETRY with `exciseInkMatchesDrawers` — excise's ink
-  bbox must land inside the spread of the drawing voters' bboxes, per axis,
-  within a stated tolerance. #1003 and #1004 are why it exists: both were rows
-  where every other check in the gate was green while excise drew the right
-  picture at visibly the wrong size, because a shape predicate cannot see a
-  magnitude any more than an ink count can see a shape.
+- **`tests/annotation-synthesis-policy.json` — appearance synthesis as data, with its evidence attached** (#993). 45 rows, one per (subtype, state, condition), each carrying the decision, the shape drawn, the fixture in full, per-oracle evidence as **bbox + shape rather than a bare count**, and the majority verdict with the size of the pool it was taken over.
 
 ### Changed
-- **There is now exactly ONE content-stream state machine** (#992, #995, #996,
-  #997). `ContentStreamParser` (2,062 lines) and `TextExtractor` (2,471) each
-  tokenized the same bytes, tracked their own graphics and text state, and
-  computed their own glyph advances, with four comments asking people to keep
-  the copies in sync by hand. Both are now sinks over
-  `Excise.Core/Content/ContentStreamWalker.cs`: 400 and 845 lines respectively,
-  a net 4,568 deletions against 3,096 insertions.
+- **There is now exactly ONE content-stream state machine** (#992, #995, #996, #997).
 
-  This is redaction security, not tidiness. Every RC1 defect lived in the drift
-  between the two copies — §9.4.2 line stepping (#942/#899, which destroyed
-  5–36% of a document per redacted term for months), the advance terms inside
-  horizontal scaling (#734), a glyph cell 12× too small in one machine
-  (#833/#980), the array nesting bound (#971), the hex-digit skip (#974),
-  `sh`/`d0`/`d1` and inline images (#980), a decode cascade at 3 steps versus 9
-  (#981), cancellation (#982), and the §8.4.1 Table 52 text state in *neither*
-  (#983). A new consumer adds a sink; it never adds a parser.
-
-  Consolidating forced three decisions where the two machines had differed, and
-  one of them mattered: `<</K /V>> (Text) Tj` showed the dictionary and dropped
-  the string in one machine while the other read the text. Resolved in the
-  keeping direction with §7.8.2 tail-operand selection — execution-only, so
-  `ContentStreamWriter` still round-trips every token, because trimming what is
-  *recorded* would turn a mis-execution into data loss on rewrite.
-
-- **The ExtGState `/Font` entry (Table 58) is implemented** (#990). A `gs`
-  operator can set the font, and both parsers were blind to it. Written once, in
-  the walker, which is the point of the consolidation above.
+- **The ExtGState `/Font` entry (Table 58) is implemented** (#990).
 
 ### Removed
-- **`ParserDifferentialTests` (58 tests)** (#997). It existed to detect
-  divergence between the two content-stream machines and has no subject now that
-  there is one. Deleted on evidence rather than assumption: reverting the §9.4.2
-  fix reddened 2 of its tests while two machines existed and **zero** afterwards,
-  while `TextMatrixLineSteppingTests` — a spec-property gate rather than a
-  twin gate — caught it either way. The rule it leaves behind: a gate that
-  compares excise to excise cannot see a defect excise holds consistently.
+- **`ParserDifferentialTests` (58 tests)** (#997).
 
 ## [3.8.0] - 2026-08-12
 
@@ -1776,81 +363,25 @@ author 2 of the 15 annotation types its own engine supported; it now authors all
 
 ### Added
 - **All 15 annotation types are reachable from the Annotate menu** (#912, #934).
-  Previously Highlight and sticky notes; now text markup from a selection
-  (Highlight, Underline, StrikeOut, Squiggly), sticky notes, shapes from a drag
-  (Square, Circle, FreeText), rubber stamps (all 15 standard names from
-  §12.5.6.12 Table 181, plus an image stamp picked from a file — the usual way a
-  scanned signature or letterhead gets onto a page), and drawn paths (freehand
-  Ink, Line, Arrow, Polygon, PolyLine).
 
-  Drawn paths share **one capture mode**, because they differ only in when the
-  gesture ends: drag for ink, drag-endpoints for lines, and click-per-vertex for
-  polygons — double-click or <kbd>Enter</kbd> to finish, <kbd>Esc</kbd> to
-  abandon, <kbd>Backspace</kbd> to take back a point.
+- **`PdfAnnotation.LineEndings`** exposes `/LE`, so an arrow is now readable and not merely writable.
 
-- **`PdfAnnotation.LineEndings`** exposes `/LE`, so an arrow is now readable and
-  not merely writable. An Arrow is not a distinct subtype — it is a `/Line`
-  carrying `/LE [None ClosedArrow]` — and until this existed excise could author
-  one with no way to observe that it had.
-
-- **An independent structural oracle for annotations** (#933) —
-  `QpdfReferenceTool.ListAnnotations` reads the object graph with qpdf's own
-  parser. Every annotation the GUI can author is now confirmed by a parser that
-  is not excise, along with `/InkList` stroke counts, `/Vertices` counts and
-  `/LE`.
-
-  This is the structural half of the rule the redaction work already follows
-  visually (mutool, pdftocairo, Ghostscript). Annotations need it more than most
-  surfaces: ISO 32000-1 §12.5.5 lets a viewer synthesise any appearance it likes
-  for an annotation with no `/AP`, so for much of this surface there is no
-  correct picture to compare against — but there is always a correct object.
+- **An independent structural oracle for annotations** (#933) — `QpdfReferenceTool.ListAnnotations` reads the object graph with qpdf's own parser.
 
 ### Changed
-- Annotation structural invariants grew from 37 cases to 58 (#933), covering
-  every subtype the authoring API can produce except Stamp and ImageStamp, which
-  are covered by GUI tests instead.
+- Annotation structural invariants grew from 37 cases to 58 (#933), covering every subtype the authoring API can produce except Stamp and ImageStamp, which are covered by GUI tests instead.
 
 ### Notes for anyone reading the tests
-Each type shipped with a test that was **wrong first**, in the same way, and
-mutation testing is the only reason that is known rather than suspected. In
-every case the assertion that passed was not the assertion that checked:
 
-- the image stamp passed with red and blue swapped — *a Stamp exists and the
-  file grew* is true of a picture with the wrong colours;
+- the image stamp passed with red and blue swapped — *a Stamp exists and the file grew* is true of a picture with the wrong colours;
 - *a non-empty `/InkList`* is true of a reversed stroke and a decimated one;
-- the distinct-subtype guard used by every earlier type is blind to Arrow by
-  construction, since an Arrow **is** a Line;
-- a vertex list that resets on each click still yields a valid shape, just one
-  built from the last click or two.
-
-The qpdf oracle was wrong first too, and in the most instructive way: it
-originally compared qpdf's answer against excise's own report of the same
-dictionary, so shifting every written `/Rect` by 50pt passed cleanly. An
-external tool checking excise against excise's own expectation is not an
-independent check — what it is compared *to* has to be independent as well.
+- the distinct-subtype guard used by every earlier type is blind to Arrow by construction, since an Arrow **is** a Line;
+- a vertex list that resets on each click still yields a valid shape, just one built from the last click or two.
 
 ### Known limitations
-Every limitation listed under 3.7.0 is still true and still tracked; none of
-them were the subject of this release. Two are worth restating because this
-release touched their surface:
 
-- **The corpus gate still judges annotations by a single most-inked oracle**
-  (#932, #907) — so ~21 pages remain pinned as excise defects for *agreeing with
-  the majority of renderers*. §12.5.5 makes appearance synthesis optional, and
-  the oracles genuinely disagree in both directions: mutool draws Redact, Sound
-  and FileAttachment and not Line, Ink or PolyLine; pdftocairo does the reverse.
-  The structural verification added above is the answer to the half of this
-  where no correct picture exists — it is **not** a fix for the scoring, and the
-  manifests still carry those known-wrong expectations.
-- **A document is still opened twice** (#917) — every annotation type added this
-  release has to write itself to both the save document and the viewer document
-  by hand, or the saved file is correct while the screen never changes. Each one
-  is covered by a test that asserts the viewer document *before* saving, because
-  that is the defect this arrangement produces and it is invisible to any test
-  that only checks the file.
-
-Not yet verified: that a synthesised `/AP` bounding box lies within its
-annotation's `/Rect` (#933).
+- **The corpus gate still judges annotations by a single most-inked oracle** (#932, #907) — so ~21 pages remain pinned as excise defects for *agreeing with the majority of renderers*.
+- **A document is still opened twice** (#917) — every annotation type added this release has to write itself to both the save document and the viewer document by hand, or the saved file is correct while the screen never changes.
 
 ## [3.7.0] - 2026-08-11
 
@@ -1866,112 +397,31 @@ quality result. A green gate means "nothing regressed". The gate itself has a
 known defect this release did not fix — see *Known limitations* below.
 
 ### Added
-- **Redaction now reports the carriers it could not examine** (#916, #905) —
-  bookmark titles carry no position, and annotations away from the redaction box
-  are never visited, so an area redaction cannot know whether either mentions
-  what it removed. Deriving terms from the box to find out corrupts the document
-  (a box over ordinary prose yields `you got time file`, turning `Younger` into
-  `Ynger`), and stripping them wholesale destroys a document's navigation and
-  every unrelated comment. So excise reports them instead, on all three
-  surfaces — the GUI redacted-copy dialog, the CLI, and batch step results:
+- **Redaction now reports the carriers it could not examine** (#916, #905) — bookmark titles carry no position, and annotations away from the redaction box are never visited, so an area redaction cannot know whether either mentions what it removed.
 
-  ```
-  Redacted 37 occurrence(s) of 'Ng'
-    note: 'Ng' is shorter than 3 characters, so document metadata was not
-          scrubbed for it. Page content was still redacted.
-  ```
-
-  The wording is deliberate: it says *not examined*, never *may contain*. excise
-  has no evidence either way, and overstating trains people to dismiss the
-  warning. A document with nothing unexaminable produces no note.
-- **Underline, StrikeOut and Squiggly annotations from the GUI** (#912) — Core
-  could author fifteen annotation subtypes and the app exposed two. These three
-  reuse the text-selection gesture Highlight already used. Ten of fifteen remain
-  unreachable; the issue tracks the rest.
-- **Coverage floors ratchet up** (#909) — `check-coverage-floor.sh --update`
-  raises a floor when coverage improves materially and **never** lowers it; a
-  regression exits non-zero and leaves the file untouched. Enforced by a
-  selftest, because a ratchet that can be talked into lowering a floor looks
-  like a guarantee and provides none.
+- **Underline, StrikeOut and Squiggly annotations from the GUI** (#912) — Core could author fifteen annotation subtypes and the app exposed two.
+- **Coverage floors ratchet up** (#909) — `check-coverage-floor.sh --update` raises a floor when coverage improves materially and **never** lowers it; a regression exits non-zero and leaves the file untouched.
 
 ### Fixed
-- **Area redaction left `/Info` and the XMP packet intact** (#897) — draw a box
-  over a name, save, and the name was still in the document title. `RedactText`
-  had scrubbed carriers since #896 because it has a term to scrub by; an area
-  redaction has only a rectangle, so it now strips the positionless carriers
-  wholesale. Fixing this introduced a regression the existing suite caught:
-  `RedactText` composes `RedactArea`, so the new default silently overrode
-  `RedactText`'s own opt-out until it was told not to.
-- **The carrier scrub ignored the caller's case sensitivity** (#905) —
-  `RedactText` matches page content case-insensitively by default while the
-  scrub was `Ordinal`, so redacting `smith` cleared the page and left `Smith`
-  in `/Info /Title`. An under-redaction, and the more dangerous half of that
-  issue.
-- **Default and regex search silently missed visible text** (#924) — both read
-  `PdfPage.Text`, which drops content on multi-column pages; only "whole words
-  only" read the complete word list. On page 117 of the IRS 1040 instructions
-  `page.Text` holds 2885 characters where the letter stream holds 3928, so
-  "insurance company", "Form 1095-A" and "net premium tax credit" were all
-  visible on the page and unfindable. The search text is now built from the
-  words, which also removes a second silent loss: the old span builder dropped
-  any word it could not locate in `page.Text`, with no error.
-- **OCR could hang the application indefinitely** — `PdfOcrService` read
-  tesseract's stdout to end and only then its stderr, which deadlocks once the
-  child fills the stderr buffer, and then waited with no timeout at all. Both
-  pipes are now drained concurrently and the wait is bounded, with a
-  `TimeoutException` naming the file. Three test harnesses had the same read
-  ordering; one of them crashed the Linux CI test host with a 500 MB core dump.
-- **The AOT publish warned about the artifact it produces** (#906) — four
-  IL3050 and two IL2026 warnings, now zero. macOS and Linux releases build
-  Native AOT, so those warnings described the shipping binary. The cause was two
-  explicit `{ReflectionBinding}` uses whose compiled-binding scope was re-pointed
-  with `x:DataType` rather than escaped.
-- **Renderer and parser defects found by the corpus scan** — annotation
-  appearances for button widgets and FreeText, and `/AP` appearances that were
-  present and ignored (#885, #888); `/Font` in an `ExtGState` (#886, 9 pages);
-  the CFF standard-strings table held 244 of 391 entries (#886); format 4 and 6
-  symbolic TrueType cmaps (#891); two name→GID routes that did not exist (#892);
-  the page group starting opaque instead of transparent (#890); inline images
-  whose `ID` is followed by CRLF (#887); JBIG2 `/JBIG2Globals` resolution and
-  sequential halftone MMR plane decoding (#874); CCITT `/EndOfBlock` classified
-  by value rather than presence (#893) and `/EncodedByteAlign` correctly
-  reported as Group-4-only; four parser recovery gaps, one of which returned the
-  wrong object (#869, #884).
-- **The viewer rendered the same page once per grid cell on first paint**
-  (#855).
-- **Two internal gates were reporting the wrong thing.** The `ci` coverage floor
-  was derived on a developer machine — applying CI's test filter locally does
-  not reproduce CI's environment, because 86 corpus-gated tests skip there
-  without announcing it, and the resulting 24-point error kept CI red for four
-  commits. The unwired-API check was **82% false positives** on its
-  referenced-nowhere list, flagging members that were used inside their own
-  declaring file; now 9 of 9 real.
+- **Area redaction left `/Info` and the XMP packet intact** (#897) — draw a box over a name, save, and the name was still in the document title.
+- **The carrier scrub ignored the caller's case sensitivity** (#905) — `RedactText` matches page content case-insensitively by default while the scrub was `Ordinal`, so redacting `smith` cleared the page and left `Smith` in `/Info /Title`.
+- **Default and regex search silently missed visible text** (#924) — both read `PdfPage.Text`, which drops content on multi-column pages; only "whole words only" read the complete word list.
+- **OCR could hang the application indefinitely** — `PdfOcrService` read tesseract's stdout to end and only then its stderr, which deadlocks once the child fills the stderr buffer, and then waited with no timeout at all.
+- **The AOT publish warned about the artifact it produces** (#906) — four IL3050 and two IL2026 warnings, now zero.
+- **Renderer and parser defects found by the corpus scan** — annotation appearances for button widgets and FreeText, and `/AP` appearances that were present and ignored (#885, #888); `/Font` in an `ExtGState` (#886, 9 pages); the CFF standard-strings table held 244 of 391 entries (#886); format 4 and 6 symbolic TrueType cmaps (#891); two name→GID routes that did not exist (#892); the page group starting opaque instead of transparent (#890); inline images whose `ID` is followed by CRLF (#887); JBIG2 `/JBIG2Globals` resolution and sequential halftone MMR plane decoding (#874); CCITT `/EndOfBlock` classified by value rather than presence (#893) and `/EncodedByteAlign` correctly reported as Group-4-only; four parser recovery gaps, one of which returned the wrong object (#869, #884).
+- **The viewer rendered the same page once per grid cell on first paint** (#855).
+- **Two internal gates were reporting the wrong thing.** The `ci` coverage floor was derived on a developer machine — applying CI's test filter locally does not reproduce CI's environment, because 86 corpus-gated tests skip there without announcing it, and the resulting 24-point error kept CI red for four commits.
 
 ### Removed
-- **292 lines of unreachable page-render machinery** (#920) — the legacy
-  ViewModel render path, bypassed when the bound viewer control took over
-  display rendering and never deleted, along with an entire adjacent-page
-  prefetch feature reachable only from it. Two tests kept it alive by calling it
-  through reflection, so no static check could see it was dead.
+- **292 lines of unreachable page-render machinery** (#920) — the legacy ViewModel render path, bypassed when the bound viewer control took over display rendering and never deleted, along with an entire adjacent-page prefetch feature reachable only from it.
 
 ### Known limitations
-Unchanged or newly measured this release, and all tracked:
 
-- **Open-and-save inflates every PDF, up to 2.79x** (#923) — the writer emits no
-  object streams or cross-reference streams, so a document opened and saved with
-  **zero** edits grows. Measured on ten corpus documents; every one grew.
-- **The corpus gate is one-directional** (#904, #907) — over-draw is computed
-  and never gated, and under-draw is scored against whichever single oracle drew
-  the most ink. 21 of 35 defect-class pages are that scoring, not excise bugs.
-- **Redaction is slow on common terms** (#919) — 7-10 seconds to redact a
-  frequent word from a six-page form, because each match re-extracts every
-  letter on the page.
-- **A document is opened twice** (#917) — two `PdfDocument` instances kept in
-  sync by hand. Saving over a file the viewer holds open fails on Windows
-  (#926).
-- **Multi-column text assembly still drops content** (#899) — the letter stream
-  is complete; the loss is in serialising it to a string. Search no longer
-  inherits this (#924); copy and text export still do.
+- **Open-and-save inflates every PDF, up to 2.79x** (#923) — the writer emits no object streams or cross-reference streams, so a document opened and saved with **zero** edits grows.
+- **The corpus gate is one-directional** (#904, #907) — over-draw is computed and never gated, and under-draw is scored against whichever single oracle drew the most ink. 21 of 35 defect-class pages are that scoring, not excise bugs.
+- **Redaction is slow on common terms** (#919) — 7-10 seconds to redact a frequent word from a six-page form, because each match re-extracts every letter on the page.
+- **A document is opened twice** (#917) — two `PdfDocument` instances kept in sync by hand.
+- **Multi-column text assembly still drops content** (#899) — the letter stream is complete; the loss is in serialising it to a string.
 
 ## [3.6.0] - 2026-08-03
 
@@ -1992,1248 +442,144 @@ refusals), #885/#888 (annotation appearances), #886 (embedded-subset code→GID)
 #887 (a 14-page blank tail), #875 (one ambiguous page).
 
 ### Fixed
-- **Hybrid-reference files resolved to a SUPERSEDED revision** (#872) — a PDF
-  written with both a classic xref table and a cross-reference stream (PDF
-  32000-1 §7.5.8.4) points at the stream from its trailer's `/XRefStm`, which
-  must be consulted *before* `/Prev`. excise ignored `/XRefStm` entirely and
-  fell through to `/Prev`, so any object the incremental update relocated into
-  an object stream resolved to its **old** value — silently rendering an
-  outdated revision of the document as if it were current. Now merged for the
-  root trailer and every `/Prev` section. Regression-pinned by a checked-in
-  899-byte generated fixture whose page height is a single-number oracle (350 =
-  honoured, 300 = fell through), so the gate runs on CI without the gitignored
-  corpus.
-- **Colour-key `/Mask` was silently ignored** (#873) — an image declaring a
-  colour-key mask (§8.9.6.4: an array of sample ranges that must not paint)
-  had every masked sample painted opaque, so pages that use it to knock out a
-  background rendered with solid blocks over content.
-- **A failed image decode fabricated a uniform fill instead of failing
-  visibly** (#878) — when a decoder returned fewer bytes than the image
-  geometry requires, the renderer painted the undersized buffer anyway,
-  producing a plausible-looking flat colour where the real image should be.
-  A fabricated image is worse than a missing one: it looks like content. The
-  renderer now refuses the buffer.
-- **A self-referencing `/Parent` hung inherited-attribute lookup** (#881) — a
-  page whose parent chain cycles made the `/Resources`, `/MediaBox` and
-  `/Rotate` inheritance walks loop forever on untrusted input. All three walks
-  are now bounded by a shared visited-set guard.
-- **Four parser refusals that condemned whole documents** (#884, partial —
-  36 pages → 14) — each was excise refusing a file that Poppler and MuPDF read
-  without complaint: an undefined indirect reference now resolves to null per
-  §7.3.10 (a free xref entry already did); a missing `endobj` keeps the object
-  it already parsed; a `/Length` that overruns the file yields truncated stream
-  data rather than throwing; and a page with no `/MediaBox` anywhere in its
-  ancestry defaults to US Letter (measured from pdftocairo) instead of being
-  refused. Pinned non-leaking: `TolerantParsePathRedactionTests` proves a
-  document recovered by these paths still redacts completely.
-- **11 unhandled parser exceptions on untrusted input** (#871) — including an
-  `OverflowException` from an out-of-range object number in an xref header
-  scan. All now recover or refuse cleanly.
-- **Line, Polygon, PolyLine and Ink annotations were invisible without an
-  `/AP`** (#885, partial) — §12.5.5 lets a viewer synthesise an appearance when
-  the annotation carries none; excise drew nothing. These four subtypes now
-  render a default appearance from their geometry. FreeText, Widget and icon
-  annotations remain unsynthesised (#885), and annotations that *do* carry an
-  `/AP` stream are a separate gap (#888).
-- **Continuous view: a page's top strip stayed blank while scrolling** (#848,
-  #849) — content-addressed tiles are now composited into one bitmap per page.
-- **Selection drag jumped to the wrong line** (#845, #850) — the drag hit-test
-  anchors to the pointer's own line rather than an X-closer neighbour on an
-  adjacent line.
-- **GUI tests leaked every window they opened** (#706) — `MouseInputTests`
-  called `Show()` thirteen times and `Close()` zero times;
-  `PointerInteractionTests`, eight and zero. xUnit builds a fresh test-class
-  instance per test but
-  the Avalonia application is process-wide, so those windows accumulated for
-  the rest of the run and perturbed pointer routing, hover hit-testing and
-  focus — the order-dependent flake that reddened T2. `ShownWindowTracker`
-  closes them from `IDisposable`, so cleanup survives a *failing* test, which
-  an inline `Close()` on the last line does not. Combined-class failure rate
-  1-in-3 → 0-in-8.
-- **Binary fixtures were being corrupted on Windows checkouts** — the repo had
-  no `.gitattributes`, so `core.autocrlf` rewrote LF to CRLF inside files git
-  guessed were text. For a PDF that is fatal and quiet: the xref stores
-  **absolute byte offsets**, so a one-byte-per-line shift invalidates every
-  entry, and a fixture written to exercise a precise structural path silently
-  stops exercising it. Caught by Test (Windows) on a new fixture; `git ls-files
-  --eol` showed 17 of 34 checked-in PDFs were exposed.
-- **PdfBoxReferenceRenderer returned the wrong page** (#868) — it matched no
-  shipping PDFBox version, so an oracle the suite was about to start trusting
-  would have corroborated the wrong thing.
-- **Fit-Width / Fit-Page now handle mixed portrait+landscape documents** (#847) —
-  the "Fit" toolbar button fitted only the *current* page's width, so in a
-  document mixing portrait and rotated/landscape pages (which share one zoom in
-  the continuous view) a wider page overflowed the viewport and pages shifted
-  off-center. Fit now targets the **widest/tallest page across the document**
-  (`TryGetMaxPageDimensionsInViewerDips`), so every page fits and centers
-  consistently. Uniform documents are unaffected. The fit math was already
-  rotation-aware (`VisualWidth`/`VisualHeight`); this fixes the mixed-width target.
-- **Glyph rectangles: correct width/height (matrix scale) and resolved `/Widths`**
-  (#833, #843) — two independent extraction-geometry bugs that gave wrong glyph
-  bounding boxes (feeding copy spacing, selection highlights, and redaction
-  boxes). (1) `#833`: the glyph bbox width/height were computed in text space
-  and stored into a user-space box **without the text-matrix/CTM scale**, so the
-  ubiquitous `1 Tf … s 0 0 s Tm` producer idiom (unit font size carried by the
-  matrix — ~58/60 corpus PDFs) yielded ~0-size boxes while positions stayed
-  correct; width/height are now transformed as vectors through the matrix
-  (ordinary `s Tf … 1 0 0 1 Tm` text is a byte-for-byte no-op). (2) `#843`:
-  `/Widths` is an indirect reference in every TeX/dvips PDF; it was read without
-  resolving the reference, so the cast failed and every glyph got the flat 600
-  default — now resolved (in both `TextExtractor` and the redaction-path
-  `ContentStreamParser`). Verified non-leaking (redaction round-trip +
-  ink-differential, full Core suite, extraction-parity all green) and against
-  poppler `pdftotext`.
-- **Copied text no longer fuses words on tight-tracking lines** (#835) — the
-  word-space heuristic judged the horizontal gap against the glyph *height*
-  (`0.5·lineHeight ≈ 0.5em`), a bar above a normal word space, so lines that
-  position words with small gaps and no real space glyph fused
-  (`ForewordItisagreat…`). It now judges against a horizontal `~0.25·fontSize`
-  (poppler's ~0.1–0.3em band). foss-primer copy word agreement 6.6%→**77.9%**,
-  cdc 73.9%→**94.4%**; clean prose unchanged.
+- **Hybrid-reference files resolved to a SUPERSEDED revision** (#872) — a PDF written with both a classic xref table and a cross-reference stream (PDF 32000-1 §7.5.8.4) points at the stream from its trailer's `/XRefStm`, which must be consulted *before* `/Prev`.
+- **Colour-key `/Mask` was silently ignored** (#873) — an image declaring a colour-key mask (§8.9.6.4: an array of sample ranges that must not paint) had every masked sample painted opaque, so pages that use it to knock out a background rendered with solid blocks over content.
+- **A failed image decode fabricated a uniform fill instead of failing visibly** (#878) — when a decoder returned fewer bytes than the image geometry requires, the renderer painted the undersized buffer anyway, producing a plausible-looking flat colour where the real image should be.
+- **A self-referencing `/Parent` hung inherited-attribute lookup** (#881) — a page whose parent chain cycles made the `/Resources`, `/MediaBox` and `/Rotate` inheritance walks loop forever on untrusted input.
+- **Four parser refusals that condemned whole documents** (#884, partial — 36 pages → 14) — each was excise refusing a file that Poppler and MuPDF read without complaint: an undefined indirect reference now resolves to null per §7.3.10 (a free xref entry already did); a missing `endobj` keeps the object it already parsed; a `/Length` that overruns the file yields truncated stream data rather than throwing; and a page with no `/MediaBox` anywhere in its ancestry defaults to US Letter (measured from pdftocairo) instead of being refused.
+- **11 unhandled parser exceptions on untrusted input** (#871) — including an `OverflowException` from an out-of-range object number in an xref header scan.
+- **Line, Polygon, PolyLine and Ink annotations were invisible without an `/AP`** (#885, partial) — §12.5.5 lets a viewer synthesise an appearance when the annotation carries none; excise drew nothing.
+- **Continuous view: a page's top strip stayed blank while scrolling** (#848, #849) — content-addressed tiles are now composited into one bitmap per page.
+- **Selection drag jumped to the wrong line** (#845, #850) — the drag hit-test anchors to the pointer's own line rather than an X-closer neighbour on an adjacent line.
+- **GUI tests leaked every window they opened** (#706) — `MouseInputTests` called `Show()` thirteen times and `Close()` zero times; `PointerInteractionTests`, eight and zero.
+- **Binary fixtures were being corrupted on Windows checkouts** — the repo had no `.gitattributes`, so `core.autocrlf` rewrote LF to CRLF inside files git guessed were text.
+- **PdfBoxReferenceRenderer returned the wrong page** (#868) — it matched no shipping PDFBox version, so an oracle the suite was about to start trusting would have corroborated the wrong thing.
+- **Fit-Width / Fit-Page now handle mixed portrait+landscape documents** (#847) — the "Fit" toolbar button fitted only the *current* page's width, so in a document mixing portrait and rotated/landscape pages (which share one zoom in the continuous view) a wider page overflowed the viewport and pages shifted off-center.
+- **Glyph rectangles: correct width/height (matrix scale) and resolved `/Widths`** (#833, #843) — two independent extraction-geometry bugs that gave wrong glyph bounding boxes (feeding copy spacing, selection highlights, and redaction boxes).
+- **Copied text no longer fuses words on tight-tracking lines** (#835) — the word-space heuristic judged the horizontal gap against the glyph *height* (`0.5·lineHeight ≈ 0.5em`), a bar above a normal word space, so lines that position words with small gaps and no real space glyph fused (`ForewordItisagreat…`).
 
 ### Added
-- **The corpus rendering scan is now a gate** (#862) — page 1 of all 3,915
-  documents across four corpora (veraPDF 2694, pdf.js 685, Isartor 205, PDFium
-  331) is rendered and classified against up to five independent oracles, then
-  checked against a per-corpus expectation manifest. Keys are corpus-relative
-  *paths*, not basenames: PDFium's corpus has subdirectories and duplicate
-  filenames that basename keys would silently merge. See the ratchet caveat at
-  the top of this release.
-- **PDFium and PDFBox are real oracles now, not decorative ones** (#857) — the
-  file map advertised six reference renderers; two were referenced by zero
-  tests (PDFBox) or only by argument-string unit tests that never invoke a
-  binary (PDFium). PDFium is now driven through `libpdfium` and promoted to a
-  third primary; PDFBox is auto-discovered from the vendored jar. Escalation is
-  close to free: the extra oracles run only where the primaries already
-  disagree.
-- **Refusals are corroborated instead of assumed** (#882, #877) — the scan
-  reported `AGREED_REFUSAL` on pages where **the oracles were never invoked**,
-  so "no renderer could open this" was an assumption, not a measurement, and
-  it masked excise-only failures. It also filed pages excise rendered *and no
-  oracle could* as failures. Both are fixed, and the scan now reports an
-  agreement classification (`PASS` / `AGREED_REFUSAL` / `EXCISE_ONLY` /
-  `ORACLE_SPLIT` / `EXCISE_SIDE_GAP` / …) rather than a bare status. The
-  classification fix does not repair any page — it **exposes** them: 36
-  `EXCISE_SIDE_GAP` pages (an oracle rendered it, excise did not) had been
-  sitting inside the bucket labelled "no renderer managed it, so refusing is
-  correct". One of them was #881's unbounded `/Parent` walk. The parser work
-  above then took that 36 to 14 (#884); the remainder of the drop from 99 to
-  75 defects on the informative corpora is the other fixes in this release.
-- **The gate can detect small missing content** (#883) — it previously compared
-  excise against whichever oracle was *closest* to excise, which is backwards:
-  adding oracles made it detect **less** (three genuinely-missing-content pages
-  flipped to PASS). It now compares against the most-inked oracle, over 32×32
-  ink-locality tiles rather than a whole-page aggregate, so a page that drops a
-  single word or figure fails instead of averaging out.
-- **A restartable, memory-bounded full-suite runner** —
-  `scripts/run-full-suite.sh --resume` checkpoints per step so a 30-minute run
-  survives interruption. Checkpoints fail toward re-running: markers are
-  sync-then-atomic-rename and validated on read, a step matching zero tests is
-  a failure rather than a vacuous pass, and the redaction gates are never
-  checkpointed at all.
-- **The skip allow-list is environment-conditioned** (#854) — entries may
-  declare `[requires: tool:NAME corpus:NAME env:NAME]`. The allow-list is
-  calibrated for a corpus-less CI runner, so on a corpus-equipped dev machine
-  the reverse check ("allow-listed skips are no longer skipping") fired on
-  every local run, making `t1` a guaranteed local failure — and a gate that
-  always fails locally is a gate people stop reading. The forward check is
-  never relaxed, and a selftest forces a prerequisite absent to prove the
-  conditioning is not unconditional.
-- **Bomb and implementation-limit fixtures are tested for what they are FOR** —
-  Isartor contributed 10,223 of the 14,589 pages across all four corpora, and
-  almost all of them are a single PDF/A-1b implementation-limits *violation*
-  fixture — one file whose 10,000 near-identical-by-construction pages are 69%
-  of every page in every corpus. Scanning them wholesale measured
-  repetition, not conformance. Sampled appropriately: 10,223 pages / 96 min →
-  723 pages / 5.6 min, testing the same property.
-- **Corpus scans no longer lose work or collide** (#879, #880) — a chunk
-  timeout discarded every page it had already completed; pages are now
-  published as they finish. Two concurrent scans corrupted each other through
-  shared `/tmp` paths; artifacts are run-scoped. Generating a manifest from a
-  *partial* report is now refused outright — a partial report looks perfectly
-  usable, but pages a lost chunk never reached would simply be absent from the
-  manifest and therefore ungated.
-- **Live visual-mutation trace harness** (#695 Phase 3 / #846) — `scripts/run-visual-mutation-trace.sh`
-  drives a page mutation (rotate/remove/move/zoom) then a scroll sweep, zoom, and
-  save in the **real running app** (where the compositor re-renders the continuous
-  view, unlike the headless host), capturing a PNG per frame plus an ink-centroid
-  trajectory and a per-phase stability summary. Gated behind `EXCISE_VISUAL_TRACE_OUT`
-  (`Excise.App/Automation/VisualTraceRunner.cs`) — a no-op in normal use. Reliably
-  verifies save round-trip and zoom/settle stability; the scroll-bounce (#846) is
-  a human-inspection artifact (the ink centroid legitimately moves when a page
-  rotates to landscape, so an automatic bounce verdict is not asserted).
-- **GUI expected-effect registry** (#695 Phase 2) — builds on the Phase 1 sweep
-  with a per-command contract: for 16 view/zoom/navigation/mode/panel-toggle
-  commands, clicking must keep the page surface inked, flip exactly its declared
-  panel (Outline / Thumbnails / Clipboard / Search), and leave every OTHER panel's
-  visibility unchanged — the "a click changed the wrong region" guard Phase 1 is
-  blind to. Verified structurally (page-surface ink + panel effective-visibility,
-  at dpr 1 and 2), not with brittle pixel goldens. Building it surfaced #846
-  (continuous view may not repaint after a Document-swapping mutation like rotate
-  in the headless harness); those page-mutation commands are excluded from the
-  page-ink contract pending live-GUI confirmation and remain covered by Phase 1.
-- **Universal GUI click-safety sweep** (#695 Phase 1) — a headless test enumerates
-  every command-backed leaf Button/MenuItem in a real MainWindow with a document
-  loaded and *invokes* each one (40 commands today), asserting none throws and the
-  app still renders a document afterward. Catches the whole class of "a menu item's
-  handler explodes on click" / "a command wedges rendering" regressions that the
-  binding-only sweep (`CommandBindingSweepTests`, CanExecute only) cannot. Dialog /
-  file-picker / OS-shell / lifecycle commands (24) are skipped by name and the skip
-  list is logged every run so removed coverage is never silent. Per-command
-  expected-effect verification and multi-step workflow drivers remain (#695 Phases
-  2–3). Set `EXCISE_DUMP_CLICK_CAPTURES=dir` to archive an after-click PNG per command.
-- **Text selection spans pages in the continuous reading view** (#832) — a drag
-  that starts on one page and ends on another now selects across the boundary
-  instead of being clamped to the anchor page. The span is decomposed per page
-  (anchor page from the anchor glyph onward, whole intervening pages, focus page
-  up to the focus glyph — direction-aware), each page's slot highlighted via the
-  same per-slot overlay, and the copied text joins the pages in reading order.
-  Known limit: a paragraph flowing across a page break gets a hard line break at
-  the boundary (the whitespace layer does not reflow across pages, #824/#826).
-- **Selection highlights are guarded against the invisible-sliver regression**
-  (#840) — a headless test drives the full continuous-view pipeline on a font
-  with an all-zero `/Widths` array (glyphs extract at ~0 width) and asserts the
-  RENDERED highlight `Rectangle` visuals are at least half a glyph-advance wide,
-  not slivers. The prior test asserted only rect count and position — exactly the
-  blind spot that let the #833 sliver bug ship.
-- **Copy-parity now measures reading ORDER, not just token sets** (#838) — the
-  copy-whitespace gate scored word/line agreement with **order-insensitive**
-  multiset Jaccard, so a reading-order regression (multi-column scramble) was
-  invisible — the #774/#824 fix did not move the numbers at all. A third,
-  order-**sensitive** metric (normalized longest-common-subsequence of excise's
-  token stream vs poppler `pdftotext`) is added, with its own per-doc floor in
-  `tests/copy-whitespace/floors.json`. It immediately exposes what Jaccard hid:
-  irs-pub509 reads 58.8% word agreement but only **22.2%** sequence agreement —
-  right tokens, wrong order. Two construction-known self-tests (no corpus) prove
-  the metric drops on a scramble while Jaccard stays flat.
-- **Parity gates can no longer green vacuously on a tool-less runner** (#841) —
-  `check-copy-whitespace-parity.sh` skipped (exit 0) when poppler or the corpus
-  was absent, so on CI it measured nothing while reporting success. It now honors
-  `EXCISE_REQUIRE_PARITY_TOOLS=1` (mirrors `EXCISE_REQUIRE_ENCRYPTION_INTEROP_TOOLS`):
-  a missing tool or an incomplete required corpus becomes a hard FAIL. Wired into
-  the release-evidence path (`RELEASE_CHECKLIST.md`, pinned by
-  `verify-doc-claims.sh`) and run non-strict in `release-smoke.sh`. The live-.gov
-  corpus-on-CI half is drift-fragile and deferred to #844.
-- **Redaction/extraction geometry now has two independent-oracle regression
-  gates** (#842, #839) — both guard the glyph-box path the #833/#843 fixes
-  touch, and neither lets excise grade its own homework. `#842`
-  (`AreaRedactionDegenerateWidthTests`) draws an area over only the **top half**
-  of unit-Tf glyph ink — a region a baseline-pinned degenerate box (the #833
-  leak) could not intersect — and verifies with mutool *and* ghostscript that
-  the glyphs are gone, catching area-redaction under-inclusion. `#839`
-  (`GlyphWidthAccuracyTests`) compares excise glyph box widths to mutool's stext
-  quads over real corpus pages at the distribution level: the **median** ratio
-  must sit near 1 (catches #833's global shrink) and the width **spread** must
-  track the oracle (catches #843's flat-600 collapse). Both skip loudly when
-  mutool/ghostscript are absent.
-- **Copy-whitespace parity is now a ratcheting CI gate** (#837) — the harness
-  that measures copied-text word/line agreement against poppler `pdftotext`
-  (`CopyWhitespaceParityHarness`) now enforces per-document floors from
-  `tests/copy-whitespace/floors.json` and fails when a score regresses;
-  `scripts/check-copy-whitespace-parity.sh` (wired into tier `t1`) runs it and
-  skips loudly when `pdftotext`/corpus are absent, mirroring the
-  extraction-parity gate. Ratchet the floors with `--update`.
+- **The corpus rendering scan is now a gate** (#862) — page 1 of all 3,915 documents across four corpora (veraPDF 2694, pdf.js 685, Isartor 205, PDFium 331) is rendered and classified against up to five independent oracles, then checked against a per-corpus expectation manifest.
+- **PDFium and PDFBox are real oracles now, not decorative ones** (#857) — the file map advertised six reference renderers; two were referenced by zero tests (PDFBox) or only by argument-string unit tests that never invoke a binary (PDFium).
+- **Refusals are corroborated instead of assumed** (#882, #877) — the scan reported `AGREED_REFUSAL` on pages where **the oracles were never invoked**, so "no renderer could open this" was an assumption, not a measurement, and it masked excise-only failures.
+- **The gate can detect small missing content** (#883) — it previously compared excise against whichever oracle was *closest* to excise, which is backwards: adding oracles made it detect **less** (three genuinely-missing-content pages flipped to PASS).
+- **A restartable, memory-bounded full-suite runner** — `scripts/run-full-suite.sh --resume` checkpoints per step so a 30-minute run survives interruption.
+- **The skip allow-list is environment-conditioned** (#854) — entries may declare `[requires: tool:NAME corpus:NAME env:NAME]`.
+- **Bomb and implementation-limit fixtures are tested for what they are FOR** — Isartor contributed 10,223 of the 14,589 pages across all four corpora, and almost all of them are a single PDF/A-1b implementation-limits *violation* fixture — one file whose 10,000 near-identical-by-construction pages are 69% of every page in every corpus.
+- **Corpus scans no longer lose work or collide** (#879, #880) — a chunk timeout discarded every page it had already completed; pages are now published as they finish.
+- **Live visual-mutation trace harness** (#695 Phase 3 / #846) — `scripts/run-visual-mutation-trace.sh` drives a page mutation (rotate/remove/move/zoom) then a scroll sweep, zoom, and save in the **real running app** (where the compositor re-renders the continuous view, unlike the headless host), capturing a PNG per frame plus an ink-centroid trajectory and a per-phase stability summary.
+- **GUI expected-effect registry** (#695 Phase 2) — builds on the Phase 1 sweep with a per-command contract: for 16 view/zoom/navigation/mode/panel-toggle commands, clicking must keep the page surface inked, flip exactly its declared panel (Outline / Thumbnails / Clipboard / Search), and leave every OTHER panel's visibility unchanged — the "a click changed the wrong region" guard Phase 1 is blind to.
+- **Universal GUI click-safety sweep** (#695 Phase 1) — a headless test enumerates every command-backed leaf Button/MenuItem in a real MainWindow with a document loaded and *invokes* each one (40 commands today), asserting none throws and the app still renders a document afterward.
+- **Text selection spans pages in the continuous reading view** (#832) — a drag that starts on one page and ends on another now selects across the boundary instead of being clamped to the anchor page.
+- **Selection highlights are guarded against the invisible-sliver regression** (#840) — a headless test drives the full continuous-view pipeline on a font with an all-zero `/Widths` array (glyphs extract at ~0 width) and asserts the RENDERED highlight `Rectangle` visuals are at least half a glyph-advance wide, not slivers.
+- **Copy-parity now measures reading ORDER, not just token sets** (#838) — the copy-whitespace gate scored word/line agreement with **order-insensitive** multiset Jaccard, so a reading-order regression (multi-column scramble) was invisible — the #774/#824 fix did not move the numbers at all.
+- **Parity gates can no longer green vacuously on a tool-less runner** (#841) — `check-copy-whitespace-parity.sh` skipped (exit 0) when poppler or the corpus was absent, so on CI it measured nothing while reporting success.
+- **Redaction/extraction geometry now has two independent-oracle regression gates** (#842, #839) — both guard the glyph-box path the #833/#843 fixes touch, and neither lets excise grade its own homework.
+- **Copy-whitespace parity is now a ratcheting CI gate** (#837) — the harness that measures copied-text word/line agreement against poppler `pdftotext` (`CopyWhitespaceParityHarness`) now enforces per-document floors from `tests/copy-whitespace/floors.json` and fails when a score regresses; `scripts/check-copy-whitespace-parity.sh` (wired into tier `t1`) runs it and skips loudly when `pdftotext`/corpus are absent, mirroring the extraction-parity gate.
 
 ### Fixed
-- **Full-width headers/footers no longer scramble two-column copy** (#774/#824)
-  — a continuous full-width running header, footer, title, or page-number line
-  spanning the column gutter used to fill the horizontal sweep, so column
-  detection found no gutter and the page copied in woven row-major order
-  ("colA-line1 colB-line1 colA-line2 …"). Such lines are now excluded from
-  gutter detection and emitted in place, band-separating the columns, so a
-  two-column page with a header/footer reads header → column 1 (top-to-bottom)
-  → column 2 → footer. Proven by a construction-known fixture
-  (`TwoColumnHeaderReadingOrderTests`). Conservative and bounded: single-column
-  pages stay byte-identical, and narrow gutters, 3+ columns, tables, and pages
-  whose extraction interleaves glyphs at the same baseline (an extraction issue,
-  not reading order) still degrade to geometric order rather than mis-split.
-- **Copied text rejoins soft (line-break) hyphens** (#836) — in Smart mode
-  (the reader-friendly default), a hyphen at a line end followed by a lowercase
-  continuation is rejoined (`unfamil-\niar` → `unfamiliar`), matching
-  `pdftotext` and most readers; guarded so ranges, capitalised continuations and
-  paragraph-break hyphens stay intact. LineFaithful stays verbatim. Lifts
-  producingoss parity to 91.0% word / 67.3% line.
-- **Degenerate glyph widths no longer break copy spacing or hide selection
-  highlights** (#833) — some TrueType-subset fonts (e.g. `TT0` in
-  `scotus-trump-v-us.pdf`) report a near-zero glyph advance width while glyph
-  *positions* are correct. That inserted a space between every letter on copy
-  ("w o r r y") and drew ~0-wide, invisible selection highlights in the reading
-  view. Both are fixed in the GUI selection engine from ground-truth positions,
-  without touching the redaction-critical Core width path (filed as a follow-up
-  under #833): the word-space rule defers to real space glyphs and, on
-  degenerate-width lines only, switches to a width-independent advance-vs-median
-  rule (normal-width documents are unchanged); and highlight rects widen a
-  degenerate glyph to its advance. Verified non-leaking (mutool + render/OCR
-  both show the redacted word gone on the affected font) and against poppler
-  `pdftotext` (aggregate word agreement 37.9%→50.8%, scotus 1.4%→35.4%).
-  Regression-guarded by `DegenerateGlyphWidthTests`.
+- **Full-width headers/footers no longer scramble two-column copy** (#774/#824) — a continuous full-width running header, footer, title, or page-number line spanning the column gutter used to fill the horizontal sweep, so column detection found no gutter and the page copied in woven row-major order ("colA-line1 colB-line1 colA-line2 …").
+- **Copied text rejoins soft (line-break) hyphens** (#836) — in Smart mode (the reader-friendly default), a hyphen at a line end followed by a lowercase continuation is rejoined (`unfamil-\niar` → `unfamiliar`), matching `pdftotext` and most readers; guarded so ranges, capitalised continuations and paragraph-break hyphens stay intact.
+- **Degenerate glyph widths no longer break copy spacing or hide selection highlights** (#833) — some TrueType-subset fonts (e.g.
 
 ## [3.5.1] - 2026-07-28
 
 ### Fixed
-- **macOS app menu now shows "About Excise" and opens the app's own About
-  dialog** (#834) — the bold app-name menu was showing Avalonia's built-in
-  default "About Avalonia" (which opened the framework's `AboutAvaloniaDialog`),
-  not Excise's. Root cause, traced through Avalonia's decompiled source: the
-  `MenuTarget.Application` menu exporter runs a **one-shot** layout reset when it
-  is constructed and installs its built-in default if no application menu is set
-  on the `Application` at that instant — and, having no property-change
-  subscription, never re-reads. The existing window-side
-  `NativeMenu.SetMenu(Application, …)` therefore ran too late. The application
-  menu ("About Excise", "Preferences…") is now set on the `Application` in
-  `App.Initialize` (during XAML load, before that exporter is constructed);
-  Avalonia still appends the standard Services / Hide / Quit items. Verified on
-  the live macOS global menu bar via UI automation and by new headless tests
-  (`MacApplicationMenuTests`): the menu's first item is "About Excise" (not
-  "About Avalonia"), and clicking it opens the real About window. The brand is
-  also capitalized to **Excise** across the app-name menu, Hide/Quit, the
-  in-window title-bar label, the Help menu item, and the About window.
+- **macOS app menu now shows "About Excise" and opens the app's own About dialog** (#834) — the bold app-name menu was showing Avalonia's built-in default "About Avalonia" (which opened the framework's `AboutAvaloniaDialog`), not Excise's.
 
 ## [3.5.0] - 2026-07-27
 
 ### Added
-- **Text selection is on by default in the reading view** (#831) — selecting
-  text is now the resting affordance of the viewer: open a document and drag,
-  and it selects, exactly like every other PDF reader — no "Select Text" mode
-  to hunt for first. Previously the viewer opened in no interaction mode, so a
-  drag did nothing until you toggled selection on, which read as "selection is
-  broken / there's no blue highlight." An **I-beam cursor** now appears over the
-  page whenever selection is active, so it is discoverable that a drag selects.
-  The editing modes (redaction, typewriter, form authoring) still suspend
-  selection while active and now **restore it on exit** (you return to reading,
-  not to a dead no-interaction state); the "Select Text" toggle remains as an
-  explicit on/off. The whole default→binding→viewer→highlight path is locked in
-  by a new end-to-end test (`DefaultTextSelectionTests`) that drives a real
-  window mouse drag with no mode toggled and asserts both the rendered blue
-  rectangles and the copied text — the exact seam a control-only test had been
-  skipping.
-- **Pointer-interaction test coverage + thumbnail drag-reorder fix** (#827,
-  batch A) — new headless-Avalonia suite `PointerInteractionTests` that drives
-  the *real* pointer/keyboard gesture on the *real* control and asserts the
-  downstream effect (never the VM method directly) for eight surfaces that had
-  only command-level or no coverage: external-link click (fires
-  `ExternalLinkClicked` + runs the confirm dialog), dangerous `/Launch` link
-  click (fires `DangerousLinkClicked` + runs the refusal), FormAuthoring
-  drag-to-create (fires `FormFieldRectDrawn` with a Y-flipped PDF-point rect on
-  the correct page), form-field checkbox toggle (fires `FormFieldEdited`, mutates
-  the `PdfField`, marks the document dirty), thumbnail drag-reorder (+ the
-  `from == to` no-op), thumbnail click-navigate, thumbnail batch-select
-  checkbox, and search-result row click. The form-field text-field and
-  choice-combo commits already had real-element coverage in
-  `FormFieldsOverlayTests`. Driving these gestures surfaced a real bug, now
-  fixed: **thumbnail drag-to-reorder never worked** — the drop handlers were
-  XAML event attributes on the thumbnail `Button`, whose own class handler marks
-  `PointerReleased` handled before a normal instance handler runs, so
-  `OnThumbnailPointerReleased` was silently skipped and every drag was a no-op
-  (`toIndex == fromIndex`). The handlers are now attached in code-behind on the
-  thumbnails `ItemsControl` with `handledEventsToo: true`, and the drop target is
-  resolved by hit-testing the pointer-release position (a `Button` captures the
-  pointer on press, so `sender` is always the source thumbnail). Click-to-navigate
-  is unchanged (still the `Button`'s `Command`).
-- **Ctrl+wheel zoom and middle-button pan in the PDF viewer** (#827) — the viewer
-  now handles the mouse wheel directly: **Ctrl (or ⌘) + wheel** zooms in/out
-  (reusing the existing 25%-step, min/max-clamped zoom), while a **plain wheel**
-  still scrolls natively and is never consumed. **Middle-button drag** pans the
-  active ScrollViewer (single-page or continuous) grab-and-drag style, available
-  in any interaction mode. Previously no `PointerWheelChanged` handler existed
-  (Ctrl+wheel was unimplemented) and `InteractionMode.Pan` was dead. New
-  real-gesture tests drive `window.MouseWheel` / middle-button `MouseDown`+drag
-  and assert `ZoomLevel`, scroll offset, and continuous page-boundary sync — the
-  legacy `LineDown()`/`ZoomInCommand`-invoke tests are superseded. Handlers are
-  registered on the Tunnel pass so Ctrl+wheel can suppress the native scroll;
-  plain scrolling, existing zoom shortcuts, and fit-on-resize are unchanged.
-- **Copied-text whitespace fidelity: paragraph + list awareness, as the default**
-  — copying text now inserts a blank line at detected **paragraph** breaks (a
-  vertical gap meaningfully larger than the block's typical leading) and keeps
-  **bullet/numbered lists** (•, -, –, *, `N.`, `N)`) on tight, own-line items
-  with their indentation preserved, so a copied list still reads as a list. This
-  is a new user setting (Preferences → Text Selection → **Whitespace**):
-  **Smart** (default, paragraph/list-aware) or **LineFaithful** (the prior
-  behaviour — one line break per visual line, no detection), persisted with the
-  window settings. `TextSelectionEngine.JoinText` gained a `WhitespaceMode`
-  overload; word spacing, reading order (#774/#824) and RTL (#373) are
-  unchanged. **Reliability is measured, not asserted** — a per-category
-  solid-vs-heuristic assessment against an independent oracle (poppler
-  `pdftotext`) plus construction-known synthetic fixtures lives in
-  `docs/copy-whitespace-reliability.md` (harness:
-  `scripts/copy-whitespace-parity.sh`). The honest headline: strong on clean
-  single-column prose (~87% word agreement); bounded by the reading-order layer
-  on multi-column government forms and graphical pages, where the copy path
-  scrambles regardless of whitespace policy. Deferred cases (wrap-reflow, nested
-  lists, table-vs-list, the reading-order ceiling) are tracked in #825.
-- **Column-aware reading order for text copy, as the default** (#774) — copying
-  a selection that spans a multi-column layout (or a whole multi-column page)
-  now yields all of column 1 top-to-bottom, then column 2, instead of
-  interleaving the columns line-by-line across the gutter. The selection engine
-  (`Excise.Avalonia/Services/TextSelectionEngine.cs`) gained a bounded
-  column-gutter detector: an interior vertical gap wider than the page's
-  gutter threshold that has a genuine multi-line text block on both sides,
-  running in parallel down most of the page. Single-column pages are byte-
-  identical to the old order (the detector finds no gutter and falls through).
-  The copy order is now a user setting (Preferences → Text Selection →
-  Reading Order): **ColumnAware** (default, best quality), **Simple** (the old
-  geometric top-to-bottom/left-to-right), and **RawStream** (the PDF's stored
-  content-stream order). The choice persists in the window settings and is
-  bound to the viewer control's new `ReadingOrderStrategy` property. Bounded
-  scope (the remainder of #774 stays deferred): a full-width line spanning the
-  gutter, baseline-aligned wide-gap tables, nested/uneven columns, and text
-  wrapping around figures degrade to the old geometric order rather than
-  splitting. Verified against an independent oracle (poppler `pdftotext`
-  reading-order mode) plus construction-known fixtures in
-  `Excise.App.Tests/Unit/CopyReadingOrderTests.cs`.
-- **About dialog now carries a completeness-gated third-party license
-  manifest** — the About dialog already listed every shipped NuGet package
-  (name, version, SPDX id, copyright, verbatim license text) from the embedded
-  `Excise.App/Assets/third-party-licenses.json`, but nothing guaranteed the
-  list stayed complete. A new compliance gate
-  (`Excise.App.Tests/Unit/ThirdPartyLicenseCompletenessTests.cs`) enumerates
-  the actual restored package closure via
-  `dotnet list package --include-transitive` — an independent source, so the
-  manifest cannot vouch for its own completeness — and fails the build if any
-  shipped package is missing an attribution or carries an unresolved license.
-  Two previously-unresolved licenses were filled: `BitMiracle.LibJpeg.NET`
-  (BSD-3-Clause, from its bundled `license.txt`) and `CSJ2K` (BSD, with the
-  JJ2000 copyright notice embedded verbatim). Two reference-only packages that
-  ship no runtime DLL (`Microsoft.NETCore.Platforms`, `NETStandard.Library`)
-  are excluded as non-redistributed, in both the generator and the gate. The
-  headless About-window test now also asserts the verbatim license text is
-  reachable in the dialog, not just present in the ViewModel. **Verbatim text
-  now covers every shipped package** (#831): packages that declare an SPDX
-  *expression* (e.g. `MIT`) and bundle no license file on NuGet — 41 of the 55,
-  all MIT — previously showed only the SPDX id and a link. They now render the
-  canonical license body (MIT/BSD/0BSD permission notice) with the package's own
-  copyright woven in, via `SpdxLicenseTexts`, and a second gate
-  (`EveryShippedPackage_HasVerbatimLicenseText`) fails the build if any shipped
-  package would show only a link instead of the full notice.
-- **Interactive GUI tests for file-ops toolbar/menu commands** (#816 batch 2)
-  — `Excise.App.Tests/UI/FileOpsCommandTests.cs` executes the real
-  `ReactiveCommand` behind Save/SaveAs/SaveFlattenedFormCopy/Open/LoadRecent/
-  ExportCurrentPage/ExportPages/Print and asserts the effect (bytes on disk,
-  loaded-document state, exported PNGs, or the shown dialog message), closing
-  a false-coverage gap where these were previously only exercised via their
-  underlying async method with an already-known path — a mis-wired command
-  would have passed every existing test. `MainWindowViewModel` gained a small
-  test seam, `StorageProviderOverride`, since the headless test host runs
-  with no desktop lifetime and `GetStorageProvider()` otherwise always
-  resolves to null.
-- **Text selection works in the continuous reading view** (#815) — text
-  selection used to be a mode toggle that forced single-page layout, so the
-  default continuous reading view had no way to drag-to-select and showed no
-  highlight. Selecting text is now treated as a read affordance (like clicking a
-  link), not a draw/edit mode: entering it keeps the continuous view, and a drag
-  paints a per-page semi-transparent highlight over the selected glyphs on that
-  page's overlay. Each `PdfPageSlot` carries the highlight rectangles bound to a
-  Canvas overlay in the reading-view page template; the gesture reuses the exact
-  single-page selection engine and the continuous pointer→page mapping the link
-  hit-test already uses. Bounded first version: a selection lives on the single
-  page the press landed on — a drag onto another page is clamped rather than
-  drawing a cross-page range (cross-page selection deferred).
+- **Text selection is on by default in the reading view** (#831) — selecting text is now the resting affordance of the viewer: open a document and drag, and it selects, exactly like every other PDF reader — no "Select Text" mode to hunt for first.
+- **Pointer-interaction test coverage + thumbnail drag-reorder fix** (#827, batch A) — new headless-Avalonia suite `PointerInteractionTests` that drives the *real* pointer/keyboard gesture on the *real* control and asserts the downstream effect (never the VM method directly) for eight surfaces that had only command-level or no coverage: external-link click (fires `ExternalLinkClicked` + runs the confirm dialog), dangerous `/Launch` link click (fires `DangerousLinkClicked` + runs the refusal), FormAuthoring drag-to-create (fires `FormFieldRectDrawn` with a Y-flipped PDF-point rect on the correct page), form-field checkbox toggle (fires `FormFieldEdited`, mutates the `PdfField`, marks the document dirty), thumbnail drag-reorder (+ the `from == to` no-op), thumbnail click-navigate, thumbnail batch-select checkbox, and search-result row click.
+- **Ctrl+wheel zoom and middle-button pan in the PDF viewer** (#827) — the viewer now handles the mouse wheel directly: **Ctrl (or ⌘) + wheel** zooms in/out (reusing the existing 25%-step, min/max-clamped zoom), while a **plain wheel** still scrolls natively and is never consumed.
+- **Copied-text whitespace fidelity: paragraph + list awareness, as the default** — copying text now inserts a blank line at detected **paragraph** breaks (a vertical gap meaningfully larger than the block's typical leading) and keeps **bullet/numbered lists** (•, -, –, *, `N.`, `N)`) on tight, own-line items with their indentation preserved, so a copied list still reads as a list.
+- **Column-aware reading order for text copy, as the default** (#774) — copying a selection that spans a multi-column layout (or a whole multi-column page) now yields all of column 1 top-to-bottom, then column 2, instead of interleaving the columns line-by-line across the gutter.
+- **About dialog now carries a completeness-gated third-party license manifest** — the About dialog already listed every shipped NuGet package (name, version, SPDX id, copyright, verbatim license text) from the embedded `Excise.App/Assets/third-party-licenses.json`, but nothing guaranteed the list stayed complete.
+- **Interactive GUI tests for file-ops toolbar/menu commands** (#816 batch 2) — `Excise.App.Tests/UI/FileOpsCommandTests.cs` executes the real `ReactiveCommand` behind Save/SaveAs/SaveFlattenedFormCopy/Open/LoadRecent/ ExportCurrentPage/ExportPages/Print and asserts the effect (bytes on disk, loaded-document state, exported PNGs, or the shown dialog message), closing a false-coverage gap where these were previously only exercised via their underlying async method with an already-known path — a mis-wired command would have passed every existing test.
+- **Text selection works in the continuous reading view** (#815) — text selection used to be a mode toggle that forced single-page layout, so the default continuous reading view had no way to drag-to-select and showed no highlight.
 
 ### Fixed
-- **Three menu keyboard shortcuts were advertised but did nothing** (#827) —
-  `Ctrl+E` (Export Current Page), `Ctrl+,` (Preferences), and `Enter` (Apply
-  Redaction) each showed an `InputGesture` in the menu but had no key handler
-  behind them (Avalonia's `InputGesture` is display-only — every *working*
-  shortcut is explicitly duplicated in `MainWindow_KeyDown`). Pressing them was
-  a silent no-op; only the menu-item click worked. All three are now wired in
-  `MainWindow_KeyDown`; the `Enter`→apply-redaction handler is guarded on
-  redaction mode and skips when a text/combo editor is focused so it never
-  steals Enter from the search box or form fields. Found and fixed under the
-  #827 keyboard-shortcut effect-coverage pass below.
-- **Keyboard shortcuts now have effect-asserting GUI coverage** (#827) — the
-  new `KeyboardShortcutEffectTests` suite dispatches the REAL key (raw headless
-  input for window shortcuts; routed `KeyDownEvent` for viewer/search controls)
-  and asserts the RESULTING EFFECT — loaded/closed document, advanced search
-  index (`CurrentSearchMatchIndex` F3/Shift+F3), rotated page (Ctrl+L/R exact
-  angle), toggled sidebars (Ctrl+Shift+O/T), clipboard-history copy (Ctrl+C),
-  print-explanation dialog (Ctrl+P, #621), preferences/shortcuts dialogs
-  (Ctrl+,/F1), pending-redaction apply (Enter), viewer page nav (Left/Right)
-  and tagged-heading nav (H/Shift+H) — rather than the old
-  `Command.Should().NotBeNull()`, which passed even when a key was unwired (see
-  the three-bug fix above). The vacuous `Ctrl+1` fit-width assertion
-  (`ZoomLevel > 0`) was upgraded to prove it lands on the fit-WIDTH ratio,
-  distinct from fit-page. Unhandled keys (Ctrl+A, Space, Tab) are asserted as
-  intended no-ops. Form-field Enter/Ctrl+Enter/Esc commit was already covered
-  by `FormFieldsOverlayTests` and is cross-referenced, not duplicated.
-- **Text-selection highlight now has automated GUI coverage** (#815) — the
-  single-page "selection box" drawing was untested at the GUI level, so any
-  coordinate/z-order regression (e.g. the historic "highlight far to the left"
-  origin offset) could ship silently. New headless-Avalonia tests drive a real
-  pointer press→drag and assert the highlight rectangles land on the selected
-  glyphs, verified against an independent layout-geometry oracle (overlay/page
-  image share an origin; each rect sits at its glyph's MediaBox fraction) rather
-  than the coordinate mapper vouching for itself. Single-page rendering was
-  found already correct; the tests lock it in and cover the new continuous view.
-- **Interactive GUI tests for page-organization toolbar/menu commands** (#816)
-  — a new `PageOrganizationCommandTests` suite executes the real
-  `MainWindowViewModel` commands a user clicks (Combine, Split, Add/Insert
-  Before/After, Extract Current/Selected, Remove/Move/Clear Selected, Move
-  Current Earlier/Later, Rotate Left/180) and asserts the resulting page
-  order, count, rotation, or saved-file content — closing an audit gap where
-  these effects were proven only by calling the underlying async methods, so a
-  button mis-wired to the wrong method would have passed. To make the
-  file/folder-picker commands drivable headlessly (no desktop lifetime, and
-  Avalonia's storage interfaces are sealed against user implementation), the
-  view-model gained internal picked-path test seams (`PickPdfFilesOverride`,
-  `PickSavePdfPathOverride`, `PickFolderOverride`) that the picker helpers
-  honor; all null in production, so the real storage provider is always used.
-  No command mis-wiring was found.
-- **GUI test coverage: annotate/style + dialog/misc commands, batch 4 (#816)**
-  — `AnnotateAndDialogCommandTests.cs` executes the real `ReactiveCommand`
-  behind ten toolbar/menu entries and asserts the real effect, closing a
-  false-coverage gap where these were previously proven only by calling the
-  underlying viewmodel method directly or by a `NotBeNull` wiring check (the
-  same pattern that hid #815's bug): `AddHighlightAnnotationFromSelectionCommand`
-  and `AddStickyNoteAnnotationCommand` now assert a real annotation lands on
-  the saved page's `/Annots`; `SetTypewriterColorCommand` asserts the active
-  box's `Style.Color` changes; `VerifySignaturesCommand` asserts the
-  verification summary is actually surfaced; `SecurityCommand`,
-  `ShowPreferencesCommand`, and `AboutCommand` assert the real dialog/window
-  opens; `ShowDocumentationCommand` and `ShowShortcutsCommand` assert the
-  real open/show path fires without launching a real external app or driving
-  headless overlay internals; `GoToPageCommand` asserts `CurrentPageIndex`
-  actually moves. `KeyboardShortcutTests.Ctrl2_FitsEntirePage`'s vacuous
-  `ZoomLevel > 0` assertion is replaced with a real fit-page-vs-fit-width
-  distinction, and a new `ZoomFitPageCommand` test asserts the exact computed
-  fit-page ratio on a non-square page. Two of these commands had no
-  observable test seam at all — `ShowDocumentationCommand` shelled out to
-  `Process.Start` directly, and `GetMainWindow()` resolved
-  `Application.Current.ApplicationLifetime`, which the headless test host
-  never sets (and which Avalonia refuses to set a second time, so a test
-  can't stand one up itself) — so `MainWindowViewModel` gains three small
-  internal test seams (`DocumentationOpener`, `MainWindowResolver`,
-  `KeyboardShortcutsDialogRequested`), each defaulting to the real production
-  path.
+- **Three menu keyboard shortcuts were advertised but did nothing** (#827) — `Ctrl+E` (Export Current Page), `Ctrl+,` (Preferences), and `Enter` (Apply Redaction) each showed an `InputGesture` in the menu but had no key handler behind them (Avalonia's `InputGesture` is display-only — every *working* shortcut is explicitly duplicated in `MainWindow_KeyDown`).
+- **Keyboard shortcuts now have effect-asserting GUI coverage** (#827) — the new `KeyboardShortcutEffectTests` suite dispatches the REAL key (raw headless input for window shortcuts; routed `KeyDownEvent` for viewer/search controls) and asserts the RESULTING EFFECT — loaded/closed document, advanced search index (`CurrentSearchMatchIndex` F3/Shift+F3), rotated page (Ctrl+L/R exact angle), toggled sidebars (Ctrl+Shift+O/T), clipboard-history copy (Ctrl+C), print-explanation dialog (Ctrl+P, #621), preferences/shortcuts dialogs (Ctrl+,/F1), pending-redaction apply (Enter), viewer page nav (Left/Right) and tagged-heading nav (H/Shift+H) — rather than the old `Command.Should().NotBeNull()`, which passed even when a key was unwired (see the three-bug fix above).
+- **Text-selection highlight now has automated GUI coverage** (#815) — the single-page "selection box" drawing was untested at the GUI level, so any coordinate/z-order regression (e.g.
+- **Interactive GUI tests for page-organization toolbar/menu commands** (#816) — a new `PageOrganizationCommandTests` suite executes the real `MainWindowViewModel` commands a user clicks (Combine, Split, Add/Insert Before/After, Extract Current/Selected, Remove/Move/Clear Selected, Move Current Earlier/Later, Rotate Left/180) and asserts the resulting page order, count, rotation, or saved-file content — closing an audit gap where these effects were proven only by calling the underlying async methods, so a button mis-wired to the wrong method would have passed.
+- **GUI test coverage: annotate/style + dialog/misc commands, batch 4 (#816)** — `AnnotateAndDialogCommandTests.cs` executes the real `ReactiveCommand` behind ten toolbar/menu entries and asserts the real effect, closing a false-coverage gap where these were previously proven only by calling the underlying viewmodel method directly or by a `NotBeNull` wiring check (the same pattern that hid #815's bug): `AddHighlightAnnotationFromSelectionCommand` and `AddStickyNoteAnnotationCommand` now assert a real annotation lands on the saved page's `/Annots`; `SetTypewriterColorCommand` asserts the active box's `Style.Color` changes; `VerifySignaturesCommand` asserts the verification summary is actually surfaced; `SecurityCommand`, `ShowPreferencesCommand`, and `AboutCommand` assert the real dialog/window opens; `ShowDocumentationCommand` and `ShowShortcutsCommand` assert the real open/show path fires without launching a real external app or driving headless overlay internals; `GoToPageCommand` asserts `CurrentPageIndex` actually moves.
 
 ## [3.4.0] - 2026-07-27
-- **Interactive GUI-command coverage for redaction and search (#816, batch 3)**
-  — `RedactionAndSearchCommandTests` executes the real ReactiveCommands behind
-  the redaction buttons and search bar (`ApplyAllRedactionsCommand`,
-  `ApplyRedactionCommand`, `ClearAllRedactionsCommand`,
-  `RemovePendingRedactionCommand`, `FindCommand`, `FindNextCommand`,
-  `FindPreviousCommand`, `JumpToSearchMatchCommand`, `CloseSearchCommand`) and
-  asserts their real effects — closing a gap where redaction removal had only
-  been proven through the scripting path / "doc still open", never by executing
-  the actual Apply command. `ApplyAllRedactionsCommand` now runs end-to-end in
-  headless tests via a small test-only save-path seam
-  (`SetRedactedSavePathProviderForTests`), and removal is verified with
-  independent oracles per the no-self-oracle rule: a carrier-agnostic saved-bytes
-  scan (ASCII + UTF-16BE) with an in-file negative control, plus an independent
-  mutool extraction (skips cleanly on tool-less CI, allow-listed).
+- **Interactive GUI-command coverage for redaction and search (#816, batch 3)** — `RedactionAndSearchCommandTests` executes the real ReactiveCommands behind the redaction buttons and search bar (`ApplyAllRedactionsCommand`, `ApplyRedactionCommand`, `ClearAllRedactionsCommand`, `RemovePendingRedactionCommand`, `FindCommand`, `FindNextCommand`, `FindPreviousCommand`, `JumpToSearchMatchCommand`, `CloseSearchCommand`) and asserts their real effects — closing a gap where redaction removal had only been proven through the scripting path / "doc still open", never by executing the actual Apply command.
 
 ### Added
-- **PDF/UA-1 and PDF/A conformance checker** (#772) — a new
-  `Excise.Core.Validation` namespace adds a *checker* (not an emitter):
-  `PdfUaValidator.Validate(document)` reports a bounded, honestly-scoped subset
-  of PDF/UA-1 (ISO 14289-1) rules that are decidable from what excise already
-  parses — document is tagged (`/MarkInfo /Marked`), has a `/StructTreeRoot`,
-  declares `/Lang`, has a title (Info `/Title` or XMP `dc:title`) with
-  `/ViewerPreferences /DisplayDocTitle true`, custom structure types are
-  role-mapped (`/RoleMap`) to standard ones, figures carry `/Alt` or
-  `/ActualText`, heading levels don't skip, tables use `TR`/`TH`/`TD`, lists use
-  `L`/`LI`/`LBody`, and real page text is either inside the structure tree or
-  marked `/Artifact`. `PdfAStructuralValidator.Validate(document, conformance)`
-  structurally checks the PDF/A markers excise itself emits (XMP `pdfaid`
-  part/level, sRGB OutputIntent, trailer `/ID`). Each rule reports
-  pass/fail/not-applicable/not-checked with a severity and a location, and every
-  `ValidationReport` carries an explicit `UncoveredCheckpoints` list plus a
-  deliberately-named `CheckedSubsetConformant` flag so a green result can never
-  be mistaken for full ISO conformance. The content-tagging rule re-walks the
-  page content stream itself (honoring `/Artifact` and `/MCID`) rather than
-  going through the text extractor, so it distinguishes an artifact from
-  untagged content and touches nothing on the extraction path. A small
-  `excise validate <file> [--pdfa 1b|2b] [--json]` CLI command surfaces the
-  report. Tests drive per-rule pass/fail fixtures whose verdict is known by
-  construction and, where veraPDF is installed, cross-check excise's verdict
-  against it.
-- **Type-over (typewriter) styling UI** (#781) — the type-over engine already
-  supported font size, colour, and text alignment
-  (`PdfTypewriterTextStyle`/`PdfTypewriterTextOperation.WithStyle`), but nothing
-  in the GUI called it, so every box was Helvetica 12pt black left-aligned. A
-  small style inspector now sits in the toolbar (font-size stepper, alignment
-  Left/Center/Right, and a colour swatch flyout) and is shown only in
-  typewriter mode when a box is active. Changes route through `WithStyle` onto
-  the active `PdfTypewriterTextOperation` (immutably, as one undo step each), so
-  the on-screen editor and the flattened saved PDF both reflect the chosen
-  style; a new box inherits the last-used style. The active box is the one the
-  user last created, typed into, or moved (no separate select gesture).
-- **PDF 2.0 page-level and document-level structural features: parse, model,
-  round-trip** (#331) — page transitions (`/Trans`, all twelve ISO
-  32000-2:2020 §12.4.4 styles: Split/Blinds/Box/Wipe/Dissolve/Glitter/R
-  ("Replace")/Fly/Push/Cover/Uncover/Fade, plus duration/dimension/motion/
-  direction/fly-scale/fly-rectangle) via `PdfPage.Transition`; page display
-  duration (`/Dur`) via `PdfPage.Duration`; embedded page thumbnails (`/Thumb`)
-  via `PdfPage.ThumbnailStream` (parsed and preserved, deliberately not
-  decoded/rendered — a thumbnail strip should fall back to the renderer when
-  null); and document/page actions (`/OpenAction` — both the modern action-
-  dictionary form and the legacy bare-destination-array form —, `/AA` on both
-  document and page, and the `/Names/JavaScript` name tree) via the new
-  `PdfAction` model (`PdfDocument.OpenAction`/`.AdditionalActions`/
-  `.DocumentJavaScriptActions`, `PdfPage.AdditionalActions`). `PdfAction`
-  never executes anything it parses — `JavaScriptSource` decodes `/JS`
-  (string or stream form) purely as inert data for inspection/audit, and
-  `/Next` action chains are followed (depth-capped) without evaluation. Page
-  labels (`/PageLabels` → `PdfDocument.GetPageLabel`) and named destinations
-  (`/Dests` and `/Names/Dests`, both forms → `PdfDocument.GetNamedDestinations`)
-  were already implemented; this issue added save/reopen round-trip coverage
-  for both. All of the above are purely additive parse-side properties — no
-  writer changes — so save output for documents that don't use these features
-  is unaffected. UI integration (presentation-mode playback, thumbnail-strip
-  wiring, page-label status bar) is explicitly deferred, per the issue.
-- **Accessibility MCID→letter bridge: screen readers read tagged elements'
-  real body text (#776).** Follow-up to the tagged-PDF structure layer (#631,
-  PR #775). Text extraction now tags each `Letter` with the marked-content ID
-  (`/MCID`) of the `BDC ... EMC` span it was drawn inside, and
-  `PdfDocument.ResolveStructElementText` gathers a structure element's glyphs by
-  matching its `/MCID` references (both `/K` integers and `/MCR` child
-  dictionaries, each honouring its `/Pg`) in reading order. The
-  `Excise.Avalonia` accessibility peers use this so a heading, list item, or
-  table cell with no `/ActualText` carrier now exposes its real body text to a
-  screen reader instead of a role-only peer. The MCID tagging is additive: it
-  does not change extraction output (verified by the extraction-parity gate,
-  which is unchanged).
-- **OCG-aware text extraction now resolves OCMD membership and visibility
-  expressions** (#336) — the per-letter hidden-layer flag
-  (`Letter.IsInHiddenOptionalContent`) previously identified only content
-  inside a directly-referenced Optional Content Group named in the catalog
-  `/OCProperties /D /OFF` array, matched by name. It now resolves the full
-  default-configuration visibility of a marked-content `/OC` span through a
-  shared resolver (`Excise.Core/Document/OptionalContentVisibility.cs`):
-  Optional Content Membership Dictionaries (`/Type /OCMD`) with a `/P` policy
-  (AnyOn/AllOn/AnyOff/AllOff) or a `/VE` And/Or/Not visibility expression, OCG
-  membership matched by object reference (so two OCGs sharing a `/Name` are
-  distinguished), `/ON` arrays, and `/BaseState /OFF`. This makes hidden-layer
-  content in those carriers precisely identifiable for audit and for the
-  `RedactText(includeHiddenLayers: false)` opt-out (which now correctly skips
-  them). Default redaction is unaffected: `RedactText` includes hidden layers
-  by default and already reached this content — the flag governs identification
-  and the opt-out, not the default removal path. Default extraction output is
-  likewise unchanged (hidden layers are still extracted; only the flag differs)
-  — the extraction-parity gate holds at 98.7% / 332 pages. The SkiaSharp
-  renderer already suppressed paint for default-off optional content (Part C);
-  this brings the text extractor's OCG resolution to parity with it.
-  Structure-tree mutation on redaction (Part B) shipped earlier as #636.
-- **ICCBased-CMYK (N=4) overprint participation** (#803, follow-up to #634) —
-  a fill or stroke whose colour space is an ICCBased space with four
-  components now takes part in overprint simulation, treated as DeviceCMYK
-  under the same nonzero-overprint-mode (`/OPM 1`) gating: a component that is
-  exactly zero leaves that colorant of the backdrop unchanged instead of
-  knocking it out. Previously such a colour knocked out even under `/OP`
-  `/op` `/OPM 1`. Participation is preview-grade only — the raw four
-  components drive the zero-component merge; there is still no colour-managed
-  ICC CMM. Verified against the `gs -dOverprint=/simulate` oracle and by
-  spec-driven relative tests inside a DeviceCMYK transparency group.
-- **App-wide in-session undo/redo** (#782) — a single edit-history stack
-  (command pattern with per-operation inverse closures, plus a collection
-  snapshot for type-over edits) now covers the reversible, pre-flatten editing
-  state: type-over create/edit/move/delete, annotation authoring (highlight and
-  sticky-note add), and page reorder/rotate/delete. Wired to Ctrl+Z / Ctrl+Y
-  (Cmd+Z / Cmd+Shift+Z on macOS) and the Edit menu, with live `Undo`/`Redo`
-  labels that name the pending action. The stack clears on document open, close,
-  and save — content already flattened into the PDF content stream on save is
-  irreversible by design and is never recorded.
-- **Audit flag for symbolic (3,0) glyphs no extractor recovers** (#796) — a
-  simple symbolic TrueType with a Microsoft-Symbol `(3,0)` cmap AND an
-  `/Encoding` renders meaningful text through its `(3,0)` glyphs, but every
-  extractor (excise, mutool, poppler — established by #794/#795) honours
-  `/Encoding` and extracts the WinAnsi interpretation instead. The visible text
-  is therefore unrecoverable and `RedactText` cannot reach it. excise
-  deliberately matches the reference tools rather than diverging (no
-  self-oracle), so #796 is the conservative response: `HiddenTextDetector` now
-  DETECTS this class — it decodes each such font's `(3,0)`/`post` glyph names
-  (reusing #791's `TrueTypeFontFile.GidForSymbolByte`/`GlyphName`) and, where
-  that spells real text that DIVERGES from what extraction yielded, emits a
-  finding ("visible text via (3,0) symbol cmap not recoverable by extraction —
-  redaction may not reach it") through the same audit surface as every other
-  hidden-text finding (CLI, GUI reveal, redacted-copy safety check). Detection
-  only — no change to extraction decoding, and no false flag for a normal
-  WinAnsi font, a `(3,0)` font WITHOUT `/Encoding` (#791 already extracts it),
-  or a `(3,0)`+`/Encoding` font whose decode already equals the extracted text.
-- **Overprint simulation for Separation and DeviceN colours (#634).** Overprint
-  (ISO 32000-1 §8.6.7) previously engaged only for DeviceCMYK fills/strokes;
-  it now also engages for Separation and DeviceN colours whose tint transform
-  resolves to a DeviceCMYK alternate. Such a colour is tint-transformed to
-  DeviceCMYK (already done for display), and overprint then leaves the process
-  colorants the transform outputs as zero unchanged in the backdrop instead of
-  knocking them out. Per the spec this "unnamed colorants stay put" rule applies
-  whenever `/OP`/`/op` is set **regardless of `/OPM`** — unlike DeviceCMYK,
-  which still requires `/OPM 1`. Verified against Ghostscript's overprint
-  simulation (`gs -dOverprint=/simulate`, the only harness reference renderer
-  that simulates overprint on an RGB device): a spot colour mapping to yellow
-  over a cyan backdrop keeps the cyan (green overlap) under both `/OPM 0` and
-  `/OPM 1`, matching the oracle, versus a plain-yellow knockout with overprint
-  off (`SeparationOverprintDifferentialTests`, plus relative
-  `SeparationOverprintRenderingTests`). Works both outside and inside a
-  DeviceCMYK transparency group. DeviceCMYK `/OPM 0`/`/OPM 1` behaviour is
-  unchanged (the existing Ghent GWG011 OPM-mode traps still pass). ICC colour
-  management remains preview-grade with no real CMM (matrix/TRC and lut16 A2B
-  tables are genuine transforms; there are no rendering intents, black-point
-  compensation, or gamut mapping), and ICCBased-CMYK overprint is not yet
-  handled — tracked as #803.
+- **PDF/UA-1 and PDF/A conformance checker** (#772) — a new `Excise.Core.Validation` namespace adds a *checker* (not an emitter): `PdfUaValidator.Validate(document)` reports a bounded, honestly-scoped subset of PDF/UA-1 (ISO 14289-1) rules that are decidable from what excise already parses — document is tagged (`/MarkInfo /Marked`), has a `/StructTreeRoot`, declares `/Lang`, has a title (Info `/Title` or XMP `dc:title`) with `/ViewerPreferences /DisplayDocTitle true`, custom structure types are role-mapped (`/RoleMap`) to standard ones, figures carry `/Alt` or `/ActualText`, heading levels don't skip, tables use `TR`/`TH`/`TD`, lists use `L`/`LI`/`LBody`, and real page text is either inside the structure tree or marked `/Artifact`.
+- **Type-over (typewriter) styling UI** (#781) — the type-over engine already supported font size, colour, and text alignment (`PdfTypewriterTextStyle`/`PdfTypewriterTextOperation.WithStyle`), but nothing in the GUI called it, so every box was Helvetica 12pt black left-aligned.
+- **PDF 2.0 page-level and document-level structural features: parse, model, round-trip** (#331) — page transitions (`/Trans`, all twelve ISO 32000-2:2020 §12.4.4 styles: Split/Blinds/Box/Wipe/Dissolve/Glitter/R ("Replace")/Fly/Push/Cover/Uncover/Fade, plus duration/dimension/motion/ direction/fly-scale/fly-rectangle) via `PdfPage.Transition`; page display duration (`/Dur`) via `PdfPage.Duration`; embedded page thumbnails (`/Thumb`) via `PdfPage.ThumbnailStream` (parsed and preserved, deliberately not decoded/rendered — a thumbnail strip should fall back to the renderer when null); and document/page actions (`/OpenAction` — both the modern action- dictionary form and the legacy bare-destination-array form —, `/AA` on both document and page, and the `/Names/JavaScript` name tree) via the new `PdfAction` model (`PdfDocument.OpenAction`/`.AdditionalActions`/ `.DocumentJavaScriptActions`, `PdfPage.AdditionalActions`).
+- **Accessibility MCID→letter bridge: screen readers read tagged elements' real body text (#776).** Follow-up to the tagged-PDF structure layer (#631, PR #775).
+- **OCG-aware text extraction now resolves OCMD membership and visibility expressions** (#336) — the per-letter hidden-layer flag (`Letter.IsInHiddenOptionalContent`) previously identified only content inside a directly-referenced Optional Content Group named in the catalog `/OCProperties /D /OFF` array, matched by name.
+- **ICCBased-CMYK (N=4) overprint participation** (#803, follow-up to #634) — a fill or stroke whose colour space is an ICCBased space with four components now takes part in overprint simulation, treated as DeviceCMYK under the same nonzero-overprint-mode (`/OPM 1`) gating: a component that is exactly zero leaves that colorant of the backdrop unchanged instead of knocking it out.
+- **App-wide in-session undo/redo** (#782) — a single edit-history stack (command pattern with per-operation inverse closures, plus a collection snapshot for type-over edits) now covers the reversible, pre-flatten editing state: type-over create/edit/move/delete, annotation authoring (highlight and sticky-note add), and page reorder/rotate/delete.
+- **Audit flag for symbolic (3,0) glyphs no extractor recovers** (#796) — a simple symbolic TrueType with a Microsoft-Symbol `(3,0)` cmap AND an `/Encoding` renders meaningful text through its `(3,0)` glyphs, but every extractor (excise, mutool, poppler — established by #794/#795) honours `/Encoding` and extracts the WinAnsi interpretation instead.
+- **Overprint simulation for Separation and DeviceN colours (#634).** Overprint (ISO 32000-1 §8.6.7) previously engaged only for DeviceCMYK fills/strokes; it now also engages for Separation and DeviceN colours whose tint transform resolves to a DeviceCMYK alternate.
 
 ### Performance
-- **Renderer image decode / colour-conversion allocation cuts** (#599) — the
-  image decode path no longer stages a large transient managed pixel buffer per
-  image. The raw, DCT-RGB, and fast Gray/RGB/CMYK decoders now fill the final
-  `SKBitmap`'s pixel store directly (via a writable span) instead of allocating
-  a `width*height*4` byte[] and `Marshal.Copy`-ing it in, and the fast CMYK
-  decoder reuses one CMYK sample buffer instead of allocating a `double[4]` per
-  pixel — that per-pixel array was the dominant allocator on colour-heavy CMYK
-  pages. The `/Decode`-array lookup and max-sample constant are hoisted out of
-  the per-pixel loop. Decoded images are also cached across child render
-  contexts (transparency groups / tiling patterns / soft masks), so an image
-  reused inside a group or pattern decodes once per page, not once per context;
-  only the owning context disposes the shared cache. Measured in Release on the
-  colour-heavy Altona visual suite (`altona_visual_1v2a_x3.pdf` p1, min-of-4):
-  managed allocation 2473.7 → 2028.1 MB (-18%) with render time flat; the
-  remaining per-pixel cost is the ICC CMYK→RGB conversion in `Excise.Core`
-  (out of scope here). Output is byte-identical — verified by the Visual PNG
-  baselines (63/0 unchanged) and the full `Excise.Rendering.Tests` differential
-  suite (3463/0). The decoded-image cache lifetime is one page render.
-- **Renderer glyph-outline caching on the text hot path** (#598) — glyph
-  outlines are now tessellated once per (typeface, size, glyph) and reused for
-  the rest of the page instead of re-decoding the same outline on every draw.
-  The dominant win is the embedded-subset-font path (Type0/CID and byte-cmap
-  simple fonts drawn glyph-by-glyph via `SKFont.GetGlyphPath` in
-  `BuildGlyphIdTextPath`), where real-world body text recurs the same glyph IDs
-  thousands of times per page: on the smoke corpus the outline cache serves
-  94.6% of glyph lookups (≈917k hits / 970k lookups; ≈561k avoided
-  tessellations on `irs-1040-instructions.pdf` alone). Measured back-to-back in
-  Release on the smoke corpus (`scripts/check-perf-budgets.sh`, min-of-3, with
-  the non-rendering `text-extract` workflow flat as a machine-stability
-  control): `all-page-render` managed allocation 206→197 MB (-4.4%) and render
-  time 794→749 ms (-5.7%); `navigation-rerender` 271→258 ms (-4.8%). The caches
-  hold only the UNPOSITIONED outline; every draw still transforms a fresh copy
-  to its own cursor/scale, so output is byte-identical — verified by the Visual
-  PNG baselines (63/0 unchanged) and the mutool differential smoke suite (49/0)
-  on the embedded-font corpus. Cache lifetime is one page render; keys compare
-  the typeface by reference.
-- **Text-extraction hot path: fewer allocations, less CPU** (#600) — the
-  `TextExtractor` content-stream parse now caches all per-font derived state
-  (ToUnicode map, `/Differences`, the Identity / Mac-glyph-order /
-  embedded-CID / symbol-cmap decode tables, and the CID/CMap/`/W` width
-  geometry) keyed by the resolved font dictionary, instead of re-parsing those
-  streams on every `Tf` operator — the dominant repeated cost, since every
-  text block re-issues `Tf`. `ParseNumber` gained an exact inline integer
-  parser for the common operand (TJ kerns, `Td`/`Tm`/`cm` coordinates) that
-  bypasses `int.TryParse`'s culture machinery, and the operand list is
-  pre-sized. Measured over `test-pdfs/smoke` (min-of-3, Release,
-  `scripts/check-perf-budgets.sh`): text-extract allocation **389.7 → 160.7 MB
-  (-59%)** and wall time **230.2 → 164.7 ms (-29%)**; redaction-save
-  allocation also fell ~8% (it shares the extractor). Every change is
-  behavior-preserving: the font cache re-assigns all derived fields on each
-  `Tf` (a snapshot, never a skip-if-same short-circuit, so it still heals the
-  partial state restore in form-XObject parsing) and the integer parser falls
-  back to `int.TryParse` for any non-trivial span. The 332-page
-  extraction-parity gate is **unchanged at 98.7%** — proving extraction output
-  (and therefore redaction reach) did not move. The text-extract allocation
-  budget was tightened to the new floor to lock in the win.
+- **Renderer image decode / colour-conversion allocation cuts** (#599) — the image decode path no longer stages a large transient managed pixel buffer per image.
+- **Renderer glyph-outline caching on the text hot path** (#598) — glyph outlines are now tessellated once per (typeface, size, glyph) and reused for the rest of the page instead of re-decoding the same outline on every draw.
+- **Text-extraction hot path: fewer allocations, less CPU** (#600) — the `TextExtractor` content-stream parse now caches all per-font derived state (ToUnicode map, `/Differences`, the Identity / Mac-glyph-order / embedded-CID / symbol-cmap decode tables, and the CID/CMap/`/W` width geometry) keyed by the resolved font dictionary, instead of re-parsing those streams on every `Tf` operator — the dominant repeated cost, since every text block re-issues `Tf`.
 
 ### Fixed
-- **Flaky redaction test: `FullwidthFormsRedactionTests` collided with the
-  random `/ID`** (#771, #800) — the fullwidth-forms redaction test intermittently
-  failed on macOS and Windows CI (same commit could pass on Linux and fail on
-  macOS — definitionally non-deterministic, and it was a false red, never a real
-  leak). Root cause, measured directly: the test's carrier-agnostic saved-bytes
-  oracle searched the WHOLE file for a short ASCII needle (`"123"`, `"ABC"`),
-  which collided with the trailer `/ID` — a random 16-byte file identifier
-  written twice as 32 hex characters and regenerated on every save. Over 20,000
-  saves the needle appeared inside `/ID` 139–143 times and in NO real carrier
-  even once; lowercase `"abc"` never collided because hex is uppercase, which is
-  exactly why only the ABC and 123 cases were ever reported. #771's font-metric
-  guess and #800's parallelism guess were both wrong: the redaction box width is
-  the platform-independent constant `49.344` (Helvetica AFM advances A=667, B=667,
-  C=722, ×24/1000 — identical on every platform, and identical across all three
-  cases since the fixture always emits codes A/B/C), so parallel CI only raised
-  the number of draws on a ~0.7%-per-needle random `/ID` collision. Fixed by excising
-  the `/ID` array from the searchable view before the needle check (a lossless
-  Latin1 round-trip that keeps every real text carrier — content streams,
-  ToUnicode, `/ActualText`, XMP, annotations, hex text strings — in the search).
-  The redaction guarantee is unchanged: no redaction code path writes page text
-  into `/ID`, so removing a random identifier eliminates a false-positive source,
-  not a leak-detection surface. The other redaction assertions (independent
-  saved-bytes carrier search, extractor-agnostic, plus the removed>0 and reopened
-  checks) are intact.
+- **Flaky redaction test: `FullwidthFormsRedactionTests` collided with the random `/ID`** (#771, #800) — the fullwidth-forms redaction test intermittently failed on macOS and Windows CI (same commit could pass on Linux and fail on macOS — definitionally non-deterministic, and it was a false red, never a real leak).
 
 ### Changed
-- **Linux coverage gate restored to green** (R6 CI health) — `Excise.Core` line
-  coverage had drifted to 92.39% on `develop`, below the 93% ratchet, reddening
-  every merge. Added targeted unit tests for the least-covered recently-added
-  Core code: `SignatureAppearanceAuthoring` (#623 baked `/AP /N` signature
-  appearance, previously 0% covered), the `TrueTypeFontFile` symbolic `(3,0)`
-  cmap parse + `post`-glyph-name path (#791, driven by an in-assembly symbol-cmap
-  font builder), and deterministic `PdfOutlineParser` destination resolution
-  (direct `/Dest`, `/A` GoTo, `/Names/Dests` name tree, and legacy
-  `/Catalog/Dests`) — the pre-existing outline tests silently no-op'd on CI
-  because they load a book from a hard-coded local path (a #619-style invisible
-  coverage loss). Clears the existing 93% gate (measured 93.27% locally, up from
-  the 92.39% that had reddened `develop`; the Linux CI coverage job is the
-  authority); the threshold itself is unchanged.
-- **`Excise.Cli.Tests` wall-clock cut ~93% (72s → 5s measured, `-c Release`
-  only) by removing an accidental full rebuild** (#731). Root cause:
-  `BenchmarkSuite.ResolveExciseCliInvocation()` (`tools/Excise.RenderTools/`
-  — the shared implementation behind the shipping `benchmark-suite` CLI
-  command, not test-only code) picked which `Excise.Cli/bin/<config>/`
-  directory to look in via this assembly's own `#if DEBUG`/`#else "Release"`
-  compile-time symbol. `Excise.RenderTools` is a tool project outside
-  `excise.sln`, so it always builds Debug regardless of what configuration
-  the CLI or the calling process used. `run-benchmarks.sh`,
-  `check-perf-budgets.sh`, and every `release-smoke.sh`/`ci.yml` caller
-  already set the `CONFIG` env var explicitly and were never affected by the
-  symbol; only `BenchmarkSuiteTests`, which calls `RenderProgram.RunAsync`
-  in-process with no `CONFIG` set, hit the bug. Any `-c Release`
-  `Excise.Cli.Tests` run (`release-smoke.sh --release-tests`, or a
-  maintainer running `dotnet test -c Release` directly) looked for a Debug
-  binary a Release-only build never produces, silently fell through to
-  `dotnet run -c Debug --`, and paid for a from-scratch Debug build of
-  `Excise.Cli` + `Excise.Core` + `Excise.Rendering` + `Excise.Ocr` inside a
-  single test (`BenchmarkSuite_WritesJsonCsvMarkdownAndPassesSyntheticGate`,
-  measured 68 of the suite's 72s). Fixed by probing the filesystem for an
-  already-built `excise`/`excise.dll` under both `Release` and `Debug`
-  before ever falling back to `dotnet run` — same CLI binary invoked, same
-  assertions, same 126 tests (125 passed / 1 skipped, unchanged) — a
-  redundant-build removal, not a coverage or behavior change. Verified `-c
-  Debug` (CI's PR gate, `t0`/`t1`) is unaffected either way: 865ms before and
-  after, with only a Debug build on disk (simulating a fresh CI checkout) —
-  RenderTools' Debug default already matched, so this fix saves nothing on
-  the PR gate; the win applies to `t2`/`release-smoke.sh --release-tests`
-  and any local `-c Release` run. Measured this session on a 10-core Apple
-  Silicon machine, Release build, all five suites run individually:
-  `Excise.Core.Tests` 4s (3755 tests), `Excise.Rendering.Tests` 32s (3420
-  tests, already 4-way parallel per #732), `Excise.App.Tests` 226s (1098
-  tests, serial by design — #363), `Excise.Avalonia.Tests` 2s (86 tests),
-  `Excise.Cli.Tests` 72s→5s (126 tests). Investigated and explicitly NOT
-  pursued this pass, per the #731 analysis already on the issue: overlapping
-  `Excise.Core.Tests` with the now-4-way-parallel `Excise.Rendering.Tests` in
-  `release-smoke.sh`, and sharding `Excise.App.Tests` across concurrent
-  local processes — both reintroduce the CPU-contention false-red class #619
-  exists to prevent (wall-clock-budgeted tests reading as hangs under
-  contention), for a smaller, single-machine-only saving than this fix.
-  `Excise.App.Tests` stays serial (#363 SkiaSharp native font-manager crash)
-  and untouched.
+- **Linux coverage gate restored to green** (R6 CI health) — `Excise.Core` line coverage had drifted to 92.39% on `develop`, below the 93% ratchet, reddening every merge.
+- **`Excise.Cli.Tests` wall-clock cut ~93% (72s → 5s measured, `-c Release` only) by removing an accidental full rebuild** (#731).
 
 ## [3.3.1] - 2026-07-26
-- **GUI interaction latency: per-page search-highlight index (#601).** Page
-  navigation recomputed the current page's search highlights with a linear
-  `O(total matches)` scan over every match on *every* page flip, so the cost
-  grew with document size (a dense search on a large book — thousands of
-  matches — made each page change scan all of them). Matches are now indexed by
-  page once when results publish, making the per-navigation lookup
-  `O(matches on the target page)`. Measured (new `GuiLatencyBenchmarkTests`,
-  400-page document, 2,000-match active search, 2 runs): the per-navigation
-  match lookup dropped from **~22 µs to ~0.05 µs** (~400×), and — being now
-  independent of match count — no longer scales with the document (the old scan
-  was linear in total matches, so ~2 ms at 200k matches).
-  **User-visible latency was already sub-frame and is unchanged within
-  measurement noise** — every direct interaction averaged well under one 60 Hz
-  input frame both before and after (end-to-end page navigation ≈ 0.5–0.7 ms,
-  its run-to-run baseline jitter larger than the change). The value is removing
-  the one per-interaction cost that scaled with document content, plus the new
-  benchmark that gates each profiled interaction under a 16 ms budget going
-  forward.
+- **GUI interaction latency: per-page search-highlight index (#601).** Page navigation recomputed the current page's search highlights with a linear `O(total matches)` scan over every match on *every* page flip, so the cost grew with document size (a dense search on a large book — thousands of matches — made each page change scan all of them).
 
 ### Fixed
-- **Symbolic TrueType with a (3,0) symbol cmap: text extraction mis-decode**
-  (#791) — a simple (non-Type0) symbolic TrueType font that carries a
-  Microsoft-Symbol `(3,0)` cmap subtable and ships no `/ToUnicode` addresses
-  glyphs through an F000-based Private Use offset. excise rendered such fonts
-  correctly but text EXTRACTION echoed the raw content byte through
-  WinAnsi — e.g. a page reading "Redaction" extracted as `¡¢£¤¥¦§¨©`. Because
-  extraction bounds redaction, `RedactText` then removed **0** occurrences and
-  reported success: a silent redaction leak (CLAUDE.md, #637/#645). Extraction
-  now resolves such fonts through the embedded program's `(3,0)` cmap
-  (code→glyph, ISO 32000-2 §9.6.6.4) and recovers Unicode from the program's
-  `post` glyph names (or a Unicode cmap subtable), matching the independent
-  oracle (mutool). Scoped strictly to symbolic simple TrueType with an embedded
-  `(3,0)` cmap and no `/ToUnicode` / no `/Encoding`, so every other simple font
-  keeps its existing decode — the 332-page extraction-parity gate stays at
-  98.7%. A purpose-built fixture (`SymbolCmapTtfBuilder`, patches DejaVu Sans to
-  a `(3,0)` symbol cmap) proves render parity, extraction parity, and — the
-  redaction-relevance made concrete — that excise now removes the text and
-  mutool confirms it is gone.
+- **Symbolic TrueType with a (3,0) symbol cmap: text extraction mis-decode** (#791) — a simple (non-Type0) symbolic TrueType font that carries a Microsoft-Symbol `(3,0)` cmap subtable and ships no `/ToUnicode` addresses glyphs through an F000-based Private Use offset.
 
 ### Investigated (no code change)
-- **Symbolic TrueType with a (3,0) symbol cmap AND `/Encoding` present**
-  (#794) — the sibling case of #791 was measured and found **not to reproduce**
-  as a excise-specific mis-decode, so no extraction/precedence change was made.
-  #791 fixed the **no-`/Encoding`** shape (where mutool recovers the intended
-  text from the `post` glyph names, so excise was made to match). #794 asked
-  whether the same font **with `/Encoding /WinAnsiEncoding`** (or a
-  `/Differences` dict) still mis-decodes. Controlled measurement against two
-  independent oracles (fixture: `SymbolCmapTtfBuilder` + non-ASCII codes
-  0xA1..0xA9 so WinAnsi(code) != the intended letter):
-
-  | fixture | excise | mutool | poppler |
-  |---|---|---|---|
-  | NO `/Encoding` (#791 shape) | Redaction | Redaction | ¡¢£… |
-  | `/Encoding /WinAnsiEncoding` | ¡¢£… | ¡¢£… | ¡¢£… |
-  | `/Encoding <<WinAnsi base + Differences>>` | ¡¢£… | ¡¢£… | ¡¢£… |
-  | `/Encoding /WinAnsiEncoding`, WinAnsi-undef codes | ••• | ••• | ••• |
-
-  The only variable that flips mutool off `(3,0)`/`post` recovery is the
-  presence of `/Encoding`: with it, **both mutool AND poppler honour WinAnsi
-  and never consult the `(3,0)` cmap** — even for codes WinAnsi leaves
-  undefined (they emit bullets, not the cmap glyph). excise already agrees with
-  both oracles, so preferring the `(3,0)` cmap here would make excise the sole
-  tool emitting "Redaction" — the no-self-oracle violation CLAUDE.md forbids.
-  (Spec tension noted for a human call: ISO 32000-2 §9.6.6.4 says a symbolic
-  TrueType ignores `/Encoding`, so the oracles are arguably non-compliant.)
-  Characterization tests
-  (`SymbolicTrueTypeSymbolCmapWithEncodingExtractionTests`) pin that excise
-  matches the independent oracle for each shape, that redaction removes the
-  extracted text with mutool confirming removal, and that an explicit
-  `/Differences` per-code name is honoured (§9.6.6.2 precedence).
+- **Symbolic TrueType with a (3,0) symbol cmap AND `/Encoding` present** (#794) — the sibling case of #791 was measured and found **not to reproduce** as a excise-specific mis-decode, so no extraction/precedence change was made.
 
 ## [3.3.0] - 2026-07-26
 
 ### Added
-- **Type-over tool: GUI-save independent-oracle test coverage** (#780) — closed
-  a no-self-oracle gap in type-over save verification. The existing GUI-save
-  test reopened the file and verified with excise's own extractor
-  (`saved.GetPage(1).Text` — excise vouching for excise), and the independent
-  extractor check lived only in the engine-path fidelity suite
-  (`PdfTypewriterTextApplier`, not the GUI save command). A new headless test
-  now drives the REAL `SaveFileAsAsync` command → disk → an INDEPENDENT
-  extractor (`MutoolTextExtractor.ExtractPage`), asserting the typed note reads
-  back and the pre-existing page text survives. Skips gracefully where mutool
-  is absent.
-- **Type-over tool: move/resize-handle and wrap-parity test coverage** (#780) —
-  closed the two coverage gaps left after the type-over workflow work. A
-  control-level headless test drives a real routed pointer gesture
-  (press → move → release) on the editor's move handle and resize grip and
-  asserts the `TypewriterTextBoundsChanged` PDF bounds reflect the drag (move:
-  position shifts, size preserved; resize: size grows, the anchored corner is
-  fixed). A wrap-parity test compares the on-screen editor `TextBox` wrapping
-  (Avalonia `TextWrapping.Wrap`) against the flattened PDF output (Skia +
-  base-14 metrics) via save/reopen/extract, asserting both wrap to multiple
-  lines, all words survive in reading order, and the line counts agree within
-  ±1 (observed 4 vs 4 exactly).
+- **Type-over tool: GUI-save independent-oracle test coverage** (#780) — closed a no-self-oracle gap in type-over save verification.
+- **Type-over tool: move/resize-handle and wrap-parity test coverage** (#780) — closed the two coverage gaps left after the type-over workflow work.
 
 ### Fixed
-- **Typewriter (type-over) workflow: pending edits can no longer be lost or
-  flattened unseen** (#780) — pending type-over edits used to persist silently
-  after leaving typewriter mode and bake into the PDF on the next save with no
-  signal, off-page edits were never shown yet still flattened, and a plain
-  click placed nothing. Now: mode-exit is non-destructive and the pending-edit
-  count stays visible in the status bar; an explicit "Discard Pending Type-over
-  Edits" command is the only non-saving way to clear them; "Go to Next Pending
-  Type-over Edit" navigates to off-page edits before they commit; `Esc` removes
-  an empty active box and keeps typed text in a non-empty one; and a click now
-  places a default-sized box (drag still sizes it). Added GUI/headless coverage
-  for the pointer-driven creation path, DIP↔PDF round-trips (incl. `/Rotate`
-  90/180/270 and page clamp), the on-create permission re-check, and mode-exit
-  non-loss / discard verified by reopening the saved PDF.
-- **RTL redaction: numbers inside right-to-left lines no longer evade
-  removal** (#632) — a number embedded in an Arabic/Hebrew line (an ID, date,
-  or phone number) kept its surrounding words in visual order, so a
-  phrase-spanning-a-number search matched nothing and `RedactText` silently
-  removed nothing while reporting success. Digit "islands" now reorder to
-  logical order (segments reverse, the number stays put), so RTL content that
-  contains numbers is searchable and redactable. Verified against the Unicode
-  Bidi Algorithm (UAX #9) reference, not against excise itself.
+- **Typewriter (type-over) workflow: pending edits can no longer be lost or flattened unseen** (#780) — pending type-over edits used to persist silently after leaving typewriter mode and bake into the PDF on the next save with no signal, off-page edits were never shown yet still flattened, and a plain click placed nothing.
+- **RTL redaction: numbers inside right-to-left lines no longer evade removal** (#632) — a number embedded in an Arabic/Hebrew line (an ID, date, or phone number) kept its surrounding words in visual order, so a phrase-spanning-a-number search matched nothing and `RedactText` silently removed nothing while reporting success.
 
 ### Security
-- **RTL redaction in Type0/Identity-H (CID) Arabic/Hebrew fonts verified with
-  independent oracles** (#632) — the redaction-critical case where the content
-  stream carries the word only as 2-byte CIDs (glyph indices), so the Unicode
-  string never appears in the file and a saved-bytes search — even UTF-16BE —
-  is structurally blind to it. Added fixtures embedding a real font that paint
-  the word in visual (reversed) order and drive `RedactText` with a
-  logical-order needle, asserted with the two mandated non-excise oracles:
-  mutool independent extraction (word present before, unrecoverable after) and
-  a Ghostscript ink differential over the word's region (blank after removal,
-  not merely covered). Confirms logical→visual matching and true glyph removal
-  in the CID path; a keep-word guards against blanking the page. Also pins, as
-  a measured limitation, the whole-line bidi gap for mixed-direction lines
-  (per-word RTL redaction works; a phrase spanning a direction change on an
-  RTL-base line is not matched) — split to #785. No engine behaviour changed;
-  the existing bidi reorder already covered these cases and this locks them
-  under independent verification.
-- **Type0/CID horizontal advance now scales `Tc`/`Tw` by `Th`** (#734) — for
-  Type0 fonts the character/word-spacing contributions were applied outside the
-  horizontal-scaling factor (`Th`), drifting extracted glyph positions on text
-  that combines Type0 fonts with non-default horizontal scaling and non-zero
-  spacing (ISO 32000-1 §9.4.4). Applied identically in the text extractor and
-  the redaction content-stream parser so redaction bounds track letters.
-- **Renderer: horizontal Type0/CID glyph advance now applies `Tc`/`Tw`**
-  (#734) — `SkiaRenderer.RenderCidBytes` advanced the horizontal text matrix
-  by summed `/W` glyph widths only, never adding character spacing (`Tc`) or
-  word spacing (`Tw`, single-byte code 32 only per §9.3.3), unlike the
-  simple-font path and the #515 vertical Type0 path, which both already
-  applied them. On CJK/Type0 pages with non-zero `Tc`, rendered glyphs
-  progressively fell behind where extraction and reference renderers placed
-  them. Fixed per §9.4.4 (`tx = ((w0/1000)·Tfs + Tc + Tw)·Th`), mirroring the
-  #515 vertical path: Tc/Tw now accumulate into the same per-glyph cursor
-  used to position and advance the text matrix, so drawn positions and pen
-  advance cannot drift apart. Verified against live pdftocairo/Ghostscript
-  (not excise's own extractor): a synthetic Type0 fixture with `Tc`/`Tw` that
-  diverged from both references by 1.8%-2.0% differing pixels before the fix
-  now agrees within 0.25%.
-- **Redaction on a multi-run line no longer shifts the kept text** (#758) —
-  when `GlyphRemover` removed a text-showing operator from a multi-run `BT`
-  block, it dropped that operator's pen advance, so kept runs after the
-  redaction on the same line shifted left. The removed run's advance is now
-  consumed, so following kept text stays in place (the removed content is still
-  gone from every carrier).
-- **Deterministic real-number formatting in the PDF writer** (#762) — every
-  real-number emit site (content-stream operands in `ContentStreamWriter`,
-  object serialization in `PdfObjectWriter`, `ContentOperator.ToString`) now
-  formats through a shared `PdfNumberFormatter`: invariant culture, at most
-  six decimal places, trailing zeros trimmed, never exponent notation. The
-  previous `"G"` (shortest-round-trip) format faithfully reproduced
-  accumulated float noise (`216.01600000000002`, `49.343999999999994`),
-  making saved bytes differ across platforms — and on Windows a noisy
-  coordinate's digit run coincidentally matched a redacted number, tripping
-  the carrier-agnostic saved-bytes redaction check (a byte-check false
-  positive, not a leak). Six decimals bounds any coordinate perturbation at
-  5e-7 pt — far below a rendered pixel — so redaction bounds, extraction
-  parity, and visual baselines are unchanged, while files get slightly
-  smaller and byte-identical cross-platform. The RTL saved-bytes redaction
-  tests additionally pin the trailer `/ID` (normally random bytes serialized
-  as uppercase hex) so their short A–F raw-code needles can't collide with
-  it either.
-- **CID glyph-selection matrix: deterministic handling of missing maps**
-  (#515, final slice) — the renderer's CID→GID resolution for Type0 fonts now
-  handles every cell of the matrix the way the reference renderers do, each
-  behavior verified empirically against poppler/Ghostscript (and mutool where
-  it has CMap resources) rather than assumed:
-  - A CID **absent from a CID-keyed CFF charset** selects GID 0 (.notdef)
-    instead of falling through to identity — which indexed the CFF's
-    unrelated glyph order with the CID and **drew an arbitrary wrong glyph**.
-  - `/CIDToGIDMap` on a **CIDFontType0** descendant is ignored (§9.7.4.2:
-    CIDFontType2 only); the embedded CFF charset governs, matching poppler.
-  - A CID **beyond a `/CIDToGIDMap` stream's extent** keeps the identity
-    fallback — the unanimous mutool/poppler/Ghostscript behavior — while
-    in-range zero entries still mean an explicit .notdef.
-  - A **CID-keyed CFF with a predefined/absent charset offset** now maps
-    Identity over all glyphs; previously it fell into the IsoAdobe table,
-    which is accidentally identity up to glyph 228 and silently unmapped
-    (.notdef) above.
-  In every case layout comes from `/W`/`/DW` keyed by CID, so a missing
-  glyph still consumes its full advance and neighbouring positions (and the
-  redaction bounds derived from them) never drift. Covered by the new
-  `CidGlyphSelectionMatrixTests` — CIDFontType2 fixtures over DejaVuSans
-  (explicit/identity/absent/truncated/all-zero/odd-length maps, GID beyond
-  glyph count) plus a synthetic CID-keyed CFF (CIDFontType0C with a
-  non-identity charset, charset misses, bogus map) — with live
-  pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
+- **RTL redaction in Type0/Identity-H (CID) Arabic/Hebrew fonts verified with independent oracles** (#632) — the redaction-critical case where the content stream carries the word only as 2-byte CIDs (glyph indices), so the Unicode string never appears in the file and a saved-bytes search — even UTF-16BE — is structurally blind to it.
+- **Type0/CID horizontal advance now scales `Tc`/`Tw` by `Th`** (#734) — for Type0 fonts the character/word-spacing contributions were applied outside the horizontal-scaling factor (`Th`), drifting extracted glyph positions on text that combines Type0 fonts with non-default horizontal scaling and non-zero spacing (ISO 32000-1 §9.4.4).
+- **Renderer: horizontal Type0/CID glyph advance now applies `Tc`/`Tw`** (#734) — `SkiaRenderer.RenderCidBytes` advanced the horizontal text matrix by summed `/W` glyph widths only, never adding character spacing (`Tc`) or word spacing (`Tw`, single-byte code 32 only per §9.3.3), unlike the simple-font path and the #515 vertical Type0 path, which both already applied them.
+- **Redaction on a multi-run line no longer shifts the kept text** (#758) — when `GlyphRemover` removed a text-showing operator from a multi-run `BT` block, it dropped that operator's pen advance, so kept runs after the redaction on the same line shifted left.
+- **Deterministic real-number formatting in the PDF writer** (#762) — every real-number emit site (content-stream operands in `ContentStreamWriter`, object serialization in `PdfObjectWriter`, `ContentOperator.ToString`) now formats through a shared `PdfNumberFormatter`: invariant culture, at most six decimal places, trailing zeros trimmed, never exponent notation.
+- **CID glyph-selection matrix: deterministic handling of missing maps** (#515, final slice) — the renderer's CID→GID resolution for Type0 fonts now handles every cell of the matrix the way the reference renderers do, each behavior verified empirically against poppler/Ghostscript (and mutool where it has CMap resources) rather than assumed: instead of falling through to identity — which indexed the CFF's unrelated glyph order with the CID and **drew an arbitrary wrong glyph**.
 
 ### Added
-- **Right-to-left text selection in the viewer** (#373) — selecting a line that
-  contains Arabic/Hebrew now copies the text in logical reading order (the way
-  it is read) rather than the visual order it is painted in, reusing the same
-  bidi ordering the extractor already applies (#632) instead of a second bidi
-  pass. The on-screen highlight still follows visual order, so each glyph
-  rectangle — including within an RTL run — is drawn where the user sees it. A
-  bounded multi-column improvement also keeps a column-local drag from vacuuming
-  up an adjacent column that shares a Y-band; full multi-column and CJK
-  selection correctness remain deferred (#774).
-- **Visible signature appearance** (#623, last remaining bullet) — a signed
-  signature field whose widget `/Rect` has non-zero area now gets a baked
-  `/AP /N` appearance stream (`SignatureAppearanceAuthoring` in
-  `Excise.Core`, mirroring the annotation-authoring baked-appearance pattern
-  from #626): a bordered box with "Digitally signed by {name}", the signing
-  date, and any `/Reason`/`/Location` the caller supplied. `SignFile`/
-  `SignDocument` wire this in automatically after the field is signed, and it
-  touches only the widget's appearance — the CMS/ByteRange machinery is
-  unchanged. A zero-size (or absent) `/Rect` — the default for a
-  freshly-authored field — stays untouched: invisible signatures remain
-  fully valid, as before. Verified with an independent renderer (mutool) so
-  excise is not its own oracle for whether a third-party viewer actually
-  draws the appearance.
-- **Tagged-PDF structure accessibility layer** (#631) — the Avalonia viewer's
-  automation peer tree now exposes the tagged-PDF structure tree to screen
-  readers: the page's accessible text is ordered by the structure tree when a
-  tagged document supplies orderable `/ActualText` (falling back to geometric
-  reading order otherwise), structure elements are surfaced as role peers
-  (headings H1–H6, lists and list items, tables/rows/cells; figures continue
-  to come through as `/Alt` image peers), and `H` / `Shift+H` navigate to the
-  next/previous heading across page boundaries. Reading a heading's body glyphs
-  in struct order still awaits MCID-to-letter mapping from Excise.Core (a
-  follow-up slice of #631); untagged reading-order heuristics (#773) and
-  PDF/UA conformance validation (#772) are out of scope.
-- **Remaining #626 annotation subtypes: markup, shapes, stamps, edit/reply**
-  (#626) — `PdfAnnotationAuthoring` now covers the rest of ISO 32000-2
-  §12.5.6's programmatic authoring surface, each with a baked, self-contained
-  `/AP /N` appearance stream so third-party viewers render the same pixels
-  (excise cannot be its own oracle for this — see below):
-  - **Text markup**: `AddUnderlineAnnotation`, `AddStrikeOutAnnotation`,
-    `AddSquigglyAnnotation` (§12.5.6.10) mirror `AddHighlightAnnotation`'s
-    single-quad shape but bake a stroked line/zig-zag appearance, since
-    (unlike Highlight) most viewers do not synthesize one for these subtypes.
-  - **Line/Arrow/Polygon/PolyLine** (§12.5.6.7, §12.5.6.9): `AddLineAnnotation`
-    and `AddArrowAnnotation` write `/L` plus `/LE` line-endings (`None`,
-    `OpenArrow`, `ClosedArrow`) with a matching baked triangular arrowhead;
-    `AddPolygonAnnotation` (closed, optional `/IC` fill) and
-    `AddPolyLineAnnotation` (always open, stroke-only) write `/Vertices`.
-  - **Stamp** (§12.5.6.12): `AddStampAnnotation` renders one of the 15
-    standard rubber-stamp names (`PdfAnnotationAuthoring.StandardStampNames`)
-    as a bordered, colored, bold-labeled box — excise has no bundled Acrobat
-    icon artwork, so this trades exact icon fidelity for guaranteed
-    cross-viewer pixel identity. `AddImageStampAnnotation` embeds a
-    caller-supplied raw RGB24 image as an uncompressed DeviceRGB Image
-    XObject for a custom/logo stamp, with no dependency on a JPEG/PNG codec.
-  - **Edit and delete**: `SetAnnotationContents`, `SetAnnotationColor`,
-    `SetAnnotationOpacity` mutate `/Contents`, `/C`, `/CA` on an existing
-    annotation in place (refreshing `/M`); `RemoveAnnotation` detaches an
-    annotation from a page's `/Annots` array.
-  - **Reply threads** (§12.5.6.2): `SetReplyTo` sets `/IRT` (an indirect
-    reference to the parent annotation) and `/RT` (`R` or `Group`).
-  - `XfdfSerializer`/`FdfSerializer` gained a `stamp`/`Stamp` import case
-    (previously exported but not re-importable) and now carry `/IC` through
-    generic Polygon imports (a pre-existing round-trip gap this work
-    surfaced); every new subtype round-trips position, color, `/T` author,
-    `/Contents` and `/CA` opacity through both formats.
-  - Verified with an independent-renderer gate, not excise reading its own
-    output: mutool and pdftocairo render every new appearance stream
-    (ink-region assertions on the saved file), and a third test confirms
-    excise's own `SkiaRenderer` agrees with mutool on the same pixels
-    (`Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs`).
-- **FDF annotation import/export round-trip** (#626) — `Excise.Core.Forms.FdfSerializer`
-  reads and writes the PDF-syntax `/FDF` annotation interchange format (the
-  counterpart to XFDF), so annotations round-trip with tools that prefer FDF.
-- **DeviceCMYK overprint rendering** (#634) — the renderer now honours `/OP`,
-  `/op`, and `/OPM` overprint state for DeviceCMYK fills and strokes (ISO
-  32000-1 §8.6.7): with overprint on, a zero colorant no longer knocks out the
-  underlying separation. Conservatively scoped to literal DeviceCMYK
-  (Separation/DeviceN tracked under #634); verified against Ghostscript's
-  `-dOverprint=/simulate` oracle on the Ghent GWG overprint fixtures, with the
-  OPM-0 trap patch confirmed unchanged (no over-application).
-- **Screen readers announce tagged-PDF `/ActualText`** (#631) — replacement
-  text (`/ActualText`, ISO 32000-2 §14.9.4) is exposed to assistive technology
-  through the viewer's automation tree, so hyphenation rejoins, ligature/symbol
-  substitutions, and pages where glyph extraction fails are read correctly.
-  De-duplicated against the page-text so content is never announced twice.
-- **XFDF annotation import/export round-trip** (#626, final headline slice) —
-  `Excise.Core.Forms.XfdfSerializer` speaks Adobe XFDF 3.0, the interchange
-  dialect behind Acrobat/Foxit "Export comments as data file" review
-  workflows. `ExportAnnotations` serializes every markup/geometry subtype the
-  reader surfaces (text, freetext, line, square, circle, polygon, polyline,
-  highlight, underline, squiggly, strikeout, stamp, caret, ink, watermark,
-  redact) with the spec's attributes — page, rect, `#RRGGBB` color,
-  interior-color, flags, name/title/subject, PDF-format dates, opacity,
-  border width/style/dashes — and subtype geometry (raw 8-number `coords`
-  quads, line `start`/`end`, `vertices`, `inklist`/`gesture` strokes,
-  freetext `justification` + `defaultappearance`). `ImportAnnotations` adds
-  the described annotations to a document: subtypes with an authoring method
-  are created through `PdfAnnotationAuthoring` so they carry baked `/AP`
-  appearance streams; text-markup/line/polygon/polyline/caret become
-  spec-correct dictionaries; XFDF identity (name, dates, flags, subject,
-  opacity) overrides authoring defaults so a round-trip preserves it, and
-  unimportable elements are reported in `XfdfImportResult.Skipped` rather
-  than failing the import. Round-trip is the proof: authored annotations
-  export → re-import into a fresh document and match on subtype, rect,
-  geometry, color, contents, author and `/NM`; the interop gate parses a
-  spec-derived Acrobat-dialect fixture (multi-quad `coords`,
-  `contents-richtext`, `f`/`ids` elements, timezone dates) — not
-  excise-as-oracle. Widget form data (`<fields>`) and the PDF-syntax FDF
-  container remain out of scope.
-- **Apply self-signed PDF signatures — PKCS#7/CMS detached** (#623, first
-  slice) — `SignatureApplicationService` signs a document with a self-signed
-  or locally-held certificate: `/Sig` dictionary (`/Filter /Adobe.PPKLite`,
-  `/SubFilter /adbe.pkcs7.detached`), correct two-pass `/ByteRange` (a
-  fixed-capacity zero-filled `/Contents` hex hole plus a fixed-width
-  ByteRange placeholder patched in place after serialization, so no byte
-  offset shifts), and a BouncyCastle detached CMS SignedData backfilled into
-  the hole. `SigningCertificateFactory` generates an in-process self-signed
-  RSA-2048 identity or loads a PKCS#12 from disk — no CA account, no paid
-  service, no network, per the issue's deliberate constraint. Signing an
-  already-authored empty signature field is supported; signing a document
-  that already carries a signature is refused (excise saves are full
-  rewrites, which would silently invalidate it). Round-trip proven against
-  the independent #466 verifier (valid + byte-exact ByteRange coverage,
-  tamper ⇒ Invalid, self-signed ⇒ ValidUntrusted, pinned anchor ⇒
-  ValidTrusted) and against poppler `pdfsig` as an out-of-repo oracle
-  ("Signature is Valid / Total document signed / Certificate issuer is
-  unknown"). Still open on #623: visible signature appearance, GUI/CLI
-  surface, and multi-signature incremental-update saves.
-- **Ink (freehand) annotation authoring** (#626) — `AddInkAnnotation` writes
-  ISO 32000-2 §12.5.6.13 ink annotations from one or more polylines:
-  `/InkList` (one inner array of x/y pairs per stroke), `/Rect` (the bounding
-  box of every point, padded by half the pen width), stroke color (`/C`) and
-  pen width (`/BS`) — plus a baked, self-contained `/AP /N` appearance stream
-  that strokes each polyline with round caps and joins, so the drawing
-  renders identically in excise, Acrobat, mutool, and pdftocairo (verified by
-  independent-renderer differential tests). Surfaced in the app as
-  `AnnotationWorkflowService.AddInk`.
-- **FreeText annotation authoring** (#626) — `AddFreeTextAnnotation` writes
-  ISO 32000-2 §12.5.6.6 text-box annotations: `/Contents`, a `/DA` default
-  appearance string (color + base-14 Helvetica + size), `/Q` quadding
-  (left/center/right via the new `PdfFreeTextQuadding` enum), optional border
-  (`/BS`) and background fill (`/C`) — plus a baked, self-contained `/AP /N`
-  appearance stream that draws the text (word-wrapped with real Helvetica
-  advance widths, quadding-aware) so the box renders identically in excise,
-  Acrobat, mutool, and pdftocairo (verified by independent-renderer
-  differential tests). Surfaced in the app as
-  `AnnotationWorkflowService.AddFreeText`.
-- **Signature trust-chain validation and consolidated result states** (#466) —
-  signature verification now evaluates the signer certificate chain (OS trust
-  store by default; an explicit trust-anchor policy is injectable) in addition
-  to the existing ByteRange/CMS checks, and reports a consolidated state:
-  valid+trusted, valid-but-untrusted, invalid (modified after signing / broken
-  signature), or indeterminate (could not verify). Trust is additional to
-  cryptographic validity, never a replacement: the "trusted" state is
-  unreachable unless the signature is also cryptographically valid over the
-  correct byte range, and the summary text can only claim a trusted signer in
-  that state. Signing time is now extracted from the CMS signed attributes.
-  Certificate revocation (CRL/OCSP) remains deliberately unchecked (offline by
-  design) and is stated in the summary.
-- **Square and Circle annotation authoring** (#626, first slice of #271) —
-  `AddSquareAnnotation` / `AddCircleAnnotation` write ISO 32000-2 §12.5.6.8
-  shape annotations with border color (`/C`), optional interior fill (`/IC`),
-  border width (`/BS`), and — unlike the earlier sticky-note/highlight
-  authoring — a baked normal appearance stream (`/AP /N`), so the authored
-  shape renders identically in excise, Acrobat, mutool, and pdftocairo
-  (verified by independent-renderer differential tests).
-- **Complete predefined CJK CMap coverage — the full PDF 32000 Table 118 set**
-  (#515) — 50 more registered encoding CMaps ship embedded (Adobe
-  cmap-resources, BSD-3), covering every predefined name a conforming reader
-  must support: the legacy national encodings (GBK-EUC, GB-EUC, GBpc-EUC,
-  GBK2K, Big5 `B5pc`/`ETen`/`ETenms`/`HKscs`, CNS-EUC, EUC-JP, the RKSJ
-  Shift-JIS family, ISO-2022 `H`/`V`, KSC-EUC, KSCms-UHC, KSCpc-EUC) and the
-  PDF 1.5+ `Uni*-UTF16` encodings including Adobe-KR's `UniAKR-UTF16-H`
-  (ISO 32000-2). Previously only the `Uni*-UCS2` and `90ms-RKSJ` CMaps
-  shipped; a Type0 font using any other predefined name fell through to the
-  2-byte identity fallback — bytes misread as CIDs, extraction garbled, and
-  `RedactText` **silently unable to match** the text (extraction coverage
-  bounds redaction, CLAUDE.md limitation #1). UTF-16 surrogate-pair
-  codespaces decode as single 4-byte codes and re-encode byte-exactly through
-  redaction, so plane-2 CJK survives a round trip. Vertical writing is now
-  detected from each CMap's own parsed `/WMode` rather than the `-V` name
-  suffix, which the one-letter vertical CMap `V` does not carry.
-- **Type 3 d0/d1 glyph metrics and d1 bounding-box clipping** (#514) — the
-  renderer now honors the metrics a Type 3 CharProc declares: when the font
-  has no `/Widths` entry covering a code, the advance falls back to the `wx`
-  operand of the glyph's leading `d0`/`d1` operator (`/Widths` still overrides
-  an inconsistent `wx`, per §9.6.5); glyph-space advances map through
-  `/FontMatrix` as a displacement vector, so rotated matrices no longer drift
-  glyphs apart by a bogus 1/1000 scale; and the glyph bounding box declared by
-  `d1` clips the glyph description (an all-zero box declares no bounds).
-  A stray `d0`/`d1` in an ordinary content stream is now ignored instead of
-  colour-locking the rest of the page. Corroborated against live pdftocairo
-  and Ghostscript renders of generated fixtures.
-- **Vertical writing mode for Type0/CID fonts** (#515) — the `/W2` and `/DW2`
-  vertical metric tables (PDF §9.7.4.3) are now parsed and honored across the
-  extractor, the redaction content-stream parser, and the renderer. Vertical
-  (`/Identity-V`, registered `-V` CMaps, or embedded CMap streams declaring
-  `/WMode 1`) text now advances DOWN the page by the per-CID vertical
-  displacement (previously: up, by the horizontal width), glyphs are placed
-  via the `/W2` position vector (default centered, `v = (w0/2, 880)`), TJ
-  adjustments move the vertical coordinate, and `Tz` horizontal scaling no
-  longer applies vertically. Letter bounding boxes follow, so area redaction
-  and `RedactText` target the correct region on vertical text (verified by a
-  vertical redaction round-trip test with carrier-agnostic saved-bytes
-  assertions, plus live pdftocairo/Ghostscript render differentials).
+- **Right-to-left text selection in the viewer** (#373) — selecting a line that contains Arabic/Hebrew now copies the text in logical reading order (the way it is read) rather than the visual order it is painted in, reusing the same bidi ordering the extractor already applies (#632) instead of a second bidi pass.
+- **Visible signature appearance** (#623, last remaining bullet) — a signed signature field whose widget `/Rect` has non-zero area now gets a baked `/AP /N` appearance stream (`SignatureAppearanceAuthoring` in `Excise.Core`, mirroring the annotation-authoring baked-appearance pattern from #626): a bordered box with "Digitally signed by {name}", the signing date, and any `/Reason`/`/Location` the caller supplied.
+- **Tagged-PDF structure accessibility layer** (#631) — the Avalonia viewer's automation peer tree now exposes the tagged-PDF structure tree to screen readers: the page's accessible text is ordered by the structure tree when a tagged document supplies orderable `/ActualText` (falling back to geometric reading order otherwise), structure elements are surfaced as role peers (headings H1–H6, lists and list items, tables/rows/cells; figures continue to come through as `/Alt` image peers), and `H` / `Shift+H` navigate to the next/previous heading across page boundaries.
+- **Remaining #626 annotation subtypes: markup, shapes, stamps, edit/reply** (#626) — `PdfAnnotationAuthoring` now covers the rest of ISO 32000-2 §12.5.6's programmatic authoring surface, each with a baked, self-contained `/AP /N` appearance stream so third-party viewers render the same pixels (excise cannot be its own oracle for this — see below): `AddSquigglyAnnotation` (§12.5.6.10) mirror `AddHighlightAnnotation`'s single-quad shape but bake a stroked line/zig-zag appearance, since (unlike Highlight) most viewers do not synthesize one for these subtypes.
+- **FDF annotation import/export round-trip** (#626) — `Excise.Core.Forms.FdfSerializer` reads and writes the PDF-syntax `/FDF` annotation interchange format (the counterpart to XFDF), so annotations round-trip with tools that prefer FDF.
+- **DeviceCMYK overprint rendering** (#634) — the renderer now honours `/OP`, `/op`, and `/OPM` overprint state for DeviceCMYK fills and strokes (ISO 32000-1 §8.6.7): with overprint on, a zero colorant no longer knocks out the underlying separation.
+- **Screen readers announce tagged-PDF `/ActualText`** (#631) — replacement text (`/ActualText`, ISO 32000-2 §14.9.4) is exposed to assistive technology through the viewer's automation tree, so hyphenation rejoins, ligature/symbol substitutions, and pages where glyph extraction fails are read correctly.
+- **XFDF annotation import/export round-trip** (#626, final headline slice) — `Excise.Core.Forms.XfdfSerializer` speaks Adobe XFDF 3.0, the interchange dialect behind Acrobat/Foxit "Export comments as data file" review workflows.
+- **Apply self-signed PDF signatures — PKCS#7/CMS detached** (#623, first slice) — `SignatureApplicationService` signs a document with a self-signed or locally-held certificate: `/Sig` dictionary (`/Filter /Adobe.PPKLite`, `/SubFilter /adbe.pkcs7.detached`), correct two-pass `/ByteRange` (a fixed-capacity zero-filled `/Contents` hex hole plus a fixed-width ByteRange placeholder patched in place after serialization, so no byte offset shifts), and a BouncyCastle detached CMS SignedData backfilled into the hole.
+- **Ink (freehand) annotation authoring** (#626) — `AddInkAnnotation` writes ISO 32000-2 §12.5.6.13 ink annotations from one or more polylines: `/InkList` (one inner array of x/y pairs per stroke), `/Rect` (the bounding box of every point, padded by half the pen width), stroke color (`/C`) and pen width (`/BS`) — plus a baked, self-contained `/AP /N` appearance stream that strokes each polyline with round caps and joins, so the drawing renders identically in excise, Acrobat, mutool, and pdftocairo (verified by independent-renderer differential tests).
+- **FreeText annotation authoring** (#626) — `AddFreeTextAnnotation` writes ISO 32000-2 §12.5.6.6 text-box annotations: `/Contents`, a `/DA` default appearance string (color + base-14 Helvetica + size), `/Q` quadding (left/center/right via the new `PdfFreeTextQuadding` enum), optional border (`/BS`) and background fill (`/C`) — plus a baked, self-contained `/AP /N` appearance stream that draws the text (word-wrapped with real Helvetica advance widths, quadding-aware) so the box renders identically in excise, Acrobat, mutool, and pdftocairo (verified by independent-renderer differential tests).
+- **Signature trust-chain validation and consolidated result states** (#466) — signature verification now evaluates the signer certificate chain (OS trust store by default; an explicit trust-anchor policy is injectable) in addition to the existing ByteRange/CMS checks, and reports a consolidated state: valid+trusted, valid-but-untrusted, invalid (modified after signing / broken signature), or indeterminate (could not verify).
+- **Square and Circle annotation authoring** (#626, first slice of #271) — `AddSquareAnnotation` / `AddCircleAnnotation` write ISO 32000-2 §12.5.6.8 shape annotations with border color (`/C`), optional interior fill (`/IC`), border width (`/BS`), and — unlike the earlier sticky-note/highlight authoring — a baked normal appearance stream (`/AP /N`), so the authored shape renders identically in excise, Acrobat, mutool, and pdftocairo (verified by independent-renderer differential tests).
+- **Complete predefined CJK CMap coverage — the full PDF 32000 Table 118 set** (#515) — 50 more registered encoding CMaps ship embedded (Adobe cmap-resources, BSD-3), covering every predefined name a conforming reader must support: the legacy national encodings (GBK-EUC, GB-EUC, GBpc-EUC, GBK2K, Big5 `B5pc`/`ETen`/`ETenms`/`HKscs`, CNS-EUC, EUC-JP, the RKSJ Shift-JIS family, ISO-2022 `H`/`V`, KSC-EUC, KSCms-UHC, KSCpc-EUC) and the PDF 1.5+ `Uni*-UTF16` encodings including Adobe-KR's `UniAKR-UTF16-H` (ISO 32000-2).
+- **Type 3 d0/d1 glyph metrics and d1 bounding-box clipping** (#514) — the renderer now honors the metrics a Type 3 CharProc declares: when the font has no `/Widths` entry covering a code, the advance falls back to the `wx` operand of the glyph's leading `d0`/`d1` operator (`/Widths` still overrides an inconsistent `wx`, per §9.6.5); glyph-space advances map through `/FontMatrix` as a displacement vector, so rotated matrices no longer drift glyphs apart by a bogus 1/1000 scale; and the glyph bounding box declared by `d1` clips the glyph description (an all-zero box declares no bounds).
+- **Vertical writing mode for Type0/CID fonts** (#515) — the `/W2` and `/DW2` vertical metric tables (PDF §9.7.4.3) are now parsed and honored across the extractor, the redaction content-stream parser, and the renderer.
 
 ### Fixed
-- **Word spacing (`Tw`) no longer fires on 2-byte character code `<0020>`**
-  in CID fonts — per §9.3.3 it applies only to the single-byte code 32
-  (e.g. 90ms-RKSJ's 1-byte space still gets it).
-- **CID width tables are parsed by one shared, hardened parser**
-  (`CidFontWidths`) instead of three divergent `/W` walks: indirect
-  references are resolved at every level, junk tokens are skipped, reversed
-  ranges are dropped, and hostile ranges like `[0 999999999 500]` are clamped
-  to the valid CID space instead of allocating billions of entries.
+- **Word spacing (`Tw`) no longer fires on 2-byte character code `<0020>`** in CID fonts — per §9.3.3 it applies only to the single-byte code 32 (e.g. 90ms-RKSJ's 1-byte space still gets it).
+- **CID width tables are parsed by one shared, hardened parser** (`CidFontWidths`) instead of three divergent `/W` walks: indirect references are resolved at every level, junk tokens are skipped, reversed ranges are dropped, and hostile ranges like `[0 999999999 500]` are clamped to the valid CID space instead of allocating billions of entries.
 
 ## [3.2.1] - 2026-07-24
 
@@ -3243,102 +589,28 @@ failures** (the tool reported success and left the word in the file). CJK text
 now extracts *and* renders, and page content is exposed to screen readers.
 
 ### Fixed — silent redaction failures (search/redaction now matches however text is stored)
-- **Right-to-left text is matched in logical order** (#632) — Arabic/Hebrew
-  stored in visual order (the common single-`Tj` encoding) extracted reversed,
-  so `RedactText` matched 0 and reported success. Now reversed at the source
-  (`BidiReorderer`) for `page.Text`, search, and redaction.
-- **Arabic presentation forms fold to base letters for matching** (#632) — a
-  base-letter search now matches text stored as shaped forms / lam-alef
-  ligatures (U+FB50–FDFF, U+FE70–FEFF).
-- **Latin ligatures fold for matching** (#722) — a search for "office"/"final"
-  now matches text stored with `ﬃ`/`ﬁ` (U+FB00–FB06).
-- **Canonical (NFC) accents match** (#724) — precomposed "café" and decomposed
-  `cafe`+U+0301 now match.
-- **Arabic harakat / Hebrew niqqud are matched insensitively** (#725) — a
-  bare-letter needle finds vocalized/pointed text.
-- **Invisible separators no longer break matching** (#726) — soft hyphen
-  (U+00AD), zero-width characters, and non-breaking spaces.
-- **Fullwidth ↔ halfwidth forms match** (#727) — a keyboard "ABC"/"123" finds
-  `ＡＢＣ`/`１２３` and halfwidth katakana.
-  (All folds are matching-only via `MatchingNormalization`; extraction stays
-  raw so glyph-level removal still targets the original glyphs.)
+- **Right-to-left text is matched in logical order** (#632) — Arabic/Hebrew stored in visual order (the common single-`Tj` encoding) extracted reversed, so `RedactText` matched 0 and reported success.
+- **Arabic presentation forms fold to base letters for matching** (#632) — a base-letter search now matches text stored as shaped forms / lam-alef ligatures (U+FB50–FDFF, U+FE70–FEFF).
+- **Latin ligatures fold for matching** (#722) — a search for "office"/"final" now matches text stored with `ﬃ`/`ﬁ` (U+FB00–FB06).
+- **Canonical (NFC) accents match** (#724) — precomposed "café" and decomposed `cafe`+U+0301 now match.
+- **Arabic harakat / Hebrew niqqud are matched insensitively** (#725) — a bare-letter needle finds vocalized/pointed text.
+- **Invisible separators no longer break matching** (#726) — soft hyphen (U+00AD), zero-width characters, and non-breaking spaces.
+- **Fullwidth ↔ halfwidth forms match** (#727) — a keyboard "ABC"/"123" finds `ＡＢＣ`/`１２３` and halfwidth katakana.
 
 ### Added
-- **Text extraction for Type0 CJK / CID fonts** (#715, #515) — `/ToUnicode`
-  `/Identity-H|V` (name form), non-embedded Identity-H CID fonts via the
-  standard Macintosh glyph order (#532), and embedded fonts via reverse-cmap
-  GID→Unicode now decode correctly instead of garbling (which previously made
-  `RedactText` silently fail on CJK).
-- **Registered (predefined) CJK CMap support in text extraction and
-  redaction** (#515 slice 2; the CJK half of #715) — a Type0 font whose
-  `/Encoding` is a registered CMap NAME (`/UniGB-UCS2-H`, `/UniCNS-UCS2-H`,
-  `/UniJIS-UCS2-H`, `/UniKS-UCS2-H`, `/90ms-RKSJ-H`, and their vertical `-V`
-  variants) now decodes code→CID through the actual Adobe CMap data, and —
-  when there is no embedded `/ToUnicode` — CID→Unicode through the
-  `Adobe-<Ordering>-UCS2` CMap selected from the descendant's
-  `/CIDSystemInfo` (PDF §9.10.2 method (b)). The ordering path also fires
-  for `Identity-H/V` fonts whose CIDSystemInfo names a known ordering, and
-  for a registered-CMap-name `/ToUnicode` (#715). Mixed 1/2-byte codespaces
-  (Shift-JIS) segment per the CMap's codespace ranges instead of a fixed
-  2-byte stride, and `/W` width lookups are now CID-keyed under these
-  encodings. Previously such text extracted as garbage, which made
-  `RedactText` silently fail on it (CLAUDE.md limitation #1). The CMap data
-  (15 files, ~750KB gzipped) is embedded from Adobe's cmap-resources /
-  mapping-resources-pdf repositories (BSD-3-Clause, see
-  `Excise.Core/Resources/CMaps/LICENSE.md`).
+- **Text extraction for Type0 CJK / CID fonts** (#715, #515) — `/ToUnicode` `/Identity-H|V` (name form), non-embedded Identity-H CID fonts via the standard Macintosh glyph order (#532), and embedded fonts via reverse-cmap GID→Unicode now decode correctly instead of garbling (which previously made `RedactText` silently fail on CJK).
+- **Registered (predefined) CJK CMap support in text extraction and redaction** (#515 slice 2; the CJK half of #715) — a Type0 font whose `/Encoding` is a registered CMap NAME (`/UniGB-UCS2-H`, `/UniCNS-UCS2-H`, `/UniJIS-UCS2-H`, `/UniKS-UCS2-H`, `/90ms-RKSJ-H`, and their vertical `-V` variants) now decodes code→CID through the actual Adobe CMap data, and — when there is no embedded `/ToUnicode` — CID→Unicode through the `Adobe-<Ordering>-UCS2` CMap selected from the descendant's `/CIDSystemInfo` (PDF §9.10.2 method (b)).
 
 ### Fixed
-- **Renderer now selects glyphs through registered CMap names** (#515
-  renderer slice) — `SkiaRenderer`'s Type0 path only honored an embedded
-  `/Encoding` CMap *stream*; a registered CMap NAME fell through to
-  identity decoding, so 2-byte character codes were misread as CIDs and
-  CJK pages rendered as .notdef tofu even though extraction (above) read
-  them fine. Glyph selection now loads the same predefined Adobe CMap for
-  code→CID; unknown names keep the identity fallback, and Identity-H/V and
-  embedded-stream behavior is unchanged. Verified against pdftocairo and
-  Ghostscript (`RegisteredCMapRenderingTests`, 2%-differing-pixel gate).
-- **Content-stream parser no longer mangles multi-byte text operands**
-  (#515) — `ContentStreamParser` round-tripped `Tj`/`TJ` string operands
-  through `PdfString.Value`'s document-string decode heuristics and Latin-1,
-  clamping any byte the heuristic mapped above U+00FF to `?`. It now reads
-  the raw font-encoded bytes. This is what let glyph-level redaction match
-  CJK operator text against extracted letters instead of degrading to
-  whole-operator removal.
-- **Text no longer renders heavier than reference renderers** (#710, root
-  cause of #584) — fill-mode text was rasterized through `SKCanvas.DrawText`,
-  whose glyph masks come from the platform scaler (CoreText on macOS, hinted
-  FreeType on Linux, DirectWrite on Windows); on macOS that added ~+0.45px of
-  width to every stem at body-text sizes (~17% more ink on an identical
-  embedded Type 1C outline vs mutool/pdftocairo). Text fills now draw the
-  glyph outline path through Skia's own analytic scan converter — exact area
-  coverage, platform-independent, within ~0.1% ink of mutool on the same
-  outline — with a DrawText fallback for bitmap-only faces (color emoji).
-  Gated by `TextRasterInkParityTests` against mutool on an embedded-CFF
-  fixture.
-- **Raw Type 1 (`/FontFile`) text keeps the platform glyph-mask fill**
-  (#710 regression fix) — the outline-path fill above made embedded raw
-  Type 1 faces render *worse* against the references (highlights.pdf p5,
-  URW Nimbus Roman: DifferingPixelFraction vs mutool 0.00067 → 0.0152),
-  because the platform's raw-Type1 raster path never applied the CFF
-  stem darkening the outline fill was fixing — DrawText already matched
-  mutool almost exactly there. Outline fill is now scoped to embedded
-  CFF/Type1C, TrueType, OpenType, and system-substituted faces
-  (`ResolvedRenderFont.HasRawType1Program` gate in
-  `FillTextUsingGlyphPath`); both directions are test-gated
-  (`PdfJsFontFallbackDifferentialTests` + `TextRasterInkParityTests`).
-- **Type 3 uncolored-glyph (d1) colour semantics** (#514) — a d1 CharProc's
-  own colour operators are now ignored so the glyph paints in the text
-  object's fill colour, per ISO 32000-1 §9.6.5.
+- **Renderer now selects glyphs through registered CMap names** (#515 renderer slice) — `SkiaRenderer`'s Type0 path only honored an embedded `/Encoding` CMap *stream*; a registered CMap NAME fell through to identity decoding, so 2-byte character codes were misread as CIDs and CJK pages rendered as .notdef tofu even though extraction (above) read them fine.
+- **Content-stream parser no longer mangles multi-byte text operands** (#515) — `ContentStreamParser` round-tripped `Tj`/`TJ` string operands through `PdfString.Value`'s document-string decode heuristics and Latin-1, clamping any byte the heuristic mapped above U+00FF to `?`.
+- **Text no longer renders heavier than reference renderers** (#710, root cause of #584) — fill-mode text was rasterized through `SKCanvas.DrawText`, whose glyph masks come from the platform scaler (CoreText on macOS, hinted FreeType on Linux, DirectWrite on Windows); on macOS that added ~+0.45px of width to every stem at body-text sizes (~17% more ink on an identical embedded Type 1C outline vs mutool/pdftocairo).
+- **Raw Type 1 (`/FontFile`) text keeps the platform glyph-mask fill** (#710 regression fix) — the outline-path fill above made embedded raw Type 1 faces render *worse* against the references (highlights.pdf p5, URW Nimbus Roman: DifferingPixelFraction vs mutool 0.00067 → 0.0152), because the platform's raw-Type1 raster path never applied the CFF stem darkening the outline fill was fixing — DrawText already matched mutool almost exactly there.
+- **Type 3 uncolored-glyph (d1) colour semantics** (#514) — a d1 CharProc's own colour operators are now ignored so the glyph paints in the text object's fill colour, per ISO 32000-1 §9.6.5.
 
 ### Added
-- **PDF page text is exposed to the platform accessibility tree** (#631,
-  first slice) — a screen reader entering the viewer now reaches the current
-  page's text in reading order (via a `PdfViewerAutomationPeer`), updating on
-  page navigation and content changes. Struct-tree reading order and PDF/UA
-  validation remain follow-ups.
-- **Direct per-font-class rendering test matrix** (#512) — embedded
-  TrueType/CFF/OpenType, base-14, encoding, render-mode, and Type0/CID paths
-  are now covered by focused render tests independent of complex corpus PDFs.
+- **PDF page text is exposed to the platform accessibility tree** (#631, first slice) — a screen reader entering the viewer now reaches the current page's text in reading order (via a `PdfViewerAutomationPeer`), updating on page navigation and content changes.
+- **Direct per-font-class rendering test matrix** (#512) — embedded TrueType/CFF/OpenType, base-14, encoding, render-mode, and Type0/CID paths are now covered by focused render tests independent of complex corpus PDFs.
 
 ## [3.2.0] - 2026-07-22
 
@@ -3348,52 +620,22 @@ and saved editing output (typewriter, forms) is now verified against
 independent reference renderers.
 
 ### Fixed
-- **Continuous viewport anchoring across zoom** (#700) — zooming in the
-  continuous viewer now keeps the page under the viewport centre in place and
-  the page-number label live, instead of jumping to the top and freezing the
-  label. The current page and intra-page fraction are captured before the
-  re-layout and restored through a permanent scroll-extent subscription.
-- **View-mode switch visual continuity** (#693) — switching between
-  single-page and continuous modes carries the reading position over and uses
-  a unified display scale, so text no longer jumps or changes size across the
-  switch.
-- **Duplicate class-handler registration** (#700) — viewer input class handlers
-  were registered in the instance constructor, so every constructed viewer
-  added another static handler (N-plicated event dispatch, a source of
-  UI-test flakiness). Moved to the static constructor.
-- **Packaged/AOT startup crash** (#593) — `FluentAvaloniaTheme`'s compiled-XAML
-  constructor hard-references the DataGrid themes at startup; an over-eager
-  assembly trim broke app launch in the published bundle. DataGrid is restored
-  and guarded by `AppThemeCanaryTests` asserting on the app's build output.
+- **Continuous viewport anchoring across zoom** (#700) — zooming in the continuous viewer now keeps the page under the viewport centre in place and the page-number label live, instead of jumping to the top and freezing the label.
+- **View-mode switch visual continuity** (#693) — switching between single-page and continuous modes carries the reading position over and uses a unified display scale, so text no longer jumps or changes size across the switch.
+- **Duplicate class-handler registration** (#700) — viewer input class handlers were registered in the instance constructor, so every constructed viewer added another static handler (N-plicated event dispatch, a source of UI-test flakiness).
+- **Packaged/AOT startup crash** (#593) — `FluentAvaloniaTheme`'s compiled-XAML constructor hard-references the DataGrid themes at startup; an over-eager assembly trim broke app launch in the published bundle.
 
 ### Changed
-- **Native AOT publishes with zero warnings** (#593) — `ReactiveUI.Avalonia`
-  was dropped (the main-thread scheduler is vendored as
-  `RxSchedulers.MainThreadScheduler`; `RxApp` is gone in ReactiveUI 23), and
-  third-party AOT/IL warning roll-ups were eliminated at the source. The lone
-  survivor (CSJ2K `IL2104`, a terminal cctor assembly-scan) is narrowly
-  suppressed; unsuppressed AOT publish now reports 0 warnings.
-- **AOT support matrix documented** (#595) — `osx-arm64` is shipped and
-  validated by the AOT CI lane and `run-aot-smoke.sh`; `win-x64`, `linux-x64`,
-  and `osx-x64` are explicitly deferred with probe issues. Release notes and
-  docs must not claim AOT targets beyond this table.
+- **Native AOT publishes with zero warnings** (#593) — `ReactiveUI.Avalonia` was dropped (the main-thread scheduler is vendored as `RxSchedulers.MainThreadScheduler`; `RxApp` is gone in ReactiveUI 23), and third-party AOT/IL warning roll-ups were eliminated at the source.
+- **AOT support matrix documented** (#595) — `osx-arm64` is shipped and validated by the AOT CI lane and `run-aot-smoke.sh`; `win-x64`, `linux-x64`, and `osx-x64` are explicitly deferred with probe issues.
 
 ### Added
-- **Editing-output fidelity gates** (#610, #611) — typewriter and interactive
-  form saves are now verified against mutool/Ghostscript reference renders, so
-  regressions in what excise writes are caught by independent tools. Interactive
-  form saves are documented as `/NeedAppearances`-dependent (excise generates no
-  appearance stream on fill). Closes epic #605.
+- **Editing-output fidelity gates** (#610, #611) — typewriter and interactive form saves are now verified against mutool/Ghostscript reference renders, so regressions in what excise writes are caught by independent tools.
 
 ### CI / Infrastructure
-- **Windows veraPDF install fixed** (#666) — it had never actually run (a
-  pwsh-wrapped bash string expanded `$(find …)` as its own subexpression behind
-  `continue-on-error`); veraPDF setup failures are now explicit on all three OS
-  jobs, and veraPDF prints its version on Windows for the first time.
-- **Branch model** — `develop` is the default branch where work lands; `main`
-  is a stable release pointer that only ever advances to release tags.
-- Removed the never-configured Gemini workflows that reported red on every PR
-  (#699).
+- **Windows veraPDF install fixed** (#666) — it had never actually run (a pwsh-wrapped bash string expanded `$(find …)` as its own subexpression behind `continue-on-error`); veraPDF setup failures are now explicit on all three OS jobs, and veraPDF prints its version on Windows for the first time.
+- **Branch model** — `develop` is the default branch where work lands; `main` is a stable release pointer that only ever advances to release tags.
+- Removed the never-configured Gemini workflows that reported red on every PR (#699).
 
 ## [3.1.0] - 2026-07-20
 
@@ -3402,41 +644,21 @@ zoom, and two live-reproduced selection/zoom display bugs are root-caused and
 fixed with pixel-level regression batteries.
 
 ### Fixed
-- **Crisp text on HiDPI and when zoomed** (#682, #683) — both the continuous
-  and single-page viewers render at device-pixel resolution (zoom ×
-  device-pixel-ratio), re-rendering as you zoom instead of upscaling a 96-DPI
-  raster. Layout sizes, coordinates, and overlays are unchanged.
-- **Selection highlights no longer drift left** (#693) — overlay canvases are
-  pinned to the page image's origin; at narrow zooms the highlight previously
-  landed up to ~400 dips left of the selected text.
-- **Fit-after-selection display corruption** (#697) — pressing Fit in
-  select-text mode at HiDPI showed ~2× oversized text over blank space with
-  seemingly orphaned highlights. Root cause: Avalonia's `Image` mispaints any
-  bitmap stamped at a DPI other than 96 as a magnified top-left pixel crop
-  (pinned by `DpiStampedBitmapPaintProbeTests`). Single-page bitmaps are now
-  always 96-stamped, with the logical layout size carried explicitly.
-- **Quick-win batch** (#675, #674, #668, #665) — in-page links no longer
-  dispatch double click events; a flaky AES round-trip test stabilized;
-  skip-budget comment hygiene.
+- **Crisp text on HiDPI and when zoomed** (#682, #683) — both the continuous and single-page viewers render at device-pixel resolution (zoom × device-pixel-ratio), re-rendering as you zoom instead of upscaling a 96-DPI raster.
+- **Selection highlights no longer drift left** (#693) — overlay canvases are pinned to the page image's origin; at narrow zooms the highlight previously landed up to ~400 dips left of the selected text.
+- **Fit-after-selection display corruption** (#697) — pressing Fit in select-text mode at HiDPI showed ~2× oversized text over blank space with seemingly orphaned highlights.
+- **Quick-win batch** (#675, #674, #668, #665) — in-page links no longer dispatch double click events; a flaky AES round-trip test stabilized; skip-budget comment hygiene.
 
 ### Added
-- **Thumbnail viewport window** (#687–#690) — thumbnails are evicted,
-  prefetched, and pre-warmed around the visible window with a disk-cache trim,
-  keeping the sidebar responsive on large documents.
-- **Page-assembly permission enforcement on CLI merge/split** (#677) —
-  `/P` bit 11 now gates `excise merge`/`excise split`
-  (`DocumentAction.AssembleDocument`).
+- **Thumbnail viewport window** (#687–#690) — thumbnails are evicted, prefetched, and pre-warmed around the visible window with a disk-cache trim, keeping the sidebar responsive on large documents.
+- **Page-assembly permission enforcement on CLI merge/split** (#677) — `/P` bit 11 now gates `excise merge`/`excise split` (`DocumentAction.AssembleDocument`).
 - **Native AOT release lane for Excise.App** (#590), validated on osx-arm64.
 - Deterministic SVG→raster icon generation script (#679).
 
 ### Tests / infrastructure
-- Mode-switch display invariants across modes and device pixel ratios,
-  pixel-level displayed-text verification for mode buttons, and a
-  fit-after-selection live-repro battery (red-checked at dpr 2).
-- Project-authored test-data drift gate and the skip-budget self-test wired
-  into tier t0 (#678).
-- `EXCISE_TRACE_VIEWER=1` viewer-state probes (ViewMode/render plans/overlay
-  origins) used for the live #697 diagnosis.
+- Mode-switch display invariants across modes and device pixel ratios, pixel-level displayed-text verification for mode buttons, and a fit-after-selection live-repro battery (red-checked at dpr 2).
+- Project-authored test-data drift gate and the skip-budget self-test wired into tier t0 (#678).
+- `EXCISE_TRACE_VIEWER=1` viewer-state probes (ViewMode/render plans/overlay origins) used for the live #697 diagnosis.
 
 ## [3.0.0] - 2026-07-18
 
@@ -3451,32 +673,18 @@ documented in the (never-tagged) **[2.29.0]** (test-integrity gates) and
 Make Searchable GUI) sections below.
 
 ### Changed — BREAKING (why this is a major version)
-- **CLI command `pdfe` → `excise`.** `excise redact in.pdf out.pdf "secret"`,
-  `excise info`, `excise render`, … — same commands, same flags.
-- **Library namespaces / assemblies / NuGet ids `Pdfe.*` → `Excise.*`**:
-  `Excise.Core`, `Excise.Rendering`, `Excise.Avalonia`, `Excise.Ocr`,
-  `Excise.Cli`; the desktop app is `Excise.App`. Any code referencing the
-  old `Pdfe.*` types must update its `using` directives and package references.
-- **App identity**: window title, macOS bundle (`cl.skpt.excise`), and Linux
-  desktop id updated to Excise. Internal `PDFE_*` environment toggles are now
-  `EXCISE_*`.
-- **Repository** renamed `github.com/marctjones/pdfe` → `.../excise`
-  (old URLs redirect).
+- **CLI command `pdfe` → `excise`.** `excise redact in.pdf out.pdf "secret"`, `excise info`, `excise render`, … — same commands, same flags.
+- **Library namespaces / assemblies / NuGet ids `Pdfe.*` → `Excise.*`**: `Excise.Core`, `Excise.Rendering`, `Excise.Avalonia`, `Excise.Ocr`, `Excise.Cli`; the desktop app is `Excise.App`.
+- **App identity**: window title, macOS bundle (`cl.skpt.excise`), and Linux desktop id updated to Excise.
+- **Repository** renamed `github.com/marctjones/pdfe` → `.../excise` (old URLs redirect).
 
 ### Added
-- **New document-first app icon.** A PDF page with a cleanly *excised* line —
-  a see-through slot where text was, not a black bar hiding it — expressing the
-  product in one mark. Vector master plus a regenerated 16–256px raster set.
-- **First-class in-page links in continuous view** (#667) — click-to-follow and
-  hover affordance for internal/GoTo and URI link annotations while scrolling.
+- **New document-first app icon.** A PDF page with a cleanly *excised* line — a see-through slot where text was, not a black bar hiding it — expressing the product in one mark.
+- **First-class in-page links in continuous view** (#667) — click-to-follow and hover affordance for internal/GoTo and URI link annotations while scrolling.
 
 ### Notes
-- No engine behavior changed in the rename; the redaction, encryption, and
-  rendering pipelines are byte-for-byte the 2.30.0 code under new names.
-- The two blocking roadmap tracks — **Redaction Trust** and **Document
-  Security** — are complete and closed. Remaining work (fonts, performance/AOT,
-  interop, editing fidelity) is enhancement, tracked in the named-track
-  milestones.
+- No engine behavior changed in the rename; the redaction, encryption, and rendering pipelines are byte-for-byte the 2.30.0 code under new names.
+- The two blocking roadmap tracks — **Redaction Trust** and **Document Security** — are complete and closed.
 
 ## [2.30.0] - 2026-07-17
 
@@ -3493,147 +701,28 @@ Note: the `[2.29.0]` section below was documented on 2026-07-13 but never
 tagged — v2.30.0 is the first tagged release containing those changes too.
 
 ### Security
-- **Empty owner password no longer grants passwordless full authority**
-  (found and fixed pre-release, during #644 verification — no released
-  build was ever affected). AES-256/R6 files written with a user password
-  but no owner password derived `/O`/`/OE` from the empty owner password,
-  which qpdf, Ghostscript, and pdftoppm all accepted as the full-authority
-  owner password with NO password supplied — silently bypassing the user
-  password. `CreateR6` now falls back to the user password as the owner
-  password, exactly as R4's Algorithm 3 always did; the interop gate,
-  the core writer suite, and a rebuilt-binary falsifiability drill all pin
-  the user-password-only configuration for both algorithms.
+- **Empty owner password no longer grants passwordless full authority** (found and fixed pre-release, during #644 verification — no released build was ever affected).
 
 ### Added
-- **Encryption writer: AES-256 (V5 R6, PDF 2.0 native) and AES-128
-  (V4 R4, CFM=AESV2)** (#639, #640, part of the #624 encryption epic).
-  `new PdfDocumentWriter(document, new PdfEncryptionOptions { ... })`
-  emits a spec-correct `/Encrypt` dictionary (Algorithms 8/9/10 for R6;
-  Algorithms 3/5 plus per-object Algorithm 1 key derivation for R4), with
-  fresh random-IV AES-CBC per stream/string and correct exemptions for the
-  `/Encrypt` dictionary itself, the trailer `/ID`, and (when
-  `EncryptMetadata=false`) the XMP metadata stream. Building R4 exposed and
-  fixed a real ordering bug: the trailer `/ID` was generated AFTER key
-  derivation, which would have silently produced undecryptable R4 files.
-  Verified per algorithm against qpdf (structure, permissions, both
-  passwords, `--decrypt` round-trip), mutool (content extraction), and
-  Ghostscript (pixel-identical renders) — including a reverse-direction
-  oracle where excise independently decrypts a file qpdf itself encrypted.
-- **Password management: Document > Security dialog and `excise encrypt` /
-  `excise decrypt`** (#641). Set a user (open) and/or owner (permissions)
-  password, choose AES-256 (default) or AES-128, change a password (gated
-  on re-entering the current one), or remove protection — removal is a
-  distinct, confirmation-gated action, so clearing the password fields and
-  clicking Apply on an encrypted document can never silently strip
-  protection. Change-password on the CLI is the documented two-step
-  `excise decrypt` → `excise encrypt`.
-- **Multi-reader encryption interop gate** (#644). 37 assertions covering
-  both algorithms × four independent tools (mutool, qpdf, Ghostscript, and
-  a new pdftoppm oracle) × correct/owner/wrong/absent password, plus
-  semantic `/P` verification via qpdf and an anti-vacuity guard
-  (`EXCISE_REQUIRE_ENCRYPTION_INTEROP_TOOLS=1` makes an all-tools-missing run
-  a hard failure). Wired into tier T1 and `docs/RELEASE_CHECKLIST.md` as
-  the release's encryption evidence, with Adobe Acrobat as a documented
-  manual step. Falsifiability-drilled: ignoring the `/Encrypt` dictionary
-  flips 28 of 33 original assertions red.
-- **Make Searchable in the GUI** (#658, completing #627). Tools > Make
-  Searchable OCRs pages without a text layer and writes the recognized
-  words back as an invisible, searchable text layer — with language
-  selection, progress, cancellation, and a result summary. The #627 engine
-  (`PdfSearchableConverter`) and `excise make-searchable` CLI shipped
-  earlier in this cycle; redaction of a made-searchable scan removes both
-  the invisible text and the raster ink (verified via independent
-  extractor + ink differential).
-- **Encryption is preserved across redact/edit/save round-trips** (#643, part
-  of the #624 encryption epic). A document opened encrypted now SAVES
-  encrypted by default on every mutating path — GUI save/save-as, redacted
-  copy, flattened-form copy, scripting, CLI `redact` / `fill-form` /
-  `add-field` / `autodetect-fields --apply` / `make-searchable`, and batch
-  `redaction.apply` — with the same algorithm, the same `/P` permission mask,
-  the same `/EncryptMetadata` choice, and the same password it was opened
-  with. Core API: `PdfDocument.GetReEncryptionOptions(password)` plus
-  explicit `Save`/`SaveToBytes` overloads taking `PdfEncryptionOptions?`
-  (the parameterless `Save()` still writes plaintext so nothing re-encrypts
-  by surprise). RC4 sources (V1/V2, V4 CFM=V2) are re-encrypted **upgraded
-  to AES-256** — never downgraded, never silently decrypted. `excise redact`
-  gained `--password`; `--allow-decrypt` / batch `allowDecrypt: true`
-  flipped meaning from #638's "opt in to proceed at all" to the explicit
-  opt-OUT that writes an unprotected copy, and the GUI's "Encryption Will Be
-  Removed" confirmation is gone — dropping protection now happens only via
-  the Security dialog's Remove Protection (#641). Verified with independent
-  oracles (qpdf structure/permissions/decrypt, mutool extraction), including
-  a ciphertext-aware redaction-leak scan over qpdf's decrypted,
-  uncompressed serialization of the re-encrypted output.
-- **Document permissions (`/P`) are surfaced and enforced** (#642, part of the
-  #624 encryption epic). `PdfDocument.Permissions` /
-  `EffectivePermissions` decode the ISO 32000-2 Table 22 bitmask
-  (bit meanings verified against qpdf's `--show-encryption`). Enforcement is
-  at the action layer: GUI copy, text-selection copy, and page-image export
-  refuse (with a visible toast) on copy-forbidden documents; typewriter and
-  form authoring require the modify permission, annotations the annotate
-  permission, and form fill the fill-forms permission. The CLI gates
-  `text`/`letters`/`render`/`ocr` (copy/extract), `fill-form`,
-  `add-field`/`autodetect-fields --apply`, and the batch-automation steps,
-  each failing closed with an explicit override (`--ignore-permissions` /
-  `ignorePermissions: true` / scripting `IgnoreDocumentPermissions`) for
-  document owners, since owner-password opening is not yet supported (#324).
-  The bit 10 extract-for-accessibility carve-out is honoured
-  (`--for-accessibility`; search, rendering, and the accessibility/automation
-  tree are never permission-gated). Redaction is deliberately not gated:
-  removing sensitive content from your own copy is excise's core purpose.
+- **Encryption writer: AES-256 (V5 R6, PDF 2.0 native) and AES-128 (V4 R4, CFM=AESV2)** (#639, #640, part of the #624 encryption epic).
+- **Password management: Document > Security dialog and `excise encrypt` / `excise decrypt`** (#641).
+- **Multi-reader encryption interop gate** (#644). 37 assertions covering both algorithms × four independent tools (mutool, qpdf, Ghostscript, and a new pdftoppm oracle) × correct/owner/wrong/absent password, plus semantic `/P` verification via qpdf and an anti-vacuity guard (`EXCISE_REQUIRE_ENCRYPTION_INTEROP_TOOLS=1` makes an all-tools-missing run a hard failure).
+- **Make Searchable in the GUI** (#658, completing #627).
+- **Encryption is preserved across redact/edit/save round-trips** (#643, part of the #624 encryption epic).
+- **Document permissions (`/P`) are surfaced and enforced** (#642, part of the #624 encryption epic).
 
 ### Fixed
-- **Redaction-trust extraction sweep — the #651 adversarial-corpus
-  allowlist is now empty.** The #648 gate's original finding (11 pdf.js
-  fixtures where excise catastrophically under-extracted vs. mutool) is fully
-  resolved: off-page metadata pollution filtered by crop-box bounds (#649);
-  Type0/CID fonts with 1-byte codespaces decode correctly, which also
-  surfaced and fixed a raw-byte corruption in `ContentStreamWriter` and an
-  incorrect CID-font inference in redaction reconstruction (#659); FreeText
-  annotation content is extractable AND removable by `RedactText` (#660);
-  list-box widgets emit their full `/Opt` option list (#661);
-  `/Differences`-encoded simple fonts without `/ToUnicode` decode via the
-  Adobe glyph list (#662); signature widget `/AP` appearance text is
-  extracted and removable (#669); orphaned merged field/widgets outside
-  `/AcroForm/Fields` are surfaced (#670); widgets without the optional `/P`
-  key resolve their page via the page's own `/Annots` (#671); multiline
-  field values are no longer truncated to one line (#672). Every fix
-  verified against mutool, and every new extraction carrier proven
-  REMOVABLE via saved-bytes redaction round-trips — findable-but-not-
-  removable is a leak, not a feature.
+- **Redaction-trust extraction sweep — the #651 adversarial-corpus allowlist is now empty.** The #648 gate's original finding (11 pdf.js fixtures where excise catastrophically under-extracted vs.
 - **Embedded-CFF text ignored character/word spacing when drawing** (#652).
-  The glyph-run draw path applied `Tc`/`Tw` only to the tracked text
-  cursor, not the drawn glyphs, so justified lines drifted until glyphs
-  visually collided (the "em-dash strikethrough" report — the issue's
-  FontMatrix hypothesis was refuted at the byte level). Page 36 of the
-  local book fixture: 9.55% → 0.59% pixel diff vs. mutool.
-- **Trust PDF `/Widths` over embedded-font `hmtx` for inter-glyph
-  advance** (#584) and **ShadingType 5/7 wired into pattern-fill
-  dispatch** (#633).
+- **Trust PDF `/Widths` over embedded-font `hmtx` for inter-glyph advance** (#584) and **ShadingType 5/7 wired into pattern-fill dispatch** (#633).
 - **PDF string-literal line-continuation escape handled** (#637).
-- **Continuous-view cache is byte-budgeted** (#615): the page cache is
-  bounded by memory (200 MB) instead of a flat page count, so mixed-size
-  documents can't blow past intended memory use.
-- **Four flaky/incorrect UI tests root-caused** (#653): a view-mode
-  default mismatch, not layout timing — and the investigation found link
-  click/hover has no continuous-mode implementation at all (filed #667).
-- Test-infrastructure hardening: skip-budget gates extended to every test
-  project with real CI-log-verified allowlists (#655, #663, #664, #654);
-  corpus-resilience and adversarial-extraction gates (#648) plus the
-  corpus-wide extraction-parity floor gate (#645); test tiers T0–T3 with
-  one entry point (#646); per-OS CI jobs (#647); Excise.Core coverage gate
-  restored to 93% (#603); font-parser fuzzing closed a real hang and crash
-  (#648).
+- **Continuous-view cache is byte-budgeted** (#615): the page cache is bounded by memory (200 MB) instead of a flat page count, so mixed-size documents can't blow past intended memory use.
+- **Four flaky/incorrect UI tests root-caused** (#653): a view-mode default mismatch, not layout timing — and the investigation found link click/hover has no continuous-mode implementation at all (filed #667).
+- Test-infrastructure hardening: skip-budget gates extended to every test project with real CI-log-verified allowlists (#655, #663, #664, #654); corpus-resilience and adversarial-extraction gates (#648) plus the corpus-wide extraction-parity floor gate (#645); test tiers T0–T3 with one entry point (#646); per-OS CI jobs (#647); Excise.Core coverage gate restored to 93% (#603); font-parser fuzzing closed a real hang and crash (#648).
 
 ### Changed
-- **`--allow-decrypt` flipped meaning** with #643 (see Added): #638 had
-  made "saving an encrypted document decrypts it" loud and fail-closed
-  because excise could not write encryption; now that it can, preservation is
-  the default and `--allow-decrypt` is the explicit plaintext opt-out. The
-  #638-era `PdfWouldLoseEncryptionException` and batch
-  `DECRYPT_CONFIRMATION_REQUIRED` error code are gone.
-- Printing removed from the roadmap as an intentional decision (#621,
-  #622).
+- **`--allow-decrypt` flipped meaning** with #643 (see Added): #638 had made "saving an encrypted document decrypts it" loud and fail-closed because excise could not write encryption; now that it can, preservation is the default and `--allow-decrypt` is the explicit plaintext opt-out.
+- Printing removed from the roadmap as an intentional decision (#621, #622).
 
 ## [2.29.0] - 2026-07-13
 
@@ -3643,38 +732,17 @@ silently, and a performance change can no longer quietly rewrite what a
 correctness test considers correct.
 
 ### Fixed
-- **Continuous mode swallowed programmatic navigation.** "Go to page N" — an
-  outline click, the page-number box, a jump to a search hit — could be silently
-  discarded and land the user on page 1. Three stacked defects: the scroll request
-  was dropped when the page slots did not exist yet; the document-changed path
-  wiped the pending-navigation latch; and the "did we arrive?" check treated an
-  un-laid-out ScrollViewer (extent 0, so max offset 0) as *already arrived*, which
-  disarmed the guard instantly and let the scroll handler snap back to page 1.
+- **Continuous mode swallowed programmatic navigation.** "Go to page N" — an outline click, the page-number box, a jump to a search hit — could be silently discarded and land the user on page 1.
 
 ### Changed
-- **Continuous scroll is the default view mode again**, now that the navigation
-  race above is fixed. The preference is still remembered across sessions.
+- **Continuous scroll is the default view mode again**, now that the navigation race above is fixed.
 
 ### Test integrity (#617, #618, #619, #620)
-- **Coverage can no longer vanish silently.** `scripts/check-skip-budget.sh` fails
-  the build when the set of skipped tests changes in either direction. Seeding it
-  found **33 skipped tests in Excise.Core alone** — including rotation tests in code
-  v2.28.0 had just touched. A security-relevant assertion (does hidden-text reveal
-  avoid loading OCR?) had already stopped running unnoticed.
-- **A perf change can no longer rewrite a correctness assertion quietly.**
-  `scripts/check-gate-asymmetry.sh` (in CI) fails a change that touches a
-  performance-sensitive path *and* rewrites a test's expected values, unless the
-  commit says so explicitly. Validated against the commit that did exactly that.
-- **The 144-page display sweep no longer fails on machine load.** It owns its
-  deadline and reports what actually happened; `scripts/run-gui-display-sweep.sh`
-  shards it (one shard of four: 1m24s, vs 5–20min). It had produced three false
-  reds in a single day.
-- **Geometry tests state invariants, not pinned numbers**, so they survive a legal
-  optimization and still fail an illegal one. Mutation-tested against three real
-  defects.
-- **CLAUDE.md corrected**: it was pointing contributors at a redaction directory
-  that does not exist, listing closed issues as current, and — worst — prescribing
-  a redaction test assertion that is **blind** to three of the leaks fixed in 2.28.0.
+- **Coverage can no longer vanish silently.** `scripts/check-skip-budget.sh` fails the build when the set of skipped tests changes in either direction.
+- **A perf change can no longer rewrite a correctness assertion quietly.** `scripts/check-gate-asymmetry.sh` (in CI) fails a change that touches a performance-sensitive path *and* rewrites a test's expected values, unless the commit says so explicitly.
+- **The 144-page display sweep no longer fails on machine load.** It owns its deadline and reports what actually happened; `scripts/run-gui-display-sweep.sh` shards it (one shard of four: 1m24s, vs 5–20min).
+- **Geometry tests state invariants, not pinned numbers**, so they survive a legal optimization and still fail an illegal one.
+- **CLAUDE.md corrected**: it was pointing contributors at a redaction directory that does not exist, listing closed issues as current, and — worst — prescribing a redaction test assertion that is **blind** to three of the leaks fixed in 2.28.0.
 
 ## [2.28.0] - 2026-07-13
 
@@ -3688,90 +756,42 @@ reported as a clean redaction — by a fully green test suite.
 
 ### Security
 
-- **Fixed: redacted text survived in the structure tree of tagged PDFs (#636).**
-  `/ActualText` and `/Alt` restate the text of a marked-content span. Glyph
-  removal rewrote the content stream and left them untouched, so Acrobat, screen
-  readers, and any tag-aware extractor still read the redacted name straight out
-  of the file. Tagged PDFs are exactly the institutional documents (government
-  forms, court filings, medical records) most likely to hold sensitive data.
-- **Fixed: redacted text survived in document-level carriers (#608).** The XMP
-  `/Metadata` packet, outline (bookmark) titles, and annotation `/Contents` were
-  never scrubbed — only `/Info` was, and only in the GUI. A redacted name left in
-  a bookmark title is visible in the reader's navigation sidebar without the page
-  ever being opened.
-- **Verified (was only asserted in a comment): a full save garbage-collects the
-  previous revision**, so an incremental-update PDF cannot retain the
-  un-redacted page. Now proven by test rather than believed.
-- **New: redaction is now verified by tools that are not excise** (#606, #607,
-  #609) — independent extraction (mutool), independent rendering (Ghostscript)
-  as a before/after ink differential, and the full corpus. Ink absence is the
-  stronger claim: extraction cannot see text rendered as vector paths or raster
-  pixels; a renderer can.
+- **Fixed: redacted text survived in the structure tree of tagged PDFs (#636).** `/ActualText` and `/Alt` restate the text of a marked-content span.
+- **Fixed: redacted text survived in document-level carriers (#608).** The XMP `/Metadata` packet, outline (bookmark) titles, and annotation `/Contents` were never scrubbed — only `/Info` was, and only in the GUI.
+- **Verified (was only asserted in a comment): a full save garbage-collects the previous revision**, so an incremental-update PDF cannot retain the un-redacted page.
+- **New: redaction is now verified by tools that are not excise** (#606, #607, #609) — independent extraction (mutool), independent rendering (Ghostscript) as a before/after ink differential, and the full corpus.
 
 ### Known security limitations (unchanged from 2.27.1 — not introduced here)
 
-- **Redaction is silently incomplete where text extraction is blind (#637).**
-  Where excise cannot read text, it cannot redact it, and it reports success
-  anyway. Measured on `irs-1040-instructions.pdf` page 47: excise extracts 471
-  characters, mutool extracts 3,192. **Verify redactions of unfamiliar documents
-  with an independent tool.** This is pre-existing; it is disclosed here because
-  the new independent-verification suite is what found it.
-- **Redacting an encrypted PDF returns an unencrypted copy (#638).** The writer
-  cannot emit `/Encrypt`. The redaction succeeds; the protection on the rest of
-  the document is silently dropped.
+- **Redaction is silently incomplete where text extraction is blind (#637).** Where excise cannot read text, it cannot redact it, and it reports success anyway.
+- **Redacting an encrypted PDF returns an unencrypted copy (#638).** The writer cannot emit `/Encrypt`.
 - **`/P` permissions are parsed but never enforced (#642).**
 
 ### Added
-- Continuous scroll can now be enabled from View > Continuous Scroll and the
-  choice is remembered across sessions (`ContinuousScrollEnabled`). It is
-  **opt-in**; making it the default is deferred to 2.29.0 (see Deferred below).
-- `PdfDocumentSanitizer.ScrubTerms` (public API, additive) — removes redacted
-  terms from `/Info`, XMP `/Metadata`, outline titles, and annotation `/Contents`.
+- Continuous scroll can now be enabled from View > Continuous Scroll and the choice is remembered across sessions (`ContinuousScrollEnabled`).
+- `PdfDocumentSanitizer.ScrubTerms` (public API, additive) — removes redacted terms from `/Info`, XMP `/Metadata`, outline titles, and annotation `/Contents`.
 
 ### Deferred to 2.29.0
-- **Continuous scroll as the default view mode.** Enabling it by default surfaced
-  a pre-existing navigation race in the viewer: a programmatic "go to page N"
-  (outline click, page-number box, search hit) issued before layout settles is
-  swallowed by the scroll→page sync and silently lands on page 1. The preference
-  machinery ships and works; only the default is off. Held back rather than delay
-  the security fixes in this release. Tracked on `fix/continuous-nav-race` with
-  failing regression tests that pin the contract.
+- **Continuous scroll as the default view mode.** Enabling it by default surfaced a pre-existing navigation race in the viewer: a programmatic "go to page N" (outline click, page-number box, search hit) issued before layout settles is swallowed by the scroll→page sync and silently lands on page 1.
 
 ### Changed
-- Continuous-scroll page rendering now coalesces render passes and de-duplicates
-  in-flight tile requests, so fast scrolling through large documents no longer
-  queues and cancels a render for every intermediate scroll position. Tiles are
-  quantized and rendered with overscan so nearby scroll offsets reuse one cache
-  entry. Adds a `gui.render` benchmark workload covering visible-page settle time.
+- Continuous-scroll page rendering now coalesces render passes and de-duplicates in-flight tile requests, so fast scrolling through large documents no longer queues and cancels a render for every intermediate scroll position.
 
 ### Fixed
-- View and Tools menu checkmarks (Show Outline, Show Thumbnails, Show Clipboard
-  History, Continuous Scroll, Reveal Hidden Text, Reveal Rasterized Hidden Text)
-  stayed permanently checked and did nothing when clicked. They bound `IsChecked`
-  two-way with no `Command`, so a click never reached the ViewModel. They now
-  mutate state through a ViewModel command with a one-way `IsChecked` binding,
-  and the macOS native menu drives its check state from `PropertyChanged` instead
-  of owning it.
-- Leaving an editing mode (redaction, text selection, form authoring, typewriter)
-  now restores the saved continuous-scroll preference. Previously these modes
-  forced single-page view on entry and never restored it, stranding the session in
-  single-page for the rest of its life.
-- Suppressed the tooltip on the status-bar page arrows, whose popup made the small
-  footer targets hard to click while the status bar was re-measuring.
+- View and Tools menu checkmarks (Show Outline, Show Thumbnails, Show Clipboard History, Continuous Scroll, Reveal Hidden Text, Reveal Rasterized Hidden Text) stayed permanently checked and did nothing when clicked.
+- Leaving an editing mode (redaction, text selection, form authoring, typewriter) now restores the saved continuous-scroll preference.
+- Suppressed the tooltip on the status-bar page arrows, whose popup made the small footer targets hard to click while the status bar was re-measuring.
 
 ## [2.27.1] - 2026-07-08
 
 macOS bundle identity correction release. No intended public API break.
 
 ### Changed
-- Changed the macOS app bundle identifier from `com.marcjones.excise` to
-  `cl.skpt.excise` so LaunchServices, Finder/Open With, and packaged GUI smoke
-  target the skpt-owned excise app identity.
+- Changed the macOS app bundle identifier from `com.marcjones.excise` to `cl.skpt.excise` so LaunchServices, Finder/Open With, and packaged GUI smoke target the skpt-owned excise app identity.
 - Updated packaged GUI smoke shutdown to address the new bundle identifier.
 
 ### Tests
-- Release smoke passed for `2.27.1` with the quick, package, and packaged-GUI
-  gates: `logs/release-smoke_20260708_021515`.
+- Release smoke passed for `2.27.1` with the quick, package, and packaged-GUI gates: `logs/release-smoke_20260708_021515`.
 
 ## [2.27.0] - 2026-07-08
 
@@ -3779,35 +799,19 @@ GUI search responsiveness and release-gate hardening release. No intended
 public API break.
 
 ### Changed
-- **Search and indexing hot paths.** Reused the page letter cache for page text
-  and word extraction, made document text-index builds single-flight, skipped
-  annotation search work on pages without annotations, and removed per-match word
-  list allocations from search result bounds calculation.
-- **Background indexing responsiveness.** Delayed search-index startup after
-  document open and page mutations so first-page interaction stays responsive,
-  while keeping the index available for fast repeated searches.
-- **Search result publication.** Batched search-match publication to the UI,
-  deferred first-match navigation behind the result update, and recorded worker,
-  UI queue, UI publish, and total search timings for hotspot reports.
-- **Status-message accuracy.** Cleared `Opening PDF…` once the document is
-  usable and hardened search cancellation/close paths so stale `Searching…`
-  status and inline progress text do not remain visible.
+- **Search and indexing hot paths.** Reused the page letter cache for page text and word extraction, made document text-index builds single-flight, skipped annotation search work on pages without annotations, and removed per-match word list allocations from search result bounds calculation.
+- **Background indexing responsiveness.** Delayed search-index startup after document open and page mutations so first-page interaction stays responsive, while keeping the index available for fast repeated searches.
+- **Search result publication.** Batched search-match publication to the UI, deferred first-match navigation behind the result update, and recorded worker, UI queue, UI publish, and total search timings for hotspot reports.
+- **Status-message accuracy.** Cleared `Opening PDF…` once the document is usable and hardened search cancellation/close paths so stale `Searching…` status and inline progress text do not remain visible.
 
 ### Added
-- **Status-message regression audit.** Added UI tests that verify document-open
-  and cleared-search status transitions remain accurate.
-- **Icon resource regression audit.** Added a main-shell `PathIcon`
-  `StaticResource` sweep so toolbar and menu icon references fail tests if an
-  icon resource is missing.
-- **Search subphase hotspot reporting.** Added `gui.search.worker`,
-  `gui.search.ui-queue`, `gui.search.ui-publish`, and `gui.search.total` to the
-  GUI workflow performance reports.
+- **Status-message regression audit.** Added UI tests that verify document-open and cleared-search status transitions remain accurate.
+- **Icon resource regression audit.** Added a main-shell `PathIcon` `StaticResource` sweep so toolbar and menu icon references fail tests if an icon resource is missing.
+- **Search subphase hotspot reporting.** Added `gui.search.worker`, `gui.search.ui-queue`, `gui.search.ui-publish`, and `gui.search.total` to the GUI workflow performance reports.
 
 ### Tests
-- Stabilized headless GUI fixture checks and encrypted redaction fixture skips on
-  machines where optional encrypted fixtures are unavailable.
-- Aligned the core coverage gate with the current baseline so CI fails on real
-  regressions instead of stale thresholds.
+- Stabilized headless GUI fixture checks and encrypted redaction fixture skips on machines where optional encrypted fixtures are unavailable.
+- Aligned the core coverage gate with the current baseline so CI fails on real regressions instead of stale thresholds.
 
 ## [2.26.0] - 2026-07-07
 
@@ -3815,91 +819,49 @@ Native AOT and GUI hot-path responsiveness release. Additive public API change
 in `Excise.Avalonia`; no intended breaking change.
 
 ### Added
-- **Native AOT release lane (#590-#595).** Added
-  `scripts/run-aot-smoke.sh` and wired `scripts/release-smoke.sh --only=aot`
-  so the GUI AOT build can be published, packaged, warning-audited, and
-  optionally exercised with packaged GUI smoke evidence.
-- **GUI hotspot regression reporting (#596, #601).** Added structured GUI
-  workflow hotspot reports for document open, continuous scroll, page jumps,
-  search, annotation, forms, redaction, save, and close workflows.
-- **Full GUI responsiveness coverage (#601).** Added end-to-end responsiveness
-  tests and catalog coverage for the long-document and broad workflow phases
-  that should stay below human-visible interaction budgets.
+- **Native AOT release lane (#590-#595).** Added `scripts/run-aot-smoke.sh` and wired `scripts/release-smoke.sh --only=aot` so the GUI AOT build can be published, packaged, warning-audited, and optionally exercised with packaged GUI smoke evidence.
+- **GUI hotspot regression reporting (#596, #601).** Added structured GUI workflow hotspot reports for document open, continuous scroll, page jumps, search, annotation, forms, redaction, save, and close workflows.
+- **Full GUI responsiveness coverage (#601).** Added end-to-end responsiveness tests and catalog coverage for the long-document and broad workflow phases that should stay below human-visible interaction budgets.
 
 ### Changed
-- **Viewer-owned display rendering (#601).** Shifted display rendering
-  ownership into the viewer, cached rendered pages as bitmaps, and exposed the
-  additive `PdfViewerControl.RenderVersion` API so hosts can explicitly
-  invalidate viewer caches after visual document changes.
-- **Continuous-view hot path (#601).** Cached continuous page layout positions
-  and optimized visible-page lookup for long-document scrolling.
+- **Viewer-owned display rendering (#601).** Shifted display rendering ownership into the viewer, cached rendered pages as bitmaps, and exposed the additive `PdfViewerControl.RenderVersion` API so hosts can explicitly invalidate viewer caches after visual document changes.
+- **Continuous-view hot path (#601).** Cached continuous page layout positions and optimized visible-page lookup for long-document scrolling.
 
 ### Tests
-- Regenerated the `Excise.Avalonia` public API approval baseline for the
-  intentional `RenderVersion` addition.
-- Redaction gates remain required for this release line:
-  `dotnet test ... --filter "FullyQualifiedName~Redaction"`.
+- Regenerated the `Excise.Avalonia` public API approval baseline for the intentional `RenderVersion` addition.
+- Redaction gates remain required for this release line: `dotnet test ...
 
 ## [2.25.0] - 2026-07-04
 
 Benchmarking and renderer-performance release. No intended public API break.
 
 ### Added
-- **Benchmark suite (#344, #357).** Added `Excise.RenderTools benchmark-suite`
-  and wired `scripts/run-benchmarks.sh` so one command emits
-  `benchmark-report.json`, `benchmark-pages.csv`, and `benchmark-report.md`
-  covering excise parse/text/render speed, external-reference fidelity,
-  RMSE/SSIM metrics, tool availability, and subprocess-only license isolation.
-- **Benchmark regression gate (#344, #357).** Added a release-smoke benchmark
-  gate plus a deterministic CI gate that runs the benchmark suite in synthetic
-  no-oracle mode and fails on excise parse/render/redaction regressions.
-- **Redaction-completeness signal (#357).** The benchmark report now includes a
-  synthetic glyph-level redaction check so speed reporting does not drift away
-  from excise's security-critical differentiator.
+- **Benchmark suite (#344, #357).** Added `Excise.RenderTools benchmark-suite` and wired `scripts/run-benchmarks.sh` so one command emits `benchmark-report.json`, `benchmark-pages.csv`, and `benchmark-report.md` covering excise parse/text/render speed, external-reference fidelity, RMSE/SSIM metrics, tool availability, and subprocess-only license isolation.
+- **Benchmark regression gate (#344, #357).** Added a release-smoke benchmark gate plus a deterministic CI gate that runs the benchmark suite in synthetic no-oracle mode and fails on excise parse/render/redaction regressions.
+- **Redaction-completeness signal (#357).** The benchmark report now includes a synthetic glyph-level redaction check so speed reporting does not drift away from excise's security-critical differentiator.
 
 ### Changed
-- **Benchmark wrapper (#344).** `scripts/run-benchmarks.sh` now runs the
-  benchmark suite by default, keeps `corpus-hotspots` and
-  `gui-display-hotspots`, and exposes `benchmarkdotnet` for the isolated
-  `Excise.Benchmarks` microbenchmark project.
-- **RenderTools exit codes (#344).** Utility commands now normalize handler
-  `Environment.ExitCode` the same way the public CLI does, so failed benchmark
-  gates return a non-zero process exit.
+- **Benchmark wrapper (#344).** `scripts/run-benchmarks.sh` now runs the benchmark suite by default, keeps `corpus-hotspots` and `gui-display-hotspots`, and exposes `benchmarkdotnet` for the isolated `Excise.Benchmarks` microbenchmark project.
+- **RenderTools exit codes (#344).** Utility commands now normalize handler `Environment.ExitCode` the same way the public CLI does, so failed benchmark gates return a non-zero process exit.
 
 ### Tests
-- `BenchmarkSuiteTests` covers oracle parsing, report generation, license
-  metadata, redaction-completeness reporting, and non-zero regression exits.
-- Local reference smoke passed with MuPDF, Poppler, and Ghostscript available:
-  `logs/benchmarks/v2.25-reference-smoke`.
+- `BenchmarkSuiteTests` covers oracle parsing, report generation, license metadata, redaction-completeness reporting, and non-zero regression exits.
+- Local reference smoke passed with MuPDF, Poppler, and Ghostscript available: `logs/benchmarks/v2.25-reference-smoke`.
 
 ## [2.24.0] - 2026-07-04
 
 UX, icon, and visual-polish audit release. No intended public API break.
 
 ### Changed
-- **Vector shell icons (#559).** Replaced the main menu, toolbar, and empty
-  state emoji icon affordances with local vector `StreamGeometry` resources so
-  the shell no longer depends on platform emoji fonts for core commands.
-- **Toolbar layout (#559).** Reserved the right side of the toolbar for zoom
-  controls and placed the main action strip in a horizontal scroll region. The
-  default 1280px workflow screenshot now keeps zoom controls visible and avoids
-  clipped toolbar labels by making secondary actions icon-only with explicit
-  tooltips and accessibility names.
+- **Vector shell icons (#559).** Replaced the main menu, toolbar, and empty state emoji icon affordances with local vector `StreamGeometry` resources so the shell no longer depends on platform emoji fonts for core commands.
+- **Toolbar layout (#559).** Reserved the right side of the toolbar for zoom controls and placed the main action strip in a horizontal scroll region.
 
 ### Added
-- **Screenshot-backed UX/icon audit (#559).** Added
-  `VisualPolishAuditTests` and `scripts/run-ux-icon-audit.sh`, which capture
-  headless screenshots for empty/open, document navigation/page organization,
-  search, redaction, forms, typewriter/annotation, and preferences states and
-  write `ux-icon-audit.json` plus a markdown report.
-- **UX release gate (#559).** Added
-  `scripts/release-smoke.sh --quick --only=ux` and release-checklist coverage
-  so design-quality review stays separate from renderer/display parity.
+- **Screenshot-backed UX/icon audit (#559).** Added `VisualPolishAuditTests` and `scripts/run-ux-icon-audit.sh`, which capture headless screenshots for empty/open, document navigation/page organization, search, redaction, forms, typewriter/annotation, and preferences states and write `ux-icon-audit.json` plus a markdown report.
+- **UX release gate (#559).** Added `scripts/release-smoke.sh --quick --only=ux` and release-checklist coverage so design-quality review stays separate from renderer/display parity.
 
 ### Tests
-- v2.24 UX/icon audit passed:
-  `logs/ux-icon-audit/v2.24-local` (`VisualPolishAuditTests`, screenshots, and
-  manifest).
+- v2.24 UX/icon audit passed: `logs/ux-icon-audit/v2.24-local` (`VisualPolishAuditTests`, screenshots, and manifest).
 - Full Debug build passed: `dotnet build excise.sln -c Debug`.
 
 ## [2.23.0] - 2026-07-04
@@ -3908,34 +870,17 @@ Automation API and platform integration release. Additive public API change in
 `Excise.Core.Automation`; no intended breaking change.
 
 ### Added
-- **Stable CLI automation contract (#561).** Added `excise batch` for JSON
-  workflows with structured final reports, optional report files, progress
-  NDJSON on stderr, documented exit codes, relative-path resolution, and
-  password-aware document open without writing passwords to reports.
-- **JSON CLI output (#561).** Added `--json` output to `excise info`,
-  `excise text`, and `excise render`, and added `--password` handling to
-  `info` and `text` to match the render command.
-- **Automation command metadata (#561).** Added `automation.batch` to the
-  shared command registry and corrected hidden-text audit metadata to point at
-  the existing `audit` CLI command.
-- **Platform examples (#564, #567, #568, #574).** Added AppleScript,
-  Shortcuts, PowerShell, Power Automate Desktop, and Linux/GNOME examples that
-  call the CLI/batch JSON contract instead of clicking the GUI.
-- **Automation release gate (#561, #574).** Added
-  `scripts/run-automation-smoke.sh` and wired it into
-  `scripts/release-smoke.sh --only=automation`.
+- **Stable CLI automation contract (#561).** Added `excise batch` for JSON workflows with structured final reports, optional report files, progress NDJSON on stderr, documented exit codes, relative-path resolution, and password-aware document open without writing passwords to reports.
+- **JSON CLI output (#561).** Added `--json` output to `excise info`, `excise text`, and `excise render`, and added `--password` handling to `info` and `text` to match the render command.
+- **Automation command metadata (#561).** Added `automation.batch` to the shared command registry and corrected hidden-text audit metadata to point at the existing `audit` CLI command.
+- **Platform examples (#564, #567, #568, #574).** Added AppleScript, Shortcuts, PowerShell, Power Automate Desktop, and Linux/GNOME examples that call the CLI/batch JSON contract instead of clicking the GUI.
+- **Automation release gate (#561, #574).** Added `scripts/run-automation-smoke.sh` and wired it into `scripts/release-smoke.sh --only=automation`.
 
 ### Security
-- **Automation boundary (#565).** Documented the CLI-first threat model:
-  no background GUI automation listener is enabled by default, Release builds
-  still exclude Roslyn GUI scripting unless explicitly enabled, mutating batch
-  commands require explicit output paths, in-place overwrite is refused, and
-  redaction requires `confirmDestructive: true`.
+- **Automation boundary (#565).** Documented the CLI-first threat model: no background GUI automation listener is enabled by default, Release builds still exclude Roslyn GUI scripting unless explicitly enabled, mutating batch commands require explicit output paths, in-place overwrite is refused, and redaction requires `confirmDestructive: true`.
 
 ### Tests
-- Focused gates passed:
-  `BatchAutomationCommandTests`, `CommandMetadataCommandTests`,
-  `PdfCommandRegistryTests`, and `PublicApiApprovalTests`.
+- Focused gates passed: `BatchAutomationCommandTests`, `CommandMetadataCommandTests`, `PdfCommandRegistryTests`, and `PublicApiApprovalTests`.
 - Full Debug build passed: `dotnet build excise.sln -c Debug`.
 
 ## [2.22.0] - 2026-07-04
@@ -3944,41 +889,19 @@ Accessibility and assistive-technology readiness release. Additive public API
 change in `Excise.Core.Automation`; no intended breaking change.
 
 ### Added
-- **Shared semantic command metadata (#562).** Added `Excise.Core.Automation`
-  with stable command IDs, labels, descriptions, shortcuts, CLI verbs,
-  parameters, result fields, disabled reasons, and destructive/security flags.
-- **CLI command metadata (#562).** Added `excise commands` and
-  `excise commands <id> --json` so automation and batch workflows can query the
-  same command model used by the GUI.
-- **Accessibility command binding (#569).** Added the Avalonia
-  `CommandAccessibility.CommandId` attached property, binding command metadata
-  into accessible names, help text, unavailable status, and tooltips across the
-  main menu, toolbar, search bar, page controls, redaction controls, and status
-  surfaces.
-- **Accessibility release gate (#570, #573).** Added
-  `scripts/run-accessibility-smoke.sh` and wired it into
-  `scripts/release-smoke.sh --only=accessibility`, producing a JSON report with
-  automated check status and platform accessibility-tree probe status.
-- **Accessibility checklist (#566, #570).** Added
-  `docs/ACCESSIBILITY_RELEASE_CHECKLIST.md` for macOS AX/VoiceOver, Windows UI
-  Automation, and Linux/GNOME AT-SPI verification on dedicated runners.
+- **Shared semantic command metadata (#562).** Added `Excise.Core.Automation` with stable command IDs, labels, descriptions, shortcuts, CLI verbs, parameters, result fields, disabled reasons, and destructive/security flags.
+- **CLI command metadata (#562).** Added `excise commands` and `excise commands <id> --json` so automation and batch workflows can query the same command model used by the GUI.
+- **Accessibility command binding (#569).** Added the Avalonia `CommandAccessibility.CommandId` attached property, binding command metadata into accessible names, help text, unavailable status, and tooltips across the main menu, toolbar, search bar, page controls, redaction controls, and status surfaces.
+- **Accessibility release gate (#570, #573).** Added `scripts/run-accessibility-smoke.sh` and wired it into `scripts/release-smoke.sh --only=accessibility`, producing a JSON report with automated check status and platform accessibility-tree probe status.
+- **Accessibility checklist (#566, #570).** Added `docs/ACCESSIBILITY_RELEASE_CHECKLIST.md` for macOS AX/VoiceOver, Windows UI Automation, and Linux/GNOME AT-SPI verification on dedicated runners.
 
 ### Changed
-- **Keyboard-only and dialog semantics (#572).** Preferences, Save Redacted
-  Version, About, and dynamically-created message/prompt dialogs now expose
-  accessible names/help text plus default/cancel button semantics. The main
-  status bar exposes current mode, operation status, and document status for
-  assistive technology.
-- **Release checklist.** Accessibility is now reported separately from GUI
-  display parity and packaged-app smoke.
+- **Keyboard-only and dialog semantics (#572).** Preferences, Save Redacted Version, About, and dynamically-created message/prompt dialogs now expose accessible names/help text plus default/cancel button semantics.
+- **Release checklist.** Accessibility is now reported separately from GUI display parity and packaged-app smoke.
 
 ### Tests
-- v2.22 accessibility smoke passed:
-  `logs/release-smoke_20260704_135843` (`accessibility` gate PASS).
-- Focused gates passed:
-  `PdfCommandRegistryTests`, `CommandMetadataCommandTests`,
-  `AccessibilityRegressionTests`, `GuiWorkflowCoverageMatrixTests`,
-  `DocumentationClaimTests`, and `PublicApiApprovalTests`.
+- v2.22 accessibility smoke passed: `logs/release-smoke_20260704_135843` (`accessibility` gate PASS).
+- Focused gates passed: `PdfCommandRegistryTests`, `CommandMetadataCommandTests`, `AccessibilityRegressionTests`, `GuiWorkflowCoverageMatrixTests`, `DocumentationClaimTests`, and `PublicApiApprovalTests`.
 - Full Debug build passed: `dotnet build excise.sln -c Debug`.
 
 ## [2.21.0] - 2026-07-04
@@ -3987,156 +910,68 @@ GUI responsiveness and packaged-app release-gate hardening release. No intended
 API break.
 
 ### Added
-- **GUI responsiveness reporting (#577, #581, #582).** The desktop app records
-  open-to-first-page-visible timing, background phase ordering, render cache
-  stats, and PASS/WARN/FAIL budget status in a JSON report that release smoke
-  can consume.
-- **Packaged app responsiveness smoke (#582).** `scripts/release-smoke.sh`
-  now supports a packaged-GUI direct-exec mode that launches the built macOS
-  app with a real PDF, captures app stdout/stderr, validates the first-page
-  report, and avoids taking keyboard or mouse focus by default.
-- **Interaction latency coverage (#578, #583).** Focused GUI tests cover direct
-  input paths for search typing, text selection feedback, redaction preview,
-  form authoring, and form edits, plus first-page-before-background-work
-  ordering.
+- **GUI responsiveness reporting (#577, #581, #582).** The desktop app records open-to-first-page-visible timing, background phase ordering, render cache stats, and PASS/WARN/FAIL budget status in a JSON report that release smoke can consume.
+- **Packaged app responsiveness smoke (#582).** `scripts/release-smoke.sh` now supports a packaged-GUI direct-exec mode that launches the built macOS app with a real PDF, captures app stdout/stderr, validates the first-page report, and avoids taking keyboard or mouse focus by default.
+- **Interaction latency coverage (#578, #583).** Focused GUI tests cover direct input paths for search typing, text selection feedback, redaction preview, form authoring, and form edits, plus first-page-before-background-work ordering.
 
 ### Changed
-- **Render scheduling and cache behavior (#575, #579).** Visible page renders
-  cancel/drop stale work, adjacent-page prefetch is sequenced behind the visible
-  page, lazy thumbnail placeholders avoid front-loading all thumbnail renders,
-  and responsiveness reports include cache-hit/miss and cache-size signals.
-- **macOS packaged smoke stability.** The packaged-GUI smoke now wakes the
-  active display briefly before launching the app, avoiding Avalonia native
-  render-timer startup failures when the laptop display is asleep. Avalonia
-  packages were updated from 12.0.4 to 12.0.5.
-- **Benchmark wrapper cleanup (#536).** `scripts/run-benchmarks.sh` now routes
-  through the maintained render-tooling entry points so corpus hotspot reports
-  can separate excise render cost from reference-render and comparison overhead.
+- **Render scheduling and cache behavior (#575, #579).** Visible page renders cancel/drop stale work, adjacent-page prefetch is sequenced behind the visible page, lazy thumbnail placeholders avoid front-loading all thumbnail renders, and responsiveness reports include cache-hit/miss and cache-size signals.
+- **macOS packaged smoke stability.** The packaged-GUI smoke now wakes the active display briefly before launching the app, avoiding Avalonia native render-timer startup failures when the laptop display is asleep.
+- **Benchmark wrapper cleanup (#536).** `scripts/run-benchmarks.sh` now routes through the maintained render-tooling entry points so corpus hotspot reports can separate excise render cost from reference-render and comparison overhead.
 
 ### Tests
-- Focused responsiveness and scheduling gate passed:
-  `dotnet test Excise.App.Tests/Excise.App.Tests.csproj -c Debug --filter "FullyQualifiedName~GuiResponsivenessBudgetTests|FullyQualifiedName~MainWindowRenderSchedulingTests|FullyQualifiedName~PdfRenderServiceCacheTests|FullyQualifiedName~ResponsivenessReportTests|FullyQualifiedName~GuiWorkflowCoverageMatrixTests"`.
-- Packaged release smoke passed:
-  `logs/release-smoke_20260704_133123` (package and packaged-GUI direct-exec
-  gate; app first-page visible in `108ms` on the generated six-page smoke PDF).
-- Broader cross-library benchmark epics (#344, #357) remain open; this release
-  ships the GUI responsiveness gate and hotspot aggregation cleanup, not the
-  full future benchmarking system.
+- Focused responsiveness and scheduling gate passed: `dotnet test Excise.App.Tests/Excise.App.Tests.csproj -c Debug --filter "FullyQualifiedName~GuiResponsivenessBudgetTests|FullyQualifiedName~MainWindowRenderSchedulingTests|FullyQualifiedName~PdfRenderServiceCacheTests|FullyQualifiedName~ResponsivenessReportTests|FullyQualifiedName~GuiWorkflowCoverageMatrixTests"`.
+- Packaged release smoke passed: `logs/release-smoke_20260704_133123` (package and packaged-GUI direct-exec gate; app first-page visible in `108ms` on the generated six-page smoke PDF).
+- Broader cross-library benchmark epics (#344, #357) remain open; this release ships the GUI responsiveness gate and hotspot aggregation cleanup, not the full future benchmarking system.
 
 ## [2.20.0] - 2026-07-04
 
 GUI interaction and redaction hardening release. No intended API break.
 
 ### Added
-- **Adversarial redaction regression coverage (#555).** Added generated tests
-  for AcroForm values and appearances, annotations and appearance streams,
-  partial glyph overlaps, rotated text, hidden optional-content layers,
-  password-protected fixtures with documented passwords, incremental-update
-  previous revisions, and OCR/scanned-image recovery cases.
-- **Packaged GUI smoke evidence (#558, #571).** Added
-  `scripts/run-packaged-gui-smoke.sh` and wired it into
-  `scripts/release-smoke.sh --packaged-gui`, producing JSON/markdown reports,
-  launch logs, and screenshot artifacts for the packaged macOS `.app`.
+- **Adversarial redaction regression coverage (#555).** Added generated tests for AcroForm values and appearances, annotations and appearance streams, partial glyph overlaps, rotated text, hidden optional-content layers, password-protected fixtures with documented passwords, incremental-update previous revisions, and OCR/scanned-image recovery cases.
+- **Packaged GUI smoke evidence (#558, #571).** Added `scripts/run-packaged-gui-smoke.sh` and wired it into `scripts/release-smoke.sh --packaged-gui`, producing JSON/markdown reports, launch logs, and screenshot artifacts for the packaged macOS `.app`.
 
 ### Changed
-- **Redaction save safety.** Saved redacted copies now serialize only objects
-  reachable from the current trailer roots, which prevents stale previous
-  revisions, annotation appearances, and orphaned image/form content from being
-  re-emitted.
-- **Scanned-image redaction.** Named image XObjects removed from redacted page
-  content are pruned from page resources when no surviving page content uses
-  them, so object bytes do not remain reachable after save.
-- **Redacted-copy safety report.** The GUI safety report now includes a raster
-  redaction audit that warns/fails closed when raster image content still
-  overlaps requested redaction areas.
-- **GUI input coverage.** Previously skipped headless keyboard/mouse tests now
-  use Avalonia Headless input injection, and release docs distinguish those
-  routed-event tests from packaged-app launch evidence and opt-in native
-  System Events key/mouse smoke.
+- **Redaction save safety.** Saved redacted copies now serialize only objects reachable from the current trailer roots, which prevents stale previous revisions, annotation appearances, and orphaned image/form content from being re-emitted.
+- **Scanned-image redaction.** Named image XObjects removed from redacted page content are pruned from page resources when no surviving page content uses them, so object bytes do not remain reachable after save.
+- **Redacted-copy safety report.** The GUI safety report now includes a raster redaction audit that warns/fails closed when raster image content still overlaps requested redaction areas.
+- **GUI input coverage.** Previously skipped headless keyboard/mouse tests now use Avalonia Headless input injection, and release docs distinguish those routed-event tests from packaged-app launch evidence and opt-in native System Events key/mouse smoke.
 
 ### Tests
-- Required redaction gate passed after redaction changes:
-  `dotnet test --no-restore --filter "FullyQualifiedName~Redaction"`.
+- Required redaction gate passed after redaction changes: `dotnet test --no-restore --filter "FullyQualifiedName~Redaction"`.
 - Focused OCR/image redaction and redacted-copy safety tests passed.
-- v2.20 release smoke passed:
-  `logs/release-smoke_20260704_124540` (docs, build, redaction, signature, UI
-  workflow, macOS package, packaged-GUI evidence, and diffcheck).
+- v2.20 release smoke passed: `logs/release-smoke_20260704_124540` (docs, build, redaction, signature, UI workflow, macOS package, packaged-GUI evidence, and diffcheck).
 
 ## [2.19.0] - 2026-07-04
 
 Everyday PDF workbench final release gate. No intended API break.
 
 ### Changed
-- **Release rendering dashboard (#491, #535, #546).** The current full
-  contract-driven rendering report classifies `14,979/14,979` scanned pages as
-  release `PASS`, with `0` missing contract pages, `0` failed expectations, and
-  `0` unreviewed or rejected `PASS_ONE` rows. Remaining low-impact reference
-  disagreements stay visible as `MATCHES_ACCEPTED_REFERENCE`,
-  `REFERENCE_REFUSAL_ACCEPTED`, `NON_RENDERABLE_ACCEPTED`, or a named accepted
-  limitation instead of generic failures.
-- **CMYK, ICC, and transparency rendering.** DeviceCMYK transparency-group
-  preview now uses document output-intent information where available, ICCBased
-  CMYK and `/DefaultCMYK` paths use the managed ICC preview evaluator, and
-  CMYK soft-mask/screen-blend and knockout cases from the release corpus are
-  classified against accepted reference targets.
-- **GUI display parity (#537, #541).** The headless GUI display suite now checks
-  that the displayed Avalonia bitmap matches the renderer output, including the
-  ACC compensation-report cover page. Representative renderer-contract GUI
-  coverage and pdf.js/Poppler shards are release evidence rather than manual
-  spot checks.
-- **Corpus tooling and progress reporting.** Long rendering runs write
-  incremental/progress JSON, support large-PDF page sharding, use documented
-  passwords from rendering contracts, and reclassify existing raw reports
-  against current contract expectations without rerendering reference pages.
-- **Release scope.** Broad font-model completion (#512, #513, #514, #515,
-  #532), renderer performance optimization (#536), and narrower future
-  renderer-quality issues remain tracked, but are explicitly deferred from this
-  tag because the current release dashboard is clean.
+- **Release rendering dashboard (#491, #535, #546).** The current full contract-driven rendering report classifies `14,979/14,979` scanned pages as release `PASS`, with `0` missing contract pages, `0` failed expectations, and `0` unreviewed or rejected `PASS_ONE` rows.
+- **CMYK, ICC, and transparency rendering.** DeviceCMYK transparency-group preview now uses document output-intent information where available, ICCBased CMYK and `/DefaultCMYK` paths use the managed ICC preview evaluator, and CMYK soft-mask/screen-blend and knockout cases from the release corpus are classified against accepted reference targets.
+- **GUI display parity (#537, #541).** The headless GUI display suite now checks that the displayed Avalonia bitmap matches the renderer output, including the ACC compensation-report cover page.
+- **Corpus tooling and progress reporting.** Long rendering runs write incremental/progress JSON, support large-PDF page sharding, use documented passwords from rendering contracts, and reclassify existing raw reports against current contract expectations without rerendering reference pages.
+- **Release scope.** Broad font-model completion (#512, #513, #514, #515, #532), renderer performance optimization (#536), and narrower future renderer-quality issues remain tracked, but are explicitly deferred from this tag because the current release dashboard is clean.
 
 ### Tests
-- Rendering quality reclassification:
-  `logs/render-quality/release-prep-20260704/full-current-quality.json`
-  reports `14,979 PASS`, `0` missing contracts, and `14,979` expectation passes.
-- `dotnet test Excise.Cli.Tests/Excise.Cli.Tests.csproj --filter "FullyQualifiedName~CorpusScanClassificationTests"`
-  passed: `42` passed, `0` failed.
-- Release smoke evidence:
-  - `logs/release-smoke_20260704_035730`: docs, build, redaction,
-    signature, UI workflow, and PDF 2.0 renderer-conformance gates passed.
-  - `logs/release-smoke_20260704_033109`: sequential project test gate passed,
-    including the 144-page GUI display sweep with `0` failures and `0`
-    non-pass display comparisons.
-  - `logs/release-smoke_20260704_035238`: visual regression, macOS package
-    build, and `git diff --check` gates passed.
+- Rendering quality reclassification: `logs/render-quality/release-prep-20260704/full-current-quality.json` reports `14,979 PASS`, `0` missing contracts, and `14,979` expectation passes.
+- `dotnet test Excise.Cli.Tests/Excise.Cli.Tests.csproj --filter "FullyQualifiedName~CorpusScanClassificationTests"` passed: `42` passed, `0` failed.
+- Release smoke evidence: signature, UI workflow, and PDF 2.0 renderer-conformance gates passed.
 
 ## [2.15.0] - 2026-06-11
 
 Form workflow hardening release. Additive; no breaking changes.
 
 ### Added
-- **Explicit flattened form copy workflow (#457, #459, #460).** The desktop
-  app now exposes **Flatten Form** / **Save Flattened Form Copy...** so users can
-  choose between preserving interactive form fields and baking values into
-  static page content.
-- **Form widget metadata API (#459).** `PdfField` now exposes effective `/Ff`
-  flags, checkbox/radio/choice helpers, and `PdfFieldWidget` metadata so
-  consumers can distinguish checkboxes, radio groups, combo boxes, push buttons,
-  and per-widget export values.
+- **Explicit flattened form copy workflow (#457, #459, #460).** The desktop app now exposes **Flatten Form** / **Save Flattened Form Copy...** so users can choose between preserving interactive form fields and baking values into static page content.
+- **Form widget metadata API (#459).** `PdfField` now exposes effective `/Ff` flags, checkbox/radio/choice helpers, and `PdfFieldWidget` metadata so consumers can distinguish checkboxes, radio groups, combo boxes, push buttons, and per-widget export values.
 
 ### Changed
-- **Filled-form saves now persist the edited values (#460).** The desktop form
-  overlay synchronizes edits and authored fields into the service-owned document
-  before save, so interactive filled forms round-trip correctly through Save As.
-- **Form field keyboard workflow is more deterministic (#458).** Fields are
-  ordered top-to-bottom/left-to-right for tab traversal, focus styling is
-  clearer, single-line fields commit on Enter, multiline fields commit on
-  Ctrl+Enter, focus loss commits, and Escape restores the last committed value.
-- **Flattened form appearances are stronger (#459).** Text is clipped/wrapped
-  within widget bounds, radio groups draw only the selected widget, and
-  `/NeedAppearances` is parsed using the spec key while remaining compatible
-  with older pluralized fixtures.
-- **Save labeling is clearer for original documents (#460).** Original PDFs with
-  form edits now advertise **Save Filled Copy** rather than the generic
-  **Save a Copy** label.
+- **Filled-form saves now persist the edited values (#460).** The desktop form overlay synchronizes edits and authored fields into the service-owned document before save, so interactive filled forms round-trip correctly through Save As.
+- **Form field keyboard workflow is more deterministic (#458).** Fields are ordered top-to-bottom/left-to-right for tab traversal, focus styling is clearer, single-line fields commit on Enter, multiline fields commit on Ctrl+Enter, focus loss commits, and Escape restores the last committed value.
+- **Flattened form appearances are stronger (#459).** Text is clipped/wrapped within widget bounds, radio groups draw only the selected widget, and `/NeedAppearances` is parsed using the spec key while remaining compatible with older pluralized fixtures.
+- **Save labeling is clearer for original documents (#460).** Original PDFs with form edits now advertise **Save Filled Copy** rather than the generic **Save a Copy** label.
 
 ### Tests
 - Build remains warning-free.
@@ -4150,23 +985,12 @@ Form workflow hardening release. Additive; no breaking changes.
 Flat-PDF typewriter editing release. Additive; no breaking changes.
 
 ### Added
-- **Typewriter flat text editing (#453, #454, #455, #456).** The desktop app
-  now has a Typewriter mode for placing, editing, moving, resizing, and deleting
-  pending text boxes on ordinary PDF pages. Saving flattens non-empty typewriter
-  text into the page content stream instead of creating annotations, so output
-  remains interoperable with basic PDF readers.
-- **Core typewriter operation model.** `PdfTypewriterTextOperation`,
-  `PdfTypewriterTextStyle`, and `PdfTypewriterTextApplier` provide a small
-  immutable operation model and flattening service on top of `PdfGraphics`.
-- **Viewer typewriter overlay API.** `PdfViewerControl` exposes
-  `TypewriterTextOperations` plus created/edited/bounds/deleted events so hosts
-  can keep pending flat-text edits in their own view models.
+- **Typewriter flat text editing (#453, #454, #455, #456).** The desktop app now has a Typewriter mode for placing, editing, moving, resizing, and deleting pending text boxes on ordinary PDF pages.
+- **Core typewriter operation model.** `PdfTypewriterTextOperation`, `PdfTypewriterTextStyle`, and `PdfTypewriterTextApplier` provide a small immutable operation model and flattening service on top of `PdfGraphics`.
+- **Viewer typewriter overlay API.** `PdfViewerControl` exposes `TypewriterTextOperations` plus created/edited/bounds/deleted events so hosts can keep pending flat-text edits in their own view models.
 
 ### Changed
-- **Save state distinguishes redaction from ordinary edits.** Original files
-  with pending redactions still use the redacted-copy workflow; original files
-  with typewriter/form/page edits now advertise **Save a Copy** instead of the
-  redaction-specific save label.
+- **Save state distinguishes redaction from ordinary edits.** Original files with pending redactions still use the redacted-copy workflow; original files with typewriter/form/page edits now advertise **Save a Copy** instead of the redaction-specific save label.
 - The macOS native menu and in-window Edit menu now include Typewriter Mode.
 
 ### Tests
@@ -4182,29 +1006,17 @@ Flat-PDF typewriter editing release. Additive; no breaking changes.
 Architecture hardening checkpoint release. No intended PDF behavior changes.
 
 ### Changed
-- **MainWindowViewModel workflow split (#449).** Command initialization,
-  form-authoring, hidden-text reveal, and redaction workflow code now live in
-  focused partial modules, reducing the size and review risk of the main desktop
-  view model while keeping the existing command and binding surface intact.
-- **Renderer component split (#450).** `SkiaRenderer` path rendering and
-  rendering state types were moved into focused renderer files without changing
-  the public rendering API.
-- **Viewer-control type split (#451).** `PdfViewerControl` event argument types
-  and view/interaction enums now live in a separate partial file, keeping the
-  control implementation more focused while preserving API compatibility.
-- **Edit-operation foundation (#452).** Added a small immutable
-  `PdfEditOperation` model for future typewriter, form, page-organization,
-  redaction, and annotation workflows without enabling new editing behavior yet.
-- **Dictionary optional-read helpers (#427).** `PdfDictionary` now exposes
-  explicit `TryGetString` and `TryGetArray` helpers, and the document writer uses
-  `TryGetArray` when preserving trailer `/ID` values.
+- **MainWindowViewModel workflow split (#449).** Command initialization, form-authoring, hidden-text reveal, and redaction workflow code now live in focused partial modules, reducing the size and review risk of the main desktop view model while keeping the existing command and binding surface intact.
+- **Renderer component split (#450).** `SkiaRenderer` path rendering and rendering state types were moved into focused renderer files without changing the public rendering API.
+- **Viewer-control type split (#451).** `PdfViewerControl` event argument types and view/interaction enums now live in a separate partial file, keeping the control implementation more focused while preserving API compatibility.
+- **Edit-operation foundation (#452).** Added a small immutable `PdfEditOperation` model for future typewriter, form, page-organization, redaction, and annotation workflows without enabling new editing behavior yet.
+- **Dictionary optional-read helpers (#427).** `PdfDictionary` now exposes explicit `TryGetString` and `TryGetArray` helpers, and the document writer uses `TryGetArray` when preserving trailer `/ID` values.
 
 ### Tests
 - Build remains warning-free.
 - Focused core public API/edit/dictionary tests passed: 87 passed.
 - Avalonia public API tests passed: 7 passed.
-- Focused desktop viewmodel/keyboard/redaction tests passed: 238 passed, 4
-  skipped.
+- Focused desktop viewmodel/keyboard/redaction tests passed: 238 passed, 4 skipped.
 - Focused rendering/operator/differential tests passed: 222 passed, 2 skipped.
 - Full built test suite passed locally: 7011 passed, 53 skipped.
 
@@ -4213,12 +1025,8 @@ Architecture hardening checkpoint release. No intended PDF behavior changes.
 macOS integration checkpoint release. No PDF behavior changes.
 
 ### Fixed
-- **macOS native menu integration (#447).** The desktop app now installs a
-  native macOS menu bar and hides the in-window menu on macOS, while keeping the
-  in-window menu visible on Windows and Linux.
-- **macOS titlebar spacing (#447).** The custom title label is shifted away from
-  the traffic-light window controls on macOS so the title text no longer
-  overlaps the close/minimize/zoom buttons.
+- **macOS native menu integration (#447).** The desktop app now installs a native macOS menu bar and hides the in-window menu on macOS, while keeping the in-window menu visible on Windows and Linux.
+- **macOS titlebar spacing (#447).** The custom title label is shifted away from the traffic-light window controls on macOS so the title text no longer overlaps the close/minimize/zoom buttons.
 
 ### Tests
 - Build remains warning-free.
@@ -4230,21 +1038,11 @@ macOS integration checkpoint release. No PDF behavior changes.
 Archival conformance + viewer-quality release. Additive; no breaking changes.
 
 ### Added
-- **PDF/A-1b conformance (#425).** Embedded subset CID fonts now emit a `/CIDSet`
-  in the FontDescriptor (covering all glyph slots of the retain-gid subset, as
-  PDF/A-2 §6.2.11.4.2 requires it be complete). `PdfDocumentBuilder.PdfA(PdfA1B)`
-  and `PdfA(PdfA2B)` output now both validate as conformant under veraPDF 1.30.2.
-  A veraPDF conformance gate test covers both flavours.
-- **Sharp high-zoom in the continuous reading view (#371 pt1).** Continuous mode
-  now renders each page at a zoom-aware DPI (scaling with zoom, capped to bound
-  memory) and caches by `(page, dpi)`, so zoomed reading stays crisp instead of
-  upscaling a fixed-DPI bitmap. (Full visible-region tiling remains a future
-  refinement.)
+- **PDF/A-1b conformance (#425).** Embedded subset CID fonts now emit a `/CIDSet` in the FontDescriptor (covering all glyph slots of the retain-gid subset, as PDF/A-2 §6.2.11.4.2 requires it be complete).
+- **Sharp high-zoom in the continuous reading view (#371 pt1).** Continuous mode now renders each page at a zoom-aware DPI (scaling with zoom, capped to bound memory) and caches by `(page, dpi)`, so zoomed reading stays crisp instead of upscaling a fixed-DPI bitmap.
 
 ### Developer tooling
-- **`Excise.Benchmarks` (#344).** A BenchmarkDotNet project measuring parse /
-  render / text-extract (replacing the orphaned `run-benchmarks.sh` target);
-  kept out of the shippable graph.
+- **`Excise.Benchmarks` (#344).** A BenchmarkDotNet project measuring parse / render / text-extract (replacing the orphaned `run-benchmarks.sh` target); kept out of the shippable graph.
 
 ## [2.10.0] — 2026-06-08
 
@@ -4252,26 +1050,11 @@ Library DX + authoring-correctness release. Additive; no breaking changes
 (public-API gates confirmed).
 
 ### Added
-- **Public-API gate for the viewer libraries (#384).** A new lightweight,
-  non-GUI `Excise.Avalonia.Tests` project snapshots the public surface of
-  `Excise.Avalonia` and `Excise.Rendering` against committed baselines (same
-  treatment `Excise.Core` got in #383) — any API change now fails CI until the
-  baseline is intentionally regenerated. It is deliberately separate from the
-  heavy headless GUI suite, so viewer-library changes get reliable per-PR
-  coverage.
-- **`PdfField.ButtonExportValues` (#424).** For a Button field (e.g. a radio
-  group), the selectable "on" export values — the appearance-state names from
-  each widget's `/AP /N` other than `Off`. Lets a form importer map a radio
-  group to a choice/dropdown instead of a generic boolean.
+- **Public-API gate for the viewer libraries (#384).** A new lightweight, non-GUI `Excise.Avalonia.Tests` project snapshots the public surface of `Excise.Avalonia` and `Excise.Rendering` against committed baselines (same treatment `Excise.Core` got in #383) — any API change now fails CI until the baseline is intentionally regenerated.
+- **`PdfField.ButtonExportValues` (#424).** For a Button field (e.g.
 
 ### Fixed
-- **Base-14 text encoding mojibake (#426).** `PdfFont.EncodeString` formatted the
-  Unicode code point in decimal as a `\ddd` escape, but PDF reads `\ddd` as
-  octal — so `é`, `—`, `·`, curly quotes etc. came out as garbage (and code
-  points above 255 were never mapped to their WinAnsi byte). The encoder now maps
-  Unicode → WinAnsi (CP1252) and emits correct octal, falling back to `?` for
-  characters genuinely unrepresentable in base-14 (embed a font via `DefaultFont`
-  to keep those). No public-API change.
+- **Base-14 text encoding mojibake (#426).** `PdfFont.EncodeString` formatted the Unicode code point in decimal as a `\ddd` escape, but PDF reads `\ddd` as octal — so `é`, `—`, `·`, curly quotes etc.
 
 ## [2.9.0] — 2026-06-08
 
@@ -4279,60 +1062,25 @@ Viewer + macOS-reader + archival release. Additive; no breaking changes
 (public-API gate confirmed for `Excise.Core`).
 
 ### Added
-- **Continuous (reading) view mode for `Excise.Avalonia` (#371).** New
-  `PdfViewerControl.ViewMode` (`PdfViewMode.SinglePage` default | `Continuous`).
-  Continuous shows every page in a vertically-scrolling, **render-virtualized**
-  list — only pages near the viewport render, bitmaps are bounded by an LRU
-  cache, and off-screen renders are cancelled. It is **read-only by design**:
-  entering an editing interaction (Redaction / TextSelection / FormAuthoring)
-  auto-switches back to single-page, so the editing/redaction overlays only ever
-  run against a single rendered page. Scroll ⇄ current-page stay in sync and zoom
-  resizes pages live. New public types `PdfViewMode`, `PdfPageSlot`.
-- **macOS: open PDFs from Finder / be a default reader (#420).** The app handles
-  the macOS file-activation event (Finder double-click, Dock, `open -a`), and the
-  generated `.app` `Info.plist` declares `CFBundleDocumentTypes` for
-  `com.adobe.pdf` so excise registers as a PDF handler. README documents setting it
-  as the default reader and the one-time Gatekeeper unquarantine.
-- **PDF/A archival output.** `PdfDocumentBuilder.PdfA(PdfAConformance.PdfA2B)`
-  adds the document structures PDF/A requires at save time — an XMP metadata
-  packet with the `pdfaid` identifier and an sRGB OutputIntent (embedded ICC
-  profile). With an embedded font (`DefaultFont`), the output validates as
-  **PDF/A-2b under veraPDF 1.30.2 (144/144 rules)**. New `PdfAConformance` enum.
-  (PDF/A-1b is stricter and not yet fully met — tracked in #425.)
-- **Trailer `/ID`.** Newly authored documents now always get a file-identifier
-  array in the trailer (ISO 32000-1 §14.4) — required by PDF/A and recommended
-  generally; an existing `/ID` is preserved.
+- **Continuous (reading) view mode for `Excise.Avalonia` (#371).** New `PdfViewerControl.ViewMode` (`PdfViewMode.SinglePage` default | `Continuous`).
+- **macOS: open PDFs from Finder / be a default reader (#420).** The app handles the macOS file-activation event (Finder double-click, Dock, `open -a`), and the generated `.app` `Info.plist` declares `CFBundleDocumentTypes` for `com.adobe.pdf` so excise registers as a PDF handler.
+- **PDF/A archival output.** `PdfDocumentBuilder.PdfA(PdfAConformance.PdfA2B)` adds the document structures PDF/A requires at save time — an XMP metadata packet with the `pdfaid` identifier and an sRGB OutputIntent (embedded ICC profile).
+- **Trailer `/ID`.** Newly authored documents now always get a file-identifier array in the trailer (ISO 32000-1 §14.4) — required by PDF/A and recommended generally; an existing `/ID` is preserved.
 
 ### Fixed
-- **Chronic headless GUI test host-crash (#363), part 2.** The headless test
-  runner now closes each test's windows afterward (tracked via Avalonia's global
-  routed-event streams), bounding the shared dispatcher's live-window set, and the
-  heavy `*_MatchesBaseline` visual-regression tests are excluded from the PR gate
-  (owned by the nightly job). Reduces — but does not yet fully eliminate — the
-  residual native host crash; full resolution is in progress.
+- **Chronic headless GUI test host-crash (#363), part 2.** The headless test runner now closes each test's windows afterward (tracked via Avalonia's global routed-event streams), bounding the shared dispatcher's live-window set, and the heavy `*_MatchesBaseline` visual-regression tests are excluded from the PR gate (owned by the nightly job).
 
 ## [2.8.0] — 2026-06-08
 
 Operator render-coverage release (#350). Additive; no breaking changes.
 
 ### Added
-- **Dash pattern (`d`) rendering.** The dash operator was parsed but ignored by
-  the renderer, so dashed strokes drew solid. `SkiaRenderer` now honors it via
-  `SKPathEffect.CreateDash` on both stroke paths; odd-length PDF dash arrays are
-  doubled (Skia needs even on/off pairs) and empty/degenerate arrays fall back to
-  a solid line.
-- **Authoritative operator inventory test.** One stream exercising every standard
-  content-stream operator, each asserted to parse **and** survive a
-  parse→write→parse round-trip through `ContentStreamWriter`.
+- **Dash pattern (`d`) rendering.** The dash operator was parsed but ignored by the renderer, so dashed strokes drew solid.
+- **Authoritative operator inventory test.** One stream exercising every standard content-stream operator, each asserted to parse **and** survive a parse→write→parse round-trip through `ContentStreamWriter`.
 
 ### Tests
-- **Shading (`sh`) render output is now actually verified.** Earlier shading
-  tests referenced a `/Shading` resource the test PDFs never contained, so the
-  axial/radial gradient code path ran as a no-op. New `OperatorRenderCoverageTests`
-  build PDFs with real Type 2 (axial) and Type 3 (radial) shadings and assert
-  gradient pixels, clip restriction, and graceful handling of a missing resource.
-- Dash render tests assert real behavior (a dash leaves measurable gaps vs. a
-  solid control; an empty array resets to solid).
+- **Shading (`sh`) render output is now actually verified.** Earlier shading tests referenced a `/Shading` resource the test PDFs never contained, so the axial/radial gradient code path ran as a no-op.
+- Dash render tests assert real behavior (a dash leaves measurable gaps vs.
 
 ## [2.7.0] — 2026-06-06
 
@@ -4340,21 +1088,8 @@ Fillable-table authoring + PDF/UA accessibility hardening. Additive; no breaking
 changes (public-API gate confirmed).
 
 ### Added
-- **`PdfDocumentBuilder.FillableTable(...)`.** Renders a table whose body cells
-  are interactive AcroForm fields (text input, checkbox, or dropdown per cell) —
-  a fillable grid. Mirrors `Table`'s layout (column weights, gridlines, automatic
-  pagination) but places live fields instead of static text. The first column is a
-  static row-header; each cell's `/TU` accessible name comes from its tooltip.
-  New supporting types: `FillableTableRow`, `FillableTableCell`, `FillableCellKind`.
-- **PDF/UA hardening for tagged output (#407).**
-  - Decorative content (horizontal rules, form-field borders, table grid lines)
-    is wrapped in `/Artifact` so every piece of page content is tagged or an
-    artifact. New `PdfGraphics.BeginArtifact()`.
-  - Form-field widgets are added to the structure tree as `Form` elements via
-    `/OBJR`, with each widget carrying a `/StructParent` into the ParentTree.
-  - Tagged tables now nest `Table → TR → TD/TH` (header cells `TH`), each cell in
-    its own marked content, instead of one flat `Table` element;
-    `StructureTreeBuilder` models a general nested element tree.
+- **`PdfDocumentBuilder.FillableTable(...)`.** Renders a table whose body cells are interactive AcroForm fields (text input, checkbox, or dropdown per cell) — a fillable grid.
+- **PDF/UA hardening for tagged output (#407).** is wrapped in `/Artifact` so every piece of page content is tagged or an artifact.
 
 ## [2.6.0] — 2026-06-06
 
@@ -4362,32 +1097,13 @@ Font, accessibility, and image-filter additions. All additive; the public-API
 gate confirms no breaking changes.
 
 ### Added
-- **Font subsetting + CFF/OpenType embedding (#393).** Embedded TrueType fonts
-  are now subsetted to the glyphs actually drawn (retain-GID `glyf`/`loca`,
-  composite-glyph closure, subset tag) — e.g. DejaVu drawing a short string went
-  from ~759 KB to ~14 KB embedded. CFF-outline OpenType (`'OTTO'`) fonts can now
-  be embedded too (`/CIDFontType0` + `/FontFile3 /Subtype /OpenType`).
-- **Embedded fonts in the high-level builder (#398).** `TextStyle.WithFont(...)`
-  and `PdfDocumentBuilder.DefaultFont(...)` let the friendly facade render
-  arbitrary Unicode (not just base-14); the same typeface across sizes/weights
-  embeds as one subset. `PdfFont.WithSize` is now `virtual`.
-- **Tagged-PDF authoring / PDF-UA (#275).** `PdfDocumentBuilder.Tagged()` emits a
-  logical structure tree (StructTreeRoot + Document→H1-H4/P/Table), marked
-  content (`BDC`/`EMC` + MCID, `/MCR` with `/Pg`, `/ParentTree`), and catalog
-  `/MarkInfo`, `/ViewerPreferences /DisplayDocTitle`. Plus
-  `PdfGraphics.BeginMarkedContent`/`EndMarkedContent`. Combined with embedded
-  fonts + `/Lang`, the builder now produces genuinely accessible documents
-  (`pdfinfo` reports `Tagged: yes`).
-- **Image filters: JBIG2 + JPEG2000 (#325).** Pure-managed JBIG2 decoder
-  (MQ arithmetic + generic region, template 0) wired into the stream
-  decompressor with strict decode-or-passthrough fallback (no silently-wrong
-  images). JPEG2000 (`JPXDecode`) codestream/marker parsing (full pixel decode
-  deferred). JPEG/PNG remain delegated to the SkiaSharp renderer.
+- **Font subsetting + CFF/OpenType embedding (#393).** Embedded TrueType fonts are now subsetted to the glyphs actually drawn (retain-GID `glyf`/`loca`, composite-glyph closure, subset tag) — e.g.
+- **Embedded fonts in the high-level builder (#398).** `TextStyle.WithFont(...)` and `PdfDocumentBuilder.DefaultFont(...)` let the friendly facade render arbitrary Unicode (not just base-14); the same typeface across sizes/weights embeds as one subset.
+- **Tagged-PDF authoring / PDF-UA (#275).** `PdfDocumentBuilder.Tagged()` emits a logical structure tree (StructTreeRoot + Document→H1-H4/P/Table), marked content (`BDC`/`EMC` + MCID, `/MCR` with `/Pg`, `/ParentTree`), and catalog `/MarkInfo`, `/ViewerPreferences /DisplayDocTitle`.
+- **Image filters: JBIG2 + JPEG2000 (#325).** Pure-managed JBIG2 decoder (MQ arithmetic + generic region, template 0) wired into the stream decompressor with strict decode-or-passthrough fallback (no silently-wrong images).
 
 ### Notes
-- Remaining tracked follow-ups: full PDF/UA conformance (artifacts, TR/TD,
-  form-field tagging), CFF glyph subsetting, JBIG2 symbol/text regions, full
-  JPEG2000 decode.
+- Remaining tracked follow-ups: full PDF/UA conformance (artifacts, TR/TD, form-field tagging), CFF glyph subsetting, JBIG2 symbol/text regions, full JPEG2000 decode.
 
 ## [2.5.0] — 2026-06-06
 
@@ -4396,37 +1112,18 @@ accessible, fillable, Unicode PDFs from structured content. All additive; the
 public-API gate confirms no breaking changes.
 
 ### Added
-- **Unicode text + embedded fonts (#378).** `PdfFont.FromFile(path, size)` /
-  `FromTrueType(bytes|Stream, size)` embed a TrueType font as a Type0 /
-  Identity-H composite font with a ToUnicode CMap, so arbitrary Unicode (CJK,
-  Arabic, accented Latin, Greek, Cyrillic, …) both renders and stays
-  extractable. Backed by a new dependency-free sfnt reader
-  (`Excise.Core.Fonts.TrueTypeFontFile`). Full-font embedding; subsetting and CFF
-  ('OTTO') are tracked in #393.
-- **High-level text layout (#379).** `PdfGraphics.DrawText(text, font, brush,
-  PdfRectangle, …)` word-wraps into a box and returns a `TextLayoutResult`
-  (used height + overflow) for flowing across boxes/pages; `MeasureText(...)`
-  returns wrapped size.
-- **AcroForm field options (#380).** `/TU` tooltip (accessible name) on all
-  field types; `/MaxLen` + comb for text fields; `AddDateField` (Acrobat
-  `AFDate` format/keystroke actions); `SetTabOrder` (page `/Tabs`).
-- **Document metadata (#381).** `PdfDocument.SetTitle/SetAuthor/SetSubject/
-  SetKeywords/SetCreator/SetProducer` (creates the `/Info` dict on demand) and a
-  read/write `Language` property (catalog `/Lang`, required by PDF/UA).
-- **`PdfDocumentBuilder`** gains `Title/Author/Subject/Keywords/Language`,
-  `DateField`, and `tooltip`/`maxLength`/`comb` passthrough on fields (with
-  `/TU` defaulting to the visible label for screen readers).
+- **Unicode text + embedded fonts (#378).** `PdfFont.FromFile(path, size)` / `FromTrueType(bytes|Stream, size)` embed a TrueType font as a Type0 / Identity-H composite font with a ToUnicode CMap, so arbitrary Unicode (CJK, Arabic, accented Latin, Greek, Cyrillic, …) both renders and stays extractable.
+- **High-level text layout (#379).** `PdfGraphics.DrawText(text, font, brush, PdfRectangle, …)` word-wraps into a box and returns a `TextLayoutResult` (used height + overflow) for flowing across boxes/pages; `MeasureText(...)` returns wrapped size.
+- **AcroForm field options (#380).** `/TU` tooltip (accessible name) on all field types; `/MaxLen` + comb for text fields; `AddDateField` (Acrobat `AFDate` format/keystroke actions); `SetTabOrder` (page `/Tabs`).
+- **Document metadata (#381).** `PdfDocument.SetTitle/SetAuthor/SetSubject/ SetKeywords/SetCreator/SetProducer` (creates the `/Info` dict on demand) and a read/write `Language` property (catalog `/Lang`, required by PDF/UA).
+- **`PdfDocumentBuilder`** gains `Title/Author/Subject/Keywords/Language`, `DateField`, and `tooltip`/`maxLength`/`comb` passthrough on fields (with `/TU` defaulting to the visible label for screen readers).
 
 ### Changed
-- `PdfFont` text-encoding/measurement/metrics members are now `virtual` so
-  embedded fonts can override them; standard-font behavior is unchanged.
-- Dependencies: bumped `FluentAvaloniaUI` to the latest preview (#340; full
-  de-preview is blocked on an upstream FluentAvalonia 3.x stable for Avalonia 12).
+- `PdfFont` text-encoding/measurement/metrics members are now `virtual` so embedded fonts can override them; standard-font behavior is unchanged.
+- Dependencies: bumped `FluentAvaloniaUI` to the latest preview (#340; full de-preview is blocked on an upstream FluentAvalonia 3.x stable for Avalonia 12).
 
 ### Tests / CI
-- Raised `Excise.Core` CI line coverage to ~93% and ratcheted the gate to 92.5%
-  (#351); CI installs `fonts-dejavu-core` so the embedding tests run
-  deterministically. The macOS `.app` is now built and attached by CI.
+- Raised `Excise.Core` CI line coverage to ~93% and ratcheted the gate to 92.5% (#351); CI installs `fonts-dejavu-core` so the embedding tests run deterministically.
 
 ## [2.4.1] — 2026-06-06
 
@@ -4434,34 +1131,17 @@ Packaging, API-stability, and CI hardening on top of v2.4.0. No public-API
 changes (enforced by the new gate) — a pure patch.
 
 ### Added
-- **Public-API gate (#383).** `PublicApiApprovalTests` snapshots the full
-  `Excise.Core` public surface against a committed baseline
-  (`Excise.Core.Tests/PublicApi/Excise.Core.approved.txt`); any public-API change
-  fails CI until intentionally re-approved (`APPROVE_PUBLIC_API=1`). Makes every
-  API change a deliberate SemVer decision.
-- **SourceLink + symbols.** The three publishable libraries (`Excise.Core`,
-  `Excise.Rendering`, `Excise.Avalonia`) now ship portable `.snupkg` symbol packages
-  with SourceLink and deterministic CI builds (shared `Packaging.props`), so
-  consumers can step into the source while debugging.
-- README "Versioning & API stability" section documenting the SemVer policy,
-  the `Excise.Core.Authoring.*` stable writer surface, and local-feed (not
-  nuget.org) distribution.
+- **Public-API gate (#383).** `PublicApiApprovalTests` snapshots the full `Excise.Core` public surface against a committed baseline (`Excise.Core.Tests/PublicApi/Excise.Core.approved.txt`); any public-API change fails CI until intentionally re-approved (`APPROVE_PUBLIC_API=1`).
+- **SourceLink + symbols.** The three publishable libraries (`Excise.Core`, `Excise.Rendering`, `Excise.Avalonia`) now ship portable `.snupkg` symbol packages with SourceLink and deterministic CI builds (shared `Packaging.props`), so consumers can step into the source while debugging.
+- README "Versioning & API stability" section documenting the SemVer policy, the `Excise.Core.Authoring.*` stable writer surface, and local-feed (not nuget.org) distribution.
 
 ### Fixed
-- **Release pipeline cold-cache restore (#387).** `release.yml` now sets
-  `DOTNET_NUGET_SIGNATURE_VERIFICATION=false` (matching `ci.yml`) so a
-  version-bump cache miss no longer fails the license-manifest step with NU3012
-  (revoked ReactiveUI/Splat signing cert). The v2.4.0 Windows/Debian/macOS
-  installers — absent from that release due to this bug — are restored here.
-- `generate-license-manifest.sh` no longer hard-fails on a cold NuGet cache and
-  no longer suppresses restore output.
+- **Release pipeline cold-cache restore (#387).** `release.yml` now sets `DOTNET_NUGET_SIGNATURE_VERIFICATION=false` (matching `ci.yml`) so a version-bump cache miss no longer fails the license-manifest step with NU3012 (revoked ReactiveUI/Splat signing cert).
+- `generate-license-manifest.sh` no longer hard-fails on a cold NuGet cache and no longer suppresses restore output.
 
 ### CI / dev
-- Headless GUI tests (`Excise.App.Tests`) now run only when GUI-relevant paths
-  change (or on `main`), so library-only PRs aren't gated on the slow GUI suite.
-- Quarantined the flaky `KeyboardShortcutTests.CtrlS_SavesFile` on headless CI
-  (#363) — it intermittently deadlocked the Avalonia dispatcher and crashed the
-  test host. Still runs locally; the save path stays covered elsewhere.
+- Headless GUI tests (`Excise.App.Tests`) now run only when GUI-relevant paths change (or on `main`), so library-only PRs aren't gated on the slow GUI suite.
+- Quarantined the flaky `KeyboardShortcutTests.CtrlS_SavesFile` on headless CI (#363) — it intermittently deadlocked the Avalonia dispatcher and crashed the test host.
 
 ## [2.4.0] — 2026-06-05
 
@@ -4470,86 +1150,38 @@ generate PDFs from structured content without touching coordinates — the
 writer-side facade tracked by #383 (PromptResponse writer epic #382).
 
 ### Added
-- **`Excise.Core.Authoring.PdfDocumentBuilder` — high-level writer facade (#383).**
-  A fluent, flow-layout builder over the existing `PdfGraphics` /
-  `AcroFormAuthoring` API. Content flows top-to-bottom inside the page's content
-  area with automatic word-wrap and pagination, so callers never compute
-  coordinates or manage the PDF's bottom-left Y axis.
-  - Content blocks: `Heading(level)`, `Paragraph` (word-wrap + hard-break
-    aware), `Spacer`, `HorizontalRule`, `KeyValue`, `Table` (column weights,
-    optional header row + grid lines), `PageBreak`.
-  - Fillable AcroForm fields, flow-positioned with drawn labels and borders:
-    `TextField` (multiline/required), `CheckBox`, `Dropdown` (combo). Auto-names
-    fields when none is supplied.
-  - `Custom(Action<PdfGraphics, LayoutContext>)` escape hatch to the low-level
-    API; `Build()` returns the `PdfDocument` for further manipulation;
-    `SaveToBytes()` / `Save(path)` / `Save(Stream)` output.
-- **Authoring value types.** `PageSize` (Letter/Legal/A4/A3/A5 +
-  `Landscape()`/`Portrait()`), `PageMargins` (`All`/`Symmetric`/`Default`),
-  immutable `TextStyle` record (family/size/bold/italic/color/alignment/
-  line-spacing/space-after with `With…` helpers), `FontFamily`, `LayoutContext`.
+- **`Excise.Core.Authoring.PdfDocumentBuilder` — high-level writer facade (#383).** A fluent, flow-layout builder over the existing `PdfGraphics` / `AcroFormAuthoring` API.
+- **Authoring value types.** `PageSize` (Letter/Legal/A4/A3/A5 + `Landscape()`/`Portrait()`), `PageMargins` (`All`/`Symmetric`/`Default`), immutable `TextStyle` record (family/size/bold/italic/color/alignment/ line-spacing/space-after with `With…` helpers), `FontFamily`, `LayoutContext`.
 - README: a copy-paste "Authoring PDFs from scratch (high-level)" sample.
 
 ### Notes
-- Targets the base-14 fonts and Latin text available today; Unicode / embedded
-  TrueType-OpenType fonts (#378), richer text layout (#379), more AcroForm
-  field options (#380), and document metadata setters (#381) extend the facade.
-- Verified against external readers: generated forms pass `qpdf --check`,
-  `pdfinfo` reports a live `AcroForm`, content auto-paginates, and `pdftotext`
-  extracts all text. 17 new tests; full `Excise.Core` suite green (2744 passing).
+- Targets the base-14 fonts and Latin text available today; Unicode / embedded TrueType-OpenType fonts (#378), richer text layout (#379), more AcroForm field options (#380), and document metadata setters (#381) extend the facade.
+- Verified against external readers: generated forms pass `qpdf --check`, `pdfinfo` reports a live `AcroForm`, content auto-paginates, and `pdftotext` extracts all text. 17 new tests; full `Excise.Core` suite green (2744 passing).
 
 ## [2.3.1] — 2026-06-04
 
 ### Fixed
-- **Thread-safe object resolution (#376).** A single `PdfDocument` resolved
-  indirect objects through one shared lexer with a mutable stream position, so
-  concurrent reads — e.g. the GUI's background search-indexer parsing pages
-  while the UI thread reads links / renders — corrupted each other's seeks,
-  surfacing as spurious `PdfParseException: Unexpected keyword 'obj'`.
-  `GetObject` now serializes seek/parse + cache mutation behind a reentrant
-  lock. Verified on a large real document: 8 threads reading every page
-  produced 729 errors before and 0 after. Matters especially now that
-  `Excise.Core` ships as a NuGet package.
+- **Thread-safe object resolution (#376).** A single `PdfDocument` resolved indirect objects through one shared lexer with a mutable stream position, so concurrent reads — e.g.
 
 ## [2.3.0] — 2026-06-04
 
 Turns excise's engine into reusable libraries for the wider .NET/Avalonia ecosystem.
 
 ### Added
-- **`Excise.Avalonia` — reusable Avalonia PDF viewer control (#365).** The
-  `PdfViewerControl` (zoom/pan, navigation, text selection, search highlights,
-  annotations, links, form-field overlays) is extracted from the `Excise.App`
-  app into a standalone, dependency-light library (depends only on `Excise.Core`
-  + `Excise.Rendering` + Avalonia + SkiaSharp). Any Avalonia app can now drop in a
-  pure-managed, SkiaSharp-based PDF viewer — a gap the ecosystem lacked. The
-  app consumes it as the reference implementation; a minimal `Excise.Avalonia.Sample`
-  shows the dependency-light usage.
-- **Framework-neutral render API (#366).** `Excise.Rendering.SkiaRenderer` gains
-  `RenderPage(page, options, CancellationToken)` (cancellable between
-  content-stream operators, companion to #346) and `RenderPageToPng(page, Stream, …)`
-  for non-Skia consumers.
-- **NuGet-packable trio.** `Excise.Core`, `Excise.Rendering`, and `Excise.Avalonia`
-  carry package metadata + per-package READMEs; `dotnet pack` produces three
-  valid `.nupkg`s (attached to this release; not pushed to nuget.org).
+- **`Excise.Avalonia` — reusable Avalonia PDF viewer control (#365).** The `PdfViewerControl` (zoom/pan, navigation, text selection, search highlights, annotations, links, form-field overlays) is extracted from the `Excise.App` app into a standalone, dependency-light library (depends only on `Excise.Core` + `Excise.Rendering` + Avalonia + SkiaSharp).
+- **Framework-neutral render API (#366).** `Excise.Rendering.SkiaRenderer` gains `RenderPage(page, options, CancellationToken)` (cancellable between content-stream operators, companion to #346) and `RenderPageToPng(page, Stream, …)` for non-Skia consumers.
+- **NuGet-packable trio.** `Excise.Core`, `Excise.Rendering`, and `Excise.Avalonia` carry package metadata + per-package READMEs; `dotnet pack` produces three valid `.nupkg`s (attached to this release; not pushed to nuget.org).
 
 ### Changed
-- `Excise.App` now consumes `Excise.Avalonia` rather than embedding the control;
-  behavior is unchanged.
+- `Excise.App` now consumes `Excise.Avalonia` rather than embedding the control; behavior is unchanged.
 
 ## [2.2.2] — 2026-06-03
 
 ### Fixed
-- **Outline and page-preview (thumbnail) sidebars are now independently
-  toggleable (#369).** The outline panel was nested inside the thumbnails
-  sidebar, so "Show Outline" did nothing unless "Show Thumbnails" was also on,
-  and hiding thumbnails hid the outline too. The left sidebar now shows when
-  *either* panel is enabled, each panel binds its own visibility, and the
-  splitter appears only when both are visible.
+- **Outline and page-preview (thumbnail) sidebars are now independently toggleable (#369).** The outline panel was nested inside the thumbnails sidebar, so "Show Outline" did nothing unless "Show Thumbnails" was also on, and hiding thumbnails hid the outline too.
 
 ### Added
-- **Toolbar toggle buttons** for the outline (📑) and page previews (🗐), plus
-  **keyboard shortcuts** Ctrl+Shift+O (outline) and Ctrl+Shift+T (thumbnails) —
-  the toggles were previously buried as View-menu checkboxes only. (#369)
+- **Toolbar toggle buttons** for the outline (📑) and page previews (🗐), plus **keyboard shortcuts** Ctrl+Shift+O (outline) and Ctrl+Shift+T (thumbnails) — the toggles were previously buried as View-menu checkboxes only.
 
 ## [2.2.1] — 2026-06-03
 
@@ -4560,45 +1192,21 @@ release shipped the redaction-security trio; this release adds the
 parser-hardening / known-issues batch that landed afterward).
 
 ### Fixed
-- **Rotated PDFs render unrotated** — `SkiaRenderer` now honours the page
-  `/Rotate` entry (0/90/180/270), sizing the bitmap in visual dimensions, so
-  rotated pages display the right way up. (#364)
-- **Writer re-emitted cross-reference plumbing** — `/ObjStm` and `/XRef`
-  streams are no longer copied into the rewritten body, so a Form XObject
-  flattened out of a compressed object stream can't survive redaction. (#359)
-- **Inline-image `EI` scan was unbounded** on malformed image data lacking a
-  `/L` length, causing O(n²) blowup; the scan is now bounded. (#347)
-- **Parser hardening against hostile input** — content-stream array recursion
-  is depth-bounded and a `CancellationToken` is threaded through parsing so a
-  malicious/degenerate document can't hang or stack-overflow. (#346)
-- **Exception-swallowing audit** — best-effort `catch` blocks no longer
-  swallow `OutOfMemoryException` (and other critical failures) during the
-  ToUnicode-CMap parse and related paths. (#345)
-- Added an end-to-end CID/Type0 (CJK) redaction regression test on a real
-  Identity-H PDF, locking in the v2.1.0 `RawBytes` reconstruction fix. (#353)
+- **Rotated PDFs render unrotated** — `SkiaRenderer` now honours the page `/Rotate` entry (0/90/180/270), sizing the bitmap in visual dimensions, so rotated pages display the right way up.
+- **Writer re-emitted cross-reference plumbing** — `/ObjStm` and `/XRef` streams are no longer copied into the rewritten body, so a Form XObject flattened out of a compressed object stream can't survive redaction.
+- **Inline-image `EI` scan was unbounded** on malformed image data lacking a `/L` length, causing O(n²) blowup; the scan is now bounded.
+- **Parser hardening against hostile input** — content-stream array recursion is depth-bounded and a `CancellationToken` is threaded through parsing so a malicious/degenerate document can't hang or stack-overflow.
+- **Exception-swallowing audit** — best-effort `catch` blocks no longer swallow `OutOfMemoryException` (and other critical failures) during the ToUnicode-CMap parse and related paths.
+- Added an end-to-end CID/Type0 (CJK) redaction regression test on a real Identity-H PDF, locking in the v2.1.0 `RawBytes` reconstruction fix.
 
 ### Security / robustness
-- **Malformed-PDF fuzz / property tests** for the parsers (`ParserFuzzTests`):
-  on hostile or malformed bytes the parser must parse them or fail with a
-  *typed* `PdfParseException` — never a raw CLR crash. The tests surfaced and
-  fixed four genuine robustness bugs: a `FormatException` in content-stream
-  hex-string parsing (`Uri.IsHexDigit`), a `KeyNotFoundException` on a
-  `/Root`-less trailer, an `InvalidOperationException` on a catalog with no
-  `/Pages`, and an `ArgumentOutOfRangeException` from a negative/past-EOF xref
-  seek offset (`PdfLexer.Seek` now bounds-checks). (#352)
+- **Malformed-PDF fuzz / property tests** for the parsers (`ParserFuzzTests`): on hostile or malformed bytes the parser must parse them or fail with a *typed* `PdfParseException` — never a raw CLR crash.
 
 ### CI / tests
-- Removed a redundant 15s `OperationStatus` wait in the AcroForm overlay test
-  and raised over-tight GUI timeouts (3s → 15s) that masked CI slowness as a
-  hang; raised the cold-CI first-render budget (15s → 60s) in the headless
-  render baseline test, which renders in ~2s locally but can exceed 15s on a
-  cold CI runner (JIT + xvfb + SkiaSharp native init). (#363)
+- Removed a redundant 15s `OperationStatus` wait in the AcroForm overlay test and raised over-tight GUI timeouts (3s → 15s) that masked CI slowness as a hang; raised the cold-CI first-render budget (15s → 60s) in the headless render baseline test, which renders in ~2s locally but can exceed 15s on a cold CI runner (JIT + xvfb + SkiaSharp native init).
 
 ### Docs
-- Refreshed stale `CLAUDE.md` notes: the redaction-engine architecture now
-  points at `Excise.Core` (not the removed `Excise.App/Services/Redaction/`), and
-  the frozen "Current Status (v1.4.0)" block now points at `CHANGELOG.md` /
-  GitHub Releases so the version no longer goes stale in-file. (#349)
+- Refreshed stale `CLAUDE.md` notes: the redaction-engine architecture now points at `Excise.Core` (not the removed `Excise.App/Services/Redaction/`), and the frozen "Current Status (v1.4.0)" block now points at `CHANGELOG.md` / GitHub Releases so the version no longer goes stale in-file.
 
 ## [2.2.0] — 2026-06-03
 
@@ -4608,31 +1216,15 @@ way content can land under the redaction area. Also restores a working CI
 gate (it had been silently broken) and raises Excise.Core coverage.
 
 ### Added / Security
-- **Inline-image redaction** (`BI…ID…EI`) — the parser now retains the
-  embedded pixel bytes and the writer re-emits valid inline-image syntax, so
-  an inline image overlapping the redaction area is removed, not just covered.
-  (#354)
-- **Form XObject redaction** — overlapping forms are flattened into the page
-  (Matrix/BBox-correct, resources merged with collision renaming, nested
-  forms recursed) and redacted; the now-orphaned form objects are pruned so
-  the writer can't re-emit the removed content. (#355)
+- **Inline-image redaction** (`BI…ID…EI`) — the parser now retains the embedded pixel bytes and the writer re-emits valid inline-image syntax, so an inline image overlapping the redaction area is removed, not just covered.
+- **Form XObject redaction** — overlapping forms are flattened into the page (Matrix/BBox-correct, resources merged with collision renaming, nested forms recursed) and redacted; the now-orphaned form objects are pruned so the writer can't re-emit the removed content.
 
 ### Fixed
-- **Rotation-aware redaction** — `PdfPage.ToContentStreamCoordinates` maps a
-  visual-space rectangle into content space for `/Rotate` 0/90/180/270; the
-  GUI no longer mis-targets redactions on rotated pages. (#356)
-- **Outline / text-string decoding** — `PdfString` now decodes the
-  PDFDocEncoding 0x80–0x9F / 0x18–0x1F / 0xA0 ranges (em/en dash, curly
-  quotes, ligatures, €, …) instead of rendering C1 control characters as tofu
-  boxes (e.g. bookmark "Part I—Fundamentals"). (#361)
+- **Rotation-aware redaction** — `PdfPage.ToContentStreamCoordinates` maps a visual-space rectangle into content space for `/Rotate` 0/90/180/270; the GUI no longer mis-targets redactions on rotated pages.
+- **Outline / text-string decoding** — `PdfString` now decodes the PDFDocEncoding 0x80–0x9F / 0x18–0x1F / 0xA0 ranges (em/en dash, curly quotes, ligatures, €, …) instead of rendering C1 control characters as tofu boxes (e.g.
 
 ### CI / tests
-- Restored the Build/Test/Coverage gate, which had been masked by a failing
-  veraPDF-install step: best-effort veraPDF, NuGet signature-verification
-  workaround (revoked ReactiveUI cert), refreshed the redaction-architecture
-  check, and fixed the coverage-report path. The PR gate now runs the
-  deterministic test set (environment-dependent visual/corpus/differential/
-  benchmark tests are owned by the nightly job). (#351)
+- Restored the Build/Test/Coverage gate, which had been masked by a failing veraPDF-install step: best-effort veraPDF, NuGet signature-verification workaround (revoked ReactiveUI cert), refreshed the redaction-architecture check, and fixed the coverage-report path.
 - Raised Excise.Core coverage and set the enforced gate to the level CI meets.
 
 ## [2.1.0] — 2026-06-01
@@ -4644,30 +1236,30 @@ performance pass, dependency hygiene, and a round of stability/security
 hardening.
 
 ### Added
-- PDF **encryption/decryption** — RC4 (V1/V2) and AES-128/256 (V4/V5). (#237)
-- **AcroForm** read, edit, and authoring — fill, flatten, create fields. (#272)
-- **Advanced transparency** — soft masks, transparency groups, full blend-mode set. (#274)
-- **Type0 / CID (CJK)** fonts — Identity-H/V, ToUnicode CMap, vertical writing, CFF wiring. (#327, #328)
-- **Optional content groups** (OCGs) + **XMP** metadata extraction. (#329)
-- **Embedded-file** extraction. (#330)
-- Full content-stream **operator coverage** — text-state ops, color spaces, marked content, shading. (#326, #333)
-- veraPDF / corpus **conformance harness**. (#332)
+- PDF **encryption/decryption** — RC4 (V1/V2) and AES-128/256 (V4/V5).
+- **AcroForm** read, edit, and authoring — fill, flatten, create fields.
+- **Advanced transparency** — soft masks, transparency groups, full blend-mode set.
+- **Type0 / CID (CJK)** fonts — Identity-H/V, ToUnicode CMap, vertical writing, CFF wiring.
+- **Optional content groups** (OCGs) + **XMP** metadata extraction.
+- **Embedded-file** extraction.
+- Full content-stream **operator coverage** — text-state ops, color spaces, marked content, shading.
+- veraPDF / corpus **conformance harness**.
 
 ### Changed / Performance
-- GUI **Release startup profile** — ReadyToRun + TieredPGO + concurrent GC; **~36% faster cold start** (1.18 s → 0.75 s). (#339)
-- ReadyToRun for `Excise.Cli`. (#334)
-- Moved off preview packages and bumped to latest stable: **Avalonia 12.0.4, ReactiveUI 23.2.27, SkiaSharp 3.119.4, .NET 10.0.8**. (#340)
-- Removed the IdlerGear integration; refreshed stale docs (versions/architecture) and archived obsolete plan docs. (#349)
+- GUI **Release startup profile** — ReadyToRun + TieredPGO + concurrent GC; **~36% faster cold start** (1.18 s → 0.75 s).
+- ReadyToRun for `Excise.Cli`.
+- Moved off preview packages and bumped to latest stable: **Avalonia 12.0.4, ReactiveUI 23.2.27, SkiaSharp 3.119.4, .NET 10.0.8**.
+- Removed the IdlerGear integration; refreshed stale docs (versions/architecture) and archived obsolete plan docs.
 
 ### Fixed (stability & security hardening)
-- Parser **recursion-depth guard** — deeply nested hostile PDFs throw instead of StackOverflow. (#346)
-- Inline-image **`/L` length** used to avoid false-positive `EI` in binary data. (#347)
-- **Redaction re-encodes kept CID/CJK text** with original codes instead of unrenderable Unicode. (#353)
-- ToUnicode CMap parse no longer swallows fatal exceptions. (#345)
-- Headless test harness wires ReactiveUI to the Avalonia dispatcher — fixes a cross-thread `CanExecute` crash. (#358)
+- Parser **recursion-depth guard** — deeply nested hostile PDFs throw instead of StackOverflow.
+- Inline-image **`/L` length** used to avoid false-positive `EI` in binary data.
+- **Redaction re-encodes kept CID/CJK text** with original codes instead of unrenderable Unicode.
+- ToUnicode CMap parse no longer swallows fatal exceptions.
+- Headless test harness wires ReactiveUI to the Avalonia dispatcher — fixes a cross-thread `CanExecute` crash.
 
 ### Tests
-- +18 tests: parser recursion limits, inline-image `/L`, CID-redaction pipeline, and previously-untested operators (`sh`, marked content, `BX`/`EX`, `d0`/`d1`). Full Excise.Core suite: 2562 passing.
+- +18 tests: parser recursion limits, inline-image `/L`, CID-redaction pipeline, and previously-untested operators (`sh`, marked content, `BX`/`EX`, `d0`/`d1`).
 
 ### Known limitations / deferred
 - Inline-image redaction round-trip (#354), Form XObject redaction (#355, flatten-then-redact), and rotated-page redaction (#356) remain open.
@@ -4685,103 +1277,51 @@ WeasyPrint, Word, XEP, and CJK toolchains without falling back to garbage.
 ### Added
 
 #### Excise.Core — pure-.NET PDF parser, writer, and content-stream library
-- M1: parser for objects, indirect references, xref, encrypted streams. Plus
-  tolerant recovery for the off-by-one /Length and stale-startxref errors
-  that are common in real PDFs.
+- M1: parser for objects, indirect references, xref, encrypted streams.
 - M2: text extraction with letter-level positions, replacing PdfPig.
 - M3: document writing — incremental save, full rewrite, object streams.
 - M4: graphics API — `PdfGraphics` with path, text, image, and state ops.
-- Content-stream parsing + serialization (`ContentStreamReader` /
-  `ContentStreamWriter`) backing redaction.
-- Glyph-level text segmentation: `LetterFinder`, `OperationReconstructor`,
-  `GlyphRemover`, plus `PdfPageRedactionExtensions.RedactArea` /
-  `RedactAreas` / `RedactText`.
-- Image redaction: `ImageRedactor` tracks the CTM through `q`/`Q`/`cm` and
-  removes Image XObject `Do` ops that overlap the redaction area.
-- Hidden-text detection: `HiddenTextDetector` finds text occluded by later
-  opaque obstructions (the classic "black box on top of text" bad-redaction
-  pattern). `ObstructionStripper` peels overlays for the differential pass.
-- Document authoring: `PdfDocument.CreateNew()`, `Pages.AddBlank(w, h)`,
-  `page.GetGraphics()` — synthesize PDFs in-memory without the legacy stack.
+- Content-stream parsing + serialization (`ContentStreamReader` / `ContentStreamWriter`) backing redaction.
+- Glyph-level text segmentation: `LetterFinder`, `OperationReconstructor`, `GlyphRemover`, plus `PdfPageRedactionExtensions.RedactArea` / `RedactAreas` / `RedactText`.
+- Image redaction: `ImageRedactor` tracks the CTM through `q`/`Q`/`cm` and removes Image XObject `Do` ops that overlap the redaction area.
+- Hidden-text detection: `HiddenTextDetector` finds text occluded by later opaque obstructions (the classic "black box on top of text" bad-redaction pattern).
+- Document authoring: `PdfDocument.CreateNew()`, `Pages.AddBlank(w, h)`, `page.GetGraphics()` — synthesize PDFs in-memory without the legacy stack.
 - Page manipulation APIs: `Pages.Add`/`Insert`/`RemoveAt`, `page.Rotation`.
-- Indirect /Length stream resolution via parser callback (XEP, LibreOffice,
-  and other toolchains routinely use this).
-- `PdfPage.GetFont` resolves indirect /Font references (WeasyPrint, Word,
-  Office, and almost every browser-derived PDF).
+- Indirect /Length stream resolution via parser callback (XEP, LibreOffice, and other toolchains routinely use this).
+- `PdfPage.GetFont` resolves indirect /Font references (WeasyPrint, Word, Office, and almost every browser-derived PDF).
 
-#### Excise.Rendering — SkiaSharp-based renderer
-- M5: full renderer covering text, paths, images, transparency, clipping
-  paths, soft masks, ExtGState, color spaces, shading, and inline images.
-- Embedded font support:
-  - `/FontFile2` (TrueType) loaded directly into SKTypeface.
-  - `/FontFile3` raw CFF (Type1C, CIDFontType0C) wrapped into a synthesized
-    OpenType container with a Unicode cmap derived from /Differences.
-  - `/Encoding` dictionaries with `/Differences` resolved against the Adobe
-    Glyph List, falling back to AGL §D.1 `uniXXXX` for non-named glyphs.
-  - Per-font glyph widths from the PDF's `/Widths` array (loaded *before*
-    CFF wrapping, fixing a stale-state bug where every embedded font was
-    wrapped with the previous font's widths).
+- M5: full renderer covering text, paths, images, transparency, clipping paths, soft masks, ExtGState, color spaces, shading, and inline images.
+- Embedded font support: OpenType container with a Unicode cmap derived from /Differences.
 - Type0 / CIDFontType2 (Identity-H) — full CJK rendering pipeline.
-- Browser-style flipped text matrix (`Tm = 1 0 0 -1 e f`) handled correctly
-  in both the simple-font and Type0 paths — fixes upside-down rendering
-  found in the IRS-1040 footer, every WeasyPrint-produced page, and all CJK.
-- Layout-correct text advance for non-embedded fonts via the PDF's `/Widths`
-  table (instead of the system fallback's `MeasureText`).
-- Tc / Tw scaled by the text-matrix X-scale, per PDF spec 9.4.4 (fixes the
-  "Word-derived government form mid-word gap" pattern).
-- TJ array kerning routed through the text-matrix X-scale, not Y-scale —
-  fixes 6%-per-glyph drift in non-uniform Tm headers (SCOTUS opinions).
+- Browser-style flipped text matrix (`Tm = 1 0 0 -1 e f`) handled correctly in both the simple-font and Type0 paths — fixes upside-down rendering found in the IRS-1040 footer, every WeasyPrint-produced page, and all CJK.
+- Layout-correct text advance for non-embedded fonts via the PDF's `/Widths` table (instead of the system fallback's `MeasureText`).
+- Tc / Tw scaled by the text-matrix X-scale, per PDF spec 9.4.4 (fixes the "Word-derived government form mid-word gap" pattern).
+- TJ array kerning routed through the text-matrix X-scale, not Y-scale — fixes 6%-per-glyph drift in non-uniform Tm headers (SCOTUS opinions).
 - Td/TD offsets transformed through the text matrix per PDF spec 9.4.2.
-- Wingdings / dingbat fallback: when an embedded CFF subset wraps cleanly
-  but Skia can't extract any glyph outlines, fall back to a system symbol
-  font (Noto Sans Symbols2) so the user sees a glyph instead of `⊠`.
+- Wingdings / dingbat fallback: when an embedded CFF subset wraps cleanly but Skia can't extract any glyph outlines, fall back to a system symbol font (Noto Sans Symbols2) so the user sees a glyph instead of `⊠`.
 - Visual regression test infrastructure with PNG baselines.
 - Dropped `PDFtoImage` / `PDFium` native dependency.
 
-#### Excise.Ocr — OCR via system `tesseract` CLI
-- New project. Shells out to the system tesseract binary, parses TSV
-  output, returns `OcrResult` with per-word bounding boxes.
-- Differential OCR auditor: render the page twice (once with overlays
-  stripped, once without), OCR both, diff the word sets — surfaces text
-  hidden inside rasters by overlay, the rasterized analogue of structural
-  redaction.
-- Replaces the previous Tesseract.NET nuget binding (which pinned to a
-  leptonica version no longer shipping on modern Linux).
+- New project.
+- Differential OCR auditor: render the page twice (once with overlays stripped, once without), OCR both, diff the word sets — surfaces text hidden inside rasters by overlay, the rasterized analogue of structural redaction.
+- Replaces the previous Tesseract.NET nuget binding (which pinned to a leptonica version no longer shipping on modern Linux).
 
-#### Excise.Cli — `excise` command-line tool
 - `excise render <file> -o out.png [--page N] [--dpi N]`
 - `excise redact <file> -o out.pdf --text "PHRASE"` — glyph-level removal.
-- `excise audit <file> [--deep] [--json]` — structural and (with `--deep`)
-  differential-OCR audit of hidden text.
+- `excise audit <file> [--deep] [--json]` — structural and (with `--deep`) differential-OCR audit of hidden text.
 - `excise ocr <file>` — OCR the page and emit TSV.
 
-#### GUI — Excise.App
-- New reusable `PdfViewerControl` (Avalonia UserControl) with overlay layers
-  for selection, search highlights, redaction marquee, and hidden-text
-  reveal. Replaces the bespoke MainWindow rendering.
+- New reusable `PdfViewerControl` (Avalonia UserControl) with overlay layers for selection, search highlights, redaction marquee, and hidden-text reveal.
 - `MainWindow` rewritten on top of `PdfViewerControl`.
-- Reveal Hidden Text — Tools → "Reveal Hidden Text" toggle. Yellow boxes
-  for structural detections (text covered by rectangles), orange boxes for
-  differential-OCR recoveries (text inside rasterized images).
+- Reveal Hidden Text — Tools → "Reveal Hidden Text" toggle.
 - Open PDF from command-line argument on startup.
 
 ### Changed
 
-- All seven GUI services migrated from PdfPig / PDFsharp / PDFtoImage to
-  Excise.Core / Excise.Rendering: `PdfRenderService`, `PdfTextExtractionService`,
-  `PdfSearchService`, `SignatureVerificationService`, `PdfDocumentService`,
-  `BatesNumberingService`, `RedactionService`.
-- `RedactionService` unified — `RedactArea` (mouse marquee) and `RedactText`
-  (find-and-redact) now share a single Excise.Core pipeline; the previous
-  parallel PdfSharp+PdfPig path is gone.
-- The legacy `Excise.App.Redaction` library (and its `pdfer` CLI) deleted —
-  glyph-level redaction lives in Excise.Core; the Excise.Cli `redact` command
-  replaces `pdfer`.
-- System-font fallback widened: strip the 6-letter PDF subset prefix,
-  match by family prefix instead of exact name, and recognize Semibold /
-  Medium as Bold. `TimesNewRomanPS-BoldMT` now correctly maps to Times New
-  Roman instead of Sans-Serif; `BookmanStd` to Times; `ZapfDingbatsStd` to
-  Noto Sans Symbols2.
+- All seven GUI services migrated from PdfPig / PDFsharp / PDFtoImage to Excise.Core / Excise.Rendering: `PdfRenderService`, `PdfTextExtractionService`, `PdfSearchService`, `SignatureVerificationService`, `PdfDocumentService`, `BatesNumberingService`, `RedactionService`.
+- `RedactionService` unified — `RedactArea` (mouse marquee) and `RedactText` (find-and-redact) now share a single Excise.Core pipeline; the previous parallel PdfSharp+PdfPig path is gone.
+- The legacy `Excise.App.Redaction` library (and its `pdfer` CLI) deleted — glyph-level redaction lives in Excise.Core; the Excise.Cli `redact` command replaces `pdfer`.
+- System-font fallback widened: strip the 6-letter PDF subset prefix, match by family prefix instead of exact name, and recognize Semibold / Medium as Bold.
 - Build is clean — 0 warnings, 0 errors across all projects.
 
 ### Removed
@@ -4790,91 +1330,41 @@ WeasyPrint, Word, XEP, and CJK toolchains without falling back to garbage.
 - **PDFsharp 6.2.2** — replaced by `Excise.Core.Document` + `Excise.Core.Writing`.
 - **PDFtoImage 4.0.2** + native PDFium — replaced by `Excise.Rendering` (Skia).
 - **Tesseract.NET nuget** — replaced by `Excise.Ocr` (CLI shell).
-- **Excise.App.Redaction** project + **`pdfer` CLI** — replaced by
-  Excise.Core glyph-level redaction + `excise redact`.
-- **Excise.App.Demo** + Validator tools — superseded by Excise.Cli + the new
-  visual regression suite.
+- **Excise.App.Redaction** project + **`pdfer` CLI** — replaced by Excise.Core glyph-level redaction + `excise redact`.
+- **Excise.App.Demo** + Validator tools — superseded by Excise.Cli + the new visual regression suite.
 
 ### Fixed
 
-#### Renderer — real-world PDF reliability
-- Stream `/Length` as an indirect reference no longer rejected (XEP,
-  LibreOffice). Parser exposes an `IndirectObjectResolver` callback which
-  `PdfDocument` wires to its own object cache.
-- `\<EOL>` line continuations in literal strings (PDF spec 7.3.4.2)
-  stripped correctly — fixes the `⊠` placeholders that appeared at the end
-  of long underline runs in Word-derived government forms.
-- Embedded-font /Widths loaded *before* the CFF→OpenType wrapper runs;
-  previously every embedded font got hmtx widths from the previously-active
-  font (or zero for the first font), producing visibly broken layout on
-  multi-font pages — every page after the cover of any XEP-produced book.
-- AGL reverse lookup synthesizes `uniXXXX` names for BMP codepoints not in
-  the named-glyph table — required for CFF subsets keyed on uniXXXX names.
-- Post-wrap outline probe: if a wrapped CFF resolves cmap entries but
-  produces no glyph outlines, fall back to a system font instead of
-  rendering empty space (catches a class of XEP-produced ZapfDingbats
-  subsets where Skia's CFF interpreter can't extract charstrings).
-- Y-flip applied conditionally on the sign of `Tm.d`, fixing upside-down
-  text in browser-flipped Tm content (CJK, WeasyPrint, IRS-1040 footer).
-- Effective font size computed from the text matrix Y-scale (handles the
-  common `1 Tf` + scaled `Tm` idiom).
+- Stream `/Length` as an indirect reference no longer rejected (XEP, LibreOffice).
+- `\<EOL>` line continuations in literal strings (PDF spec 7.3.4.2) stripped correctly — fixes the `⊠` placeholders that appeared at the end of long underline runs in Word-derived government forms.
+- Embedded-font /Widths loaded *before* the CFF→OpenType wrapper runs; previously every embedded font got hmtx widths from the previously-active font (or zero for the first font), producing visibly broken layout on multi-font pages — every page after the cover of any XEP-produced book.
+- AGL reverse lookup synthesizes `uniXXXX` names for BMP codepoints not in the named-glyph table — required for CFF subsets keyed on uniXXXX names.
+- Post-wrap outline probe: if a wrapped CFF resolves cmap entries but produces no glyph outlines, fall back to a system font instead of rendering empty space (catches a class of XEP-produced ZapfDingbats subsets where Skia's CFF interpreter can't extract charstrings).
+- Y-flip applied conditionally on the sign of `Tm.d`, fixing upside-down text in browser-flipped Tm content (CJK, WeasyPrint, IRS-1040 footer).
+- Effective font size computed from the text matrix Y-scale (handles the common `1 Tf` + scaled `Tm` idiom).
 - Cursor advance honors text-matrix non-uniform scaling.
 - `CodePagesEncodingProvider` registered for Windows-1252 / WinAnsi support.
 - Search highlights refresh when the user changes pages manually.
-- Birth-cert form layout: routes non-embedded fonts through the PDF's
-  `/Widths` array for cursor advance instead of the substituted system
-  typeface's metrics — fixes mid-word gaps in TJ-kerning-heavy PDFs.
+- Birth-cert form layout: routes non-embedded fonts through the PDF's `/Widths` array for cursor advance instead of the substituted system typeface's metrics — fixes mid-word gaps in TJ-kerning-heavy PDFs.
 
-#### Tests
-- `PdfViewerControl_PageChanged_FiresEvent` deflaked. Test was timing-
-  sensitive on the shared Avalonia headless dispatcher; now waits
-  deterministically for the event with a 30-second deadline.
+- `PdfViewerControl_PageChanged_FiresEvent` deflaked.
 
 ### Verified rendering
 
-The new renderer has been smoke-tested against a real-world corpus:
-
-| PDF | Source | Notes |
-|---|---|---|
-| Birth Certificate Request (CT) | scanned/scrambled gov form | TJ kerning, Tw column alignment, raster background |
-| SCOTUS opinion (Trump v. Anderson) | Court PDF | Non-uniform Tm headers, Type1 PostScript subsets |
-| IRS Form 1040 + Instructions | IRS / Adobe Distiller | Type0/Identity-H, Acrobat-distilled, 180° footer text |
-| State Dept DS-82 (passport renewal) | XFA + Type0 | Acrobat / XFA mix |
-| CDC COVID-19 VIS | CDC | Embedded TrueType, Wingdings dingbats |
-| "Business Success with Open Source" | Pragmatic Bookshelf / XEP | 455 pages, multi-font CFF subsets, ZapfDingbats |
-| Multilingual CJK fixture | WeasyPrint + Noto CJK | zh-Hans, zh-Hant, ja, ko |
-
-All render essentially identically to mutool / Acrobat at the structural
-level. `Excise.Rendering.Tests/Visual/` and `Excise.App.Tests/UI/baselines/`
-keep PNG baselines for regression detection.
-
 ### Migration
 
-The architectural change is mostly transparent for end users — the desktop
-app, the redaction guarantee, and the file format are unchanged. For
-embedders moving off the v1.0 surface:
-
-- `Excise.App.Redaction` (library) → `Excise.Core.Text.Segmentation` —
-  use `page.RedactArea(rect)` / `page.RedactAreas(rects)` /
-  `document.RedactText("phrase")` from `PdfPageRedactionExtensions` /
-  `PdfDocumentRedactionExtensions`.
+- `Excise.App.Redaction` (library) → `Excise.Core.Text.Segmentation` — use `page.RedactArea(rect)` / `page.RedactAreas(rects)` / `document.RedactText("phrase")` from `PdfPageRedactionExtensions` / `PdfDocumentRedactionExtensions`.
 - `pdfer` CLI → `excise redact` — same options.
-- PdfPig text extraction → `Excise.Core.Text` — `PdfDocument.GetText(page)`
-  and `PdfDocument.GetLetters(page)`.
-- PDFsharp `PdfDocument` → `Excise.Core.Document.PdfDocument` — note that
-  `PdfDocument.Open(stream)` now takes ownership semantics via
-  `Open(stream, ownsStream)`.
+- PdfPig text extraction → `Excise.Core.Text` — `PdfDocument.GetText(page)` and `PdfDocument.GetLetters(page)`.
+- PDFsharp `PdfDocument` → `Excise.Core.Document.PdfDocument` — note that `PdfDocument.Open(stream)` now takes ownership semantics via `Open(stream, ownsStream)`.
 - PDFtoImage → `Excise.Rendering.SkiaRenderer.RenderPage(page, options)`.
 
 ### Known gaps deferred to v2.1+
 
 - PDF encryption / password handling (#237) — v2.1.
-- Partial glyph rasterization for redaction cuts that bisect a glyph
-  (#278). Current full-glyph removal is conservative-safe.
-- PDF Annotations (#271), Interactive Forms (#272), Tagged PDF (#275),
-  Advanced Transparency (#274), Multimedia (#273) — v2.2.
-- Compass-image-style inline-image-with-Smask cases that still fall back
-  to placeholder rendering (covered indirectly by #274).
+- Partial glyph rasterization for redaction cuts that bisect a glyph (#278).
+- PDF Annotations (#271), Interactive Forms (#272), Tagged PDF (#275), Advanced Transparency (#274), Multimedia (#273) — v2.2.
+- Compass-image-style inline-image-with-Smask cases that still fall back to placeholder rendering (covered indirectly by #274).
 
 ### Test counts at release
 
@@ -4882,10 +1372,6 @@ embedders moving off the v1.0 surface:
 - Excise.Rendering.Tests: 175 passing
 - Excise.Cli.Tests: 7 passing
 - Excise.App.Tests: 221 passing, 2 skipped (require Tesseract installed)
-
-**Total: 845 tests, 0 failing**
-
----
 
 ## [1.0.0] — 2026-01-11
 
