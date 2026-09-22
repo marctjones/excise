@@ -42,7 +42,16 @@ METHOD_ALLOW="tests/redaction-self-oracle-method-allowlist.txt"
 UPDATE="${1:-}"
 
 INDEPENDENT='Mutool|Qpdf|Ghostscript|Pdftocairo|Pdftoppm|PdfBox|PdfiumNative|SavedPdfLeakScanner|InkFraction|ReferenceRedactor|VeraPdf'
-SELF='\.Text\.Should|ExtractAllText|\.Letters|GetLetters'
+# GetContentStream(Bytes) added by the t0-gates review (2026-09-21): a method
+# asserting NotContain over doc.GetPage(N).GetContentStreamBytes() is exactly
+# the "excise reads its own removal" shape the other patterns already cover --
+# it was missing only because nothing had named it yet
+# (RedactCommandTests.cs::RunRedact_RemovesExactMatch_FromContentStream carried
+# a comment claiming the pdftotext property while never calling pdftotext).
+# "GetContentStream" (no trailing paren -- awk's -v string parsing does not
+# reliably round-trip a literal "\(" back into a regex metacharacter) matches
+# both GetContentStream() and GetContentStreamBytes() as a substring.
+SELF='\.Text\.Should|ExtractAllText|\.Letters|GetLetters|GetContentStream'
 
 offenders=""
 method_offenders=""
@@ -52,9 +61,33 @@ method_offenders=""
 # not failing: unseen. The rule this script enforces is that a tool must not
 # be its own oracle for the property it exists to guarantee, and the detector
 # for that property was exempt by filename.
-for f in $(find Excise.*.Tests \
-                \( -name "*Redaction*Tests.cs" -o -name "*HiddenText*Tests.cs" -o -name "*Audit*Tests.cs" \) \
-                -not -path '*/obj/*' -not -path '*/bin/*' | sort); do
+#
+# RedactCommandTests.cs added explicitly (t0-gates review, 2026-09-21): its
+# name contains "Redact", not "Redaction", so "*Redaction*Tests.cs" never
+# matched it -- the CLI's own `excise redact` leak assertions were invisible
+# to this gate. A broader "*Command*Tests.cs"/"*Service*Tests.cs" sweep was
+# considered and rejected here: simulating it pulled in ~40 unrelated files
+# and ~60 new method-level entries, most of them low-level geometry/workflow
+# tests (e.g. RedactionBoundsTests.cs's TextBounds_*/PathBounds_* cases) with
+# nothing for an oracle to corroborate. That wider population-by-content
+# rework (matching any file that calls a redaction entry point) is tracked
+# separately rather than done piecemeal here.
+population="$(find Excise.*.Tests \
+                \( -name "*Redaction*Tests.cs" -o -name "*HiddenText*Tests.cs" -o -name "*Audit*Tests.cs" -o -name "RedactCommandTests.cs" \) \
+                -not -path '*/obj/*' -not -path '*/bin/*' | sort)"
+# A floor, not just the per-item checks below: at 0 scanned files this script
+# used to exit 0 silently — a glob typo, a directory rename, or the population
+# collapsing some other way would read as a clean run (t0-gates review,
+# 2026-09-21, "weird things" #6). The gate exists to be a net; a net that can
+# quietly shrink to nothing is not one.
+population_count="$(printf '%s\n' "$population" | grep -c . || true)"
+if [[ "$population_count" -eq 0 ]]; then
+  echo "❌ ZERO files matched the redaction-test population glob — that is not a clean run," >&2
+  echo "   it is the glob (or the directory layout) having broken. Check the find pattern above." >&2
+  exit 1
+fi
+
+for f in $population; do
   # Only files that actually assert about leaks are in scope; a pure geometry
   # or workflow test has nothing for an oracle to corroborate.
   grep -qE "$SELF" "$f" || continue
@@ -99,9 +132,7 @@ while IFS= read -r f; do
     }
     END { flush() }
   ' "$f")"$'\n'
-done < <(find Excise.*.Tests \
-              \( -name "*Redaction*Tests.cs" -o -name "*HiddenText*Tests.cs" -o -name "*Audit*Tests.cs" \) \
-              -not -path '*/obj/*' -not -path '*/bin/*' | sort)
+done < <(printf '%s\n' "$population")
 method_offenders=$(printf '%s' "$method_offenders" | grep . || true)
 
 if [[ "$UPDATE" == "--update" ]]; then
