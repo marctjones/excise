@@ -6,6 +6,8 @@ using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using System;
+using System.Collections.Concurrent;
+using Excise.App.Services;
 
 namespace Excise.App.Tests.Utilities;
 
@@ -32,6 +34,21 @@ internal static class TestCertificateFactory
     public static TestSigningIdentity CreateSelfSigned(
         string subject = "CN=PDFe Test Signer", DateTime? notBefore = null)
     {
+        // RSA-2048 generation dominates the signature classes' runtime, and the
+        // identities are immutable, so equal requests share one. A caller that
+        // pins notBefore wants a specific validity window and gets its own.
+        if (notBefore is not null)
+            return GenerateSelfSigned(subject, notBefore);
+
+        return SelfSigned.GetOrAdd(
+            subject, s => new Lazy<TestSigningIdentity>(() => GenerateSelfSigned(s, null))).Value;
+    }
+
+    private static readonly ConcurrentDictionary<string, Lazy<TestSigningIdentity>> SelfSigned = new();
+    private static readonly ConcurrentDictionary<(string Root, string Leaf), Lazy<TestSigningIdentity>> Chained = new();
+
+    private static TestSigningIdentity GenerateSelfSigned(string subject, DateTime? notBefore)
+    {
         var random = new SecureRandom();
         var keyPair = GenerateKeyPair(random);
 
@@ -52,7 +69,12 @@ internal static class TestCertificateFactory
     /// </summary>
     public static TestSigningIdentity CreateChainedToRoot(
         string rootSubject = "CN=PDFe Test Root CA",
-        string leafSubject = "CN=PDFe Test Chained Signer")
+        string leafSubject = "CN=PDFe Test Chained Signer") =>
+        Chained.GetOrAdd(
+            (rootSubject, leafSubject),
+            key => new Lazy<TestSigningIdentity>(() => GenerateChainedToRoot(key.Root, key.Leaf))).Value;
+
+    private static TestSigningIdentity GenerateChainedToRoot(string rootSubject, string leafSubject)
     {
         var random = new SecureRandom();
 
@@ -102,5 +124,30 @@ internal static class TestCertificateFactory
         var keyGenerator = new RsaKeyPairGenerator();
         keyGenerator.Init(new KeyGenerationParameters(random, 2048));
         return keyGenerator.GenerateKeyPair();
+    }
+}
+
+/// <summary>
+/// <see cref="SigningCertificateFactory.CreateSelfSigned"/> identities for the
+/// signing tests, generated once per subject. Each call returns a FRESH
+/// <see cref="System.Security.Cryptography.X509Certificates.X509Certificate2"/> loaded from the cached PKCS#12 bytes, so a
+/// test can still dispose what it was handed.
+/// </summary>
+internal static class TestSigningCertificates
+{
+    private const string Pkcs12Password = "excise-test-only";
+
+    private static readonly ConcurrentDictionary<string, Lazy<byte[]>> Pkcs12ByName = new();
+
+    public static System.Security.Cryptography.X509Certificates.X509Certificate2 CreateSelfSigned(string subjectName)
+    {
+        var pkcs12 = Pkcs12ByName.GetOrAdd(subjectName, name => new Lazy<byte[]>(() =>
+        {
+            using var generated = SigningCertificateFactory.CreateSelfSigned(name);
+            return generated.Export(System.Security.Cryptography.X509Certificates.X509ContentType.Pkcs12, Pkcs12Password);
+        })).Value;
+
+        return System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12(
+            pkcs12, Pkcs12Password, System.Security.Cryptography.X509Certificates.X509KeyStorageFlags.Exportable);
     }
 }

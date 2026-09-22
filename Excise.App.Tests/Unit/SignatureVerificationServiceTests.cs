@@ -37,89 +37,26 @@ public class SignatureVerificationServiceTests
     // SIGNATURE VERIFICATION RESULT TESTS
     // ========================================================================
 
-    [Fact]
-    public void SignatureVerificationResult_DefaultSignatureName_IsEmpty()
+    /// <summary>
+    /// A result nobody has filled in must read as "not verified", never as a pass.
+    /// These defaults are the fail-closed half of the verdict: a producer that
+    /// forgets to set a field cannot accidentally produce a valid or trusted result.
+    /// </summary>
+    [Theory]
+    [InlineData(nameof(SignatureVerificationResult.IsValid), false)]
+    [InlineData(nameof(SignatureVerificationResult.CoversWholeDocument), false)]
+    [InlineData(nameof(SignatureVerificationResult.ByteRangeStructureChecked), false)]
+    [InlineData(nameof(SignatureVerificationResult.ByteRangeStructureValid), false)]
+    [InlineData(nameof(SignatureVerificationResult.ByteRangeIntegrityChecked), false)]
+    [InlineData(nameof(SignatureVerificationResult.ByteRangeIntegrityValid), false)]
+    [InlineData(nameof(SignatureVerificationResult.State), SignatureVerificationState.Indeterminate)]
+    [InlineData(nameof(SignatureVerificationResult.TrustStatus), SignatureTrustStatus.NotEvaluated)]
+    public void SignatureVerificationResult_DefaultsFailClosed(string property, object expected)
     {
-        var result = new SignatureVerificationResult();
-        result.SignatureName.Should().Be(string.Empty);
-    }
+        var actual = typeof(SignatureVerificationResult).GetProperty(property)!
+            .GetValue(new SignatureVerificationResult());
 
-    [Fact]
-    public void SignatureVerificationResult_DefaultIsValid_IsFalse()
-    {
-        var result = new SignatureVerificationResult();
-        result.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_DefaultSignedBy_IsEmpty()
-    {
-        var result = new SignatureVerificationResult();
-        result.SignedBy.Should().Be(string.Empty);
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_DefaultSigningTime_IsMinValue()
-    {
-        var result = new SignatureVerificationResult();
-        result.SigningTime.Should().Be(default(DateTime));
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_DefaultStatusMessage_IsEmpty()
-    {
-        var result = new SignatureVerificationResult();
-        result.StatusMessage.Should().Be(string.Empty);
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_DefaultCoversWholeDocument_IsFalse()
-    {
-        var result = new SignatureVerificationResult();
-        result.CoversWholeDocument.Should().BeFalse();
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_DefaultByteRangeIntegrityState_IsUnchecked()
-    {
-        var result = new SignatureVerificationResult();
-        result.ByteRangeStructureChecked.Should().BeFalse();
-        result.ByteRangeStructureValid.Should().BeFalse();
-        result.ByteRangeStructureMessage.Should().BeEmpty();
-        result.ByteRangeIntegrityChecked.Should().BeFalse();
-        result.ByteRangeIntegrityValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_CanSetAllProperties()
-    {
-        var signingTime = new DateTime(2024, 1, 15, 10, 30, 0);
-        var result = new SignatureVerificationResult
-        {
-            SignatureName = "Signature1",
-            IsValid = true,
-            SignedBy = "CN=John Doe",
-            SigningTime = signingTime,
-            StatusMessage = "Signature is valid",
-            CoversWholeDocument = true,
-            ByteRangeStructureChecked = true,
-            ByteRangeStructureValid = true,
-            ByteRangeStructureMessage = "ByteRange ok",
-            ByteRangeIntegrityChecked = true,
-            ByteRangeIntegrityValid = true
-        };
-
-        result.SignatureName.Should().Be("Signature1");
-        result.IsValid.Should().BeTrue();
-        result.SignedBy.Should().Be("CN=John Doe");
-        result.SigningTime.Should().Be(signingTime);
-        result.StatusMessage.Should().Be("Signature is valid");
-        result.CoversWholeDocument.Should().BeTrue();
-        result.ByteRangeStructureChecked.Should().BeTrue();
-        result.ByteRangeStructureValid.Should().BeTrue();
-        result.ByteRangeStructureMessage.Should().Be("ByteRange ok");
-        result.ByteRangeIntegrityChecked.Should().BeTrue();
-        result.ByteRangeIntegrityValid.Should().BeTrue();
+        actual.Should().Be(expected);
     }
 
     // ========================================================================
@@ -147,91 +84,6 @@ public class SignatureVerificationServiceTests
         results[0].IsValid.Should().BeFalse();
     }
 
-    // ========================================================================
-    // SIGNATURE VERIFICATION RESULT - VALUE ASSIGNMENT TESTS
-    // ========================================================================
-
-    [Fact]
-    public void SignatureVerificationResult_CanUpdateProperties()
-    {
-        var result = new SignatureVerificationResult();
-
-        result.SignatureName = "Sig1";
-        result.IsValid = true;
-        result.SignedBy = "Test User";
-        result.SigningTime = DateTime.UtcNow;
-        result.StatusMessage = "Valid signature";
-        result.CoversWholeDocument = true;
-
-        result.SignatureName.Should().Be("Sig1");
-        result.IsValid.Should().BeTrue();
-        result.SignedBy.Should().Be("Test User");
-        result.StatusMessage.Should().Be("Valid signature");
-        result.CoversWholeDocument.Should().BeTrue();
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_MultipleResults_Independent()
-    {
-        var result1 = new SignatureVerificationResult { SignatureName = "Sig1", IsValid = true };
-        var result2 = new SignatureVerificationResult { SignatureName = "Sig2", IsValid = false };
-
-        result1.SignatureName.Should().Be("Sig1");
-        result1.IsValid.Should().BeTrue();
-        result2.SignatureName.Should().Be("Sig2");
-        result2.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_SignedBy_CanHaveLongCertificateName()
-    {
-        var longCertName =
-            "CN=John Doe,O=Organization,OU=Department,L=City,ST=State,C=Country";
-        var result = new SignatureVerificationResult { SignedBy = longCertName };
-
-        result.SignedBy.Should().Be(longCertName);
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_StatusMessage_CanHaveDetailedText()
-    {
-        var detailedMessage =
-            "Signature verification failed: Invalid certificate chain, expired certificate";
-        var result = new SignatureVerificationResult { StatusMessage = detailedMessage };
-
-        result.StatusMessage.Should().Be(detailedMessage);
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_SigningTime_CanBeAnytime()
-    {
-        var times = new[]
-        {
-            new DateTime(2020, 1, 1),
-            new DateTime(2024, 12, 31),
-            DateTime.UtcNow,
-            DateTime.MinValue,
-            DateTime.MaxValue
-        };
-
-        foreach (var time in times)
-        {
-            var result = new SignatureVerificationResult { SigningTime = time };
-            result.SigningTime.Should().Be(time);
-        }
-    }
-
-    // ========================================================================
-    // SERVICE INSTANTIATION TESTS
-    // ========================================================================
-
-    [Fact]
-    public void SignatureVerificationService_CanBeInstantiated()
-    {
-        var service = new SignatureVerificationService(_logger);
-        service.Should().NotBeNull();
-    }
-
     [Fact]
     public void SignatureVerificationService_WithNullLogger_ThrowsArgumentNullException()
     {
@@ -239,135 +91,6 @@ public class SignatureVerificationServiceTests
 
         action.Should().Throw<ArgumentNullException>()
             .WithParameterName("logger");
-    }
-
-    // ========================================================================
-    // RESULT COLLECTION TESTS
-    // ========================================================================
-
-    [Fact]
-    public void VerifySignatures_ReturnsListNotNull()
-    {
-        try
-        {
-            var results = _service.VerifySignatures("/nonexistent.pdf");
-            results.Should().NotBeNull();
-        }
-        catch
-        {
-            // Non-existent file throws, which is expected behavior
-        }
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_DefaultInstance_IsValid()
-    {
-        var result = new SignatureVerificationResult();
-
-        result.Should().NotBeNull();
-        result.SignatureName.Should().NotBeNull();
-        result.SignedBy.Should().NotBeNull();
-        result.StatusMessage.Should().NotBeNull();
-    }
-
-    // ========================================================================
-    // SIGNATURE RESULT COPY TESTS
-    // ========================================================================
-
-    [Fact]
-    public void SignatureVerificationResult_CopyConstructor_CreatesIndependentCopy()
-    {
-        var original = new SignatureVerificationResult
-        {
-            SignatureName = "Sig1",
-            IsValid = true,
-            SignedBy = "User1"
-        };
-
-        var copy = new SignatureVerificationResult
-        {
-            SignatureName = original.SignatureName,
-            IsValid = original.IsValid,
-            SignedBy = original.SignedBy
-        };
-
-        copy.SignatureName.Should().Be(original.SignatureName);
-        copy.IsValid.Should().Be(original.IsValid);
-        copy.SignedBy.Should().Be(original.SignedBy);
-
-        copy.SignatureName = "Sig2";
-        original.SignatureName.Should().Be("Sig1");
-        copy.SignatureName.Should().Be("Sig2");
-    }
-
-    // ========================================================================
-    // EDGE CASES - EMPTY AND NULL STRINGS
-    // ========================================================================
-
-    [Fact]
-    public void SignatureVerificationResult_SignedBy_CanBeEmpty()
-    {
-        var result = new SignatureVerificationResult { SignedBy = "" };
-        result.SignedBy.Should().Be("");
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_StatusMessage_CanBeEmpty()
-    {
-        var result = new SignatureVerificationResult { StatusMessage = "" };
-        result.StatusMessage.Should().Be("");
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_SignatureName_CanBeEmpty()
-    {
-        var result = new SignatureVerificationResult { SignatureName = "" };
-        result.SignatureName.Should().Be("");
-    }
-
-    // ========================================================================
-    // COMPREHENSIVE RESULT OBJECT TEST
-    // ========================================================================
-
-    [Fact]
-    public void SignatureVerificationResult_CreateComprehensiveValidResult()
-    {
-        var result = new SignatureVerificationResult
-        {
-            SignatureName = "Document Signature",
-            IsValid = true,
-            SignedBy = "CN=Jane Smith,O=Legal Corp,C=US",
-            SigningTime = new DateTime(2024, 3, 15, 14, 30, 0),
-            StatusMessage = "Signature is cryptographically valid and covers whole document",
-            CoversWholeDocument = true
-        };
-
-        result.SignatureName.Should().Be("Document Signature");
-        result.IsValid.Should().BeTrue();
-        result.SignedBy.Should().Be("CN=Jane Smith,O=Legal Corp,C=US");
-        result.SigningTime.Should().Be(new DateTime(2024, 3, 15, 14, 30, 0));
-        result.StatusMessage.Should().StartWith("Signature is");
-        result.CoversWholeDocument.Should().BeTrue();
-    }
-
-    [Fact]
-    public void SignatureVerificationResult_CreateComprehensiveInvalidResult()
-    {
-        var result = new SignatureVerificationResult
-        {
-            SignatureName = "Untrusted Signature",
-            IsValid = false,
-            SignedBy = "",
-            SigningTime = default,
-            StatusMessage = "Certificate not in trusted store",
-            CoversWholeDocument = false
-        };
-
-        result.SignatureName.Should().Be("Untrusted Signature");
-        result.IsValid.Should().BeFalse();
-        result.SignedBy.Should().BeEmpty();
-        result.StatusMessage.Should().Contain("trusted");
-        result.CoversWholeDocument.Should().BeFalse();
     }
 
     // ========================================================================
@@ -1005,7 +728,7 @@ public class SignatureVerificationServiceTests
 
     private static string WriteTempPdf(byte[] bytes)
     {
-        var path = Path.GetTempFileName() + ".pdf";
+        var path = Path.Combine(Path.GetTempPath(), $"excise-sigverify-{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, bytes);
         return path;
     }

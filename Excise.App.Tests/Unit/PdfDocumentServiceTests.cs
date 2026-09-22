@@ -355,6 +355,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(2);
+        AssertLoadedPages("Page 2 Content", "Page 3 Content");
     }
 
     [Fact]
@@ -421,6 +422,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(4);
+        AssertLoadedPages("Page 1 Content", "Page 2 Content", "Page 4 Content", "Page 5 Content");
     }
 
     #endregion
@@ -441,6 +443,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(2);
+        AssertLoadedPages("Page 2 Content", "Page 4 Content");
     }
 
     [Fact]
@@ -457,6 +460,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(3);
+        AssertLoadedPages("Page 1 Content", "Page 2 Content", "Page 3 Content");
     }
 
     [Fact]
@@ -473,6 +477,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(2);
+        AssertLoadedPages("Page 1 Content", "Page 4 Content");
     }
 
     #endregion
@@ -484,7 +489,7 @@ public class PdfDocumentServiceTests : IDisposable
     {
         // Arrange
         var file1 = CreateTestFile("doc1.pdf", path =>
-            TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2));
+            TestPdfGenerator.CreateSimpleTextPdf(path, "Base"));
         var file2 = CreateTestFile("doc2.pdf", path =>
             TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3));
 
@@ -494,7 +499,8 @@ public class PdfDocumentServiceTests : IDisposable
         _service.AddPagesFromPdf(file2);
 
         // Assert
-        _service.PageCount.Should().Be(5);
+        _service.PageCount.Should().Be(4);
+        AssertLoadedPages("Base", "Page 1 Content", "Page 2 Content", "Page 3 Content");
     }
 
     [Fact]
@@ -513,6 +519,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(3); // 1 original + 2 added
+        AssertLoadedPages("Doc1", "Page 1 Content", "Page 3 Content");
     }
 
     [Fact]
@@ -531,6 +538,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(3);
+        AssertLoadedPages("Doc1", "Page 1 Content", "Page 2 Content");
     }
 
     [Fact]
@@ -561,6 +569,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert - Only valid indices (0, 1) should be added
         _service.PageCount.Should().Be(3);
+        AssertLoadedPages("Doc1", "Page 1 Content", "Page 2 Content");
     }
 
     #endregion
@@ -574,7 +583,7 @@ public class PdfDocumentServiceTests : IDisposable
         var file1 = CreateTestFile("doc1.pdf", path =>
             TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2));
         var file2 = CreateTestFile("doc2.pdf", path =>
-            TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 1));
+            TestPdfGenerator.CreateSimpleTextPdf(path, "Inserted"));
 
         _service.LoadDocument(file1);
 
@@ -583,6 +592,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(3);
+        AssertLoadedPages("Page 1 Content", "Inserted", "Page 2 Content");
     }
 
     [Fact]
@@ -601,6 +611,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(3);
+        AssertLoadedPages("New First", "Page 1 Content", "Page 2 Content");
     }
 
     [Fact]
@@ -631,6 +642,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(3); // 2 inserted + 1 original
+        AssertLoadedPages("Page 1 Content", "Page 3 Content", "Base");
     }
 
     [Fact]
@@ -649,6 +661,7 @@ public class PdfDocumentServiceTests : IDisposable
 
         // Assert
         _service.PageCount.Should().Be(3);
+        AssertLoadedPages("Page 1 Content", "Page 2 Content", "New");
     }
 
     #endregion
@@ -727,56 +740,93 @@ public class PdfDocumentServiceTests : IDisposable
     private static string ExtractPageText(PdfDocument document, int pageNumber)
         => new TextExtractor(document.GetPage(pageNumber)).ExtractText();
 
+    /// <summary>
+    /// Asserts the loaded document holds exactly these pages, in this order, by page text:
+    /// a page count alone cannot tell "removed page 1" from "removed page 3".
+    /// </summary>
+    private void AssertLoadedPages(params string[] expectedTextPerPage)
+    {
+        var document = _service.GetCurrentDocument()!;
+        document.PageCount.Should().Be(expectedTextPerPage.Length);
+        for (var i = 0; i < expectedTextPerPage.Length; i++)
+        {
+            ExtractPageText(document, i + 1).Should().Contain(expectedTextPerPage[i],
+                $"page {i + 1} of the edited document");
+        }
+    }
+
     #endregion
 
     #region RotatePage Tests
 
-    [Fact]
-    public void RotatePage_With90Degrees_AppliesRotation()
+    [Theory]
+    [InlineData(90)]
+    [InlineData(180)]
+    [InlineData(270)]
+    public void RotatePage_SetsThePagesRotation(int degrees)
     {
-        // Arrange
         var filePath = CreateTestFile("rotate.pdf", path =>
             TestPdfGenerator.CreateSimpleTextPdf(path, "Rotate me"));
+        _service.LoadDocument(filePath);
+        _service.GetCurrentDocument()!.GetPage(1).Rotation.Should().Be(0);
 
+        _service.RotatePage(0, degrees);
+
+        _service.GetCurrentDocument()!.GetPage(1).Rotation.Should().Be(degrees);
+    }
+
+    [Theory]
+    [InlineData("Right", 90)]
+    [InlineData("Left", 270)]
+    [InlineData("180", 180)]
+    public void RotateShortcuts_RotateByTheirDirection(string shortcut, int expectedRotation)
+    {
+        var filePath = CreateTestFile("rotate.pdf", path =>
+            TestPdfGenerator.CreateSimpleTextPdf(path, "Shortcut"));
         _service.LoadDocument(filePath);
 
-        // Act
-        _service.RotatePage(0, 90);
+        switch (shortcut)
+        {
+            case "Right": _service.RotatePageRight(0); break;
+            case "Left": _service.RotatePageLeft(0); break;
+            default: _service.RotatePage180(0); break;
+        }
 
-        // Assert - Just verify no exception; actual rotation state is internal
-        _service.PageCount.Should().Be(1);
+        _service.GetCurrentDocument()!.GetPage(1).Rotation.Should().Be(expectedRotation);
     }
 
     [Fact]
-    public void RotatePage_With180Degrees_AppliesRotation()
+    public void RotatePage_Accumulates_AndWrapsAtFullTurn()
     {
-        // Arrange
         var filePath = CreateTestFile("rotate.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "Rotate"));
-
+            TestPdfGenerator.CreateSimpleTextPdf(path, "Turns"));
         _service.LoadDocument(filePath);
 
-        // Act
-        _service.RotatePage(0, 180);
+        _service.RotatePageRight(0);
+        _service.RotatePageRight(0);
+        _service.GetCurrentDocument()!.GetPage(1).Rotation.Should().Be(180);
 
-        // Assert
-        _service.PageCount.Should().Be(1);
+        _service.RotatePageRight(0);
+        _service.RotatePageRight(0);
+        _service.GetCurrentDocument()!.GetPage(1).Rotation.Should().Be(0,
+            "four right turns are a full circle, not a rotation of 360");
     }
 
     [Fact]
-    public void RotatePage_With270Degrees_AppliesRotation()
+    public void RotatePage_OnlyTurnsTheRequestedPage_AndSurvivesASave()
     {
-        // Arrange
-        var filePath = CreateTestFile("rotate.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "Rotate"));
-
+        var filePath = CreateTestFile("rotate3.pdf", path =>
+            TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3));
+        var savedPath = Path.Combine(_tempDir, "rotated.pdf");
         _service.LoadDocument(filePath);
 
-        // Act
-        _service.RotatePage(0, 270);
+        _service.RotatePage(1, 90);
+        _service.SaveDocument(savedPath);
 
-        // Assert
-        _service.PageCount.Should().Be(1);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(savedPath));
+        reopened.GetPage(1).Rotation.Should().Be(0);
+        reopened.GetPage(2).Rotation.Should().Be(90);
+        reopened.GetPage(3).Rotation.Should().Be(0);
     }
 
     [Fact]
@@ -791,54 +841,6 @@ public class PdfDocumentServiceTests : IDisposable
         // Act & Assert
         var action = () => _service.RotatePage(0, 45);
         action.Should().Throw<ArgumentException>();
-    }
-
-    [Fact]
-    public void RotatePageRight_CallsRotatePage()
-    {
-        // Arrange
-        var filePath = CreateTestFile("rotate.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "Right"));
-
-        _service.LoadDocument(filePath);
-
-        // Act
-        _service.RotatePageRight(0);
-
-        // Assert
-        _service.PageCount.Should().Be(1);
-    }
-
-    [Fact]
-    public void RotatePageLeft_CallsRotatePage()
-    {
-        // Arrange
-        var filePath = CreateTestFile("rotate.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "Left"));
-
-        _service.LoadDocument(filePath);
-
-        // Act
-        _service.RotatePageLeft(0);
-
-        // Assert
-        _service.PageCount.Should().Be(1);
-    }
-
-    [Fact]
-    public void RotatePage180_CallsRotatePage()
-    {
-        // Arrange
-        var filePath = CreateTestFile("rotate.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "180"));
-
-        _service.LoadDocument(filePath);
-
-        // Act
-        _service.RotatePage180(0);
-
-        // Assert
-        _service.PageCount.Should().Be(1);
     }
 
     [Fact]

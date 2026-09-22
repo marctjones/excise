@@ -171,11 +171,14 @@ public class SignatureContentsReaderTests
     }
 
     [Fact]
-    public void Read_TruncatedObjectPaddedBackToFullWidth_IsStillRejected()
+    public void Read_TruncatedObjectPaddedBackToFullWidth_ReadsTheDeclaredExtent()
     {
-        // The nastier shape: the object's length header claims 516 bytes, the object is cut
-        // short, and zero padding makes the /Contents value long enough that a naive
-        // length-header slice would hand a verifier 516 bytes of object-plus-padding.
+        // The object's length header claims 516 bytes and the object is cut short, but zero
+        // padding supplies enough bytes for the declared length. The reader's job is the EXTENT
+        // of the object, and it takes that from the declared length: it must return exactly 516
+        // bytes, not the whole 8192-byte value, and not a short read. Whether those bytes are
+        // the signer's bytes is not decidable here — a splice like this is caught by the CMS
+        // signature and the ByteRange digest, which is what the verifier tests pin.
         var asn1 = LongDerSequence();
         var truncated = asn1.Take(asn1.Length - 64).ToArray();
 

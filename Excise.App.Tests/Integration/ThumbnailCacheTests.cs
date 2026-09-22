@@ -147,8 +147,13 @@ public class ThumbnailCacheTests
             var results = await Task.WhenAll(tasks);
             foreach (var r in results) r.Should().NotBeNull();
 
-            // Only one cache file should have been written (the others
-            // coalesced onto the same load).
+            // The real check: only one render ran. "One cache file" alone
+            // does not distinguish coalescing from 8 independent renders
+            // that all happen to write the same page — a non-coalescing
+            // implementation produces that too.
+            svc.RenderCount.Should().Be(1,
+                "8 concurrent requests for the same page must dedupe onto a single render");
+
             var cacheFile = await WaitForCacheFileAsync(svc.CacheDir, "p*.webp");
             cacheFile.Should().NotBeNull();
             Directory.GetFiles(svc.CacheDir, "p*.webp").Length.Should().Be(1);

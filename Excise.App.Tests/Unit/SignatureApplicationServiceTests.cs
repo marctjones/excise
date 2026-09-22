@@ -83,7 +83,7 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_CmsObject_IsDerDefiniteLengthAsIso32000Requires()
     {
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("DER Encoding Check");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("DER Encoding Check");
         var signedPath = SignSamplePdf(certificate);
 
         var contents = ExtractSignatureContentsBytes(File.ReadAllBytes(signedPath));
@@ -129,7 +129,7 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_ByteRangeOffsets_AreByteExact()
     {
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Offset Check");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Offset Check");
         var signedPath = SignSamplePdf(certificate);
         var fileBytes = File.ReadAllBytes(signedPath);
         var text = Encoding.Latin1.GetString(fileBytes);
@@ -166,7 +166,7 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_TamperedSignedByte_VerifierReportsInvalid()
     {
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Tamper Test");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Tamper Test");
         var signedPath = SignSamplePdf(certificate, new SignatureApplicationOptions
         {
             Reason = "ORIGINAL-REASON"
@@ -195,7 +195,7 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_SelfSigned_EmptyTrustAnchors_IsValidUntrusted()
     {
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Untrusted Signer");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Untrusted Signer");
         var signedPath = SignSamplePdf(certificate);
 
         var results = CreateVerifier().VerifySignatures(signedPath); // no anchors
@@ -210,7 +210,7 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_SelfSignedInjectedAsTrustAnchor_IsValidTrusted()
     {
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Pinned Signer");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Pinned Signer");
         var signedPath = SignSamplePdf(certificate);
 
         var results = CreateVerifier(certificate).VerifySignatures(signedPath);
@@ -227,7 +227,7 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_ExistingEmptySignatureField_SignsThatField()
     {
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Field Signer");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Field Signer");
         var basePath = CreateBasePdf();
 
         using var document = PdfDocument.Open(basePath);
@@ -278,7 +278,7 @@ public class SignatureApplicationServiceTests : IDisposable
                 "positive ink reading after signing would prove nothing about the appearance");
         }
 
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Visible Signer");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Visible Signer");
 
         // Author the field and sign it on the SAME open document instance —
         // signing reopens nothing, so the field must exist on the instance
@@ -318,7 +318,7 @@ public class SignatureApplicationServiceTests : IDisposable
         // when none exists (the invisible-signature default). That must
         // remain untouched — invisible signatures are still fully valid
         // per #623's acceptance criteria — not retrofitted with an /AP.
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Invisible Signer");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Invisible Signer");
         var signedPath = SignSamplePdf(certificate);
 
         using var reopened = PdfDocument.Open(signedPath);
@@ -361,7 +361,7 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_FieldNameCollidesWithNonSignatureField_Throws()
     {
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Collision");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Collision");
         var basePath = CreateBasePdf();
 
         using var document = PdfDocument.Open(basePath);
@@ -382,11 +382,11 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_AlreadySignedDocument_Throws()
     {
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("First Signer");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("First Signer");
         var signedPath = SignSamplePdf(certificate);
 
         using var reopened = PdfDocument.Open(signedPath);
-        using var secondCertificate = SigningCertificateFactory.CreateSelfSigned("Second Signer");
+        using var secondCertificate = TestSigningCertificates.CreateSelfSigned("Second Signer");
 
         var act = () => _signer.SignDocument(reopened, secondCertificate,
             new SignatureApplicationOptions { FieldName = "Signature2" });
@@ -414,7 +414,7 @@ public class SignatureApplicationServiceTests : IDisposable
             });
         }
 
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Encrypted Source");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Encrypted Source");
         using var encrypted = PdfDocument.Open(encryptedPath, "user-pw");
 
         var act = () => _signer.SignDocument(encrypted, certificate);
@@ -428,7 +428,7 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_VerifierExtractsSigningTimeFromSignedAttributes()
     {
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Timed Signer");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Timed Signer");
         var signedPath = SignSamplePdf(certificate);
 
         var results = CreateVerifier().VerifySignatures(signedPath);
@@ -443,9 +443,9 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignFile_IdentityLoadedFromPkcs12_VerifiesValid()
     {
-        var pfxPath = Path.GetTempFileName() + ".pfx";
+        var pfxPath = NewTempPath(".pfx");
         _tempFiles.Add(pfxPath);
-        using (var original = SigningCertificateFactory.CreateSelfSigned("P12 Signer"))
+        using (var original = TestSigningCertificates.CreateSelfSigned("P12 Signer"))
         {
             File.WriteAllBytes(pfxPath, original.Export(X509ContentType.Pkcs12, "test-password"));
         }
@@ -480,7 +480,7 @@ public class SignatureApplicationServiceTests : IDisposable
         var pdfsig = FindPdfsig();
         Assert.SkipWhen(pdfsig == null, "poppler pdfsig not installed on this machine");
 
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("External Oracle Signer");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("External Oracle Signer");
         var signedPath = SignSamplePdf(certificate);
 
         var startInfo = new System.Diagnostics.ProcessStartInfo
@@ -524,7 +524,7 @@ public class SignatureApplicationServiceTests : IDisposable
         var openssl = FindTool("openssl");
         Assert.SkipWhen(openssl == null, "openssl not installed on this machine");
 
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("OpenSSL Oracle Signer");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("OpenSSL Oracle Signer");
         var signedPath = SignSamplePdf(certificate);
         var fileBytes = File.ReadAllBytes(signedPath);
 
@@ -616,7 +616,7 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_CertificateWithoutPrivateKey_Throws()
     {
-        using var withKey = SigningCertificateFactory.CreateSelfSigned("Public Only");
+        using var withKey = TestSigningCertificates.CreateSelfSigned("Public Only");
         using var publicOnly = X509CertificateLoader.LoadCertificate(withKey.RawData);
         var basePath = CreateBasePdf();
         using var document = PdfDocument.Open(basePath);
@@ -630,7 +630,7 @@ public class SignatureApplicationServiceTests : IDisposable
     [Fact]
     public void SignDocument_TooSmallSignatureCapacity_Throws()
     {
-        using var certificate = SigningCertificateFactory.CreateSelfSigned("Tiny Capacity");
+        using var certificate = TestSigningCertificates.CreateSelfSigned("Tiny Capacity");
         var basePath = CreateBasePdf();
         using var document = PdfDocument.Open(basePath);
 
@@ -653,9 +653,14 @@ public class SignatureApplicationServiceTests : IDisposable
             new SignatureTrustEvaluator(anchorList));
     }
 
+    // GetTempFileName() creates a zero-byte file and returns its extensionless
+    // path; appending ".pdf" then leaves that twin behind on every call.
+    private static string NewTempPath(string extension) =>
+        Path.Combine(Path.GetTempPath(), $"excise-sigapply-{Guid.NewGuid():N}{extension}");
+
     private string CreateBasePdf()
     {
-        var path = Path.GetTempFileName() + ".pdf";
+        var path = NewTempPath(".pdf");
         _tempFiles.Add(path);
         TestPdfGenerator.CreateSimpleTextPdf(path, "Signature application test document");
         return path;
@@ -671,7 +676,7 @@ public class SignatureApplicationServiceTests : IDisposable
 
     private string WriteTempFile(byte[] bytes)
     {
-        var path = Path.GetTempFileName() + ".pdf";
+        var path = NewTempPath(".pdf");
         _tempFiles.Add(path);
         File.WriteAllBytes(path, bytes);
         return path;

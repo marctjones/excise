@@ -38,7 +38,7 @@ public class PdfTextExtractionServiceTests
     public void ExtractTextFromPage_WithFilePath_ExtractsCorrectText()
     {
         // Arrange
-        var tempFile = Path.GetTempFileName() + ".pdf";
+        var tempFile = Path.Combine(Path.GetTempPath(), $"excise-textextract-{Guid.NewGuid():N}.pdf");
         try
         {
             var pdfBytes = TestPdfGenerator.CreateSimplePdf("Hello from file");
@@ -76,7 +76,7 @@ public class PdfTextExtractionServiceTests
     {
         // Arrange - Same PDF content
         var pdfBytes = TestPdfGenerator.CreateSimplePdf("Test Content");
-        var tempFile = Path.GetTempFileName() + ".pdf";
+        var tempFile = Path.Combine(Path.GetTempPath(), $"excise-textextract-{Guid.NewGuid():N}.pdf");
 
         try
         {

@@ -56,50 +56,27 @@ public class StatePersistenceTests
     }
 
     [Fact]
-    public void WindowSettings_Save_CreatesSettingsFile()
+    public void WindowSettings_Save_WritesTheFileAndLoadReadsItBack()
     {
-        // Arrange
         var settings = new WindowSettings
         {
             X = 100,
             Y = 200,
             Width = 1400,
             Height = 900,
-            IsMaximized = false
+            IsMaximized = true
         };
 
-        var tempPath = Path.Combine(Path.GetTempPath(), "test-window-settings.json");
-        try
-        {
-            // Act
-            settings.Save();
-            // Note: We can't easily override the path, so we just verify Save() doesn't throw
-        }
-        finally
-        {
-            // Cleanup - AppPaths determines the actual path used
-            if (File.Exists(tempPath))
-            {
-                File.Delete(tempPath);
-            }
-        }
-    }
+        settings.Save();
 
-    [Fact]
-    public void DocumentState_Create_IncludesZoomAndPage()
-    {
-        // Arrange
-        var state = new WindowSettings.DocumentState
-        {
-            FilePath = "/tmp/test.pdf",
-            ZoomLevel = 1.5,
-            LastPageIndex = 5
-        };
-
-        // Act & Assert
-        state.FilePath.Should().Be("/tmp/test.pdf");
-        state.ZoomLevel.Should().Be(1.5);
-        state.LastPageIndex.Should().Be(5);
+        File.Exists(AppPaths.WindowSettingsPath).Should().BeTrue(
+            "Save() swallows every exception, so a missing file is the only sign it failed");
+        var reloaded = WindowSettings.Load();
+        reloaded.X.Should().Be(100);
+        reloaded.Y.Should().Be(200);
+        reloaded.Width.Should().Be(1400);
+        reloaded.Height.Should().Be(900);
+        reloaded.IsMaximized.Should().BeTrue();
     }
 
     [Fact]
@@ -233,44 +210,4 @@ public class StatePersistenceTests
         state2.LastAccessed.Should().BeAfter(oldTime);
     }
 
-    [Fact]
-    public void WindowSettings_ApplyTo_SetsWindowProperties()
-    {
-        // Arrange - we can't test with a real Window, but we can verify the logic
-        var settings = new WindowSettings
-        {
-            X = 100,
-            Y = 200,
-            Width = 1600,
-            Height = 1000,
-            IsMaximized = false
-        };
-
-        // Act - ApplyTo would require a Window instance
-        // Assert - verify the properties are set correctly
-        settings.X.Should().Be(100);
-        settings.Y.Should().Be(200);
-        settings.Width.Should().Be(1600);
-        settings.Height.Should().Be(1000);
-    }
-
-    [Fact]
-    public void WindowSettings_CaptureFrom_SavesWindowState()
-    {
-        // Arrange - we can't test with a real Window, but verify properties
-        var settings = new WindowSettings();
-
-        // Act - simulate capturing state
-        settings.X = 150;
-        settings.Y = 250;
-        settings.Width = 1300;
-        settings.Height = 850;
-        settings.IsMaximized = false;
-
-        // Assert
-        settings.X.Should().Be(150);
-        settings.Y.Should().Be(250);
-        settings.Width.Should().Be(1300);
-        settings.Height.Should().Be(850);
-    }
 }

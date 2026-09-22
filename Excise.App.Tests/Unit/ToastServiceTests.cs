@@ -128,33 +128,6 @@ public class ToastServiceTests
     }
 
     [Fact]
-    public void ToastEventArgs_StoresAllProperties()
-    {
-        // Arrange & Act
-        var args = new ToastService.ToastEventArgs
-        {
-            Message = "Test Message",
-            Details = "Test Details",
-            Severity = ToastService.ToastSeverity.Error
-        };
-
-        // Assert
-        args.Message.Should().Be("Test Message");
-        args.Details.Should().Be("Test Details");
-        args.Severity.Should().Be(ToastService.ToastSeverity.Error);
-    }
-
-    [Fact]
-    public void ToastSeverity_HasAllExpectedValues()
-    {
-        // Arrange & Act & Assert
-        ToastService.ToastSeverity.Informational.Should().Be(ToastService.ToastSeverity.Informational);
-        ToastService.ToastSeverity.Warning.Should().Be(ToastService.ToastSeverity.Warning);
-        ToastService.ToastSeverity.Error.Should().Be(ToastService.ToastSeverity.Error);
-        ToastService.ToastSeverity.Success.Should().Be(ToastService.ToastSeverity.Success);
-    }
-
-    [Fact]
     public void ToastService_Unsubscribe_StopsReceivingEvents()
     {
         // Arrange
