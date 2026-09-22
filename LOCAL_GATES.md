@@ -37,9 +37,27 @@ build you redact a real document with is a binary whose failure hurts someone,
 silently — no crash, no error, the name is just still in the file. The
 redaction gates are therefore unskippable at every tier that produces a binary
 anyone could redact with, including a purely local build: `t0` runs the static
-redaction-architecture guard, `t1` runs the full redaction suites and accepts
-no flag to skip them — their rows are `checkpoint=never`, so `--resume` re-runs
-them every time.
+redaction-architecture guard, and `t1` reaches a redaction verdict over every
+`~Redaction` test with no flag to skip it — their rows are `checkpoint=never`,
+so `--resume` re-runs them every time.
+
+⚠️ **How t1 reaches that verdict changed on 2026-09-21 (#1767), and the
+guarantee did not.** t1 used to re-run the solution-wide
+`FullyQualifiedName~Redaction` filter — 1898 results, 435–454 s, 17 % of the
+tier, and **zero unique tests**: the five assemblies it spans each run
+unfiltered, or under filters that partition them, elsewhere in the same tier.
+`redaction-suites-union` reads those runs' trx instead (~3 s measured), and it
+refuses to be a weaker gate three ways: every trx must be under **this run's**
+log directory (so a producer `--resume` took from a checkpoint is stale
+evidence and FAILS, naming the row to re-run — this is what `checkpoint=never`
+means once the evidence is borrowed); every `*.Tests.csproj` in `excise.sln`
+must be represented, which is the containment proof and needs no filter
+semantics at all; and `dotnet test excise.sln --list-tests --filter
+FullyQualifiedName~Redaction` supplies the authoritative population, every
+class of which must have a result. The re-execution still runs in `t2`, where
+none of those producers do and the configuration is Release. `redaction-suites`
+also gained the floor it never had (`redaction-suites-floor`): it could have
+collected 40 results instead of 1898 and read identically green.
 
 ## tests/gates.tsv is the gate map
 
@@ -74,7 +92,7 @@ into a csproj path that matched zero tests and exited 0):
 | `knownIssue` | `-`, `#N` (a FAIL is KNOWN while N is OPEN), or `#N/Substring` (KNOWN only when every failing test name — or, for a script row, the log — contains Substring; otherwise NEW naming the unmatched, so one issue cannot mask a second failing class). A CLOSED N makes the report fail STALE. **Never accept a red without one** — recipe under "Accepting a red". |
 | `prereq` | space-separated `tool:NAME` (on PATH), `corpus:NAME` (`test-pdfs/NAME` non-empty), `env:NAME`, `file:GLOB`, `opt:NAME` (the runner was invoked with `--NAME`), or `-`. Checked before the row runs. |
 | `prereqPolicy` | `fail` or `skip` — what a missing prerequisite (the column, or exit 77 from the gate) becomes. |
-| `checkpoint` | `ok` or `never` — may `--resume` skip this row. `never` today (the CKPT column of `--list` is the live list): the redaction family (`redaction-architecture`, `redaction-oracles`, `redaction-oracles-selftest`, `redaction-suites`), `extraction-parity`, `build` and `gui-coverage-reset`. The validator refuses `checkpoint=ok` on any name matching `RUNNER_NEVER_CHECKPOINT` (`redaction|true-redaction|glyph|extraction-parity`) unless the row is a GRADE — `redaction-bench` is that one exemption, because a bench guarantees nothing. |
+| `checkpoint` | `ok` or `never` — may `--resume` skip this row. `never` today (the CKPT column of `--list` is the live list): the redaction family (`redaction-architecture`, `redaction-oracles`, `redaction-oracles-selftest`, `redaction-suites`, `redaction-suites-floor`, `redaction-suites-union`, `redaction-suites-floor-selftest`), `extraction-parity`, `build` and `gui-coverage-reset`. The validator refuses `checkpoint=ok` on any name matching `RUNNER_NEVER_CHECKPOINT` (`redaction|true-redaction|glyph|extraction-parity`) unless the row is a GRADE — `redaction-bench` is that one exemption, because a bench guarantees nothing. |
 | `oracle` | `independent`, `spec`, `self`, `none` or `na` — who vouches for the verdict. |
 | `budget` | wall-clock seconds after which the row is KILLED, or `-` for unbounded. Only `test`/`project`/`project-chunked` rows may carry one (a `script` row is its own process tree). Derive it from measured `durationSeconds` in a ledger, say which runs in the `note`, and size it as roughly 2x the worst observed **clean** run **plus contention headroom** — the measured penalty on this machine was **+48%** (a loaded box ran an 913 s row in 1355 s), not the ~30% first guessed. Err generous: the bound exists to end an unbounded stall (#1283's was nine hours), not to police quiet-vs-loaded variance, and a false fire teaches people to disregard BOUND EXCEEDED — the only signal this gate has. **`-` is unbounded and is byte-for-byte the pre-#1283 behaviour**, so a row without a measurement stays as it was. See "The wall-clock bound" below. |
 | `note` | why this class and tier, and the measured cost with its date. Mandatory. |
@@ -438,9 +456,12 @@ and `advance-parity`.
 **Why the floors.** `dotnet test` exits 0 when every test skipped and 0 when
 every test passed. These tests gate on `Assert.SkipUnless(IsAvailable)`, so a
 vanished tool turns the whole subset into skips and the gate goes green having
-verified nothing. The rendering floor is **3000, not the Linux job's 60** —
+verified nothing. The rendering floor is **4000, not the Linux job's 60** —
 that 60 was what a corpus-less runner could reach; carrying it over would have
-let 3,600 tests vanish in silence. 875 of the 919 skips (2026-09-04) are
+let 3,600 tests vanish in silence. It was 3000 until 2026-09-21, which is 29 %
+below the measured 4217/4218 passed and would have let a quarter of the corpus
+go undetected (#1767); a planted trx with 717 of those passes turned into skips
+is accepted at 3000 and rejected at 4000. 875 of the 919 skips (2026-09-04) are
 `RedactionCollateralHarness` fixtures with under 200 characters of text (#1046
 documents that as intended). Do not lower a floor to make a run pass.
 
@@ -507,6 +528,17 @@ tier alone.
   that change exists. The "~20–25 min" quoted here and in CLAUDE.md until
   2026-09-10 was a 2026-09-04 estimate made before any t1 ledger existed, low
   by more than 2×.
+- **t1 after #1767: ~435 s less.** `redaction-suites` measured 435 s
+  (`logs/full-suite_Debug_20260921_125526`) and 454 s
+  (`logs/test-tier_t1_20260921_190820`); the `redaction-suites-union` row that
+  replaces it in t1 ran the same verification over the same day's trx in
+  **2.8 s** wall. Two other numbers this document and the manifest carried were
+  re-derived from those same two ledgers and were wrong: `Excise.Cli.Tests`
+  measured 159/160 s against a note claiming 17 s (86 % of it one test, now
+  the `cli-oom-ladder` row; the remainder measures 14.7 s), and
+  `architecture-docs` measured **0 s** against a note claiming 14 s. The full
+  t1 saving is not yet measured end to end — no t1 ledger exists after these
+  changes, and `app-tests-unchunked-evidence` at ~1150 s still dominates.
 - **full: ≈3 h.** The only complete ledger (2026-08-31) sums to ~80 min of
   executed rows with 24 checkpointed, so it is a floor, not a measurement.
   Now included by chain inheritance and the new rows: the t1 rows (56–57
