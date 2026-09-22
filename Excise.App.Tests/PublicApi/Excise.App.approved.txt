@@ -819,6 +819,7 @@ namespace Excise.App.ViewModels
         public bool IsRightSidebarVisible { get; }
         public bool IsSearchVisible { get; set; }
         public bool IsSearching { get; }
+        public bool IsShapeAnnotationMode { get; set; }
         public bool IsSidebarSplitterVisible { get; }
         public bool IsStickyNoteToolActive { get; set; }
         public bool IsTextSelectionMode { get; set; }
@@ -897,6 +898,7 @@ namespace Excise.App.ViewModels
         public int SelectedPageCount { get; }
         public string SelectedText { get; set; }
         public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> SetTypewriterColorCommand { get; }
+        public Excise.App.ViewModels.ShapeAnnotationKind ShapeAnnotationKind { get; set; }
         public bool ShowClipboardHistoryPanel { get; }
         public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> ShowDangerousLinkRefusalCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowDocumentationCommand { get; }
@@ -907,6 +909,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowShortcutsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SignDocumentCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SplitDocumentCommand { get; }
+        public string? StagedStampName { get; }
         public string StatusBarText { get; }
         public Excise.App.ViewModels.StickyNotePopupViewModel? StickyNotePopup { get; }
         public Avalonia.Platform.Storage.IStorageProvider? StorageProviderOverride { get; set; }
@@ -917,13 +920,16 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleArrowModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAttachmentsCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleCircleModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleClipboardSidebarCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleCommentAnnotationsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleContinuousViewCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFieldAndLinkAnnotationsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFormAuthoringModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFormFieldHighlightingCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFreeTextModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFreehandModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleImageStampModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleLineModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleOutlineCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> TogglePolyLineModeCommand { get; }
@@ -932,6 +938,8 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleRevealHiddenTextCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleRevealRasterizedHiddenCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? ToggleSearchCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleSquareModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> ToggleStampModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleStickyNoteToolCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleTextSelectionModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleThumbnailsCommand { get; }
@@ -1006,6 +1014,7 @@ namespace Excise.App.ViewModels
         public System.Threading.Tasks.Task MoveCurrentPageAsync(int toIndex) { }
         public System.Threading.Tasks.Task MovePageAsync(int fromIndex, int toIndex) { }
         public System.Threading.Tasks.Task MoveSelectedPagesAsync(int delta) { }
+        public System.Threading.Tasks.Task MoveStickyNoteAsync(int pageNumber, Excise.Core.Document.PdfRectangle oldRect, Excise.Core.Document.PdfRectangle newRect) { }
         public void NotifyThumbnailViewport(int pageIndex, bool isVisible) { }
         public System.Threading.Tasks.Task OnAnnotationPathDrawnAsync([System.Runtime.CompilerServices.TupleElementNames(new string[] {
                 "X",
@@ -1013,6 +1022,7 @@ namespace Excise.App.ViewModels
         public void OnFormFieldEditRejected(string fieldName, string message) { }
         public void OnFormFieldEdited(string fieldName, string? newValue) { }
         public void OnFormFieldRectDrawn(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
+        public System.Threading.Tasks.Task OnShapeAnnotationRectDrawnAsync(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
         public void OnTypewriterTextBoundsChanged(System.Guid operationId, Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
         public void OnTypewriterTextCreated(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
         public void OnTypewriterTextDeleted(System.Guid operationId) { }
@@ -1198,9 +1208,19 @@ namespace Excise.App.ViewModels
         public event System.EventHandler? CloseRequested;
         public event System.EventHandler<string>? Completed;
     }
+    public enum ShapeAnnotationKind
+    {
+        Square = 0,
+        Circle = 1,
+        FreeText = 2,
+        Stamp = 3,
+        ImageStamp = 4,
+    }
     public sealed class StickyNotePopupViewModel : ReactiveUI.ReactiveObject
     {
         public StickyNotePopupViewModel(int pageNumber, Excise.Core.Document.PdfRectangle rect, string initialText, System.Func<string, System.Threading.Tasks.Task> onCommit) { }
+        public double CardHeightDips { get; set; }
+        public double CardWidthDips { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CommitCommand { get; }
         public int PageNumber { get; }
         public Excise.Core.Document.PdfRectangle Rect { get; }

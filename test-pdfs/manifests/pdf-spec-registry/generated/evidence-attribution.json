@@ -8143,6 +8143,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -8557,15 +8564,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -21585,6 +21583,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -21998,15 +22003,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -23093,6 +23089,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23506,15 +23509,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -24562,6 +24556,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -24975,15 +24976,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -82523,6 +82515,27 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_ChangesRect_LeavesContentsAndPopupUntouched",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_RejectsDegenerateRectAndNonTextSubtype",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -83374,34 +83387,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Ink_PreservesEveryPointInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.ArrowAndLine_AreDistinguishableByTheirLineEndings",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -83981,6 +83966,27 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_ChangesRect_LeavesContentsAndPopupUntouched",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_RejectsDegenerateRectAndNonTextSubtype",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -84832,34 +84838,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Ink_PreservesEveryPointInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.ArrowAndLine_AreDistinguishableByTheirLineEndings",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -85439,6 +85417,27 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_ChangesRect_LeavesContentsAndPopupUntouched",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_RejectsDegenerateRectAndNonTextSubtype",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -86290,34 +86289,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Ink_PreservesEveryPointInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.ArrowAndLine_AreDistinguishableByTheirLineEndings",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -86913,6 +86884,27 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_ChangesRect_LeavesContentsAndPopupUntouched",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_RejectsDegenerateRectAndNonTextSubtype",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -87770,34 +87762,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Ink_PreservesEveryPointInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.ArrowAndLine_AreDistinguishableByTheirLineEndings",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -87954,13 +87918,11 @@
         },
         {
           "kind": "differential",
-          "ref": "Excise.Rendering.Tests/Differential/StickyNoteIconTests.cs::DegenerateRect_StillDrawsAMarker_AsMutoolDoes",
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "ref": "Excise.Rendering.Tests/Differential/StickyNoteIconTests.cs::DegenerateRect_StillDrawsACard_AsMutoolDoes",
+          "recordedOutcomes": []
         }
       ],
-      "explicitContractStatus": "passing",
+      "explicitContractStatus": "partial-or-failing",
       "grade": "verified",
       "benchmarkScenarios": []
     },
@@ -88508,6 +88470,27 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_ChangesRect_LeavesContentsAndPopupUntouched",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_RejectsDegenerateRectAndNonTextSubtype",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -89358,33 +89341,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Ink_PreservesEveryPointInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.ArrowAndLine_AreDistinguishableByTheirLineEndings",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -89957,6 +89913,27 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_ChangesRect_LeavesContentsAndPopupUntouched",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_RejectsDegenerateRectAndNonTextSubtype",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -90807,33 +90784,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Ink_PreservesEveryPointInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.ArrowAndLine_AreDistinguishableByTheirLineEndings",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -91399,6 +91349,27 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_ChangesRect_LeavesContentsAndPopupUntouched",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_RejectsDegenerateRectAndNonTextSubtype",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -92249,33 +92220,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Ink_PreservesEveryPointInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.ArrowAndLine_AreDistinguishableByTheirLineEndings",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -92841,6 +92785,27 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_ChangesRect_LeavesContentsAndPopupUntouched",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.MoveTextAnnotation_RejectsDegenerateRectAndNonTextSubtype",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -93691,33 +93656,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Ink_PreservesEveryPointInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.ArrowAndLine_AreDistinguishableByTheirLineEndings",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -106865,6 +106803,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -107278,15 +107223,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -108321,6 +108257,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.StickyNote_PlaceThenEdit_SurvivesSaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -108734,15 +108677,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113456,13 +113390,13 @@
     "targetModes": 899,
     "modesWithTestCandidates": 647,
     "modesWithExplicitContracts": 882,
-    "modesWithPassingExplicitContracts": 876,
+    "modesWithPassingExplicitContracts": 875,
     "modesWithRecordedPassingCandidate": 646,
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7581,
-    "testMethodsWithCapabilityCandidate": 4821,
+    "testMethods": 7588,
+    "testMethodsWithCapabilityCandidate": 4825,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

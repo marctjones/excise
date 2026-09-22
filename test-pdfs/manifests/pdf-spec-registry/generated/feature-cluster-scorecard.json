@@ -1145,7 +1145,7 @@
       },
       "unknownModeCount": 0,
       "explicitContractModes": 7,
-      "passingContractModes": 7,
+      "passingContractModes": 6,
       "testCandidateModes": 7,
       "reviewBatchIssues": []
     },
