@@ -44,9 +44,10 @@ public class ContinuousImageSampleReleaseTests
     public async Task PagingThroughTheDocument_ReleasesTheSamplesOfUnrealizedPages_KeepsRealizedAndSharedOnes_AndRedrawsIdentically()
     {
         const int pageCount = 12;
-        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(ImageDocument(pageCount));
+        var (window, viewer, items) = ShowContinuousViewerWithoutSinglePageRender(ImageDocument(pageCount));
         try
         {
+            viewer.SinglePagePublishCount.Should().Be(0, "fixture: no single-page render competes with the continuous one");
             var first = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             var reference = PixelCopy.Of(first);
             reference.InkFraction().Should().BeGreaterThan(0.0005, "fixture: page 1 must show its images");
@@ -129,7 +130,7 @@ public class ContinuousImageSampleReleaseTests
         const int pageCount = 12;
         using var entered = new ManualResetEventSlim();
         using var gate = new ManualResetEventSlim();
-        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(ImageDocument(pageCount));
+        var (window, viewer, items) = ShowContinuousViewerWithoutSinglePageRender(ImageDocument(pageCount));
         // Hold EVERY band render of page 1 (a page can render as more than one
         // batch), so none of them reads its images before the page is unrealized.
         viewer.ContinuousBandRenderStartingForTests = page =>
@@ -186,6 +187,32 @@ public class ContinuousImageSampleReleaseTests
     }
 
     // ---- fixture -------------------------------------------------------
+
+    /// <summary>
+    /// A continuous-view viewer that never starts a single-page render. The
+    /// shared <see cref="ContinuousTileEvictionCompositeTests.ShowContinuousViewer(byte[])"/>
+    /// assigns the document while the viewer is still in single-page view, so
+    /// a single-page render of page 1 runs (and publishes) alongside the
+    /// continuous one. That render's resource scope releases what it decoded
+    /// when it ends, and evicts the object from the document cache; a release
+    /// landing after the continuous band render has decoded the same image
+    /// leaves page 1's image undecoded although its composite shows it
+    /// (<see cref="Excise.Rendering.RenderResourceScope.NoteImageSampleRead"/>
+    /// documents the snapshot). ⚠️ That interleaving is a candidate, not a
+    /// measured cause: the one chunked failure of the "page 1's render decoded
+    /// its image" precondition (issue #1771) was never reproduced in isolation.
+    /// Setting the mode first removes the competitor rather than waiting for
+    /// it, since no signal says the single-page render is done.
+    /// </summary>
+    private static (Window Window, PdfViewerControl Viewer, ItemsControl Items) ShowContinuousViewerWithoutSinglePageRender(byte[] pdfBytes)
+    {
+        var viewer = new PdfViewerControl { ViewMode = PdfViewMode.Continuous };
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        window.Show();
+        viewer.Document = PdfCoreDocument.Open(pdfBytes);
+        var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+        return (window, viewer, items);
+    }
 
     /// <summary>
     /// <paramref name="pageCount"/> pages. Each draws its own image (/Own) and a
