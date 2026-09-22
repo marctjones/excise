@@ -7,6 +7,14 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Highlight/Underline/StrikeOut/Squiggly: arm the tool, then select** (#1793).
+  Click the Highlight tool (Annotate menu, annotation toolbar, or floating
+  palette), drag over text, release the mouse — the markup applies
+  immediately, no separate "select, then click Add" step. Matches the
+  arm-then-gesture pattern Square/Circle/Stamp (#1792) and the path tools
+  already use. The direct-apply commands (apply to whatever's already
+  selected) are unchanged and still available. Tool stays armed for marking
+  up several passages in a row.
 - **Interactive sticky-note popup** (#1788). Click a page point with the
   sticky-note tool to drop a note and type into it immediately; click an
   existing note's icon to reopen and edit it in place — the first
@@ -145,6 +153,13 @@ semantic versioning.
   - `README.md` documents `excise unredact` for the first time.
 
 ### Fixed
+- **Pressing "Select Text Mode" while a markup tool was armed exited text
+  interaction entirely instead of dropping back to plain selection** (#1793).
+  `ToggleTextSelectionMode()` did a plain boolean flip; markup mode
+  (#1793) is the one mode that sets `IsTextSelectionMode = true` itself
+  (reusing the gesture) rather than turning it off, so the flag was already
+  `true` when the toggle ran — flipping it landed on `false`, not back on
+  plain selection.
 - **Square, Circle, Text Box, Stamp and Image Stamp annotations had no
   working path through the GUI** (#1792). Clicking any of them from the
   Annotate menu, the annotation toolbar row, or the floating palette always

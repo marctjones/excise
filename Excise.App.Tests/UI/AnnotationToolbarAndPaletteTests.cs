@@ -449,38 +449,31 @@ public class AnnotationToolbarAndPaletteTests
     }
 
     /// <summary>
-    /// The four *FromSelection commands (Highlight/Underline/StrikeOut/
-    /// Squiggly) are the one family <see cref="RealPointerClick_OnRemainingToolbarButtons_DoesNotThrow"/>
-    /// and <see cref="RealPointerClick_OnRemainingPaletteButtons_DoesNotThrow"/>
-    /// above could not cover: with no text selected their CanExecute is
-    /// false, so Avalonia auto-disables the Button and it never dispatches a
-    /// PointerPressed a real MouseDown/MouseUp can observe — the click
-    /// silently lands on nothing, exactly like clicking a greyed-out menu
-    /// item. Staging a selection first (same helper shape as
-    /// TextMarkupAnnotationCommandTests.SelectSomeText) is what the other
-    /// theories' guarded-no-op buttons do not need, because THEIR guard is
-    /// "no drag rect", which does not disable the button itself.
+    /// #1792 follow-up: the four markup buttons (Highlight/Underline/
+    /// StrikeOut/Squiggly) no longer apply directly to a pre-staged
+    /// selection — they ARM markup mode (<see cref="MainWindowViewModel.ToggleHighlightModeCommand"/>
+    /// etc.), matching Square/Circle's arm-then-gesture pattern. A real click
+    /// must arm the right <see cref="MarkupAnnotationKind"/> with no
+    /// precondition at all (unlike the old direct-apply buttons, these are
+    /// always enabled once a document is loaded — arming doesn't need a
+    /// selection to already exist). The end-to-end "select while armed ->
+    /// annotation appears" proof is <see cref="RealToolbarClick_ArmsHighlightMode_AndARealTextSelection_AppliesIt"/>.
     /// </summary>
     [FixedAvaloniaTheory]
-    [InlineData(true, "AnnotationToolbarHighlightButton")]
-    [InlineData(true, "AnnotationToolbarUnderlineButton")]
-    [InlineData(true, "AnnotationToolbarStrikeOutButton")]
-    [InlineData(true, "AnnotationToolbarSquigglyButton")]
-    [InlineData(false, "PaletteHighlightButton")]
-    [InlineData(false, "PaletteUnderlineButton")]
-    [InlineData(false, "PaletteStrikeOutButton")]
-    [InlineData(false, "PaletteSquigglyButton")]
-    public async Task RealPointerClick_OnFromSelectionButtons_WithATextSelectionStaged_AddsTheAnnotation(
-        bool onToolbar, string buttonName)
+    [InlineData(true, "AnnotationToolbarHighlightButton", MarkupAnnotationKind.Highlight)]
+    [InlineData(true, "AnnotationToolbarUnderlineButton", MarkupAnnotationKind.Underline)]
+    [InlineData(true, "AnnotationToolbarStrikeOutButton", MarkupAnnotationKind.StrikeOut)]
+    [InlineData(true, "AnnotationToolbarSquigglyButton", MarkupAnnotationKind.Squiggly)]
+    [InlineData(false, "PaletteHighlightButton", MarkupAnnotationKind.Highlight)]
+    [InlineData(false, "PaletteUnderlineButton", MarkupAnnotationKind.Underline)]
+    [InlineData(false, "PaletteStrikeOutButton", MarkupAnnotationKind.StrikeOut)]
+    [InlineData(false, "PaletteSquigglyButton", MarkupAnnotationKind.Squiggly)]
+    public async Task RealPointerClick_OnMarkupButtons_ArmsMarkupModeWithNoSelectionNeeded(
+        bool onToolbar, string buttonName, MarkupAnnotationKind expectedKind)
     {
         var (vm, window, pdf) = await OpenWithDocumentAsync();
         try
         {
-            vm.CurrentTextSelectionPageArea = PdfPageRect.ViewerDips(
-                1, x: 100, y: 100, width: 140, height: 20,
-                renderDpi: MainWindowViewModel.DefaultViewerRenderDpi);
-            vm.SelectedText = "Test Content";
-
             Window host;
             if (onToolbar)
             {
@@ -502,14 +495,13 @@ public class AnnotationToolbarAndPaletteTests
             var button = host.GetLogicalDescendants().OfType<Button>()
                 .FirstOrDefault(b => b.Name == buttonName);
             button.Should().NotBeNull($"{(onToolbar ? "MainWindow.axaml" : "AnnotationPaletteWindow.axaml")} must declare {buttonName}");
-            button!.Command!.CanExecute(button.CommandParameter).Should().BeTrue(
-                $"{buttonName} must be enabled once a text selection is staged, or this click proves nothing");
+            button!.Command!.CanExecute(null).Should().BeTrue(
+                $"{buttonName} must be enabled with a document loaded and NO selection — arming needs no precondition");
 
-            var before = vm.FileState.AnnotationEditsCount;
             await ClickAsync(button, host);
 
-            vm.FileState.AnnotationEditsCount.Should().Be(before + 1,
-                $"a real click on {buttonName} with a selection staged must add exactly one annotation");
+            vm.IsMarkupAnnotationMode.Should().BeTrue($"a real click on {buttonName} must arm markup mode");
+            vm.MarkupAnnotationKind.Should().Be(expectedKind);
         }
         finally
         {

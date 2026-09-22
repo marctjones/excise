@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "88124a98173254fdb77425bfeabc086bb038a896",
+  "sourceRevision": "a196aa38b04af8c53385ba9012d5e0951baf5c0d",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7952,
+    "retainedSymbols": 7959,
     "observedComponentDependencies": 72,
     "declaredDependencies": 69,
     "acceptedExceptions": 1,
@@ -24,22 +24,22 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 462,
+      "references": 463,
       "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Views.MainWindow",
           "target": "Excise.App.ViewModels.MainWindowViewModel",
-          "references": 172
+          "references": 173
         }
       ]
     },
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 725,
-      "typeDependencyCount": 80,
+      "references": 737,
+      "typeDependencyCount": 81,
       "classification": "declared",
       "evidence": [
         {

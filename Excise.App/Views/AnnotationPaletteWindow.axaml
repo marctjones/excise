@@ -43,39 +43,39 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Orientation="Vertical" Spacing="2" Margin="4">
             <Button x:Name="PaletteHighlightButton"
-                    Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                    Command="{Binding ToggleHighlightModeCommand}"
                     Classes="modern-button toolbar-button"
-                    IsEnabled="{Binding HasTextSelection}"
-                    access:CommandAccessibility.CommandId="annotation.addHighlight"
-                    ToolTip.Tip="Add highlight from selected text"
-                    AutomationProperties.Name="Add Highlight From Selection">
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.toggleHighlightMode"
+                    ToolTip.Tip="Highlight tool: select text to highlight it"
+                    AutomationProperties.Name="Highlight Tool">
                 <PathIcon Classes="toolbar-icon" Data="{StaticResource IconHighlight}"/>
             </Button>
             <Button x:Name="PaletteUnderlineButton"
-                    Command="{Binding AddUnderlineAnnotationFromSelectionCommand}"
+                    Command="{Binding ToggleUnderlineModeCommand}"
                     Classes="modern-button toolbar-button"
-                    IsEnabled="{Binding HasTextSelection}"
-                    access:CommandAccessibility.CommandId="annotation.addUnderline"
-                    ToolTip.Tip="Add underline from selected text"
-                    AutomationProperties.Name="Add Underline From Selection">
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.toggleUnderlineMode"
+                    ToolTip.Tip="Underline tool: select text to underline it"
+                    AutomationProperties.Name="Underline Tool">
                 <PathIcon Classes="toolbar-icon" Data="{StaticResource IconUnderline}"/>
             </Button>
             <Button x:Name="PaletteStrikeOutButton"
-                    Command="{Binding AddStrikeOutAnnotationFromSelectionCommand}"
+                    Command="{Binding ToggleStrikeOutModeCommand}"
                     Classes="modern-button toolbar-button"
-                    IsEnabled="{Binding HasTextSelection}"
-                    access:CommandAccessibility.CommandId="annotation.addStrikeOut"
-                    ToolTip.Tip="Add strikeout from selected text"
-                    AutomationProperties.Name="Add Strikeout From Selection">
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.toggleStrikeOutMode"
+                    ToolTip.Tip="Strikeout tool: select text to strike it out"
+                    AutomationProperties.Name="Strikeout Tool">
                 <PathIcon Classes="toolbar-icon" Data="{StaticResource IconStrikeOut}"/>
             </Button>
             <Button x:Name="PaletteSquigglyButton"
-                    Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
+                    Command="{Binding ToggleSquigglyModeCommand}"
                     Classes="modern-button toolbar-button"
-                    IsEnabled="{Binding HasTextSelection}"
-                    access:CommandAccessibility.CommandId="annotation.addSquiggly"
-                    ToolTip.Tip="Add squiggly underline from selected text"
-                    AutomationProperties.Name="Add Squiggly From Selection">
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.toggleSquigglyMode"
+                    ToolTip.Tip="Squiggly tool: select text to squiggly-underline it"
+                    AutomationProperties.Name="Squiggly Tool">
                 <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSquiggly}"/>
             </Button>
 

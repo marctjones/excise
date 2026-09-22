@@ -69,6 +69,20 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> AddUnderlineAnnotationFromSelectionCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddStrikeOutAnnotationFromSelectionCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddSquigglyAnnotationFromSelectionCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Arms/disarms markup-annotation mode for the kind named in each
+    /// property (#1792 follow-up) — select text while armed and the markup
+    /// applies the instant the selection finishes, no separate "select then
+    /// click Add" step. The direct Add*FromSelectionCommand above (apply to
+    /// whatever's already selected) is unchanged and still available. See
+    /// <see cref="IsMarkupAnnotationMode"/>.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ToggleHighlightModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleUnderlineModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleStrikeOutModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleSquigglyModeCommand { get; private set; } = null!;
+
     public ReactiveCommand<Unit, Unit> AddSquareAnnotationFromDragCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddCircleAnnotationFromDragCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddFreeTextAnnotationFromDragCommand { get; private set; } = null!;
@@ -260,6 +274,10 @@ public partial class MainWindowViewModel
         AddUnderlineAnnotationFromSelectionCommand = ReactiveCommand.CreateFromTask(AddUnderlineAnnotationFromSelectionAsync);
         AddStrikeOutAnnotationFromSelectionCommand = ReactiveCommand.CreateFromTask(AddStrikeOutAnnotationFromSelectionAsync);
         AddSquigglyAnnotationFromSelectionCommand = ReactiveCommand.CreateFromTask(AddSquigglyAnnotationFromSelectionAsync);
+        ToggleHighlightModeCommand = ReactiveCommand.Create(() => ToggleMarkupMode(MarkupAnnotationKind.Highlight));
+        ToggleUnderlineModeCommand = ReactiveCommand.Create(() => ToggleMarkupMode(MarkupAnnotationKind.Underline));
+        ToggleStrikeOutModeCommand = ReactiveCommand.Create(() => ToggleMarkupMode(MarkupAnnotationKind.StrikeOut));
+        ToggleSquigglyModeCommand = ReactiveCommand.Create(() => ToggleMarkupMode(MarkupAnnotationKind.Squiggly));
         AddSquareAnnotationFromDragCommand = ReactiveCommand.CreateFromTask(AddSquareAnnotationFromDragAsync);
         AddCircleAnnotationFromDragCommand = ReactiveCommand.CreateFromTask(AddCircleAnnotationFromDragAsync);
         AddFreeTextAnnotationFromDragCommand = ReactiveCommand.CreateFromTask(() => AddFreeTextAnnotationFromDragAsync(null));

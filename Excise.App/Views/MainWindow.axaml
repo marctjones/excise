@@ -227,18 +227,18 @@
 
             <!-- ANNOTATE MENU -->
             <MenuItem Header="_Annotate">
-                <MenuItem Header="Add _Highlight From Selection" Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
-                          IsEnabled="{Binding HasTextSelection}"
-                          access:CommandAccessibility.CommandId="annotation.addHighlight"/>
-                <MenuItem Header="Add _Underline From Selection" Command="{Binding AddUnderlineAnnotationFromSelectionCommand}"
-                          IsEnabled="{Binding HasTextSelection}"
-                          access:CommandAccessibility.CommandId="annotation.addUnderline"/>
-                <MenuItem Header="Add Strike_out From Selection" Command="{Binding AddStrikeOutAnnotationFromSelectionCommand}"
-                          IsEnabled="{Binding HasTextSelection}"
-                          access:CommandAccessibility.CommandId="annotation.addStrikeOut"/>
-                <MenuItem Header="Add S_quiggly From Selection" Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
-                          IsEnabled="{Binding HasTextSelection}"
-                          access:CommandAccessibility.CommandId="annotation.addSquiggly"/>
+                <MenuItem Header="_Highlight Tool" Command="{Binding ToggleHighlightModeCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.toggleHighlightMode"/>
+                <MenuItem Header="_Underline Tool" Command="{Binding ToggleUnderlineModeCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.toggleUnderlineMode"/>
+                <MenuItem Header="Strike_out Tool" Command="{Binding ToggleStrikeOutModeCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.toggleStrikeOutMode"/>
+                <MenuItem Header="S_quiggly Tool" Command="{Binding ToggleSquigglyModeCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.toggleSquigglyMode"/>
                 <Separator/>
                 <MenuItem Header="Draw S_quare" Command="{Binding ToggleSquareModeCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
@@ -921,13 +921,13 @@
                             Background="{DynamicResource DividerBrush}"/>
 
                     <Button toolbar:PriorityToolbarPanel.Priority="50"
-                            Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                            Command="{Binding ToggleHighlightModeCommand}"
                             Classes="modern-button toolbar-button"
-                            IsEnabled="{Binding HasTextSelection}"
-                            access:CommandAccessibility.CommandId="annotation.addHighlight"
-                            ToolTip.Tip="Add highlight from selected text"
-                            AutomationProperties.Name="Add Highlight From Selection"
-                            AutomationProperties.HelpText="Creates a real PDF highlight annotation from the current text selection">
+                            IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="annotation.toggleHighlightMode"
+                            ToolTip.Tip="Highlight tool: select text to highlight it"
+                            AutomationProperties.Name="Highlight Tool"
+                            AutomationProperties.HelpText="Arms highlight mode — selecting text applies a highlight the instant you release the mouse">
                         <PathIcon Classes="toolbar-icon" Data="{StaticResource IconHighlight}"/>
                     </Button>
 
@@ -1111,42 +1111,42 @@
                                           ClipToBounds="True">
                 <Button x:Name="AnnotationToolbarHighlightButton"
                         toolbar:PriorityToolbarPanel.Priority="100"
-                        Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                        Command="{Binding ToggleHighlightModeCommand}"
                         Classes="modern-button toolbar-button"
-                        IsEnabled="{Binding HasTextSelection}"
-                        access:CommandAccessibility.CommandId="annotation.addHighlight"
-                        ToolTip.Tip="Add highlight from selected text"
-                        AutomationProperties.Name="Add Highlight From Selection">
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.toggleHighlightMode"
+                        ToolTip.Tip="Highlight tool: select text to highlight it"
+                        AutomationProperties.Name="Highlight Tool">
                     <PathIcon Classes="toolbar-icon" Data="{StaticResource IconHighlight}"/>
                 </Button>
                 <Button x:Name="AnnotationToolbarUnderlineButton"
                         toolbar:PriorityToolbarPanel.Priority="95"
-                        Command="{Binding AddUnderlineAnnotationFromSelectionCommand}"
+                        Command="{Binding ToggleUnderlineModeCommand}"
                         Classes="modern-button toolbar-button"
-                        IsEnabled="{Binding HasTextSelection}"
-                        access:CommandAccessibility.CommandId="annotation.addUnderline"
-                        ToolTip.Tip="Add underline from selected text"
-                        AutomationProperties.Name="Add Underline From Selection">
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.toggleUnderlineMode"
+                        ToolTip.Tip="Underline tool: select text to underline it"
+                        AutomationProperties.Name="Underline Tool">
                     <PathIcon Classes="toolbar-icon" Data="{StaticResource IconUnderline}"/>
                 </Button>
                 <Button x:Name="AnnotationToolbarStrikeOutButton"
                         toolbar:PriorityToolbarPanel.Priority="90"
-                        Command="{Binding AddStrikeOutAnnotationFromSelectionCommand}"
+                        Command="{Binding ToggleStrikeOutModeCommand}"
                         Classes="modern-button toolbar-button"
-                        IsEnabled="{Binding HasTextSelection}"
-                        access:CommandAccessibility.CommandId="annotation.addStrikeOut"
-                        ToolTip.Tip="Add strikeout from selected text"
-                        AutomationProperties.Name="Add Strikeout From Selection">
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.toggleStrikeOutMode"
+                        ToolTip.Tip="Strikeout tool: select text to strike it out"
+                        AutomationProperties.Name="Strikeout Tool">
                     <PathIcon Classes="toolbar-icon" Data="{StaticResource IconStrikeOut}"/>
                 </Button>
                 <Button x:Name="AnnotationToolbarSquigglyButton"
                         toolbar:PriorityToolbarPanel.Priority="85"
-                        Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
+                        Command="{Binding ToggleSquigglyModeCommand}"
                         Classes="modern-button toolbar-button"
-                        IsEnabled="{Binding HasTextSelection}"
-                        access:CommandAccessibility.CommandId="annotation.addSquiggly"
-                        ToolTip.Tip="Add squiggly underline from selected text"
-                        AutomationProperties.Name="Add Squiggly From Selection">
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.toggleSquigglyMode"
+                        ToolTip.Tip="Squiggly tool: select text to squiggly-underline it"
+                        AutomationProperties.Name="Squiggly Tool">
                     <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSquiggly}"/>
                 </Button>
 

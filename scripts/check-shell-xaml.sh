@@ -88,7 +88,7 @@ required_commands = [
     "view.toggleOutline", "view.toggleThumbnails", "view.toggleContinuous",
     "app.open", "app.save", "form.saveFlattenedCopy",
     "edit.selectTextMode", "edit.typewriterMode",
-    "annotation.addHighlight", "annotation.addStickyNote",
+    "annotation.toggleHighlightMode", "annotation.addStickyNote",
     "redaction.toggleMode", "redaction.apply",
     "form.toggleAuthoring", "form.autoDetectFields", "search.open",
     "document.rotateLeft", "document.rotateRight",

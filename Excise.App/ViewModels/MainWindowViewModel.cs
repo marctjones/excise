@@ -265,6 +265,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 if (_isTypewriterMode) IsTypewriterMode = false;
                 if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
                 if (_isShapeAnnotationMode) IsShapeAnnotationMode = false;
+                if (_isMarkupAnnotationMode) IsMarkupAnnotationMode = false;
             }
 
             this.RaisePropertyChanged(nameof(IsContinuousView));
@@ -940,6 +941,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 if (_isTypewriterMode) IsTypewriterMode = false;
                 if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
                 if (_isShapeAnnotationMode) IsShapeAnnotationMode = false;
+                if (_isMarkupAnnotationMode) IsMarkupAnnotationMode = false;
             }
             else
             {
@@ -1067,6 +1069,15 @@ public partial class MainWindowViewModel : ViewModelBase
                 IsStickyNoteToolActive = false;
             if (value && _isShapeAnnotationMode)
                 IsShapeAnnotationMode = false;
+            // Plain "Select Text Mode" (edit.selectTextMode) sets this directly,
+            // bypassing IsMarkupAnnotationMode's own arm-then-select flow —
+            // without this, leaving markup mode this way would silently keep
+            // auto-applying a markup to the next ordinary selection. Reads
+            // false during IsMarkupAnnotationMode's OWN arming call, which sets
+            // this property before flipping its own backing field, so arming
+            // never immediately un-arms itself here.
+            if (value && _isMarkupAnnotationMode)
+                IsMarkupAnnotationMode = false;
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));
         }
@@ -1913,6 +1924,20 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void ToggleTextSelectionMode()
     {
+        // Markup mode (#1792 follow-up) is the one mode that REUSES this
+        // flag rather than turning it off — arming Highlight etc. sets
+        // IsTextSelectionMode = true, same as plain "Select Text Mode"
+        // would. So a plain toggle here, while markup is armed, would flip
+        // an ALREADY-true flag to false and exit text interaction entirely,
+        // not "drop back to plain selection" — the read a user pressing
+        // Select Text Mode while a markup tool is active actually wants.
+        if (IsMarkupAnnotationMode)
+        {
+            _logger.LogInformation("Select Text Mode pressed while markup-armed: dropping the markup tool, staying in text selection");
+            IsMarkupAnnotationMode = false;
+            return;
+        }
+
         _logger.LogInformation("Toggle text selection mode. Current: {Current}", IsTextSelectionMode);
         IsTextSelectionMode = !IsTextSelectionMode;
 

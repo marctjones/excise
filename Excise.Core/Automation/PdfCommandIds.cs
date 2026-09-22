@@ -29,6 +29,18 @@ public static class PdfCommandIds
     public const string AddStrikeOut = "annotation.addStrikeOut";
     public const string AddSquiggly = "annotation.addSquiggly";
 
+    /// <summary>Toggle highlight-markup mode; a finished text selection becomes a Highlight (#1792 follow-up).</summary>
+    public const string ToggleHighlightMode = "annotation.toggleHighlightMode";
+
+    /// <summary>Toggle underline-markup mode; a finished text selection becomes an Underline (#1792 follow-up).</summary>
+    public const string ToggleUnderlineMode = "annotation.toggleUnderlineMode";
+
+    /// <summary>Toggle strikeout-markup mode; a finished text selection becomes a StrikeOut (#1792 follow-up).</summary>
+    public const string ToggleStrikeOutMode = "annotation.toggleStrikeOutMode";
+
+    /// <summary>Toggle squiggly-markup mode; a finished text selection becomes a Squiggly (#1792 follow-up).</summary>
+    public const string ToggleSquigglyMode = "annotation.toggleSquigglyMode";
+
     /// <summary>Square annotation from the drag rectangle (#912).</summary>
     public const string AddSquare = "annotation.addSquare";
 

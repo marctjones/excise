@@ -1666,7 +1666,7 @@ public partial class MainWindow : Window
         host.Margin = new Thickness(Math.Max(0, inDocumentArea.X), Math.Max(0, inDocumentArea.Y), 0, 0);
     }
 
-    private void OnTextSelected(object? sender, TextSelectedEventArgs e)
+    private async void OnTextSelected(object? sender, TextSelectedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel)
             return;
@@ -1696,6 +1696,11 @@ public partial class MainWindow : Window
         // The selection still powers highlight annotations and search; text
         // reaches the clipboard only from an explicit Copy.
         viewModel.SelectedText = string.IsNullOrEmpty(e.Text) ? string.Empty : e.Text;
+
+        // #1792 follow-up: if a markup tool is armed, the selection finishing
+        // (this handler firing at all IS that moment) applies it immediately —
+        // no separate "select, then click Add" step.
+        await viewModel.HandleTextSelectionFinishedForMarkupAsync();
     }
 
     private void OnPageChanged(object? sender, PageChangedEventArgs e)

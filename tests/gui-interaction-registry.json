@@ -4,16 +4,16 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "88124a98173254fdb77425bfeabc086bb038a896",
+  "sourceRevision": "a196aa38b04af8c53385ba9012d5e0951baf5c0d",
   "summary": {
     "interactions": 197,
     "menuItems": 111,
     "buttons": 77,
     "mouseGestures": 9,
     "keyboardShortcuts": 28,
-    "declaredCommandIds": 121,
+    "declaredCommandIds": 125,
     "commandIdsReachableFromTheGui": 107,
-    "commandIdsWithNoGuiPath": 5,
+    "commandIdsWithNoGuiPath": 9,
     "cliOnlyCommandIds": 9,
     "controlsWithNoCommandId": 0,
     "duplicateShortcuts": 0,
@@ -46,15 +46,6 @@
       "commandParameter": "{Binding PageIndex}",
       "shortcut": null,
       "commandId": "view.goToPage"
-    },
-    {
-      "kind": "button",
-      "path": "",
-      "label": "Add highlight from selected text",
-      "command": "AddHighlightAnnotationFromSelectionCommand",
-      "commandParameter": null,
-      "shortcut": null,
-      "commandId": "annotation.addHighlight"
     },
     {
       "kind": "button",
@@ -244,6 +235,15 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "form.autoDetectFields"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Highlight tool: select text to highlight it",
+      "command": "ToggleHighlightModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleHighlightMode"
     },
     {
       "kind": "button",
@@ -491,11 +491,11 @@
     {
       "kind": "button",
       "path": "AnnotationToolbarHighlightButton",
-      "label": "Add highlight from selected text",
-      "command": "AddHighlightAnnotationFromSelectionCommand",
+      "label": "Highlight tool: select text to highlight it",
+      "command": "ToggleHighlightModeCommand",
       "commandParameter": null,
       "shortcut": null,
-      "commandId": "annotation.addHighlight"
+      "commandId": "annotation.toggleHighlightMode"
     },
     {
       "kind": "button",
@@ -554,11 +554,11 @@
     {
       "kind": "button",
       "path": "AnnotationToolbarSquigglyButton",
-      "label": "Add squiggly underline from selected text",
-      "command": "AddSquigglyAnnotationFromSelectionCommand",
+      "label": "Squiggly tool: select text to squiggly-underline it",
+      "command": "ToggleSquigglyModeCommand",
       "commandParameter": null,
       "shortcut": null,
-      "commandId": "annotation.addSquiggly"
+      "commandId": "annotation.toggleSquigglyMode"
     },
     {
       "kind": "button",
@@ -572,20 +572,20 @@
     {
       "kind": "button",
       "path": "AnnotationToolbarStrikeOutButton",
-      "label": "Add strikeout from selected text",
-      "command": "AddStrikeOutAnnotationFromSelectionCommand",
+      "label": "Strikeout tool: select text to strike it out",
+      "command": "ToggleStrikeOutModeCommand",
       "commandParameter": null,
       "shortcut": null,
-      "commandId": "annotation.addStrikeOut"
+      "commandId": "annotation.toggleStrikeOutMode"
     },
     {
       "kind": "button",
       "path": "AnnotationToolbarUnderlineButton",
-      "label": "Add underline from selected text",
-      "command": "AddUnderlineAnnotationFromSelectionCommand",
+      "label": "Underline tool: select text to underline it",
+      "command": "ToggleUnderlineModeCommand",
       "commandParameter": null,
       "shortcut": null,
-      "commandId": "annotation.addUnderline"
+      "commandId": "annotation.toggleUnderlineMode"
     },
     {
       "kind": "button",
@@ -715,48 +715,12 @@
     },
     {
       "kind": "menu",
-      "path": "Annotate > Add Highlight From Selection",
-      "label": "Add Highlight From Selection",
-      "command": "AddHighlightAnnotationFromSelectionCommand",
-      "commandParameter": null,
-      "shortcut": null,
-      "commandId": "annotation.addHighlight"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Squiggly From Selection",
-      "label": "Add Squiggly From Selection",
-      "command": "AddSquigglyAnnotationFromSelectionCommand",
-      "commandParameter": null,
-      "shortcut": null,
-      "commandId": "annotation.addSquiggly"
-    },
-    {
-      "kind": "menu",
       "path": "Annotate > Add Sticky Note...",
       "label": "Add Sticky Note...",
       "command": "AddStickyNoteAnnotationCommand",
       "commandParameter": null,
       "shortcut": null,
       "commandId": "annotation.addStickyNote"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Strikeout From Selection",
-      "label": "Add Strikeout From Selection",
-      "command": "AddStrikeOutAnnotationFromSelectionCommand",
-      "commandParameter": null,
-      "shortcut": null,
-      "commandId": "annotation.addStrikeOut"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Underline From Selection",
-      "label": "Add Underline From Selection",
-      "command": "AddUnderlineAnnotationFromSelectionCommand",
-      "commandParameter": null,
-      "shortcut": null,
-      "commandId": "annotation.addUnderline"
     },
     {
       "kind": "menu",
@@ -985,12 +949,48 @@
     },
     {
       "kind": "menu",
+      "path": "Annotate > Highlight Tool",
+      "label": "Highlight Tool",
+      "command": "ToggleHighlightModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleHighlightMode"
+    },
+    {
+      "kind": "menu",
       "path": "Annotate > Place Sticky Note (click page)",
       "label": "Place Sticky Note (click page)",
       "command": "ToggleStickyNoteToolCommand",
       "commandParameter": null,
       "shortcut": null,
       "commandId": "annotation.toggleStickyNoteTool"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Squiggly Tool",
+      "label": "Squiggly Tool",
+      "command": "ToggleSquigglyModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleSquigglyMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Strikeout Tool",
+      "label": "Strikeout Tool",
+      "command": "ToggleStrikeOutModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleStrikeOutMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Underline Tool",
+      "label": "Underline Tool",
+      "command": "ToggleUnderlineModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleUnderlineMode"
     },
     {
       "kind": "menu",
@@ -1992,9 +1992,13 @@
   "commandIdsWithNoGuiPath": [
     "annotation.addCircle",
     "annotation.addFreeText",
+    "annotation.addHighlight",
     "annotation.addImageStamp",
     "annotation.addSquare",
-    "annotation.addStamp"
+    "annotation.addSquiggly",
+    "annotation.addStamp",
+    "annotation.addStrikeOut",
+    "annotation.addUnderline"
   ],
   "cliOnlyCommandIds": [
     "audit.hiddenText",

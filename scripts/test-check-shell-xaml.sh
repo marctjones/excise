@@ -20,7 +20,7 @@ RC=0
 
 COMMANDS=(view.toggleOutline view.toggleThumbnails view.toggleContinuous app.open app.save
           form.saveFlattenedCopy edit.selectTextMode edit.typewriterMode
-          annotation.addHighlight annotation.addStickyNote redaction.toggleMode redaction.apply
+          annotation.toggleHighlightMode annotation.addStickyNote redaction.toggleMode redaction.apply
           form.toggleAuthoring form.autoDetectFields search.open document.rotateLeft
           document.rotateRight view.zoomOut view.zoomIn view.zoomFitWidth)
 

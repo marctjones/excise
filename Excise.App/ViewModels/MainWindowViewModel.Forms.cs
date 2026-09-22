@@ -62,6 +62,7 @@ public partial class MainWindowViewModel
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
                 if (_isPathAnnotationMode) IsPathAnnotationMode = false;
                 if (_isShapeAnnotationMode) IsShapeAnnotationMode = false;
+                if (_isMarkupAnnotationMode) IsMarkupAnnotationMode = false;
             }
             else
             {
@@ -101,6 +102,7 @@ public partial class MainWindowViewModel
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
                 if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
                 if (_isShapeAnnotationMode) IsShapeAnnotationMode = false;
+                if (_isMarkupAnnotationMode) IsMarkupAnnotationMode = false;
             }
             else
             {
@@ -199,6 +201,7 @@ public partial class MainWindowViewModel
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
                 if (_isPathAnnotationMode) IsPathAnnotationMode = false;
                 if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
+                if (_isMarkupAnnotationMode) IsMarkupAnnotationMode = false;
             }
             else
             {
@@ -274,6 +277,119 @@ public partial class MainWindowViewModel
         IsShapeAnnotationMode = true;
     }
 
+    private bool _isMarkupAnnotationMode;
+
+    /// <summary>
+    /// When true, finishing an ordinary text selection (the ONLY gesture
+    /// <see cref="InteractionMode.TextSelection"/> ever had) also applies
+    /// <see cref="MarkupAnnotationKind"/> to it immediately — arm the tool
+    /// first, drag over the text, release, done — instead of selecting text
+    /// then separately clicking Add*FromSelection. That older direct-apply
+    /// path (<see cref="AddHighlightAnnotationFromSelectionCommand"/> etc.)
+    /// is unchanged and still available.
+    ///
+    /// Deliberately does NOT introduce its own InteractionMode: the gesture
+    /// IS plain text selection, unchanged, so arming this just sets
+    /// <see cref="IsTextSelectionMode"/> and lets <see cref="MainWindow.OnTextSelected"/>
+    /// notice a kind is armed once the selection finishes.
+    /// </summary>
+    public bool IsMarkupAnnotationMode
+    {
+        get => _isMarkupAnnotationMode;
+        set
+        {
+            if (_isMarkupAnnotationMode == value)
+                return;
+
+            if (value)
+            {
+                // Arms the real gesture FIRST, while this property's own
+                // backing field is still false — see IsTextSelectionMode's
+                // setter for why that ordering matters.
+                IsTextSelectionMode = true;
+                if (_isPathAnnotationMode) IsPathAnnotationMode = false;
+            }
+
+            this.RaiseAndSetIfChanged(ref _isMarkupAnnotationMode, value);
+            this.RaisePropertyChanged(nameof(CurrentModeText));
+        }
+    }
+
+    private MarkupAnnotationKind _markupAnnotationKind = MarkupAnnotationKind.Highlight;
+
+    /// <summary>
+    /// Which markup a finished selection becomes. Selecting the kind is what
+    /// the menu/toolbar/palette items do; the selection gesture itself is
+    /// shared between them.
+    /// </summary>
+    public MarkupAnnotationKind MarkupAnnotationKind
+    {
+        get => _markupAnnotationKind;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _markupAnnotationKind, value);
+            this.RaisePropertyChanged(nameof(CurrentModeText));
+        }
+    }
+
+    /// <summary>
+    /// Enter markup-annotation mode with <paramref name="kind"/> selected, or
+    /// leave it if that kind is already active — same re-selection-not-exit
+    /// rule as <see cref="ToggleShapeMode"/>.
+    /// </summary>
+    private void ToggleMarkupMode(MarkupAnnotationKind kind)
+    {
+        // #642: applying markup is annotating — /P bit 6. Gate on entering;
+        // leaving is free.
+        var alreadyActive = IsMarkupAnnotationMode && MarkupAnnotationKind == kind;
+
+        if (!alreadyActive && !EnsureDocumentPermission(p => p.CanAnnotate,
+                "Marking up text", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        if (alreadyActive)
+        {
+            IsMarkupAnnotationMode = false;
+            return;
+        }
+
+        MarkupAnnotationKind = kind;
+        IsMarkupAnnotationMode = true;
+    }
+
+    /// <summary>
+    /// Called by MainWindow's OnTextSelected, right after it updates
+    /// SelectedText/CurrentTextSelectionPageArea from a finished selection —
+    /// dispatches to whichever Add*FromSelection method
+    /// <see cref="MarkupAnnotationKind"/> currently selects, if the mode is
+    /// armed and the selection is non-empty. Mode stays armed afterward
+    /// (matches ToggleShapeMode/TogglePathMode: mark several in a row
+    /// without re-arming).
+    /// </summary>
+    public async Task HandleTextSelectionFinishedForMarkupAsync()
+    {
+        if (!IsMarkupAnnotationMode || string.IsNullOrEmpty(SelectedText))
+            return;
+
+        switch (MarkupAnnotationKind)
+        {
+            case MarkupAnnotationKind.Highlight:
+                await AddHighlightAnnotationFromSelectionAsync();
+                break;
+            case MarkupAnnotationKind.Underline:
+                await AddUnderlineAnnotationFromSelectionAsync();
+                break;
+            case MarkupAnnotationKind.StrikeOut:
+                await AddStrikeOutAnnotationFromSelectionAsync();
+                break;
+            case MarkupAnnotationKind.Squiggly:
+                await AddSquigglyAnnotationFromSelectionAsync();
+                break;
+        }
+    }
+
     private bool _isFormAuthoringMode;
 
     /// <summary>
@@ -297,6 +413,7 @@ public partial class MainWindowViewModel
                 if (_isTypewriterMode) IsTypewriterMode = false;
                 if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
                 if (_isShapeAnnotationMode) IsShapeAnnotationMode = false;
+                if (_isMarkupAnnotationMode) IsMarkupAnnotationMode = false;
             }
             else
             {
