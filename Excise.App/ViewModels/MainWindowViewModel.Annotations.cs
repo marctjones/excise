@@ -4,6 +4,7 @@ using Excise.App.Services;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Excise.App.ViewModels;
@@ -592,5 +593,186 @@ public partial class MainWindowViewModel
         CurrentTextSelectionArea = new global::Avalonia.Rect();
         CurrentTextSelectionPageArea = null;
         SelectedText = string.Empty;
+    }
+
+    // ── Interactive sticky-note popup (#1788) ───────────────────────────────
+    //
+    // Click-to-place / click-to-reopen, alongside (not instead of)
+    // AddStickyNoteAnnotationAsync's modal-prompt flow above. See
+    // Excise.App/Views/StickyNotePopupView.axaml for the bound UI and
+    // Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs for the
+    // canvas-click wiring that reaches these methods.
+
+    private StickyNotePopupViewModel? _stickyNotePopup;
+
+    /// <summary>
+    /// The currently-open popup, or null the rest of the time. Bound by
+    /// MainWindow's StickyNotePopupView host; the view collapses to nothing
+    /// while this is null.
+    /// </summary>
+    public StickyNotePopupViewModel? StickyNotePopup
+    {
+        get => _stickyNotePopup;
+        private set => this.RaiseAndSetIfChanged(ref _stickyNotePopup, value);
+    }
+
+    /// <summary>
+    /// Click-to-place (#1788): the sticky-note tool places an icon exactly at
+    /// the clicked point — reached from <c>PdfViewerControl.StickyNotePlacementRequested</c>,
+    /// which only fires while <see cref="IsStickyNoteToolActive"/>. Creates a
+    /// REAL annotation immediately (with <see cref="DefaultStickyNoteText"/>,
+    /// selected-for-overwrite by the view) rather than deferring creation
+    /// until the popup commits — Core rejects an empty /Contents outright, so
+    /// there is no "pending, not yet a real annotation" state to model.  This
+    /// is undo-tracked exactly like the modal-prompt path above; the popup's
+    /// own later edits are not (see CommitStickyNotePopupAsync).
+    /// </summary>
+    public async Task PlaceStickyNoteAsync(int pageNumber, double pdfX, double pdfY)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        // #642: /P bit 6 gates adding/modifying annotations. IsStickyNoteToolActive
+        // already checked this on entry, but the flag could arm before a
+        // document loaded or permissions could be re-evaluated; re-check here
+        // for the same reason every other Add* method in this file does.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            "Adding a sticky note", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        var rect = new PdfRectangle(
+            pdfX, pdfY - PdfAnnotation.TextIconSize,
+            pdfX + PdfAnnotation.TextIconSize, pdfY);
+
+        try
+        {
+            var request = new AnnotationRectRequest(
+                AnnotationRectKind.TextNote, pageNumber, rect, DefaultStickyNoteText, Open: true);
+            var result = _annotationWorkflow.AddRect(request, _pdfCoreDocument);
+            await MarkAnnotationChangedAsync(result.SuccessMessage);
+            RecordAnnotationAdd(
+                result.HistoryDescription,
+                result.Request.PageNumber,
+                result.Annotation,
+                () => _annotationWorkflow.ReplayRect(result.Request));
+
+            OpenStickyNotePopup(pageNumber, result.Annotation.Rect, result.Annotation.Contents ?? DefaultStickyNoteText);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error placing sticky-note annotation");
+            _toastService.ShowError("Failed to add sticky note", ex.Message);
+        }
+
+        // One-shot placement: a reasonable default matching how the shape/path
+        // tools do NOT auto-disarm, but a note is placed once per click and
+        // immediately wants typing, not a second placement.
+        IsStickyNoteToolActive = false;
+    }
+
+    /// <summary>
+    /// Click-to-reopen (#1788): the user clicked an EXISTING /Text
+    /// annotation's icon — reached from <c>PdfViewerControl.StickyNoteClicked</c>,
+    /// which fires in every interaction mode. <paramref name="rect"/> is the
+    /// clicked note's own /Rect (from the VIEWER document); the current text
+    /// is re-read from that same document rather than trusting a value handed
+    /// across the control boundary.
+    /// </summary>
+    public void ReopenStickyNote(int pageNumber, PdfRectangle rect)
+    {
+        if (!_documentService.IsDocumentLoaded || _pdfCoreDocument == null)
+            return;
+        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
+            return;
+
+        var annotation = _pdfCoreDocument.GetPage(pageNumber).GetAnnotations()
+            .FirstOrDefault(a => a.Subtype == PdfAnnotationSubtype.Text && a.Rect.Equals(rect));
+        if (annotation == null)
+            return;
+
+        OpenStickyNotePopup(pageNumber, annotation.Rect, annotation.Contents ?? string.Empty);
+    }
+
+    private void OpenStickyNotePopup(int pageNumber, PdfRectangle rect, string initialText)
+    {
+        StickyNotePopup = new StickyNotePopupViewModel(
+            pageNumber, rect, initialText,
+            onCommit: text => CommitStickyNotePopupAsync(pageNumber, rect, text));
+    }
+
+    /// <summary>
+    /// The only mutation an open popup ever causes: ONE update on collapse
+    /// (click-away), never per keystroke. Blank text falls back to
+    /// <see cref="DefaultStickyNoteText"/> rather than leaving an empty
+    /// /Contents, which Core rejects outright — a reasonable default so
+    /// clearing the box and clicking away cannot throw.
+    /// </summary>
+    private async Task CommitStickyNotePopupAsync(int pageNumber, PdfRectangle rect, string text)
+    {
+        StickyNotePopup = null;
+        var trimmed = string.IsNullOrWhiteSpace(text) ? DefaultStickyNoteText : text.Trim();
+
+        try
+        {
+            _annotationWorkflow.UpdateTextNote(pageNumber, rect, trimmed, open: false);
+            MarkStickyNoteEdited();
+            await RefreshAfterDocumentMutationAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating sticky-note annotation");
+            _toastService.ShowError("Failed to update sticky note", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Fire-and-forget wrapper for click-away dismissal: MainWindow's
+    /// light-dismiss handler (any press on the document area while a popup is
+    /// open) calls this synchronously and lets the same press continue on to
+    /// whatever it would otherwise hit — see the handler's own comment for why
+    /// that ordering lets one click both dismiss and open a different note.
+    /// </summary>
+    public void CommitOpenStickyNotePopup()
+    {
+        var popup = StickyNotePopup;
+        if (popup == null)
+            return;
+        _ = CommitStickyNotePopupAsync(popup.PageNumber, popup.Rect, popup.Text);
+    }
+
+    /// <summary>
+    /// Flush a still-open popup's typed text into the SAVE document before
+    /// Save writes it out, with /Open left true — so "a note left open
+    /// persists as open" (#1788) holds even when the user saves without first
+    /// clicking away. Synchronous and save-document-only: the subsequent save
+    /// path already reloads the viewer, so there is nothing else to refresh
+    /// here (see <c>SaveFileAsync</c>/<c>SaveFileAsAsync</c> callers).
+    /// </summary>
+    internal void FlushOpenStickyNotePopupBeforeSave()
+    {
+        var popup = StickyNotePopup;
+        if (popup == null)
+            return;
+
+        try
+        {
+            var text = string.IsNullOrWhiteSpace(popup.Text) ? DefaultStickyNoteText : popup.Text.Trim();
+            _annotationWorkflow.UpdateTextNote(popup.PageNumber, popup.Rect, text, open: true);
+            MarkStickyNoteEdited();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error flushing open sticky-note popup before save");
+        }
+    }
+
+    private void MarkStickyNoteEdited()
+    {
+        FileState.AnnotationEditsCount++;
+        this.RaisePropertyChanged(nameof(SaveButtonText));
+        this.RaisePropertyChanged(nameof(StatusBarText));
+        AnnotationsChanged?.Invoke(this, EventArgs.Empty);
     }
 }

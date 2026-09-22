@@ -54,8 +54,35 @@ public partial class PdfViewerControl
             return;
         }
 
+        // Second chance, still mode-agnostic (#1788): an existing sticky
+        // note's icon reopens for editing regardless of which tool is
+        // active — the same "ambient affordance" the link check above is.
+        // Checked before the None-mode return so reopening a note works even
+        // in plain reading mode, matching how a link click already does.
+        var stickyNoteHit = HitTestStickyNoteForEvent(e, out var stickyNotePageNumber);
+        if (stickyNoteHit != null)
+        {
+            StickyNoteClicked?.Invoke(
+                this, new StickyNoteClickedEventArgs(stickyNotePageNumber, stickyNoteHit.Rect));
+            e.Handled = true;
+            return;
+        }
+
         if (InteractionMode == InteractionMode.None)
             return;
+
+        if (InteractionMode == InteractionMode.StickyNote)
+        {
+            // A click, not a drag: one point is the whole gesture, so there is
+            // no drag-state to arm (contrast Redaction/FormAuthoring below).
+            if (TryMapPointerToContent(e, out var placePageNumber, out var placePdfX, out var placePdfY))
+            {
+                StickyNotePlacementRequested?.Invoke(
+                    this, new StickyNotePlacementRequestedEventArgs(placePageNumber, placePdfX, placePdfY));
+            }
+            e.Handled = true;
+            return;
+        }
 
         var point = GetPressPoint(e);
         _dragStart = point;
@@ -477,6 +504,50 @@ public partial class PdfViewerControl
             if (ContainsPoint(a, pdfX, pdfY)) return a;
         }
         return null;
+    }
+
+    /// <summary>
+    /// Click-to-reopen hit test (#1788) — deliberately narrower than
+    /// <see cref="HitTestAnnotationForEvent"/>: only /Text (a Popup itself
+    /// carries no /Contents/T and never lands here; every other subtype has
+    /// no click-to-edit affordance yet). No blank-contents/author gate either
+    /// — <c>AddTextAnnotation</c> already refuses empty /Contents, so every
+    /// note reaching this hit test has something to show.
+    /// </summary>
+    private PdfAnnotation? HitTestStickyNoteForEvent(PointerEventArgs e, out int pageNumber)
+    {
+        pageNumber = 0;
+        if (!TryMapPointerToContent(e, out var mappedPage, out var pdfX, out var pdfY))
+            return null;
+        pageNumber = mappedPage;
+
+        var annots = GetPageAnnotations(mappedPage);
+        for (var i = annots.Count - 1; i >= 0; i--)
+        {
+            var a = annots[i];
+            if (a.Subtype != PdfAnnotationSubtype.Text) continue;
+            if (a.Flags.HasFlag(PdfAnnotationFlags.Hidden)) continue;
+            if (a.Flags.HasFlag(PdfAnnotationFlags.NoView)) continue;
+            if (ContainsPoint(a, pdfX, pdfY)) return a;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Where a page-space rect currently lands in this control's own
+    /// coordinate space (#1788) — for a host positioning its own overlay UI
+    /// (the sticky-note popup) next to a note's icon. Public because the
+    /// coordinate conversion belongs to the ONE boundary crossing
+    /// (<c>PdfCoordinateMapper</c>), per CLAUDE.md's "convert once at the
+    /// boundary" rule — a host re-deriving this from render DPI and zoom
+    /// itself is exactly the drift that rule exists to prevent. Null when
+    /// there is no document or the page is out of range.
+    /// </summary>
+    public Rect? GetViewerPositionForPageRect(int pageNumber, PdfRectangle rect)
+    {
+        if (Document == null || pageNumber < 1 || pageNumber > Document.PageCount)
+            return null;
+        return PdfRectToViewerDips(rect, pageNumber);
     }
 
     /// <summary>

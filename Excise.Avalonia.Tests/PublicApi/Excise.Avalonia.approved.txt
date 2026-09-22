@@ -67,6 +67,7 @@ namespace Excise.Avalonia.Controls
         FormAuthoring = 4,
         Typewriter = 5,
         PathAnnotation = 6,
+        StickyNote = 7,
     }
     public class LinkClickedEventArgs : System.EventArgs
     {
@@ -176,6 +177,8 @@ namespace Excise.Avalonia.Controls
         public event System.EventHandler<Excise.Avalonia.Controls.LinkHoveredEventArgs>? LinkHovered;
         public event System.EventHandler<Excise.Avalonia.Controls.PageChangedEventArgs>? PageChanged;
         public event System.EventHandler<Excise.Avalonia.Controls.RedactionDrawnEventArgs>? RedactionDrawn;
+        public event System.EventHandler<Excise.Avalonia.Controls.StickyNoteClickedEventArgs>? StickyNoteClicked;
+        public event System.EventHandler<Excise.Avalonia.Controls.StickyNotePlacementRequestedEventArgs>? StickyNotePlacementRequested;
         public event System.EventHandler<Excise.Avalonia.Controls.TextSelectedEventArgs>? TextSelected;
         public event System.EventHandler<Excise.Avalonia.Controls.TypewriterTextBoundsChangedEventArgs>? TypewriterTextBoundsChanged;
         public event System.EventHandler<Excise.Avalonia.Controls.TypewriterTextCreatedEventArgs>? TypewriterTextCreated;
@@ -194,6 +197,7 @@ namespace Excise.Avalonia.Controls
         public void ClearSearchHighlights() { }
         public void ClearSelectionHighlight() { }
         public Excise.Avalonia.Controls.PdfViewerRenderDiagnostics GetRenderDiagnostics() { }
+        public Avalonia.Rect? GetViewerPositionForPageRect(int pageNumber, Excise.Core.Document.PdfRectangle rect) { }
         public Excise.Avalonia.Controls.PdfViewerViewportDiagnostics GetViewportDiagnostics() { }
         public Avalonia.Size GetVisibleViewportSize() { }
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -251,6 +255,19 @@ namespace Excise.Avalonia.Controls
         public Avalonia.Rect Area { get; }
         public Excise.Core.Document.PdfPageRect PageArea { get; }
         public int RenderDpi { get; }
+    }
+    public class StickyNoteClickedEventArgs : System.EventArgs
+    {
+        public StickyNoteClickedEventArgs(int pageNumber, Excise.Core.Document.PdfRectangle rect) { }
+        public int PageNumber { get; }
+        public Excise.Core.Document.PdfRectangle Rect { get; }
+    }
+    public class StickyNotePlacementRequestedEventArgs : System.EventArgs
+    {
+        public StickyNotePlacementRequestedEventArgs(int pageNumber, double pdfX, double pdfY) { }
+        public int PageNumber { get; }
+        public double PdfX { get; }
+        public double PdfY { get; }
     }
     public class TextSelectedEventArgs : System.EventArgs
     {

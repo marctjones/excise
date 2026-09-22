@@ -306,6 +306,9 @@
                 <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="annotation.addStickyNote"/>
+                <MenuItem Header="_Place Sticky Note (click page)" Command="{Binding ToggleStickyNoteToolCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.toggleStickyNoteTool"/>
             </MenuItem>
 
             <!-- DOCUMENT MENU -->
@@ -1493,6 +1496,8 @@
                                                DangerousLinkClicked="OnDangerousLinkClicked"
                                                LinkHovered="OnLinkHovered"
                                                AnnotationHovered="OnAnnotationHovered"
+                                               StickyNoteClicked="OnStickyNoteClicked"
+                                               StickyNotePlacementRequested="OnStickyNotePlacementRequested"
                                                FormFieldEdited="OnFormFieldEdited"
                                                FormFieldEditRejected="OnFormFieldEditRejected"
                                                FormFieldRectDrawn="OnFormFieldRectDrawn"
@@ -1503,6 +1508,21 @@
                                                TypewriterTextBoundsChanged="OnTypewriterTextBoundsChanged"
                                                TypewriterTextDeleted="OnTypewriterTextDeleted"
                                                PageChanged="OnPageChanged" />
+
+                    <!-- #1788: the interactive sticky-note popup. An overlay in
+                         the SAME window as the viewer (not a second OS Window)
+                         so "click away to collapse" is ordinary same-window
+                         routed-event handling — see OnDocumentAreaPointerPressedTunnel
+                         in the code-behind. Positioned in code-behind from
+                         PdfViewerControl.GetViewerPositionForPageRect whenever
+                         StickyNotePopup changes. -->
+                    <Border x:Name="StickyNotePopupHost"
+                            IsVisible="{Binding StickyNotePopup, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            ZIndex="30">
+                        <views:StickyNotePopupView DataContext="{Binding StickyNotePopup}"/>
+                    </Border>
                 </Grid>
             </Border>
 

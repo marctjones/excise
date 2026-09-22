@@ -60,6 +60,10 @@ public static class PdfCommandIds
     public const string TogglePolyLineMode = "annotation.togglePolyLineMode";
     public const string AddStickyNote = "annotation.addStickyNote";
 
+    /// <summary>Toggle click-to-place sticky-note mode: a click plants a note's
+    /// icon at that point and opens its popup for typing (#1788).</summary>
+    public const string ToggleStickyNoteTool = "annotation.toggleStickyNoteTool";
+
     public const string AddPages = "document.addPages";
     public const string InsertPagesBefore = "document.insertPagesBefore";
     public const string InsertPagesAfter = "document.insertPagesAfter";

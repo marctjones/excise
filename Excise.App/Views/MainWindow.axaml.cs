@@ -154,6 +154,14 @@ public partial class MainWindow : Window
                 RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
         }
 
+        // #1788: "click away to collapse" for the sticky-note popup. Tunnel so
+        // this runs BEFORE PdfViewerControl's own press handler — the popup is
+        // committed first, then the SAME press continues on to place a new
+        // note or reopen a different one, so one click can do both.
+        var documentArea = this.FindControl<Control>("DocumentArea");
+        documentArea?.AddHandler(PointerPressedEvent, OnDocumentAreaPointerPressedTunnel,
+            RoutingStrategies.Tunnel);
+
         if (OperatingSystem.IsMacOS())
         {
             MainMenuBar.IsVisible = false;
@@ -520,6 +528,11 @@ public partial class MainWindow : Window
                 or nameof(viewModel.SaveButtonText))
             {
                 UpdateTitle(viewModel);
+            }
+
+            if (args.PropertyName is null or nameof(viewModel.StickyNotePopup))
+            {
+                RepositionStickyNotePopup(viewModel);
             }
         };
         UpdateTitle(viewModel);
@@ -1414,6 +1427,72 @@ public partial class MainWindow : Window
     {
         if (DataContext is not MainWindowViewModel viewModel) return;
         viewModel.SetHoveredAnnotationInfo(e.DisplayText);
+    }
+
+    /// <summary>Click on an EXISTING sticky note's icon (#1788) — reopen its popup for editing.</summary>
+    private void OnStickyNoteClicked(object? sender, StickyNoteClickedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        viewModel.ReopenStickyNote(e.PageNumber, e.Rect);
+    }
+
+    /// <summary>The sticky-note tool placed a click on an empty page point (#1788).</summary>
+    private void OnStickyNotePlacementRequested(object? sender, StickyNotePlacementRequestedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        _ = viewModel.PlaceStickyNoteAsync(e.PageNumber, e.PdfX, e.PdfY);
+    }
+
+    /// <summary>
+    /// Light-dismiss for the sticky-note popup (#1788): any press on the
+    /// document area while a popup is open commits it, UNLESS the press
+    /// landed inside the popup itself (typing, or its own commit affordance).
+    /// Registered Tunnel in the constructor so this runs before
+    /// PdfViewerControl sees the same press — see that registration's comment.
+    /// </summary>
+    private void OnDocumentAreaPointerPressedTunnel(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel || viewModel.StickyNotePopup == null)
+            return;
+
+        var host = this.FindControl<Border>("StickyNotePopupHost");
+        if (host != null && e.Source is Visual sourceVisual &&
+            sourceVisual.GetVisualAncestors().Contains(host))
+        {
+            return;
+        }
+
+        viewModel.CommitOpenStickyNotePopup();
+    }
+
+    /// <summary>
+    /// Positions the popup host next to the note it belongs to (#1788).
+    /// <see cref="PdfViewerControl.GetViewerPositionForPageRect"/> is the one
+    /// coordinate-conversion boundary crossed here — no independent DPI/zoom
+    /// math lives in this file. Best-effort: if the viewer or the host is not
+    /// ready yet (document not loaded, popup null), this simply no-ops — the
+    /// host's IsVisible binding already hides it while StickyNotePopup is null.
+    /// </summary>
+    private void RepositionStickyNotePopup(MainWindowViewModel viewModel)
+    {
+        var popup = viewModel.StickyNotePopup;
+        if (popup == null)
+            return;
+
+        var host = this.FindControl<Border>("StickyNotePopupHost");
+        var documentArea = this.FindControl<Control>("DocumentArea");
+        if (host == null || documentArea == null || _pdfViewerControl == null)
+            return;
+
+        var dips = _pdfViewerControl.GetViewerPositionForPageRect(popup.PageNumber, popup.Rect);
+        if (dips == null)
+            return;
+
+        // Anchor at the icon's top-right corner, just clear of the icon itself.
+        var anchor = new Point(dips.Value.Right + 4, dips.Value.Top);
+        var inDocumentArea = _pdfViewerControl.TranslatePoint(anchor, documentArea) ?? anchor;
+
+        host.Margin = new Thickness(Math.Max(0, inDocumentArea.X), Math.Max(0, inDocumentArea.Y), 0, 0);
     }
 
     private void OnTextSelected(object? sender, TextSelectedEventArgs e)

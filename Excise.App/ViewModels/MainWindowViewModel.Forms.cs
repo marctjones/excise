@@ -22,7 +22,53 @@ public partial class MainWindowViewModel
             if (IsFormAuthoringMode) return InteractionMode.FormAuthoring;
             if (IsTypewriterMode) return InteractionMode.Typewriter;
             if (IsPathAnnotationMode) return InteractionMode.PathAnnotation;
+            if (IsStickyNoteToolActive) return InteractionMode.StickyNote;
             return InteractionMode.None;
+        }
+    }
+
+    private bool _isStickyNoteToolActive;
+
+    /// <summary>
+    /// When true, clicking the page places a sticky note at that exact point
+    /// and opens its popup for typing (#1788) — the click-to-place path
+    /// alongside <see cref="AddStickyNoteAnnotationCommand"/>'s existing
+    /// modal-prompt flow, which this does not replace. Mutually exclusive
+    /// with the other editing modes, same as <see cref="IsPathAnnotationMode"/>.
+    /// </summary>
+    public bool IsStickyNoteToolActive
+    {
+        get => _isStickyNoteToolActive;
+        set
+        {
+            if (_isStickyNoteToolActive == value)
+                return;
+
+            // #642: placing a sticky note is annotating — /P bit 6.
+            if (value && !EnsureDocumentPermission(p => p.CanAnnotate,
+                "Adding a sticky note", "adding or modifying annotations (/P bit 6)"))
+            {
+                return;
+            }
+
+            this.RaiseAndSetIfChanged(ref _isStickyNoteToolActive, value);
+            if (value)
+            {
+                ViewMode = PdfViewMode.SinglePage;
+                if (_isRedactionMode) IsRedactionMode = false;
+                if (_isTextSelectionMode) IsTextSelectionMode = false;
+                if (_isTypewriterMode) IsTypewriterMode = false;
+                if (_isFormAuthoringMode) IsFormAuthoringMode = false;
+                if (_isPathAnnotationMode) IsPathAnnotationMode = false;
+            }
+            else
+            {
+                RestoreViewModeFromPreference();
+                if (!IsEditingModeActive) IsTextSelectionMode = true;
+            }
+
+            this.RaisePropertyChanged(nameof(InteractionMode));
+            this.RaisePropertyChanged(nameof(CurrentModeText));
         }
     }
 
@@ -51,6 +97,7 @@ public partial class MainWindowViewModel
                 if (_isTextSelectionMode) IsTextSelectionMode = false;
                 if (_isTypewriterMode) IsTypewriterMode = false;
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
+                if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
             }
             else
             {
@@ -142,6 +189,7 @@ public partial class MainWindowViewModel
                 if (_isRedactionMode) IsRedactionMode = false;
                 if (_isTextSelectionMode) IsTextSelectionMode = false;
                 if (_isTypewriterMode) IsTypewriterMode = false;
+                if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
             }
             else
             {

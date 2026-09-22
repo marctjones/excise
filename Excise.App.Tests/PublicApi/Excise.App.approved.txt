@@ -814,6 +814,7 @@ namespace Excise.App.ViewModels
         public bool IsSearchVisible { get; set; }
         public bool IsSearching { get; }
         public bool IsSidebarSplitterVisible { get; }
+        public bool IsStickyNoteToolActive { get; set; }
         public bool IsTextSelectionMode { get; set; }
         public bool IsThumbnailsSidebarVisible { get; set; }
         public bool IsTypewriterMode { get; set; }
@@ -901,6 +902,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SignDocumentCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SplitDocumentCommand { get; }
         public string StatusBarText { get; }
+        public Excise.App.ViewModels.StickyNotePopupViewModel? StickyNotePopup { get; }
         public Avalonia.Platform.Storage.IStorageProvider? StorageProviderOverride { get; set; }
         public Excise.App.Services.ToastService ToastService { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationAuditModeCommand { get; }
@@ -922,6 +924,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleRevealHiddenTextCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleRevealRasterizedHiddenCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? ToggleSearchCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleStickyNoteToolCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleTextSelectionModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleThumbnailsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleTypewriterModeCommand { get; }
@@ -971,6 +974,7 @@ namespace Excise.App.ViewModels
         public System.Threading.Tasks.Task ApplyRedactionsCommand() { }
         public void ApplyWhitespaceModePreference(Excise.Core.Text.WhitespaceMode mode) { }
         public int AutoDetectAndApplyFormFields() { }
+        public void CommitOpenStickyNotePopup() { }
         public System.Threading.Tasks.Task<bool> ConfirmDiscardUnsavedChangesAsync(string actionDescription) { }
         public void DiscardPendingTypewriterEdits() { }
         public System.Threading.Tasks.Task EnsureThumbnailLoadedAsync(int pageIndex, System.Threading.CancellationToken cancellationToken = default) { }
@@ -1006,7 +1010,9 @@ namespace Excise.App.ViewModels
         public void OnTypewriterTextDeleted(System.Guid operationId) { }
         public void OnTypewriterTextEdited(System.Guid operationId, string text, int pageNumber) { }
         public System.Threading.Tasks.Task<bool> OpenDroppedFilesAsync(System.Collections.Generic.IReadOnlyList<Avalonia.Platform.Storage.IStorageItem> files) { }
+        public System.Threading.Tasks.Task PlaceStickyNoteAsync(int pageNumber, double pdfX, double pdfY) { }
         public System.Threading.Tasks.Task RedactTextCommand(string text) { }
+        public void ReopenStickyNote(int pageNumber, Excise.Core.Document.PdfRectangle rect) { }
         public System.Threading.Tasks.Task<int> SaveAllAttachmentsAsync() { }
         public System.Threading.Tasks.Task<bool> SaveAttachmentAsync(Excise.App.Models.AttachmentEntry entry, string outputPath) { }
         public System.Threading.Tasks.Task SaveDocumentCommand(string filePath) { }
@@ -1182,6 +1188,14 @@ namespace Excise.App.ViewModels
         public event System.EventHandler? CloseRequested;
         public event System.EventHandler<string>? Completed;
     }
+    public sealed class StickyNotePopupViewModel : ReactiveUI.ReactiveObject
+    {
+        public StickyNotePopupViewModel(int pageNumber, Excise.Core.Document.PdfRectangle rect, string initialText, System.Func<string, System.Threading.Tasks.Task> onCommit) { }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CommitCommand { get; }
+        public int PageNumber { get; }
+        public Excise.Core.Document.PdfRectangle Rect { get; }
+        public string Text { get; set; }
+    }
     public sealed class ThirdPartyPackage
     {
         public ThirdPartyPackage() { }
@@ -1288,6 +1302,12 @@ namespace Excise.App.Views
     public class SecurityDialog : Avalonia.Controls.Window
     {
         public SecurityDialog() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class StickyNotePopupView : Avalonia.Controls.UserControl
+    {
+        public StickyNotePopupView() { }
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public void InitializeComponent(bool loadXaml = true) { }
     }

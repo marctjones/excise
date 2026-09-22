@@ -263,6 +263,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 if (_isRedactionMode) IsRedactionMode = false;
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
                 if (_isTypewriterMode) IsTypewriterMode = false;
+                if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
             }
 
             this.RaisePropertyChanged(nameof(IsContinuousView));
@@ -496,7 +497,8 @@ public partial class MainWindowViewModel : ViewModelBase
     /// view, so it neither forces single-page nor blocks restoring continuous.
     /// </summary>
     private bool IsEditingModeActive =>
-        _isRedactionMode || _isFormAuthoringMode || _isTypewriterMode || _isPathAnnotationMode;
+        _isRedactionMode || _isFormAuthoringMode || _isTypewriterMode || _isPathAnnotationMode
+        || _isStickyNoteToolActive;
 
     /// <summary>
     /// Re-applies the saved continuous-scroll preference once the last editing mode
@@ -935,6 +937,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 if (_isTextSelectionMode) IsTextSelectionMode = false;
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
                 if (_isTypewriterMode) IsTypewriterMode = false;
+                if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
             }
             else
             {
@@ -1058,6 +1061,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 IsFormAuthoringMode = false;
             if (value && _isTypewriterMode)
                 IsTypewriterMode = false;
+            if (value && _isStickyNoteToolActive)
+                IsStickyNoteToolActive = false;
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));
         }
@@ -1379,6 +1384,11 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogInformation("Save cancelled: user declined the signed-document warning");
             return;
         }
+
+        // #1788: a still-open sticky-note popup's typed text lives only in
+        // the popup VM until now — flush it into the save document so "a note
+        // left open persists as open" holds even without clicking away first.
+        FlushOpenStickyNotePopupBeforeSave();
 
         // CRITICAL: If working on the original with pending redactions, force
         // the redacted-copy workflow. Other edits still preserve the original,
@@ -2380,6 +2390,9 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogInformation("Save cancelled: user declined the signed-document warning");
             return;
         }
+
+        // #1788: see SaveFileAsync's identical call for why.
+        FlushOpenStickyNotePopupBeforeSave();
 
         try
         {

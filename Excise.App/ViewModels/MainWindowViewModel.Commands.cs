@@ -14,6 +14,7 @@ public partial class MainWindowViewModel
         {
             if (IsRedactionMode) return "Redaction Mode";
             if (IsTypewriterMode) return "✎ Typewriter Mode";
+            if (IsStickyNoteToolActive) return "\U0001F4CC Sticky Note Mode — click to place a note";
             if (IsPathAnnotationMode)
             {
                 return PathAnnotationKind switch
@@ -74,6 +75,14 @@ public partial class MainWindowViewModel
     public ReactiveCommand<string, Unit> AddStampAnnotationFromDragCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddImageStampAnnotationFromDragCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddStickyNoteAnnotationCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Arms/disarms the click-to-place sticky-note tool (#1788), alongside
+    /// (not instead of) <see cref="AddStickyNoteAnnotationCommand"/>'s modal
+    /// prompt flow. See <see cref="IsStickyNoteToolActive"/>.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ToggleStickyNoteToolCommand { get; private set; } = null!;
+
     public ReactiveCommand<Unit, Unit> ToggleOutlineCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleThumbnailsCommand { get; private set; } = null!;
     /// <summary>#1563 — View ▸ Show Attachments.</summary>
@@ -238,6 +247,8 @@ public partial class MainWindowViewModel
         AddStampAnnotationFromDragCommand = ReactiveCommand.CreateFromTask<string>(AddStampAnnotationFromDragAsync);
         AddImageStampAnnotationFromDragCommand = ReactiveCommand.CreateFromTask(() => AddImageStampAnnotationFromDragAsync(null));
         AddStickyNoteAnnotationCommand = ReactiveCommand.CreateFromTask(() => AddStickyNoteAnnotationAsync());
+        ToggleStickyNoteToolCommand = ReactiveCommand.Create(
+            () => { IsStickyNoteToolActive = !IsStickyNoteToolActive; });
     }
 
     private void InitializeViewAndNavigationCommands()

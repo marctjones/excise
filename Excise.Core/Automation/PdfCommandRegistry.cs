@@ -74,6 +74,8 @@ public static class PdfCommandRegistry
         Annotate(PdfCommandIds.TogglePolygonMode, "Draw Polygon", "Toggle polygon drawing; each click plants a vertex and double-click or Enter closes the shape."),
         Annotate(PdfCommandIds.TogglePolyLineMode, "Draw PolyLine", "Toggle polyline drawing; each click plants a vertex and double-click or Enter ends the open path."),
         Annotate(PdfCommandIds.AddStickyNote, "Add Sticky Note", "Create a sticky-note annotation."),
+        Annotate(PdfCommandIds.ToggleStickyNoteTool, "Place Sticky Note",
+            "Toggle click-to-place sticky-note mode: click the page to plant a note there and start typing."),
 
         Document(PdfCommandIds.AddPages, "Add Pages", "Append pages from another PDF."),
         Document(PdfCommandIds.InsertPagesBefore, "Insert Pages Before Current", "Insert pages before the current page."),
