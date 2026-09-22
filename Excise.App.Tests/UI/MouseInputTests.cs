@@ -18,6 +18,7 @@ using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
+using Excise.TestSupport;
 using Xunit;
 namespace Excise.App.Tests.UI;
 
@@ -36,8 +37,16 @@ public class MouseInputTests : IDisposable
     /// pointer routing and focus for every later test.
     /// </summary>
     private readonly ShownWindowTracker _windows = new();
+    private readonly List<string> _tempDirs = new();
 
-    public void Dispose() => _windows.Dispose();
+    public void Dispose()
+    {
+        _windows.Dispose();
+        foreach (var dir in _tempDirs)
+        {
+            try { Directory.Delete(dir, recursive: true); } catch { /* best effort */ }
+        }
+    }
 
     private readonly ITestOutputHelper _out;
     public MouseInputTests(ITestOutputHelper o) { _out = o; }
@@ -52,12 +61,22 @@ public class MouseInputTests : IDisposable
     // File.Exists(PragmaticBook) has silently skipped everywhere else since
     // this file was written (the #619 "invisible coverage loss" pattern;
     // same bug independently found and fixed in MultiEmbeddedFontLayoutTests.cs
-    // and InPageLinkClickTests.cs this session). Resolved via the same
-    // FindRepoFile convention every other local-corpus test in this project
-    // uses; null (not File.Exists-false) means "corpus not present locally,"
-    // same skip semantics as before.
-    private static readonly string? PragmaticBook = FindPragmaticBook();
+    // and InPageLinkClickTests.cs this session). Resolved via the shared
+    // TestRepoLayout locator every other local-corpus test in this project
+    // uses (#1768 — the hand-rolled walk here only worked by accident: it is
+    // unbounded and this worktree happens to nest inside the main checkout).
+    // The tests below that only need SOME multi-page document with body text
+    // (continuous scroll/zoom/pan, outline navigation) use a small synthetic
+    // fixture instead — #1768's wall-time requirement — leaving only the
+    // link and letter-hit-test tests, which need the book's real content,
+    // gated on this corpus.
+    private const string PragmaticBookRelativePath =
+        "test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf";
+    private static readonly string? PragmaticBook = TestRepoLayout.FindFile(PragmaticBookRelativePath);
     private const double RenderDpi = 120.0;
+
+    private static string PragmaticBookAbsenceReason() =>
+        TestRepoLayout.AbsenceReason("Pragmatic book (local-real-world corpus)", PragmaticBookRelativePath);
 
     private static MainWindowViewModel CreateViewModel()
     {
@@ -69,87 +88,73 @@ public class MouseInputTests : IDisposable
         return MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
     }
 
-    private static string? FindPragmaticBook()
+    /// <summary>
+    /// A small synthetic multi-page document for tests that only need SOME
+    /// multi-page content — continuous-scroll extent, zoom, pan — not the
+    /// real book's links or letters. #1768: swapping this in for the 455-page
+    /// book removed the sole source of ContinuousScrollViewer's 30-second
+    /// layout deadline in this file (it existed because virtualizing 455 slot
+    /// heights genuinely takes real wall-clock time; 40 synthetic pages lay
+    /// out fast enough that the poll below usually returns on its first try).
+    /// </summary>
+    private static string CreateSyntheticMultiPageDoc(string tempDir, int pageCount = 40)
     {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName, "test-pdfs", "local-real-world",
-                "business-success-with-open-source_P1.0.pdf");
-            if (File.Exists(candidate)) return candidate;
-            dir = dir.Parent;
-        }
-        return null;
+        Directory.CreateDirectory(tempDir);
+        var path = Path.Combine(tempDir, $"synthetic-{pageCount}p.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount);
+        return path;
     }
 
     #region Discrete Event Tests
 
-    [FixedAvaloniaFact]
-    public async Task ClickInViewer_FocusesTheViewer()
-    {
-        // When the user clicks anywhere in the PDF viewer area (outside
-        // any special affordance like a link), the viewer should receive
-        // focus so keyboard shortcuts work.
-        if (!File.Exists(PragmaticBook)) return;
-
-        var vm = CreateViewModel();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        _windows.Show(window);
-        await Task.Delay(200);
-
-        await vm.LoadDocumentAsync(PragmaticBook);
-        await Task.Delay(300);
-
-        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-        viewer.Should().NotBeNull();
-
-        // Click somewhere neutral (middle of page, no links/text).
-        var clickPoint = new Point(640, 450);
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            window.MouseDown(clickPoint, MouseButton.Left);
-            window.MouseUp(clickPoint, MouseButton.Left);
-        });
-        await Task.Delay(100);
-
-        // Viewer should now be focused (or at least the click should have
-        // been processed). This is a soft assertion since focus management
-        // is complex in headless mode — the key is that no exception throws
-        // and the viewer processes the click.
-        viewer!.IsVisible.Should().BeTrue();
-    }
+    // #1768: ClickInViewer_FocusesTheViewer deleted — its own comment called
+    // its only assertion "soft" (`viewer.IsVisible.Should().BeTrue()`, which
+    // is true before any click too). No independent coverage lost.
 
     [FixedAvaloniaFact]
     public async Task ClickOnOutlineTreeNode_NavigatesToPage()
     {
         // When the user clicks a node in the outline (TOC) tree, it should
         // navigate to that page. This is the GUI path for outline navigation.
-        if (!File.Exists(PragmaticBook)) return;
+        // #1768: no longer needs the real book — a synthetic 8-page document
+        // with a bookmark past page 5 exercises the same VM binding path.
+        var tempDir = Path.Combine(Path.GetTempPath(), "excise-mouse-outline-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        var plain = Path.Combine(tempDir, "plain.pdf");
+        var outlined = Path.Combine(tempDir, "outlined.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(plain, pageCount: 8);
+        using (var document = PdfDocument.Open(plain))
+        {
+            document.AddOutlineItem("Chapter One", 1);
+            document.AddOutlineItem("Chapter Two", 7);
+            document.Save(outlined);
+        }
 
         var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
 
-        await vm.LoadDocumentAsync(PragmaticBook);
+        await vm.LoadDocumentAsync(outlined);
         await Task.Delay(300);
 
-        // Find a non-page-1 outline node.
         var targetNode = vm.OutlineNodes
             .FirstOrDefault(n => n.PageNumber.HasValue && n.PageNumber.Value > 5);
-        if (targetNode == null) return; // Skip if document has no suitable outline
+        targetNode.Should().NotBeNull("the synthetic document's second bookmark points at page 7");
 
         var initialPage = vm.CurrentPageIndex;
-        _out.WriteLine($"Initial page: {initialPage + 1}, target: {targetNode.PageNumber}");
+        _out.WriteLine($"Initial page: {initialPage + 1}, target: {targetNode!.PageNumber}");
 
         // Programmatically select the outline node (simulates click→selection→navigation).
-        // Direct VM manipulation verifies the binding path exists; a follow-up test
-        // would use actual click simulation.
+        // Direct VM manipulation verifies the binding path exists; the real
+        // click path is exercised by OutlineTreeNavigationTests.
         vm.SelectedOutlineNode = targetNode;
         await Task.Delay(150);
 
         vm.CurrentPageIndex.Should().Be(targetNode.PageNumber!.Value - 1,
             "selecting outline node must navigate to its page");
+
+        try { Directory.Delete(tempDir, recursive: true); } catch { /* best effort */ }
     }
 
     [FixedAvaloniaFact]
@@ -160,7 +165,7 @@ public class MouseInputTests : IDisposable
         // fully, but we include it here for completeness of the mouse-input
         // matrix.
         //
-        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
+        Assert.SkipWhen(PragmaticBook == null, PragmaticBookAbsenceReason());
         // #653: this test's PragmaticBook path was broken (a hardcoded
         // personal path) for so long it never actually ran. Once fixed, it
         // failed for a reason unrelated to the book's size or a layout-timing
@@ -209,7 +214,7 @@ public class MouseInputTests : IDisposable
             var first = links.FirstOrDefault(l => l.DestinationPage != p);
             if (first != null) { linkPage = p; targetLink = first; break; }
         }
-        if (targetLink == null) return; // Skip if no links found
+        targetLink.Should().NotBeNull("the Pragmatic book has internal links on its early pages");
 
         vm.CurrentPageIndex = linkPage - 1;
 
@@ -252,116 +257,12 @@ public class MouseInputTests : IDisposable
             "clicking a link annotation must fire LinkClicked event");
     }
 
-    [FixedAvaloniaFact]
-    public async Task MouseWheelScrollDown_ScrollsViewerVertically()
-    {
-        // When the user scrolls the mouse wheel down, the viewer scrolls
-        // down (reveals content below). The scroll handler is on the
-        // ScrollViewer, which is part of the control hierarchy.
-        // In headless mode, we test via the ScrollViewer's public methods.
-        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
-        // #653: this test originally targeted the single-page "PdfScrollViewer"
-        // and failed the same way as the link tests, for the same reason —
-        // but unlike those, there is no fix that just forces single-page here:
-        // Continuous is the app's actual default (543ada9) and wheel-scroll is
-        // exactly the interaction continuous mode exists for, so testing the
-        // single-page ScrollViewer would no longer exercise what a user
-        // actually hits by default. There was also no other test anywhere in
-        // the suite that drives a real wheel/LineDown gesture against
-        // ContinuousScrollViewer (ContinuousNavigationRegressionTests only
-        // covers *programmatic* CurrentPageIndex navigation, not a scroll
-        // gesture) — so this test now targets ContinuousScrollViewer instead
-        // of PdfScrollViewer, which is both the honest fix and closes that
-        // coverage gap.
-        //
-        // This is a real 455-page book, and ContinuousScrollViewer's extent
-        // depends on VirtualizingStackPanel measuring every one of 455 slot
-        // heights before LineDown()'s offset delta has anything to clamp
-        // against — genuinely more layout work than the smaller synthetic
-        // fixtures elsewhere in this file, so the wait here polls the
-        // ScrollViewer's own Extent becoming non-zero (with a generous
-        // ceiling) rather than a fixed delay/iteration count.
-        var vm = CreateViewModel();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        _windows.Show(window);
-        await Task.Delay(200);
-
-        await vm.LoadDocumentAsync(PragmaticBook);
-
-        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-        viewer.Should().NotBeNull();
-        vm.IsContinuousView.Should().BeTrue("continuous scroll is the app's default view mode");
-
-        var scrollViewer = FindNamedDescendant<ScrollViewer>(viewer!, "ContinuousScrollViewer");
-        scrollViewer.Should().NotBeNull();
-
-        // Poll on the thing that actually gates LineDown() doing anything —
-        // a non-zero Extent — instead of a fixed number of retries. 455 pages
-        // of slot layout is real work; a magic iteration count would either
-        // be too short here or wastefully long for a 3-page fixture.
-        var layoutDeadline = DateTime.UtcNow.AddSeconds(30);
-        while (DateTime.UtcNow < layoutDeadline && scrollViewer!.Extent.Height <= 0)
-        {
-            await Task.Delay(150);
-            window.UpdateLayout();
-        }
-        scrollViewer!.Extent.Height.Should().BeGreaterThan(0,
-            "ContinuousScrollViewer must have laid out its (455-page) content before a scroll can move it");
-
-        // Record initial scroll position.
-        var initialOffset = scrollViewer.Offset;
-        _out.WriteLine($"Initial scroll offset: {initialOffset}, extent: {scrollViewer.Extent}");
-
-        // Simulate wheel scroll by calling ScrollViewer's LineDown method,
-        // which is the standard way to scroll down (mouse wheel scroll calls this).
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            scrollViewer.LineDown();
-        });
-        await Task.Delay(150);
-        window.UpdateLayout();
-
-        var afterOffset = scrollViewer.Offset;
-        _out.WriteLine($"After scroll offset: {afterOffset}");
-
-        // LineDown() increments Y offset, scrolling down visually.
-        afterOffset.Y.Should().BeGreaterThan(initialOffset.Y,
-            "scrolling down must increase the vertical offset");
-    }
-
-    [FixedAvaloniaFact]
-    public async Task CtrlWheelZoom_IncreasesZoomLevel()
-    {
-        // When the user holds Ctrl and scrolls wheel up, zoom level should
-        // increase. This is a common pattern in PDF viewers.
-        if (!File.Exists(PragmaticBook)) return;
-
-        var vm = CreateViewModel();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        _windows.Show(window);
-        await Task.Delay(200);
-
-        await vm.LoadDocumentAsync(PragmaticBook);
-        await Task.Delay(300);
-
-        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-        viewer.Should().NotBeNull();
-
-        var initialZoom = viewer!.ZoomLevel;
-        _out.WriteLine($"Initial zoom: {initialZoom}");
-
-        // Ctrl+Wheel zoom is handled by MainWindowViewModel's ZoomInCommand.
-        // In headless testing, we can directly invoke the command rather than
-        // simulating the exact key+wheel combination.
-        vm.ZoomInCommand?.Execute().Subscribe();
-        await Task.Delay(150);
-
-        var afterZoom = viewer.ZoomLevel;
-        _out.WriteLine($"After zoom in: {afterZoom}");
-
-        afterZoom.Should().BeGreaterThan(initialZoom,
-            "Ctrl+scroll up must increase zoom level");
-    }
+    // #1768: MouseWheelScrollDown_ScrollsViewerVertically and
+    // CtrlWheelZoom_IncreasesZoomLevel deleted — the file's own comments
+    // already called both "kept for history", superseded by the
+    // CtrlWheelUp/Down/PlainWheel_RealGesture tests below, which drive the
+    // real PointerWheelChanged handler these two bypassed by calling
+    // ScrollViewer.LineDown()/ZoomInCommand directly.
 
     // ---- #827 batch C: real gesture wheel/pan/zoom coverage --------------
     // MouseWheelScrollDown / CtrlWheelZoom above are the legacy command-invoke
@@ -375,16 +276,27 @@ public class MouseInputTests : IDisposable
 
     private static readonly Point ViewerCenter = new(640, 450);
 
-    // Instance rather than static: it shows a window, and the window tracker
-    // that guarantees the window is closed is per-test-instance (#706).
+    /// <summary>
+    /// #1768: opens the small synthetic multi-page document, not the real
+    /// 455-page book — every caller below only needs SOME multi-page content
+    /// to exercise continuous-scroll/zoom/pan, and virtualizing 40 slot
+    /// heights instead of 455 removed the 30-second layout deadline these
+    /// tests used to need. Instance rather than static: it shows a window,
+    /// and the window tracker that guarantees the window is closed is
+    /// per-test-instance (#706).
+    /// </summary>
     private async Task<(MainWindowViewModel vm, MainWindow window, PdfViewerControl viewer)>
         OpenBookAsync()
     {
+        var tempDir = Path.Combine(Path.GetTempPath(), "excise-mouse-scroll-" + Guid.NewGuid().ToString("N"));
+        _tempDirs.Add(tempDir);
+        var path = CreateSyntheticMultiPageDoc(tempDir);
+
         var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
-        await vm.LoadDocumentAsync(PragmaticBook!);
+        await vm.LoadDocumentAsync(path);
         await Task.Delay(300);
         window.UpdateLayout();
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
@@ -410,7 +322,6 @@ public class MouseInputTests : IDisposable
     [FixedAvaloniaFact]
     public async Task CtrlWheelUp_RealGesture_ZoomsIn()
     {
-        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
         var (_, window, viewer) = await OpenBookAsync();
 
         var before = viewer.ZoomLevel;
@@ -427,7 +338,6 @@ public class MouseInputTests : IDisposable
     [FixedAvaloniaFact]
     public async Task CtrlWheelDown_RealGesture_ZoomsOut()
     {
-        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
         var (_, window, viewer) = await OpenBookAsync();
 
         // Zoom in first so there is room to zoom back out (fit-width may start low).
@@ -450,7 +360,6 @@ public class MouseInputTests : IDisposable
     [FixedAvaloniaFact]
     public async Task PlainWheel_RealGesture_ScrollsAndDoesNotZoom()
     {
-        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
         var (vm, window, viewer) = await OpenBookAsync();
         vm.IsContinuousView.Should().BeTrue("continuous scroll is the app's default view mode");
         var sv = await WaitForContinuousLaidOutAsync(window, viewer);
@@ -478,7 +387,6 @@ public class MouseInputTests : IDisposable
     [FixedAvaloniaFact]
     public async Task ContinuousScrollPastPageBoundary_UpdatesCurrentPage()
     {
-        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
         var (_, window, viewer) = await OpenBookAsync();
         var sv = await WaitForContinuousLaidOutAsync(window, viewer);
 
@@ -504,7 +412,6 @@ public class MouseInputTests : IDisposable
     [FixedAvaloniaFact]
     public async Task MiddleButtonDrag_RealGesture_PansScrollOffset()
     {
-        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
         var (_, window, viewer) = await OpenBookAsync();
         var sv = await WaitForContinuousLaidOutAsync(window, viewer);
 
@@ -532,9 +439,16 @@ public class MouseInputTests : IDisposable
     [FixedAvaloniaFact]
     public async Task FitOnResize_RecomputesZoom()
     {
-        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
+        // #1768: needs no book at all — any document with a page establishes
+        // FitWidth mode. A single blank page is enough.
+        var tempDir = Path.Combine(Path.GetTempPath(), "excise-mouse-fit-" + Guid.NewGuid().ToString("N"));
+        _tempDirs.Add(tempDir);
+        Directory.CreateDirectory(tempDir);
+        var path = Path.Combine(tempDir, "one-page.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 1);
+
         var vm = CreateViewModel();
-        await vm.LoadDocumentAsync(PragmaticBook!);
+        await vm.LoadDocumentAsync(path);
         await Task.Delay(200);
 
         // Default fit mode is FitWidth. Setting the viewport width drives
@@ -564,7 +478,7 @@ public class MouseInputTests : IDisposable
         // is drawn (via TextSelected event) and the text is extracted.
         // This is covered extensively by TextSelectionDragTests, but we
         // include a basic version here for the mouse-input matrix.
-        if (!File.Exists(PragmaticBook)) return;
+        Assert.SkipWhen(PragmaticBook == null, PragmaticBookAbsenceReason());
 
         var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
@@ -582,7 +496,7 @@ public class MouseInputTests : IDisposable
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
         var letters = page.Letters?.ToList() ?? new List<Letter>();
         var ordered = TextSelectionEngine.SortReadingOrder(letters);
-        if (ordered.Count < 5) return;
+        ordered.Count.Should().BeGreaterThanOrEqualTo(5, "page 15 must have at least 5 letters to drag across");
 
         var anchor = ordered[0];
         var focus = ordered[4];
@@ -590,9 +504,7 @@ public class MouseInputTests : IDisposable
         vm.CurrentPageIndex = targetPageNumber - 1;
         vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
-        for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
-
-        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+        var viewer = await GetViewerReadyForModeAsync(window, InteractionMode.TextSelection);
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
         var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
         var focusWindow = ToWindowPoint(focus, page, overlay, window);
@@ -639,11 +551,7 @@ public class MouseInputTests : IDisposable
         const int targetPageNumber = 1;
         vm.CurrentPageIndex = targetPageNumber - 1;
         vm.IsRedactionMode = true; // Sets InteractionMode to Redaction
-        for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
-
-        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-        viewer.Should().NotBeNull();
-        viewer!.InteractionMode.Should().Be(InteractionMode.Redaction);
+        var viewer = await GetViewerReadyForModeAsync(window, InteractionMode.Redaction);
 
         RedactionDrawnEventArgs? redaction = null;
         viewer.RedactionDrawn += (_, e) => { redaction = e; };
@@ -682,7 +590,7 @@ public class MouseInputTests : IDisposable
         // A realistic drag involves multiple MouseMove events between
         // MouseDown and MouseUp. The viewer should track the focus letter
         // as it moves, redrawing the selection incrementally.
-        if (!File.Exists(PragmaticBook)) return;
+        Assert.SkipWhen(PragmaticBook == null, PragmaticBookAbsenceReason());
 
         var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
@@ -700,7 +608,7 @@ public class MouseInputTests : IDisposable
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
         var letters = page.Letters?.ToList() ?? new List<Letter>();
         var ordered = TextSelectionEngine.SortReadingOrder(letters);
-        if (ordered.Count < 10) return;
+        ordered.Count.Should().BeGreaterThanOrEqualTo(10, "page 15 must have at least 10 letters for a multi-step drag");
 
         var anchor = ordered[0];
         var mid = ordered[5];
@@ -709,9 +617,7 @@ public class MouseInputTests : IDisposable
         vm.CurrentPageIndex = targetPageNumber - 1;
         vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
-        for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
-
-        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+        var viewer = await GetViewerReadyForModeAsync(window, InteractionMode.TextSelection);
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
         var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
         var midWindow = ToWindowPoint(mid, page, overlay, window);
@@ -755,7 +661,7 @@ public class MouseInputTests : IDisposable
     {
         // Clicking and immediately releasing on a single letter should
         // select only that letter's text (e.g., "H" not "Heartfelt").
-        if (!File.Exists(PragmaticBook)) return;
+        Assert.SkipWhen(PragmaticBook == null, PragmaticBookAbsenceReason());
 
         var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
@@ -773,16 +679,14 @@ public class MouseInputTests : IDisposable
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
         var letters = page.Letters?.ToList() ?? new List<Letter>();
         var ordered = TextSelectionEngine.SortReadingOrder(letters);
-        if (ordered.Count == 0) return;
+        ordered.Should().NotBeEmpty("page 15 must have at least one letter to click");
 
         var singleLetter = ordered[0];
 
         vm.CurrentPageIndex = targetPageNumber - 1;
         vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
-        for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
-
-        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+        var viewer = await GetViewerReadyForModeAsync(window, InteractionMode.TextSelection);
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
         var letterWindow = ToWindowPoint(singleLetter, page, overlay, window);
 
@@ -807,7 +711,7 @@ public class MouseInputTests : IDisposable
         // Rapid double-click on a letter should select the whole word
         // (if word-selection is implemented). If not, it falls back to
         // single-letter selection. This test documents current behavior.
-        if (!File.Exists(PragmaticBook)) return;
+        Assert.SkipWhen(PragmaticBook == null, PragmaticBookAbsenceReason());
 
         var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
@@ -825,16 +729,14 @@ public class MouseInputTests : IDisposable
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
         var letters = page.Letters?.ToList() ?? new List<Letter>();
         var ordered = TextSelectionEngine.SortReadingOrder(letters);
-        if (ordered.Count < 5) return;
+        ordered.Count.Should().BeGreaterThanOrEqualTo(5, "page 15 must have at least 5 letters");
 
         var clickLetter = ordered[2]; // Middle of a word
 
         vm.CurrentPageIndex = targetPageNumber - 1;
         vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
-        for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
-
-        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+        var viewer = await GetViewerReadyForModeAsync(window, InteractionMode.TextSelection);
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
         var letterWindow = ToWindowPoint(clickLetter, page, overlay, window);
 
@@ -875,7 +777,7 @@ public class MouseInputTests : IDisposable
         // indicate it's clickable (cursor change to hand, visual feedback).
         // In headless mode, we can't easily detect cursor changes, but we
         // can verify that the link-hit-test infrastructure works.
-        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
+        Assert.SkipWhen(PragmaticBook == null, PragmaticBookAbsenceReason());
         // #653: same root cause as ClickOnLinkAnnotation_FiresLinkClickedEvent
         // above (see the detailed comment there for why the failure was a
         // TranslatePoint-through-a-hidden-ancestor problem, not a
@@ -905,7 +807,7 @@ public class MouseInputTests : IDisposable
             var first = links.FirstOrDefault(l => l.DestinationPage != p);
             if (first != null) { linkPage = p; targetLink = first; break; }
         }
-        if (targetLink == null) return;
+        targetLink.Should().NotBeNull("the Pragmatic book has internal links on its early pages");
 
         vm.CurrentPageIndex = linkPage - 1;
 
@@ -967,7 +869,7 @@ public class MouseInputTests : IDisposable
     {
         // End-to-end workflow: open PDF → switch to text-selection mode →
         // drag to select text → verify clipboard history has the selected text.
-        if (!File.Exists(PragmaticBook)) return;
+        Assert.SkipWhen(PragmaticBook == null, PragmaticBookAbsenceReason());
 
         var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
@@ -990,16 +892,14 @@ public class MouseInputTests : IDisposable
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
         var letters = page.Letters?.ToList() ?? new List<Letter>();
         var ordered = TextSelectionEngine.SortReadingOrder(letters);
-        if (ordered.Count < 5) return;
+        ordered.Count.Should().BeGreaterThanOrEqualTo(5, "page 15 must have at least 5 letters");
 
         vm.CurrentPageIndex = targetPageNumber - 1;
 
         // Step 3: Enable text-selection mode
         vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
-        for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
-
-        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+        var viewer = await GetViewerReadyForModeAsync(window, InteractionMode.TextSelection);
         viewer?.InteractionMode.Should().Be(Excise.Avalonia.Controls.InteractionMode.TextSelection);
 
         var initialHistoryCount = vm.ClipboardHistory.Count;
@@ -1050,6 +950,33 @@ public class MouseInputTests : IDisposable
     #endregion
 
     #region Helpers
+
+    /// <summary>
+    /// #1768: the six call sites that used to follow an InteractionMode
+    /// switch with a FIXED 10x150ms (1.5s) sleep, no matter how fast the
+    /// mode actually propagated to the control — replaced with a poll on
+    /// TWO conditions: InteractionMode itself (near-instant — it is a plain
+    /// property set) AND the OverlayCanvas having a laid-out, non-zero size
+    /// (the part that actually took the 1.5s: a hit-test point translated
+    /// through an unlaid-out overlay silently lands at (0,0) and the click
+    /// misses everything). The common case still returns almost
+    /// immediately; a slow run gets the same 1.5s ceiling as before.
+    /// </summary>
+    private static async Task<PdfViewerControl> GetViewerReadyForModeAsync(
+        MainWindow window, InteractionMode mode, int maxIterations = 10, int delayMs = 150)
+    {
+        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+        for (int i = 0; i < maxIterations; i++)
+        {
+            var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas");
+            if (viewer.InteractionMode == mode && overlay is { Bounds.Width: > 0 })
+                break;
+            await Task.Delay(delayMs);
+            window.UpdateLayout();
+        }
+        viewer.InteractionMode.Should().Be(mode);
+        return viewer;
+    }
 
     /// <summary>
     /// Scroll the single-page viewport so the given content rect is visible.

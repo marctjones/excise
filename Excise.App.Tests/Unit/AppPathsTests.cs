@@ -145,11 +145,7 @@ public class AppPathsTests
     [Fact]
     public void ConfigDir_OnLinux_FollowsXdgSpec()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            // Skip on non-Linux platforms
-            return;
-        }
+        Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Linux-only path convention");
 
         var configDir = AppPaths.ResolveConfigDirFresh();
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -176,11 +172,7 @@ public class AppPathsTests
     [Fact]
     public void DataDir_OnLinux_FollowsXdgSpec()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            // Skip on non-Linux platforms
-            return;
-        }
+        Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Linux-only path convention");
 
         var dataDir = AppPaths.ResolveDataDirFresh();
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -207,11 +199,7 @@ public class AppPathsTests
     [Fact]
     public void CacheDir_OnLinux_FollowsXdgSpec()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            // Skip on non-Linux platforms
-            return;
-        }
+        Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Linux-only path convention");
 
         var cacheDir = AppPaths.ResolveCacheDirFresh();
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -237,11 +225,7 @@ public class AppPathsTests
     [Fact]
     public void ConfigDir_OnMacOS_UsesLibraryApplicationSupport()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // Skip on non-macOS platforms
-            return;
-        }
+        Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.OSX), "macOS-only path convention");
 
         var configDir = AppPaths.ResolveConfigDirFresh();
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -258,11 +242,7 @@ public class AppPathsTests
     [Fact]
     public void CacheDir_OnMacOS_UsesLibraryCaches()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // Skip on non-macOS platforms
-            return;
-        }
+        Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.OSX), "macOS-only path convention");
 
         var cacheDir = AppPaths.ResolveCacheDirFresh();
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -279,11 +259,7 @@ public class AppPathsTests
     [Fact]
     public void ConfigDir_OnWindows_UsesAppData()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            // Skip on non-Windows platforms
-            return;
-        }
+        Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "Windows-only path convention");
 
         var configDir = AppPaths.ResolveConfigDirFresh();
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -295,11 +271,7 @@ public class AppPathsTests
     [Fact]
     public void DataDir_OnWindows_UsesAppData()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            // Skip on non-Windows platforms
-            return;
-        }
+        Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "Windows-only path convention");
 
         var dataDir = AppPaths.ResolveDataDirFresh();
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -311,11 +283,7 @@ public class AppPathsTests
     [Fact]
     public void CacheDir_OnWindows_UsesLocalAppData()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            // Skip on non-Windows platforms
-            return;
-        }
+        Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "Windows-only path convention");
 
         var cacheDir = AppPaths.ResolveCacheDirFresh();
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -328,32 +296,10 @@ public class AppPathsTests
     // PATH CONSISTENCY TESTS
     // ========================================================================
 
-    [Fact]
-    public void ConfigDir_IsCached_ReturnsSamePath()
-    {
-        var first = AppPaths.ResolveConfigDirFresh();
-        var second = AppPaths.ResolveConfigDirFresh();
-
-        first.Should().Be(second, "ConfigDir should be cached and return same path");
-    }
-
-    [Fact]
-    public void DataDir_IsCached_ReturnsSamePath()
-    {
-        var first = AppPaths.ResolveDataDirFresh();
-        var second = AppPaths.ResolveDataDirFresh();
-
-        first.Should().Be(second, "DataDir should be cached and return same path");
-    }
-
-    [Fact]
-    public void CacheDir_IsCached_ReturnsSamePath()
-    {
-        var first = AppPaths.ResolveCacheDirFresh();
-        var second = AppPaths.ResolveCacheDirFresh();
-
-        first.Should().Be(second, "CacheDir should be cached and return same path");
-    }
+    // #1768: ConfigDir_IsCached_ReturnsSamePath / DataDir_.../ CacheDir_...
+    // deleted — each called the *Fresh resolver (which BYPASSES the cache)
+    // twice, so none of them could ever test caching; the names were false.
+    // Caching itself remains untested either way.
 
     // ========================================================================
     // DERIVED PATH TESTS

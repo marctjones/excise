@@ -8,7 +8,7 @@
 /// - ISO 32000-1 reference files
 /// - Various PDF structures and edge cases
 /// </summary>
-/// <returns>0 on success, 1 on failure</returns>
+/// <returns>0 on success, 1 on failure, 2 when the corpus is not present (#1768: distinguishable from success)</returns>
 
 using System;
 using System.IO;
@@ -33,7 +33,8 @@ if (repoRoot == null)
 
 var corpusRoot = Path.Combine(repoRoot, "test-pdfs", "verapdf-corpus");
 var sampleSize = 20; // Test with 20 random PDFs
-var outputDir = "/tmp/excise-corpus-test";
+// #1768: unique per run, not a fixed path every invocation clobbers.
+var outputDir = Path.Combine(Path.GetTempPath(), $"excise-corpus-test-{Guid.NewGuid():N}");
 
 Directory.CreateDirectory(outputDir);
 
@@ -43,7 +44,7 @@ if (!Directory.Exists(corpusRoot))
     Console.WriteLine($"⚠️  SKIP: veraPDF corpus not found at {corpusRoot}");
     Console.WriteLine("  Run: ./scripts/download-test-pdfs.sh");
     Console.WriteLine("  This test requires the corpus to be downloaded locally.");
-    return 0; // Skip, not fail
+    return 2; // #1768: distinguishable from success (0) so the xunit caller can Assert.SkipWhen instead of silently passing
 }
 
 // Also check if corpus has any PDFs
@@ -51,7 +52,7 @@ var pdfCheck = Directory.GetFiles(corpusRoot, "*.pdf", SearchOption.AllDirectori
 if (pdfCheck.Length == 0)
 {
     Console.WriteLine($"⚠️  SKIP: veraPDF corpus is empty (no PDFs found)");
-    return 0; // Skip, not fail
+    return 2; // #1768: distinguishable from success
 }
 
 try
@@ -63,7 +64,7 @@ try
     if (allPdfs.Count == 0)
     {
         Console.WriteLine($"❌ SKIP: No PDFs found in corpus");
-        return 0;
+        return 2; // #1768: distinguishable from success
     }
 
     Console.WriteLine($"✅ Found {allPdfs.Count} PDFs in corpus");

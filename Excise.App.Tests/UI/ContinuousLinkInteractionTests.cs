@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -12,6 +11,7 @@ using Excise.Core.Document;
 using Excise.Avalonia.Controls;
 using Excise.App.ViewModels;
 using Excise.App.Views;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.App.Tests.UI;
@@ -41,18 +41,10 @@ public class ContinuousLinkInteractionTests
     private readonly ITestOutputHelper _out;
     public ContinuousLinkInteractionTests(ITestOutputHelper o) { _out = o; }
 
-    private static string? FindPragmaticBook()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName, "test-pdfs", "local-real-world",
-                "business-success-with-open-source_P1.0.pdf");
-            if (File.Exists(candidate)) return candidate;
-            dir = dir.Parent;
-        }
-        return null;
-    }
+    private const string PragmaticBookRelativePath =
+        "test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf";
+
+    private static string? FindPragmaticBook() => TestRepoLayout.FindFile(PragmaticBookRelativePath);
 
     /// <summary>
     /// The centered page Border inside a realized slot container (the
@@ -183,7 +175,8 @@ public class ContinuousLinkInteractionTests
     public async Task ClickOnTocLink_InContinuousMode_NavigatesToDestinationPage()
     {
         var pragmaticBook = FindPragmaticBook();
-        Assert.SkipWhen(pragmaticBook == null, "Pragmatic book corpus fixture not available locally.");
+        Assert.SkipWhen(pragmaticBook == null,
+            TestRepoLayout.AbsenceReason("Pragmatic book (local-real-world corpus)", PragmaticBookRelativePath));
 
         var setup = await ArrangeTocLinkInContinuousModeAsync(pragmaticBook!);
         setup.Should().NotBeNull();
@@ -223,7 +216,8 @@ public class ContinuousLinkInteractionTests
     public async Task HoverOverTocLink_InContinuousMode_ShowsHandCursorAndRaisesLinkHovered()
     {
         var pragmaticBook = FindPragmaticBook();
-        Assert.SkipWhen(pragmaticBook == null, "Pragmatic book corpus fixture not available locally.");
+        Assert.SkipWhen(pragmaticBook == null,
+            TestRepoLayout.AbsenceReason("Pragmatic book (local-real-world corpus)", PragmaticBookRelativePath));
 
         var setup = await ArrangeTocLinkInContinuousModeAsync(pragmaticBook!);
         setup.Should().NotBeNull();

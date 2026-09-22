@@ -6,7 +6,7 @@
 /// 3. Save redacted versions with naming convention
 /// 4. Generate processing report
 /// </summary>
-/// <returns>0 on success, 1 on failure</returns>
+/// <returns>0 on success, 1 on failure, 2 when the corpus is not present (#1768: distinguishable from success)</returns>
 
 using System;
 using System.IO;
@@ -31,7 +31,8 @@ if (repoRoot == null)
 }
 
 var inputDir = Path.Combine(repoRoot, "test-pdfs", "verapdf-corpus", "veraPDF-corpus-master", "PDF-A");
-var outputDir = "/tmp/excise-batch-output";
+// #1768: unique per run, not a fixed path every invocation clobbers.
+var outputDir = Path.Combine(Path.GetTempPath(), $"excise-batch-output-{Guid.NewGuid():N}");
 var maxFiles = 10;
 
 var termsToRedact = new[] { "test", "sample", "example", "data" };
@@ -47,7 +48,7 @@ Console.WriteLine($"Terms to redact: {string.Join(", ", termsToRedact)}");
 if (!Directory.Exists(inputDir))
 {
     Console.WriteLine($"\n❌ SKIP: Input directory not found");
-    return 0;
+    return 2; // #1768: distinguishable from success (0) so the xunit caller can Assert.SkipWhen instead of silently passing
 }
 
 try
@@ -61,7 +62,7 @@ try
     if (pdfFiles.Count == 0)
     {
         Console.WriteLine($"❌ SKIP: No PDF files found");
-        return 0;
+        return 2; // #1768: distinguishable from success
     }
 
     Console.WriteLine($"✅ Found {pdfFiles.Count} PDF file(s)");

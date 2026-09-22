@@ -232,10 +232,133 @@ EOF
 run_gate "$BADREG" "$WORK/badreg.log"
 [[ "$RC" -ne 0 ]] || { echo "FAIL: gate accepted a registry that does not use TestRepoLayout"; cat "$WORK/badreg.log"; FAIL=1; }
 
+# ---------------------------------------------------------------------------
+# 8. (#1768) An UNBOUNDED ancestor walk that resolves a gitignored corpus by
+#    hand fails and is named. This is DocumentTextIndexCompactWordsTests: it
+#    walked up to the first ancestor holding the tracked test-pdfs/sample-pdfs,
+#    then read test-pdfs/smoke from there -- absent in every worktree, so 13
+#    corpus files became 3. No `for`, no bound, no ".git": checks 2-3b were
+#    blind to it. Both loop spellings are planted.
+# ---------------------------------------------------------------------------
+for step in 'dir = dir.Parent;' 'dir = Directory.GetParent(dir)?.FullName;'; do
+  WALK="$WORK/walk-$RANDOM"
+  make_repo "$WALK"
+  write_registered_gate "$WALK"
+  mkdir -p "$WALK/Excise.App.Tests/Unit"
+  cat > "$WALK/Excise.App.Tests/Unit/HandRolledParityTests.cs" <<EOF
+namespace Excise.App.Tests.Unit;
+public class HandRolledParityTests
+{
+    private static string? ParityCorpus()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            if (Directory.Exists(Path.Combine(dir.FullName, "test-pdfs", "sample-pdfs")))
+                return Path.Combine(dir.FullName, "test-pdfs", "smoke");
+            $step
+        }
+        return null;
+    }
+}
+EOF
+  run_gate "$WALK" "$WORK/walk.log"
+  [[ "$RC" -ne 0 ]] || { echo "FAIL: gate accepted an unbounded ancestor walk to a gitignored corpus ($step)"; cat "$WORK/walk.log"; FAIL=1; }
+  grep -qF "HandRolledParityTests.cs" "$WORK/walk.log" || { echo "FAIL: gate did not name the unbounded-walk file ($step)"; cat "$WORK/walk.log"; FAIL=1; }
+  grep -qF "walk Excise.App.Tests" "$WORK/walk.log" || { echo "FAIL: gate did not classify it as a 'walk' ($step)"; cat "$WORK/walk.log"; FAIL=1; }
+done
+
+# ---------------------------------------------------------------------------
+# 9. (#1768) Path.Combine(..., "..", "..", ...) fails and is named -- the
+#    '..'-counting of check 3 in the spelling check 3 does not look for.
+# ---------------------------------------------------------------------------
+CHAIN="$WORK/chain"
+make_repo "$CHAIN"
+write_registered_gate "$CHAIN"
+mkdir -p "$CHAIN/Excise.App.Tests/UI"
+cat > "$CHAIN/Excise.App.Tests/UI/ChainTests.cs" <<'EOF'
+namespace Excise.App.Tests.UI;
+public class ChainTests
+{
+    private static string Root(string testBin) =>
+        Path.GetFullPath(Path.Combine(testBin, "..", "..", "..", "..", "test-pdfs"));
+}
+EOF
+run_gate "$CHAIN" "$WORK/chain.log"
+[[ "$RC" -ne 0 ]] || { echo "FAIL: gate accepted a Path.Combine('..','..') chain"; cat "$WORK/chain.log"; FAIL=1; }
+grep -qF "chain Excise.App.Tests/UI/ChainTests.cs" "$WORK/chain.log" || { echo "FAIL: gate did not name the '..' chain"; cat "$WORK/chain.log"; FAIL=1; }
+
+# ---------------------------------------------------------------------------
+# 10. (#1768) The two exemptions that keep 8 and 9 from over-reaching, and the
+#     phase-in's visible count. None of these is a file allowlist:
+#       - a walk in a file that ASKS TestRepoLayout is a local-root walk, not a
+#         corpus locator (PdfViewerHeadlessRenderTests walks to its own csproj);
+#       - an Avalonia visual-tree walk (`x.Parent as Control`) is not a
+#         directory walk at all;
+#       - a single ".." is not a chain;
+#       - the same defect in a project that is NOT yet enforced is COUNTED and
+#         printed, never silently dropped -- and does not fail the gate.
+# ---------------------------------------------------------------------------
+EXEMPT="$WORK/exempt"
+make_repo "$EXEMPT"
+write_registered_gate "$EXEMPT"
+mkdir -p "$EXEMPT/Excise.App.Tests/UI"
+cat > "$EXEMPT/Excise.App.Tests/UI/LocalRootWalkTests.cs" <<'EOF'
+using Excise.TestSupport;
+namespace Excise.App.Tests.UI;
+public class LocalRootWalkTests
+{
+    private static string? Smoke() => TestRepoLayout.FindDirectory("test-pdfs", "smoke");
+    private static string? OwnCsproj()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Excise.App.Tests.csproj")))
+            dir = dir.Parent;
+        return dir?.FullName;
+    }
+}
+EOF
+cat > "$EXEMPT/Excise.App.Tests/UI/VisualTreeTests.cs" <<'EOF'
+namespace Excise.App.Tests.UI;
+public class VisualTreeTests
+{
+    // smoke corpus name appears here, and a visual-tree walk below
+    private const string Corpus = "smoke";
+    private static object? Up(Control walk)
+    {
+        while (walk != null) { walk = walk.Parent as Control; }
+        return null;
+    }
+    private static string One(string a) => Path.Combine(a, "nested", "..", "x.pdf");
+}
+EOF
+cat > "$EXEMPT/Excise.Rendering.Tests/Differential/NotYetEnforcedTests.cs" <<'EOF'
+namespace Excise.Rendering.Tests.Differential;
+public class NotYetEnforcedTests
+{
+    private static string? Smoke()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            if (Directory.Exists(Path.Combine(dir.FullName, "test-pdfs", "smoke"))) return dir.FullName;
+            dir = dir.Parent;
+        }
+        return null;
+    }
+}
+EOF
+run_gate "$EXEMPT" "$WORK/exempt.log"
+[[ "$RC" -eq 0 ]] || { echo "FAIL: gate over-reached on a TestRepoLayout-using walk, a visual-tree walk, a single '..', or an unenforced project"; cat "$WORK/exempt.log"; FAIL=1; }
+grep -qF "1 hand-rolled locator(s) counted but NOT yet enforced" "$WORK/exempt.log" || { echo "FAIL: the unenforced project's hit was not counted and printed"; cat "$WORK/exempt.log"; FAIL=1; }
+
 if [[ $FAIL -ne 0 ]]; then
   exit 1
 fi
 
+echo "PASS: check-fixture-locators.sh (#1527, #1768) fails on an unbounded ancestor walk"
+echo "      to a gitignored corpus and on a Path.Combine('..','..') chain, and"
+echo "      exempts a TestRepoLayout-using walk, a visual-tree walk and a single '..'."
 echo "PASS: check-fixture-locators.sh (#1527) fails on a bounded upward walk, on"
 echo "      hand-rolled '..' counting, on a corpus-gated theory class with no"
 echo "      declared collected-row floor, on a missing shared locator and on a"

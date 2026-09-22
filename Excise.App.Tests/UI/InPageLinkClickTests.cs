@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -14,6 +13,7 @@ using Excise.Core.Document;
 using Excise.Avalonia.Controls;
 using Excise.App.ViewModels;
 using Excise.App.Views;
+using Excise.TestSupport;
 using Xunit;
 namespace Excise.App.Tests.UI;
 
@@ -36,27 +36,21 @@ public class InPageLinkClickTests
     /// machine but the original author's — this test has silently skipped
     /// everywhere else since it was written (the #619 "invisible coverage
     /// loss" pattern; same bug found and fixed in MultiEmbeddedFontLayoutTests.cs
-    /// this session). Resolved via the same FindRepoFile convention every
-    /// other local-corpus test in this project uses.
+    /// this session). Resolved via the shared <see cref="TestRepoLayout"/>
+    /// locator every other local-corpus test in this project uses (#1768 —
+    /// the hand-rolled walk here matched neither #1527's nor #1706's gate).
     /// </summary>
-    private static string? FindPragmaticBook()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName, "test-pdfs", "local-real-world",
-                "business-success-with-open-source_P1.0.pdf");
-            if (File.Exists(candidate)) return candidate;
-            dir = dir.Parent;
-        }
-        return null;
-    }
+    private const string PragmaticBookRelativePath =
+        "test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf";
+
+    private static string? FindPragmaticBook() => TestRepoLayout.FindFile(PragmaticBookRelativePath);
 
     [FixedAvaloniaFact]
     public async Task ClickOnTocLink_NavigatesToDestinationPage()
     {
         var pragmaticBook = FindPragmaticBook();
-        Assert.SkipWhen(pragmaticBook == null, "Pragmatic book corpus fixture not available locally.");
+        Assert.SkipWhen(pragmaticBook == null,
+            TestRepoLayout.AbsenceReason("Pragmatic book (local-real-world corpus)", PragmaticBookRelativePath));
         // #653: this test's path was broken (hardcoded personal path) for so
         // long it never actually ran. Once fixed, it failed for a reason that
         // had nothing to do with the book's size or a layout-timing race (the

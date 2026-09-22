@@ -198,8 +198,7 @@ public class CommandBindingSweepTests
     [FixedAvaloniaFact]
     public async Task MacNativeMenu_IsAttachedToWindowOnMacOS()
     {
-        if (!OperatingSystem.IsMacOS())
-            return;
+        Assert.SkipUnless(OperatingSystem.IsMacOS(), "macOS-only native menu export");
 
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
@@ -208,8 +207,12 @@ public class CommandBindingSweepTests
         await KeyboardTestHelpers.FlushDispatcherAsync();
         window.UpdateLayout();
 
-        if (window.PlatformImpl?.TryGetFeature<ITopLevelNativeMenuExporter>() is null)
-            return;
+        // #1768: this was a silent, undeclared skip -- the headless platform
+        // exposes no ITopLevelNativeMenuExporter, so this returned early on
+        // every run, on every platform, with no NotExecuted row for #1172's
+        // gate to see.
+        Assert.SkipWhen(window.PlatformImpl?.TryGetFeature<ITopLevelNativeMenuExporter>() is null,
+            "the headless platform exposes no ITopLevelNativeMenuExporter");
 
         NativeMenu.GetMenu(window).Should().NotBeNull(
             "macOS exports the window-level native menu bar, so EXCISE must attach its full menu to the window after it opens");

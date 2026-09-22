@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Excise.App.Automation;
+using Excise.TestSupport;
 using AwesomeAssertions;
 using Xunit;
 
@@ -36,8 +37,9 @@ public class PerfScenarioTests
     [Fact]
     public void ShippedScenarioFile_Parses_AndEveryScenarioHasAWhy()
     {
-        var path = TryFindRepoFile("tests", "gui-perf-scenarios.json");
-        Assert.SkipWhen(path == null, "tests/gui-perf-scenarios.json not found above the test output directory.");
+        var path = TestRepoLayout.FindFile("tests", "gui-perf-scenarios.json");
+        Assert.SkipWhen(path == null,
+            TestRepoLayout.AbsenceReason("tests/gui-perf-scenarios.json", "tests/gui-perf-scenarios.json"));
 
         var scenarios = PerfScenarioFile.Parse(File.ReadAllText(path!));
 
@@ -50,8 +52,9 @@ public class PerfScenarioTests
     [Fact]
     public void ShippedScenarioFile_HasTheCalibrationBaseline()
     {
-        var path = TryFindRepoFile("tests", "gui-perf-scenarios.json");
-        Assert.SkipWhen(path == null, "tests/gui-perf-scenarios.json not found above the test output directory.");
+        var path = TestRepoLayout.FindFile("tests", "gui-perf-scenarios.json");
+        Assert.SkipWhen(path == null,
+            TestRepoLayout.AbsenceReason("tests/gui-perf-scenarios.json", "tests/gui-perf-scenarios.json"));
 
         var scenarios = PerfScenarioFile.Parse(File.ReadAllText(path!));
 
@@ -65,8 +68,9 @@ public class PerfScenarioTests
     [Fact]
     public void ShippedScenarioFile_NeverClosesAMutatedDocument()
     {
-        var path = TryFindRepoFile("tests", "gui-perf-scenarios.json");
-        Assert.SkipWhen(path == null, "tests/gui-perf-scenarios.json not found above the test output directory.");
+        var path = TestRepoLayout.FindFile("tests", "gui-perf-scenarios.json");
+        Assert.SkipWhen(path == null,
+            TestRepoLayout.AbsenceReason("tests/gui-perf-scenarios.json", "tests/gui-perf-scenarios.json"));
 
         var scenarios = PerfScenarioFile.Parse(File.ReadAllText(path!));
 
@@ -92,8 +96,9 @@ public class PerfScenarioTests
     [Fact]
     public void ShippedScenarioFile_ReferencedDocumentsExist()
     {
-        var path = TryFindRepoFile("tests", "gui-perf-scenarios.json");
-        Assert.SkipWhen(path == null, "tests/gui-perf-scenarios.json not found above the test output directory.");
+        var path = TestRepoLayout.FindFile("tests", "gui-perf-scenarios.json");
+        Assert.SkipWhen(path == null,
+            TestRepoLayout.AbsenceReason("tests/gui-perf-scenarios.json", "tests/gui-perf-scenarios.json"));
 
         var root = Path.GetDirectoryName(Path.GetDirectoryName(path!))!;
         var scenarios = PerfScenarioFile.Parse(File.ReadAllText(path!));
@@ -200,8 +205,9 @@ public class PerfScenarioTests
     [Fact]
     public void ShippedScenarioFile_MultiDocumentScenariosAreOptIn()
     {
-        var path = TryFindRepoFile("tests", "gui-perf-scenarios.json");
-        Assert.SkipWhen(path == null, "tests/gui-perf-scenarios.json not found above the test output directory.");
+        var path = TestRepoLayout.FindFile("tests", "gui-perf-scenarios.json");
+        Assert.SkipWhen(path == null,
+            TestRepoLayout.AbsenceReason("tests/gui-perf-scenarios.json", "tests/gui-perf-scenarios.json"));
 
         // run-gui-perf-scenarios.sh runs every scenario WITHOUT a "set" by
         // default and a set only with --set. A multi-document scenario that
@@ -581,19 +587,6 @@ public class PerfScenarioTests
     /// bodies readable without inventing a new idiom.
     /// </summary>
     private static Action Throwing(Action action) => action;
-
-    private static string? TryFindRepoFile(params string[] relativeParts)
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(new[] { dir.FullName }.Concat(relativeParts).ToArray());
-            if (File.Exists(candidate)) return candidate;
-            dir = dir.Parent;
-        }
-
-        return null;
-    }
 
     /// <summary>
     /// Records what the runner asked for. No Avalonia, no display, no fixture —

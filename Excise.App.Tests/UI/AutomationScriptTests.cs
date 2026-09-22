@@ -169,10 +169,15 @@ public class AutomationScriptTests
         // The unconditional [Fact(Skip = ...)] this test used to carry made it
         // impossible to enable even when the corpus IS present locally. The
         // companion .csx (automation-scripts/test-verapdf-corpus-sample.csx)
-        // already self-skips by returning 0 with a "veraPDF corpus not found"
-        // message when test-pdfs/verapdf-corpus is missing — that's the
+        // self-skips when test-pdfs/verapdf-corpus is missing -- that's the
         // single source of truth for the corpus-presence gate. No need to
         // duplicate it as an attribute Skip.
+        //
+        // #1768: the script used to return 0 (the SAME code as success) on a
+        // missing corpus, so this assertion could not tell "passed" from
+        // "never ran" -- exactly the #1172 invisible-skip shape, just moved
+        // into a process exit code instead of an early `return;`. The script
+        // now returns 2 for that case specifically.
         //
         // Issue #190 FIX: now uses the file-based Excise.Core redaction API (like the CLI)
         // which bypasses coordinate conversion issues.
@@ -187,6 +192,7 @@ public class AutomationScriptTests
         result.Success.Should().BeTrue("script should compile and execute");
 
         var exitCode = Convert.ToInt32(result.ReturnValue);
+        Assert.SkipWhen(exitCode == 2, "veraPDF corpus not present (scripts/download-test-pdfs.sh)");
         exitCode.Should().Be(0, "corpus sample test should pass");
 
         _output.WriteLine("\n✅ Corpus diversity validated");
@@ -197,6 +203,8 @@ public class AutomationScriptTests
     public async Task AutomationScript_StressDiversePdfs_ExecutesSuccessfully()
     {
         // Stress test: Process 100 diverse PDFs sequentially
+        // #1768: see AutomationScript_VeraPdfCorpusSample_ExecutesSuccessfully
+        // -- the companion .csx now returns 2, not 0, when the corpus is absent.
 
         // Arrange
         var viewModel = MainWindowViewModelTestFactory.Create();
@@ -208,6 +216,7 @@ public class AutomationScriptTests
         result.Success.Should().BeTrue("script should compile and execute");
 
         var exitCode = Convert.ToInt32(result.ReturnValue);
+        Assert.SkipWhen(exitCode == 2, "veraPDF corpus not present (scripts/download-test-pdfs.sh)");
         exitCode.Should().Be(0, "stress test should achieve ≥80% success rate");
 
         _output.WriteLine("\n✅ Stress test passed");
@@ -218,6 +227,8 @@ public class AutomationScriptTests
     public async Task AutomationScript_BatchProcessing_ExecutesSuccessfully()
     {
         // Test realistic batch processing workflow
+        // #1768: see AutomationScript_VeraPdfCorpusSample_ExecutesSuccessfully
+        // -- the companion .csx now returns 2, not 0, when the corpus is absent.
 
         // Arrange
         var viewModel = MainWindowViewModelTestFactory.Create();
@@ -229,6 +240,7 @@ public class AutomationScriptTests
         result.Success.Should().BeTrue("script should compile and execute");
 
         var exitCode = Convert.ToInt32(result.ReturnValue);
+        Assert.SkipWhen(exitCode == 2, "veraPDF-corpus PDF-A input directory not present (scripts/download-test-pdfs.sh)");
         exitCode.Should().Be(0, "batch processing should complete successfully");
 
         _output.WriteLine("\n✅ Batch processing validated");

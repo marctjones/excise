@@ -1,9 +1,9 @@
-using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
 using Excise.Core.Document;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.App.Tests.Integration;
@@ -55,7 +55,8 @@ public class MultiColumnSearchTests
     {
         var path = FindFixture();
         Assert.SkipWhen(path == null,
-            "irs-1040-instructions.pdf not present (gitignored corpus); run scripts/download-smoke-corpus.sh");
+            TestRepoLayout.AbsenceReason("irs-1040-instructions.pdf (gitignored smoke corpus; run scripts/download-smoke-corpus.sh)",
+                FixtureRelativePath));
 
         using var doc = PdfDocument.Open(path!);
         var page = doc.GetPage(117);
@@ -81,7 +82,7 @@ public class MultiColumnSearchTests
     public void WholeWordsSearch_StillFindsThem(string phrase)
     {
         var path = FindFixture();
-        Assert.SkipWhen(path == null, "corpus fixture not present");
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("irs-1040-instructions.pdf", FixtureRelativePath));
 
         using var doc = PdfDocument.Open(path!);
         var page = doc.GetPage(117);
@@ -105,7 +106,7 @@ public class MultiColumnSearchTests
     public void AMatchCarriesAPositiveHighlightRectangle()
     {
         var path = FindFixture();
-        Assert.SkipWhen(path == null, "corpus fixture not present");
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("irs-1040-instructions.pdf", FixtureRelativePath));
 
         using var doc = PdfDocument.Open(path!);
         var page = doc.GetPage(117);
@@ -120,16 +121,7 @@ public class MultiColumnSearchTests
         match.Height.Should().BeGreaterThan(0);
     }
 
-    private static string? FindFixture()
-    {
-        var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName, "test-pdfs", "smoke",
-                "irs-1040-instructions.pdf");
-            if (File.Exists(candidate)) return candidate;
-            dir = dir.Parent;
-        }
-        return null;
-    }
+    private const string FixtureRelativePath = "test-pdfs/smoke/irs-1040-instructions.pdf";
+
+    private static string? FindFixture() => TestRepoLayout.FindFile(FixtureRelativePath);
 }
