@@ -4,7 +4,7 @@ using Excise.Core.Document;
 using Excise.Core.Text;
 using Xunit;
 
-namespace Excise.App.Tests.Unit;
+namespace Excise.Core.Tests.Text;
 
 /// <summary>
 /// Pure-logic tests for the text-selection engine — hit-testing,

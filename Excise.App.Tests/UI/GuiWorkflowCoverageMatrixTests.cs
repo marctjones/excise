@@ -392,7 +392,9 @@ public class GuiWorkflowCoverageMatrixTests
         new("UX/icon polish screenshots and toolbar/menu affordance audit",
             Modality.Mouse | Modality.Toolbar | Modality.Menu,
             [
-                Capability.Covered("toolbar icon buttons have tooltips and accessibility command ids", typeof(VisualPolishAuditTests), nameof(VisualPolishAuditTests.ToolbarIconButtons_HaveTooltipsAndAccessibilityCommandIds)),
+                // The source-text audit of the toolbar CommandIds/tooltips moved to scripts/check-shell-xaml.sh (#1773);
+                // this is the runtime check of the same claim: every command-backed control carries its id, name, help text and tooltip.
+                Capability.Covered("toolbar icon buttons have tooltips and accessibility command ids", typeof(AccessibilityRegressionTests), nameof(AccessibilityRegressionTests.CommandBackedControls_UseSharedCommandMetadataForAccessibleText)),
                 Capability.Covered("core workflow screenshots are captured for the audit", typeof(VisualPolishAuditTests), nameof(VisualPolishAuditTests.CoreWorkflowScreenshots_AreCapturedForUxIconAudit)),
             ]),
 #if EXCISE_SCRIPTING

@@ -14,7 +14,7 @@ using Excise.Core.Graphics;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-namespace Excise.App.Tests.UI;
+namespace Excise.App.Tests.Unit;
 
 /// <summary>
 /// #1710: the Linux CUPS printer with its two seams replaced — a scripted
@@ -25,7 +25,7 @@ namespace Excise.App.Tests.UI;
 /// <remarks>
 /// None of this file touches CUPS, so it runs on every platform. The test
 /// that talks to a real <c>cupsd</c> is
-/// <see cref="LinuxCupsPrintIntegrationTests"/>, which only runs where CUPS
+/// <see cref="UI.LinuxCupsPrintIntegrationTests"/>, which only runs where CUPS
 /// is installed — a container, in practice
 /// (<c>scripts/run-linux-print-test.sh</c>).
 /// </remarks>

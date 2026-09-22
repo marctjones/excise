@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using AwesomeAssertions;
@@ -12,7 +11,6 @@ using Excise.App.Tests.Utilities;
 using Excise.App.Tests.Utilities.Fakes;
 using Moq;
 using Xunit;
-using Excise.TestSupport;
 
 namespace Excise.App.Tests.UI;
 
@@ -200,81 +198,8 @@ public class HostSeamTests
         FilePickerFilters.Jpeg.Patterns.Should().Equal("*.jpg", "*.jpeg");
     }
 
-    /// <summary>
-    /// A new <c>Application.Current</c> read in a view model would put host
-    /// access back where #1500 step 1 took it from, and no behavioural test
-    /// would fail. So the source is scanned, in the style of
-    /// <c>StoragePickerRoutingTests</c>.
-    /// </summary>
-    [Fact]
-    public void NoViewModel_ReadsApplicationLifetimeDirectly_ExceptTheDocumentedOne()
-    {
-        var offenders = ScanViewModels(new Regex(@"Application\s*\.\s*Current", RegexOptions.Compiled));
-
-        // ShowErrorDialogAsync builds a raw Avalonia Window and owns it against
-        // the lifetime's main window rather than MainWindowResolver. Routing it
-        // through IWindowHost would make a test that sets the resolver show a
-        // real modal dialog on a failed open (GuiClickSafetySweepTests sets the
-        // resolver and clicks everything), which a structural step must not do.
-        // The design deletes this method outright in its step 13.
-        offenders.Should().HaveCount(1,
-            "only ShowErrorDialogAsync may still read the lifetime; it is deleted by the code-behind step. "
-            + "Found: " + string.Join(" | ", offenders));
-        offenders[0].Should().Contain("MainWindowViewModel.cs");
-    }
-
-    /// <summary>
-    /// The same guard for persistence (#1500 step 2): a view model must reach
-    /// <c>window.json</c>, <c>zoom.txt</c> and <c>recent.txt</c> only through
-    /// the injected stores.
-    /// </summary>
-    [Fact]
-    public void NoViewModel_ReadsOrWritesPersistedSettingsDirectly()
-    {
-        var pattern = new Regex(@"WindowSettings\s*\.\s*(Load|Update)\s*\(|AppPaths\s*\.", RegexOptions.Compiled);
-
-        ScanViewModels(pattern).Should().BeEmpty(
-            "window.json / zoom.txt / recent.txt go through ISettingsStore and IRecentFilesStore, "
-            + "so a test can supply an in-memory store and the view-mode leak class loses its mechanism");
-    }
-
-    private static List<string> ScanViewModels(Regex pattern)
-    {
-        var root = FindRepoRoot();
-        var viewModels = Path.Combine(root, "Excise.App", "ViewModels");
-        Directory.Exists(viewModels).Should().BeTrue("fixture: the view-model folder must exist");
-
-        var offenders = new List<string>();
-        foreach (var file in Directory.EnumerateFiles(viewModels, "*.cs", SearchOption.AllDirectories))
-        {
-            var relative = Path.GetRelativePath(root, file).Replace('\\', '/');
-            if (relative.Contains("/bin/") || relative.Contains("/obj/"))
-                continue;
-
-            var lines = File.ReadAllLines(file);
-            for (int i = 0; i < lines.Length; i++)
-            {
-                var line = lines[i];
-                // Comments and doc comments talk ABOUT these names on purpose.
-                var trimmed = line.TrimStart();
-                if (trimmed.StartsWith("//", StringComparison.Ordinal) ||
-                    trimmed.StartsWith("///", StringComparison.Ordinal) ||
-                    trimmed.StartsWith("*", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                if (pattern.IsMatch(line))
-                    offenders.Add($"{relative}:{i + 1}: {line.Trim()}");
-            }
-        }
-
-        return offenders;
-    }
-
-    // #1706 — TestRepoLayout, not a hand-rolled walk to .git/excise.sln. LOCAL
-    // checkout, deliberately: this reads THIS worktree's own source / writes its
-    // own artifacts, and the main checkout may be on a different branch.
-    private static string FindRepoRoot() =>
-        TestRepoLayout.LocalCheckoutRoot ?? throw new InvalidOperationException("Could not find repository root.");
+    // The two source scans that lived here (#1500: no Application.Current read and
+    // no direct window.json/zoom.txt/recent.txt access in a view model) moved to
+    // scripts/check-viewmodel-seams.sh, a t0 gate (#1773): they read source text
+    // and need nothing from this host.
 }
