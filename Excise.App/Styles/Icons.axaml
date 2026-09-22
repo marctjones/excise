@@ -25,4 +25,24 @@
     <StreamGeometry x:Key="IconForm">M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 7h8v2H8V7zm0 4h8v2H8v-2zm0 4h5v2H8v-2z</StreamGeometry>
     <StreamGeometry x:Key="IconSparkles">M12 2l1.4 4.6L18 8l-4.6 1.4L12 14l-1.4-4.6L6 8l4.6-1.4L12 2zm6 10 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3zM5 13l.8 2.2L8 16l-2.2.8L5 19l-.8-2.2L2 16l2.2-.8L5 13z</StreamGeometry>
     <StreamGeometry x:Key="IconPage">M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z</StreamGeometry>
+
+    <!-- #1789: the optional annotation toolbar row / floating palette need an
+         icon per annotation command; only IconHighlight and IconNote existed
+         before (the Annotate menu itself is text-only). Each follows the
+         file's existing conventions: a 24-unit coordinate space, and either a
+         filled silhouette or an outer/inner "ring" pair (same trick as
+         IconRedact's hollow rectangle) for a hollow shape. -->
+    <StreamGeometry x:Key="IconUnderline">M4 4h2v8a6 6 0 0 0 12 0V4h2v8a8 8 0 0 1 -16 0V4zM4 20h16v2H4z</StreamGeometry>
+    <StreamGeometry x:Key="IconStrikeOut">M5 5h14v2H5V5zM5 17h14v2H5v-2zM3 11h18v2H3v-2z</StreamGeometry>
+    <StreamGeometry x:Key="IconSquiggly">M3 15l3 -3 3 3 3 -3 3 3 3 -3 3 3v3l-3 -3 -3 3 -3 -3 -3 3 -3 -3 -3 3z</StreamGeometry>
+    <StreamGeometry x:Key="IconSquare">M4 4h16v16H4V4zm2 2v12h12V6H6z</StreamGeometry>
+    <StreamGeometry x:Key="IconCircle">M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0 -20zM12 4a8 8 0 1 1 0 16a8 8 0 1 1 0 -16z</StreamGeometry>
+    <StreamGeometry x:Key="IconFreeText">M4 4h16v16H4V4zm2 2v12h12V6H6zm2 3h8v2H8V9zm0 4h5v2H8v-2z</StreamGeometry>
+    <StreamGeometry x:Key="IconStamp">M9 2h6v6l3 3v3H6v-3l3 -3zM6 16h12v2H6v-2zM8 20h8v2H8v-2z</StreamGeometry>
+    <StreamGeometry x:Key="IconImageStamp">M4 4h16v16H4V4zm2 2v12h12V6H6zM8 16l3 -4 2 2 3 -4 4 6H8z</StreamGeometry>
+    <StreamGeometry x:Key="IconInk">M4 20v-3l11 -11 3 3 -11 11H4zM16 5l3 -3 2 2 -3 3z</StreamGeometry>
+    <StreamGeometry x:Key="IconAnnotationLine">M3 19l1.5 1.5L20 5.5 18.5 4z</StreamGeometry>
+    <StreamGeometry x:Key="IconArrow">M3 19l2 2L21 3l-2 -2zM15 3h6v6z</StreamGeometry>
+    <StreamGeometry x:Key="IconPolygon">M12 3l8 6 -3 9H7l-3 -9z</StreamGeometry>
+    <StreamGeometry x:Key="IconPolyLine">M3 8l1.5 -1.5 4 4 4 -4 4 4 4 -4 1.5 1.5 -5.5 5.5 -4 -4 -4 4z</StreamGeometry>
 </ResourceDictionary>

@@ -536,6 +536,22 @@
                           IsChecked="{Binding IsClipboardSidebarVisible, Mode=OneWay}"
                           Command="{Binding ToggleClipboardSidebarCommand}"
                           access:CommandAccessibility.CommandId="view.toggleClipboardHistory"/>
+                <Separator/>
+                <!-- #1789: two optional, independently-toggleable surfaces for the
+                     same annotation commands the Annotate menu already exposes —
+                     off by default, either/both/neither may be on. -->
+                <MenuItem x:Name="ViewAnnotationToolbarMenuItem"
+                          Header="Annotation _Toolbar"
+                          ToggleType="CheckBox"
+                          IsChecked="{Binding IsAnnotationToolbarVisible, Mode=OneWay}"
+                          Command="{Binding ToggleAnnotationToolbarCommand}"
+                          access:CommandAccessibility.CommandId="view.toggleAnnotationToolbar"/>
+                <MenuItem x:Name="ViewAnnotationPaletteMenuItem"
+                          Header="_Floating Annotation Palette"
+                          ToggleType="CheckBox"
+                          IsChecked="{Binding IsAnnotationPaletteVisible, Mode=OneWay}"
+                          Command="{Binding ToggleAnnotationPaletteCommand}"
+                          access:CommandAccessibility.CommandId="view.toggleAnnotationPalette"/>
             </MenuItem>
 
             <!-- WINDOW MENU (#1553): every open document; the view model builds
@@ -618,8 +634,8 @@
 
              Direct children of the panel must not bind IsVisible: the panel
              owns it. A contextual item binds PriorityToolbarPanel.IsAvailable. -->
+        <StackPanel Grid.Row="3">
         <Border x:Name="ToolbarBorder"
-                Grid.Row="3"
                 Background="{DynamicResource SecondaryBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,0,1"
@@ -1067,6 +1083,216 @@
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- #1789: the optional second annotation toolbar row — off by default,
+             toggled from View ▸ Annotation Toolbar. Every one of the 15
+             annotation commands lives here regardless of what the main toolbar
+             above already carries (Highlight and Sticky Note duplicate main-
+             toolbar buttons): this row is meant to stand alone as a complete
+             annotation strip, and a would-be user of it should not have to look
+             at two rows to find every tool. IsVisible is bound on this Border,
+             never on a PriorityToolbarPanel child (see the note on
+             ToolbarActionsPanel above) — same never-scroll, never-wrap
+             discipline as the main toolbar, just with a shorter Priority list
+             since the Annotate menu is always the fallback for anything this
+             row overflows. -->
+        <Border x:Name="AnnotationToolbarBorder"
+                IsVisible="{Binding IsAnnotationToolbarVisible}"
+                Background="{DynamicResource SecondaryBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="8,6">
+            <toolbar:PriorityToolbarPanel x:Name="AnnotationToolbarPanel"
+                                          Spacing="4"
+                                          MinHeight="32"
+                                          ClipToBounds="True">
+                <Button x:Name="AnnotationToolbarHighlightButton"
+                        toolbar:PriorityToolbarPanel.Priority="100"
+                        Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding HasTextSelection}"
+                        access:CommandAccessibility.CommandId="annotation.addHighlight"
+                        ToolTip.Tip="Add highlight from selected text"
+                        AutomationProperties.Name="Add Highlight From Selection">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconHighlight}"/>
+                </Button>
+                <Button x:Name="AnnotationToolbarUnderlineButton"
+                        toolbar:PriorityToolbarPanel.Priority="95"
+                        Command="{Binding AddUnderlineAnnotationFromSelectionCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding HasTextSelection}"
+                        access:CommandAccessibility.CommandId="annotation.addUnderline"
+                        ToolTip.Tip="Add underline from selected text"
+                        AutomationProperties.Name="Add Underline From Selection">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconUnderline}"/>
+                </Button>
+                <Button x:Name="AnnotationToolbarStrikeOutButton"
+                        toolbar:PriorityToolbarPanel.Priority="90"
+                        Command="{Binding AddStrikeOutAnnotationFromSelectionCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding HasTextSelection}"
+                        access:CommandAccessibility.CommandId="annotation.addStrikeOut"
+                        ToolTip.Tip="Add strikeout from selected text"
+                        AutomationProperties.Name="Add Strikeout From Selection">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconStrikeOut}"/>
+                </Button>
+                <Button x:Name="AnnotationToolbarSquigglyButton"
+                        toolbar:PriorityToolbarPanel.Priority="85"
+                        Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding HasTextSelection}"
+                        access:CommandAccessibility.CommandId="annotation.addSquiggly"
+                        ToolTip.Tip="Add squiggly underline from selected text"
+                        AutomationProperties.Name="Add Squiggly From Selection">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSquiggly}"/>
+                </Button>
+
+                <Border toolbar:PriorityToolbarPanel.IsSeparator="True"
+                        Width="1" Height="24" Margin="6,0"
+                        Background="{DynamicResource DividerBrush}"/>
+
+                <Button x:Name="AnnotationToolbarSquareButton"
+                        toolbar:PriorityToolbarPanel.Priority="80"
+                        Command="{Binding AddSquareAnnotationFromDragCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.addSquare"
+                        ToolTip.Tip="Add square from drag"
+                        AutomationProperties.Name="Add Square">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSquare}"/>
+                </Button>
+                <Button x:Name="AnnotationToolbarCircleButton"
+                        toolbar:PriorityToolbarPanel.Priority="75"
+                        Command="{Binding AddCircleAnnotationFromDragCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.addCircle"
+                        ToolTip.Tip="Add circle from drag"
+                        AutomationProperties.Name="Add Circle">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconCircle}"/>
+                </Button>
+                <Button x:Name="AnnotationToolbarFreeTextButton"
+                        toolbar:PriorityToolbarPanel.Priority="70"
+                        Command="{Binding AddFreeTextAnnotationFromDragCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.addFreeText"
+                        ToolTip.Tip="Add text box from drag"
+                        AutomationProperties.Name="Add Text Box">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconFreeText}"/>
+                </Button>
+                <Button x:Name="AnnotationToolbarStampButton"
+                        toolbar:PriorityToolbarPanel.Priority="65"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        ToolTip.Tip="Add stamp from drag"
+                        AutomationProperties.Name="Add Stamp">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconStamp}"/>
+                    <Button.Flyout>
+                        <Flyout>
+                            <StackPanel Spacing="2" Width="168">
+                                <Button Content="Approved" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Approved" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Experimental" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Experimental" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Not Approved" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="NotApproved" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="As Is" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="AsIs" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Expired" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Expired" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Not For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="NotForPublicRelease" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Confidential" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Confidential" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Sold" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Sold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Departmental" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Departmental" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Top Secret" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="TopSecret" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Draft" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Draft" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="For Comment" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="ForComment" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Final" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Final" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="ForPublicRelease" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Information Only" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="InformationOnly" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <Button x:Name="AnnotationToolbarImageStampButton"
+                        toolbar:PriorityToolbarPanel.Priority="60"
+                        Command="{Binding AddImageStampAnnotationFromDragCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.addImageStamp"
+                        ToolTip.Tip="Add image stamp from drag"
+                        AutomationProperties.Name="Add Image Stamp">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconImageStamp}"/>
+                </Button>
+
+                <Border toolbar:PriorityToolbarPanel.IsSeparator="True"
+                        Width="1" Height="24" Margin="6,0"
+                        Background="{DynamicResource DividerBrush}"/>
+
+                <Button x:Name="AnnotationToolbarInkButton"
+                        toolbar:PriorityToolbarPanel.Priority="55"
+                        Command="{Binding ToggleFreehandModeCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.toggleDrawMode"
+                        ToolTip.Tip="Draw (Ink)"
+                        AutomationProperties.Name="Draw (Ink)">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconInk}"/>
+                </Button>
+                <Button x:Name="AnnotationToolbarLineButton"
+                        toolbar:PriorityToolbarPanel.Priority="50"
+                        Command="{Binding ToggleLineModeCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.toggleLineMode"
+                        ToolTip.Tip="Draw Line"
+                        AutomationProperties.Name="Draw Line">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconAnnotationLine}"/>
+                </Button>
+                <Button x:Name="AnnotationToolbarArrowButton"
+                        toolbar:PriorityToolbarPanel.Priority="45"
+                        Command="{Binding ToggleArrowModeCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.toggleArrowMode"
+                        ToolTip.Tip="Draw Arrow"
+                        AutomationProperties.Name="Draw Arrow">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconArrow}"/>
+                </Button>
+                <Button x:Name="AnnotationToolbarPolygonButton"
+                        toolbar:PriorityToolbarPanel.Priority="40"
+                        Command="{Binding TogglePolygonModeCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.togglePolygonMode"
+                        ToolTip.Tip="Draw Polygon"
+                        AutomationProperties.Name="Draw Polygon">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconPolygon}"/>
+                </Button>
+                <Button x:Name="AnnotationToolbarPolyLineButton"
+                        toolbar:PriorityToolbarPanel.Priority="35"
+                        Command="{Binding TogglePolyLineModeCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.togglePolyLineMode"
+                        ToolTip.Tip="Draw PolyLine"
+                        AutomationProperties.Name="Draw PolyLine">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconPolyLine}"/>
+                </Button>
+
+                <Border toolbar:PriorityToolbarPanel.IsSeparator="True"
+                        Width="1" Height="24" Margin="6,0"
+                        Background="{DynamicResource DividerBrush}"/>
+
+                <Button x:Name="AnnotationToolbarStickyNoteButton"
+                        toolbar:PriorityToolbarPanel.Priority="30"
+                        Command="{Binding AddStickyNoteAnnotationCommand}"
+                        Classes="modern-button toolbar-button"
+                        IsEnabled="{Binding IsDocumentLoaded}"
+                        access:CommandAccessibility.CommandId="annotation.addStickyNote"
+                        ToolTip.Tip="Add sticky note"
+                        AutomationProperties.Name="Add Sticky Note">
+                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconNote}"/>
+                </Button>
+            </toolbar:PriorityToolbarPanel>
+        </Border>
+        </StackPanel>
 
         <!-- Search Bar -->
         <Border Grid.Row="4"

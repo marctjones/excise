@@ -122,6 +122,12 @@ public static class PdfCommandIds
     public const string ToggleFormFieldHighlighting = "view.toggleFormFieldHighlighting";
     public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
 
+    /// <summary>Show or hide the optional second annotation-tools toolbar row (#1789).</summary>
+    public const string ToggleAnnotationToolbar = "view.toggleAnnotationToolbar";
+
+    /// <summary>Show or hide the floating annotation tool palette window (#1789).</summary>
+    public const string ToggleAnnotationPalette = "view.toggleAnnotationPalette";
+
     public const string ToggleRedactionMode = "redaction.toggleMode";
     public const string ApplyRedaction = "redaction.apply";
     public const string ApplyAllRedactions = "redaction.applyAll";

@@ -120,6 +120,68 @@ public class CommandBindingSweepTests
             "every command's CanExecute must respond without throwing");
     }
 
+    /// <summary>
+    /// #1789 — the floating annotation palette is a SEPARATE Window, not part
+    /// of MainWindow's logical tree, so <see cref="EveryButtonAndMenuItemCommand_ResolvesToNonNullCommand"/>
+    /// above does not see it at all; <see cref="CollectCommandHosts"/> already
+    /// takes an <c>ILogical</c> root, so no extraction was needed — it is run
+    /// again here against the palette itself.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public void PaletteWindowCommand_ResolvesToNonNullCommand()
+    {
+        var vm = MainWindowViewModelTestFactory.Create();
+        var mainWindow = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        mainWindow.Show();
+        vm.ToggleAnnotationPaletteCommand.Execute().Subscribe();
+        mainWindow.UpdateLayout();
+        var palette = mainWindow.AnnotationPalette;
+
+        try
+        {
+            palette.Should().NotBeNull("toggling the palette on must create the window this test sweeps");
+            palette!.UpdateLayout();
+
+            var commandHosts = CollectCommandHosts(palette).ToList();
+            commandHosts.Should().NotBeEmpty("the palette should expose its icon buttons as command hosts");
+
+            var nullLeafCommands = new List<string>();
+            var brokenExecutions = new List<string>();
+            foreach (var (host, label) in commandHosts)
+            {
+                // Unlike the toolbar row's Stamp button, the compact palette's
+                // Stamp button carries a fixed CommandParameter directly rather
+                // than a Flyout of 15 stamp choices — every host here is a
+                // plain command leaf.
+                var cmd = (host as Button)?.Command;
+                if (cmd == null)
+                {
+                    nullLeafCommands.Add(label);
+                    continue;
+                }
+
+                try
+                {
+                    _ = cmd.CanExecute(null);
+                }
+                catch (Exception ex)
+                {
+                    brokenExecutions.Add($"{label}: CanExecute threw {ex.GetType().Name}: {ex.Message}");
+                }
+            }
+
+            nullLeafCommands.Should().BeEmpty(
+                "every icon button on the palette must have a non-null Command");
+            brokenExecutions.Should().BeEmpty(
+                "every palette command's CanExecute must respond without throwing");
+        }
+        finally
+        {
+            palette?.Close();
+            mainWindow.Close();
+        }
+    }
+
     [FixedAvaloniaFact]
     public void MacNativeMenuCommandItems_ResolveToNonNullCommands()
     {

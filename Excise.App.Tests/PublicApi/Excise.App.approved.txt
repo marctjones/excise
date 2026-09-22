@@ -162,6 +162,10 @@ namespace Excise.App.Models
     public class WindowSettings
     {
         public WindowSettings() { }
+        public bool AnnotationPaletteVisible { get; set; }
+        public double? AnnotationPaletteX { get; set; }
+        public double? AnnotationPaletteY { get; set; }
+        public bool AnnotationToolbarVisible { get; set; }
         public bool AttachmentsSidebarVisible { get; set; }
         public int CacheTrimIdleSeconds { get; set; }
         public bool CacheTrimOnMemoryPressure { get; set; }
@@ -799,6 +803,8 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesBeforeCurrentCommand { get; }
         public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; }
         public bool IsAnnotationAuditModeEnabled { get; set; }
+        public bool IsAnnotationPaletteVisible { get; set; }
+        public bool IsAnnotationToolbarVisible { get; set; }
         public bool IsAttachmentsNoticeOpen { get; set; }
         public bool IsAttachmentsSidebarVisible { get; set; }
         public bool IsClipboardSidebarVisible { get; set; }
@@ -904,6 +910,8 @@ namespace Excise.App.ViewModels
         public Avalonia.Platform.Storage.IStorageProvider? StorageProviderOverride { get; set; }
         public Excise.App.Services.ToastService ToastService { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationAuditModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationPaletteCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationToolbarCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleArrowModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAttachmentsCommand { get; }
@@ -1021,6 +1029,8 @@ namespace Excise.App.ViewModels
         public System.Threading.Tasks.Task SignDocumentAsync() { }
         public void StripAllAttachments() { }
         public void ToggleAnnotationAuditMode() { }
+        public void ToggleAnnotationPalette() { }
+        public void ToggleAnnotationToolbar() { }
         public void ToggleAnnotationsVisible() { }
         public void ToggleAttachmentsSidebar() { }
         public void ToggleClipboardSidebar() { }
@@ -1239,6 +1249,12 @@ namespace Excise.App.Views
     public class AboutWindow : Avalonia.Controls.Window
     {
         public AboutWindow() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class AnnotationPaletteWindow : Avalonia.Controls.Window
+    {
+        public AnnotationPaletteWindow() { }
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public void InitializeComponent(bool loadXaml = true) { }
     }

@@ -292,12 +292,27 @@ public partial class MainWindow : Window
         // from startup, so saving it would revert a Preferences save and every
         // document state written since.
         var viewModel = DataContext as MainWindowViewModel;
+
+        // #1789: the main window closing cascades to its OWNED palette window
+        // first (Avalonia closes owned windows ahead of the owner), so by the
+        // time this method runs, OnAnnotationPaletteClosing has already fired
+        // with WindowCloseReason.OwnerWindowClosing — which it recognizes and
+        // deliberately leaves IsAnnotationPaletteVisible untouched. Reading it
+        // here therefore still gives the pre-close truth ("was it open"), not
+        // "closed", which is what window.json needs to reopen it next launch.
+        // The palette's position is persisted by OnAnnotationPaletteClosing
+        // itself, unconditionally, so it is not repeated here.
+        var paletteWasVisible = viewModel?.IsAnnotationPaletteVisible ?? false;
+        _annotationPalette?.Close(); // no-op in the normal case: the cascade above already closed it.
+
         _settingsStore.Update(settings =>
         {
             if (viewModel != null)
             {
                 settings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
                 settings.AttachmentsSidebarVisible = viewModel.IsAttachmentsSidebarVisible;
+                settings.AnnotationToolbarVisible = viewModel.IsAnnotationToolbarVisible;
+                settings.AnnotationPaletteVisible = paletteWasVisible;
                 viewModel.WritePreferencesTo(settings);
             }
             settings.CaptureFrom(this);
@@ -305,6 +320,124 @@ public partial class MainWindow : Window
         // Cancel any pending toast auto-dismiss so nothing is left queued on
         // the dispatcher when the window/test tears down.
         _toastTimer?.Stop();
+    }
+
+    // ── #1789: the floating annotation palette — an owned window this
+    // MainWindow creates, positions, shows, hides and closes; see the class
+    // doc on AnnotationPaletteWindow for why none of that is the palette's
+    // own job. ─────────────────────────────────────────────────────────────
+
+    private AnnotationPaletteWindow? _annotationPalette;
+
+    /// <summary>The live palette window, or null while it is closed. Internal for tests.</summary>
+    internal AnnotationPaletteWindow? AnnotationPalette => _annotationPalette;
+
+    /// <summary>
+    /// Make the palette match <paramref name="visible"/> for <paramref name="viewModel"/>.
+    /// Idempotent: asking for what is already showing just re-points its
+    /// DataContext (the tab-switch case, where the window stays open across
+    /// sessions that both want it visible).
+    /// </summary>
+    private void SetAnnotationPaletteVisibility(bool visible, MainWindowViewModel viewModel)
+    {
+        if (!visible)
+        {
+            _annotationPalette?.Close();
+            return;
+        }
+
+        if (_annotationPalette != null)
+        {
+            _annotationPalette.DataContext = viewModel;
+            return;
+        }
+
+        if (!IsVisible)
+        {
+            // #1789: this runs from ApplyPersistedPreferences, which fires
+            // while binding DataContext — and DataContext is always set
+            // before Show() (both DocumentWorkspace.ShowInNewWindow and this
+            // window's own test constructions set it in the object
+            // initializer, then call Show() afterwards). An owned window
+            // cannot Show() against a not-yet-visible owner
+            // (Window.EnsureParentStateBeforeShow throws), so defer until
+            // this window is actually shown, once, then re-check: a document
+            // load or another toggle could change the answer before Opened
+            // fires.
+            EventHandler? onOpened = null;
+            onOpened = (_, _) =>
+            {
+                Opened -= onOpened;
+                if (viewModel.IsAnnotationPaletteVisible)
+                    SetAnnotationPaletteVisibility(true, viewModel);
+            };
+            Opened += onOpened;
+            return;
+        }
+
+        var window = new AnnotationPaletteWindow { DataContext = viewModel };
+        PositionAnnotationPalette(window);
+        window.Closing += OnAnnotationPaletteClosing;
+        _annotationPalette = window;
+        // Owned, not modal (Show, never ShowDialog): the document stays fully
+        // interactive underneath, and the OS keeps the palette above/with its
+        // owner without making it independent — closing/minimizing the main
+        // window does not orphan it (#1789).
+        window.Show(this);
+    }
+
+    /// <summary>
+    /// First show: park the palette near the main window's top-right corner —
+    /// the standard tool-palette spot (Acrobat's torn-off comment toolbar,
+    /// Illustrator's tool palette). Later shows restore wherever the user last
+    /// left it, with the same off-screen sanity range <see cref="WindowSettings"/>
+    /// already uses for the main window's own saved position.
+    /// </summary>
+    private void PositionAnnotationPalette(Window palette)
+    {
+        var settings = _settingsStore.Load();
+        if (settings.AnnotationPaletteX is { } x && settings.AnnotationPaletteY is { } y
+            && x >= -100 && y >= -100 && x < 10000 && y < 10000)
+        {
+            palette.Position = new PixelPoint((int)x, (int)y);
+            return;
+        }
+
+        palette.Position = new PixelPoint(
+            Position.X + (int)System.Math.Max(Width - 90, 0),
+            Position.Y + 60);
+    }
+
+    private void OnAnnotationPaletteClosing(object? sender, WindowClosingEventArgs e)
+    {
+        if (sender is not AnnotationPaletteWindow window)
+            return;
+
+        window.Closing -= OnAnnotationPaletteClosing;
+        _settingsStore.Update(settings =>
+        {
+            settings.AnnotationPaletteX = window.Position.X;
+            settings.AnnotationPaletteY = window.Position.Y;
+        });
+
+        if (ReferenceEquals(_annotationPalette, window))
+            _annotationPalette = null;
+
+        // #1789: when the MAIN window closes, Avalonia closes its OWNED
+        // palette window first — ahead of the main window's own Closing
+        // handler — with CloseReason.OwnerWindowClosing. Leave the VM flag
+        // alone in that case: PersistWindowStateOnClose reads it right after
+        // this returns, and it must still say "the user had this open" so
+        // window.json restores it at the next launch, not "closed" (which is
+        // merely a side effect of how the app is shutting down, not a user
+        // decision). Any other reason — the palette's own title-bar close, or
+        // a live View-menu toggle-off — IS a real user decision, and clears
+        // the flag so the menu's checked state does not lie.
+        if (e.CloseReason == WindowCloseReason.OwnerWindowClosing)
+            return;
+
+        if (window.DataContext is MainWindowViewModel viewModel)
+            viewModel.IsAnnotationPaletteVisible = false;
     }
 
     /// <summary>
@@ -398,6 +531,13 @@ public partial class MainWindow : Window
         {
             Subscribe(viewModel);
             OnPerformanceSettingsApplied(viewModel, viewModel.PerformanceSettings);
+            // #1789: an already-live session (a tab switch, #1551) carries its
+            // own IsAnnotationPaletteVisible, which may differ from whatever
+            // the previously-shown session had — sync the one palette window
+            // this MainWindow owns to it explicitly, the same reason
+            // ApplyPersistedPreferences does above rather than trusting a
+            // PropertyChanged event that may not fire.
+            SetAnnotationPaletteVisibility(viewModel.IsAnnotationPaletteVisible, viewModel);
         }
 
         viewModel.ViewerTileCacheResidentBytesProvider = TileCacheResidentBytes;
@@ -448,9 +588,18 @@ public partial class MainWindow : Window
             settings.RedactionProfile);   // #1586
         viewModel.ApplyPrintScalingPreference(settings.PrintScaling);
         viewModel.ApplyDocumentOpenModePreference(settings.DocumentOpenMode);
+        viewModel.ApplyAnnotationToolbarPreference(settings.AnnotationToolbarVisible);
         // Preferences → Performance: subscribe first so the restore below
         // reaches the viewer through the same path a Save does.
         Subscribe(viewModel);
+        // #1789: after Subscribe, but the palette window is opened explicitly
+        // rather than left to the PropertyChanged handler Subscribe just wired
+        // up — ApplyAnnotationPalettePreference would only raise a change (and
+        // so only fire that handler) when the persisted value differs from the
+        // property's false default, which silently skips the every-launch-it-
+        // was-on case.
+        viewModel.ApplyAnnotationPalettePreference(settings.AnnotationPaletteVisible);
+        SetAnnotationPaletteVisibility(viewModel.IsAnnotationPaletteVisible, viewModel);
         viewModel.ApplyPerformanceSettings(
             PerformanceSettings.FromWindowSettings(settings), fromPersistedStartup: true);
         viewModel.WindowPreferencesApplied = true;
@@ -537,6 +686,24 @@ public partial class MainWindow : Window
             viewer.VisibleViewportChanged += viewportChanged;
             _viewModelUnsubscribers.Add(() => viewer.VisibleViewportChanged -= viewportChanged);
         }
+
+        // #1789: the floating annotation palette is a separate owned Window,
+        // not an in-window panel, so — unlike IsAnnotationToolbarVisible,
+        // which the toolbar row's Border binds directly — its visibility has
+        // to be pushed to a real window from code-behind. Live toggles during
+        // this session (the user picks View ▸ Floating Annotation Palette)
+        // come through here; the two other call sites
+        // (ApplyPersistedPreferences for the first-time restore, BindViewModel
+        // for a tab switch onto an already-live session) call
+        // SetAnnotationPaletteVisibility directly since no PropertyChanged
+        // event fires for a value that was already correct.
+        System.ComponentModel.PropertyChangedEventHandler annotationPaletteChanged = (_, args) =>
+        {
+            if (args.PropertyName is null or nameof(viewModel.IsAnnotationPaletteVisible))
+                SetAnnotationPaletteVisibility(viewModel.IsAnnotationPaletteVisible, viewModel);
+        };
+        viewModel.PropertyChanged += annotationPaletteChanged;
+        _viewModelUnsubscribers.Add(() => viewModel.PropertyChanged -= annotationPaletteChanged);
     }
 
     private void UnbindViewModel()

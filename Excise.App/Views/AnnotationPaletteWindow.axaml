@@ -1,0 +1,192 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Excise.App.ViewModels"
+        xmlns:access="using:Excise.App.Automation"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="56" d:DesignHeight="420"
+        x:Class="Excise.App.Views.AnnotationPaletteWindow"
+        x:DataType="vm:MainWindowViewModel"
+        x:Name="PaletteWin"
+        Title="Annotation Tools"
+        Width="56" SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="False"
+        WindowStartupLocation="Manual"
+        Background="{DynamicResource SecondaryBackgroundBrush}">
+
+    <!--
+    #1789: a compact floating tool palette — icon buttons only (no labels),
+    bound to the SAME 15 annotation ICommand properties the Annotate menu and
+    the optional annotation toolbar row already use. This window carries no
+    command logic of its own; MainWindow's code-behind owns it as view
+    mechanics (create/position/show/hide/close), the same way it owns
+    BeginMoveDrag for the main window's custom title bar. Its DataContext is
+    set to the active session's MainWindowViewModel by MainWindow, and kept in
+    sync across a document-tab switch — this XAML never sets its own
+    DataContext.
+
+    Standard tool-palette pattern (Acrobat's comment toolbar torn off,
+    Illustrator's tool palette): a single narrow column of icon buttons with
+    tooltips, draggable anywhere via the normal OS window chrome, non-modal so
+    the document stays interactive underneath it.
+    -->
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Styles/Icons.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Orientation="Vertical" Spacing="2" Margin="4">
+            <Button x:Name="PaletteHighlightButton"
+                    Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding HasTextSelection}"
+                    access:CommandAccessibility.CommandId="annotation.addHighlight"
+                    ToolTip.Tip="Add highlight from selected text"
+                    AutomationProperties.Name="Add Highlight From Selection">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconHighlight}"/>
+            </Button>
+            <Button x:Name="PaletteUnderlineButton"
+                    Command="{Binding AddUnderlineAnnotationFromSelectionCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding HasTextSelection}"
+                    access:CommandAccessibility.CommandId="annotation.addUnderline"
+                    ToolTip.Tip="Add underline from selected text"
+                    AutomationProperties.Name="Add Underline From Selection">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconUnderline}"/>
+            </Button>
+            <Button x:Name="PaletteStrikeOutButton"
+                    Command="{Binding AddStrikeOutAnnotationFromSelectionCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding HasTextSelection}"
+                    access:CommandAccessibility.CommandId="annotation.addStrikeOut"
+                    ToolTip.Tip="Add strikeout from selected text"
+                    AutomationProperties.Name="Add Strikeout From Selection">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconStrikeOut}"/>
+            </Button>
+            <Button x:Name="PaletteSquigglyButton"
+                    Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding HasTextSelection}"
+                    access:CommandAccessibility.CommandId="annotation.addSquiggly"
+                    ToolTip.Tip="Add squiggly underline from selected text"
+                    AutomationProperties.Name="Add Squiggly From Selection">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSquiggly}"/>
+            </Button>
+
+            <Separator Margin="2,4"/>
+
+            <Button x:Name="PaletteSquareButton"
+                    Command="{Binding AddSquareAnnotationFromDragCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.addSquare"
+                    ToolTip.Tip="Add square from drag"
+                    AutomationProperties.Name="Add Square">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSquare}"/>
+            </Button>
+            <Button x:Name="PaletteCircleButton"
+                    Command="{Binding AddCircleAnnotationFromDragCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.addCircle"
+                    ToolTip.Tip="Add circle from drag"
+                    AutomationProperties.Name="Add Circle">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconCircle}"/>
+            </Button>
+            <Button x:Name="PaletteFreeTextButton"
+                    Command="{Binding AddFreeTextAnnotationFromDragCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.addFreeText"
+                    ToolTip.Tip="Add text box from drag"
+                    AutomationProperties.Name="Add Text Box">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconFreeText}"/>
+            </Button>
+            <Button x:Name="PaletteStampButton"
+                    Command="{Binding AddStampAnnotationFromDragCommand}"
+                    CommandParameter="Confidential"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.addStamp"
+                    ToolTip.Tip="Add &quot;Confidential&quot; stamp from drag — see the Annotate menu for other stamps"
+                    AutomationProperties.Name="Add Stamp">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconStamp}"/>
+            </Button>
+            <Button x:Name="PaletteImageStampButton"
+                    Command="{Binding AddImageStampAnnotationFromDragCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.addImageStamp"
+                    ToolTip.Tip="Add image stamp from drag"
+                    AutomationProperties.Name="Add Image Stamp">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconImageStamp}"/>
+            </Button>
+
+            <Separator Margin="2,4"/>
+
+            <Button x:Name="PaletteInkButton"
+                    Command="{Binding ToggleFreehandModeCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.toggleDrawMode"
+                    ToolTip.Tip="Draw (Ink)"
+                    AutomationProperties.Name="Draw (Ink)">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconInk}"/>
+            </Button>
+            <Button x:Name="PaletteLineButton"
+                    Command="{Binding ToggleLineModeCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.toggleLineMode"
+                    ToolTip.Tip="Draw Line"
+                    AutomationProperties.Name="Draw Line">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconAnnotationLine}"/>
+            </Button>
+            <Button x:Name="PaletteArrowButton"
+                    Command="{Binding ToggleArrowModeCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.toggleArrowMode"
+                    ToolTip.Tip="Draw Arrow"
+                    AutomationProperties.Name="Draw Arrow">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconArrow}"/>
+            </Button>
+            <Button x:Name="PalettePolygonButton"
+                    Command="{Binding TogglePolygonModeCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.togglePolygonMode"
+                    ToolTip.Tip="Draw Polygon"
+                    AutomationProperties.Name="Draw Polygon">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconPolygon}"/>
+            </Button>
+            <Button x:Name="PalettePolyLineButton"
+                    Command="{Binding TogglePolyLineModeCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.togglePolyLineMode"
+                    ToolTip.Tip="Draw PolyLine"
+                    AutomationProperties.Name="Draw PolyLine">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconPolyLine}"/>
+            </Button>
+
+            <Separator Margin="2,4"/>
+
+            <Button x:Name="PaletteStickyNoteButton"
+                    Command="{Binding AddStickyNoteAnnotationCommand}"
+                    Classes="modern-button toolbar-button"
+                    IsEnabled="{Binding IsDocumentLoaded}"
+                    access:CommandAccessibility.CommandId="annotation.addStickyNote"
+                    ToolTip.Tip="Add sticky note"
+                    AutomationProperties.Name="Add Sticky Note">
+                <PathIcon Classes="toolbar-icon" Data="{StaticResource IconNote}"/>
+            </Button>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

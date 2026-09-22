@@ -31,8 +31,9 @@ namespace Excise.App.Tests.UI;
 /// byte-level baselines brittle, as the existing visual-baseline tests already show).
 ///
 /// The window has one content region — the page surface (<c>PdfViewerControl</c>) —
-/// and five independently toggle-able panels (Outline, Thumbnails, Clipboard,
-/// Search, Attachments), each <c>IsVisible</c>-bound to a VM flag. The contract for every
+/// and six independently toggle-able panels (Outline, Thumbnails, Clipboard,
+/// Search, Attachments, and the #1789 annotation toolbar row), each
+/// <c>IsVisible</c>-bound to a VM flag. The contract for every
 /// command in <see cref="Registry"/>:
 ///
 ///   • the page surface keeps comparable ink (no command here may blank the page);
@@ -69,7 +70,7 @@ public class GuiExpectedEffectTests
     private readonly ITestOutputHelper _out;
     public GuiExpectedEffectTests(ITestOutputHelper o) { _out = o; }
 
-    private enum Panel { Outline, Thumbnails, Clipboard, Search, Attachments }
+    private enum Panel { Outline, Thumbnails, Clipboard, Search, Attachments, AnnotationToolbar }
 
     /// <summary>A command and the one panel it is expected to toggle (null = pure
     /// page-surface command that must leave every panel alone).</summary>
@@ -210,8 +211,16 @@ public class GuiExpectedEffectTests
         new("ToggleClipboardSidebarCommand", Panel.Clipboard),
         new("ToggleAttachmentsCommand", Panel.Attachments),
         new("ToggleSearchCommand", Panel.Search),
+        // #1789: the optional annotation toolbar row is an in-window region
+        // exactly like the panels above (a Border whose IsVisible is the VM
+        // flag), so it fits this registry's model directly.
+        new("ToggleAnnotationToolbarCommand", Panel.AnnotationToolbar),
 
         // NOT in this registry, with a live reason each:
+        //  - ToggleAnnotationPaletteCommand (#1789): its effect is a separate
+        //    OWNED WINDOW, not an in-window region this registry's page/panel
+        //    model can express — no Control in MainWindow's tree to track.
+        //    Covered directly in AnnotationToolbarAndPaletteTests instead.
         //  - RemovePendingRedactionCommand (Guid), SetTypewriterColorCommand
         //    (string), AddStampAnnotationFromDragCommand (string), GoToPageCommand
         //    (int), JumpToOutlineCommand (OutlineNode), LoadRecentFileCommand
@@ -262,6 +271,7 @@ public class GuiExpectedEffectTests
                 [Panel.Clipboard] = window.FindControl<Control>("ClipboardPanel")!,
                 [Panel.Search] = window.FindControl<Control>("SearchTextBox")!,
                 [Panel.Attachments] = window.FindControl<Control>("AttachmentsPanel")!,
+                [Panel.AnnotationToolbar] = window.FindControl<Control>("AnnotationToolbarBorder")!,
             };
             panels.Values.Should().OnlyContain(c => c != null, "every tracked region control must exist by name");
 
@@ -375,6 +385,7 @@ public class GuiExpectedEffectTests
                 [Panel.Clipboard] = window.FindControl<Control>("ClipboardPanel")!,
                 [Panel.Search] = window.FindControl<Control>("SearchTextBox")!,
                 [Panel.Attachments] = window.FindControl<Control>("AttachmentsPanel")!,
+                [Panel.AnnotationToolbar] = window.FindControl<Control>("AnnotationToolbarBorder")!,
             };
 
             var nameToCommand = BuildCommandMap(vm);
