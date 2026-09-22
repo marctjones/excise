@@ -48,7 +48,8 @@
 # selected for tier "full" (chain: every t0 and t1 row plus the full-only
 # ones — the corpus scans, the release-smoke rows and the GRADE benches) are
 # read through runner_manifest_plan, project-chunked rows are expanded through
-# build_chunk_plan below, and {TRXARGS:…} references become the chunk union.
+# runner_plan_expand_chunks (lib-runner.sh, shared with test-tier.sh since
+# #1774), and {TRXARGS:…} references become the chunk union.
 # The run ends with scripts/report-gates.sh, whose exit code is this script's.
 #
 # WHAT IS NOT RESUMABLE, BY DESIGN
@@ -106,9 +107,8 @@ list_suites() {
 SUITES
 }
 FRESH=0
-# Test classes per chunk. Smaller = finer resume granularity and lower peak RSS
-# per testhost, at ~2s of process-start overhead per extra chunk.
-CHUNK_CLASSES="${CHUNK_CLASSES:-12}"
+# CHUNK_CLASSES (classes per chunk) is declared by lib-runner.sh, which owns
+# the chunker; --chunk-size below overrides it.
 SKIP_CHUNKING=0
 EVERYTHING=0
 ALLOW_MISSING_CORPORA=0
@@ -168,7 +168,10 @@ while [ $# -gt 0 ]; do
         --list-suites) list_suites; exit 0 ;;
         --everything) EVERYTHING=1; shift ;;
         --allow-missing-corpora) ALLOW_MISSING_CORPORA=1; shift ;;
-        --no-chunking) SKIP_CHUNKING=1; shift ;;
+        # --skip-chunking is the spelling test-tier.sh passes through; it was
+        # never parsed here, so `test-tier.sh full --skip-chunking` died on
+        # "Unknown option" instead of skipping chunking.
+        --no-chunking|--skip-chunking) SKIP_CHUNKING=1; shift ;;
         --chunk-size) CHUNK_CLASSES="${2:-20}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) say "${R}Unknown option: $1${N}"; usage; exit 2 ;;
@@ -210,8 +213,9 @@ runner_export_release_env
 GATE_ASYMMETRY_BASE="$(runner_gate_asymmetry_base full)"
 export GATE_ASYMMETRY_BASE
 
-CHUNK_DIR="$(runner_state_dir)/chunks"
-mkdir -p "$CHUNK_DIR"
+# The chunker lives in lib-runner.sh (#1774) and derives its own directory
+# from the state dir; RUNNER_SKIP_CHUNKING is how --no-chunking reaches it.
+export RUNNER_SKIP_CHUNKING="$SKIP_CHUNKING"
 
 # Ctrl-C / SIGTERM must leave the state consistent. Markers are written
 # synchronously per step, so there is nothing to flush — just report where to
@@ -238,158 +242,15 @@ trap on_signal INT TERM
 # matched zero tests, and exited 0. A vacuous green.
 PLAN_FILE="$LOG_DIR/plan.tsv"
 
-# Fingerprint of the built test assembly. If this has not changed, the set of
-# test names cannot have changed either, so a cached chunk plan is still valid.
-# Cheaper than re-running --list-tests, and unlike a bare file-exists check it
-# cannot go stale.
-chunk_plan_fingerprint() {
-    local proj="$1"
-    local dll="$proj/bin/$CONFIG/net10.0/$proj.dll"
-    [ -f "$dll" ] || { echo "no-dll"; return 0; }
-    # size+mtime is enough and costs nothing on a large assembly.
-    stat -f '%z:%m' "$dll" 2>/dev/null || stat -c '%s:%Y' "$dll" 2>/dev/null || echo "no-stat"
-}
-
-# Enumerate test classes for a project and write a chunk plan. The enumeration
-# is cached in the state dir — it costs a process start per project and
-# survives a crash like everything else.
-#
-# ⚠️ THE CACHE IS KEYED ON THE TEST ASSEMBLY, NOT ON THE STATE DIR EXISTING.
-#
-# It used to short-circuit on `[ -s "$out" ]` alone. The state dir is keyed by
-# LABEL_CONFIG_BRANCH (see runner_state_dir), NOT by commit — so
-# full-suite_Debug_develop_-dirty is reused across every commit on the branch,
-# and a plan built once was reused forever. Worse, the early return skipped
-# verify_chunk_coverage, the one thing that would have noticed.
-#
-# Measured cost of that (#1362): the 2026-08-31 run reused a plan built
-# 2026-08-16. Three classes added in between — RawSampleImageDecoderTests,
-# ReferenceProcessResourcesTests, RenderResourceScopeTests — appeared in ZERO
-# chunk. 289 of 2,357 discovered tests never ran, and every chunk still exited
-# 0, because a class no filter names is not skipped or reported, it simply is
-# not addressed. Only the downstream test-count check noticed.
-build_chunk_plan() {
-    local proj="$1"
-    local out="$CHUNK_DIR/$proj.chunks"
-    local fp_file="$out.fingerprint"
-    local fp
-    fp="$(chunk_plan_fingerprint "$proj")"
-
-    if [ -s "$out" ] && [ -f "$fp_file" ] && [ "$(cat "$fp_file")" = "$fp" ]; then
-        # Re-verify even on a cache hit. The fingerprint should make this
-        # redundant; it is cheap, and this is the check whose absence cost 289
-        # tests. Belt and braces on the gate that failed silently.
-        if verify_chunk_coverage "$proj" "$CHUNK_DIR/$proj.tests.txt" "$out"; then
-            echo "$out"; return 0
-        fi
-        say "  ${Y}cached chunk plan for $proj failed re-verification; rebuilding${N}" >&2
-    elif [ -s "$out" ]; then
-        say "  ${Y}$proj test assembly changed since its chunk plan; rebuilding${N}" >&2
-    fi
-    rm -f "$out" "$fp_file"
-
-    local listing="$CHUNK_DIR/$proj.tests.txt"
-    if ! dotnet test "$proj/$proj.csproj" --no-build -c "$CONFIG" --list-tests \
-            > "$listing" 2>"$CHUNK_DIR/$proj.list.err"; then
-        say "  ${Y}--list-tests failed for $proj; falling back to one unchunked step${N}" >&2
-        return 1
-    fi
-
-    # Lines are indented FQNs: Namespace.Class.Method(args). Strip the method
-    # (and any parameter list) to get the class FQN, then unique them.
-    sed -n 's/^[[:space:]]\{1,\}\([A-Za-z_][A-Za-z0-9_.]*\).*$/\1/p' "$listing" \
-        | sed 's/\.[^.]*$//' \
-        | sort -u \
-        | grep -E '\.' > "$CHUNK_DIR/$proj.classes.txt" || true
-
-    if [ ! -s "$CHUNK_DIR/$proj.classes.txt" ]; then
-        return 1
-    fi
-
-    : > "$out"
-    local i=0 n=0 filter=""
-    while IFS= read -r cls; do
-        [ -n "$cls" ] || continue
-        if [ -z "$filter" ]; then
-            filter="FullyQualifiedName~$cls"
-        else
-            filter="$filter|FullyQualifiedName~$cls"
-        fi
-        n=$(( n + 1 ))
-        if [ "$n" -ge "$CHUNK_CLASSES" ]; then
-            i=$(( i + 1 ))
-            printf 'chunk%02d\t%s\n' "$i" "$filter" >> "$out"
-            filter=""; n=0
-        fi
-    done < "$CHUNK_DIR/$proj.classes.txt"
-    if [ -n "$filter" ]; then
-        i=$(( i + 1 ))
-        printf 'chunk%02d\t%s\n' "$i" "$filter" >> "$out"
-    fi
-
-    verify_chunk_coverage "$proj" "$listing" "$out" || return 1
-    printf '%s' "$fp" > "$fp_file"
-
-    echo "$out"
-}
-
-# Chunking must never reduce coverage. A dropped class would just... not run,
-# and the summary would still say PASS for every chunk — a silent cap presented
-# as a complete run. Assert that every test the runner can see is matched by at
-# least one chunk filter, and refuse the chunk plan otherwise (the caller then
-# falls back to one unchunked step, which cannot drop anything).
-verify_chunk_coverage() {
-    local proj="$1" listing="$2" chunks="$3"
-    python3 - "$listing" "$chunks" <<'PY'
-import re, sys
-listing, chunks = sys.argv[1], sys.argv[2]
-tests = sorted({m.group(1) for m in
-                (re.match(r'^\s+([A-Za-z_][A-Za-z0-9_.]*)', l) for l in open(listing, errors='replace'))
-                if m})
-terms = []
-for line in open(chunks):
-    _, filt = line.rstrip('\n').split('\t', 1)
-    terms += [t.replace('FullyQualifiedName~', '') for t in filt.split('|')]
-missing = [t for t in tests if not any(term in t for term in terms)]
-if missing:
-    print(f"CHUNK COVERAGE HOLE: {len(missing)} of {len(tests)} tests match no chunk", file=sys.stderr)
-    for m in missing[:10]:
-        print(f"  uncovered: {m}", file=sys.stderr)
-    sys.exit(1)
-# stdout is the captured return value of build_chunk_plan — anything printed
-# there would be mistaken for the chunk-plan path. Report on stderr.
-print(f"  chunk coverage verified: {len(tests)} test names, {len(terms)} classes, 0 uncovered",
-      file=sys.stderr)
-PY
-}
-
 # ---------------------------------------------------------------------------
 # Plan — derived from tests/gates.tsv
 # ---------------------------------------------------------------------------
 CORPUS_COVERAGE_ROWS=()
-row10() { printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$@"; }
 
 runner_manifest_plan full > "$PLAN_FILE.manifest" || { say "${R}tests/gates.tsv is defective; nothing ran.${N}"; exit 2; }
-: > "$PLAN_FILE.rows"
-while IFS=$'\t' read -r name kind target filter class known prereq policy ckpt ratchet; do
-    [ -n "$name" ] || continue
-    if [ "$kind" = "project-chunked" ] && [ "$SKIP_CHUNKING" != "1" ]; then
-        proj="$(basename "$target" .csproj)"
-        # Do NOT swallow stderr here: the coverage guard and the --list-tests
-        # fallback both report there, and a silent degrade to unchunked (or a
-        # silent coverage hole) is the thing this script exists to avoid.
-        chunks="$(build_chunk_plan "$proj" || true)"
-        if [ -n "$chunks" ] && [ -s "$chunks" ]; then
-            # Chunk rows inherit every column; {TRXARGS:name} consumers get the
-            # union of their trx files (runner_plan_expand_trx).
-            while IFS=$'\t' read -r cname cfilter; do
-                row10 "$name.$cname" test "$target" "$cfilter" "$class" "$known" "$prereq" "$policy" "$ckpt" "$ratchet"
-            done < "$chunks" >> "$PLAN_FILE.rows"
-            continue
-        fi
-    fi
-    row10 "$name" "$kind" "$target" "$filter" "$class" "$known" "$prereq" "$policy" "$ckpt" "$ratchet" >> "$PLAN_FILE.rows"
-done < "$PLAN_FILE.manifest"
+# project-chunked rows become <name>.chunkNN — lib-runner.sh owns the chunker
+# (#1774), because test-tier.sh runs the same expansion for t1.
+runner_plan_expand_chunks full "$PLAN_FILE.manifest" "$PLAN_FILE.rows"
 
 # "of" counts the rows AFTER chunk expansion and BEFORE --only, so
 # planned<of in the plan header means exactly one thing: a partial run.

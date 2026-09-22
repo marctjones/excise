@@ -330,11 +330,16 @@ run_step() {
     say ""
 }
 
-# run_tier <t0|t1> — derive the plan from the manifest, expand the trx
-# references, run every row in file order.
+# run_tier <t0|t1> — derive the plan from the manifest, expand the chunked
+# rows and the trx references, run every row in file order.
 run_tier() {
     local plan="$LOG_DIR/plan.tsv" n
-    runner_manifest_plan "$1" > "$plan.rows" || { echo "test-tier: tests/gates.tsv is defective; nothing ran." >&2; exit 2; }
+    runner_manifest_plan "$1" > "$plan.manifest" || { echo "test-tier: tests/gates.tsv is defective; nothing ran." >&2; exit 2; }
+    # project-chunked rows become <name>.chunkNN, through the SAME chunker
+    # run-full-suite.sh uses (#1774). t0 is exempt inside the helper — the
+    # pre-push hook must stay cheap, and nothing resumes a 3-minute run.
+    runner_plan_expand_chunks "$1" "$plan.manifest" "$plan.rows"
+    rm -f "$plan.manifest"
     n="$(grep -c . "$plan.rows")"
     runner_plan_write "$plan" "$1" "$plan.rows" "$n" "$n" "-"
     rm -f "$plan.rows"
