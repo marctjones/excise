@@ -3,6 +3,7 @@ using AwesomeAssertions;
 using Excise.Core.Authoring;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Document;
@@ -174,16 +175,18 @@ public class StructElementMcidTextMapTests
     /// </summary>
     private static IEnumerable<string> TaggedFixtureCandidates()
     {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "test-pdfs", "sample-pdfs")))
-            dir = dir.Parent;
-        if (dir == null)
-            return [];
-
+        // t0-gates review (2026-09-21): this used to be a hand-rolled walk
+        // anchored on "test-pdfs/sample-pdfs" -- one of #1527's locator
+        // shapes check-fixture-locators.sh does not detect (it enforces two
+        // specific anchor literals, and this anchor was not one of them).
+        // Routed through the one shared locator; each subdirectory is looked
+        // up independently because "smoke" typically exists only in the MAIN
+        // checkout (gitignored) while the others are tracked and present in
+        // every worktree too.
         return new[] { "sample-pdfs", "pdf20", "generated-regressions", "smoke" }
-            .Select(sub => Path.Combine(dir.FullName, "test-pdfs", sub))
-            .Where(Directory.Exists)
-            .SelectMany(d => Directory.GetFiles(d, "*.pdf", SearchOption.AllDirectories))
+            .Select(sub => TestRepoLayout.FindDirectory("test-pdfs", sub))
+            .Where(d => d != null)
+            .SelectMany(d => Directory.GetFiles(d!, "*.pdf", SearchOption.AllDirectories))
             .OrderBy(p => p, StringComparer.Ordinal);
     }
 }
