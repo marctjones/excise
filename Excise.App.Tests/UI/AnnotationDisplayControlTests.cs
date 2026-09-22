@@ -25,13 +25,19 @@ namespace Excise.App.Tests.UI;
 /// the automation id, its command is bound and executes, and executing it moves
 /// the property the viewer is bound to.</para>
 /// </summary>
-public class AnnotationDisplayControlTests
+public class AnnotationDisplayControlTests : IDisposable
 {
-    private static (MainWindow Window, MainWindowViewModel Vm) Open()
+    // #1768: every test here opened a window and never closed it -- 9 across
+    // the file (4 Controls() theory rows + 5 facts) -- which is exactly the
+    // #706 leak ShownWindowTracker exists to close, including on failure.
+    private readonly ShownWindowTracker _windows = new();
+
+    public void Dispose() => _windows.Dispose();
+
+    private (MainWindow Window, MainWindowViewModel Vm) Open()
     {
         var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        var window = _windows.Show(new MainWindow { DataContext = vm, Width = 1280, Height = 900 });
         window.UpdateLayout();
         return (window, vm);
     }
@@ -146,8 +152,10 @@ public class AnnotationDisplayControlTests
         vm.RedactAnnotationNotice.Should().BeNull(
             "null rather than an empty string, so a binding can hide the whole notice");
 
-        var path = ResolveFixture("test-pdfs/pdfium/redact_annot.pdf");
-        Assert.SkipWhen(path == null, "PDFium corpus not present");
+        const string fixtureRelativePath = "test-pdfs/pdfium/redact_annot.pdf";
+        var path = ResolveFixture(fixtureRelativePath);
+        Assert.SkipWhen(path == null,
+            Excise.TestSupport.TestRepoLayout.AbsenceReason("PDFium corpus fixture", fixtureRelativePath));
 
         // AWAIT it. Blocking with GetAwaiter().GetResult() here deadlocks: the
         // headless test occupies the UI thread while LoadDocumentAsync tries to
