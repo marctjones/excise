@@ -38,9 +38,9 @@ public class PdfSearchServiceTests : IDisposable
         var results = _searchService.Search(_testPdfPath, "Hello");
 
         // Assert
-        results.Should().NotBeEmpty();
-        results.Should().Contain(m => m.MatchedText.Contains("Hello"));
-        results.First().PageIndex.Should().Be(0);
+        results.Should().ContainSingle("\"Hello\" appears once in the fixture");
+        results[0].MatchedText.Should().Be("Hello");
+        results[0].PageIndex.Should().Be(0);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class PdfSearchServiceTests : IDisposable
         var resultsSensitive = _searchService.Search(_testPdfPath, "hello", caseSensitive: true);
 
         // Assert
-        resultsInsensitive.Should().NotBeEmpty();
+        resultsInsensitive.Should().ContainSingle(); // "Hello"
         resultsSensitive.Should().BeEmpty(); // "hello" lowercase not in document
     }
 
@@ -67,8 +67,22 @@ public class PdfSearchServiceTests : IDisposable
         var partialResults = _searchService.Search(_testPdfPath, "ox", wholeWordsOnly: true);
 
         // Assert
-        wholeWordResults.Should().NotBeEmpty();
+        wholeWordResults.Should().ContainSingle();
         partialResults.Should().BeEmpty(); // "ox" is not a complete word
+    }
+
+    /// <summary>
+    /// The flag is the only difference between these two calls, so a search that
+    /// ignores it (in either direction) cannot pass both halves.
+    /// </summary>
+    [Fact]
+    public void Search_WholeWordsFlag_TurnsASubstringHitOnAndOff()
+    {
+        var substring = _searchService.Search(_testPdfPath, "ox", wholeWordsOnly: false);
+        var wholeWord = _searchService.Search(_testPdfPath, "ox", wholeWordsOnly: true);
+
+        substring.Should().ContainSingle("\"ox\" is inside \"fox\"").Which.MatchedText.Should().Be("ox");
+        wholeWord.Should().BeEmpty("\"ox\" is not a word on its own");
     }
 
     [Fact]
@@ -85,7 +99,7 @@ public class PdfSearchServiceTests : IDisposable
         var results = _searchService.Search(repeatedPdfPath, "test", caseSensitive: false);
 
         // Assert
-        results.Should().HaveCountGreaterThanOrEqualTo(3); // "test", "Test", "Testing", "test"
+        results.Should().HaveCount(4); // "test", "Test", "Testing", "test"
     }
 
     [Fact]
@@ -101,14 +115,25 @@ public class PdfSearchServiceTests : IDisposable
     [Fact]
     public void Search_MultiplePages_FindsMatchesAcrossPages()
     {
-        // Act
+        // A real two-page document: "Page N Content" and "Secret on Page N" on each page.
+        var twoPagePath = Path.Combine(_testOutputDir, "two_pages.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(twoPagePath, pageCount: 2);
+
+        var results = _searchService.Search(twoPagePath, "Content", caseSensitive: true);
+
+        results.Select(r => r.PageIndex).Should().Equal(new[] { 0, 1 },
+            "one \"Content\" per page, reported against the page that holds it");
+        results.Should().OnlyContain(r => r.MatchedText == "Content");
+    }
+
+    [Fact]
+    public void Search_SingleCommonWord_CountsEveryOccurrenceOnThePage()
+    {
+        // "The quick brown fox jumps over the lazy dog." is the only line with "the".
         var results = _searchService.Search(_testPdfPath, "the", caseSensitive: false);
 
-        // Assert
-        results.Should().NotBeEmpty();
-        var pageIndices = results.Select(r => r.PageIndex).Distinct().ToList();
-        // All text is on page 0 when using CreateTextOnlyPdf with array
-        pageIndices.Should().Contain(0); // "The quick brown fox..." on page 1 (index 0)
+        results.Should().HaveCount(2);
+        results.Should().OnlyContain(r => r.PageIndex == 0);
     }
 
     [Fact]
@@ -141,16 +166,19 @@ public class PdfSearchServiceTests : IDisposable
     {
         // Arrange: Create PDF with same word appearing multiple times at different positions
         var duplicatePdfPath = Path.Combine(_testOutputDir, "duplicates.pdf");
+        // No trailing punctuation on the last word: whole-word matching compares
+        // tokenized words, and a word tokenizer that keeps a trailing "." attached
+        // (e.g. "CITY.") would otherwise silently drop that occurrence.
         TestPdfGenerator.CreateTextOnlyPdf(duplicatePdfPath, new[]
         {
-            "CITY is a great place. I love CITY life. CITY CITY CITY."
+            "CITY is a great place. I love CITY today. CITY CITY CITY"
         });
 
         // Act
         var results = _searchService.Search(duplicatePdfPath, "CITY", caseSensitive: true, wholeWordsOnly: true);
 
         // Assert: Should find 5 occurrences (each "CITY" is a whole word)
-        results.Should().HaveCountGreaterThanOrEqualTo(3, "Should find multiple CITY occurrences");
+        results.Should().HaveCount(5, "each of the five CITY words is a whole-word match");
 
         // Each result should have a distinct position (X or Y)
         // If bounding boxes are all the same, that's the bug from #96
@@ -160,7 +188,7 @@ public class PdfSearchServiceTests : IDisposable
 
         // At minimum, the X positions should vary for words on the same line
         var distinctXPositions = results.Select(r => r.X).Distinct().Count();
-        distinctXPositions.Should().BeGreaterThanOrEqualTo(2,
+        distinctXPositions.Should().Be(5,
             "Different occurrences of CITY should have different X positions (issue #96 fix)");
     }
 
