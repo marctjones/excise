@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using AwesomeAssertions;
 using Excise.App.Models;
+using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.Core.Text;
 using Xunit;
@@ -39,15 +40,29 @@ public class PreferencesReadingOrderTests
         vm.SelectedReadingOrderStrategy.Should().Be(ReadingOrderStrategy.ColumnAware);
     }
 
+    /// <summary>
+    /// The real round trip: the view model's own writer produces the persisted
+    /// string, and the view model's own preference setter consumes it back — not
+    /// an ad-hoc string fed to <see cref="Enum.TryParse{TEnum}(string, out TEnum)"/>,
+    /// which would pass even if the writer and the reader disagreed on the format.
+    /// </summary>
     [Theory]
-    [InlineData("ColumnAware", ReadingOrderStrategy.ColumnAware)]
-    [InlineData("Simple", ReadingOrderStrategy.Simple)]
-    [InlineData("RawStream", ReadingOrderStrategy.RawStream)]
-    public void WindowSettings_ReadingOrderStrategy_ParsesBackToEnum(string stored, ReadingOrderStrategy expected)
+    [InlineData(ReadingOrderStrategy.ColumnAware)]
+    [InlineData(ReadingOrderStrategy.Simple)]
+    [InlineData(ReadingOrderStrategy.RawStream)]
+    public void ReadingOrderStrategy_RoundTripsThroughWindowSettings(ReadingOrderStrategy strategy)
     {
-        var settings = new WindowSettings { ReadingOrderStrategy = stored };
-        Enum.TryParse<ReadingOrderStrategy>(settings.ReadingOrderStrategy, out var parsed).Should().BeTrue();
-        parsed.Should().Be(expected);
+        var vm = MainWindowViewModelTestFactory.Create();
+        vm.ApplyReadingOrderStrategyPreference(strategy);
+        var settings = new WindowSettings();
+
+        vm.WritePreferencesTo(settings);
+
+        Enum.TryParse<ReadingOrderStrategy>(settings.ReadingOrderStrategy, out var parsed)
+            .Should().BeTrue("the writer must produce a name WritePreferencesTo's own reader can parse");
+        var reloaded = MainWindowViewModelTestFactory.Create();
+        reloaded.ApplyReadingOrderStrategyPreference(parsed);
+        reloaded.ReadingOrderStrategy.Should().Be(strategy);
     }
 
     [Fact]
