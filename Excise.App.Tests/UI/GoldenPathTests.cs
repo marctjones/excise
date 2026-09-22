@@ -107,16 +107,20 @@ public class GoldenPathTests
         vm.SearchMatches.Count.Should().BeGreaterThanOrEqualTo(3,
             "should find at least one match per page (3+ total)");
 
-        // Step 3: Navigate to a match
-        var firstMatch = vm.SearchMatches.FirstOrDefault();
-        firstMatch.Should().NotBeNull("should have at least one match");
-        vm.JumpToSearchMatch(firstMatch!);
+        // Step 3: Navigate to a match on a LATER page. A find auto-navigates to
+        // the first match, so jumping to that one could not distinguish a
+        // working jump from a no-op; drain that post first, then target a page
+        // the viewer is not already on.
+        await SettleDispatcher();
+        var laterMatch = vm.SearchMatches.FirstOrDefault(m => m.PageIndex != vm.CurrentPageIndex);
+        laterMatch.Should().NotBeNull("should have a match on a page other than the current one");
+        vm.JumpToSearchMatch(laterMatch!);
         await SettleDispatcher();
 
         // Assert step 3: the viewer is on the match's OWN page. The previous
         // pair of assertions ("index >= 0" and "index < TotalPages") is true of
         // a build whose jump does nothing at all (#1769).
-        vm.CurrentPageIndex.Should().Be(firstMatch!.PageIndex,
+        vm.CurrentPageIndex.Should().Be(laterMatch!.PageIndex,
             "jumping to a search match must navigate the viewer to that match's page");
 
         // Step 4: Close document via command
