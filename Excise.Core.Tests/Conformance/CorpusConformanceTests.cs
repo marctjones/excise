@@ -119,9 +119,32 @@ public class CorpusConformanceTests
             TestRepoLayout.AbsenceReason("the PDF corpora", "test-pdfs"));
 
         var files = Directory.GetFiles(corpusRoot!, "*.pdf", SearchOption.AllDirectories);
-        Assert.SkipWhen(files.Length == 0,
-            $"no *.pdf files found under {corpusRoot} [{TestRepoLayout.SearchedMarker} {corpusRoot}]");
+        // No [excise-searched:] marker here (unlike AbsenceReason above):
+        // that marker means "these paths were searched and are absent", and
+        // check-skip-budget.sh test -e's each one -- corpusRoot itself
+        // EXISTS, it is just empty of *.pdf files, so claiming it as an
+        // absent path would fail the gate's own absence recheck.
+        Assert.SkipWhen(files.Length == 0, $"{corpusRoot} exists but contains no *.pdf files");
 
+        // t0-gates review (2026-09-21): this loop used to force a full GC
+        // both before AND after every file (~7,800 forced collections over
+        // the full corpus, measured as 250s of the 256s this test costs in
+        // t0). A forced collection is for CONFIRMING a suspected leak, not
+        // for routinely screening ~3,900 clean files -- but a NAIVE
+        // non-forcing read every file is unsound, not just noisier: garbage
+        // from files 1..N-1 (G) can sit uncollected until file N's own
+        // allocation spike happens to trigger an ambient gen2 that reclaims
+        // it, so file N's own delta reads as (its real retention L) − G. A
+        // genuine leak and the collection that hides it are CORRELATED (the
+        // big allocator is the one most likely to trigger a GC), so this is
+        // not a rare coincidence to wave away. Bound G instead of ignoring
+        // it: force one full collection every ForcedResyncEvery files, so at
+        // most that many files' garbage can ever be sitting uncollected when
+        // a delta is read. 3,900 files / 20 ≈ 195 forced collections instead
+        // of 7,800 -- a ~40x cut, not the unsound ~7,800x the naive version
+        // implied. MeasureRetention below still re-confirms with its OWN
+        // forced collection before anything is flagged as MEMORY EXCEEDED.
+        const int ForcedResyncEvery = 20;
         int total = 0, ok = 0, gracefulFailure = 0, crash = 0, hang = 0, memoryExceeded = 0, memoryUnattributed = 0;
         var crashes = new List<string>();
         var hangs = new List<string>();
@@ -131,18 +154,8 @@ public class CorpusConformanceTests
         {
             total++;
 
-            // t0-gates review (2026-09-21): this used to force a full GC here
-            // AND after every file (~7,800 forced collections over the full
-            // corpus, measured as 250s of the 256s wall this test costs in
-            // t0). A forced collection is for CONFIRMING a suspected leak,
-            // not for routinely screening ~3,900 clean files. The cheap,
-            // non-forcing reading below is noisier (it can see garbage the
-            // collector has not reclaimed yet) but only ever OVER-reports a
-            // delta, never under — nothing that would actually leak
-            // PerFileMemoryBudgetBytes can fail to cross this cheap
-            // threshold too, and MeasureRetention below still re-confirms
-            // with a real forced collection before anything is flagged.
-            long memBefore = GC.GetTotalMemory(forceFullCollection: false);
+            bool forceThisFile = total % ForcedResyncEvery == 1; // files 1, 21, 41, ...
+            long memBefore = GC.GetTotalMemory(forceFullCollection: forceThisFile);
             var task = Task.Run(() =>
             {
                 using var doc = PdfDocument.Open(f);
@@ -185,7 +198,7 @@ public class CorpusConformanceTests
                 continue; // no memory measurement for a faulted parse — nothing meaningful to attribute it to.
             }
 
-            long memAfter = GC.GetTotalMemory(forceFullCollection: false);
+            long memAfter = GC.GetTotalMemory(forceFullCollection: forceThisFile);
             long delta = memAfter - memBefore;
             if (delta > PerFileMemoryBudgetBytes)
             {

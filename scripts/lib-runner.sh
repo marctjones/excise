@@ -1072,7 +1072,17 @@ runner_step_status() {
     local kind="$1" class="$2" policy="$3" rc="$4" log="$5" cmdline="$6"
     local executed="" is_dotnet_test=0
     case "$cmdline" in *"dotnet test"*) is_dotnet_test=1 ;; esac
-    [ "$is_dotnet_test" = 1 ] && { runner_zero_tests_executed "$log"; executed="$RUNNER_TESTS_EXECUTED"; }
+    # runner_zero_tests_executed returns 1 (its normal, expected signal) on
+    # every row that executed at least one test -- i.e. on almost every
+    # passing row. It is safe today only because bash does not inherit
+    # errexit into a command substitution ($(...)) by default, which is how
+    # every caller invokes this function; `|| true` makes that safety
+    # explicit rather than accidental, so a future `shopt -s inherit_errexit`
+    # elsewhere in this file does not turn a passing row into an abort.
+    if [ "$is_dotnet_test" = 1 ]; then
+        runner_zero_tests_executed "$log" || true
+        executed="$RUNNER_TESTS_EXECUTED"
+    fi
 
     if [ "$rc" = "$RUNNER_EXIT_SKIP" ]; then
         if [ "$policy" = skip ]; then printf 'SKIPPED\t%s\n' "$executed"; else printf 'FAIL\t%s\n' "$executed"; fi
