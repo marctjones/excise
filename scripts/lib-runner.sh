@@ -1061,13 +1061,37 @@ runner_prereq_missing() {
 }
 
 # runner_step_status <kind> <class> <policy> <rc> <log> <cmdline>
-#   → PASS | FAIL | FAIL_ZERO_TESTS | FAIL_BOUND_EXCEEDED | SKIPPED | NO_RESULT
+#   → prints one TAB-separated line: STATUS<TAB>TESTS_EXECUTED
+#   STATUS is PASS | FAIL | FAIL_ZERO_TESTS | FAIL_BOUND_EXCEEDED | SKIPPED | NO_RESULT
 # Exit 77 is a gate saying "prerequisite missing"; prereqPolicy decides what
 # that means. A GRADE row's failure is NO_RESULT: it never sets a verdict.
+#
+# TESTS_EXECUTED is printed rather than left as a RUNNER_TESTS_EXECUTED side
+# effect (t0-gates review, 2026-09-21): every caller invokes this function
+# through `status="$(runner_step_status ...)"` -- a command-substitution
+# subshell -- so a variable this function SETS never reaches the caller; the
+# count was silently empty in every ledger.jsonl ever written. Printing it as
+# a second field on the one line of stdout survives the subshell the same way
+# runner_ledger_row_fields's tab-separated output already does -- match that
+# pattern rather than invent a temp-file handoff.
 runner_step_status() {
     local kind="$1" class="$2" policy="$3" rc="$4" log="$5" cmdline="$6"
+    local executed="" is_dotnet_test=0
+    case "$cmdline" in *"dotnet test"*) is_dotnet_test=1 ;; esac
+    # runner_zero_tests_executed returns 1 (its normal, expected signal) on
+    # every row that executed at least one test -- i.e. on almost every
+    # passing row. It is safe today only because bash does not inherit
+    # errexit into a command substitution ($(...)) by default, which is how
+    # every caller invokes this function; `|| true` makes that safety
+    # explicit rather than accidental, so a future `shopt -s inherit_errexit`
+    # elsewhere in this file does not turn a passing row into an abort.
+    if [ "$is_dotnet_test" = 1 ]; then
+        runner_zero_tests_executed "$log" || true
+        executed="$RUNNER_TESTS_EXECUTED"
+    fi
+
     if [ "$rc" = "$RUNNER_EXIT_SKIP" ]; then
-        [ "$policy" = skip ] && echo SKIPPED || echo FAIL
+        if [ "$policy" = skip ]; then printf 'SKIPPED\t%s\n' "$executed"; else printf 'FAIL\t%s\n' "$executed"; fi
         return
     fi
     # A row killed by its own wall-clock bound is NOT a test failure, and must
@@ -1075,15 +1099,18 @@ runner_step_status() {
     # partial, and the cause is upstream of the assertions (#1283). Distinct
     # status so report-gates can say so and point at the diagnostics.
     if [ "$rc" = "$RUNNER_EXIT_BOUND" ] && grep -q "BOUND EXCEEDED" "$log" 2>/dev/null; then
-        echo FAIL_BOUND_EXCEEDED
+        printf 'FAIL_BOUND_EXCEEDED\t%s\n' "$executed"
         return
     fi
     if [ "$rc" = "0" ]; then
-        case "$cmdline" in *"dotnet test"*) runner_zero_tests_executed "$log" && { echo FAIL_ZERO_TESTS; return; } ;; esac
-        echo PASS
+        if [ "$is_dotnet_test" = 1 ] && [ "$executed" = "0" ]; then
+            printf 'FAIL_ZERO_TESTS\t%s\n' "$executed"
+            return
+        fi
+        printf 'PASS\t%s\n' "$executed"
         return
     fi
-    [ "$class" = GRADE ] && echo NO_RESULT || echo FAIL
+    if [ "$class" = GRADE ]; then printf 'NO_RESULT\t%s\n' "$executed"; else printf 'FAIL\t%s\n' "$executed"; fi
 }
 
 # ---------------------------------------------------------------------------

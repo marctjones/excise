@@ -147,13 +147,18 @@ public class RedactCommandTests : IDisposable
 
         count.Should().Be(1);
 
-        // The security guarantee: raw content-stream bytes of the output
-        // must not contain WORLD. This is the "pdftotext can't recover
-        // it" property — structural removal, not visual overlay.
+        // NECESSARY, BUT BLIND (CLAUDE.md): reads only the content stream
+        // through excise's own parser -- excise vouching for excise.
         using var doc = PdfDocument.Open(File.ReadAllBytes(outputPath));
         var raw = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
         raw.Should().NotContain("WORLD");
         raw.Should().Contain("HELLO", "the non-redacted word must survive");
+
+        // The actual "pdftotext can't recover it" property: a carrier-agnostic
+        // scan of the SAVED, compressed bytes (#1049/t0-gates review 2026-09-21)
+        // — this comment used to claim that property while only the excise-read
+        // assertion above ran, and pdftotext was never invoked.
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "WORLD").Should().BeEmpty();
     }
 
     [Fact]
@@ -170,6 +175,10 @@ public class RedactCommandTests : IDisposable
         raw.Should().NotContain("WORLD",
             "same-path redaction relies on #918's byte-backed open path and must not regress to a held FileStream");
         raw.Should().Contain("HELLO");
+
+        // Carrier-agnostic corroboration on the saved bytes, not just excise's
+        // own reader (t0-gates review 2026-09-21).
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(path), "WORLD").Should().BeEmpty();
     }
 
     [Fact]
@@ -281,6 +290,7 @@ public class RedactCommandTests : IDisposable
         using var doc = PdfDocument.Open(File.ReadAllBytes(outputPath));
         var raw = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
         raw.Should().NotContain("WORLD");
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "WORLD").Should().BeEmpty();
     }
 
     [Fact]
@@ -328,6 +338,7 @@ public class RedactCommandTests : IDisposable
         var raw = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
         raw.Should().NotContain("SECRET");
         raw.Should().Contain("DATA");
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "SECRET").Should().BeEmpty();
     }
 
     [Fact]
@@ -601,6 +612,7 @@ public class RedactCommandTests : IDisposable
         var raw = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
         raw.Should().NotContain("TARGET",
             "all three occurrences must be removed from the content stream");
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "TARGET").Should().BeEmpty();
     }
 
     // ---------------------------------------------------------------------

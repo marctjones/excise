@@ -208,8 +208,8 @@ overall=0
 # finish_gate <name> <rc> <duration> <log> <cmdline> — status mapping, marker,
 # ledger row (with the manifest's class/knownIssue), console line.
 finish_gate() {
-    local name="$1" rc="$2" dur="$3" log="$4" cmdline="$5" status reason="" trx=""
-    status="$(runner_step_status "$ROW_KIND" "$ROW_CLASS" "$ROW_POLICY" "$rc" "$log" "$cmdline")"
+    local name="$1" rc="$2" dur="$3" log="$4" cmdline="$5" status reason="" trx="" tests_executed=""
+    IFS=$'\t' read -r status tests_executed <<< "$(runner_step_status "$ROW_KIND" "$ROW_CLASS" "$ROW_POLICY" "$rc" "$log" "$cmdline")"
     case "$status" in
         PASS)
             [ "$RESUME" = "1" ] && runner_step_mark "$name" "$rc" "$dur" "$(runner_target_hash "$ROW_KIND" "$ROW_TARGET" "$ROW_FILTER")" "$log"
@@ -233,7 +233,7 @@ finish_gate() {
     esac
     [ -f "$LOG_DIR/$name.trx" ] && trx="$LOG_DIR/$name.trx"
     runner_ledger_record "$name" "$status" "$rc" "$dur" "kind=$ROW_KIND" "target=$ROW_TARGET" "filter=$ROW_FILTER" \
-        "log=$log" "trx=$trx" "testsExecuted=${RUNNER_TESTS_EXECUTED:-}" \
+        "log=$log" "trx=$trx" "testsExecuted=${tests_executed:-}" \
         "class=$ROW_CLASS" "knownIssue=$ROW_KNOWN" "prereq=$ROW_PREREQ" "reason=$reason"
     say ""
 }

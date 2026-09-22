@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Parsing;
+using Excise.TestSupport;
 using Xunit;
 namespace Excise.Core.Tests.Conformance;
 
@@ -31,7 +32,12 @@ namespace Excise.Core.Tests.Conformance;
 /// </summary>
 public class CorpusConformanceTests
 {
-    private const string CorpusRoot = "../../../../test-pdfs";
+    // t0-gates review (2026-09-21): this used to be a hard-coded relative
+    // walk ("../../../../test-pdfs"), one of the hand-rolled locator shapes
+    // #1527/check-fixture-locators.sh exists to catch but this exact literal
+    // slipped past (it names no anchor the gate looks for). Routed through
+    // the one shared locator instead, same as every other corpus lookup.
+    private static string? CorpusRoot => TestRepoLayout.FindDirectory("test-pdfs");
 
     // A single file's parse+touch must not hang the gate. Every real file in
     // this corpus parses in well under a second; 10s is generous headroom,
@@ -104,19 +110,41 @@ public class CorpusConformanceTests
     [Fact]
     public async Task Corpus_ParsesWithoutCrash_AllPdfs()
     {
-        if (!Directory.Exists(CorpusRoot))
-        {
-            _out.WriteLine("Corpus not present — skipping");
-            return;
-        }
+        // t0-gates review (2026-09-21): a silent `return` here reported
+        // PASSED on an absent corpus -- #1172's skip-reason gate had nothing
+        // to read and #894's test-count gate counted the no-op as "run". A
+        // declared skip with a checkable absence claim replaces it.
+        var corpusRoot = CorpusRoot;
+        Assert.SkipWhen(corpusRoot == null,
+            TestRepoLayout.AbsenceReason("the PDF corpora", "test-pdfs"));
 
-        var files = Directory.GetFiles(CorpusRoot, "*.pdf", SearchOption.AllDirectories);
-        if (files.Length == 0)
-        {
-            _out.WriteLine("No PDFs found in corpus — skipping");
-            return;
-        }
+        var files = Directory.GetFiles(corpusRoot!, "*.pdf", SearchOption.AllDirectories);
+        // No [excise-searched:] marker here (unlike AbsenceReason above):
+        // that marker means "these paths were searched and are absent", and
+        // check-skip-budget.sh test -e's each one -- corpusRoot itself
+        // EXISTS, it is just empty of *.pdf files, so claiming it as an
+        // absent path would fail the gate's own absence recheck.
+        Assert.SkipWhen(files.Length == 0, $"{corpusRoot} exists but contains no *.pdf files");
 
+        // t0-gates review (2026-09-21): this loop used to force a full GC
+        // both before AND after every file (~7,800 forced collections over
+        // the full corpus, measured as 250s of the 256s this test costs in
+        // t0). A forced collection is for CONFIRMING a suspected leak, not
+        // for routinely screening ~3,900 clean files -- but a NAIVE
+        // non-forcing read every file is unsound, not just noisier: garbage
+        // from files 1..N-1 (G) can sit uncollected until file N's own
+        // allocation spike happens to trigger an ambient gen2 that reclaims
+        // it, so file N's own delta reads as (its real retention L) − G. A
+        // genuine leak and the collection that hides it are CORRELATED (the
+        // big allocator is the one most likely to trigger a GC), so this is
+        // not a rare coincidence to wave away. Bound G instead of ignoring
+        // it: force one full collection every ForcedResyncEvery files, so at
+        // most that many files' garbage can ever be sitting uncollected when
+        // a delta is read. 3,900 files / 20 ≈ 195 forced collections instead
+        // of 7,800 -- a ~40x cut, not the unsound ~7,800x the naive version
+        // implied. MeasureRetention below still re-confirms with its OWN
+        // forced collection before anything is flagged as MEMORY EXCEEDED.
+        const int ForcedResyncEvery = 20;
         int total = 0, ok = 0, gracefulFailure = 0, crash = 0, hang = 0, memoryExceeded = 0, memoryUnattributed = 0;
         var crashes = new List<string>();
         var hangs = new List<string>();
@@ -126,7 +154,8 @@ public class CorpusConformanceTests
         {
             total++;
 
-            long memBefore = GC.GetTotalMemory(forceFullCollection: true);
+            bool forceThisFile = total % ForcedResyncEvery == 1; // files 1, 21, 41, ...
+            long memBefore = GC.GetTotalMemory(forceFullCollection: forceThisFile);
             var task = Task.Run(() =>
             {
                 using var doc = PdfDocument.Open(f);
@@ -169,7 +198,7 @@ public class CorpusConformanceTests
                 continue; // no memory measurement for a faulted parse — nothing meaningful to attribute it to.
             }
 
-            long memAfter = GC.GetTotalMemory(forceFullCollection: true);
+            long memAfter = GC.GetTotalMemory(forceFullCollection: forceThisFile);
             long delta = memAfter - memBefore;
             if (delta > PerFileMemoryBudgetBytes)
             {
@@ -222,14 +251,13 @@ public class CorpusConformanceTests
     [Fact]
     public void Corpus_SmokeFiles_ParsesCleanly()
     {
-        var smokeDir = Path.Combine(CorpusRoot, "smoke");
-        if (!Directory.Exists(smokeDir))
-        {
-            _out.WriteLine("smoke/ not present — skipping");
-            return;
-        }
+        // t0-gates review (2026-09-21): same silent-`return`-reports-PASSED
+        // shape as Corpus_ParsesWithoutCrash_AllPdfs, replaced the same way.
+        var smokeDir = TestRepoLayout.FindDirectory("test-pdfs", "smoke");
+        Assert.SkipWhen(smokeDir == null,
+            TestRepoLayout.AbsenceReason("the smoke corpus", "test-pdfs/smoke"));
 
-        var files = Directory.GetFiles(smokeDir, "*.pdf", SearchOption.AllDirectories);
+        var files = Directory.GetFiles(smokeDir!, "*.pdf", SearchOption.AllDirectories);
         var failures = new List<string>();
 
         foreach (var f in files)

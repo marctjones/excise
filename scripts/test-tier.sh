@@ -303,7 +303,8 @@ run_step() {
     fi
     dur=$(( $(date +%s) - start ))
 
-    status="$(runner_step_status "$kind" "$class" "$policy" "$rc" "$log" "$cmdline")"
+    local tests_executed=""
+    IFS=$'\t' read -r status tests_executed <<< "$(runner_step_status "$kind" "$class" "$policy" "$rc" "$log" "$cmdline")"
     case "$status" in
         PASS)
             [ "$RESUME" = "1" ] && runner_step_mark "$name" "$rc" "$dur" "$hash" "$log"
@@ -326,7 +327,7 @@ run_step() {
     local trx=""
     [ -f "$LOG_DIR/$name.trx" ] && trx="$LOG_DIR/$name.trx"
     runner_ledger_record "$name" "$status" "$rc" "$dur" "kind=$kind" "target=$target" "filter=$filter" "log=$log" \
-        "trx=$trx" "testsExecuted=${RUNNER_TESTS_EXECUTED:-}" "class=$class" "knownIssue=$known" "prereq=$prereq" "reason=$reason"
+        "trx=$trx" "testsExecuted=${tests_executed:-}" "class=$class" "knownIssue=$known" "prereq=$prereq" "reason=$reason"
     say ""
 }
 

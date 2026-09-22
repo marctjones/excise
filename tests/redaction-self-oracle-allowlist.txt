@@ -4,8 +4,12 @@
 # where a leak could pass unnoticed if the extractor and the remover share a bug.
 Excise.App.Tests/Unit/RevealHiddenTextTests.cs  # GUI surface over HiddenTextDetector; same reasoning as the detector's own tests. The property is corroborated by XRayBadRedactionTests, not here.
 Excise.Cli.Tests/AuditInspectionHandlerTests.cs  # handler-wiring test: injects a FakeDifferentialScanner and asserts the audit handler CALLS it; asserts nothing about redaction content. The real scanner is an oracle-backed component tested in Excise.Core.Tests (SavedPdfLeakScanner) — this file exercises plumbing, not removal (#1358)
+Excise.Core.Tests/Content/RedactionBoundsTests.cs  # no independent oracle yet
+Excise.Core.Tests/Operations/RedactionIntegrationTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/HiddenTextDetectorTests.cs  # DETECTOR unit tests. Excise.Core.Tests cannot reference Excise.Rendering (dependency runs the other way), so the independent check for this property lives in Excise.Rendering.Tests/Differential/XRayBadRedactionTests.cs -- x-ray vs excise audit on a deliberately fake redaction, with a positive control (#1122). These tests stay unit-level on purpose.
+Excise.Core.Tests/Text/Segmentation/ImageRedactionTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/LowContrastHiddenTextTests.cs  # DETECTOR unit tests for #1131 low-contrast hiding. Excise.Core.Tests cannot reference Excise.Rendering (x-ray oracle), so the independent check for the audit property lives in Excise.Rendering.Tests/Differential/XRayBadRedactionTests.cs. Unit-level by design, same as HiddenTextDetectorTests.
 Excise.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/RotatedPageRedactionTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/Type3RedactionCountTests.cs  # no independent oracle yet
+Excise.Rendering.Tests/Visual/CombinedRedactionRenderTests.cs  # no independent oracle yet
