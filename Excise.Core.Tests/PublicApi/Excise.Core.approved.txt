@@ -221,6 +221,7 @@ namespace Excise.Core.Automation
         public const string TogglePolyLineMode = "annotation.togglePolyLineMode";
         public const string TogglePolygonMode = "annotation.togglePolygonMode";
         public const string ToggleRedactionMode = "redaction.toggleMode";
+        public const string ToggleStickyNoteTool = "annotation.toggleStickyNoteTool";
         public const string ToggleThumbnails = "view.toggleThumbnails";
         public const string TypewriterDiscardPendingEdits = "typewriter.discardPendingEdits";
         public const string TypewriterGoToNextPendingEdit = "typewriter.goToNextPendingEdit";
@@ -602,13 +603,14 @@ namespace Excise.Core.Document
         public static Excise.Core.Document.PdfAnnotation AddSquigglyAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0) { }
         public static Excise.Core.Document.PdfAnnotation AddStampAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string stampName, string? contents = null, string? author = null) { }
         public static Excise.Core.Document.PdfAnnotation AddStrikeOutAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0) { }
-        public static Excise.Core.Document.PdfAnnotation AddTextAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents, string? author = null, bool open = false, string iconName = "Note") { }
+        public static Excise.Core.Document.PdfAnnotation AddTextAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents, string? author = null, bool open = false, string iconName = "Note", bool withPopup = false) { }
         public static Excise.Core.Document.PdfAnnotation AddUnderlineAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0) { }
         public static bool RemoveAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfAnnotation annotation) { }
         public static void SetAnnotationColor(this Excise.Core.Document.PdfAnnotation annotation, double red, double green, double blue) { }
         public static void SetAnnotationContents(this Excise.Core.Document.PdfAnnotation annotation, string? contents) { }
         public static void SetAnnotationOpacity(this Excise.Core.Document.PdfAnnotation annotation, double opacity) { }
         public static void SetReplyTo(this Excise.Core.Document.PdfAnnotation reply, Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfAnnotation parent, string replyType = "R") { }
+        public static Excise.Core.Document.PdfAnnotation UpdateTextAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfAnnotation existing, string contents, bool? open = default) { }
     }
     [System.Flags]
     public enum PdfAnnotationFlags

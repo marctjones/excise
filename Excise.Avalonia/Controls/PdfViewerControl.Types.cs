@@ -106,6 +106,45 @@ public class LinkHoveredEventArgs : EventArgs
 }
 
 /// <summary>
+/// Payload for <c>StickyNoteClicked</c> (#1788): the user clicked an EXISTING
+/// /Text annotation's icon, ambient in any interaction mode — like a link
+/// click. Carries the page and the note's own /Rect, not the live
+/// <c>PdfAnnotation</c>, for the same reason <see cref="FormFieldRectDrawnEventArgs"/>
+/// does not: the host re-reads its own document model rather than being
+/// handed a reference into the control's.
+/// </summary>
+public class StickyNoteClickedEventArgs : EventArgs
+{
+    public int PageNumber { get; }
+    public PdfRectangle Rect { get; }
+    public StickyNoteClickedEventArgs(int pageNumber, PdfRectangle rect)
+    {
+        PageNumber = pageNumber;
+        Rect = rect;
+    }
+}
+
+/// <summary>
+/// Payload for <c>StickyNotePlacementRequested</c> (#1788): the sticky-note
+/// tool is active (<see cref="InteractionMode.StickyNote"/>) and the user
+/// clicked an empty page point. <see cref="PdfX"/>/<see cref="PdfY"/> are
+/// content-space PDF points (bottom-left origin) — already converted through
+/// <c>PdfCoordinateMapper</c>, the one boundary crossing this control makes.
+/// </summary>
+public class StickyNotePlacementRequestedEventArgs : EventArgs
+{
+    public int PageNumber { get; }
+    public double PdfX { get; }
+    public double PdfY { get; }
+    public StickyNotePlacementRequestedEventArgs(int pageNumber, double pdfX, double pdfY)
+    {
+        PageNumber = pageNumber;
+        PdfX = pdfX;
+        PdfY = pdfY;
+    }
+}
+
+/// <summary>
 /// Event arguments for the user finishing a drag-rect in FormAuthoring
 /// mode. The rect is in PDF points, bottom-left origin.
 /// </summary>
@@ -334,4 +373,13 @@ public enum InteractionMode
     /// differs, so those rows add a gesture kind here rather than a mode.
     /// </summary>
     PathAnnotation,
+
+    /// <summary>
+    /// Click a page point to place a sticky note there (#1788). Unlike the
+    /// other editing modes this is a CLICK, not a drag — the host listens for
+    /// <see cref="PdfViewerControl.StickyNotePlacementRequested"/>. An
+    /// existing note's icon is clickable in every mode via
+    /// <see cref="PdfViewerControl.StickyNoteClicked"/>, ambient like a link.
+    /// </summary>
+    StickyNote,
 }

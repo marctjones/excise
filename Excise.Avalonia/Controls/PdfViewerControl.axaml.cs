@@ -379,6 +379,22 @@ public partial class PdfViewerControl : UserControl
     public event EventHandler<AnnotationHoveredEventArgs>? AnnotationHovered;
 
     /// <summary>
+    /// Fired when the user clicks an EXISTING /Text annotation's icon (#1788).
+    /// Ambient — fires in every <see cref="InteractionMode"/>, exactly like a
+    /// link click, so a note can be reopened for editing without first
+    /// switching away from whatever tool is active.
+    /// </summary>
+    public event EventHandler<StickyNoteClickedEventArgs>? StickyNoteClicked;
+
+    /// <summary>
+    /// Fired when <see cref="InteractionMode.StickyNote"/> is active and the
+    /// user clicks a page point that is NOT an existing note's icon (#1788).
+    /// A single click, not a drag — the host places the note's icon exactly
+    /// there and opens its popup immediately.
+    /// </summary>
+    public event EventHandler<StickyNotePlacementRequestedEventArgs>? StickyNotePlacementRequested;
+
+    /// <summary>
     /// Fired when the user edits an AcroForm field via the FormFieldsLayer
     /// inputs. The control has already mutated the underlying PdfField; the
     /// host typically reacts by re-rendering the page so any baked-in

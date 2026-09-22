@@ -34,6 +34,7 @@ public partial class MainWindowViewModel
                 if (IsRedactionMode) IsRedactionMode = false;
                 if (IsTextSelectionMode) IsTextSelectionMode = false;
                 if (IsFormAuthoringMode) IsFormAuthoringMode = false;
+                if (IsStickyNoteToolActive) IsStickyNoteToolActive = false;
             }
             else
             {

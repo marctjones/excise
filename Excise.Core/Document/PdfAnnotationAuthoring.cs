@@ -28,6 +28,18 @@ public static class PdfAnnotationAuthoring
     /// <summary>
     /// Add a sticky-note Text annotation to a page.
     /// </summary>
+    /// <param name="withPopup">
+    /// Also author a linked <c>/Popup</c> annotation (§12.5.6.14) — the actual
+    /// pop-up comment WINDOW a note's icon opens in every interactive viewer,
+    /// as opposed to the icon itself. Defaults to false so every existing
+    /// caller (including <c>Excise.Core/Redaction/Recovery/RestoredCopyBuilder</c>,
+    /// which must not gain a second unexpected <c>/Annots</c> entry) is
+    /// byte-for-byte unaffected; the interactive sticky-note workflow in
+    /// <c>Excise.App</c> is the one caller that opts in. Without it, a note
+    /// authored here is UI-only in every OTHER reader — Acrobat, Preview and
+    /// the rest all render a /Text annotation's icon fine, but its "comment"
+    /// is only readable as a real pop-up when /Popup exists (#TODO issue).
+    /// </param>
     public static PdfAnnotation AddTextAnnotation(
         this PdfDocument document,
         int pageNumber,
@@ -35,7 +47,8 @@ public static class PdfAnnotationAuthoring
         string contents,
         string? author = null,
         bool open = false,
-        string iconName = "Note")
+        string iconName = "Note",
+        bool withPopup = false)
     {
         ArgumentNullException.ThrowIfNull(document);
         ValidateRect(rect);
@@ -45,14 +58,67 @@ public static class PdfAnnotationAuthoring
         if (string.IsNullOrWhiteSpace(iconName))
             throw new ArgumentException("Icon name must not be empty.", nameof(iconName));
 
-        var annot = NewAnnotationDict("Text", rect);
+        var normalized = rect.Normalize();
+        var annot = NewAnnotationDict("Text", normalized);
         annot.SetString("Contents", contents);
         if (!string.IsNullOrWhiteSpace(author))
             annot.SetString("T", author);
         annot.SetBool("Open", open);
         annot.SetName("Name", iconName);
 
-        return AttachAnnotation(document, pageNumber, annot);
+        return withPopup
+            ? AttachTextAnnotationWithPopup(document, pageNumber, annot, normalized, open)
+            : AttachAnnotation(document, pageNumber, annot);
+    }
+
+    /// <summary>
+    /// Update an already-authored sticky note's <c>/Contents</c> and, when
+    /// given, the <c>/Open</c> state of both the <c>/Text</c> annotation and
+    /// its linked <c>/Popup</c> (Tables 172 and 183 each carry their own
+    /// <c>/Open</c>). This is the edit half of <see cref="AddTextAnnotation"/>
+    /// — until now every "Add" in this file was write-once, and a reviewer
+    /// could not correct a note's text without deleting and re-adding it.
+    /// </summary>
+    /// <param name="document">The document that owns <paramref name="existing"/>.</param>
+    /// <param name="pageNumber">1-based page the annotation lives on.</param>
+    /// <param name="existing">
+    /// The annotation to update. Must belong to <paramref name="document"/>'s
+    /// own object graph — this mutates its <see cref="PdfAnnotation.RawDictionary"/>
+    /// directly, so an instance parsed from a DIFFERENT <c>PdfDocument</c>
+    /// (e.g. a separately-loaded viewer mirror) will not persist here.
+    /// </param>
+    /// <param name="contents">The new /Contents. Must not be empty — same rule as <see cref="AddTextAnnotation"/>.</param>
+    /// <param name="open">New /Open state for both the note and its popup, or null to leave it unchanged.</param>
+    public static PdfAnnotation UpdateTextAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        PdfAnnotation existing,
+        string contents,
+        bool? open = null)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(existing);
+        if (existing.Subtype != PdfAnnotationSubtype.Text)
+            throw new ArgumentException("Only a /Text annotation can be updated this way.", nameof(existing));
+        if (string.IsNullOrWhiteSpace(contents))
+            throw new ArgumentException("Annotation contents must not be empty.", nameof(contents));
+
+        var raw = existing.RawDictionary;
+        raw.SetString("Contents", contents);
+        raw.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+        if (open.HasValue)
+        {
+            raw.SetBool("Open", open.Value);
+            if (raw.GetOptional("Popup") is { } popupRef &&
+                document.Resolve(popupRef) is PdfDictionary popup)
+            {
+                popup.SetBool("Open", open.Value);
+            }
+        }
+
+        var page = document.GetPage(pageNumber);
+        return page.GetAnnotations().FirstOrDefault(a => ReferenceEquals(a.RawDictionary, raw))
+            ?? existing;
     }
 
     /// <summary>
@@ -1466,15 +1532,29 @@ public static class PdfAnnotationAuthoring
         if (annotsObj == null || document.Resolve(annotsObj) is not PdfArray annots)
             return false;
 
-        for (int i = 0; i < annots.Count; i++)
+        // A /Text annotation's linked /Popup (§12.5.6.14, AddTextAnnotation's
+        // withPopup:true) is a SEPARATE /Annots entry. Removing only the note
+        // would leave an orphaned Popup with a dangling /Parent — collect both
+        // dictionaries up front so undoing a placed sticky note removes it
+        // whole, not half of it.
+        var targets = new List<PdfDictionary> { annotation.RawDictionary };
+        if (annotation.RawDictionary.GetOptional("Popup") is { } popupRef &&
+            document.Resolve(popupRef) is PdfDictionary popup)
         {
-            if (document.Resolve(annots[i]) is PdfDictionary d && ReferenceEquals(d, annotation.RawDictionary))
+            targets.Add(popup);
+        }
+
+        var removedAny = false;
+        for (int i = annots.Count - 1; i >= 0; i--)
+        {
+            if (document.Resolve(annots[i]) is PdfDictionary d &&
+                targets.Any(t => ReferenceEquals(t, d)))
             {
                 annots.RemoveAt(i);
-                return true;
+                removedAny = true;
             }
         }
-        return false;
+        return removedAny;
     }
 
     // ── Reply threads (#626, ISO 32000-2 §12.5.6.2 — /IRT and /RT) ───────────
@@ -1701,6 +1781,47 @@ public static class PdfAnnotationAuthoring
 
         return page.GetAnnotations().LastOrDefault(a => ReferenceEquals(a.RawDictionary, annot))
             ?? page.GetAnnotations().Last();
+    }
+
+    /// <summary>
+    /// Same as <see cref="AttachAnnotation"/>, plus a linked <c>/Popup</c>
+    /// (§12.5.6.14) as a SEPARATE <c>/Annots</c> entry: <c>/Parent</c> on the
+    /// popup points back at the note, <c>/Popup</c> on the note points at the
+    /// popup, and both carry <c>/Open</c> so an interactive viewer can show
+    /// the comment window without synthesising one from just the icon.
+    /// </summary>
+    private static PdfAnnotation AttachTextAnnotationWithPopup(
+        PdfDocument document, int pageNumber, PdfDictionary textAnnot, PdfRectangle textRect, bool open)
+    {
+        var page = document.GetPage(pageNumber);
+        var pageRef = FindPageRef(document, pageNumber);
+        if (pageRef != null)
+            textAnnot["P"] = pageRef;
+
+        var textRef = document.AddIndirectObject(textAnnot);
+
+        // Popup position is UI convenience only — nothing in the spec ties it
+        // to the note's rect, and no reference renderer draws it (§12.5.6.14,
+        // and AnnotationAppearancePolicy.SelectSynthesis has no Popup case).
+        // Offset to the right of the icon purely so a producer that DOES
+        // render it (rare) does not stack it exactly on top of the note.
+        var popupRect = new PdfRectangle(
+            textRect.Right, textRect.Top - 100, textRect.Right + 200, textRect.Top);
+        var popup = NewAnnotationDict("Popup", popupRect);
+        popup.SetBool("Open", open);
+        popup["Parent"] = textRef;
+        if (pageRef != null)
+            popup["P"] = pageRef;
+
+        var popupRef = document.AddIndirectObject(popup);
+        textAnnot["Popup"] = popupRef;
+
+        var annots = GetOrCreateAnnotsArray(document, page.Dictionary);
+        annots.Add(textRef);
+        annots.Add(popupRef);
+
+        return page.GetAnnotations().LastOrDefault(a => ReferenceEquals(a.RawDictionary, textAnnot))
+            ?? page.GetAnnotations().First(a => ReferenceEquals(a.RawDictionary, textAnnot));
     }
 
     private static PdfArray GetOrCreateAnnotsArray(PdfDocument document, PdfDictionary pageDict)

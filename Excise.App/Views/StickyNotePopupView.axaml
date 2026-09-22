@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Excise.App.ViewModels"
+             x:Class="Excise.App.Views.StickyNotePopupView"
+             x:DataType="vm:StickyNotePopupViewModel"
+             Focusable="False">
+
+    <!--
+        The interactive yellow-note popup (#1788). Hosted by MainWindow as an
+        overlay above PdfViewerControl, positioned in code-behind (its own
+        Canvas.Left/Top) from PdfViewerControl.GetViewerPositionForPageRect —
+        the one coordinate-conversion boundary this feature crosses, per
+        CLAUDE.md's "convert once at the boundary" rule. This view itself does
+        no coordinate math.
+
+        "Click away to collapse": MainWindow's light-dismiss handler commits
+        via MainWindowViewModel.CommitOpenStickyNotePopup() whenever a press
+        lands outside this control while a popup is open. The Done button
+        below calls this view model's OWN CommitCommand — same effect, for a
+        keyboard/screen-reader user who never clicks away. There is no Cancel
+        affordance by design default — every close commits, same as
+        Acrobat/Preview's note popups.
+    -->
+    <Border Background="#FFF3B0"
+            BorderBrush="#D8B84A"
+            BorderThickness="1"
+            CornerRadius="3"
+            Padding="8"
+            Width="220"
+            MinHeight="110"
+            BoxShadow="0 2 8 0 #40000000">
+        <DockPanel LastChildFill="True">
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                <TextBlock Grid.Column="0"
+                           Text="Sticky Note"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="#6B5900"
+                           VerticalAlignment="Center"/>
+                <Button Grid.Column="1"
+                        Content="Done"
+                        FontSize="11"
+                        Padding="6,2"
+                        Command="{Binding CommitCommand}"
+                        AutomationProperties.Name="Commit sticky note"
+                        AutomationProperties.HelpText="Save this note's text and collapse the popup — the same effect as clicking away."/>
+            </Grid>
+            <TextBox x:Name="NoteTextBox"
+                     Text="{Binding Text, Mode=TwoWay}"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     MinHeight="80"
+                     AutomationProperties.Name="Sticky note text"
+                     AutomationProperties.HelpText="Type the note's text. Clicking away, or the Done button, commits it."/>
+        </DockPanel>
+    </Border>
+</UserControl>

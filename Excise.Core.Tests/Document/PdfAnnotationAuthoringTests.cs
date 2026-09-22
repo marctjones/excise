@@ -1105,4 +1105,157 @@ public class PdfAnnotationAuthoringTests
         };
         badReplyType.Should().Throw<ArgumentException>();
     }
+
+    // ── Interactive sticky-note popup (#1788: click-to-place + click-to-reopen) ──
+
+    [Fact]
+    public void AddTextAnnotation_WithPopup_LinksAPopupAnnotationBothWays()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+
+        var note = doc.AddTextAnnotation(
+            1, new PdfRectangle(72, 700, 89, 717), "Needs review",
+            open: true, withPopup: true);
+
+        // The popup is a SEPARATE /Annots entry, not folded into the note.
+        var annots = doc.GetPage(1).GetAnnotations();
+        annots.Should().HaveCount(2,
+            "a /Text note plus its linked /Popup are two distinct annotation dictionaries (§12.5.6.14)");
+
+        var popup = annots.Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Popup).Subject;
+        popup.IsOpen.Should().BeTrue("the popup's own /Open must match what the caller asked for");
+        note.IsOpen.Should().BeTrue();
+
+        var popupRef = note.RawDictionary.GetOptional("Popup");
+        popupRef.Should().NotBeNull("/Text must point at its /Popup so a viewer can find the comment window");
+        (doc.Resolve(popupRef!) as Excise.Core.Primitives.PdfDictionary)
+            .Should().BeSameAs(popup.RawDictionary);
+
+        var parentRef = popup.RawDictionary.GetOptional("Parent");
+        parentRef.Should().NotBeNull("/Popup must point back at its /Text via /Parent");
+        (doc.Resolve(parentRef!) as Excise.Core.Primitives.PdfDictionary)
+            .Should().BeSameAs(note.RawDictionary);
+    }
+
+    [Fact]
+    public void AddTextAnnotation_WithoutPopup_StaysASingleAnnotation()
+    {
+        // The default MUST NOT change: RestoredCopyBuilder and every other
+        // existing caller of AddTextAnnotation relies on exactly one /Annots
+        // entry per note.
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+
+        doc.AddTextAnnotation(1, new PdfRectangle(72, 700, 108, 736), "No popup wanted");
+
+        doc.GetPage(1).GetAnnotations().Should().ContainSingle();
+    }
+
+    [Fact]
+    public void UpdateTextAnnotation_ChangesContentsAndOpen_OnBothTextAndPopup()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        var note = doc.AddTextAnnotation(
+            1, new PdfRectangle(72, 700, 89, 717), "first draft",
+            open: false, withPopup: true);
+
+        var updated = doc.UpdateTextAnnotation(1, note, "second draft", open: true);
+
+        updated.Contents.Should().Be("second draft");
+        updated.IsOpen.Should().BeTrue();
+
+        var popup = doc.GetPage(1).GetAnnotations()
+            .Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Popup).Subject;
+        popup.IsOpen.Should().BeTrue("updating /Open on the note must propagate to its linked popup too");
+    }
+
+    [Fact]
+    public void UpdateTextAnnotation_WithNullOpen_LeavesOpenStateUnchanged()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        var note = doc.AddTextAnnotation(
+            1, new PdfRectangle(72, 700, 89, 717), "first draft",
+            open: true, withPopup: true);
+
+        var updated = doc.UpdateTextAnnotation(1, note, "second draft");
+
+        updated.IsOpen.Should().BeTrue("open: null must not disturb the existing /Open state");
+        updated.Contents.Should().Be("second draft");
+    }
+
+    [Fact]
+    public void UpdateTextAnnotation_RejectsEmptyContentsAndNonTextSubtype()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        var note = doc.AddTextAnnotation(1, new PdfRectangle(0, 0, 17, 17), "x", withPopup: true);
+        var highlight = doc.AddHighlightAnnotation(1, new PdfRectangle(20, 20, 60, 40), "hl");
+
+        var blank = () => doc.UpdateTextAnnotation(1, note, "   ");
+        blank.Should().Throw<ArgumentException>();
+
+        var wrongSubtype = () => doc.UpdateTextAnnotation(1, highlight, "new text");
+        wrongSubtype.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void StickyNote_PlaceThenEdit_SurvivesSaveAndReload()
+    {
+        // The round trip the interactive popup depends on: place (withPopup,
+        // Open initially true while the popup is showing), edit the text once
+        // more, then persist. A reader that only looked at the FILE — no
+        // knowledge of how excise got there — must see the final text and
+        // /Open state on both halves of the note.
+        byte[] saved;
+        using (var doc = PdfDocument.CreateNew())
+        {
+            doc.Pages.AddBlank();
+            var note = doc.AddTextAnnotation(
+                1, new PdfRectangle(200, 500, 217, 517), "Review note",
+                open: true, withPopup: true);
+
+            doc.UpdateTextAnnotation(1, note, "Please check the totals on page 3", open: true);
+            saved = doc.SaveToBytes();
+        }
+
+        using var reopened = PdfDocument.Open(saved);
+        var annotations = reopened.GetPage(1).GetAnnotations();
+
+        annotations.Should().HaveCount(2);
+        var note2 = annotations.Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Text).Subject;
+        var popup2 = annotations.Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Popup).Subject;
+
+        note2.Contents.Should().Be("Please check the totals on page 3");
+        note2.IsOpen.Should().BeTrue("a note left open must persist as open (#1788)");
+        popup2.IsOpen.Should().BeTrue();
+
+        var parentRef = popup2.RawDictionary.GetOptional("Parent");
+        (reopened.Resolve(parentRef!) as Excise.Core.Primitives.PdfDictionary)
+            .Should().BeSameAs(note2.RawDictionary,
+                "/Parent must still resolve to the SAME reloaded /Text dictionary after a round trip");
+    }
+
+    [Fact]
+    public void RemoveAnnotation_WithLinkedPopup_RemovesBothEntries()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        var keep = doc.AddTextAnnotation(1, new PdfRectangle(0, 0, 17, 17), "keep");
+        var remove = doc.AddTextAnnotation(
+            1, new PdfRectangle(30, 30, 47, 47), "remove", withPopup: true);
+
+        doc.GetPage(1).GetAnnotations().Should().HaveCount(3);
+
+        var removed = doc.RemoveAnnotation(1, remove);
+
+        removed.Should().BeTrue();
+        var remaining = doc.GetPage(1).GetAnnotations();
+        remaining.Should().ContainSingle(
+            "removing a note with a linked popup must remove BOTH /Annots entries, " +
+            "or the popup is orphaned with a dangling /Parent");
+        remaining[0].Contents.Should().Be("keep");
+    }
 }

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
 using System;
+using System.Linq;
 
 namespace Excise.App.Services;
 
@@ -82,12 +83,67 @@ public sealed class AnnotationWorkflowService
     internal PdfAnnotation ReplayRect(AnnotationRectRequest request) =>
         AddRect(request).Annotation;
 
+    /// <summary>
+    /// Update an already-placed sticky note's text and/or its popup's open
+    /// state (#1788 — the click-to-place / click-to-reopen interactive
+    /// popup). Unlike <see cref="AddRect"/>, there is no separate viewer
+    /// mirror write here: the caller resyncs the viewer document from the
+    /// save document afterward (<c>RefreshAfterDocumentMutationAsync</c>,
+    /// the same path <c>Undo</c> already uses), which sidesteps needing a
+    /// stable identity for the SAME annotation across two independently
+    /// mutated <c>PdfDocument</c> instances.
+    /// </summary>
+    /// <param name="pageNumber">1-based page the note lives on.</param>
+    /// <param name="rect">
+    /// The note's own /Rect, exactly as read off the annotation the caller
+    /// hit-tested (from the VIEWER document). Rect values are bit-identical
+    /// between the save and viewer documents for any given note — either
+    /// because both were parsed from the same file bytes, or because
+    /// <see cref="AddRect"/> passed the SAME <see cref="PdfRectangle"/> to
+    /// both when the note was created this session — so matching on it
+    /// finds the corresponding annotation in the SAVE document without
+    /// needing to thread an identifier through the dual-write.
+    /// </param>
+    /// <param name="contents">New /Contents, or null to leave the existing text unchanged.</param>
+    /// <param name="open">New /Open for the note and its popup, or null to leave it unchanged.</param>
+    internal PdfAnnotation UpdateTextNote(
+        int pageNumber, PdfRectangle rect, string? contents, bool? open)
+    {
+        var saveDocument = GetLoadedDocument();
+        var saveAnnotation = FindTextAnnotationAt(saveDocument, pageNumber, rect)
+            ?? throw new InvalidOperationException(
+                $"No sticky note found at the given rect on page {pageNumber}.");
+
+        var effectiveContents = contents ?? saveAnnotation.Contents ?? string.Empty;
+        var updated = saveDocument.UpdateTextAnnotation(pageNumber, saveAnnotation, effectiveContents, open);
+
+        _logger.LogInformation("Updated sticky note on page {PageNumber}", pageNumber);
+        return updated;
+    }
+
+    /// <summary>
+    /// Rect-match tolerance for <see cref="UpdateTextNote"/>. Values placed by
+    /// this session are bit-identical, and values round-tripped through a
+    /// save/reload are still exact doubles — a tiny epsilon only guards
+    /// against a future producer emitting a rounded /Rect.
+    /// </summary>
+    private const double RectMatchTolerance = 0.01;
+
+    private static PdfAnnotation? FindTextAnnotationAt(PdfDocument document, int pageNumber, PdfRectangle rect) =>
+        document.GetPage(pageNumber).GetAnnotations().FirstOrDefault(a =>
+            a.Subtype == PdfAnnotationSubtype.Text &&
+            Math.Abs(a.Rect.Left - rect.Left) < RectMatchTolerance &&
+            Math.Abs(a.Rect.Bottom - rect.Bottom) < RectMatchTolerance &&
+            Math.Abs(a.Rect.Right - rect.Right) < RectMatchTolerance &&
+            Math.Abs(a.Rect.Top - rect.Top) < RectMatchTolerance);
+
     private static PdfAnnotation AddRectToDocument(
         PdfDocument document,
         AnnotationRectRequest request) => request.Kind switch
         {
             AnnotationRectKind.TextNote => document.AddTextAnnotation(
-                request.PageNumber, request.Rect, request.Value ?? string.Empty),
+                request.PageNumber, request.Rect, request.Value ?? string.Empty,
+                open: request.Open, withPopup: true),
             AnnotationRectKind.Highlight => document.AddHighlightAnnotation(
                 request.PageNumber, request.Rect, request.Value ?? string.Empty),
             AnnotationRectKind.Underline => document.AddUnderlineAnnotation(
@@ -251,7 +307,8 @@ internal sealed record AnnotationRectRequest(
     PdfRectangle Rect,
     string? Value = null,
     string? Contents = null,
-    double FontSize = 12);
+    double FontSize = 12,
+    bool Open = false);
 
 internal sealed record AnnotationRectResult(
     AnnotationRectRequest Request,
