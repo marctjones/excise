@@ -2,46 +2,67 @@ using Xunit;
 using AwesomeAssertions;
 using Excise.App.Models;
 using Excise.App.ViewModels;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
-using System.Threading;
 
 namespace Excise.App.Tests.Unit;
 
 /// <summary>
 /// Tests for B1 search UX polish:
-/// - Incremental search with 200ms (actually 150ms in current impl) debounce
-/// - Regex toggle wired through search service
+/// - Incremental search debounce (150 ms in the current implementation)
 /// - Match counter display ("3 of 47")
 /// </summary>
 public class SearchDebounceTests
 {
+    /// <summary>
+    /// The class is named for debounce, so it must contain one. The view model
+    /// logs "Searching for '{Query}'" at the moment a request survives the
+    /// debounce window and is about to run, which is the observable edge: a
+    /// keystroke that is superseded inside the window must never reach it.
+    /// </summary>
     [Fact]
-    public void SearchUseRegexPropertyExists()
+    public async Task TypingFasterThanTheDebounceWindow_RunsOnlyTheLastQuery()
     {
-        var vm = MainWindowViewModelTestFactory.Create();
+        var log = new CapturingLogger();
+        var vm = MainWindowViewModelTestFactory.Create(logger: log);
 
-        // Should not throw
-        vm.SearchUseRegex = false;
-        vm.SearchUseRegex.Should().BeFalse();
+        // Each pause is far below the 150 ms debounce, so 'a' and 'ab' are
+        // superseded before their delay elapses. Without a debounce 'a' would
+        // start immediately and be logged well inside the first pause.
+        vm.SearchText = "a";
+        await Task.Delay(30);
+        vm.SearchText = "ab";
+        await Task.Delay(30);
+        vm.SearchText = "abc";
 
-        vm.SearchUseRegex = true;
-        vm.SearchUseRegex.Should().BeTrue();
+        await WaitUntilAsync(() => log.SearchedFor.Contains("abc"));
+        // Give a wrongly-surviving earlier request time to show up after the
+        // last one; a superseded request can only ever log BEFORE it.
+        await Task.Delay(100);
+
+        log.SearchedFor.Should().Equal(new[] { "abc" },
+            "'a' and 'ab' were typed inside the debounce window and must be cancelled, not run");
     }
 
     [Fact]
-    public void SearchUseRegexToggleTriggersDebouncedSearch()
+    public async Task ChangingASearchOption_IsDebouncedLikeTyping()
     {
-        var vm = MainWindowViewModelTestFactory.Create();
-        vm.SearchText = "test";
+        var log = new CapturingLogger();
+        var vm = MainWindowViewModelTestFactory.Create(logger: log);
+        vm.SearchText = "word";
+        await WaitUntilAsync(() => log.SearchedFor.Count == 1);
 
-        // Toggle regex should trigger debounced search
-        vm.SearchUseRegex = !vm.SearchUseRegex;
+        vm.SearchWholeWords = true;
+        await Task.Delay(30);
+        vm.SearchCaseSensitive = true;
 
-        // ScheduleSearchDebounced is called internally
-        // We verify that SearchMatches gets populated after debounce
-        // This is more fully tested in integration tests
+        await WaitUntilAsync(() => log.SearchedFor.Count >= 2);
+        await Task.Delay(100);
 
-        vm.SearchUseRegex.Should().BeTrue();
+        log.SearchedFor.Should().HaveCount(2,
+            "two option toggles inside one debounce window collapse into one re-search");
     }
 
     [Fact]
@@ -83,59 +104,40 @@ public class SearchDebounceTests
         vm.SearchResultText.Should().Be("3 of 3");
     }
 
-    [Fact]
-    public void SearchCaseSensitivePropertyWorks()
+    private static async Task WaitUntilAsync(Func<bool> condition)
     {
-        var vm = MainWindowViewModelTestFactory.Create();
-
-        vm.SearchCaseSensitive = false;
-        vm.SearchCaseSensitive.Should().BeFalse();
-
-        vm.SearchCaseSensitive = true;
-        vm.SearchCaseSensitive.Should().BeTrue();
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while (!condition())
+        {
+            if (DateTime.UtcNow > deadline)
+                throw new TimeoutException("the debounced search never started");
+            await Task.Delay(10);
+        }
     }
 
-    [Fact]
-    public void SearchWholeWordsPropertyWorks()
+    /// <summary>Records the query of every "Searching for '…'" line.</summary>
+    private sealed class CapturingLogger : ILogger<MainWindowViewModel>
     {
-        var vm = MainWindowViewModelTestFactory.Create();
+        private readonly ConcurrentQueue<string> _queries = new();
 
-        vm.SearchWholeWords = false;
-        vm.SearchWholeWords.Should().BeFalse();
+        public System.Collections.Generic.IReadOnlyCollection<string> SearchedFor => _queries.ToArray();
 
-        vm.SearchWholeWords = true;
-        vm.SearchWholeWords.Should().BeTrue();
-    }
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 
-    [Fact]
-    public void FindNextNavigatesToNextMatch()
-    {
-        var vm = MainWindowViewModelTestFactory.Create();
+        public bool IsEnabled(LogLevel logLevel) => true;
 
-        vm.SearchMatches.Add(new SearchMatch { PageIndex = 0 });
-        vm.SearchMatches.Add(new SearchMatch { PageIndex = 1 });
-        vm.SearchMatches.Add(new SearchMatch { PageIndex = 2 });
-
-        vm.CurrentSearchMatchIndex = 0;
-
-        // Note: FindNext requires a loaded PDF document to actually render the page,
-        // so in this unit test we're just testing the CurrentSearchMatchIndex wrapping logic
-        // The actual page navigation is tested in integration tests
-
-        vm.CurrentSearchMatchIndex.Should().Be(0);
-    }
-
-    [Fact]
-    public void FindPreviousNavigatesToPreviousMatch()
-    {
-        var vm = MainWindowViewModelTestFactory.Create();
-
-        vm.SearchMatches.Add(new SearchMatch { PageIndex = 0 });
-        vm.SearchMatches.Add(new SearchMatch { PageIndex = 1 });
-        vm.SearchMatches.Add(new SearchMatch { PageIndex = 2 });
-
-        vm.CurrentSearchMatchIndex = 2;
-
-        vm.CurrentSearchMatchIndex.Should().Be(2);
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            const string prefix = "Searching for '";
+            var message = formatter(state, exception);
+            if (!message.StartsWith(prefix, StringComparison.Ordinal)) return;
+            var end = message.IndexOf("' (", StringComparison.Ordinal);
+            _queries.Enqueue(message.Substring(prefix.Length, end - prefix.Length));
+        }
     }
 }
