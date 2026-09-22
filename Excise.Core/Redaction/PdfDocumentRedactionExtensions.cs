@@ -540,6 +540,26 @@ public static class PdfDocumentRedactionExtensions
         // every page, so a page this call also redacted is not named.
         carrierResults.AddRange(SharedImageCarrierResults(document, imageCounts.TouchedImages));
 
+        // #1599: a NAMED marked-content property list (/Span /P1 BDC) this
+        // redaction could not scrub because a span that SURVIVES it still
+        // references the same dictionary — scrubbing it would have corrupted
+        // that surviving span's /ActualText, the over-removal #1182 deferred
+        // this case over. Reported rather than silently left behind: the
+        // report must not claim clean over a carrier the engine refused to
+        // touch (rule 6).
+        if (imageCounts.UnscrubbedSharedMarkedContentCarriers is { Count: > 0 } sharedNames)
+        {
+            foreach (var name in sharedNames)
+            {
+                carrierResults.Add(new CarrierResult(
+                    $"marked-content /Properties /{name}",
+                    false,
+                    "a shared named property list (#1599): another span not covered by this " +
+                    "redaction still references it, so its /ActualText/Alt/E was left in place " +
+                    "to avoid corrupting that span"));
+            }
+        }
+
         // #1572: a kept attachment the term-based carrier scrub removed after
         // all (its name or description held the term) is reported as removed.
         var attachmentResults = keptAttachments != null

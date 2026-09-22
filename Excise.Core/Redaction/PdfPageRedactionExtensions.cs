@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Excise.Core.Content;
 using Excise.Core.Document;
 
@@ -16,14 +17,24 @@ namespace Excise.Core.Text.Segmentation;
 /// <param name="TouchedImages">Every image stream the pass region-edited or
 /// dropped (#1493), so <c>RedactText</c> can report the pages that still draw
 /// the unredacted original. Null when there were none.</param>
+/// <param name="UnscrubbedSharedMarkedContentCarriers">
+/// #1599: every NAMED marked-content property list (<c>/Span /P1 BDC</c>) this
+/// pass could not scrub because a span that SURVIVES this redaction still
+/// references it — the over-removal hazard the shared-dictionary check exists
+/// to avoid. Null when there were none. Reported rather than silently left
+/// behind (CLAUDE.md rule 6: a carrier the engine refuses to touch is
+/// reported, never silently skipped).
+/// </param>
 internal readonly record struct ImageRedactionCounts(
     int RegionEdited,
     int RemovedWhole,
-    IReadOnlyList<Excise.Core.Primitives.PdfStream>? TouchedImages = null)
+    IReadOnlyList<Excise.Core.Primitives.PdfStream>? TouchedImages = null,
+    IReadOnlyList<string>? UnscrubbedSharedMarkedContentCarriers = null)
 {
     public static ImageRedactionCounts operator +(ImageRedactionCounts a, ImageRedactionCounts b)
         => new(a.RegionEdited + b.RegionEdited, a.RemovedWhole + b.RemovedWhole,
-            Concat(a.TouchedImages, b.TouchedImages));
+            Concat(a.TouchedImages, b.TouchedImages),
+            ConcatNames(a.UnscrubbedSharedMarkedContentCarriers, b.UnscrubbedSharedMarkedContentCarriers));
 
     private static IReadOnlyList<Excise.Core.Primitives.PdfStream>? Concat(
         IReadOnlyList<Excise.Core.Primitives.PdfStream>? a,
@@ -35,6 +46,15 @@ internal readonly record struct ImageRedactionCounts(
         all.AddRange(a);
         all.AddRange(b);
         return all;
+    }
+
+    private static IReadOnlyList<string>? ConcatNames(IReadOnlyList<string>? a, IReadOnlyList<string>? b)
+    {
+        if (a is not { Count: > 0 }) return b;
+        if (b is not { Count: > 0 }) return a;
+        var all = new HashSet<string>(a, System.StringComparer.Ordinal);
+        all.UnionWith(b);
+        return all.ToList();
     }
 }
 
@@ -280,7 +300,7 @@ public static class PdfPageRedactionExtensions
         // the glyphs it ENCLOSES (/ActualText substitutes text that differs from
         // the painted glyphs, so content-matching alone misses it). The dicts are
         // mutated in place and flow through the glyph pass into the written stream.
-        MarkedContentCarrierScrubber.Scrub(content.Operators, page, area);
+        MarkedContentCarrierScrubber.Scrub(content.Operators, page, area, out var unscrubbedSharedCarriers);
 
         IReadOnlyList<ContentOperator> working = content.Operators;
 
@@ -301,7 +321,7 @@ public static class PdfPageRedactionExtensions
         ImageRedactor.PruneUnusedImageXObjects(page, working);
 
         page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
-        return new ImageRedactionCounts(imgRegionEdited, imgRemoved, touchedImages);
+        return new ImageRedactionCounts(imgRegionEdited, imgRemoved, touchedImages, unscrubbedSharedCarriers);
     }
 
     /// <summary>
@@ -380,6 +400,23 @@ public static class PdfPageRedactionExtensions
                     $"{refused} alternate-text element(s) have no content link, so they could "
                     + "not be checked against the redacted image(s) — review them by hand, or "
                     + "use the maximum profile to drop them"));
+        }
+
+        // #1599: same reporting as RedactText — a shared NAMED marked-content
+        // property list this area redaction could not scrub, because a span
+        // outside the redacted area still references it, is surfaced rather
+        // than silently left behind.
+        if (imageCounts.UnscrubbedSharedMarkedContentCarriers is { Count: > 0 } sharedNames)
+        {
+            foreach (var name in sharedNames)
+            {
+                carriers.Add(new CarrierResult(
+                    $"marked-content /Properties /{name}",
+                    false,
+                    "a shared named property list (#1599): another span outside this redaction " +
+                    "area still references it, so its /ActualText/Alt/E was left in place to " +
+                    "avoid corrupting that span"));
+            }
         }
 
         return new()
@@ -467,8 +504,12 @@ public static class PdfPageRedactionExtensions
 
         // Pass 0.5: inline marked-content carriers (#1182/#1185), per area, BEFORE
         // the glyph pass — see the single-area path for why enclosure not content.
+        var unscrubbedSharedCarriers = new List<string>();
         foreach (var area in list)
-            MarkedContentCarrierScrubber.Scrub(content.Operators, page, area);
+        {
+            MarkedContentCarrierScrubber.Scrub(content.Operators, page, area, out var skipped);
+            unscrubbedSharedCarriers.AddRange(skipped);
+        }
 
         IReadOnlyList<ContentOperator> working = content.Operators;
         var letters = page.Letters;
@@ -488,6 +529,8 @@ public static class PdfPageRedactionExtensions
                 working, page, imageArea, strategy, out var removed, out var regionEdited, touchedImages);
             imageCounts += new ImageRedactionCounts(regionEdited, removed, touchedImages);
         }
+        imageCounts += new ImageRedactionCounts(0, 0, null,
+            unscrubbedSharedCarriers.Count > 0 ? unscrubbedSharedCarriers.Distinct().ToList() : null);
 
         ImageRedactor.PruneUnusedImageXObjects(page, working);
         page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
