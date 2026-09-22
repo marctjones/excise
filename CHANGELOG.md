@@ -7,6 +7,30 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **`WidthPolicy.FixedMarker` (`redact --fixed-marker`)** (#1755). Closes the
+  width gap like `--close-width` (destroying the content-stream residue
+  #1715 measured recoverable at 91% recall@5 under the default, not just the
+  rendered box) AND draws a covering box of one CONTENT-INDEPENDENT SIZE, so
+  the redaction still leaves a visible mark (#1725: `--close-width` alone
+  draws no box at all). **Opt-in, not the default**: measured with `mutool
+  -F stext` (real glyph positions, not excise's own) to visually overlap the
+  text the gap-closing shift reflows into place, in the common case rather
+  than only when a line has little slack — the shift reused from
+  `--close-width` moves the following text to the removed run's own left
+  edge, and the marker is drawn from there out to a fixed width regardless
+  of what that edge actually left available. Making this safe to default to
+  needs the shift itself widened to make room for the marker; tracked as the
+  remaining half of #1755.
+- **A term that wraps across an ordinary line break (no hyphen) is now
+  flagged, not silently reported as removed** (#1750). `excise redact
+  ... "Betty Mary"` on a page reading "…signed by Betty" / "Mary on behalf
+  of…" used to print `Redacted 0 occurrence(s)` and exit 0 while the name
+  stayed fully readable — a silent false success, worse than the hyphen-wrap
+  case #1372 already reported. Generalizes that detector
+  (`FindHyphenWrappedCandidates` → `FindWordWrapCandidates`) to the far more
+  common plain-word-wrap shape; the CLI now prints `NOT REMOVED
+  (line-wrapped)` and exits 3 when a wrapped occurrence survives (scoped to
+  this specific case only — general exit-code semantics are unchanged).
 - **Printing on Linux, through CUPS** (#1710). `DocumentPrinterFactory`
   returned `UnsupportedDocumentPrinter` on Linux, so File → Print… could not
   print at all there; the README and `CLAUDE.md` both said Linux printing was
@@ -94,6 +118,36 @@ semantic versioning.
   - `README.md` documents `excise unredact` for the first time.
 
 ### Fixed
+- **A pushbutton's custom caption text survived a term redaction** (#1760).
+  `excise redact ... toggled` reported success while a page kept rendering
+  "This Button can be toggled" — a widget's `/AP/N` appearance stream commonly
+  draws a caption as real glyphs even though the field has no `/V` value
+  (`/V` on a Button is an on/off state name, never text). Two blind spots,
+  same stale assumption ("a Button has no readable text"): `TextExtractor`
+  never emitted letters for a Button field's caption, so the text was never
+  a candidate match; `InteractiveRedactionScrubber` also skipped every Button
+  field outright, so even a match would never have reached the appearance
+  rewrite that removes it. Both now route Button fields through the same
+  appearance-text machinery #669 already built for Signature fields.
+- **A shared NAMED marked-content property list (`/Span /P1 BDC`) the scrubber
+  correctly declined to touch — because another surviving span still
+  references it — was silently left off the report** (#1599 follow-up; the
+  scrub itself already reached the named form). The redaction now reports it
+  as an explicitly refused carrier, so `IsCleanSuccess` reflects that the
+  term's `/ActualText` is still reachable there, instead of a report that
+  looks clean over a leak the engine chose not to risk over-removing.
+- **A redaction leak assertion routed through a local variable was invisible
+  to `check-redaction-oracles.sh`'s method-level gate** (#1786). The gate only
+  matched a self-oracle extraction CHAINED onto its own assertion
+  (`.Text.Should(...)`); a method that read the extraction into a variable and
+  asserted a derived value several lines later went undetected — the same
+  failure shape as #636/#608, one level down in the tooling meant to catch
+  it. Along the way, found and fixed the reason the widened check needed
+  `-v`→`ENVIRON`: `awk -v x="$shellvar"` silently drops a backslash before any
+  character it does not recognise as an escape, which is why the new
+  `GetPage(...)` pattern matched nothing at first and (unnoticed until now)
+  is why the pre-existing `\.Text\.Should` pattern only worked by the
+  accident of an unescaped `.` still matching a literal dot.
 - **A CLI test running in a git worktree spawned the MAIN checkout's `excise`**
   (`UnredactOcrChannelTests`, `UnredactCarrierChannelTests`), so it exercised
   whatever branch happened to be checked out there and passed on code the

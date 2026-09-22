@@ -37,10 +37,18 @@ namespace Excise.Core.Text.Segmentation;
 /// covered too. Mutates the inline property dictionaries in place; they are not
 /// shared objects (an inline <c>BDC</c> dict belongs to the one operator).</para>
 ///
-/// <para><b>Not covered:</b> the NAMED property-list form
-/// (<c>/Span /P1 BDC</c> resolving through <c>/Resources /Properties</c>). That
-/// dictionary can be shared across spans, so scrubbing it positionally could
-/// over-remove; left as a follow-up on #1182.</para>
+/// <para><b>The NAMED property-list form</b> (<c>/Span /P1 BDC</c> resolving
+/// through <c>/Resources /Properties</c>, #1599) IS covered, with the sharing
+/// hazard the inline form does not have handled explicitly: the dictionary
+/// can be referenced by several spans, so it is scrubbed only when EVERY
+/// referencing <c>BDC</c> in the content encloses redacted glyphs
+/// (<see cref="EveryReferenceIsAffected"/>). When some but not all references
+/// are affected, the value is left in place — over-removal into a surviving
+/// span's accessibility text would be worse than the leak — and that refusal
+/// is reported as a carrier the caller can act on (see
+/// <c>PdfDocumentRedactionExtensions.RedactTextCore</c>'s
+/// <c>UnscrubbedSharedMarkedContentCarriers</c> handling), never silently
+/// dropped.</para>
 /// </summary>
 internal static class MarkedContentCarrierScrubber
 {

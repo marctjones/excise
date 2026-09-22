@@ -41,7 +41,7 @@ ALLOW="tests/redaction-self-oracle-allowlist.txt"
 METHOD_ALLOW="tests/redaction-self-oracle-method-allowlist.txt"
 UPDATE="${1:-}"
 
-INDEPENDENT='Mutool|Qpdf|Ghostscript|Pdftocairo|Pdftoppm|PdfBox|PdfiumNative|SavedPdfLeakScanner|InkFraction|ReferenceRedactor|VeraPdf'
+INDEPENDENT='Mutool|Qpdf|Ghostscript|Pdftocairo|Pdftoppm|Pdftotext|PdfBox|PdfiumNative|SavedPdfLeakScanner|InkFraction|ReferenceRedactor|VeraPdf'
 # GetContentStream(Bytes) added by the t0-gates review (2026-09-21): a method
 # asserting NotContain over doc.GetPage(N).GetContentStreamBytes() is exactly
 # the "excise reads its own removal" shape the other patterns already cover --
