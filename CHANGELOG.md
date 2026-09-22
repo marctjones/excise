@@ -7,6 +7,15 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Interactive sticky-note popup** (#1788). Click a page point with the
+  sticky-note tool to drop a note and type into it immediately; click an
+  existing note's icon to reopen and edit it in place — the first
+  edit-in-place path for an already-authored annotation. Spec-correct: each
+  note gets a real linked `/Popup` annotation (ISO 32000-2 §12.5.6.14) with
+  `/Parent`/`/Popup` cross-references and `/Open` state, so a note left open
+  persists as open and the popup round-trips through other PDF readers, not
+  just excise. The existing `Add _Sticky Note...` modal-prompt command is
+  unchanged and still available.
 - **`WidthPolicy.FixedMarker` (`redact --fixed-marker`)** (#1755). Closes the
   width gap like `--close-width` (destroying the content-stream residue
   #1715 measured recoverable at 91% recall@5 under the default, not just the

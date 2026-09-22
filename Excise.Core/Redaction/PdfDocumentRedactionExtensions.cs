@@ -912,7 +912,7 @@ public static class PdfDocumentRedactionExtensions
     /// that occurrence. Extending <see cref="SameLineRun"/> to walk multiple
     /// words per side needs care with the raw-index/joined-index bookkeeping
     /// this method already does (the <c>beforeText.Length</c> straddle math),
-    /// so it is left as a follow-up rather than done here.</para>
+    /// so it is left as a follow-up rather than done here. See issue #1791.</para>
     /// </remarks>
     internal static List<WordWrapTermCandidate> FindWordWrapCandidates(
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, int pageNumber)
