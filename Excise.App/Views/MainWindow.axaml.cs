@@ -403,9 +403,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Position and Width/Height are in different units — PixelPoint is
+        // physical pixels, Width/Height are DIPs — so the DIP offsets below
+        // must go through RenderScaling or a Retina/HiDPI owner parks the
+        // palette mid-window instead of near its top-right corner.
         palette.Position = new PixelPoint(
-            Position.X + (int)System.Math.Max(Width - 90, 0),
-            Position.Y + 60);
+            Position.X + (int)(System.Math.Max(Width - 90, 0) * RenderScaling),
+            Position.Y + (int)(60 * RenderScaling));
     }
 
     private void OnAnnotationPaletteClosing(object? sender, WindowClosingEventArgs e)

@@ -357,6 +357,56 @@ public class AnnotationToolbarAndPaletteTests
         }
     }
 
+    /// <summary>
+    /// The toolbar row's Stamp button carries no Command of its own (a
+    /// <c>Button.Flyout</c> host, like the main toolbar's typewriter-style
+    /// button) — <see cref="RealPointerClick_OnRemainingToolbarButtons_DoesNotThrow"/>
+    /// deliberately excludes it, so without a real-input test of its own it
+    /// would be an undeclared gap at scripts/check-gui-interaction-coverage.sh's
+    /// FORWARD check (never relaxed). A real click must open the flyout, then a
+    /// second real click on one of its 15 stamp choices must reach
+    /// AddStampAnnotationFromDragCommand and run it without throwing — it no-ops
+    /// via a dialog ("Drag a box... before adding a stamp") since no drag rect
+    /// is staged here, the same guarded-no-op shape as the "remaining buttons"
+    /// theory above, not a thrown exception.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task RealPointerClick_OnToolbarStampButton_OpensTheFlyoutAndClicksAChoice()
+    {
+        var (vm, window, pdf) = await OpenWithDocumentAsync();
+        try
+        {
+            vm.ToggleAnnotationToolbarCommand.Execute().Subscribe();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            window.UpdateLayout();
+
+            var stampButton = window.GetLogicalDescendants().OfType<Button>()
+                .FirstOrDefault(b => b.Name == "AnnotationToolbarStampButton");
+            stampButton.Should().NotBeNull("MainWindow.axaml must declare AnnotationToolbarStampButton");
+            stampButton!.Flyout.Should().NotBeNull("the stamp choices live in a Flyout, not a direct Command");
+
+            await ClickAsync(stampButton, window);
+
+            stampButton.Flyout!.IsOpen.Should().BeTrue("a real click on the Stamp button must open its flyout");
+
+            var content = ((Flyout)stampButton.Flyout).Content as Control;
+            content.Should().NotBeNull();
+            var confidential = content!.GetLogicalDescendants().OfType<Button>()
+                .FirstOrDefault(b => b.Content as string == "Confidential");
+            confidential.Should().NotBeNull("the flyout must offer the same 15 stamps the Annotate menu does");
+            confidential!.Command.Should().Be(vm.AddStampAnnotationFromDragCommand);
+            confidential.CommandParameter.Should().Be("Confidential");
+
+            var act = async () => await ClickAsync(confidential, window);
+            await act.Should().NotThrowAsync();
+        }
+        finally
+        {
+            window.Close();
+            TestPdfGenerator.CleanupTestFile(pdf);
+        }
+    }
+
     [FixedAvaloniaTheory]
     [InlineData("PaletteHighlightButton")]
     [InlineData("PaletteUnderlineButton")]
