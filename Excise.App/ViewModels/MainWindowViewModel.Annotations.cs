@@ -13,6 +13,15 @@ public partial class MainWindowViewModel
 {
     internal const string DefaultStickyNoteText = "Review note";
 
+    /// <summary>
+    /// Default post-it card size in PDF points (#1794) — a real note-sized
+    /// card, not the old ~17pt icon (<see cref="PdfAnnotation.TextIconSize"/>,
+    /// still used only as the fallback for a genuinely degenerate/undersized
+    /// /Rect — see <c>SkiaRenderer.RenderDefaultAppearance</c>).
+    /// </summary>
+    internal const double DefaultStickyNoteWidth = 200.0;
+    internal const double DefaultStickyNoteHeight = 150.0;
+
     public event EventHandler? AnnotationsChanged;
 
     public async Task AddHighlightAnnotationFromSelectionAsync()
@@ -634,7 +643,29 @@ public partial class MainWindowViewModel
         var page = document.GetPage(pageNumber);
         var left = Math.Max(18, page.MediaBox.Normalize().Left + 48);
         var top = page.MediaBox.Normalize().Top - 48;
-        return new PdfRectangle(left, top - 36, left + 36, top).Normalize();
+        var rect = new PdfRectangle(
+            left, top - DefaultStickyNoteHeight, left + DefaultStickyNoteWidth, top).Normalize();
+        return ClampRectToPage(rect, page);
+    }
+
+    /// <summary>
+    /// Keep a note's rect inside its page's /MediaBox by translating it (never
+    /// resizing) — used both for a freshly-placed note near a page edge and
+    /// for a drag-to-move landing point (#1794). A note wider/taller than the
+    /// page itself is left overflowing rather than shrunk: resizing on
+    /// placement would be a surprising, unrequested change to a size the user
+    /// (or the default) chose.
+    /// </summary>
+    private static PdfRectangle ClampRectToPage(PdfRectangle rect, PdfPage page)
+    {
+        var box = page.MediaBox.Normalize();
+        var width = rect.Right - rect.Left;
+        var height = rect.Top - rect.Bottom;
+
+        var left = Math.Clamp(rect.Left, box.Left, Math.Max(box.Left, box.Right - width));
+        var bottom = Math.Clamp(rect.Bottom, box.Bottom, Math.Max(box.Bottom, box.Top - height));
+
+        return new PdfRectangle(left, bottom, left + width, bottom + height);
     }
 
     private async Task CommitRectAnnotationAsync(
@@ -724,9 +755,17 @@ public partial class MainWindowViewModel
             return;
         }
 
-        var rect = new PdfRectangle(
-            pdfX, pdfY - PdfAnnotation.TextIconSize,
-            pdfX + PdfAnnotation.TextIconSize, pdfY);
+        // #1794: the click anchors the card's top-left corner (screenY down =
+        // pdfY down from the click), sized to the default post-it card rather
+        // than the old TextIconSize icon — then clamped so a note placed near
+        // a page edge doesn't hang off it.
+        var rawRect = new PdfRectangle(
+            pdfX, pdfY - DefaultStickyNoteHeight,
+            pdfX + DefaultStickyNoteWidth, pdfY);
+        var document = _documentService.GetCurrentDocument();
+        var rect = document != null && pageNumber >= 1 && pageNumber <= document.PageCount
+            ? ClampRectToPage(rawRect, document.GetPage(pageNumber))
+            : rawRect;
 
         try
         {
@@ -810,6 +849,41 @@ public partial class MainWindowViewModel
     }
 
     /// <summary>
+    /// Drag-to-move (#1794): <c>PdfViewerControl</c> raises
+    /// <c>StickyNoteMoved</c> when a press-and-drag on an existing,
+    /// NOT-currently-editing note exceeds its click/drag threshold — see that
+    /// control's <c>OnInteractionLayerPointerReleased</c> for the
+    /// disambiguation. Same "no separate viewer mirror write, caller
+    /// resyncs" shape as <see cref="CommitStickyNotePopupAsync"/>, and same
+    /// "not undo-tracked" precedent: a move is a light in-place edit, not a
+    /// structural add.
+    /// </summary>
+    public async Task MoveStickyNoteAsync(int pageNumber, PdfRectangle oldRect, PdfRectangle newRect)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        // #642: /P bit 6 gates adding/modifying annotations.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            "Moving a sticky note", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        try
+        {
+            _annotationWorkflow.MoveTextNote(pageNumber, oldRect, newRect);
+            MarkStickyNoteEdited();
+            await RefreshAfterDocumentMutationAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error moving sticky-note annotation");
+            _toastService.ShowError("Failed to move sticky note", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Fire-and-forget wrapper for click-away dismissal: MainWindow's
     /// light-dismiss handler (any press on the document area while a popup is
     /// open) calls this synchronously and lets the same press continue on to
@@ -856,6 +930,14 @@ public partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
         AnnotationsChanged?.Invoke(this, EventArgs.Empty);
+
+        // #1794: unlike the old ~17pt icon (whose look never depended on
+        // /Contents or /Rect), the post-it card renders the note's text and
+        // is sized/positioned FROM /Rect — so a text edit or a move now
+        // changes what's on screen, and needs the same re-render request
+        // AddStickyNoteAnnotationAsync's own MarkAnnotationChangedAsync
+        // already sends for a freshly-placed note.
+        RequestViewerRenderRefresh();
     }
 
     // ── #1789: two optional, independently-toggleable surfaces for the same

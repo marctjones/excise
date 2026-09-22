@@ -180,6 +180,7 @@ namespace Excise.Avalonia.Controls
         public event System.EventHandler<Excise.Avalonia.Controls.RedactionDrawnEventArgs>? RedactionDrawn;
         public event System.EventHandler<Excise.Avalonia.Controls.ShapeAnnotationRectDrawnEventArgs>? ShapeAnnotationRectDrawn;
         public event System.EventHandler<Excise.Avalonia.Controls.StickyNoteClickedEventArgs>? StickyNoteClicked;
+        public event System.EventHandler<Excise.Avalonia.Controls.StickyNoteMovedEventArgs>? StickyNoteMoved;
         public event System.EventHandler<Excise.Avalonia.Controls.StickyNotePlacementRequestedEventArgs>? StickyNotePlacementRequested;
         public event System.EventHandler<Excise.Avalonia.Controls.TextSelectedEventArgs>? TextSelected;
         public event System.EventHandler<Excise.Avalonia.Controls.TypewriterTextBoundsChangedEventArgs>? TypewriterTextBoundsChanged;
@@ -269,6 +270,13 @@ namespace Excise.Avalonia.Controls
         public StickyNoteClickedEventArgs(int pageNumber, Excise.Core.Document.PdfRectangle rect) { }
         public int PageNumber { get; }
         public Excise.Core.Document.PdfRectangle Rect { get; }
+    }
+    public class StickyNoteMovedEventArgs : System.EventArgs
+    {
+        public StickyNoteMovedEventArgs(int pageNumber, Excise.Core.Document.PdfRectangle oldRect, Excise.Core.Document.PdfRectangle newRect) { }
+        public Excise.Core.Document.PdfRectangle NewRect { get; }
+        public Excise.Core.Document.PdfRectangle OldRect { get; }
+        public int PageNumber { get; }
     }
     public class StickyNotePlacementRequestedEventArgs : System.EventArgs
     {

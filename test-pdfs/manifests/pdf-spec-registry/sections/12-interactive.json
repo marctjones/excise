@@ -203,7 +203,7 @@
           },
           {
             "kind": "differential",
-            "ref": "Excise.Rendering.Tests/Differential/StickyNoteIconTests.cs::DegenerateRect_StillDrawsAMarker_AsMutoolDoes",
+            "ref": "Excise.Rendering.Tests/Differential/StickyNoteIconTests.cs::DegenerateRect_StillDrawsACard_AsMutoolDoes",
             "modes": [
               "author"
             ]

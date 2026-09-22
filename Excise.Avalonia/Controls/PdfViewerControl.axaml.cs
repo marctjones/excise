@@ -395,6 +395,15 @@ public partial class PdfViewerControl : UserControl
     public event EventHandler<StickyNotePlacementRequestedEventArgs>? StickyNotePlacementRequested;
 
     /// <summary>
+    /// Fired when a press-and-drag on an existing, NOT-currently-editing note
+    /// moves it past the click/drag threshold (#1794) — the drag counterpart
+    /// to <see cref="StickyNoteClicked"/> for the same ambient press/release
+    /// gesture on a note's on-screen card. See
+    /// <c>OnInteractionLayerPointerReleased</c> for the disambiguation.
+    /// </summary>
+    public event EventHandler<StickyNoteMovedEventArgs>? StickyNoteMoved;
+
+    /// <summary>
     /// Fired when the user edits an AcroForm field via the FormFieldsLayer
     /// inputs. The control has already mutated the underlying PdfField; the
     /// host typically reacts by re-rendering the page so any baked-in
@@ -454,6 +463,16 @@ public partial class PdfViewerControl : UserControl
     private TextBlock? _errorMessageText;
     private Point _dragStart;
     private bool _isDragging;
+
+    /// <summary>
+    /// Click-vs-drag disambiguation for an ambient press on an existing,
+    /// resting sticky note (#1794) — staged on press, resolved on release.
+    /// See <c>PdfViewerControl.Interaction.cs</c>'s press/release handlers.
+    /// </summary>
+    private readonly record struct StickyNoteDragCandidate(
+        int PageNumber, PdfRectangle Rect, Point PressDips, double PressPdfX, double PressPdfY);
+
+    private StickyNoteDragCandidate? _stickyNoteDragCandidate;
 
     // The single-page view's LOGICAL layout DPI: the Image is laid out at
     // pt × 120/72 DIPs, and the overlay, hit-testing and every redaction,
@@ -1991,6 +2010,17 @@ public partial class PdfViewerControl : UserControl
     {
         InvalidateSinglePageLookAhead();
         _singlePageRenderLifetime.InvalidateCache();
+
+        // #1794: a sticky-note edit or drag-to-move mutates an existing
+        // annotation's /Rect/Contents on the SAME PdfAnnotation-owning
+        // PdfDocument instance in place — GetPageAnnotations' cache holds
+        // PdfAnnotation wrappers whose Rect/Contents were captured at parse
+        // time, so a stale entry here would hit-test a moved note at its OLD
+        // position (or an edited one with its OLD text) until the next
+        // unrelated cache-clearing event. Content edits invalidating prior
+        // renders is exactly this case, even in single-page view where
+        // RefreshContinuousLayout's own clear is a no-op.
+        _pageAnnotations.Clear();
     }
 
     private void ClearDisplay()

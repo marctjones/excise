@@ -1202,6 +1202,75 @@ public class PdfAnnotationAuthoringTests
     }
 
     [Fact]
+    public void MoveTextAnnotation_ChangesRect_LeavesContentsAndPopupUntouched()
+    {
+        // #1794: drag-to-move for the interactive post-it card. A separate
+        // method from UpdateTextAnnotation (text/open) — this test pins that
+        // moving a note touches ONLY /Rect.
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        var note = doc.AddTextAnnotation(
+            1, new PdfRectangle(72, 600, 272, 750), "moved note",
+            open: true, withPopup: true);
+        var popupRectBefore = doc.GetPage(1).GetAnnotations()
+            .Single(a => a.Subtype == PdfAnnotationSubtype.Popup).Rect;
+
+        var moved = doc.MoveTextAnnotation(1, note, new PdfRectangle(300, 400, 500, 550));
+
+        moved.Rect.Should().Be(new PdfRectangle(300, 400, 500, 550));
+        moved.Contents.Should().Be("moved note", "a move must not touch /Contents");
+        moved.IsOpen.Should().BeTrue("a move must not touch /Open");
+
+        var popup = doc.GetPage(1).GetAnnotations()
+            .Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Popup).Subject;
+        popup.Rect.Should().Be(popupRectBefore,
+            "/Popup's own /Rect is a UI hint only (§12.5.6.14) and is deliberately left untouched by a move");
+    }
+
+    [Fact]
+    public void MoveTextAnnotation_RejectsDegenerateRectAndNonTextSubtype()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        var note = doc.AddTextAnnotation(1, new PdfRectangle(0, 0, 17, 17), "x", withPopup: true);
+        var highlight = doc.AddHighlightAnnotation(1, new PdfRectangle(20, 20, 60, 40), "hl");
+
+        var degenerate = () => doc.MoveTextAnnotation(1, note, new PdfRectangle(10, 10, 10, 10));
+        degenerate.Should().Throw<ArgumentException>();
+
+        var wrongSubtype = () => doc.MoveTextAnnotation(1, highlight, new PdfRectangle(0, 0, 20, 20));
+        wrongSubtype.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void StickyNote_PlaceMoveThenEdit_SurvivesSaveAndReload()
+    {
+        // The round trip drag-to-move depends on: place (withPopup), move it
+        // (#1794), edit the text once more, then persist. A reader that only
+        // looked at the FILE must see the final /Rect, text and /Open state.
+        byte[] saved;
+        using (var doc = PdfDocument.CreateNew())
+        {
+            doc.Pages.AddBlank();
+            var note = doc.AddTextAnnotation(
+                1, new PdfRectangle(200, 500, 400, 650), "Review note",
+                open: true, withPopup: true);
+
+            var moved = doc.MoveTextAnnotation(1, note, new PdfRectangle(250, 450, 450, 600));
+            doc.UpdateTextAnnotation(1, moved, "Please check the totals on page 3", open: true);
+            saved = doc.SaveToBytes();
+        }
+
+        using var reopened = PdfDocument.Open(saved);
+        var note2 = reopened.GetPage(1).GetAnnotations()
+            .Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Text).Subject;
+
+        note2.Rect.Should().Be(new PdfRectangle(250, 450, 450, 600));
+        note2.Contents.Should().Be("Please check the totals on page 3");
+        note2.IsOpen.Should().BeTrue();
+    }
+
+    [Fact]
     public void StickyNote_PlaceThenEdit_SurvivesSaveAndReload()
     {
         // The round trip the interactive popup depends on: place (withPopup,

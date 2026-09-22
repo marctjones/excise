@@ -122,6 +122,28 @@ public sealed class AnnotationWorkflowService
     }
 
     /// <summary>
+    /// Drag-to-move (#1794): reposition an already-placed sticky note's
+    /// <c>/Rect</c>. Same "no separate viewer mirror write" shape as
+    /// <see cref="UpdateTextNote"/> — the caller resyncs the viewer document
+    /// from the save document afterward.
+    /// </summary>
+    /// <param name="pageNumber">1-based page the note lives on.</param>
+    /// <param name="oldRect">The note's CURRENT /Rect — the identity used to find it, same as <see cref="UpdateTextNote"/>.</param>
+    /// <param name="newRect">The note's new /Rect.</param>
+    internal PdfAnnotation MoveTextNote(int pageNumber, PdfRectangle oldRect, PdfRectangle newRect)
+    {
+        var saveDocument = GetLoadedDocument();
+        var saveAnnotation = FindTextAnnotationAt(saveDocument, pageNumber, oldRect)
+            ?? throw new InvalidOperationException(
+                $"No sticky note found at the given rect on page {pageNumber}.");
+
+        var moved = saveDocument.MoveTextAnnotation(pageNumber, saveAnnotation, newRect);
+
+        _logger.LogInformation("Moved sticky note on page {PageNumber}", pageNumber);
+        return moved;
+    }
+
+    /// <summary>
     /// Rect-match tolerance for <see cref="UpdateTextNote"/>. Values placed by
     /// this session are bit-identical, and values round-tripped through a
     /// save/reload are still exact doubles — a tiny epsilon only guards

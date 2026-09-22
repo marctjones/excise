@@ -1724,6 +1724,7 @@
                                                AnnotationHovered="OnAnnotationHovered"
                                                StickyNoteClicked="OnStickyNoteClicked"
                                                StickyNotePlacementRequested="OnStickyNotePlacementRequested"
+                                               StickyNoteMoved="OnStickyNoteMoved"
                                                FormFieldEdited="OnFormFieldEdited"
                                                FormFieldEditRejected="OnFormFieldEditRejected"
                                                FormFieldRectDrawn="OnFormFieldRectDrawn"
@@ -1736,24 +1737,28 @@
                                                TypewriterTextDeleted="OnTypewriterTextDeleted"
                                                PageChanged="OnPageChanged" />
 
-                    <!-- #1788: the interactive sticky-note popup. An overlay in
+                    <!-- #1788: the interactive sticky-note card. An overlay in
                          the SAME window as the viewer (not a second OS Window)
                          so "click away to collapse" is ordinary same-window
                          routed-event handling — see OnDocumentAreaPointerPressedTunnel
-                         in the code-behind. Positioned in code-behind from
-                         PdfViewerControl.GetViewerPositionForPageRect whenever
-                         StickyNotePopup changes.
+                         in the code-behind. Positioned AND SIZED in code-behind
+                         from PdfViewerControl.GetViewerPositionForPageRect
+                         whenever StickyNotePopup or ZoomLevel changes — #1794
+                         reworked this to be the note's real post-it-card
+                         appearance at its actual on-page rect (matching
+                         SkiaRenderer's resting-state rendering, "no visual
+                         jump"), not a small popup offset beside an icon.
 
                          The ContentControl (not a plain child) is deliberate:
-                         with StickyNotePopup null (no popup open, the default
+                         with StickyNotePopup null (no card open, the default
                          state) it realises NO visual/logical child at all, so
-                         StickyNotePopupView's "Done" button does not exist in
+                         StickyNotePopupView's controls do not exist in
                          MainWindow's logical tree for CommandBindingSweepTests
                          to walk — the same "swept when realised" exemption
                          #1789 already relies on for the floating palette,
                          rather than a plain Border+IsVisible=False, which
-                         would still contain a live Button whose Command binds
-                         to a null DataContext. -->
+                         would still contain a live control bound to a null
+                         DataContext. -->
                     <Border x:Name="StickyNotePopupHost"
                             IsVisible="{Binding StickyNotePopup, Converter={x:Static ObjectConverters.IsNotNull}}"
                             HorizontalAlignment="Left"

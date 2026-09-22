@@ -145,6 +145,27 @@ public class StickyNotePlacementRequestedEventArgs : EventArgs
 }
 
 /// <summary>
+/// Payload for <c>StickyNoteMoved</c> (#1794): a press-and-drag on an
+/// existing, NOT-currently-editing note past the click/drag threshold —
+/// ambient, like <see cref="StickyNoteClickedEventArgs"/>, and fired instead
+/// of <c>StickyNoteClicked</c> for the SAME gesture when the pointer moved
+/// past the threshold before release. Both rects are PDF content-space,
+/// bottom-left origin — the one coordinate boundary this control crosses.
+/// </summary>
+public class StickyNoteMovedEventArgs : EventArgs
+{
+    public int PageNumber { get; }
+    public PdfRectangle OldRect { get; }
+    public PdfRectangle NewRect { get; }
+    public StickyNoteMovedEventArgs(int pageNumber, PdfRectangle oldRect, PdfRectangle newRect)
+    {
+        PageNumber = pageNumber;
+        OldRect = oldRect;
+        NewRect = newRect;
+    }
+}
+
+/// <summary>
 /// Event arguments for the user finishing a drag-rect in FormAuthoring
 /// mode. The rect is in PDF points, bottom-left origin.
 /// </summary>

@@ -122,6 +122,49 @@ public static class PdfAnnotationAuthoring
     }
 
     /// <summary>
+    /// Reposition an already-authored sticky note's <c>/Rect</c> — drag-to-move
+    /// for the interactive post-it card (#1794). A separate method rather than
+    /// an added parameter on <see cref="UpdateTextAnnotation"/>: that method's
+    /// contract (text/open) predates this feature, and a caller that only
+    /// edits text should not have to reason about a rect it is not changing.
+    /// </summary>
+    /// <param name="document">The document that owns <paramref name="existing"/>.</param>
+    /// <param name="pageNumber">1-based page the annotation lives on.</param>
+    /// <param name="existing">
+    /// The annotation to move. Must belong to <paramref name="document"/>'s own
+    /// object graph — same caveat as <see cref="UpdateTextAnnotation"/>.
+    /// </param>
+    /// <param name="newRect">The note's new position/size.</param>
+    /// <remarks>
+    /// The linked <c>/Popup</c>'s own <c>/Rect</c> is a UI hint only
+    /// (§12.5.6.14) — it is not load-bearing for anything #1788 already does
+    /// with it, so it is deliberately left untouched here.
+    /// </remarks>
+    public static PdfAnnotation MoveTextAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        PdfAnnotation existing,
+        PdfRectangle newRect)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(existing);
+        if (existing.Subtype != PdfAnnotationSubtype.Text)
+            throw new ArgumentException("Only a /Text annotation can be moved this way.", nameof(existing));
+
+        var normalized = newRect.Normalize();
+        ValidateRect(normalized);
+
+        var raw = existing.RawDictionary;
+        raw["Rect"] = PdfArray.FromRectangle(
+            normalized.Left, normalized.Bottom, normalized.Right, normalized.Top);
+        raw.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+
+        var page = document.GetPage(pageNumber);
+        return page.GetAnnotations().FirstOrDefault(a => ReferenceEquals(a.RawDictionary, raw))
+            ?? existing;
+    }
+
+    /// <summary>
     /// Add a rectangular Highlight text-markup annotation to a page.
     /// </summary>
     public static PdfAnnotation AddHighlightAnnotation(

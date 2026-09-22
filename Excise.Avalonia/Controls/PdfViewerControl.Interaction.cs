@@ -54,16 +54,42 @@ public partial class PdfViewerControl
             return;
         }
 
-        // Second chance, still mode-agnostic (#1788): an existing sticky
-        // note's icon reopens for editing regardless of which tool is
-        // active — the same "ambient affordance" the link check above is.
-        // Checked before the None-mode return so reopening a note works even
-        // in plain reading mode, matching how a link click already does.
+        // Second chance, still mode-agnostic (#1788, drag added #1794): an
+        // existing sticky note's card is ambient — reachable regardless of
+        // which tool is active — the same "ambient affordance" the link
+        // check above is. Checked before the None-mode return so reopening a
+        // note works even in plain reading mode, matching how a link click
+        // already does.
+        //
+        // A NOTE CURRENTLY BEING EDITED never reaches this hit test: its
+        // interactive overlay (StickyNotePopupHost, positioned exactly over
+        // the card, higher ZIndex, with its own opaque background) already
+        // captured the press before it could reach this control — see
+        // MainWindow.axaml's comment on StickyNotePopupHost. So this branch
+        // only ever sees a RESTING note, which is exactly when drag-to-move
+        // should apply.
+        //
+        // The press alone cannot tell a click from a drag — that needs the
+        // release point too (#1794) — so it only STAGES a candidate here;
+        // OnInteractionLayerPointerReleased decides and fires StickyNoteClicked
+        // or StickyNoteMoved.
         var stickyNoteHit = HitTestStickyNoteForEvent(e, out var stickyNotePageNumber);
         if (stickyNoteHit != null)
         {
-            StickyNoteClicked?.Invoke(
-                this, new StickyNoteClickedEventArgs(stickyNotePageNumber, stickyNoteHit.Rect));
+            _stickyNoteDragCandidate = TryMapPointerToContent(e, out _, out var pressPdfX, out var pressPdfY)
+                ? new StickyNoteDragCandidate(
+                    stickyNotePageNumber, stickyNoteHit.Rect, GetPressPoint(e), pressPdfX, pressPdfY)
+                : null;
+
+            // No content mapping (shouldn't happen — the hit test above just
+            // used the same mapping — but fail toward the always-worked
+            // click behavior rather than silently eating the press).
+            if (_stickyNoteDragCandidate == null)
+            {
+                StickyNoteClicked?.Invoke(
+                    this, new StickyNoteClickedEventArgs(stickyNotePageNumber, stickyNoteHit.Rect));
+            }
+
             e.Handled = true;
             return;
         }
@@ -147,6 +173,18 @@ public partial class PdfViewerControl
     {
         if (IsTypewriterOverlayEvent(e))
             return;
+
+        // #1794: a sticky-note click/drag candidate is staged on the press
+        // (see OnInteractionLayerPointerPressed) and resolved on the release
+        // — the design is "apply on release", not a live drag-follow, so
+        // there is nothing to draw here. Just claim the event so hover
+        // feedback and every mode-specific drag below stay quiet while the
+        // gesture is in flight, same as the _isDragging guard does for them.
+        if (_stickyNoteDragCandidate != null)
+        {
+            e.Handled = true;
+            return;
+        }
 
         // Link hover feedback (cursor + status text) is an ambient affordance
         // like the click handler above — active in any interaction mode,
@@ -233,6 +271,18 @@ public partial class PdfViewerControl
     {
         if (IsTypewriterOverlayEvent(e))
             return;
+
+        // #1794: resolve the click-vs-drag candidate staged on press. This is
+        // its own gesture, independent of the mode-scoped _isDragging flow
+        // below (a sticky-note press is ambient — see the press handler's
+        // comment) so it is decided and cleared BEFORE that flow's own guard.
+        if (_stickyNoteDragCandidate is { } candidate)
+        {
+            _stickyNoteDragCandidate = null;
+            ResolveStickyNoteDragOrClick(candidate, e);
+            e.Handled = true;
+            return;
+        }
 
         if (!_isDragging)
             return;
@@ -568,14 +618,93 @@ public partial class PdfViewerControl
     }
 
     /// <summary>
+    /// Click/drag threshold in viewer DIPs (#1794) — a press-and-release on a
+    /// resting note within this distance is a click (enter edit in place);
+    /// past it, a drag (move the note). Matches the "4-6 DIPs" a plain click
+    /// with an unsteady hand still produces, without so wide a deadzone that a
+    /// real short drag reads as a click.
+    /// </summary>
+    private const double StickyNoteDragThreshold = 5.0;
+
+    /// <summary>
+    /// Resolve the sticky-note candidate <see cref="OnInteractionLayerPointerPressed"/>
+    /// staged: a plain click re-fires the existing #1788 <see cref="StickyNoteClicked"/>
+    /// behavior; a drag past <see cref="StickyNoteDragThreshold"/> fires
+    /// <see cref="StickyNoteMoved"/> instead (#1794).
+    /// </summary>
+    /// <remarks>
+    /// Maps BOTH the press and release points through <see cref="TryMapPointerToContent"/>
+    /// rather than scaling a DIPs delta — that one call already carries the
+    /// y-flip and zoom the "convert once at the boundary" rule exists for, so
+    /// subtracting its two outputs handles both for free. If the release maps
+    /// to no page, or a DIFFERENT page than the press, the move is cancelled
+    /// (treated as neither a click nor a move) rather than silently
+    /// relocating the note across pages or off the document entirely.
+    /// </remarks>
+    private void ResolveStickyNoteDragOrClick(StickyNoteDragCandidate candidate, PointerEventArgs e)
+    {
+        var releaseDips = GetPressPoint(e);
+        var movedPastThreshold =
+            Math.Abs(releaseDips.X - candidate.PressDips.X) > StickyNoteDragThreshold ||
+            Math.Abs(releaseDips.Y - candidate.PressDips.Y) > StickyNoteDragThreshold;
+
+        if (!movedPastThreshold)
+        {
+            StickyNoteClicked?.Invoke(
+                this, new StickyNoteClickedEventArgs(candidate.PageNumber, candidate.Rect));
+            return;
+        }
+
+        if (!TryMapPointerToContent(e, out var releasePageNumber, out var releasePdfX, out var releasePdfY) ||
+            releasePageNumber != candidate.PageNumber ||
+            Document == null)
+        {
+            return;
+        }
+
+        var dx = releasePdfX - candidate.PressPdfX;
+        var dy = releasePdfY - candidate.PressPdfY;
+        var moved = new PdfRectangle(
+            candidate.Rect.Left + dx, candidate.Rect.Bottom + dy,
+            candidate.Rect.Right + dx, candidate.Rect.Top + dy);
+        var newRect = ClampRectToPage(moved, Document.GetPage(candidate.PageNumber));
+
+        StickyNoteMoved?.Invoke(
+            this, new StickyNoteMovedEventArgs(candidate.PageNumber, candidate.Rect, newRect));
+    }
+
+    /// <summary>
+    /// Keep a moved note's rect inside its page's /MediaBox by translating it
+    /// (never resizing) — the drag counterpart of
+    /// <c>MainWindowViewModel.ClampRectToPage</c>, which does the same for a
+    /// freshly-placed note. Not shared code: the two live on opposite sides of
+    /// the ViewModel/Control boundary and each is a few lines.
+    /// </summary>
+    private static PdfRectangle ClampRectToPage(PdfRectangle rect, PdfPage page)
+    {
+        var box = page.MediaBox.Normalize();
+        var width = rect.Right - rect.Left;
+        var height = rect.Top - rect.Bottom;
+
+        var left = Math.Clamp(rect.Left, box.Left, Math.Max(box.Left, box.Right - width));
+        var bottom = Math.Clamp(rect.Bottom, box.Bottom, Math.Max(box.Bottom, box.Top - height));
+
+        return new PdfRectangle(left, bottom, left + width, bottom + height);
+    }
+
+    /// <summary>
     /// Rect containment, with the §12.5.6.4 normalisation a /Text annotation
     /// needs.
     ///
-    /// <para>A sticky note's icon is a fixed size regardless of its /Rect, and
-    /// producers write degenerate rects and mean it. Hit-testing the RAW rect
-    /// there would give a note that draws an icon you can see and can never
-    /// hover. The renderer normalises with the same constant — see
-    /// <see cref="PdfAnnotation.TextIconSize"/>.</para>
+    /// <para>A pre-#1794 sticky note's icon was a fixed size regardless of its
+    /// /Rect, and some producers write degenerate rects and mean it.
+    /// Hit-testing the RAW rect there would give a note that draws an icon you
+    /// can see and can never hover — so a rect SMALLER than the icon still
+    /// clamps to it, matching the renderer's own fallback (see
+    /// <see cref="PdfAnnotation.TextIconSize"/> and
+    /// <c>SkiaRenderer.RenderDefaultAppearance</c>). A note sized to the real
+    /// post-it card (#1794) is hit-tested at its ACTUAL rect instead — the
+    /// whole card is clickable/draggable, not just a 17pt corner of it.</para>
     /// </summary>
     private static bool ContainsPoint(PdfAnnotation a, double x, double y)
     {
@@ -583,7 +712,8 @@ public partial class PdfViewerControl
         double left = Math.Min(r.Left, r.Right), right = Math.Max(r.Left, r.Right);
         double bottom = Math.Min(r.Bottom, r.Top), top = Math.Max(r.Bottom, r.Top);
 
-        if (a.Subtype == PdfAnnotationSubtype.Text)
+        if (a.Subtype == PdfAnnotationSubtype.Text &&
+            (right - left < PdfAnnotation.TextIconSize || top - bottom < PdfAnnotation.TextIconSize))
         {
             right = left + PdfAnnotation.TextIconSize;
             bottom = top - PdfAnnotation.TextIconSize;

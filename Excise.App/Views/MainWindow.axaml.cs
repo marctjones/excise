@@ -683,7 +683,14 @@ public partial class MainWindow : Window
                 UpdateTitle(viewModel);
             }
 
-            if (args.PropertyName is null or nameof(viewModel.StickyNotePopup))
+            // #1794: the card's overlay must track the note's on-screen
+            // rect exactly, not just appear/disappear — a zoom change (or the
+            // page navigation already covered by the unconditional `null`
+            // case above) moves/resizes that rect just as much as opening or
+            // closing the popup does.
+            if (args.PropertyName is null
+                or nameof(viewModel.StickyNotePopup)
+                or nameof(viewModel.ZoomLevel))
             {
                 RepositionStickyNotePopup(viewModel);
             }
@@ -1614,6 +1621,13 @@ public partial class MainWindow : Window
         _ = viewModel.PlaceStickyNoteAsync(e.PageNumber, e.PdfX, e.PdfY);
     }
 
+    /// <summary>A press-and-drag on an existing, resting note moved it past the click/drag threshold (#1794).</summary>
+    private void OnStickyNoteMoved(object? sender, StickyNoteMovedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        _ = viewModel.MoveStickyNoteAsync(e.PageNumber, e.OldRect, e.NewRect);
+    }
+
     /// <summary>
     /// Light-dismiss for the sticky-note popup (#1788): any press on the
     /// document area while a popup is open commits it, UNLESS the press
@@ -1637,7 +1651,9 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Positions the popup host next to the note it belongs to (#1788).
+    /// Positions AND SIZES the card host exactly where/how the note's
+    /// resting-state rendering (SkiaRenderer's <c>RenderStickyNoteDefault</c>)
+    /// drew it (#1788, "no visual jump" reworked by #1794).
     /// <see cref="PdfViewerControl.GetViewerPositionForPageRect"/> is the one
     /// coordinate-conversion boundary crossed here — no independent DPI/zoom
     /// math lives in this file. Best-effort: if the viewer or the host is not
@@ -1659,11 +1675,15 @@ public partial class MainWindow : Window
         if (dips == null)
             return;
 
-        // Anchor at the icon's top-right corner, just clear of the icon itself.
-        var anchor = new Point(dips.Value.Right + 4, dips.Value.Top);
+        // #1794: the card's editing overlay covers exactly the same on-screen
+        // rect the resting-state card occupies — the note's own top-left
+        // corner, at its own size — not offset beside an icon.
+        var anchor = new Point(dips.Value.Left, dips.Value.Top);
         var inDocumentArea = _pdfViewerControl.TranslatePoint(anchor, documentArea) ?? anchor;
 
         host.Margin = new Thickness(Math.Max(0, inDocumentArea.X), Math.Max(0, inDocumentArea.Y), 0, 0);
+        popup.CardWidthDips = Math.Max(1, dips.Value.Width);
+        popup.CardHeightDips = Math.Max(1, dips.Value.Height);
     }
 
     private async void OnTextSelected(object? sender, TextSelectedEventArgs e)
