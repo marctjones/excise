@@ -685,9 +685,9 @@ Peak RSS per testhost varies enormously by project, and an early note here
 claimed it did not — that claim was made from a partial sample (Core and one
 Rendering chunk) and was **wrong**. Measured over a full run:
 
-| step | peak RSS (2026-07) | re-measured 2026-08-16 | re-measured 2026-09-15/16 | re-measured 2026-09-21 |
+| step | peak RSS (2026-07) | re-measured 2026-08-16 | re-measured 2026-09-15/16 | re-measured 2026-09-21/22 |
 |---|---:|---:|---:|---:|
-| `Excise.App.Tests` unchunked (one process) | **8536 MB** | **3862 MB** | **7338 MB** (6339 / 6364 / 7338 over three consecutive runs) | **8207 MB** (#1772) |
+| `Excise.App.Tests` unchunked (one process) | **8536 MB** | **3862 MB** | **7338 MB** (6339 / 6364 / 7338 over three consecutive runs) | **8207 MB** @`491762a4`, **4869 MB** @`4fdf1916`, **1949 MB** after #1772 |
 | `Excise.App.Tests` heaviest chunk | 6576 MB (chunk05) | 3323 MB (chunk06) | not re-run (`--no-chunking`) |
 | `Excise.Rendering.Tests` heaviest chunk | 2389 MB (chunk02) | 2006 MB (chunk04) | not re-run |
 | `Excise.Core.Tests.*` (all 17 chunks) | ≤ 450 MB | not re-run (checkpointed) | not re-run |
@@ -715,6 +715,25 @@ which is back above the original 2026-07 measurement. That sentence stood here
 until 2026-09-16 and is exactly the drift this table's own warning is about. The
 biggest single consumer on the last full run was a corpus scan; on a
 `--no-chunking` App-only run it is App.Tests again.
+
+⚠️ **Three numbers on 2026-09-21/22, and they do NOT disagree** — each names
+the commit it was measured on, because this row has been read as a trend when
+it was a set of measurements of different code. **8207 MB** is `491762a4`
+(#1769). **4869 MB** is `4fdf1916`, i.e. that plus the #1768/#1769/#1770/#1771/
+#1773 merges — ~120 deleted Unit tests, nine windows `AnnotationDisplayControlTests`
+now closes, the #1771 UI-test leak fixes and the gates #1773 moved out of the
+assembly. **1949 MB** is after #1772, wall 756 s → 356 s.
+
+The #1772 cause was ONE static in a test-only instrument:
+`GuiInteractionRecorder.SeenSurfaces` recorded "have I enumerated this window?"
+in a strong `HashSet` nothing ever removed from, so every window that received
+a pointer or key event stayed reachable for the process lifetime with its
+visual tree, viewer controls and tile caches. The 5 s RSS sampler showed it:
+sawtooth teeth (12 drops > 100 MB — the forced collections do reclaim) on a
+monotonically rising floor, ending at the run's maximum. **A rising trough is
+retention; a flat trough would have been GC high-water.** Sample the shape
+before theorising about the peak. Measurements, method and the reverted step 4
+are in `docs/performance-baselines/2026-09-21-app-testhost-memory/`.
 
 ⚠️ The `Excise.Core.Tests` 847 MB row is the **unchunked** project, and is NOT
 comparable to the "≤ 450 MB" figure above it — that one is per-chunk across 17
