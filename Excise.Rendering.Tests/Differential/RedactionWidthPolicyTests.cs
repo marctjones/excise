@@ -208,14 +208,87 @@ public class RedactionWidthPolicyTests : IDisposable
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
         // Same shape as Overshoot_DoesNotEatTheNeighbouringWords: an
-        // INDEPENDENT extractor confirms the neighbours survive and the secret
-        // does not, under the new default.
+        // INDEPENDENT extractor confirms the neighbours survive (as TEXT --
+        // whether they are also visually COVERED by the marker box is a
+        // separate question, see the next test) and the secret does not.
         var path = WriteTemp(Redact(SecretB, WidthPolicy.FixedMarker));
         var text = MutoolTextExtractor.ExtractPage(path, 1) ?? "";
 
         text.Should().Contain("Name", "the word before the redaction survives");
         text.Should().Contain("Ref", "the word after the redaction survives");
         text.Should().NotContain(SecretB, "the secret is removed");
+    }
+
+    /// <summary>
+    /// #1755 — THE KNOWN LIMIT that blocks making FixedMarker the default,
+    /// measured rather than left as a docstring claim. FixedMarker reuses
+    /// CloseGap's shift unchanged, which moves the following text all the way
+    /// to the removed run's OWN left edge; the marker is then drawn from that
+    /// same left edge out to a FIXED width. Whenever the fixed width exceeds
+    /// what was actually removed — the common case for a short redacted word
+    /// in running text, not a rare one bounded by available slack — the box
+    /// visually overlaps the reflowed neighbour's leading glyphs.
+    /// </summary>
+    /// <remarks>
+    /// If this assertion ever goes red because the neighbour's first glyph
+    /// moved clear of the box, the shift arithmetic was fixed to account for
+    /// the marker's own width (not just the removed run's) — update this test
+    /// to assert the opposite, and revisit whether FixedMarker can become the
+    /// default (RedactionOptions.Width's remark and the CLI's --fixed-marker
+    /// description both need to change alongside that).
+    /// </remarks>
+    [Fact]
+    public void FixedMarker_TheMarkerOverlapsTheReflowedNeighbour_KnownLimitBlockingDefault()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var pdf = Redact(SecretB, WidthPolicy.FixedMarker);
+        var path = WriteTemp(pdf);
+
+        double boxRight;
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            var box = FindLastFilledRectangle(doc.GetPage(1).GetContentStream().Operators);
+            box.Should().NotBeNull("FixedMarker must have drawn a covering rectangle");
+            boxRight = box!.Value.Right;
+        }
+
+        // INDEPENDENT of excise's own geometry: mutool's own glyph-position
+        // reader (used by the redaction benchmark's residue tier) says where
+        // the reflowed "R" of "Ref." actually landed.
+        var glyphs = MutoolGlyphPositions.ExtractPage(path, 1);
+        glyphs.Should().NotBeNull();
+        var reflowedR = glyphs!.FirstOrDefault(g => g.Char == "R");
+        reflowedR.Char.Should().Be("R", "the reflowed neighbour's leading glyph must still be findable");
+
+        reflowedR.X.Should().BeLessThan(boxRight,
+            "KNOWN LIMIT (#1755): the marker's fixed width does not yet account for the " +
+            "removed run's own width, so the box the redaction draws overlaps the very " +
+            "neighbour the gap-closing shift just reflowed into place -- this is why " +
+            "FixedMarker is an opt-in (--fixed-marker), not the default, until the shift " +
+            "itself is widened to make room for the marker.");
+    }
+
+    /// <summary>The last <c>x y w h re</c> ... <c>f</c> filled rectangle in the
+    /// content stream — the shape <c>AppendBlackRectangle</c> always emits.</summary>
+    private static (double Left, double Right)? FindLastFilledRectangle(
+        IReadOnlyList<Excise.Core.Content.ContentOperator> ops)
+    {
+        (double Left, double Right)? found = null;
+        foreach (var op in ops)
+        {
+            if (op.Name != "re" || op.Operands.Count < 4) continue;
+            double At(int i) => op.Operands[i] switch
+            {
+                Excise.Core.Primitives.PdfInteger n => n.Value,
+                Excise.Core.Primitives.PdfReal r => r.Value,
+                _ => 0.0,
+            };
+            var x = At(0);
+            var w = At(2);
+            found = (x, x + w);
+        }
+        return found;
     }
 
     [Fact]

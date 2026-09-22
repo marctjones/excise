@@ -106,16 +106,18 @@ internal static class RedactCommandHandler
             CaseSensitive = request.CaseSensitive,
             WholeWord = request.WholeWord,   // #1052
             DrawBox = request.DrawBox,
-            // #1755: FixedMarker is the default (closes the #1715 width
-            // channel AND always draws a visible mark, #1725). --close-width
-            // and --overshoot-box stay explicit opt-INS to their own older,
-            // narrower trade-offs; --preserve-layout is the explicit opt-OUT
-            // back to the pre-#1755 default for a caller that specifically
-            // needs the layout unchanged and accepts the width residue.
+            // #1755: FixedMarker exists and is fully implemented, but is NOT
+            // the default yet — measured to visually overlap the reflowed
+            // neighbour in the common case, not just when slack is short (see
+            // the remark on RedactionOptions.Width). --fixed-marker is an
+            // explicit opt-in with that limit stated; --close-width and
+            // --overshoot-box are the existing explicit opt-ins to their own
+            // narrower trade-offs. The implicit default stays
+            // CollapsePreserveLayout.
             Width = request.CloseWidth ? WidthPolicy.CloseGap
                 : request.OvershootBox ? WidthPolicy.OvershootPreserveLayout   // #1189
-                : request.PreserveLayout ? WidthPolicy.CollapsePreserveLayout
-                : WidthPolicy.FixedMarker,
+                : request.FixedMarker ? WidthPolicy.FixedMarker
+                : WidthPolicy.CollapsePreserveLayout,
             BoxColor = request.BoxColor,
             // #1188/#1169: per-carrier mode. An explicit --carrier-policy wins;
             // otherwise the PROFILE's policy stands. Falling back to
@@ -238,20 +240,20 @@ internal static class RedactCommandHandler
                 "--no-box and --box-color are mutually exclusive: --no-box draws no box to colour.");
         }
 
-        // #1755: --close-width, --overshoot-box and --preserve-layout are
-        // three different, mutually exclusive answers to the same width-policy
+        // #1755: --close-width, --overshoot-box and --fixed-marker are three
+        // different, mutually exclusive answers to the same width-policy
         // question; picking more than one is not "pick the last one wins".
         var widthFlagCount =
-            (request.CloseWidth ? 1 : 0) + (request.OvershootBox ? 1 : 0) + (request.PreserveLayout ? 1 : 0);
+            (request.CloseWidth ? 1 : 0) + (request.OvershootBox ? 1 : 0) + (request.FixedMarker ? 1 : 0);
         if (widthFlagCount > 1)
         {
             throw new ArgumentException(
-                "--close-width, --overshoot-box and --preserve-layout are mutually exclusive width policies.");
+                "--close-width, --overshoot-box and --fixed-marker are mutually exclusive width policies.");
         }
 
         if (request.FlattenOcr &&
             (request.OcrImageText || !request.DrawBox || request.BoxColor != null ||
-             request.CloseWidth || request.OvershootBox || request.PreserveLayout ||
+             request.CloseWidth || request.OvershootBox || request.FixedMarker ||
              request.Strict || request.AllowLowConfidence || request.KeepAttachments))
         {
             throw new ArgumentException(
@@ -291,11 +293,13 @@ internal readonly record struct RedactCommandRequest(
     Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null,   // #1188/#1169
     bool WholeWord = false,   // #1052
     bool OvershootBox = false,   // #1189
-    // #1755: opt OUT of the new FixedMarker default back to the pre-#1755
-    // behaviour (advance kept, no reflow, box exactly the removed run's
-    // width) -- accepting the #1715 width-residue channel knowingly, for a
-    // caller that specifically needs unchanged layout.
-    bool PreserveLayout = false,
+    // #1755: opt IN to WidthPolicy.FixedMarker -- closes the gap like
+    // --close-width AND draws a content-independent covering box, unlike
+    // --close-width (no box at all). NOT the default: measured to visually
+    // overlap the reflowed neighbour in the common case (see the remark on
+    // RedactionOptions.Width) until the shift arithmetic accounts for the
+    // marker's own width.
+    bool FixedMarker = false,
     bool KeepAttachments = false,   // #1572 — opt out of removing every attachment
     // #1586 — the output profile. Standard is the default on every path; the
     // CLI must not be the one front end that quietly ships less.

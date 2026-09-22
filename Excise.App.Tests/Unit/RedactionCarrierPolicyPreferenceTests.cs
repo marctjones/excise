@@ -144,15 +144,20 @@ public class RedactionCarrierPolicyPreferenceTests
     }
 
     [Fact]
-    public void WidthPolicy_DefaultsToFixedMarker_AndRoundTripsThroughPreferences()
+    public void WidthPolicy_DefaultsToCollapse_AndRoundTripsThroughPreferences()
     {
-        // #1755: the default changed FROM the exact-width box #1189/#1140
-        // recorded as a ruler TO FixedMarker -- closing the #1715 width
-        // channel and always drawing a visible mark (#1725) -- a deliberate
-        // product decision (D1: "Redaction trust: silent misses and width
-        // residue"), pinned here so the next change is equally deliberate.
+        // #1189. The default keeps today's behaviour: an exact-width box that
+        // does not reflow the page — and that IS the ruler #1140 recorded, so
+        // changing the default is a product decision, not a side effect.
+        //
+        // #1755 added WidthPolicy.FixedMarker as an available OPTION (it
+        // closes the #1715 width channel and always draws a visible mark,
+        // #1725) but deliberately NOT as the default yet: measured (mutool
+        // -F stext, real glyph positions) to visually overlap the reflowed
+        // neighbouring text in the COMMON case, not merely when a line has
+        // little slack — see the remark on RedactionOptions.Width.
         var main = MainWindowViewModelTestFactory.Create();
-        main.RedactionWidthPolicy.Should().Be(WidthPolicy.FixedMarker);
+        main.RedactionWidthPolicy.Should().Be(WidthPolicy.CollapsePreserveLayout);
 
         var prefs = new PreferencesViewModel();
         prefs.WidthPolicyOptions.Should().BeEquivalentTo(new[]
@@ -178,7 +183,7 @@ public class RedactionCarrierPolicyPreferenceTests
         // they configured something they no longer have.
         var settings = new Excise.App.Models.WindowSettings();
         settings.RedactionWholeWord.Should().BeFalse("defaults are the pre-option behaviour");
-        settings.RedactionWidthPolicy.Should().Be("FixedMarker");   // #1755
+        settings.RedactionWidthPolicy.Should().Be("CollapsePreserveLayout");
         settings.LinkUriCarrierPolicy.Should().Be("Strip");
         settings.MetadataCarrierPolicy.Should().Be("Strip");
 
@@ -201,7 +206,7 @@ public class RedactionCarrierPolicyPreferenceTests
         var main = MainWindowViewModelTestFactory.Create();
         main.ApplyRedactionPolicyPreferences(false, "Nonsense", "Nonsense", null);
 
-        main.RedactionWidthPolicy.Should().Be(WidthPolicy.FixedMarker);   // #1755
+        main.RedactionWidthPolicy.Should().Be(WidthPolicy.CollapsePreserveLayout);
         main.LinkUriCarrierPolicy.Should().Be(CarrierScrubMode.Strip);
         main.MetadataCarrierPolicy.Should().Be(CarrierScrubMode.Strip);
     }

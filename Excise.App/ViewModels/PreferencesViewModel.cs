@@ -28,10 +28,8 @@ public class PreferencesViewModel : ViewModelBase
         Excise.Core.Text.Segmentation.RedactionProfile.Standard;
     private Excise.App.Services.Printing.PrintScalingMode _printScaling =
         Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
-    // #1755: FixedMarker is the new default -- closes the #1715 width channel
-    // and always draws a visible mark (#1725).
     private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
-        Excise.Core.Text.Segmentation.WidthPolicy.FixedMarker;
+        Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
 
     // Performance (Balanced until loaded).
     private PerformancePreset _performancePreset = PerformancePreset.Balanced;
@@ -400,7 +398,7 @@ public class PreferencesViewModel : ViewModelBase
         RedactionWholeWord = false;
         RedactionKeepAttachments = false;
         SelectedRedactionProfile = Excise.Core.Text.Segmentation.RedactionProfile.Standard;
-        SelectedRedactionWidthPolicy = Excise.Core.Text.Segmentation.WidthPolicy.FixedMarker;   // #1755
+        SelectedRedactionWidthPolicy = Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
         SelectedPrintScaling = Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
         SetPerformanceFields(PerformanceSettings.Balanced);
         SelectedDocumentOpenMode = DocumentOpenMode.Automatic;

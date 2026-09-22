@@ -171,10 +171,8 @@ public class RedactionService
     public TextRedactionResult RedactText(
         string inputPath, string outputPath, string textToRedact, bool caseSensitive = false,
         bool allowLowConfidence = false, bool wholeWord = false,
-        // #1755: FixedMarker is the new default -- closes the #1715 width
-        // channel and always draws a visible mark (#1725).
         Excise.Core.Text.Segmentation.WidthPolicy width =
-            Excise.Core.Text.Segmentation.WidthPolicy.FixedMarker,
+            Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout,
         bool keepAttachments = false,
         Excise.Core.Text.Segmentation.RedactionProfile profile
             = Excise.Core.Text.Segmentation.RedactionProfile.Standard)   // #1586

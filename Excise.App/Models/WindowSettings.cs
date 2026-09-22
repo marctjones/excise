@@ -62,12 +62,13 @@ public class WindowSettings
     /// <summary>
     /// Redaction width / covering-box policy (#1189). Persisted as a string;
     /// parsed back to <see cref="Excise.Core.Text.Segmentation.WidthPolicy"/>.
-    /// Default "FixedMarker" (#1755) — closes the #1715 width channel and
-    /// always draws a visible mark (#1725). A settings file written before
-    /// #1755 still names "CollapsePreserveLayout" explicitly and keeps that
-    /// choice; only a FRESH install with no saved value gets the new default.
+    /// "FixedMarker" (#1755) exists and closes the #1715 width channel while
+    /// always drawing a visible mark (#1725), but is not the default yet — see
+    /// the remark on <see cref="Excise.Core.Text.Segmentation.RedactionOptions.Width"/>
+    /// for the measured reason (the marker overlaps the reflowed neighbour in
+    /// the common case until the shift arithmetic accounts for its width).
     /// </summary>
-    public string RedactionWidthPolicy { get; set; } = "FixedMarker";
+    public string RedactionWidthPolicy { get; set; } = "CollapsePreserveLayout";
 
     /// <summary>
     /// The redaction output profile (#1586): "Standard" or "Maximum".
