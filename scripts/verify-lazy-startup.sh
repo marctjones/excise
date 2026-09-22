@@ -60,7 +60,7 @@ RUN_LOG="$(mktemp)"
 trap 'rm -f "$RUN_LOG"' EXIT
 set +e
 dotnet test Excise.App.Tests/Excise.App.Tests.csproj \
-    --filter "FullyQualifiedName~HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan" \
+    --filter "FullyQualifiedName~HiddenTextToggle_WithDocumentLoaded_DoesNotLoadOcrAssembly" \
     --logger "console;verbosity=minimal" 2>&1 | tee "$RUN_LOG"
 run_status=${PIPESTATUS[0]}
 set -e
@@ -68,9 +68,9 @@ run_output="$(cat "$RUN_LOG")"
 
 if grep -q "No test matches the given testcase filter" <<<"$run_output"; then
     echo
-    echo "ERROR: the filter matched NO tests — HiddenTextToggles_DoNotLoadOcrAssembly" >&2
-    echo "       BeforeRasterizedScan was renamed, moved, or removed. This gate would" >&2
-    echo "       otherwise report green having verified nothing." >&2
+    echo "ERROR: the filter matched NO tests — HiddenTextToggle_WithDocumentLoaded_" >&2
+    echo "       DoesNotLoadOcrAssembly was renamed, moved, or removed (#1780). This" >&2
+    echo "       gate would otherwise report green having verified nothing." >&2
     exit 1
 fi
 [[ $run_status -eq 0 ]] || exit $run_status

@@ -11386,6 +11386,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenGeneratedFixture_BlocksWithToast_AndKeepsClipboardEmpty",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenDocument_BlocksWithToast_AndKeepsClipboardEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11519,6 +11526,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedGeneratedSource_SavesEncrypted_WithoutAskingAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11535,22 +11549,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_UnencryptedSource_NeverAsksForConfirmation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -12854,6 +12852,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenGeneratedFixture_BlocksWithToast_AndKeepsClipboardEmpty",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenDocument_BlocksWithToast_AndKeepsClipboardEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12987,6 +12992,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedGeneratedSource_SavesEncrypted_WithoutAskingAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -13003,22 +13015,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_UnencryptedSource_NeverAsksForConfirmation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -14315,6 +14311,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenGeneratedFixture_BlocksWithToast_AndKeepsClipboardEmpty",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenDocument_BlocksWithToast_AndKeepsClipboardEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14448,6 +14451,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedGeneratedSource_SavesEncrypted_WithoutAskingAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14464,22 +14474,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_UnencryptedSource_NeverAsksForConfirmation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -15777,6 +15771,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenGeneratedFixture_BlocksWithToast_AndKeepsClipboardEmpty",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenDocument_BlocksWithToast_AndKeepsClipboardEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15910,6 +15911,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedGeneratedSource_SavesEncrypted_WithoutAskingAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15926,22 +15934,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_UnencryptedSource_NeverAsksForConfirmation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -81396,6 +81388,34 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/CatalogVersionOracleTests.cs::CatalogVersionOracleTests.Qpdf_ReadsTheSameTwoInputs_ThatExciseResolvesToTheLater",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CatalogVersionOracleTests.cs::CatalogVersionOracleTests.Mutool_AgreesWithExcise_WhenTheCatalogRaisesTheVersion",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CatalogVersionOracleTests.cs::CatalogVersionOracleTests.Mutool_Diverges_WhenTheCatalogLowersTheVersion_RegisteredDivergence",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/CatalogVersionOracleTests.cs::CatalogVersionOracleTests.TheSavedHeader_CarriesTheEffectiveVersion_AndTheRaisedVersionUnlocksObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/CcittEndOfBlockTests.cs::CcittEndOfBlockTests.TheOnlyCorpusFileSettingEndOfBlock_RendersAtOracleParity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81934,42 +81954,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::EncryptionInteropGateTests.AtLeastOneIndependentToolIsAvailable_GateIsNotVacuous",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Mutool_CorrectUserPassword_ExtractsMarkerText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Mutool_OwnerPassword_ExtractsMarkerText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Mutool_WrongPassword_RefusesToExtractOrRender",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::skips.Mutool_NoPassword_RefusesToExtractOrRender",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -110417,6 +110401,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenGeneratedFixture_BlocksWithToast_AndKeepsClipboardEmpty",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenDocument_BlocksWithToast_AndKeepsClipboardEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -110550,6 +110541,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedGeneratedSource_SavesEncrypted_WithoutAskingAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -110566,22 +110564,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_UnencryptedSource_NeverAsksForConfirmation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -111893,6 +111875,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenGeneratedFixture_BlocksWithToast_AndKeepsClipboardEmpty",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenDocument_BlocksWithToast_AndKeepsClipboardEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -112026,6 +112015,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedGeneratedSource_SavesEncrypted_WithoutAskingAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -112042,22 +112038,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_UnencryptedSource_NeverAsksForConfirmation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -113346,6 +113326,13 @@
           ]
         },
         {
+          "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenGeneratedFixture_BlocksWithToast_AndKeepsClipboardEmpty",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs::DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenDocument_BlocksWithToast_AndKeepsClipboardEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -113479,6 +113466,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedGeneratedSource_SavesEncrypted_WithoutAskingAnything",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -113495,22 +113489,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_UnencryptedSource_NeverAsksForConfirmation",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/LinuxCupsDocumentPrinterTests.cs::LinuxPrintPermissionGatingTests.PrintDenied_Bit3_NeverReachesCups",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -113577,8 +113555,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7781,
-    "testMethodsWithCapabilityCandidate": 4844,
+    "testMethods": 7541,
+    "testMethodsWithCapabilityCandidate": 4786,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

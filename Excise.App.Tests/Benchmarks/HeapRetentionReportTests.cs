@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Excise.App.Services;
 using Excise.App.ViewModels;
 using Excise.Rendering;
+using Excise.TestSupport;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -66,9 +67,10 @@ public sealed class HeapRetentionReportTests
             "Report-only heap retention measurement (#1481/#1469); set EXCISE_HEAP_REPORT=1 to run it.");
 
         var pdf = Environment.GetEnvironmentVariable("EXCISE_HEAP_REPORT_PDF")
-            ?? FindUpwards(Path.Combine("test-pdfs", "federal", "irs-1040-instructions.pdf"));
+            ?? TestRepoLayout.FindFile("test-pdfs", "federal", "irs-1040-instructions.pdf");
         Assert.SkipUnless(pdf is not null && File.Exists(pdf),
-            "irs-1040-instructions.pdf not found above the test output directory; set EXCISE_HEAP_REPORT_PDF.");
+            TestRepoLayout.AbsenceReason("irs-1040-instructions.pdf",
+                "test-pdfs/federal/irs-1040-instructions.pdf") + " Set EXCISE_HEAP_REPORT_PDF.");
 
         var settings = new ReportSettings(
             Pdf: pdf!,
@@ -275,17 +277,6 @@ public sealed class HeapRetentionReportTests
         => int.TryParse(Environment.GetEnvironmentVariable(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
             ? value
             : fallback;
-
-    private static string? FindUpwards(string relative)
-    {
-        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
-        {
-            var candidate = Path.Combine(dir.FullName, relative);
-            if (File.Exists(candidate))
-                return candidate;
-        }
-        return null;
-    }
 
     /// <summary>Samples committed GC bytes and RSS every 50 ms to catch the cycle peak.</summary>
     private sealed class PeakSampler : IDisposable

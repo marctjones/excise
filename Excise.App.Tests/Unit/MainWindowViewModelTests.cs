@@ -191,6 +191,64 @@ public class MainWindowViewModelTests
 
     #endregion
 
+    #region Lazy OCR Loading
+
+    /// <summary>
+    /// Ordinary hidden-text reveal must stay structural-only and must not drag in
+    /// the OCR assembly — that is a real dependency/privacy property, not a
+    /// performance nicety (OCR shells out to an external `tesseract` binary).
+    /// </summary>
+    /// <remarks>
+    /// Restored by #1780 after #1770 removed the no-document version of this test
+    /// as unable to fail: with no document loaded, the toggle setter returns before
+    /// reaching any code path that could load OCR, so the assertion was vacuously
+    /// true regardless of behaviour. This version loads a real document headlessly
+    /// first, so the toggle exercises the same code path a user's reveal action
+    /// would.
+    ///
+    /// This assertion is ORDER-DEPENDENT and cannot be made otherwise in-process:
+    /// once any earlier test has loaded Excise.Ocr, "is it loaded?" can no longer
+    /// distinguish "we pulled it in" from "it was already here". So this watches
+    /// AssemblyLoad DURING the toggle rather than checking absolute load state —
+    /// that holds regardless of what ran before.
+    /// </remarks>
+    [Fact]
+    public async Task HiddenTextToggle_WithDocumentLoaded_DoesNotLoadOcrAssembly()
+    {
+        var pdfPath = Path.Combine(Path.GetTempPath(), $"excise-mwvm-ocr-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            TestPdfGenerator.CreateSimpleTextPdf(pdfPath);
+            await _viewModel.LoadDocumentHeadlessAsync(pdfPath);
+
+            var loadedDuringAction = new List<string>();
+            AssemblyLoadEventHandler handler = (_, e) =>
+                loadedDuringAction.Add(e.LoadedAssembly.GetName().Name ?? "");
+            AppDomain.CurrentDomain.AssemblyLoad += handler;
+
+            try
+            {
+                _viewModel.RevealHiddenText = true;
+                _viewModel.RevealRasterizedHidden = false;
+            }
+            finally
+            {
+                AppDomain.CurrentDomain.AssemblyLoad -= handler;
+            }
+
+            loadedDuringAction.Should().NotContain("Excise.Ocr",
+                "toggling structural hidden-text reveal on a loaded document must not pull in " +
+                "the OCR assembly — OCR shells out to an external tesseract binary and must " +
+                "stay behind an explicit rasterized-scan request");
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    #endregion
+
     #region Scripting API Tests
 
     [Fact]
