@@ -7,10 +7,12 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using AwesomeAssertions;
 using Excise.Avalonia.Controls;
 using Excise.Core.Document;
+using Excise.Rendering.Differential;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
@@ -248,6 +250,156 @@ public class StickyNotePopupWorkflowTests
 
         window.Close();
         Cleanup(tempDir);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task PlaceAndSave_QpdfIndependentlySeesBothTheNoteAndItsPopup()
+    {
+        // PlaceEditAndSave_SurvivesReload_WithPopupAndOpenState above asks
+        // excise's OWN PdfDocument.Open whether the /Parent<->/Popup link
+        // round-tripped — proof the writer and reader agree, not proof about
+        // the file (CLAUDE.md's no-self-oracle rule, same one #933 applies to
+        // pixels). qpdf parses the saved bytes independently and has never
+        // heard of PdfAnnotationAuthoring.
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed [requires: tool:qpdf]");
+
+        var (sourcePath, outputPath, tempDir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Qpdf independent check fixture");
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        await Task.Delay(200);
+
+        await vm.LoadDocumentAsync(sourcePath);
+        await Task.Delay(400);
+
+        await vm.ToggleStickyNoteToolCommand.Execute();
+        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+        await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer!);
+        var center = PageCenterInWindow(window, viewer!, vm)!.Value;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            window.MouseDown(center, MouseButton.Left);
+            window.MouseUp(center, MouseButton.Left);
+        });
+        for (var i = 0; i < 5; i++) { await Task.Delay(100); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); }
+
+        window.KeyTextInput("Seen independently by qpdf");
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+        vm.CommitOpenStickyNotePopup();
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+
+        await vm.SaveFileAsAsync(outputPath);
+        window.Close();
+
+        var check = QpdfReferenceTool.Check(outputPath);
+        check.Should().NotBeNull();
+        check!.Value.Success.Should().BeTrue($"qpdf must consider the saved file structurally sound:\n{check.Value.Output}");
+
+        var annotations = QpdfReferenceTool.ListAnnotations(outputPath);
+        annotations.Should().NotBeNull("qpdf must be able to enumerate the saved file's annotations");
+        annotations!.Should().Contain(a => a.Subtype == "Text" && a.Contents == "Seen independently by qpdf",
+            "qpdf's own parser, not excise's, must find the note text in a /Text annotation");
+        annotations.Should().Contain(a => a.Subtype == "Popup",
+            "qpdf's own parser must find the linked /Popup annotation #1788 authors alongside /Text");
+
+        Cleanup(tempDir);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task RealMenuClick_EntersStickyNoteMode_AndARealClickOnDone_CommitsTheNote()
+    {
+        // The two coverage gaps left after #1789's sweep: the "Place Sticky
+        // Note (click page)" menu item is entered via vm.ToggleStickyNoteToolCommand
+        // .Execute() everywhere else in this file (that's fine for the OTHER
+        // tests, which are really about the popup, not the menu), and the
+        // popup's "Done" button (Excise.App/Views/StickyNotePopupView.axaml)
+        // had no test clicking it directly — click-away dismissal exercises
+        // MainWindowViewModel.CommitOpenStickyNotePopup instead. Both real
+        // gestures, end to end, in one workflow.
+        var (sourcePath, outputPath, tempDir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Click to place a note");
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        await Task.Delay(200);
+
+        await vm.LoadDocumentAsync(sourcePath);
+        await Task.Delay(400);
+
+        // "Place Sticky Note (click page)" has no x:Name (MainWindow.axaml:309)
+        // — found by its Command binding, same as the coverage inventory does
+        // when a static XAML scan cannot otherwise name it.
+        var menuItem = window.GetLogicalDescendants().OfType<MenuItem>()
+            .FirstOrDefault(m => m.Command == vm.ToggleStickyNoteToolCommand);
+        menuItem.Should().NotBeNull("MainWindow.axaml must still bind a menu item to ToggleStickyNoteToolCommand");
+
+        RaisePointerPressRelease(menuItem!, window);
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+        // As ViewToggleMenuInteractionTests notes: a pointer press/release on a
+        // CLOSED menu's item does not itself run the command — the explicit
+        // Click event is what a real open-menu selection ultimately raises.
+        menuItem!.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+
+        vm.IsStickyNoteToolActive.Should().BeTrue(
+            "a real click on \"Place Sticky Note (click page)\" must enter sticky-note mode");
+
+        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+        await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer!);
+        var center = PageCenterInWindow(window, viewer!, vm)!.Value;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            window.MouseDown(center, MouseButton.Left);
+            window.MouseUp(center, MouseButton.Left);
+        });
+        for (var i = 0; i < 5; i++) { await Task.Delay(100); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); }
+        vm.StickyNotePopup.Should().NotBeNull("precondition: the popup must be open before typing into it");
+
+        window.KeyTextInput("Committed via the Done button");
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+
+        window.UpdateLayout();
+        var doneButton = window.GetLogicalDescendants().OfType<Button>()
+            .FirstOrDefault(b => b.Content as string == "Done");
+        doneButton.Should().NotBeNull("StickyNotePopupView.axaml must declare the Done button");
+
+        var doneCenter = doneButton!.TranslatePoint(
+            new Point(doneButton.Bounds.Width / 2, doneButton.Bounds.Height / 2), window) ?? default;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            window.MouseDown(doneCenter, MouseButton.Left);
+            window.MouseUp(doneCenter, MouseButton.Left);
+        });
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+
+        vm.StickyNotePopup.Should().BeNull("a real click on Done must collapse the popup, same as click-away");
+
+        await vm.SaveFileAsAsync(outputPath);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        reopened.GetPage(1).GetAnnotations()
+            .Single(a => a.Subtype == PdfAnnotationSubtype.Text).Contents
+            .Should().Be("Committed via the Done button");
+
+        window.Close();
+        Cleanup(tempDir);
+    }
+
+    private static void RaisePointerPressRelease(Control target, Visual root)
+    {
+        var pointer = new global::Avalonia.Input.Pointer(
+            global::Avalonia.Input.Pointer.GetNextFreeId(), PointerType.Mouse, isPrimary: true);
+        var pos = new Point(4, 4);
+        target.RaiseEvent(new PointerPressedEventArgs(
+            target, pointer, root, pos, 0,
+            new PointerPointProperties(RawInputModifiers.LeftMouseButton, PointerUpdateKind.LeftButtonPressed),
+            KeyModifiers.None));
+        target.RaiseEvent(new PointerReleasedEventArgs(
+            target, pointer, root, pos, 0,
+            new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.LeftButtonReleased),
+            KeyModifiers.None, MouseButton.Left));
     }
 
     // ── shared geometry helpers ──────────────────────────────────────────────

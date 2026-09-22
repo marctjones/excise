@@ -13,6 +13,7 @@ using Excise.App.Tests.Utilities;
 using Excise.App.Tests.Utilities.Fakes;
 using Excise.App.ViewModels;
 using Excise.App.Views;
+using Excise.Core.Document;
 using Xunit;
 
 namespace Excise.App.Tests.UI;
@@ -435,6 +436,76 @@ public class AnnotationToolbarAndPaletteTests
 
             var act = async () => await ClickAsync(button!, palette);
             await act.Should().NotThrowAsync();
+        }
+        finally
+        {
+            window.Close();
+            TestPdfGenerator.CleanupTestFile(pdf);
+        }
+    }
+
+    /// <summary>
+    /// The four *FromSelection commands (Highlight/Underline/StrikeOut/
+    /// Squiggly) are the one family <see cref="RealPointerClick_OnRemainingToolbarButtons_DoesNotThrow"/>
+    /// and <see cref="RealPointerClick_OnRemainingPaletteButtons_DoesNotThrow"/>
+    /// above could not cover: with no text selected their CanExecute is
+    /// false, so Avalonia auto-disables the Button and it never dispatches a
+    /// PointerPressed a real MouseDown/MouseUp can observe — the click
+    /// silently lands on nothing, exactly like clicking a greyed-out menu
+    /// item. Staging a selection first (same helper shape as
+    /// TextMarkupAnnotationCommandTests.SelectSomeText) is what the other
+    /// theories' guarded-no-op buttons do not need, because THEIR guard is
+    /// "no drag rect", which does not disable the button itself.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(true, "AnnotationToolbarHighlightButton")]
+    [InlineData(true, "AnnotationToolbarUnderlineButton")]
+    [InlineData(true, "AnnotationToolbarStrikeOutButton")]
+    [InlineData(true, "AnnotationToolbarSquigglyButton")]
+    [InlineData(false, "PaletteHighlightButton")]
+    [InlineData(false, "PaletteUnderlineButton")]
+    [InlineData(false, "PaletteStrikeOutButton")]
+    [InlineData(false, "PaletteSquigglyButton")]
+    public async Task RealPointerClick_OnFromSelectionButtons_WithATextSelectionStaged_AddsTheAnnotation(
+        bool onToolbar, string buttonName)
+    {
+        var (vm, window, pdf) = await OpenWithDocumentAsync();
+        try
+        {
+            vm.CurrentTextSelectionPageArea = PdfPageRect.ViewerDips(
+                1, x: 100, y: 100, width: 140, height: 20,
+                renderDpi: MainWindowViewModel.DefaultViewerRenderDpi);
+            vm.SelectedText = "Test Content";
+
+            Window host;
+            if (onToolbar)
+            {
+                vm.ToggleAnnotationToolbarCommand.Execute().Subscribe();
+                await KeyboardTestHelpers.FlushDispatcherAsync();
+                window.UpdateLayout();
+                host = window;
+            }
+            else
+            {
+                vm.ToggleAnnotationPaletteCommand.Execute().Subscribe();
+                await KeyboardTestHelpers.FlushDispatcherAsync();
+                var palette = window.AnnotationPalette;
+                palette.Should().NotBeNull();
+                palette!.UpdateLayout();
+                host = palette;
+            }
+
+            var button = host.GetLogicalDescendants().OfType<Button>()
+                .FirstOrDefault(b => b.Name == buttonName);
+            button.Should().NotBeNull($"{(onToolbar ? "MainWindow.axaml" : "AnnotationPaletteWindow.axaml")} must declare {buttonName}");
+            button!.Command!.CanExecute(button.CommandParameter).Should().BeTrue(
+                $"{buttonName} must be enabled once a text selection is staged, or this click proves nothing");
+
+            var before = vm.FileState.AnnotationEditsCount;
+            await ClickAsync(button, host);
+
+            vm.FileState.AnnotationEditsCount.Should().Be(before + 1,
+                $"a real click on {buttonName} with a selection staged must add exactly one annotation");
         }
         finally
         {
