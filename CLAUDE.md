@@ -74,19 +74,41 @@ Excise.App/Services/RedactionService.cs                 ← GUI orchestration; m
 
 ### Required Test Assertions
 
-⚠️ **The assertion below is NOT sufficient on its own. It has passed on leaking
-documents three separate times.**
+**Start from the carrier-agnostic scan. It is the assertion a redaction test
+may not omit:**
 
 ```csharp
-// NECESSARY, BUT BLIND. Reads only the CONTENT STREAM.
-var textAfter = PdfTestHelpers.ExtractAllText(redactedPdf);
-textAfter.Should().NotContain("REDACTED_TEXT",
+// SEARCH THE SAVED BYTES, INCLUDING INSIDE COMPRESSED STREAMS. If the secret
+// is anywhere in the file, in any carrier, this fails. Excise.Core.Tests/
+// TestSupport/SavedPdfLeakScanner.cs, linked into every test project that
+// needs it.
+SavedPdfLeakScanner.FindTerm(document.SaveToBytes(), "REDACTED_TEXT")
+    .Should().BeEmpty();
+```
+
+⚠️ **The assertion below — excise's own extractor on excise's own output — is
+NOT sufficient on its own. It has passed on leaking documents three separate
+times.**
+
+```csharp
+// NECESSARY, BUT BLIND. Reads only the CONTENT STREAM, through excise.
+page.Text.Should().NotContain("REDACTED_TEXT",
     "Text must be REMOVED from PDF structure, not just hidden");
 ```
 
-**Why this is not enough.** `ExtractAllText` reads the content stream. A PDF
-restates the same text in carriers it cannot see, and each one has already
-shipped a green suite over a leaking file:
+(⚠️ This block named `PdfTestHelpers.ExtractAllText` until 2026-09-21. **That
+helper does not exist** — `Excise.App.Tests/Utilities/PdfTestHelpers.cs` was
+deleted long ago, so the one code sample in the project's own redaction
+guidance could not be copied into a test. It is `page.Text` /
+`doc.GetPage(n).Text`. The text below still says "ExtractAllText" where it
+recounts what the three leaks did, because that is what the assertion was at
+the time; the property described — an excise-side content-stream read — is
+unchanged, and #1769 replaced the last live users of it in
+`Excise.App.Tests`.)
+
+**Why this is not enough.** An excise-side content-stream read sees only the
+content stream. A PDF restates the same text in carriers it cannot see, and
+each one has already shipped a green suite over a leaking file:
 
 | Leak | Where the text survived | What our assertion said |
 |------|------------------------|-------------------------|
@@ -472,7 +494,12 @@ is: its only package reference is CSJ2K, which is managed.
 
 Located in `Excise.App.Tests/`:
 
-**Framework**: xUnit 2.5.3 with FluentAssertions 6.12.0
+**Framework** (read off `Excise.App.Tests.csproj`, 2026-09-21): **xUnit v3
+3.2.2** with **AwesomeAssertions 9.6.0** — the OSS fork of FluentAssertions 7.x,
+because FluentAssertions 8+ moved to a non-commercial licence. ⚠️ This line said
+"xUnit 2.5.3 with FluentAssertions 6.12.0" until 2026-09-21; both halves were
+wrong, and the v2→v3 difference is not cosmetic — `Assert.Skip*` (#1172) and
+`ITestOutputHelper` in the `Xunit` namespace are v3-only.
 
 **Test Count** (measured 2026-09-04): **5,866 `[Fact]`/`[Theory]` attributes** —
 Excise.Core.Tests 3,761, Excise.Rendering.Tests 900, Excise.App.Tests 770,
@@ -500,18 +527,43 @@ wall-clock timeout and produce a **false red** (observed three times on
 
 **Utilities:**
 - `Utilities/TestPdfGenerator.cs` - Creates test PDFs with known content
-- `Utilities/PdfTestHelpers.cs` - PDF inspection and text extraction
+- `Utilities/MainWindowViewModelTestFactory.cs` - Builds a headless view model
+- `Utilities/FixedAvaloniaFact.cs` / `FixedAvaloniaTheory.cs` - the headless
+  dispatcher attributes (#337); a parameterized UI test needs the Theory one
+- `../Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs` and
+  `TestRepoLayout.cs` - linked in, not copied (see the `.csproj` `<Compile
+  Include>` items and #1527)
 
-**Test Categories:**
-- `Integration/` - End-to-end redaction, coordinate conversion, batch processing
-- `Unit/` - ViewModel, coordinate conversion, PDF operations
-- `UI/` - Headless UI tests, ViewModel integration
-- `Security/` - Content removal verification
+**Test Categories** (⚠️ verified with `find`, 2026-09-21 — this list named a
+`Security/` directory that does not exist):
+- `Integration/` - search/index, thumbnail cache, real-world document sweeps
+- `Unit/` - services, view-model orchestration, redaction service
+- `UI/` - headless Avalonia workflow tests (the bulk of the project)
+- `Controls/` - control-level behaviour (typewriter, viewer chrome)
+- `Automation/`, `PublicApi/`, `Fixtures/`, `Resources/`
 
-**Key Test Files:**
-- `GuiRedactionSimulationTests.cs` - Simulates exact GUI workflow to catch coordinate issues
-- `Excise.Core.Tests/Document/PdfCoordinateMapperTests.cs` and `PageRotationCoordinateTests.cs` - Validate active coordinate contracts
-- `ComprehensiveRedactionTests.cs` - Full redaction pipeline tests
+**Key Test Files** (⚠️ every path below was checked with `find` on 2026-09-21.
+The three this list named before — `GuiRedactionSimulationTests.cs`,
+`ComprehensiveRedactionTests.cs` and a `Security/ContentRemovalVerificationTests.cs`
+— **none of them exist**, so the pointer at the top of the redaction-critical
+reading list led nowhere. #1769):
+- `Excise.App.Tests/UI/RedactionMouseWorkflowTests.cs` - the real mouse drag
+  through the viewer, one theory row per corpus scenario; saved-bytes and qpdf
+  oracles
+- `Excise.App.Tests/UI/RedactionAndSearchCommandTests.cs` - the real
+  Apply-All command end to end; saved-bytes AND mutool oracles
+- `Excise.App.Tests/UI/GoldenPathTests.cs` - open → mark → apply → save,
+  asserted on the saved copy
+- `Excise.App.Tests/UI/SecondRedactionSaveScrubTests.cs` - redacting an
+  already-redacted copy leaves no secret in any carrier
+- `Excise.App.Tests/Unit/RedactionServiceTests.cs` - the GUI service's area,
+  text, options and metadata surfaces
+- `Excise.App.Tests/Unit/RedactedCopySafetyPolicyTests.cs` - what the
+  redacted-copy dialog is allowed to claim
+- `Excise.App.Tests/UI/GuiWorkflowCoverageMatrixTests.cs` - the map from user
+  workflow to the test that covers it; a deleted test must be re-pointed here
+- `Excise.Core.Tests/Document/PdfCoordinateMapperTests.cs` and
+  `PageRotationCoordinateTests.cs` - the active coordinate contracts
 
 **Running Tests:** See "Build and Run Commands" section above.
 
@@ -628,9 +680,9 @@ Peak RSS per testhost varies enormously by project, and an early note here
 claimed it did not — that claim was made from a partial sample (Core and one
 Rendering chunk) and was **wrong**. Measured over a full run:
 
-| step | peak RSS (2026-07) | re-measured 2026-08-16 | re-measured 2026-09-15/16 |
-|---|---:|---:|---:|
-| `Excise.App.Tests` unchunked (one process) | **8536 MB** | **3862 MB** | **7338 MB** (6339 / 6364 / 7338 over three consecutive runs) |
+| step | peak RSS (2026-07) | re-measured 2026-08-16 | re-measured 2026-09-15/16 | re-measured 2026-09-21 |
+|---|---:|---:|---:|---:|
+| `Excise.App.Tests` unchunked (one process) | **8536 MB** | **3862 MB** | **7338 MB** (6339 / 6364 / 7338 over three consecutive runs) | **8207 MB** (#1772) |
 | `Excise.App.Tests` heaviest chunk | 6576 MB (chunk05) | 3323 MB (chunk06) | not re-run (`--no-chunking`) |
 | `Excise.Rendering.Tests` heaviest chunk | 2389 MB (chunk02) | 2006 MB (chunk04) | not re-run |
 | `Excise.Core.Tests.*` (all 17 chunks) | ≤ 450 MB | not re-run (checkpointed) | not re-run |
@@ -652,9 +704,10 @@ work — this is also why it is serial by design and why CPU contention produces
 false reds here) is what survives, not any one figure. Tracked as #861.
 
 ⚠️ **"App.Tests has more than halved since #861" was true on 2026-08-16 and is
-false now** — it is back to 7338 MB, 1.9× the 2026-08-16 figure, and it rose
-across the three consecutive runs measured. That sentence stood here until
-2026-09-16 and is exactly the drift this table's own warning is about. The
+false now** — it reached 7338 MB on 2026-09-16 (1.9× the 2026-08-16 figure,
+rising across three consecutive runs) and **8207 MB on 2026-09-21** (#1772),
+which is back above the original 2026-07 measurement. That sentence stood here
+until 2026-09-16 and is exactly the drift this table's own warning is about. The
 biggest single consumer on the last full run was a corpus scan; on a
 `--no-chunking` App-only run it is App.Tests again.
 
@@ -1223,21 +1276,30 @@ Excise.App/                          # the Avalonia GUI (orchestration only)
 Excise.Avalonia/                      # reusable viewer control
 └── Controls/PdfViewerControl*.cs   # incl. .Continuous.cs (continuous scroll)
 
-Excise.App.Tests/
-├── Integration/
-│   ├── GuiRedactionSimulationTests.cs  # GUI workflow simulation
-│   ├── ComprehensiveRedactionTests.cs  # Full redaction tests
-│   └── ...
+Excise.App.Tests/                   # ⚠️ re-derived with `find`, 2026-09-21 (#1769):
+│                                   # the four files and the Security/ directory
+│                                   # this tree used to name do not exist
+├── UI/                             # the bulk of the project — headless Avalonia
+│   ├── RedactionMouseWorkflowTests.cs  # mouse drag → apply → save; qpdf oracle
+│   ├── RedactionAndSearchCommandTests.cs # the real commands; mutool oracle
+│   ├── GoldenPathTests.cs              # open → mark → apply → save
+│   ├── SecondRedactionSaveScrubTests.cs
+│   ├── GuiWorkflowCoverageMatrixTests.cs # workflow → covering test
+│   └── ...                             # ~100 more UI files
 ├── Unit/
+│   ├── RedactionServiceTests.cs        # the GUI redaction service
+│   ├── RedactedCopySafetyPolicyTests.cs
 │   ├── MainWindowViewModelTests.cs     # View-model orchestration tests
 │   └── ...
-├── UI/
-│   └── HeadlessUITests.cs              # UI integration tests
-├── Security/
-│   └── ContentRemovalVerificationTests.cs
+├── Integration/                    # search/index, thumbnail cache, real docs
+│   ├── RealWorldSearchTests.cs
+│   └── ...
+├── Controls/                       # control-level behaviour
+├── Automation/ PublicApi/ Fixtures/ Resources/
 ├── Utilities/
 │   ├── TestPdfGenerator.cs
-│   └── PdfTestHelpers.cs
+│   ├── MainWindowViewModelTestFactory.cs
+│   └── FixedAvaloniaFact.cs / FixedAvaloniaTheory.cs   # #337
 └── Excise.App.Tests.csproj
 
 Documentation:

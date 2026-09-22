@@ -226,6 +226,10 @@ public class RedactedCopySafetyPolicyTests : IDisposable
     {
         var inputPath = Path.Combine(_tempDir, "redact.pdf");
         TestPdfGenerator.CreateSimpleTextPdf(inputPath, "PUBLIC SECRET");
+        // #1769 input-side control: the carrier scan must be able to see the
+        // term in the file we started from, or its absence below proves nothing.
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(inputPath), "SECRET").Should().NotBeEmpty(
+            "the term must be findable in the unredacted input");
 
         using var document = PdfDocument.Open(File.ReadAllBytes(inputPath));
         var page = document.GetPage(1);
@@ -249,7 +253,11 @@ public class RedactedCopySafetyPolicyTests : IDisposable
         report.ContentVerificationStatus.Should().Be(RedactedContentVerificationStatus.Verified);
         report.RemainingTermCount.Should().Be(0);
         report.HiddenTextAuditStatus.Should().Be(RedactedContentVerificationStatus.Verified);
-        page.Text.Should().NotContain("SECRET");
+        // #1769: this read page.Text — excise confirming excise removed it,
+        // which proves only that its bugs are self-consistent. The saved bytes
+        // are searched instead, in every carrier and inside compressed streams.
+        SavedPdfLeakScanner.FindTerm(document.SaveToBytes(), "SECRET").Should().BeEmpty(
+            "the glyph redaction must leave the term in no carrier of the saved copy");
         dialog.Should().NotContain("SECRET");
     }
 

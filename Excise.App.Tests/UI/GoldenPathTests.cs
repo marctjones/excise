@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Headless.XUnit;
@@ -11,6 +12,7 @@ using Excise.App.Models;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
+using Excise.TestSupport;
 using Xunit;
 namespace Excise.App.Tests.UI;
 
@@ -43,6 +45,16 @@ public class GoldenPathTests
 
     private string CreateTestPdf(string nameHint = "test.pdf")
         => Path.Combine(_tempDir, nameHint);
+
+    /// <summary>
+    /// Drain queued Background-priority dispatcher posts (the auto-navigate to
+    /// the first search match) so they cannot fire after a later assertion.
+    /// </summary>
+    private static async Task SettleDispatcher()
+    {
+        for (var i = 0; i < 6; i++)
+            await Task.Delay(100);
+    }
 
     #region Golden Path 1: Open → Search → Navigate → Close
 
@@ -95,15 +107,21 @@ public class GoldenPathTests
         vm.SearchMatches.Count.Should().BeGreaterThanOrEqualTo(3,
             "should find at least one match per page (3+ total)");
 
-        // Step 3: Navigate to a match on a later page
-        var firstMatch = vm.SearchMatches.FirstOrDefault();
-        firstMatch.Should().NotBeNull("should have at least one match");
-        vm.JumpToSearchMatch(firstMatch!);
-        await Task.Delay(100);
+        // Step 3: Navigate to a match on a LATER page. A find auto-navigates to
+        // the first match, so jumping to that one could not distinguish a
+        // working jump from a no-op; drain that post first, then target a page
+        // the viewer is not already on.
+        await SettleDispatcher();
+        var laterMatch = vm.SearchMatches.FirstOrDefault(m => m.PageIndex != vm.CurrentPageIndex);
+        laterMatch.Should().NotBeNull("should have a match on a page other than the current one");
+        vm.JumpToSearchMatch(laterMatch!);
+        await SettleDispatcher();
 
-        // Assert step 3: Navigation occurred
-        vm.CurrentPageIndex.Should().BeGreaterThanOrEqualTo(0, "should be on a valid page");
-        vm.CurrentPageIndex.Should().BeLessThan(vm.TotalPages, "page index should be in bounds");
+        // Assert step 3: the viewer is on the match's OWN page. The previous
+        // pair of assertions ("index >= 0" and "index < TotalPages") is true of
+        // a build whose jump does nothing at all (#1769).
+        vm.CurrentPageIndex.Should().Be(laterMatch!.PageIndex,
+            "jumping to a search match must navigate the viewer to that match's page");
 
         // Step 4: Close document via command
         // Note: ReactiveCommand cannot be awaited directly; use Invoke() pattern
@@ -125,144 +143,87 @@ public class GoldenPathTests
     #region Golden Path 2: Open → Redact → Apply → Verify Text Gone
 
     /// <summary>
-    /// Golden Path 2: Security-critical workflow. User opens a PDF, redacts
-    /// an area covering known text, and applies the redaction.
+    /// Golden Path 2: Security-critical workflow. User opens a PDF, marks an
+    /// area over known text, applies, and saves the redacted copy — then the
+    /// SAVED BYTES are searched for the secret in every carrier.
     ///
-    /// This tests the redaction workflow in the ViewModel:
-    /// - Redaction area is added to pending redactions
-    /// - Redactions are applied via the command
-    /// - Pending count clears after apply
+    /// <para>#1769: this test was named <c>VerifyTextGone</c> and verified no
+    /// such thing. The apply ran inside <c>try { } catch { }</c> — and in
+    /// headless, with no desktop-lifetime MainWindow and no save picker, it bailed
+    /// before the pipeline ran at all — after which the only assertions were
+    /// "the document is still open" and "it still has pages". Both are true of a
+    /// build that redacts nothing, so a redaction regression could not redden
+    /// it.</para>
     ///
-    /// Note: The actual glyph-level removal is verified in Excise.Core.Tests.
-    /// Saving to disk is tested via integration tests.
+    /// <para>The save destination now comes through the test seam so the command
+    /// runs end to end, the apply is awaited rather than swallowed, and removal
+    /// is proven by <see cref="SavedPdfLeakScanner.FindTerm"/> over the saved
+    /// file — raw bytes and inflated streams — with the secret's presence in the
+    /// INPUT as the control that the scan can see this file's text at all, and
+    /// the survivor token as the control that it can still see text in the
+    /// OUTPUT. (mutool on this same command path is covered by
+    /// <c>RedactionAndSearchCommandTests.ApplyAllRedactionsCommand_RedactedSecret_NotReadableByIndependentExtractor</c>;
+    /// repeating it here would pad the gate without adding an oracle.)</para>
     /// </summary>
     [FixedAvaloniaFact]
     public async Task GoldenPath_OpenRedactApplyVerifyTextGone()
     {
-        // Arrange: Create a PDF with predictable text at known position
+        // Arrange. CreateMultiPagePdf draws "Page 1 Content" at PDF y=692 and
+        // "Secret on Page 1" at y=592 — 100pt apart, so one rectangle can cover
+        // the secret with the survivor comfortably outside it.
+        const string Secret = "Secret on Page 1";
+        const string Survivor = "Page 1 Content";
         var pdfPath = CreateTestPdf("redact_verify.pdf");
-        var secretText = "CONFIDENTIAL_SECRET_DATA";
-        TestPdfGenerator.CreateSimpleTextPdf(pdfPath, secretText);
+        var outputPath = CreateTestPdf("redact_verify_output.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
+
+        var sourceBytes = File.ReadAllBytes(pdfPath);
+        SavedPdfLeakScanner.FindTerm(sourceBytes, Secret).Should().NotBeEmpty(
+            "input-side control: the carrier scan must be able to find the secret BEFORE redaction, " +
+            "or its absence afterwards would prove only that the scan is blind to this file");
 
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
-
-        // Step 1: Open document
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
-
-        // Assert step 1: Document opens successfully
-        vm.IsDocumentLoaded.Should().BeTrue("document should be open");
-        vm.TotalPages.Should().BeGreaterThan(0, "should have pages");
-
-        // Verify the secret text is present before redaction
-        var textBefore = vm.CurrentPageText;
-        textBefore.Should().Contain(secretText, "secret text should be extractable before redaction");
-        _out.WriteLine($"Text before redaction: {textBefore}");
-
-        // Step 2: Add a pending redaction covering the secret area
-        // Position approximately where TestPdfGenerator places text (100, 100)
-        var redactionArea = new Rect(50, 80, 300, 40);  // Approximate area covering text
-        vm.RedactionWorkflow.MarkArea(pageNumber: 1, area: redactionArea, previewText: secretText);
-        await Task.Delay(50);
-
-        // Assert step 2: Redaction is pending
-        vm.RedactionWorkflow.PendingCount.Should().Be(1, "should have 1 pending redaction");
-
-        // Step 3: Apply the redaction via command
-        // ApplyAllRedactionsCommand applies all pending redactions to the document in-memory
         try
         {
-            vm.ApplyAllRedactionsCommand?.Execute().Subscribe();
-            await Task.Delay(500);  // Allow apply to complete
+            // Step 1: Open document
+            await vm.LoadDocumentAsync(pdfPath);
+            await Task.Delay(100);
+
+            vm.IsDocumentLoaded.Should().BeTrue("document should be open");
+            vm.TotalPages.Should().Be(1);
+            vm.CurrentPageText.Should().Contain(Secret, "the secret is extractable before redaction");
+
+            // Step 2: Mark the secret's area, in content coordinates.
+            vm.SetRedactedSavePathProviderForTests(_ => Task.FromResult<string?>(outputPath));
+            vm.IsRedactionMode = true;
+            vm.RedactionWorkflow.MarkArea(
+                PdfPageRect.FromContentPoints(1, new PdfRectangle(40, 570, 500, 620)), Secret);
+            vm.RedactionWorkflow.PendingCount.Should().Be(1, "should have 1 pending redaction");
+
+            // Step 3: Apply. Awaited, not swallowed — a throw here is the test
+            // failing, which is the whole point of a security workflow test.
+            await vm.ApplyAllRedactionsCommand!.Execute();
+
+            // Step 4: the redacted copy exists and the secret is gone from it.
+            vm.RedactionWorkflow.PendingCount.Should().Be(0, "applied redactions leave the pending list");
+            File.Exists(outputPath).Should().BeTrue("Apply All must write the redacted copy");
+
+            var savedBytes = File.ReadAllBytes(outputPath);
+            SavedPdfLeakScanner.FindTerm(savedBytes, Secret).Should().BeEmpty(
+                "the redacted secret must be gone from every carrier of the saved file, " +
+                "compressed streams included");
+            SavedPdfLeakScanner.AllCarriersText(savedBytes).Should().Contain(Survivor,
+                "output-side control: text outside the marked area must survive, which also proves " +
+                "the scan can still read text out of the redacted file");
+
+            vm.IsDocumentLoaded.Should().BeTrue("document should still be open after redaction");
         }
-        catch (Exception ex)
+        finally
         {
-            _out.WriteLine($"ApplyAllRedactionsCommand execution: {ex.Message}");
+            window.Close();
         }
-
-        // Step 4: Verify workflow state is correct after apply
-        // The pending count should be 0 after successful apply
-        // (actual glyph removal verification is done in Excise.Core.Tests)
-        _out.WriteLine($"Pending count after apply: {vm.RedactionWorkflow.PendingCount}");
-
-        // At minimum, verify the command executed without crashing
-        vm.IsDocumentLoaded.Should().BeTrue("document should still be open after redaction");
-        vm.TotalPages.Should().BeGreaterThan(0, "page count should be unchanged");
-    }
-
-    #endregion
-
-    #region Golden Path 3: Multi-Page Redaction
-
-    /// <summary>
-    /// Golden Path 3: User applies redactions across multiple pages (pages 1, 2, 3).
-    /// Tests:
-    /// - Multiple redaction areas on different pages
-    /// - Bulk apply across all pages
-    /// - Pending count clears after apply
-    /// - Navigation across pages with redactions works
-    /// </summary>
-    [FixedAvaloniaFact]
-    public async Task GoldenPath_MultiPageRedaction()
-    {
-        // Arrange: Create a 3-page PDF with distinct text per page
-        var pdfPath = CreateTestPdf("multipage_redact.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-
-        // Step 1: Open document
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
-
-        // Assert step 1
-        vm.TotalPages.Should().Be(3, "should have 3 pages");
-        vm.IsDocumentLoaded.Should().BeTrue();
-
-        // Step 2: Add redactions to each page using the public API
-        vm.RedactionWorkflow.MarkArea(pageNumber: 1, area: new Rect(50, 180, 300, 40), previewText: "Secret on Page 1");
-        vm.RedactionWorkflow.MarkArea(pageNumber: 2, area: new Rect(50, 180, 300, 40), previewText: "Secret on Page 2");
-        vm.RedactionWorkflow.MarkArea(pageNumber: 3, area: new Rect(50, 180, 300, 40), previewText: "Secret on Page 3");
-        await Task.Delay(50);
-
-        // Assert step 2
-        vm.RedactionWorkflow.PendingCount.Should().Be(3, "should have 3 pending redactions");
-
-        // Step 3: Apply all redactions via command
-        // Note: The actual apply operation modifies document; tested via ScriptedGuiTests
-        try
-        {
-            vm.ApplyAllRedactionsCommand?.Execute().Subscribe(_ => { });
-            await Task.Delay(200);
-        }
-        catch (Exception ex)
-        {
-            _out.WriteLine($"ApplyAllRedactionsCommand invoked: {ex.Message}");
-        }
-
-        // Assert step 3: Redactions workflow remains in valid state
-        // (The actual pending count clearing happens internally after apply succeeds)
-
-        // Step 4: Navigate across pages and verify document is still responsive
-        vm.CurrentPageIndex = 0;
-        await Task.Delay(50);
-        vm.CurrentPage.Should().Be(1, "should be on page 1");
-
-        vm.CurrentPageIndex = 1;
-        await Task.Delay(50);
-        vm.CurrentPage.Should().Be(2, "should be on page 2");
-
-        vm.CurrentPageIndex = 2;
-        await Task.Delay(50);
-        vm.CurrentPage.Should().Be(3, "should be on page 3");
-
-        // Assert step 4: Document remains open after multi-page redactions
-        vm.IsDocumentLoaded.Should().BeTrue("document should still be open");
-        vm.TotalPages.Should().Be(3, "page count should be unchanged");
     }
 
     #endregion
@@ -375,13 +336,11 @@ public class GoldenPathTests
         vm.IsDocumentLoaded.Should().BeTrue("document B should be loaded");
         vm.DocumentName.Should().Contain("recent_b", "current document should be B");
 
-        // Step 3: Verify files are tracked in recent files
-        // (The exact ordering and retention depends on implementation)
-        vm.RecentFiles.Count.Should().BeGreaterThanOrEqualTo(1, "should have at least 1 recent file");
-        // At minimum, one of the files should be remembered
-        var hasA = vm.RecentFiles.Contains(pdfA);
-        var hasB = vm.RecentFiles.Contains(pdfB);
-        (hasA || hasB).Should().BeTrue("should have A or B in recent files");
+        // Step 3: BOTH files are tracked. "A or B" was satisfied by step 1's
+        // own assertion and so could never fail here (#1769); ordering is still
+        // deliberately not asserted.
+        vm.RecentFiles.Should().Contain(pdfA, "opening A must have recorded it");
+        vm.RecentFiles.Should().Contain(pdfB, "opening B must have recorded it too");
     }
 
     #endregion
@@ -486,14 +445,17 @@ public class GoldenPathTests
         var targetMatch = vm.SearchMatches.ElementAtOrDefault(totalMatches / 2);
         targetMatch.Should().NotBeNull("should have middle match");
 
-        var pageBeforeJump = vm.CurrentPageIndex;
+        // A find auto-navigates to the FIRST match on a Background-priority
+        // post; drain that before jumping, or a late-firing navigate could
+        // clobber the assertion below.
+        await SettleDispatcher();
         vm.JumpToSearchMatch(targetMatch!);
-        await Task.Delay(100);
+        await SettleDispatcher();
 
-        // Assert step 2: Navigation occurred
-        var pageAfterJump = vm.CurrentPageIndex;
-        pageAfterJump.Should().BeGreaterThanOrEqualTo(0, "should be on valid page");
-        pageAfterJump.Should().BeLessThan(vm.TotalPages, "page index should be in bounds");
+        // Assert step 2: the viewer is on the TARGET match's page. The previous
+        // "index in bounds" pair could not fail (#1769).
+        vm.CurrentPageIndex.Should().Be(targetMatch!.PageIndex,
+            "jumping to the middle match must navigate to that match's page");
     }
 
     #endregion

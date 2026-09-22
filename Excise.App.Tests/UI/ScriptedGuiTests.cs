@@ -6,6 +6,7 @@ using AwesomeAssertions;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
+using Excise.Rendering.Differential;
 using Excise.TestSupport;
 using Xunit;
 namespace Excise.App.Tests.UI;
@@ -175,13 +176,23 @@ public class ScriptedGuiTests
         result.ReturnValue.Should().Be(true);
         File.Exists(outputPdf).Should().BeTrue("SaveDocumentCommand must produce a file");
 
-        // Verify the text was actually removed — this is the security
-        // guarantee for scripted redaction. Open the saved file with
-        // Excise.Core and confirm neither phrase appears.
-        using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(outputPdf));
-        var text = string.Concat(doc.GetPage(1).Letters.Select(l => l.Value));
-        text.Should().NotContain("SECRET");
-        text.Should().NotContain("CONFIDENTIAL");
+        // The security guarantee for scripted redaction, read from the SAVED
+        // BYTES in every carrier rather than from excise's own extractor
+        // (#1769) — with the source as the control that the scan can see these
+        // terms at all, and the untouched remainder of the sentence as the
+        // control that it can still see text in the output.
+        var sourceBytes = File.ReadAllBytes(sourcePdf);
+        var savedBytes = File.ReadAllBytes(outputPdf);
+        foreach (var term in new[] { "SECRET", "CONFIDENTIAL" })
+        {
+            SavedPdfLeakScanner.FindTerm(sourceBytes, term).Should().NotBeEmpty(
+                $"input-side control: '{term}' must be findable before the redaction");
+            SavedPdfLeakScanner.FindTerm(savedBytes, term).Should().BeEmpty(
+                $"'{term}' must be gone from every carrier of the scripted redaction's output");
+        }
+
+        SavedPdfLeakScanner.AllCarriersText(savedBytes).Should().Contain("for good measure",
+            "output-side control: text the script never asked to redact must survive");
     }
 
     [Fact]
@@ -218,13 +229,75 @@ public class ScriptedGuiTests
         result.ReturnValue.Should().Be(true);
         File.Exists(outputPdf).Should().BeTrue("redacted PDF should be created");
 
-        // Verify the sensitive terms are actually gone from the saved file.
-        using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(outputPdf));
-        var allText = string.Concat(
-            Enumerable.Range(1, doc.PageCount)
-                .SelectMany(p => doc.GetPage(p).Letters.Select(l => l.Value)));
-        allText.Should().NotContain("TORRINGTON");
-        allText.Should().NotContain("CERTIFICATE");
+        // Carrier-agnostic scan of the SAVED BYTES (#1769). This fixture has
+        // SCRAMBLED GLYPH ORDER, so only some of the redacted terms are
+        // contiguous in the file at all — "TORRINGTON" and "CITY CLERK" are
+        // split across TJ array elements and the byte scan cannot see them
+        // even before the redaction. Asserting their absence here would be a
+        // vacuous pass; the input-side control below is what makes that
+        // distinction visible instead of silently swallowing it, and mutool
+        // (which reassembles the glyph runs) covers the rest.
+        var sourceBytes = File.ReadAllBytes(birthCertPath!);
+        var savedBytes = File.ReadAllBytes(outputPdf);
+        foreach (var term in new[] { "CERTIFICATE", "BIRTH" })
+        {
+            SavedPdfLeakScanner.FindTerm(sourceBytes, term).Should().NotBeEmpty(
+                $"input-side control: '{term}' is contiguous in the fixture and must be findable before redaction");
+            SavedPdfLeakScanner.FindTerm(savedBytes, term).Should().BeEmpty(
+                $"'{term}' must be gone from every carrier of the redacted birth certificate");
+        }
+    }
+
+    /// <summary>
+    /// The same scripted birth-certificate workflow, graded by an extractor
+    /// that is not excise. This is the only assertion that can speak for the
+    /// scrambled-glyph terms ("TORRINGTON", "CITY CLERK"): they are never
+    /// contiguous in the bytes, so the carrier scan above is blind to them,
+    /// and excise reading its own output would be no oracle at all.
+    /// </summary>
+    [Fact]
+    public async Task Script_BirthCertificateRedaction_NotReadableByIndependentExtractor()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var viewModel = MainWindowViewModelTestFactory.Create();
+        var birthCertPath = TestRepoLayout.FindFile(
+            "test-pdfs", "sample-pdfs", "birth-certificate-request-scrambled.pdf");
+        Assert.SkipWhen(birthCertPath == null, TestRepoLayout.AbsenceReason(
+            "synthetic birth certificate", "test-pdfs/sample-pdfs/birth-certificate-request-scrambled.pdf"));
+        var outputPdf = Path.Combine(_testDataDir, $"birth-cert-mutool-{Guid.NewGuid():N}.pdf");
+
+        var before = MutoolTextExtractor.ExtractAllPages(birthCertPath!, PageCount(birthCertPath!));
+        before.Should().NotBeNull("mutool must be able to read the fixture");
+        var beforeText = string.Concat(before!);
+        beforeText.Should().Contain("TORRINGTON",
+            "input-side control: the independent extractor must read the term before the redaction");
+
+        var result = await ExecuteScriptAsync(viewModel, $@"
+            await LoadDocumentHeadlessAsync(@""{birthCertPath}"");
+            var terms = new[] {{ ""TORRINGTON"", ""CERTIFICATE"", ""BIRTH"", ""CITY CLERK"" }};
+            foreach (var term in terms)
+                await RedactTextCommand(term);
+            await ApplyRedactionsCommand();
+            await SaveDocumentCommand(@""{outputPdf}"");
+            return System.IO.File.Exists(@""{outputPdf}"");
+        ");
+
+        result.Success.Should().BeTrue(result.ErrorMessage);
+        var after = MutoolTextExtractor.ExtractAllPages(outputPdf, PageCount(outputPdf));
+        after.Should().NotBeNull("mutool must be able to read the redacted copy");
+        var afterText = string.Concat(after!);
+        foreach (var term in new[] { "TORRINGTON", "CERTIFICATE", "BIRTH", "CITY CLERK" })
+        {
+            afterText.Should().NotContain(term,
+                $"an extractor that is not excise must not read '{term}' out of the redacted file");
+        }
+    }
+
+    private static int PageCount(string pdfPath)
+    {
+        using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(pdfPath));
+        return doc.PageCount;
     }
 
     [Fact]
@@ -276,13 +349,24 @@ public class ScriptedGuiTests
         result.ReturnValue.Should().Be(3, "CreateMultiPageTestPdf returns 3 pages");
         File.Exists(outputPdf).Should().BeTrue();
 
-        // "Secret" must be absent from every page of the redacted file.
-        using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(outputPdf));
-        for (int p = 1; p <= doc.PageCount; p++)
+        // "Secret" must be absent from every carrier of the whole saved file —
+        // not merely from what excise's own letter model reports per page
+        // (#1769). Each page seeds its own "Secret on Page N", so the scan
+        // covers all three without iterating pages.
+        var sourceBytes = File.ReadAllBytes(multiPagePdf);
+        var savedBytes = File.ReadAllBytes(outputPdf);
+        SavedPdfLeakScanner.FindTerm(sourceBytes, "Secret").Should().NotBeEmpty(
+            "input-side control: the seeded term must be findable before the redaction");
+        SavedPdfLeakScanner.FindTerm(savedBytes, "Secret").Should().BeEmpty(
+            "scripted multi-page redaction must leave 'Secret' in no carrier of the saved file");
+
+        // Conservation control, per page: the OTHER line each page carries must
+        // survive. Without it, a build that empties every content stream passes.
+        var savedCarriers = SavedPdfLeakScanner.AllCarriersText(savedBytes);
+        for (int p = 1; p <= 3; p++)
         {
-            var text = string.Concat(doc.GetPage(p).Letters.Select(l => l.Value));
-            text.Should().NotContain("Secret",
-                $"page {p} must not leak 'Secret' after scripted multi-page redaction");
+            savedCarriers.Should().Contain($"Page {p} Content",
+                $"page {p}'s unredacted line must survive the multi-page redaction");
         }
     }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ using AwesomeAssertions;
 using Excise.Avalonia.Controls;
 using Excise.Core.Document;
 using Excise.Core.Graphics;
+using Excise.Rendering.Differential;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using Xunit;
@@ -19,6 +21,18 @@ using Excise.TestSupport;
 
 namespace Excise.App.Tests.UI;
 
+/// <summary>
+/// The mouse-drag redaction workflow, one scenario per theory row (#1769).
+///
+/// <para>This used to be a single <c>[Fact]</c> looping four scenarios, so a
+/// failure in the first hid the other three. Worse, removal was asserted from
+/// <c>saved.GetPage(1).Letters</c> — excise reading its own output, which
+/// CLAUDE.md forbids for the property this product exists to guarantee. Every
+/// removal is now asserted with <see cref="SavedPdfLeakScanner.FindTerm"/> over
+/// the SAVED BYTES (raw and inflated, every carrier) with an INPUT-SIDE control
+/// proving that scan can see the term before redaction, and the image scenario
+/// is corroborated by qpdf's independent parser.</para>
+/// </summary>
 [Collection("AvaloniaTests")]
 public class RedactionMouseWorkflowTests
 {
@@ -30,19 +44,34 @@ public class RedactionMouseWorkflowTests
         Directory.CreateDirectory(_tempDir);
     }
 
-    [FixedAvaloniaFact(Timeout = 90000)]
-    public async Task MouseDragRedaction_CorpusScenarios_RedactExpectedContentAndSave()
+    [FixedAvaloniaTheory(Timeout = 90000)]
+    [InlineData("simple-text")]
+    [InlineData("text-with-nearby-vector-graphics")]
+    [InlineData("form-xobject-text")]
+    [InlineData("image-xobject")]
+    public async Task MouseDragRedaction_CorpusScenarios_RedactExpectedContentAndSave(string scenarioName)
     {
-        foreach (var scenario in RedactionScenarios())
+        var scenario = RedactionScenarios().Single(s => s.Name == scenarioName);
+
+        // The image row's whole point is the structural check below, so it does
+        // not run at all without the oracle that performs it — a row that
+        // silently drops its only independent assertion is the #1527 shape.
+        if (scenario.RequiresQpdf)
         {
-            var sourcePdf = Path.Combine(_tempDir, $"{scenario.Name}-source.pdf");
-            var outputPdf = Path.Combine(_tempDir, $"{scenario.Name}-output.pdf");
-            scenario.CreatePdf(sourcePdf);
+            Assert.SkipUnless(QpdfReferenceTool.IsAvailable,
+                "qpdf not installed; it is the independent parser this row proves the image removal with");
+        }
 
-            var vm = MainWindowViewModelTestFactory.Create();
-            var window = new MainWindow { DataContext = vm, Width = 2000, Height = 1600 };
-            window.Show();
+        var sourcePdf = Path.Combine(_tempDir, $"{scenario.Name}-source.pdf");
+        var outputPdf = Path.Combine(_tempDir, $"{scenario.Name}-output.pdf");
+        scenario.CreatePdf(sourcePdf);
+        var sourceBytes = File.ReadAllBytes(sourcePdf);
 
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 2000, Height = 1600 };
+        window.Show();
+        try
+        {
             await vm.LoadDocumentAsync(sourcePdf);
             await WaitForIdleLayout(window);
 
@@ -94,28 +123,27 @@ public class RedactionMouseWorkflowTests
             File.Exists(outputPdf).Should().BeTrue(
                 $"{scenario.Name}: saving after a mouse redaction must write an output PDF");
             var savedBytes = File.ReadAllBytes(outputPdf);
-            using var saved = PdfDocument.Open(savedBytes);
-            var savedText = string.Concat(saved.GetPage(1).Letters.Select(l => l.Value));
+            var savedCarriers = SavedPdfLeakScanner.AllCarriersText(savedBytes);
 
             foreach (var removed in scenario.TextMustBeRemoved)
             {
-                savedText.Should().NotContain(removed,
-                    $"{scenario.Name}: selected visible content must be removed from the saved PDF structure");
+                // INPUT-SIDE CONTROL. Without it "no hits" is equally consistent
+                // with a scanner that cannot see this file's text at all.
+                SavedPdfLeakScanner.FindTerm(sourceBytes, removed).Should().NotBeEmpty(
+                    $"{scenario.Name}: the carrier scan must be able to find '{removed}' BEFORE the redaction, " +
+                    "or its absence afterwards proves nothing");
+                SavedPdfLeakScanner.FindTerm(savedBytes, removed).Should().BeEmpty(
+                    $"{scenario.Name}: '{removed}' must be gone from every carrier of the saved file, " +
+                    "including inside compressed streams — not merely from what excise's own extractor reads");
             }
 
             foreach (var kept in scenario.TextMustRemain)
             {
-                savedText.Should().Contain(kept,
-                    $"{scenario.Name}: content outside the selected mouse-redaction area must remain extractable");
+                savedCarriers.Should().Contain(kept,
+                    $"{scenario.Name}: content outside the selected mouse-redaction area must survive");
             }
 
-            var savedLatin1 = SavedPdfLeakScanner.AllCarriersText(savedBytes);
-            foreach (var removedBytes in scenario.SavedBytesMustNotContain)
-            {
-                savedLatin1.Should().NotContain(removedBytes,
-                    $"{scenario.Name}: redacted literal bytes must not leak in the saved PDF");
-            }
-
+            using var saved = PdfDocument.Open(savedBytes);
             var content = saved.GetPage(1).GetContentStream().Operators;
             content.Any(op => string.Equals(op.Name, "re", StringComparison.Ordinal))
                 .Should().BeTrue($"{scenario.Name}: redaction must add a visual black rectangle as confirmation");
@@ -123,6 +151,10 @@ public class RedactionMouseWorkflowTests
                 .Should().BeTrue($"{scenario.Name}: redaction must fill the visual black rectangle");
 
             scenario.ExtraAssertions?.Invoke(saved);
+            scenario.SavedFileAssertions?.Invoke(sourcePdf, outputPdf);
+        }
+        finally
+        {
             window.Close();
         }
     }
@@ -159,8 +191,7 @@ public class RedactionMouseWorkflowTests
             DragArea: new PdfRectangle(90, 690, 280, 725),
             PreviewMustNotContain: ["FORMKEEP", "FORMOUTSIDE"],
             TextMustBeRemoved: ["FORMSECRET"],
-            TextMustRemain: ["FORMKEEP", "FORMOUTSIDE"],
-            SavedBytesMustNotContain: ["FORMSECRET"]);
+            TextMustRemain: ["FORMKEEP", "FORMOUTSIDE"]);
 
         yield return new RedactionScenario(
             Name: "image-xobject",
@@ -168,11 +199,62 @@ public class RedactionMouseWorkflowTests
             DragArea: new PdfRectangle(90, 590, 210, 710),
             PreviewMustNotContain: ["IMAGEKEEP"],
             TextMustRemain: ["IMAGEKEEP"],
+            RequiresQpdf: true,
             ExtraAssertions: saved =>
             {
                 saved.GetPage(1).GetContentStream().Operators.Should().NotContain(op => op.Name == "Do",
                     "the selected image XObject invocation should be removed, not merely covered");
+            },
+            SavedFileAssertions: (sourcePdf, outputPdf) =>
+            {
+                // The image scenario redacts no TEXT, so the carrier scan above
+                // has nothing to say about it, and an ink differential cannot
+                // help either: the redaction paints a black box over exactly the
+                // pixels the image occupied, so "there is ink there" is true
+                // whether the image survived or not. What is left is STRUCTURE,
+                // read by a parser that is not excise.
+                QpdfExpandedText(sourcePdf).Should().Contain(ImageObjectMarker,
+                    "input-side control: qpdf must find the image in the file the user opened, " +
+                    "or its absence from the output says nothing about removal");
+                QpdfExpandedText(outputPdf).Should().NotContain(ImageObjectMarker,
+                    "the image object itself must be gone from the saved file — an orphaned image " +
+                    "left behind after the Do is dropped is still recoverable by anyone who opens the bytes");
             });
+    }
+
+    /// <summary>§8.9.5 Table 89: the key/value pair that makes an object an image XObject.</summary>
+    private const string ImageObjectMarker = "/Subtype /Image";
+
+    /// <summary>
+    /// The file as qpdf's own parser re-serialises it in QDF form — every object
+    /// expanded, no object streams, one key per line — so a dictionary entry can
+    /// be searched for textually without excise parsing anything.
+    /// </summary>
+    private static string QpdfExpandedText(string pdfPath)
+    {
+        var qdfPath = Path.ChangeExtension(pdfPath, ".qdf");
+        var psi = new ProcessStartInfo(
+            "qpdf", $"--qdf --object-streams=disable \"{pdfPath}\" \"{qdfPath}\"")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        using var process = Process.Start(psi)!;
+        // #925/#1516: drain both redirected pipes CONCURRENTLY, or a full
+        // stderr buffer deadlocks the single headless dispatcher thread.
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(30000))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { /* gone */ }
+            throw new TimeoutException(
+                "qpdf --qdf did not exit within 30s; killed it rather than hanging the suite (#1516).");
+        }
+        var diagnostics = stdoutTask.GetAwaiter().GetResult() + stderrTask.GetAwaiter().GetResult();
+        File.Exists(qdfPath).Should().BeTrue(
+            $"qpdf must be able to expand {Path.GetFileName(pdfPath)}; it said: {diagnostics}");
+        return File.ReadAllText(qdfPath, Encoding.Latin1);
     }
 
     private static void CreateSeparatedTextPdf(string path)
@@ -294,13 +376,13 @@ public class RedactionMouseWorkflowTests
         string[]? PreviewMustNotContain = null,
         string[]? TextMustBeRemoved = null,
         string[]? TextMustRemain = null,
-        string[]? SavedBytesMustNotContain = null,
-        Action<PdfDocument>? ExtraAssertions = null)
+        bool RequiresQpdf = false,
+        Action<PdfDocument>? ExtraAssertions = null,
+        Action<string, string>? SavedFileAssertions = null)
     {
         public string[] PreviewMustNotContain { get; init; } = PreviewMustNotContain ?? [];
         public string[] TextMustBeRemoved { get; init; } = TextMustBeRemoved ?? [];
         public string[] TextMustRemain { get; init; } = TextMustRemain ?? [];
-        public string[] SavedBytesMustNotContain { get; init; } = SavedBytesMustNotContain ?? [];
     }
 
     private const string HelveticaFont =
