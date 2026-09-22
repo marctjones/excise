@@ -21,7 +21,20 @@ internal static class RedactCommand
         };
         var closeWidthOption = new Option<bool>("--close-width")
         {
-            Description = "Close the width gap so the removed text's width can't be recovered (moves surviving text)",
+            Description = "Close the width gap so the removed text's width can't be recovered (moves " +
+                "surviving text), and draw NO covering box (#1725: the box would itself be a residue " +
+                "oracle). #1715 measured this at 0% recall@5 vs 91% under the default.",
+            DefaultValueFactory = _ => false,
+        };
+        var fixedMarkerOption = new Option<bool>("--fixed-marker")
+        {
+            Description = "Close the width gap like --close-width AND draw a covering box of ONE " +
+                "CONTENT-INDEPENDENT SIZE, so the redaction stays visibly marked (#1725) without the " +
+                "box's width leaking the removed run's length (#1715: 0% recall@5, same as --close-width, " +
+                "with a mark). NOT the default: measured to visually overlap the reflowed neighbouring " +
+                "text in the common case, not just when a line has little slack -- the shift that closes " +
+                "the gap does not yet account for the marker's own width. Review the output before " +
+                "relying on it for anything but the width-channel measurement itself.",
             DefaultValueFactory = _ => false,
         };
         var passwordOption = new Option<string?>("--password")
@@ -141,6 +154,7 @@ internal static class RedactCommand
             textArgument,
             caseSensitiveOption,
             closeWidthOption,
+            fixedMarkerOption,
             passwordOption,
             allowDecryptOption,
             strictOption,
@@ -168,6 +182,7 @@ internal static class RedactCommand
             var ocrImageText = parseResult.GetValue(ocrImageTextOption);
             var closeWidth = parseResult.GetValue(closeWidthOption);
             var overshootBox = parseResult.GetValue(overshootBoxOption);
+            var fixedMarker = parseResult.GetValue(fixedMarkerOption);
             var strict = parseResult.GetValue(strictOption);
             var allowLowConfidence = parseResult.GetValue(allowLowConfidenceOption);
 
@@ -194,6 +209,17 @@ internal static class RedactCommand
                 return 1;
             }
 
+            // #1755: --close-width, --overshoot-box and --fixed-marker are
+            // three different, mutually exclusive answers to the same
+            // width-policy question.
+            if (fixedMarker && (closeWidth || overshootBox))
+            {
+                Console.Error.WriteLine(
+                    "--fixed-marker, --close-width and --overshoot-box are mutually exclusive " +
+                    "width policies.");
+                return 1;
+            }
+
             if (overshootBox && noBox)
             {
                 Console.Error.WriteLine(
@@ -210,8 +236,8 @@ internal static class RedactCommand
 
             var keepAttachments = parseResult.GetValue(keepAttachmentsOption);
             if (flattenOcr &&
-                (ocrImageText || noBox || boxColorSpec != null || closeWidth || strict || allowLowConfidence
-                 || keepAttachments))
+                (ocrImageText || noBox || boxColorSpec != null || closeWidth || overshootBox ||
+                 fixedMarker || strict || allowLowConfidence || keepAttachments))
             {
                 Console.Error.WriteLine(
                     "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, or attachment options.");
@@ -262,6 +288,7 @@ internal static class RedactCommand
                     carrierPolicy,
                     parseResult.GetValue(wholeWordOption),
                     overshootBox,
+                    fixedMarker,
                     keepAttachments,
                     profile),
                     progress);
@@ -293,7 +320,11 @@ internal static class RedactCommand
                 foreach (var note in result.CarrierNotes)
                     Console.WriteLine($"  note: {note}");
                 Console.WriteLine($"Output: {result.OutputPath}");
-                return 0;
+                // #1750: a term excise located but could not structurally
+                // remove (a hyphen- or line-wrapped occurrence) is still fully
+                // readable in the saved output. The notes above say so, but a
+                // caller that only checks the exit code must not see success.
+                return result.HasUnremovedWrappedOccurrence ? 3 : 0;
             }
             catch (Exception ex)
             {

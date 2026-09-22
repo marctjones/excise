@@ -37,10 +37,18 @@ namespace Excise.Core.Text.Segmentation;
 /// covered too. Mutates the inline property dictionaries in place; they are not
 /// shared objects (an inline <c>BDC</c> dict belongs to the one operator).</para>
 ///
-/// <para><b>Not covered:</b> the NAMED property-list form
-/// (<c>/Span /P1 BDC</c> resolving through <c>/Resources /Properties</c>). That
-/// dictionary can be shared across spans, so scrubbing it positionally could
-/// over-remove; left as a follow-up on #1182.</para>
+/// <para><b>The NAMED property-list form</b> (<c>/Span /P1 BDC</c> resolving
+/// through <c>/Resources /Properties</c>, #1599) IS covered, with the sharing
+/// hazard the inline form does not have handled explicitly: the dictionary
+/// can be referenced by several spans, so it is scrubbed only when EVERY
+/// referencing <c>BDC</c> in the content encloses redacted glyphs
+/// (<see cref="EveryReferenceIsAffected"/>). When some but not all references
+/// are affected, the value is left in place — over-removal into a surviving
+/// span's accessibility text would be worse than the leak — and that refusal
+/// is reported as a carrier the caller can act on (see
+/// <c>PdfDocumentRedactionExtensions.RedactTextCore</c>'s
+/// <c>UnscrubbedSharedMarkedContentCarriers</c> handling), never silently
+/// dropped.</para>
 /// </summary>
 internal static class MarkedContentCarrierScrubber
 {
@@ -53,6 +61,19 @@ internal static class MarkedContentCarrierScrubber
     /// </summary>
     /// <returns>True if any carrier entry was removed.</returns>
     public static bool Scrub(IReadOnlyList<ContentOperator> ops, PdfPage page, PdfRectangle area)
+        => Scrub(ops, page, area, out _);
+
+    /// <summary>
+    /// As <see cref="Scrub(IReadOnlyList{ContentOperator}, PdfPage, PdfRectangle)"/>,
+    /// also naming every NAMED property list (#1599) this call could not scrub
+    /// because a span that SURVIVES this redaction still references it — the
+    /// over-removal hazard the shared-dictionary check exists to avoid. CLAUDE.md
+    /// rule 6: a carrier the engine refuses to touch must be reported, not
+    /// silently left behind with a clean-looking result.
+    /// </summary>
+    public static bool Scrub(
+        IReadOnlyList<ContentOperator> ops, PdfPage page, PdfRectangle area,
+        out IReadOnlyList<string> unscrubbedSharedCarriers)
     {
         // Analysis and mutation run on the SAME list: `ops` is the pre-removal
         // content, so it still carries the glyph bounding boxes that tell us which
@@ -65,6 +86,7 @@ internal static class MarkedContentCarrierScrubber
             affectedSpans,
             removedText,
             page.Document,
+            out unscrubbedSharedCarriers,
             page.Document.Resolve(page.Resources?.GetOptional("Properties") ?? PdfNull.Instance) as PdfDictionary);
     }
 
@@ -74,8 +96,18 @@ internal static class MarkedContentCarrierScrubber
         IReadOnlyCollection<string> removedText,
         PdfDocument doc,
         PdfDictionary? properties = null)
+        => Scrub(ops, affectedSpans, removedText, doc, out _, properties);
+
+    internal static bool Scrub(
+        IReadOnlyList<ContentOperator> ops,
+        HashSet<ContentOperator> affectedSpans,
+        IReadOnlyCollection<string> removedText,
+        PdfDocument doc,
+        out IReadOnlyList<string> unscrubbedSharedCarriers,
+        PdfDictionary? properties = null)
     {
         var removedAny = false;
+        HashSet<string>? shared = null;
 
         foreach (var op in ops)
         {
@@ -93,7 +125,18 @@ internal static class MarkedContentCarrierScrubber
                 if (propertyName == null) continue;
                 props = doc.Resolve(properties?.GetOptional(propertyName.Value) ?? PdfNull.Instance) as PdfDictionary;
                 if (props == null) continue;
-                if (!EveryReferenceIsAffected(ops, propertyName.Value, affectedSpans)) continue;
+                if (!EveryReferenceIsAffected(ops, propertyName.Value, affectedSpans))
+                {
+                    // This span's glyphs are being removed, but the property
+                    // list it names is shared with a span that survives — the
+                    // over-removal #1182 deferred this over. Report it rather
+                    // than let the redaction look clean over a carrier that
+                    // still restates the removed text (#1599 acceptance / rule 6).
+                    if (affectedSpans.Contains(op))
+                        (shared ??= new HashSet<string>(System.StringComparer.Ordinal))
+                            .Add(propertyName.Value);
+                    continue;
+                }
             }
 
             var enclosesRemovedGlyphs = affectedSpans.Contains(op);
@@ -117,6 +160,9 @@ internal static class MarkedContentCarrierScrubber
             }
         }
 
+        unscrubbedSharedCarriers = shared is { Count: > 0 }
+            ? shared.ToList()
+            : System.Array.Empty<string>();
         return removedAny;
     }
 

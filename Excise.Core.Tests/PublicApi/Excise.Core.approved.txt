@@ -2600,6 +2600,7 @@ namespace Excise.Core.Text.Segmentation
         public required string Term { get; init; }
         public int VerifiedRemovals { get; }
         public bool WholeWord { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.WordWrapTermCandidate> WordWrapCandidates { get; init; }
         public override string ToString() { }
     }
     public class TextSegment
@@ -2638,6 +2639,15 @@ namespace Excise.Core.Text.Segmentation
         CollapsePreserveLayout = 0,
         CloseGap = 1,
         OvershootPreserveLayout = 2,
+        FixedMarker = 3,
+    }
+    public sealed class WordWrapTermCandidate : System.IEquatable<Excise.Core.Text.Segmentation.WordWrapTermCandidate>
+    {
+        public WordWrapTermCandidate(int PageNumber, string BeforeBreak, string AfterBreak) { }
+        public string AfterBreak { get; init; }
+        public string BeforeBreak { get; init; }
+        public int PageNumber { get; init; }
+        public override string ToString() { }
     }
 }
 namespace Excise.Core.Validation

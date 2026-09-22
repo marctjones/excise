@@ -25,11 +25,15 @@ namespace Excise.Rendering.Tests.Differential;
 /// <para><b>What this file pins.</b> Two secrets of very different length, in
 /// the same fixture between the same neighbouring words:</para>
 /// <list type="bullet">
-///   <item><see cref="WidthPolicy.CollapsePreserveLayout"/> (the default) —
-///   the boxes have DIFFERENT rendered widths. The channel is open. Pinned as a
-///   fact, not fixed silently.</item>
+///   <item><see cref="WidthPolicy.CollapsePreserveLayout"/> (the pre-#1755
+///   default) — the boxes have DIFFERENT rendered widths. The channel is open.
+///   Pinned as a fact, not fixed silently.</item>
 ///   <item><see cref="WidthPolicy.OvershootPreserveLayout"/> — the boxes have
 ///   the SAME rendered width. The rendered channel is closed.</item>
+///   <item><see cref="WidthPolicy.FixedMarker"/> (#1755, now the default) —
+///   the boxes have the SAME rendered width AND the content-stream advance is
+///   also closed, like CloseGap. The only policy that answers #1715 and #1725
+///   together.</item>
 /// </list>
 ///
 /// <para>⚠️ <b>And the part a self-congratulating gate would omit.</b> Overshoot
@@ -150,6 +154,141 @@ public class RedactionWidthPolicyTests : IDisposable
         FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.CloseGap)).Should().BeNull(
             "CloseGap emits no compensating advance at all");
         FirstNegativeTjAdjustment(Redact(SecretB, WidthPolicy.CloseGap)).Should().BeNull();
+    }
+
+    /// <summary>
+    /// #1755 — FixedMarker is the new DEFAULT. It has to answer both #1715
+    /// (the width channel Collapse leaves open, pinned above) and #1725
+    /// (CloseGap draws no box at all, so a width-closed redaction has no
+    /// visible mark) AT THE SAME TIME — this is the measurement that proves it
+    /// does, rather than trading one for the other.
+    /// </summary>
+    [Fact]
+    public void FixedMarker_MakesTheBoxTheSameWidthForBothSecrets_AndVisible()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var widthA = RenderedBoxWidth(Redact(SecretA, WidthPolicy.FixedMarker));
+        var widthB = RenderedBoxWidth(Redact(SecretB, WidthPolicy.FixedMarker));
+
+        // #1725: a mark is actually drawn — unlike CloseGap, which draws none
+        // once the gap is closed (Overshoot_DoesNotEatTheNeighbouringWords'
+        // sibling policy has a box; CloseGap has none).
+        widthA.Should().BeGreaterThan(0, "FixedMarker must leave a visible mark (#1725)");
+        widthB.Should().BeGreaterThan(0);
+
+        // #1715: unlike Overshoot (which rounds UP from the removed width and
+        // so still correlates with it, just more coarsely), FixedMarker's box
+        // is the SAME size regardless of what was removed — not merely
+        // "close enough", exactly equal, because the width computation never
+        // reads the removed run's own width at all.
+        Math.Abs(widthB - widthA).Should().BeLessThanOrEqualTo(2,
+            "the marker's width is a function of font size ONLY — it carries no " +
+            "information about the removed string's length, which is the whole " +
+            "point (allowing 2px for rasterisation)");
+    }
+
+    [Fact]
+    public void FixedMarker_ClosesTheContentStreamAdvance_LikeCloseGap()
+    {
+        // #1715/#1755: FixedMarker has to close the FILE-level channel too, not
+        // just the rendered one — the same honesty check
+        // Overshoot_LeavesTheContentStreamAdvanceIntact exists for, but with
+        // the opposite (passing) expectation: no surviving TJ adjustment for
+        // either secret, because FixedMarker closes the gap exactly as
+        // CloseGap does.
+        FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.FixedMarker)).Should().BeNull(
+            "FixedMarker closes the gap like CloseGap -- no compensating advance survives");
+        FirstNegativeTjAdjustment(Redact(SecretB, WidthPolicy.FixedMarker)).Should().BeNull();
+    }
+
+    [Fact]
+    public void FixedMarker_RemovesTheSecretAndKeepsTheNeighbours()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // Same shape as Overshoot_DoesNotEatTheNeighbouringWords: an
+        // INDEPENDENT extractor confirms the neighbours survive (as TEXT --
+        // whether they are also visually COVERED by the marker box is a
+        // separate question, see the next test) and the secret does not.
+        var path = WriteTemp(Redact(SecretB, WidthPolicy.FixedMarker));
+        var text = MutoolTextExtractor.ExtractPage(path, 1) ?? "";
+
+        text.Should().Contain("Name", "the word before the redaction survives");
+        text.Should().Contain("Ref", "the word after the redaction survives");
+        text.Should().NotContain(SecretB, "the secret is removed");
+    }
+
+    /// <summary>
+    /// #1755 — THE KNOWN LIMIT that blocks making FixedMarker the default,
+    /// measured rather than left as a docstring claim. FixedMarker reuses
+    /// CloseGap's shift unchanged, which moves the following text all the way
+    /// to the removed run's OWN left edge; the marker is then drawn from that
+    /// same left edge out to a FIXED width. Whenever the fixed width exceeds
+    /// what was actually removed — the common case for a short redacted word
+    /// in running text, not a rare one bounded by available slack — the box
+    /// visually overlaps the reflowed neighbour's leading glyphs.
+    /// </summary>
+    /// <remarks>
+    /// If this assertion ever goes red because the neighbour's first glyph
+    /// moved clear of the box, the shift arithmetic was fixed to account for
+    /// the marker's own width (not just the removed run's) — update this test
+    /// to assert the opposite, and revisit whether FixedMarker can become the
+    /// default (RedactionOptions.Width's remark and the CLI's --fixed-marker
+    /// description both need to change alongside that).
+    /// </remarks>
+    [Fact]
+    public void FixedMarker_TheMarkerOverlapsTheReflowedNeighbour_KnownLimitBlockingDefault()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var pdf = Redact(SecretB, WidthPolicy.FixedMarker);
+        var path = WriteTemp(pdf);
+
+        double boxRight;
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            var box = FindLastFilledRectangle(doc.GetPage(1).GetContentStream().Operators);
+            box.Should().NotBeNull("FixedMarker must have drawn a covering rectangle");
+            boxRight = box!.Value.Right;
+        }
+
+        // INDEPENDENT of excise's own geometry: mutool's own glyph-position
+        // reader (used by the redaction benchmark's residue tier) says where
+        // the reflowed "R" of "Ref." actually landed.
+        var glyphs = MutoolGlyphPositions.ExtractPage(path, 1);
+        glyphs.Should().NotBeNull();
+        var reflowedR = glyphs!.FirstOrDefault(g => g.Char == "R");
+        reflowedR.Char.Should().Be("R", "the reflowed neighbour's leading glyph must still be findable");
+
+        reflowedR.X.Should().BeLessThan(boxRight,
+            "KNOWN LIMIT (#1755): the marker's fixed width does not yet account for the " +
+            "removed run's own width, so the box the redaction draws overlaps the very " +
+            "neighbour the gap-closing shift just reflowed into place -- this is why " +
+            "FixedMarker is an opt-in (--fixed-marker), not the default, until the shift " +
+            "itself is widened to make room for the marker.");
+    }
+
+    /// <summary>The last <c>x y w h re</c> ... <c>f</c> filled rectangle in the
+    /// content stream — the shape <c>AppendBlackRectangle</c> always emits.</summary>
+    private static (double Left, double Right)? FindLastFilledRectangle(
+        IReadOnlyList<Excise.Core.Content.ContentOperator> ops)
+    {
+        (double Left, double Right)? found = null;
+        foreach (var op in ops)
+        {
+            if (op.Name != "re" || op.Operands.Count < 4) continue;
+            double At(int i) => op.Operands[i] switch
+            {
+                Excise.Core.Primitives.PdfInteger n => n.Value,
+                Excise.Core.Primitives.PdfReal r => r.Value,
+                _ => 0.0,
+            };
+            var x = At(0);
+            var w = At(2);
+            found = (x, x + w);
+        }
+        return found;
     }
 
     [Fact]

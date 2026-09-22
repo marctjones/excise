@@ -106,8 +106,17 @@ internal static class RedactCommandHandler
             CaseSensitive = request.CaseSensitive,
             WholeWord = request.WholeWord,   // #1052
             DrawBox = request.DrawBox,
+            // #1755: FixedMarker exists and is fully implemented, but is NOT
+            // the default yet — measured to visually overlap the reflowed
+            // neighbour in the common case, not just when slack is short (see
+            // the remark on RedactionOptions.Width). --fixed-marker is an
+            // explicit opt-in with that limit stated; --close-width and
+            // --overshoot-box are the existing explicit opt-ins to their own
+            // narrower trade-offs. The implicit default stays
+            // CollapsePreserveLayout.
             Width = request.CloseWidth ? WidthPolicy.CloseGap
                 : request.OvershootBox ? WidthPolicy.OvershootPreserveLayout   // #1189
+                : request.FixedMarker ? WidthPolicy.FixedMarker
                 : WidthPolicy.CollapsePreserveLayout,
             BoxColor = request.BoxColor,
             // #1188/#1169: per-carrier mode. An explicit --carrier-policy wins;
@@ -152,6 +161,17 @@ internal static class RedactCommandHandler
                 $"NOT REMOVED (hyphen-wrapped): page {candidate.PageNumber} reads {candidate} — " +
                 $"'{request.Text}' is split across a line break, so excise could not match it. " +
                 "It is still readable in the output by tools that rejoin hyphenated words.");
+        }
+
+        // #1750: the same structural blind spot for a multi-word term split by
+        // an ORDINARY line wrap (no hyphen) — generalizes #1372's reporting so
+        // this also does not print a bare "0 occurrence(s)" success.
+        foreach (var candidate in redaction.WordWrapCandidates)
+        {
+            carrierNotes.Add(
+                $"NOT REMOVED (line-wrapped): page {candidate.PageNumber} reads {candidate} — " +
+                $"'{request.Text}' wraps across a line break, so excise could not match it. " +
+                "It is still fully readable in the output.");
         }
 
         foreach (var carrier in redaction.Carriers)
@@ -200,7 +220,12 @@ internal static class RedactCommandHandler
             redaction.WholeWord,
             redaction.Attachments,
             redaction.Removals,
-            redaction.AccessibilityAndInteractivityRemoved);
+            redaction.AccessibilityAndInteractivityRemoved,
+            // #1750: a term excise located and structurally could not remove —
+            // still fully readable in the output — must not be indistinguishable
+            // from a clean run at the exit-code level, or a script sees success.
+            HasUnremovedWrappedOccurrence:
+                redaction.HyphenatedCandidates.Count > 0 || redaction.WordWrapCandidates.Count > 0);
     }
 
     private static void Validate(RedactCommandRequest request)
@@ -215,9 +240,21 @@ internal static class RedactCommandHandler
                 "--no-box and --box-color are mutually exclusive: --no-box draws no box to colour.");
         }
 
+        // #1755: --close-width, --overshoot-box and --fixed-marker are three
+        // different, mutually exclusive answers to the same width-policy
+        // question; picking more than one is not "pick the last one wins".
+        var widthFlagCount =
+            (request.CloseWidth ? 1 : 0) + (request.OvershootBox ? 1 : 0) + (request.FixedMarker ? 1 : 0);
+        if (widthFlagCount > 1)
+        {
+            throw new ArgumentException(
+                "--close-width, --overshoot-box and --fixed-marker are mutually exclusive width policies.");
+        }
+
         if (request.FlattenOcr &&
             (request.OcrImageText || !request.DrawBox || request.BoxColor != null ||
-             request.CloseWidth || request.Strict || request.AllowLowConfidence || request.KeepAttachments))
+             request.CloseWidth || request.OvershootBox || request.FixedMarker ||
+             request.Strict || request.AllowLowConfidence || request.KeepAttachments))
         {
             throw new ArgumentException(
                 "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, or attachment options.");
@@ -256,6 +293,13 @@ internal readonly record struct RedactCommandRequest(
     Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null,   // #1188/#1169
     bool WholeWord = false,   // #1052
     bool OvershootBox = false,   // #1189
+    // #1755: opt IN to WidthPolicy.FixedMarker -- closes the gap like
+    // --close-width AND draws a content-independent covering box, unlike
+    // --close-width (no box at all). NOT the default: measured to visually
+    // overlap the reflowed neighbour in the common case (see the remark on
+    // RedactionOptions.Width) until the shift arithmetic accounts for the
+    // marker's own width.
+    bool FixedMarker = false,
     bool KeepAttachments = false,   // #1572 — opt out of removing every attachment
     // #1586 — the output profile. Standard is the default on every path; the
     // CLI must not be the one front end that quietly ships less.
@@ -276,7 +320,13 @@ internal sealed record RedactCommandResult(
     // accessible. Printed, because a removal made without a term match is
     // destruction the user is entitled to know about.
     IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals = null,
-    bool AccessibilityRemoved = false)
+    bool AccessibilityRemoved = false,
+    // #1750: a hyphen- or line-wrapped occurrence excise located but could not
+    // structurally remove — still fully readable in the output. Distinct from
+    // "excise removed it and a re-read still finds it" (that is Count > 0
+    // already going through CarrierNotes' WARNING line); this is "excise never
+    // even formed the match".
+    bool HasUnremovedWrappedOccurrence = false)
 {
     /// <summary>Every attachment removed or kept (#1572); never null.</summary>
     public IReadOnlyList<AttachmentRedactionResult> Attachments =>

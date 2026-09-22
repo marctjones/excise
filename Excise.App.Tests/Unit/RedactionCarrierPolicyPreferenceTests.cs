@@ -149,6 +149,13 @@ public class RedactionCarrierPolicyPreferenceTests
         // #1189. The default keeps today's behaviour: an exact-width box that
         // does not reflow the page — and that IS the ruler #1140 recorded, so
         // changing the default is a product decision, not a side effect.
+        //
+        // #1755 added WidthPolicy.FixedMarker as an available OPTION (it
+        // closes the #1715 width channel and always draws a visible mark,
+        // #1725) but deliberately NOT as the default yet: measured (mutool
+        // -F stext, real glyph positions) to visually overlap the reflowed
+        // neighbouring text in the COMMON case, not merely when a line has
+        // little slack — see the remark on RedactionOptions.Width.
         var main = MainWindowViewModelTestFactory.Create();
         main.RedactionWidthPolicy.Should().Be(WidthPolicy.CollapsePreserveLayout);
 
@@ -158,6 +165,7 @@ public class RedactionCarrierPolicyPreferenceTests
             WidthPolicy.CollapsePreserveLayout,
             WidthPolicy.CloseGap,
             WidthPolicy.OvershootPreserveLayout,
+            WidthPolicy.FixedMarker,
         });
 
         prefs.LoadFromMainViewModel(main);

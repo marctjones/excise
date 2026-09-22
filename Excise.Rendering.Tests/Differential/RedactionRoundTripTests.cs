@@ -98,12 +98,36 @@ public sealed class RedactionRoundTripTests
         }
     }
 
+    /// <summary>
+    /// #1786 — this used to be TWO theories: one asking excise whether excise
+    /// removed the text (<c>reopened.GetPage(p).Text</c>, a self-oracle), and a
+    /// sibling asking mutool. Merging them is the fix, not a cleanup: the
+    /// self-oracle assertion lived on a LOCAL variable (<c>remaining</c> →
+    /// <c>stillContainsTarget</c>), which is exactly the shape
+    /// <c>check-redaction-oracles.sh</c>'s method-level gate could not see —
+    /// same failure class as #636 and #608, one level down in the tooling that
+    /// is supposed to catch it (see #1786's repro).
+    ///
+    /// <para>The redact/save/reopen happens ONCE. excise's own re-extraction is
+    /// kept only as a sanity check that excise can read its own output — never
+    /// as the leak assertion. The leak assertion is mutool's, an independent
+    /// reader that sees carriers our extractor does not (the structure tree,
+    /// the ToUnicode CMap, the raw strings) — exactly how #636 and #608 passed
+    /// a full green suite while the secret sat in the file.</para>
+    /// </summary>
     [Theory]
     [MemberData(nameof(CorpusPdfs))]
     public void RedactedWordIsGoneAfterSaveAndReopen(string relativePath)
     {
         Assert.SkipWhen(relativePath == SentinelNoCorpus,
             "No smoke corpus found at test-pdfs/smoke/. Run scripts/download-smoke-corpus.sh to populate it.");
+        // #1786: this test now skips without mutool, where the deleted
+        // self-oracle theory did not. Acceptable — rendering-oracles carries
+        // tool:mutool with policy=fail (tests/gates.tsv), so a mutool-less box
+        // already fails the row outright; there is no configuration where this
+        // silently covers less than before.
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
+            "mutool not installed — independent verification unavailable (NOT a pass)");
 
         var root = LocateRepoRoot()!;
         var pdfPath = Path.Combine(root, relativePath);
@@ -127,7 +151,7 @@ public sealed class RedactionRoundTripTests
             $"{relativePath}: no suitable target word found in extracted text — " +
             "PDF probably has no extractable text or only short/non-ASCII content");
 
-        // ── Phase 2: redact + save ───────────────────────────────────
+        // ── Phase 2: redact + save, ONCE ──────────────────────────────
         byte[] redactedBytes;
         int matchCount;
         try
@@ -149,12 +173,13 @@ public sealed class RedactionRoundTripTests
             "extraction and matching are using different glyph paths; " +
             "this is a separate bug class than 'redaction left text behind'");
 
-        // ── Phase 3: reopen and assert the word is gone ──────────────
-        string remaining;
+        // ── Phase 3: excise can reopen its own output — a sanity check, NOT
+        // the leak assertion. Whether the term is still readable is answered
+        // by mutool in phase 4, INDEPENDENTLY of what this reopen sees.
         try
         {
             using var reopened = PdfDocument.Open(redactedBytes);
-            remaining = string.Concat(
+            _ = string.Concat(
                 Enumerable.Range(1, reopened.PageCount)
                           .Select(p => reopened.GetPage(p).Text));
         }
@@ -165,80 +190,11 @@ public sealed class RedactionRoundTripTests
                 $"{ex.GetType().Name}: {ex.Message}");
         }
 
-        var stillContainsTarget = remaining
-            .IndexOf(target!, StringComparison.OrdinalIgnoreCase) >= 0;
-
-        _output.WriteLine($"  {relativePath}");
-        _output.WriteLine($"  redacted '{target}' ({matchCount} match(es)); " +
-                          $"text-leaks-after-redact: {stillContainsTarget}");
-
-        if (stillContainsTarget && KnownRedactionFailures.TryGetValue(relativePath, out var reason))
-        {
-            _output.WriteLine($"  ⚑ KNOWN FAILURE — not gating: {reason}");
-            Assert.SkipWhen(true,
-                $"Known redaction failure for {relativePath}: {reason}");
-        }
-        stillContainsTarget.Should().BeFalse(
-            $"SECURITY: redacted text leaked through save+reopen on {relativePath}. " +
-            $"Target word '{target}' was removed from the source ({matchCount} matches) " +
-            $"but is still extractable from the saved output.");
-    }
-
-    /// <summary>
-    /// The same corpus round-trip, verified by a tool that is not excise (#607).
-    /// </summary>
-    /// <remarks>
-    /// <see cref="RedactedWordIsGoneAfterSaveAndReopen"/> asks excise whether excise
-    /// removed the text — it re-extracts with <c>page.Text</c>, which reads the
-    /// content stream and nothing else. That blind spot is not hypothetical: it is
-    /// exactly how #636 (/ActualText in the structure tree) and #608 (an XMP scrub
-    /// that never reached the saved bytes) passed a full green suite while the
-    /// secret sat in the file.
-    ///
-    /// mutool reads carriers our extractor does not. Running it over the whole
-    /// corpus — rather than a handful of synthetic fixtures — is what turns
-    /// "we believe redaction works" into "an independent tool cannot find the word
-    /// in any of these real documents".
-    ///
-    /// A disagreement here is a genuine leak, not a rendering nicety: excise says the
-    /// word is gone and something else can still read it.
-    /// </remarks>
-    [Theory]
-    [MemberData(nameof(CorpusPdfs))]
-    public void RedactedWordIsNotRecoverableByAnIndependentExtractor(string relativePath)
-    {
-        Assert.SkipWhen(relativePath == SentinelNoCorpus,
-            "No smoke corpus found at test-pdfs/smoke/. Run scripts/download-smoke-corpus.sh to populate it.");
-        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
-            "mutool not installed — independent verification unavailable (NOT a pass)");
-
-        var root = LocateRepoRoot()!;
-        var pdfBytes = File.ReadAllBytes(Path.Combine(root, relativePath));
-
-        string? target;
-        try
-        {
-            using var doc = PdfDocument.Open(pdfBytes);
-            target = PickRedactionTarget(doc);
-        }
-        catch (Exception ex)
-        {
-            Assert.SkipWhen(true, $"excise could not open {relativePath}: {ex.GetType().Name}: {ex.Message}");
-            return;
-        }
-
-        Assert.SkipWhen(target == null, $"{relativePath}: no suitable target word");
-
-        byte[] redactedBytes;
-        int matchCount;
-        using (var doc = PdfDocument.Open(pdfBytes))
-        {
-            matchCount = doc.RedactText(target!, caseSensitive: false).VerifiedRemovals;
-            redactedBytes = doc.SaveToBytes();
-        }
-
-        Assert.SkipWhen(matchCount == 0, $"{relativePath}: '{target}' wasn't matched by RedactText");
-
+        // ── Phase 4: THE LEAK ASSERTION — mutool, INDEPENDENT of excise's own
+        // extractor. mutool reads carriers our extractor does not (the
+        // structure tree, the ToUnicode CMap, the raw strings), which is
+        // exactly how #636 and #608 passed a full green suite while the
+        // secret sat in the file.
         var temp = Path.Combine(Path.GetTempPath(), $"excise-corpus-{Guid.NewGuid():N}.pdf");
         try
         {
@@ -256,20 +212,23 @@ public sealed class RedactionRoundTripTests
                 }
             }
 
-            _output.WriteLine($"  {relativePath}: redacted '{target}' ({matchCount} match(es)); " +
+            _output.WriteLine($"  {relativePath}");
+            _output.WriteLine($"  redacted '{target}' ({matchCount} match(es)); " +
                               $"mutool-recoverable on page(s): [{string.Join(",", recovered)}]");
 
             if (recovered.Count > 0 && KnownRedactionFailures.TryGetValue(relativePath, out var reason))
             {
                 _output.WriteLine($"  ⚑ KNOWN FAILURE — not gating: {reason}");
-                Assert.SkipWhen(true, $"Known redaction failure for {relativePath}: {reason}");
+                Assert.SkipWhen(true,
+                    $"Known redaction failure for {relativePath}: {reason}");
             }
 
+            // INDEPENDENT: mutool, not excise's own extractor.
             recovered.Should().BeEmpty(
-                $"SECURITY: excise reports '{target}' redacted from {relativePath}, but mutool still " +
-                $"recovers it from page(s) [{string.Join(",", recovered)}] of the saved output. " +
-                "excise's own extractor reads only the content stream; mutool reads the structure " +
-                "tree, the ToUnicode CMap, and the raw strings. The word is still in the file.");
+                $"SECURITY: excise reports '{target}' redacted from {relativePath}, but mutool — " +
+                "INDEPENDENT of excise's own content-stream extractor — still recovers it from " +
+                $"page(s) [{string.Join(",", recovered)}] of the saved output. Target word '{target}' " +
+                $"was removed from the source ({matchCount} matches) but is still extractable.");
         }
         finally
         {

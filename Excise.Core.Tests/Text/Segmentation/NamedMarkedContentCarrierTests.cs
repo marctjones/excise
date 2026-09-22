@@ -72,6 +72,34 @@ public class NamedMarkedContentCarrierTests
             + "caller never asked for");
     }
 
+    /// <summary>
+    /// #1599 / CLAUDE.md rule 6 — a carrier the engine refuses to scrub because
+    /// scrubbing it would corrupt a surviving span must be REPORTED, not
+    /// silently left behind with a report that still claims success. This is
+    /// the document-level <c>RedactText</c> entry point the CLI and GUI
+    /// actually call, not the lower-level area primitive the sibling test
+    /// above uses.
+    /// </summary>
+    [Fact]
+    public void RedactText_ReportsSharedPropertyListItCouldNotScrub()
+    {
+        using var pdf = PdfDocument.Open(BuildPdf(twoSpans: true));
+
+        var report = pdf.RedactText(First);
+
+        report.Carriers.Should().Contain(
+            c => c.RefusedReason != null && c.RefusedReason.Contains("#1599"),
+            "a shared named property list that could not be scrubbed must show up as a refused " +
+            "carrier — silently leaving /ActualText behind while reporting success is exactly " +
+            "the failure CLAUDE.md rule 6 forbids");
+        report.IsCleanSuccess.Should().BeFalse(
+            "a carrier still holds the redacted term (SECRETNAME, via the second span's " +
+            "/ActualText), so this run must not be reported clean");
+
+        SavedPdfLeakScanner.FindTerm(Save(pdf), Secret).Should().NotBeEmpty(
+            "sanity: the value really is still there — the report above must match reality");
+    }
+
     private static void RedactWord(PdfPage page, string word)
     {
         var letters = page.Letters.Where(l => word.Contains(l.Value)).ToList();

@@ -277,6 +277,105 @@ public class RedactCommandTests : IDisposable
         raw.Should().Contain("WORLD");
     }
 
+    /// <summary>
+    /// #1750 — the exit-code half of the fix, through the ACTUAL CLI surface
+    /// (<see cref="Program.RunAsync"/>), not just the typed handler. A term
+    /// that wraps across a plain line break is structurally invisible to the
+    /// matcher (no space is inferred at a line wrap), so it survives fully
+    /// readable while excise located zero occurrences — the exit code must
+    /// say so, not just the printed note a script does not read.
+    /// </summary>
+    [Fact]
+    public async Task RunAsync_RedactWordWrappedTerm_ExitsThree_AndPrintsTheNote()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        // Two lines, 14pt apart (more than half the 12pt font size, so a
+        // genuine line wrap): "...signed by Betty" / "Mary on behalf...".
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage(
+            "This document was signed by Betty",
+            fontSize: 12, x: 72, y: 700,
+            contentSuffix: "BT /F1 12 Tf 72 686 Td (Mary on behalf of the company) Tj ET"));
+
+        var previousOut = Console.Out;
+        var captured = new StringWriter();
+        Console.SetOut(captured);
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "Betty Mary"
+            });
+        }
+        finally
+        {
+            Console.SetOut(previousOut);
+        }
+
+        exitCode.Should().Be(3,
+            "a wrapped occurrence excise located but could not structurally remove must not " +
+            "be indistinguishable from a clean run at the exit-code level");
+        var stdout = captured.ToString();
+        stdout.Should().Contain("Redacted 0 occurrence(s)",
+            "sanity: this is precisely the shape that used to print bare success");
+        stdout.Should().Contain("NOT REMOVED (line-wrapped)");
+
+        // Prove the flag is HONEST: the name really is still there, via a
+        // saved-bytes scan (independent of the page-content-only extractor
+        // whose blind spot this whole fix is about) -- Excise.Cli.Tests does
+        // not reference Excise.Rendering, so mutool/pdftotext are not
+        // available here; SavedPdfLeakScanner decompresses streams and reads
+        // the raw bytes, which is the independent check this project scope has.
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "Betty").Should().NotBeEmpty(
+            "the wrapped name must genuinely still be present, not just flagged on faith");
+    }
+
+    /// <summary>
+    /// #1372's hyphen-wrap case shares the SAME exit-code path as #1750's
+    /// plain-wrap case (<c>HasUnremovedWrappedOccurrence</c> is true for
+    /// either candidate list) — verified directly rather than left as an
+    /// inference from the word-wrap test above, since it is a distinct,
+    /// user-visible claim (the hyphen case used to exit 0 too, silently).
+    /// </summary>
+    [Fact]
+    public async Task RunAsync_RedactHyphenWrappedTerm_ExitsThree_AndPrintsTheNote()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        // "Ander-" / "son", 14pt apart — the #1372 fixture shape.
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage(
+            "Reported by Ander-",
+            fontSize: 12, x: 72, y: 700,
+            contentSuffix: "BT /F1 12 Tf 72 686 Td (son on the record) Tj ET"));
+
+        var previousOut = Console.Out;
+        var captured = new StringWriter();
+        Console.SetOut(captured);
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "Anderson"
+            });
+        }
+        finally
+        {
+            Console.SetOut(previousOut);
+        }
+
+        exitCode.Should().Be(3,
+            "the pre-existing hyphen-wrap case (#1372) must exit non-zero too, not just the " +
+            "new plain-wrap case -- both share HasUnremovedWrappedOccurrence");
+        var stdout = captured.ToString();
+        stdout.Should().Contain("Redacted 0 occurrence(s)");
+        stdout.Should().Contain("NOT REMOVED (hyphen-wrapped)");
+
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "Ander").Should().NotBeEmpty(
+            "the wrapped name must genuinely still be present, not just flagged on faith");
+    }
+
     [Fact]
     public void RunRedact_CaseInsensitive_MatchesDifferentCase()
     {

@@ -112,7 +112,8 @@ public static class PdfDocumentRedactionExtensions
             options.Width == WidthPolicy.OvershootPreserveLayout,
             options.KeepAttachments,
             options,
-            depth: 0);
+            depth: 0,
+            fixedMarker: options.FixedMarker);
     }
 
     /// <summary>
@@ -176,12 +177,20 @@ public static class PdfDocumentRedactionExtensions
         // directly, and because a caller that forgets one gets Standard — the
         // safe value — instead of silently getting less.
         RedactionOptions profileOptions,
-        int depth)
+        int depth,
+        // #1755: FixedMarker's box is a FIXED size, never derived from the
+        // removed run's own width — the opposite of overshootBox, which is
+        // still rounded up FROM that width. Kept separate from closeWidth
+        // (both are true together for FixedMarker) so the drawing site below
+        // can tell "no box" (plain CloseGap) from "fixed box" (FixedMarker)
+        // apart.
+        bool fixedMarker = false)
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
         var pageResults = new List<PageRedactionResult>();
         var hyphenCandidates = new List<HyphenatedTermCandidate>();
+        var wordWrapCandidates = new List<WordWrapTermCandidate>();
         var carrierResults = new List<CarrierResult>();
         var imageCounts = default(ImageRedactionCounts);   // #1187/#1195 surfacing
 
@@ -213,7 +222,7 @@ public static class PdfDocumentRedactionExtensions
                 (nested, term) => RedactTextCore(nested, term, caseSensitive, strategy, drawBlackRect,
                     includeHiddenLayers, scrubDocumentCarriers, closeWidth, boxColor, carriers, null,
                     carrierPolicy, wholeWord, overshootBox, keepAttachments: true,
-                    profileOptions, depth + 1));
+                    profileOptions, depth + 1, fixedMarker));
         }
         else
         {
@@ -357,9 +366,14 @@ public static class PdfDocumentRedactionExtensions
                         // #1189: under the overshoot policy the covering box is
                         // widened out toward the surviving neighbours, so its
                         // width stops being a ruler for the removed string.
-                        markerAreas.Add(overshootBox
-                            ? OvershootBoxFor(bbox, matchLetters, searchLetters, cropWindow)
-                            : bbox);
+                        // #1755: under FixedMarker the box is a FIXED size —
+                        // never derived from bbox's own width at all, unlike
+                        // overshoot which still rounds UP from it.
+                        markerAreas.Add(fixedMarker
+                            ? FixedMarkerBoxFor(bbox, matchLetters)
+                            : overshootBox
+                                ? OvershootBoxFor(bbox, matchLetters, searchLetters, cropWindow)
+                                : bbox);
                     }
 
                     if (contentAreas.Count > 0)
@@ -377,11 +391,14 @@ public static class PdfDocumentRedactionExtensions
                     }
 
                     // A box whose width equals the removed run is itself a
-                    // width-residue oracle (#1140). Width-closing therefore
-                    // cannot draw one: its contract is to destroy that channel,
-                    // accepting the visual/layout trade-off explicitly chosen by
-                    // the caller.
-                    if (drawBlackRect && !closeWidth)
+                    // width-residue oracle (#1140). Plain width-closing
+                    // (CloseGap) therefore draws none at all (#1725: the
+                    // resulting redaction has no visible mark). FixedMarker is
+                    // the exception: its box is ALREADY content-independent —
+                    // exactly the property this guard exists to protect — so it
+                    // draws unconditionally, answering both #1715 and #1725
+                    // instead of trading one for the other (#1755).
+                    if (drawBlackRect && (fixedMarker || !closeWidth))
                         foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox, boxColor);
 
                     // #1101: count what this page's window shows, not the full
@@ -401,6 +418,11 @@ public static class PdfDocumentRedactionExtensions
             // joined (joining is #942; see HyphenatedTermCandidate).
             hyphenCandidates.AddRange(
                 FindHyphenWrappedCandidates(page.Letters, text, caseSensitive, pageNum));
+            // #1750: the same structural blind spot for a multi-word term
+            // split by an ORDINARY line wrap (no hyphen) — generalizes the
+            // #1372 detector rather than silently reporting "0 occurrences".
+            wordWrapCandidates.AddRange(
+                FindWordWrapCandidates(page.Letters, text, caseSensitive, pageNum));
 
             var remaining = CountOccurrences(page, text, caseSensitive, includeHiddenLayers, wholeWord);
             pageResults.Add(new PageRedactionResult(
@@ -540,6 +562,26 @@ public static class PdfDocumentRedactionExtensions
         // every page, so a page this call also redacted is not named.
         carrierResults.AddRange(SharedImageCarrierResults(document, imageCounts.TouchedImages));
 
+        // #1599: a NAMED marked-content property list (/Span /P1 BDC) this
+        // redaction could not scrub because a span that SURVIVES it still
+        // references the same dictionary — scrubbing it would have corrupted
+        // that surviving span's /ActualText, the over-removal #1182 deferred
+        // this case over. Reported rather than silently left behind: the
+        // report must not claim clean over a carrier the engine refused to
+        // touch (rule 6).
+        if (imageCounts.UnscrubbedSharedMarkedContentCarriers is { Count: > 0 } sharedNames)
+        {
+            foreach (var name in sharedNames)
+            {
+                carrierResults.Add(new CarrierResult(
+                    $"marked-content /Properties /{name}",
+                    false,
+                    "a shared named property list (#1599): another span not covered by this " +
+                    "redaction still references it, so its /ActualText/Alt/E was left in place " +
+                    "to avoid corrupting that span"));
+            }
+        }
+
         // #1572: a kept attachment the term-based carrier scrub removed after
         // all (its name or description held the term) is reported as removed.
         var attachmentResults = keptAttachments != null
@@ -556,6 +598,7 @@ public static class PdfDocumentRedactionExtensions
             ImageRegionsRedacted = imageCounts.RegionEdited,
             ImagesDroppedWhole = imageCounts.RemovedWhole,
             HyphenatedCandidates = hyphenCandidates,
+            WordWrapCandidates = wordWrapCandidates,
             Profile = profileOptions.Profile,
             Removals = profileRemovals,
             AccessibilityAndInteractivityRemoved =
@@ -823,6 +866,103 @@ public static class PdfDocumentRedactionExtensions
         return found;
     }
 
+    /// <summary>
+    /// Find occurrences of <paramref name="searchText"/> that an ORDINARY
+    /// (non-hyphenated) line wrap splits across two lines — a multi-word term
+    /// where the break falls between words, e.g. "…signed by Betty" /
+    /// "Mary on behalf of…" for the term "Betty Mary" (#1750).
+    /// </summary>
+    /// <remarks>
+    /// <para>Generalizes <see cref="FindHyphenWrappedCandidates"/> to the case a
+    /// hyphen does not mark: <see cref="FindTextMatches"/> never inserts a space
+    /// at a line wrap (<see cref="IsInferredWordGap"/> is same-line only, so a
+    /// hyphen-continued word is not corrupted by an invented space), so the
+    /// concatenated text at an ordinary wrap reads "…BettyMary…" with nothing
+    /// between the words and a multi-word needle with a space in it can never
+    /// match. Before this, that produced "Redacted 0 occurrence(s)" and exit 0
+    /// — a silent false success, not a miss anyone could see.</para>
+    ///
+    /// <para><b>Detection only, same reason as the hyphen case.</b> Actually
+    /// removing a wrapped match needs a removal box PER LINE, which is a change
+    /// to how a match's geometry is built (#942's lesson: one box spanning both
+    /// lines destroys everything between them). Until that exists, this reports
+    /// the occurrence rather than silently calling the redaction clean.</para>
+    ///
+    /// <para>The join here inserts a SPACE at the break (<c>beforeText + " " +
+    /// afterText</c>) — the opposite of the hyphen case, which joins with
+    /// nothing and drops the hyphen. That is the actual difference between the
+    /// two wrap kinds: a hyphen marks "this is one word, continued"; an ordinary
+    /// wrap is a word boundary the line break stands in for.</para>
+    ///
+    /// <para>Break points already reported by <see cref="FindHyphenWrappedCandidates"/>
+    /// are skipped here (<see cref="IsHyphen"/> on the last same-line letter) so
+    /// one break point does not produce two different, disagreeing notes.</para>
+    ///
+    /// <para>⚠️ <b>Known limit: catches a TWO-word straddle, not a longer
+    /// phrase wrapping mid-name.</b> <see cref="SameLineRun"/> stops at the
+    /// first blank on each side (inherited from the hyphen detector, where
+    /// that is correct — a hyphenated WORD has no internal blank to stop at).
+    /// For a phrase, that means <c>beforeText</c> is only the LAST word of the
+    /// first line and <c>afterText</c> only the FIRST word of the second. Two
+    /// words straddling the break ("Betty Mary") are found. A name that wraps
+    /// mid-phrase with a word fully on the near side of the break on EITHER
+    /// line — "Mary Jane Smith" breaking after "Jane", so <c>beforeText</c> is
+    /// "Jane" and <c>afterText</c> is "Smith" — is not: the 3-word needle
+    /// cannot be found in "Jane Smith", and this silently reports nothing for
+    /// that occurrence. Extending <see cref="SameLineRun"/> to walk multiple
+    /// words per side needs care with the raw-index/joined-index bookkeeping
+    /// this method already does (the <c>beforeText.Length</c> straddle math),
+    /// so it is left as a follow-up rather than done here.</para>
+    /// </remarks>
+    internal static List<WordWrapTermCandidate> FindWordWrapCandidates(
+        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, int pageNumber)
+    {
+        var found = new List<WordWrapTermCandidate>();
+        var needle = NormalizeText(searchText).Trim();
+        // A single-word needle cannot straddle a plain (non-hyphenated) wrap:
+        // with no hyphen consumed, whitespace normalization means the needle
+        // itself would need an internal space to span two words.
+        if (!needle.Contains(' ') || letters.Count == 0) return found;
+
+        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        var (view, _, _) = CollapseOverprintedGlyphs(letters);
+
+        for (var h = 0; h < view.Count; h++)
+        {
+            if (string.IsNullOrWhiteSpace(view[h].Value)) continue;
+            if (IsHyphen(view[h].Value)) continue;   // the hyphen detector owns this break
+
+            // The continuation is the next non-blank letter; it must be on a
+            // DIFFERENT line and this must be the LAST non-blank letter on its
+            // own line (otherwise h is mid-line, not a wrap point).
+            var next = h + 1;
+            while (next < view.Count && string.IsNullOrWhiteSpace(view[next].Value)) next++;
+            if (next >= view.Count || !OnDifferentLines(view[h], view[next])) continue;
+
+            var before = SameLineRun(view, h, needle.Length, forward: false, out var beforeText);
+            var after = SameLineRun(view, next, needle.Length, forward: true, out var afterText);
+            if (before == 0 || after == 0) continue;
+
+            // Join WITH a space — the wrap stands in for the word boundary a
+            // producer would otherwise have drawn as a literal space glyph.
+            var joined = NormalizeText(beforeText + " " + afterText);
+            var idx = joined.IndexOf(needle, comparison);
+            if (idx < 0) continue;
+            // The break sits right after beforeText in the joined string (one
+            // inserted space); the needle must actually straddle it.
+            if (idx + needle.Length <= beforeText.Length) continue;   // ends before the break
+            if (idx > beforeText.Length) continue;                   // starts after the break
+
+            found.Add(new WordWrapTermCandidate(
+                pageNumber,
+                beforeText.Substring(Math.Min(idx, beforeText.Length)),
+                afterText.Substring(0, Math.Min(afterText.Length,
+                    Math.Max(0, idx + needle.Length - beforeText.Length - 1)))));
+        }
+
+        return found;
+    }
+
     private static bool IsHyphen(string value) =>
         value == "-" || value == "‐" || value == "­";
 
@@ -1021,6 +1161,64 @@ public static class PdfDocumentRedactionExtensions
 
         return matches;
     }
+
+    /// <summary>
+    /// #1755 — the covering box for one match under <see cref="WidthPolicy.FixedMarker"/>:
+    /// a FIXED number of ems of the match's own font size, anchored at the
+    /// removed run's left edge, with NO dependence on the removed run's actual
+    /// width at all.
+    /// </summary>
+    /// <remarks>
+    /// <para>This is the property <see cref="OvershootBoxFor"/> does not have:
+    /// overshoot still ROUNDS UP from the removed width, so it merely coarsens
+    /// the measurement into buckets — two candidates in the same bucket become
+    /// indistinguishable, but the bucket itself still correlates with length.
+    /// A fixed multiple of the font size carries no information about the
+    /// removed string at all: every redaction on the same font size draws the
+    /// identical mark.</para>
+    /// <para><b>Anchored left, matching how <see cref="WidthPolicy.CloseGap"/>
+    /// reflows the line</b> (FixedMarker closes the gap the same way — see
+    /// <see cref="RedactionOptions.CloseWidth"/>): the surviving text that
+    /// followed the removed run shifts left to sit exactly at
+    /// <c>bbox.Left</c>, so anchoring the marker there places it right where
+    /// the removed text was, with the reflowed continuation immediately after
+    /// it.</para>
+    /// <para><b>Known limit, stated rather than hidden:</b> when the fixed
+    /// width is WIDER than the line's slack, the marker visually overlaps the
+    /// reflowed neighbour — cosmetic only (the box is a drawn overlay; the
+    /// content-stream removal that actually deletes the glyphs already ran
+    /// unconditionally), but a real limit. Placing the marker by
+    /// run-boundary/alignment-aware machinery is #1751/#1752/#1753, explicitly
+    /// out of scope here.</para>
+    /// </remarks>
+    internal static PdfRectangle FixedMarkerBoxFor(
+        PdfRectangle bbox,
+        IReadOnlyList<Letter> matchLetters)
+    {
+        var box = bbox.Normalize();
+        var height = box.Top - box.Bottom;
+        if (height <= 0) return bbox;
+
+        // Same "one em of the match's own font size" reference OvershootBoxFor
+        // uses for its bucket — but here it IS the width, not a rounding unit,
+        // so no removed-width measurement ever enters the computation at all.
+        var em = matchLetters.Count > 0 ? matchLetters.Max(l => l.FontSize) : height;
+        if (!(em > 0)) return bbox;
+
+        var width = FixedMarkerEms * em;
+        return new PdfRectangle(box.Left, box.Bottom, box.Left + width, box.Top);
+    }
+
+    /// <summary>
+    /// Marker width for <see cref="FixedMarkerBoxFor"/>, in ems of the match's
+    /// font size. A constant, not a <see cref="RedactionOptions"/> knob: making
+    /// it caller-choosable would let a caller pick a size that happens to fit
+    /// one particular candidate, which is the same shape of leak #1754's
+    /// width-quantise option was found to have (a bucket is still a
+    /// measurement). Two ems comfortably covers a short redacted run's own
+    /// width without depending on what it was.
+    /// </summary>
+    private const double FixedMarkerEms = 2.0;
 
     /// <summary>
     /// #1189 — the covering box for one match, WIDENED so its width no longer
