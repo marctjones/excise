@@ -84,11 +84,64 @@ public class EncryptedDocumentSaveWarningTests : IDisposable
         return (vm, dialog);
     }
 
+    /// <summary>
+    /// #1768: a generated fixture BESIDE the pdfjs-corpus test below, not
+    /// instead of it -- a document excise both encrypts and re-reads is a
+    /// self-oracle for excise's own encryption round-trip (CLAUDE.md #1617),
+    /// which the pdfjs-produced fixture (issue15893_reduced.pdf, encrypted
+    /// by a different producer) corroborates independently. This gives the
+    /// preserve-on-save contract a row when that corpus is absent.
+    /// </summary>
+    private string SaveEncryptedFixture(string password)
+    {
+        var plainPath = Path.Combine(_tempDir, "plain-for-encrypt.pdf");
+        using (var plain = PdfDocument.CreateNew())
+        {
+            plain.Pages.AddBlank();
+            plain.Save(plainPath);
+        }
+
+        var encryptedPath = Path.Combine(_tempDir, "generated-encrypted-source.pdf");
+        using var doc = PdfDocument.Open(File.ReadAllBytes(plainPath));
+        doc.Save(encryptedPath, new Excise.Core.Security.PdfEncryptionOptions
+        {
+            UserPassword = password,
+            OwnerPassword = "owner-1768",
+            Permissions = -4,
+        });
+        return encryptedPath;
+    }
+
+    [Fact]
+    public async Task SaveFileAsAsync_EncryptedGeneratedSource_SavesEncrypted_WithoutAskingAnything()
+    {
+        const string password = "generated-pw";
+        var fixturePath = SaveEncryptedFixture(password);
+
+        var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
+        documentService.LoadDocument(fixturePath, password);
+        documentService.IsEncrypted.Should().BeTrue("fixture is a password-protected PDF");
+
+        var (vm, dialog) = CreateViewModel(documentService);
+        dialog.ConfirmResult = false;
+
+        var outputPath = Path.Combine(_tempDir, "generated-preserved.pdf");
+        await vm.SaveFileAsAsync(outputPath);
+
+        dialog.ConfirmCallCount.Should().Be(0,
+            "preserving the source's protection is the good path (#643) — there is no loss to confirm");
+        File.Exists(outputPath).Should().BeTrue();
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), password);
+        reopened.IsEncrypted.Should().BeTrue("saving an encrypted document must keep it encrypted (#643)");
+    }
+
     [Fact]
     public async Task SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything()
     {
         var fixturePath = ExistingEncryptedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Encrypted PDF fixture not available: {EncryptedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null,
+            TestRepoLayout.AbsenceReason("encrypted pdfjs corpus fixture", EncryptedFixtureRelativePath));
 
         var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
         documentService.LoadDocument(fixturePath!, EncryptedFixturePassword);
@@ -124,7 +177,8 @@ public class EncryptedDocumentSaveWarningTests : IDisposable
     public void SaveDocument_EncryptedSource_PreservesPermissionsMask()
     {
         var fixturePath = ExistingEncryptedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Encrypted PDF fixture not available: {EncryptedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null,
+            TestRepoLayout.AbsenceReason("encrypted pdfjs corpus fixture", EncryptedFixtureRelativePath));
 
         var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
         documentService.LoadDocument(fixturePath!, EncryptedFixturePassword);
