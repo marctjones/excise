@@ -138,8 +138,12 @@ public class CopyReadingOrderTests
         File.WriteAllBytes(path, pdf);
         try
         {
-            var oracle = RunPdftotext(path);
-            Assert.SkipWhen(oracle == null, "poppler pdftotext not on PATH (Linux CI has no poppler binaries)");
+            var (outcome, oracle) = RunPdftotext(path);
+            Assert.SkipWhen(outcome == PdftotextOutcome.ToolNotFound,
+                "poppler pdftotext not on PATH (Linux CI has no poppler binaries)");
+            outcome.Should().Be(PdftotextOutcome.Success,
+                $"pdftotext must run cleanly against this fixture (outcome={outcome}) -- " +
+                "a timeout or a nonzero exit is a real failure, not an environment gap");
 
             var oracleTokens = Tokens(oracle!);
             var columnMajor = LeftColumn.Concat(RightColumn).SelectMany(Tokens).ToList();
@@ -336,8 +340,19 @@ public class CopyReadingOrderTests
 
     // ── pdftotext oracle helper ──────────────────────────────────────────────
 
-    private static string? RunPdftotext(string pdfPath)
+    /// <summary>
+    /// #1768: a "not found" reason and a "failed or timed out" reason used
+    /// to collapse to the same null return, so the caller's SkipWhen turned
+    /// a real pdftotext failure under load into a silent skip -- exactly the
+    /// #1527 shape (a reason asserting the absence of something that could
+    /// instead just be a transient failure). The caller now distinguishes
+    /// them: ToolNotFound skips, everything else fails the test.
+    /// </summary>
+    private enum PdftotextOutcome { ToolNotFound, TimedOut, NonZeroExit, Success }
+
+    private static (PdftotextOutcome Outcome, string? Text) RunPdftotext(string pdfPath)
     {
+        Process? p;
         try
         {
             var psi = new ProcessStartInfo("pdftotext", $"\"{pdfPath}\" -")
@@ -347,20 +362,30 @@ public class CopyReadingOrderTests
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
-            using var p = Process.Start(psi);
-            if (p == null) return null;
+            p = Process.Start(psi);
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // The OS could not even launch the executable -- not on PATH.
+            return (PdftotextOutcome.ToolNotFound, null);
+        }
+        if (p == null) return (PdftotextOutcome.ToolNotFound, null);
+
+        using (p)
+        {
             // #925: drain both redirected pipes concurrently.
             var stdoutTask = p.StandardOutput.ReadToEndAsync();
             var stderrTask = p.StandardError.ReadToEndAsync();
             if (!p.WaitForExit(15000))
             {
                 try { p.Kill(entireProcessTree: true); } catch { /* gone */ }
-                return null;
+                return (PdftotextOutcome.TimedOut, null);
             }
             _ = stderrTask.GetAwaiter().GetResult();
-            return p.ExitCode == 0 ? stdoutTask.GetAwaiter().GetResult() : null;
+            return p.ExitCode == 0
+                ? (PdftotextOutcome.Success, stdoutTask.GetAwaiter().GetResult())
+                : (PdftotextOutcome.NonZeroExit, null);
         }
-        catch { return null; } // tool absent → caller skips
     }
 
     private static void TryDelete(string path)
