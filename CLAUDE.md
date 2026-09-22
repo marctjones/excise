@@ -113,7 +113,7 @@ convenience:
 | Tier | What | When |
 |---|---|---|
 | `t0` | build, Core/Cli/Avalonia tests, static gates | before every push (`--install-hook`) |
-| `t1` | t0 + redaction suites, rendering oracles, parity ratchets, full App tests | before merging to `develop` |
+| `t1` | t0 + redaction suites, rendering oracles, parity ratchets, App tests (chunked, #1767) | before merging to `develop` |
 | `full` | everything, resumable | weekly and before a release candidate |
 | `t2` / `t3` | release smoke | release candidate / before tagging |
 

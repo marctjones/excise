@@ -96,7 +96,8 @@ Usage: scripts/test-tier.sh {t0|t1|full|t2|t3} [--resume]
                   selftests). Pre-push: the installed hook runs exactly this.
   t1     ~20–25m  t0 + the redaction suites + Rendering (deterministic AND the
                   independent-oracle subsets with their floors) + parity ratchets
-                  + skip budgets + the full Excise.App.Tests run. Merge gate.
+                  + skip budgets + Excise.App.Tests, CHUNKED (#1774; the
+                  unchunked evidence pass runs in full). Merge gate.
   full   ≈3 h     t1 + every project chunked + the corpus scans + the release
                   smoke rows + the GRADE benches. exec's scripts/run-full-suite.sh
                   under caffeinate; resumable there (--fresh restarts; --only <re>
@@ -331,11 +332,16 @@ run_step() {
     say ""
 }
 
-# run_tier <t0|t1> — derive the plan from the manifest, expand the trx
-# references, run every row in file order.
+# run_tier <t0|t1> — derive the plan from the manifest, expand the chunked
+# rows and the trx references, run every row in file order.
 run_tier() {
     local plan="$LOG_DIR/plan.tsv" n
-    runner_manifest_plan "$1" > "$plan.rows" || { echo "test-tier: tests/gates.tsv is defective; nothing ran." >&2; exit 2; }
+    runner_manifest_plan "$1" > "$plan.manifest" || { echo "test-tier: tests/gates.tsv is defective; nothing ran." >&2; exit 2; }
+    # project-chunked rows become <name>.chunkNN, through the SAME chunker
+    # run-full-suite.sh uses (#1774). t0 is exempt inside the helper — the
+    # pre-push hook must stay cheap, and nothing resumes a 3-minute run.
+    runner_plan_expand_chunks "$1" "$plan.manifest" "$plan.rows"
+    rm -f "$plan.manifest"
     n="$(grep -c . "$plan.rows")"
     runner_plan_write "$plan" "$1" "$plan.rows" "$n" "$n" "-"
     rm -f "$plan.rows"
