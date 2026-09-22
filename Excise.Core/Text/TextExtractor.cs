@@ -143,14 +143,29 @@ public class TextExtractor
             // invokes, not anywhere EmitFormFieldLetters otherwise looks.
             if (field.FieldType == PdfFieldType.Signature)
             {
-                EmitSignatureAppearanceLetters(field);
+                EmitAppearanceStreamLetters(field);
+                continue;
+            }
+
+            // #1760: /V on a Button holds an on/off STATE NAME
+            // (checkbox/radio) or is absent (pushbutton) — never human
+            // -readable text on its own. But a PUSHBUTTON's /AP/N commonly
+            // draws a CUSTOM CAPTION as real, visible text (issue15053: "This
+            // Button can be toggled", no /V at all), the exact same shape
+            // #669 fixed for Signature fields above. Route through the same
+            // appearance-text extraction rather than skipping the field
+            // outright — the old blanket skip meant a pushbutton's caption
+            // was invisible to search AND redaction while mutool rendered it
+            // plainly, so `excise redact ... toggled` reported success with
+            // the caption fully intact.
+            if (field.FieldType == PdfFieldType.Button)
+            {
+                EmitAppearanceStreamLetters(field);
                 continue;
             }
 
             var value = field.Value ?? field.DefaultValue;
             if (string.IsNullOrEmpty(value)) continue;
-            // Buttons are off/on/checked/unchecked names — not human-readable text.
-            if (field.FieldType == PdfFieldType.Button) continue;
 
             // Plain multiline text fields (/Ff bit 12) can hold far more than
             // fits on one line — the same reasoning as the Choice-listbox
@@ -165,19 +180,21 @@ public class TextExtractor
     }
 
     /// <summary>
-    /// Emit synthetic Letters for a Signature field's rendered appearance
-    /// text (#669). A signature widget's <c>/V</c> is a signature dictionary,
-    /// not a string, so the normal value-based path above never applies —
-    /// but the widget's <c>/AP/N</c> appearance stream frequently draws real
-    /// text ("Digitally signed by…", date, reason) that mutool's renderer
+    /// Emit synthetic Letters for a field's rendered appearance text — a
+    /// Signature's "Digitally signed by…" block (#669) or a pushbutton's
+    /// custom caption (#1760). Both have no ORDINARY string value to read
+    /// (a signature widget's <c>/V</c> is a signature dictionary; a button's
+    /// is an on/off state name or absent entirely), so the normal
+    /// value-based path above never applies — but the widget's <c>/AP/N</c>
+    /// appearance stream frequently draws real text that mutool's renderer
     /// (and a human) sees, which excise was blind to entirely before this.
     /// Font-name prefix is still "AcroForm:" (not a new prefix) so
     /// <c>PdfDocumentRedactionExtensions.IsInteractiveOnlyMatch</c> already
     /// routes a match here through <see cref="InteractiveRedactionScrubber"/>
-    /// with no changes needed there beyond no longer skipping Signature
-    /// fields when scrubbing (see that class).
+    /// with no changes needed there beyond no longer skipping these field
+    /// types when scrubbing (see that class).
     /// </summary>
-    private void EmitSignatureAppearanceLetters(PdfField field)
+    private void EmitAppearanceStreamLetters(PdfField field)
     {
         if (field.Rect == null) return;
 

@@ -251,53 +251,71 @@ internal static class InteractiveRedactionScrubber
             if (!widgets.Any(w => w.PageNumber == page.PageNumber && w.Rect.IntersectsWith(area)))
                 continue;
 
-            // Buttons are off/on/checked/unchecked names, never human-readable
-            // text — TextExtractor never emits letters for them, so a match
-            // can't reach this method for a Button field. Signature fields
-            // USED to be excluded here too, on the same "no text" assumption
-            // — but #669 fixed TextExtractor to read a signature widget's
-            // /AP/N appearance text (a real "Digitally signed by…" block),
-            // so a match can now legitimately reach here for a Signature
-            // field, and skipping it would be exactly the "found but not
-            // removable" gap #660 already had to fix for FreeText. Removing
-            // /V here drops the reference to the signature dictionary (whose
-            // /Reason, /Name, /Location strings can restate the same text as
-            // the appearance) — since Save() only serializes objects
-            // reachable from the trailer, letting that reference go is
-            // enough for the dictionary to fall out of the saved bytes with
-            // no separate prune step needed for it specifically.
-            if (field.FieldType == PdfFieldType.Button)
-                continue;
+            // #1760: /V on a Button holds an on/off STATE NAME
+            // (checkbox/radio), never human-readable text — but a PUSHBUTTON's
+            // /AP/N is very commonly a direct content stream that draws a
+            // CUSTOM CAPTION as real glyphs (issue15053: "This Button can be
+            // toggled", painted text, no /V at all). The value carriers
+            // (V/DV/RV/Opt) genuinely do not apply to a button and stay
+            // skipped, but the #1098 appearance-stream rewrite must NOT be —
+            // this used to skip buttons entirely, including that rewrite,
+            // which is exactly how a pushbutton's caption survived a redaction
+            // that reported success. Signature fields USED to be excluded on
+            // the same "no text" assumption — but #669 fixed TextExtractor to
+            // read a signature widget's /AP/N appearance text (a real
+            // "Digitally signed by…" block), so a match can now legitimately
+            // reach here for a Signature field too, and skipping it would be
+            // exactly the "found but not removable" gap #660 already had to
+            // fix for FreeText. Removing /V on a Signature field drops the
+            // reference to the signature dictionary (whose /Reason, /Name,
+            // /Location strings can restate the same text as the appearance)
+            // — since Save() only serializes objects reachable from the
+            // trailer, letting that reference go is enough for the dictionary
+            // to fall out of the saved bytes with no separate prune step
+            // needed for it specifically.
+            var isButton = field.FieldType == PdfFieldType.Button;
 
             CaptureObjectGraph(page.Document, field.RawDictionary.GetOptional("AP"), pruneCandidates);
 
             var defaultResources = GetAcroFormDefaultResources(page.Document);
             if (term != null)
             {
-                // #1038: cut the term out, keep the rest of the value. See
-                // ScrubTerm for what deleting it instead cost on a real file.
-                changed |= RedactStringEntry(
-                    page.Document, field.RawDictionary, "V", term, caseSensitive, pruneCandidates, wholeWord);
-                changed |= RedactStringEntry(
-                    page.Document, field.RawDictionary, "DV", term, caseSensitive, pruneCandidates, wholeWord);
-                // #1581: /RV, the rich-text value (§12.7.4.3). It is an
-                // independent carrier — a field can have /RV and NO /V at all
-                // — and mutool DRAWS it, so the term stayed both in the file
-                // and on the page while every /V assertion read clean.
-                changed |= RedactStringEntry(
-                    page.Document, field.RawDictionary, "RV", term, caseSensitive, pruneCandidates, wholeWord);
-                // #1098: rewrite the appearance to remove the term's GLYPHS so
-                // the field still renders its remaining text in readers that
-                // ignore /NeedAppearances. Drops /AP (leak-safe) only if the
-                // rewrite can't be done.
+                if (!isButton)
+                {
+                    // #1038: cut the term out, keep the rest of the value. See
+                    // ScrubTerm for what deleting it instead cost on a real file.
+                    changed |= RedactStringEntry(
+                        page.Document, field.RawDictionary, "V", term, caseSensitive, pruneCandidates, wholeWord);
+                    changed |= RedactStringEntry(
+                        page.Document, field.RawDictionary, "DV", term, caseSensitive, pruneCandidates, wholeWord);
+                    // #1581: /RV, the rich-text value (§12.7.4.3). It is an
+                    // independent carrier — a field can have /RV and NO /V at
+                    // all — and mutool DRAWS it, so the term stayed both in
+                    // the file and on the page while every /V assertion read
+                    // clean.
+                    changed |= RedactStringEntry(
+                        page.Document, field.RawDictionary, "RV", term, caseSensitive, pruneCandidates, wholeWord);
+                }
+                // #1098/#1760: rewrite the appearance to remove the term's
+                // GLYPHS so the field (button caption included) still renders
+                // its remaining text in readers that ignore /NeedAppearances.
+                // Drops /AP (leak-safe) only if the rewrite can't be done —
+                // for a checkbox/radio whose /AP/N is a STATE DICTIONARY
+                // (§12.5.6.19), AppearanceStreamRedactor correctly refuses to
+                // rewrite it (no readable stream), so this falls back to
+                // dropping /AP: the same fail-closed policy every other field
+                // type already gets when its widget rect intersects the match.
                 changed |= RewriteOrDropAppearance(
                     page, field.RawDictionary, defaultResources, term, caseSensitive, processedAp, wholeWord);
             }
             else
             {
-                changed |= field.RawDictionary.Remove("V");
-                changed |= field.RawDictionary.Remove("DV");
-                changed |= field.RawDictionary.Remove("RV");   // #1581
+                if (!isButton)
+                {
+                    changed |= field.RawDictionary.Remove("V");
+                    changed |= field.RawDictionary.Remove("DV");
+                    changed |= field.RawDictionary.Remove("RV");   // #1581
+                }
                 // Area mode knows only a rectangle, so the whole appearance goes.
                 changed |= field.RawDictionary.Remove("AP");
             }
