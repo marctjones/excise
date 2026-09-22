@@ -4,6 +4,7 @@ using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.TestSupport;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -43,6 +44,44 @@ public sealed class DocumentTextIndexCompactWordsTests : IDisposable
             "the fixture must have text, or retention cannot be observed");
         Enumerable.Range(1, document.PageCount).Should().NotContain(p => document.GetPage(p).HasCachedLetters,
             "building the index must not leave letters cached on the pages it walked");
+    }
+
+    /// <summary>
+    /// #1768: <see cref="ParityCorpus"/> used to walk up to the first ancestor
+    /// holding the TRACKED test-pdfs/sample-pdfs and read test-pdfs/smoke as a
+    /// sibling there. In a git worktree that ancestor is the worktree root,
+    /// where the gitignored smoke corpus is absent — so 13 files silently
+    /// became 3, and every test below compared bitwise output against 3 files
+    /// while believing it covered 13. This asserts the resolved count against
+    /// an INDEPENDENT count via <see cref="TestRepoLayout"/> directly (not
+    /// through <see cref="ParityCorpus"/> itself), so a regression that
+    /// reintroduces a bounded or worktree-anchored walk reds even though it
+    /// still returns a nonzero, plausible-looking count.
+    /// </summary>
+    [Fact]
+    public void ParityCorpus_ResolvesEveryReachableCorpusDirectory()
+    {
+        var sampleDir = TestRepoLayout.FindDirectory("test-pdfs", "sample-pdfs");
+        sampleDir.Should().NotBeNull("test-pdfs/sample-pdfs is checked in and must always resolve");
+        var sampleCount = Directory.GetFiles(sampleDir!, "*.pdf").Length;
+
+        var fixtures = ParityCorpus();
+        fixtures.Count.Should().BeGreaterThanOrEqualTo(sampleCount,
+            "the corpus must include at least the tracked sample-pdfs files");
+
+        // smoke is gitignored and only downloaded on some machines — the
+        // differential only applies where TestRepoLayout can independently
+        // see it, so a box without the corpus at all is not falsely reddened.
+        var smokeDir = TestRepoLayout.FindDirectory("test-pdfs", "smoke");
+        if (smokeDir != null)
+        {
+            var smokeCount = Directory.GetFiles(smokeDir, "*.pdf").Length;
+            smokeCount.Should().BeGreaterThan(0, "a resolved smoke directory with zero files would make this vacuous");
+            fixtures.Count.Should().Be(sampleCount + smokeCount,
+                $"ParityCorpus() must resolve both sample-pdfs ({sampleCount}) and smoke " +
+                $"({smokeCount}) even when run from a worktree — got {fixtures.Count}, which " +
+                "means the gitignored smoke corpus was silently dropped (#1768)");
+        }
     }
 
     [Fact]
@@ -149,21 +188,13 @@ public sealed class DocumentTextIndexCompactWordsTests : IDisposable
         $"{BitConverter.DoubleToInt64Bits(r.Left):X}/{BitConverter.DoubleToInt64Bits(r.Bottom):X}/" +
         $"{BitConverter.DoubleToInt64Bits(r.Right):X}/{BitConverter.DoubleToInt64Bits(r.Top):X}";
 
-    private static IReadOnlyList<string> ParityCorpus()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "test-pdfs", "sample-pdfs")))
-            dir = dir.Parent;
-        if (dir == null)
-            return [];
-
-        return new[] { "sample-pdfs", "smoke" }
-            .Select(sub => Path.Combine(dir.FullName, "test-pdfs", sub))
-            .Where(Directory.Exists)
-            .SelectMany(d => Directory.GetFiles(d, "*.pdf"))
+    private static IReadOnlyList<string> ParityCorpus() =>
+        new[] { "sample-pdfs", "smoke" }
+            .Select(sub => TestRepoLayout.FindDirectory("test-pdfs", sub))
+            .Where(d => d != null)
+            .SelectMany(d => Directory.GetFiles(d!, "*.pdf"))
             .OrderBy(Path.GetFileName, StringComparer.Ordinal)
             .ToList();
-    }
 
     public void Dispose()
     {

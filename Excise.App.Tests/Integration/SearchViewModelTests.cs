@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Headless.XUnit;
 using AwesomeAssertions;
+using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Xunit;
 namespace Excise.App.Tests.Integration;
@@ -19,31 +20,48 @@ namespace Excise.App.Tests.Integration;
 /// search code publishes results via Dispatcher.UIThread.Post — without
 /// a running Avalonia dispatcher the post never fires and SearchMatches
 /// stays empty.
+///
+/// #1768: four of the five tests below returned at the top on a book path
+/// that was the empty string. Ported onto a synthetic 5-page document —
+/// <c>TestPdfGenerator.CreateMultiPagePdf</c> draws "Page N Content" and
+/// "Secret on Page N" on every page, giving both a multi-hit-per-page term
+/// ("Page") and a one-hit-per-page term across several pages ("Secret").
 /// </summary>
 [Collection("AvaloniaTests")]
-public class SearchViewModelTests
+public class SearchViewModelTests : IDisposable
 {
+    private const int PageCount = 5;
     private readonly ITestOutputHelper _out;
+    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), "excise-search-vm-" + Guid.NewGuid().ToString("N"));
+
     public SearchViewModelTests(ITestOutputHelper o) { _out = o; }
 
-    // Legacy real-world coverage is disabled pending a redistributable fixture.
-    private const string PragmaticBook = "";
+    public void Dispose()
+    {
+        try { Directory.Delete(_tempDir, recursive: true); } catch { /* best effort */ }
+    }
+
+    private string CreateDoc()
+    {
+        Directory.CreateDirectory(_tempDir);
+        var path = Path.Combine(_tempDir, "five-pages.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: PageCount);
+        return path;
+    }
 
     [FixedAvaloniaFact]
     public async Task PragmaticBook_VmSearch_PopulatesSearchMatches()
     {
-        if (!File.Exists(PragmaticBook)) return;
-
         var vm = MainWindowViewModelTestFactory.Create();
-        await vm.LoadDocumentAsync(PragmaticBook);
+        await vm.LoadDocumentAsync(CreateDoc());
 
         // Setting SearchText schedules a debounced search (300 ms wait
         // + service walk + Dispatcher.UIThread.Post to publish results).
-        vm.SearchText = "open source";
+        vm.SearchText = "Page";
 
-        var deadline = DateTime.UtcNow.AddSeconds(90);
+        var deadline = DateTime.UtcNow.AddSeconds(20);
         while (DateTime.UtcNow < deadline && vm.SearchMatches.Count == 0)
-            await Task.Delay(200);
+            await Task.Delay(50);
 
         _out.WriteLine($"SearchMatches.Count = {vm.SearchMatches.Count}");
         if (vm.SearchMatches.Count > 0)
@@ -53,33 +71,32 @@ public class SearchViewModelTests
                 $"box=({vm.SearchMatches[0].X:F1},{vm.SearchMatches[0].Y:F1}," +
                 $"{vm.SearchMatches[0].Width:F1}×{vm.SearchMatches[0].Height:F1})");
 
-        vm.SearchMatches.Should().NotBeEmpty(
-            "the service finds 481 matches for 'open source' in this book — " +
-            "if SearchMatches is empty the VM bridge is broken");
+        vm.SearchMatches.Should().HaveCount(PageCount * 2,
+            "'Page' appears twice per page ('Page N Content' and 'Secret on Page N') — " +
+            "if SearchMatches is empty or short the VM bridge is broken");
     }
 
     [FixedAvaloniaFact]
     public async Task PragmaticBook_VmSearch_ComputesPageHighlights()
     {
-        if (!File.Exists(PragmaticBook)) return;
-
         var vm = MainWindowViewModelTestFactory.Create();
-        await vm.LoadDocumentAsync(PragmaticBook);
+        await vm.LoadDocumentAsync(CreateDoc());
 
-        vm.SearchText = "Open Source";
-        var deadline = DateTime.UtcNow.AddSeconds(90);
+        vm.SearchText = "Content";
+        var deadline = DateTime.UtcNow.AddSeconds(20);
         while (DateTime.UtcNow < deadline && vm.SearchMatches.Count == 0)
-            await Task.Delay(200);
+            await Task.Delay(50);
 
         // After NavigateToSearchMatch the VM jumps to the page with the
         // first match and UpdateSearchHighlights computes screenRects.
-        await Task.Delay(800); // let the dispatcher post settle
+        for (int i = 0; i < 20 && vm.CurrentPageSearchHighlights.Count == 0; i++)
+            await Task.Delay(50); // let the dispatcher post settle
 
         _out.WriteLine(
             $"After search: CurrentPageIndex={vm.CurrentPageIndex}, " +
             $"highlights={vm.CurrentPageSearchHighlights.Count}");
 
-        vm.SearchMatches.Should().NotBeEmpty();
+        vm.SearchMatches.Should().HaveCount(PageCount, "'Content' appears once per page");
         vm.CurrentPageSearchHighlights.Should().NotBeEmpty(
             "the current page should contain at least one highlight rectangle " +
             "after the VM auto-navigates to the first match");
@@ -98,21 +115,19 @@ public class SearchViewModelTests
     [FixedAvaloniaFact]
     public async Task PragmaticBook_JumpToSearchMatch_NavigatesToMatchPage()
     {
-        if (!File.Exists(PragmaticBook)) return;
-
         var vm = MainWindowViewModelTestFactory.Create();
-        await vm.LoadDocumentAsync(PragmaticBook);
+        await vm.LoadDocumentAsync(CreateDoc());
 
-        vm.SearchText = "Brasseur";
-        var deadline = DateTime.UtcNow.AddSeconds(90);
+        vm.SearchText = "Secret";
+        var deadline = DateTime.UtcNow.AddSeconds(20);
         while (DateTime.UtcNow < deadline && vm.SearchMatches.Count < 2)
-            await Task.Delay(200);
+            await Task.Delay(50);
 
-        vm.SearchMatches.Should().HaveCountGreaterThan(1,
-            "the book uses 'Brasseur' on multiple pages — we need at least " +
+        vm.SearchMatches.Should().HaveCount(PageCount,
+            "'Secret on Page N' appears once per page — we need at least " +
             "two matches to verify jumping moves between distinct locations");
 
-        // First match is normally on page 3 (back-cover praise).
+        // First match is normally on page 1.
         vm.CurrentPageIndex.Should().Be(vm.SearchMatches[0].PageIndex,
             "VM auto-navigates to first match");
         vm.CurrentSearchMatchIndex.Should().Be(0);
@@ -120,7 +135,7 @@ public class SearchViewModelTests
         // Jump to a later match on a different page.
         var laterMatch = vm.SearchMatches.First(m => m.PageIndex != vm.SearchMatches[0].PageIndex);
         vm.JumpToSearchMatch(laterMatch);
-        await Task.Delay(200);
+        await Task.Delay(100);
 
         vm.CurrentPageIndex.Should().Be(laterMatch.PageIndex,
             "JumpToSearchMatch must navigate to that match's page");
@@ -160,23 +175,22 @@ public class SearchViewModelTests
         // Highlights must be in the same DIP space the bitmap renders into
         // (120 DPI = page-points × 1.667). Pre-fix this used 150/72 which
         // pushed highlights ~25 % off the page.
-        if (!File.Exists(PragmaticBook)) return;
-
         var vm = MainWindowViewModelTestFactory.Create();
-        await vm.LoadDocumentAsync(PragmaticBook);
+        await vm.LoadDocumentAsync(CreateDoc());
 
-        vm.SearchText = "Brasseur";
+        vm.SearchText = "Secret";
         // Wait long enough to cover the 300 ms search debounce + the
         // service walk + dispatcher post; cross-test contention on the
         // shared headless dispatcher can stretch this on a busy run.
-        var deadline = DateTime.UtcNow.AddSeconds(90);
+        var deadline = DateTime.UtcNow.AddSeconds(20);
         while (DateTime.UtcNow < deadline && vm.SearchMatches.Count == 0)
-            await Task.Delay(200);
-        await Task.Delay(800);
+            await Task.Delay(50);
+        for (int i = 0; i < 20 && vm.CurrentPageSearchHighlights.Count == 0; i++)
+            await Task.Delay(50);
 
         var page = vm.PdfCoreDocument!.GetPage(vm.CurrentPageIndex + 1);
         vm.CurrentPageSearchHighlights.Should().NotBeEmpty(
-            "Brasseur appears on multiple pages of the book");
+            "'Secret' appears on every page of the document");
         foreach (var r in vm.CurrentPageSearchHighlights)
         {
             r.Space.Should().Be(Excise.Core.Document.PdfCoordinateSpace.ContentPoints);

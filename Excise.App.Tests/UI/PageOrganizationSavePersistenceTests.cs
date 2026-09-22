@@ -10,6 +10,7 @@ using Excise.App.ViewModels;
 using Excise.App.Views;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.App.Tests.UI;
@@ -206,8 +207,9 @@ public class PageOrganizationSavePersistenceTests
         // structure tree and no inherited page attributes — which is exactly
         // where page-tree edits break on real documents. irs-w9.pdf is a real
         // government form (6 pages, AcroForm) from the smoke corpus.
-        var source = TryFindRepoFile("test-pdfs", "smoke", "irs-w9.pdf");
-        Assert.SkipWhen(source == null, "smoke corpus not present (scripts/download-smoke-corpus.sh)");
+        var source = TestRepoLayout.FindFile("test-pdfs", "smoke", "irs-w9.pdf");
+        Assert.SkipWhen(source == null,
+            TestRepoLayout.AbsenceReason("smoke corpus (scripts/download-smoke-corpus.sh)", "test-pdfs/smoke/irs-w9.pdf"));
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
 
         var (dir, src) = NewDir("realworld-remove");
@@ -272,18 +274,6 @@ public class PageOrganizationSavePersistenceTests
 
     private static string AllTextOf(PdfDocument doc) =>
         string.Join("|", Enumerable.Range(1, doc.PageCount).Select(n => doc.GetPage(n).Text));
-
-    private static string? TryFindRepoFile(params string[] relativeParts)
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(new[] { dir.FullName }.Concat(relativeParts).ToArray());
-            if (File.Exists(candidate)) return candidate;
-            dir = dir.Parent;
-        }
-        return null;
-    }
 
     private static void Close(MainWindow window, string dir)
     {

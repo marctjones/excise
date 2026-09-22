@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using AwesomeAssertions;
 using Excise.App.Tests.Utilities;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.App.Tests.UI;
@@ -53,14 +54,18 @@ public class AppThemeCanaryTests
     /// <summary>
     /// Excise.App's bin directory for the same configuration this test runs
     /// under (test bin: Excise.App.Tests/bin/{config}/net10.0 → app bin:
-    /// Excise.App/bin/{config}/net10.0).
+    /// Excise.App/bin/{config}/net10.0). Build output is resolved through
+    /// <see cref="TestRepoLayout.LocalCheckoutRoot"/> only — a worktree
+    /// resolving the MAIN checkout's Excise.App output would check a
+    /// different binary and pass regardless of this worktree's own build.
     /// </summary>
     private static string FindAppOutputDirectory()
     {
         var testBin = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
         var tfmDir = Path.GetFileName(testBin);                       // net10.0
         var config = Path.GetFileName(Path.GetDirectoryName(testBin)!); // Debug/Release
-        var repoRoot = Path.GetFullPath(Path.Combine(testBin, "..", "..", "..", ".."));
-        return Path.Combine(repoRoot, "Excise.App", "bin", config, tfmDir);
+        var root = TestRepoLayout.LocalCheckoutRoot
+            ?? throw new InvalidOperationException("could not determine this worktree's checkout root");
+        return Path.Combine(root, "Excise.App", "bin", config, tfmDir);
     }
 }
