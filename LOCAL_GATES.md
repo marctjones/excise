@@ -159,7 +159,7 @@ Shortening it buys no containment. Per-row calibration — a timeout inside
 `scripts/test-run-bounded.sh` (row `run-bounded-selftest`, t0) proves the
 mechanism can still fire: a bound that has never fired is not a bound.
 
-### The four classes, and what each means for you
+### The five classes, and what each means for you
 
 | class | the runner | what a red means |
 |---|---|---|
@@ -167,6 +167,7 @@ mechanism can still fire: a bound that has never fired is not a bound.
 | **IMPROVE** | fails only on regression vs its `ratchet` file | keep working on it. Green means "no worse than the checked-in floor", never "good enough" — floors were set at whatever the behaviour was (CLAUDE.md, Limitations). |
 | **GRADE** | never fails the run | a number against the reference tools, printed in the report's GRADES block (table under "The report"); when the bench produced nothing the block says `NO DATA` and the verdict is unaffected. A bench is a survey, not a net. |
 | **SELFTEST** | fails when a gate can no longer fail | falsifiability (#1012): a red here means the gate it proves has lost its teeth, and every green from that gate since is suspect. |
+| **SETUP** | prepares the run; judges nothing | still blocks on a real failure (any non-GRADE failure reads NEW), but is NOT counted in "N BLOCK rows passed" — it is not a check. `gui-coverage-reset` is the one today: `rm -f` over append-only artifacts returns 0 for an absent path, so it cannot fail meaningfully and inflated the BLOCK tally by one (#1767). Ordering still matters, which is why it keeps `checkpoint=never`. |
 
 ### Adding a gate
 

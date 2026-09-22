@@ -772,7 +772,13 @@ runner_manifest_plan() {
         if (name !~ /^[A-Za-z0-9][A-Za-z0-9._-]*$/) bad("name must be a slug: " name)
         if (name in names) bad("duplicate name " name)
         names[name] = NR
-        if (class !~ /^(BLOCK|IMPROVE|GRADE|SELFTEST)$/) bad("class " class)
+        # SETUP (#1767): a row that PREPARES the run rather than judging it.
+        # gui-coverage-reset is `rm -f` over append-only artifacts, which
+        # returns 0 for an absent path, so counting it in "N BLOCK rows passed"
+        # inflated that number with a step that cannot fail meaningfully. It
+        # still BLOCKS when it does fail (report_gates.py classifies any
+        # non-GRADE failure NEW), and it is simply absent from the class tally.
+        if (class !~ /^(BLOCK|IMPROVE|GRADE|SELFTEST|SETUP)$/) bad("class " class)
         if (kind !~ /^(script|test|project|project-chunked|fn)$/) bad("kind " kind)
         if (tiers !~ /^(t0|t1|full|t2)(,(t0|t1|full|t2))*$/) bad("tiers " tiers)
         if (known !~ /^(#[0-9]+(\/[^\t]+)?|-)$/) bad("knownIssue " known)
