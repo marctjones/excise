@@ -214,7 +214,7 @@ public class MouseInputTests : IDisposable
             var first = links.FirstOrDefault(l => l.DestinationPage != p);
             if (first != null) { linkPage = p; targetLink = first; break; }
         }
-        if (targetLink == null) return; // Skip if no links found
+        targetLink.Should().NotBeNull("the Pragmatic book has internal links on its early pages");
 
         vm.CurrentPageIndex = linkPage - 1;
 
@@ -496,7 +496,7 @@ public class MouseInputTests : IDisposable
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
         var letters = page.Letters?.ToList() ?? new List<Letter>();
         var ordered = TextSelectionEngine.SortReadingOrder(letters);
-        if (ordered.Count < 5) return;
+        ordered.Count.Should().BeGreaterThanOrEqualTo(5, "page 15 must have at least 5 letters to drag across");
 
         var anchor = ordered[0];
         var focus = ordered[4];
@@ -608,7 +608,7 @@ public class MouseInputTests : IDisposable
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
         var letters = page.Letters?.ToList() ?? new List<Letter>();
         var ordered = TextSelectionEngine.SortReadingOrder(letters);
-        if (ordered.Count < 10) return;
+        ordered.Count.Should().BeGreaterThanOrEqualTo(10, "page 15 must have at least 10 letters for a multi-step drag");
 
         var anchor = ordered[0];
         var mid = ordered[5];
@@ -679,7 +679,7 @@ public class MouseInputTests : IDisposable
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
         var letters = page.Letters?.ToList() ?? new List<Letter>();
         var ordered = TextSelectionEngine.SortReadingOrder(letters);
-        if (ordered.Count == 0) return;
+        ordered.Should().NotBeEmpty("page 15 must have at least one letter to click");
 
         var singleLetter = ordered[0];
 
@@ -729,7 +729,7 @@ public class MouseInputTests : IDisposable
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
         var letters = page.Letters?.ToList() ?? new List<Letter>();
         var ordered = TextSelectionEngine.SortReadingOrder(letters);
-        if (ordered.Count < 5) return;
+        ordered.Count.Should().BeGreaterThanOrEqualTo(5, "page 15 must have at least 5 letters");
 
         var clickLetter = ordered[2]; // Middle of a word
 
@@ -807,7 +807,7 @@ public class MouseInputTests : IDisposable
             var first = links.FirstOrDefault(l => l.DestinationPage != p);
             if (first != null) { linkPage = p; targetLink = first; break; }
         }
-        if (targetLink == null) return;
+        targetLink.Should().NotBeNull("the Pragmatic book has internal links on its early pages");
 
         vm.CurrentPageIndex = linkPage - 1;
 
@@ -892,7 +892,7 @@ public class MouseInputTests : IDisposable
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
         var letters = page.Letters?.ToList() ?? new List<Letter>();
         var ordered = TextSelectionEngine.SortReadingOrder(letters);
-        if (ordered.Count < 5) return;
+        ordered.Count.Should().BeGreaterThanOrEqualTo(5, "page 15 must have at least 5 letters");
 
         vm.CurrentPageIndex = targetPageNumber - 1;
 
