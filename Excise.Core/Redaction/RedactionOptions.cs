@@ -41,6 +41,37 @@ public enum WidthPolicy
     /// a property the code does not have.
     /// </remarks>
     OvershootPreserveLayout,
+
+    /// <summary>
+    /// Close the gap like <see cref="CloseGap"/> (destroying the content-stream
+    /// width residue, not just the rendered one), AND draw a covering box of
+    /// ONE CONTENT-INDEPENDENT SIZE at the mark — a fixed number of ems of the
+    /// removed run's font size, never the removed run's actual width (#1755).
+    /// The default: it answers #1715 (91% of names recoverable at rank 5 via
+    /// the width side channel; 0% once the gap is closed) and #1725 (no box at
+    /// all is drawn today when the gap is closed, so a width-closed redaction
+    /// is indistinguishable from an editing mistake) at the same time, rather
+    /// than trading one for the other.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>What "content-independent" means here.</b> Every redacted run
+    /// on the same font size produces an IDENTICAL marker width, so the marker
+    /// itself carries no information about how long the removed string was —
+    /// unlike <see cref="OvershootPreserveLayout"/>'s box, which is rounded UP
+    /// from the removed width and therefore still correlates with it, just more
+    /// coarsely. Font size is not the secret; it is visible from the
+    /// surrounding, unredacted text on the same line.</para>
+    /// <para><b>Known limit, not silently papered over.</b> The marker replaces
+    /// the removed run at a fixed size; when that size is WIDER than the slack
+    /// the line actually had, it visually overlaps the neighbour that closing
+    /// the gap moved into place next to it — a layout blemish, never glyph
+    /// destruction (drawing a box is cosmetic; the content-stream rewrite that
+    /// actually removes text is unconditional and already ran). Placing the
+    /// marker by run-boundary/alignment-aware machinery instead of the naive
+    /// left anchor here is #1751/#1752/#1753 — explicitly out of scope for this
+    /// default change.</para>
+    /// </remarks>
+    FixedMarker,
 }
 
 /// <summary>
@@ -107,8 +138,11 @@ public sealed record RedactionOptions
     public GlyphRemovalStrategy Strategy { get; init; } = GlyphRemovalStrategy.AnyOverlap;
 
     /// <summary>How the removed glyphs' width residue is handled.
-    /// Default <see cref="WidthPolicy.CollapsePreserveLayout"/>. Enforced by: Core.</summary>
-    public WidthPolicy Width { get; init; } = WidthPolicy.CollapsePreserveLayout;
+    /// Default <see cref="WidthPolicy.FixedMarker"/> (#1755) — closes the
+    /// width side channel #1715 measured at 91% recall@5 AND always draws a
+    /// visible mark, answering #1725 (no default before this drew a mark once
+    /// the gap was closed). Enforced by: Core.</summary>
+    public WidthPolicy Width { get; init; } = WidthPolicy.FixedMarker;
 
     /// <summary>Draw the covering box over each redacted run (visual
     /// confirmation only — removal is what secures). Default true. Enforced by: Core.</summary>
@@ -359,5 +393,10 @@ public sealed record RedactionOptions
             Operations.CarrierScrubMode.RemoveWhole),
     };
 
-    internal bool CloseWidth => Width == WidthPolicy.CloseGap;
+    // #1755: FixedMarker closes the gap the same way CloseGap does (that is
+    // what destroys the content-stream width residue); the two differ only in
+    // what gets drawn at the mark.
+    internal bool CloseWidth => Width is WidthPolicy.CloseGap or WidthPolicy.FixedMarker;
+
+    internal bool FixedMarker => Width == WidthPolicy.FixedMarker;
 }

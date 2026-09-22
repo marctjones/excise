@@ -112,7 +112,8 @@ public static class PdfDocumentRedactionExtensions
             options.Width == WidthPolicy.OvershootPreserveLayout,
             options.KeepAttachments,
             options,
-            depth: 0);
+            depth: 0,
+            fixedMarker: options.FixedMarker);
     }
 
     /// <summary>
@@ -176,7 +177,14 @@ public static class PdfDocumentRedactionExtensions
         // directly, and because a caller that forgets one gets Standard — the
         // safe value — instead of silently getting less.
         RedactionOptions profileOptions,
-        int depth)
+        int depth,
+        // #1755: FixedMarker's box is a FIXED size, never derived from the
+        // removed run's own width — the opposite of overshootBox, which is
+        // still rounded up FROM that width. Kept separate from closeWidth
+        // (both are true together for FixedMarker) so the drawing site below
+        // can tell "no box" (plain CloseGap) from "fixed box" (FixedMarker)
+        // apart.
+        bool fixedMarker = false)
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
@@ -214,7 +222,7 @@ public static class PdfDocumentRedactionExtensions
                 (nested, term) => RedactTextCore(nested, term, caseSensitive, strategy, drawBlackRect,
                     includeHiddenLayers, scrubDocumentCarriers, closeWidth, boxColor, carriers, null,
                     carrierPolicy, wholeWord, overshootBox, keepAttachments: true,
-                    profileOptions, depth + 1));
+                    profileOptions, depth + 1, fixedMarker));
         }
         else
         {
@@ -358,9 +366,14 @@ public static class PdfDocumentRedactionExtensions
                         // #1189: under the overshoot policy the covering box is
                         // widened out toward the surviving neighbours, so its
                         // width stops being a ruler for the removed string.
-                        markerAreas.Add(overshootBox
-                            ? OvershootBoxFor(bbox, matchLetters, searchLetters, cropWindow)
-                            : bbox);
+                        // #1755: under FixedMarker the box is a FIXED size —
+                        // never derived from bbox's own width at all, unlike
+                        // overshoot which still rounds UP from it.
+                        markerAreas.Add(fixedMarker
+                            ? FixedMarkerBoxFor(bbox, matchLetters)
+                            : overshootBox
+                                ? OvershootBoxFor(bbox, matchLetters, searchLetters, cropWindow)
+                                : bbox);
                     }
 
                     if (contentAreas.Count > 0)
@@ -378,11 +391,14 @@ public static class PdfDocumentRedactionExtensions
                     }
 
                     // A box whose width equals the removed run is itself a
-                    // width-residue oracle (#1140). Width-closing therefore
-                    // cannot draw one: its contract is to destroy that channel,
-                    // accepting the visual/layout trade-off explicitly chosen by
-                    // the caller.
-                    if (drawBlackRect && !closeWidth)
+                    // width-residue oracle (#1140). Plain width-closing
+                    // (CloseGap) therefore draws none at all (#1725: the
+                    // resulting redaction has no visible mark). FixedMarker is
+                    // the exception: its box is ALREADY content-independent —
+                    // exactly the property this guard exists to protect — so it
+                    // draws unconditionally, answering both #1715 and #1725
+                    // instead of trading one for the other (#1755).
+                    if (drawBlackRect && (fixedMarker || !closeWidth))
                         foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox, boxColor);
 
                     // #1101: count what this page's window shows, not the full
@@ -1129,6 +1145,64 @@ public static class PdfDocumentRedactionExtensions
 
         return matches;
     }
+
+    /// <summary>
+    /// #1755 — the covering box for one match under <see cref="WidthPolicy.FixedMarker"/>:
+    /// a FIXED number of ems of the match's own font size, anchored at the
+    /// removed run's left edge, with NO dependence on the removed run's actual
+    /// width at all.
+    /// </summary>
+    /// <remarks>
+    /// <para>This is the property <see cref="OvershootBoxFor"/> does not have:
+    /// overshoot still ROUNDS UP from the removed width, so it merely coarsens
+    /// the measurement into buckets — two candidates in the same bucket become
+    /// indistinguishable, but the bucket itself still correlates with length.
+    /// A fixed multiple of the font size carries no information about the
+    /// removed string at all: every redaction on the same font size draws the
+    /// identical mark.</para>
+    /// <para><b>Anchored left, matching how <see cref="WidthPolicy.CloseGap"/>
+    /// reflows the line</b> (FixedMarker closes the gap the same way — see
+    /// <see cref="RedactionOptions.CloseWidth"/>): the surviving text that
+    /// followed the removed run shifts left to sit exactly at
+    /// <c>bbox.Left</c>, so anchoring the marker there places it right where
+    /// the removed text was, with the reflowed continuation immediately after
+    /// it.</para>
+    /// <para><b>Known limit, stated rather than hidden:</b> when the fixed
+    /// width is WIDER than the line's slack, the marker visually overlaps the
+    /// reflowed neighbour — cosmetic only (the box is a drawn overlay; the
+    /// content-stream removal that actually deletes the glyphs already ran
+    /// unconditionally), but a real limit. Placing the marker by
+    /// run-boundary/alignment-aware machinery is #1751/#1752/#1753, explicitly
+    /// out of scope here.</para>
+    /// </remarks>
+    internal static PdfRectangle FixedMarkerBoxFor(
+        PdfRectangle bbox,
+        IReadOnlyList<Letter> matchLetters)
+    {
+        var box = bbox.Normalize();
+        var height = box.Top - box.Bottom;
+        if (height <= 0) return bbox;
+
+        // Same "one em of the match's own font size" reference OvershootBoxFor
+        // uses for its bucket — but here it IS the width, not a rounding unit,
+        // so no removed-width measurement ever enters the computation at all.
+        var em = matchLetters.Count > 0 ? matchLetters.Max(l => l.FontSize) : height;
+        if (!(em > 0)) return bbox;
+
+        var width = FixedMarkerEms * em;
+        return new PdfRectangle(box.Left, box.Bottom, box.Left + width, box.Top);
+    }
+
+    /// <summary>
+    /// Marker width for <see cref="FixedMarkerBoxFor"/>, in ems of the match's
+    /// font size. A constant, not a <see cref="RedactionOptions"/> knob: making
+    /// it caller-choosable would let a caller pick a size that happens to fit
+    /// one particular candidate, which is the same shape of leak #1754's
+    /// width-quantise option was found to have (a bucket is still a
+    /// measurement). Two ems comfortably covers a short redacted run's own
+    /// width without depending on what it was.
+    /// </summary>
+    private const double FixedMarkerEms = 2.0;
 
     /// <summary>
     /// #1189 — the covering box for one match, WIDENED so its width no longer

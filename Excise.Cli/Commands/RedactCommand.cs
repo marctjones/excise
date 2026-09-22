@@ -21,7 +21,18 @@ internal static class RedactCommand
         };
         var closeWidthOption = new Option<bool>("--close-width")
         {
-            Description = "Close the width gap so the removed text's width can't be recovered (moves surviving text)",
+            Description = "Close the width gap so the removed text's width can't be recovered (moves " +
+                "surviving text), and draw NO covering box (#1725: the box would itself be a residue " +
+                "oracle). The default (#1755, no flag needed) also closes the gap AND draws a " +
+                "content-independent box; use this flag only when you specifically want no mark at all.",
+            DefaultValueFactory = _ => false,
+        };
+        var preserveLayoutOption = new Option<bool>("--preserve-layout")
+        {
+            Description = "Opt OUT of the default width-closing (#1755): keep every glyph's advance so " +
+                "layout never reflows, and draw the box at exactly the removed run's width. This is the " +
+                "pre-#1755 default -- it accepts the width-residue side channel (#1715 measured 91% of " +
+                "names recoverable at rank 5 under it) in exchange for pixel-identical layout.",
             DefaultValueFactory = _ => false,
         };
         var passwordOption = new Option<string?>("--password")
@@ -141,6 +152,7 @@ internal static class RedactCommand
             textArgument,
             caseSensitiveOption,
             closeWidthOption,
+            preserveLayoutOption,
             passwordOption,
             allowDecryptOption,
             strictOption,
@@ -168,6 +180,7 @@ internal static class RedactCommand
             var ocrImageText = parseResult.GetValue(ocrImageTextOption);
             var closeWidth = parseResult.GetValue(closeWidthOption);
             var overshootBox = parseResult.GetValue(overshootBoxOption);
+            var preserveLayout = parseResult.GetValue(preserveLayoutOption);
             var strict = parseResult.GetValue(strictOption);
             var allowLowConfidence = parseResult.GetValue(allowLowConfidenceOption);
 
@@ -194,6 +207,17 @@ internal static class RedactCommand
                 return 1;
             }
 
+            // #1755: --close-width, --overshoot-box and --preserve-layout are
+            // three different, mutually exclusive answers to the same
+            // width-policy question the (now-default) FixedMarker also answers.
+            if (preserveLayout && (closeWidth || overshootBox))
+            {
+                Console.Error.WriteLine(
+                    "--preserve-layout, --close-width and --overshoot-box are mutually exclusive " +
+                    "width policies.");
+                return 1;
+            }
+
             if (overshootBox && noBox)
             {
                 Console.Error.WriteLine(
@@ -210,8 +234,8 @@ internal static class RedactCommand
 
             var keepAttachments = parseResult.GetValue(keepAttachmentsOption);
             if (flattenOcr &&
-                (ocrImageText || noBox || boxColorSpec != null || closeWidth || strict || allowLowConfidence
-                 || keepAttachments))
+                (ocrImageText || noBox || boxColorSpec != null || closeWidth || overshootBox ||
+                 preserveLayout || strict || allowLowConfidence || keepAttachments))
             {
                 Console.Error.WriteLine(
                     "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, or attachment options.");
@@ -262,6 +286,7 @@ internal static class RedactCommand
                     carrierPolicy,
                     parseResult.GetValue(wholeWordOption),
                     overshootBox,
+                    preserveLayout,
                     keepAttachments,
                     profile),
                     progress);

@@ -85,8 +85,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _redactionKeepAttachments;
     private Excise.Core.Text.Segmentation.RedactionProfile _redactionProfile =
         Excise.Core.Text.Segmentation.RedactionProfile.Standard;
+    // #1755: FixedMarker is the new default -- closes the #1715 width channel
+    // and always draws a visible mark (#1725).
     private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
-        Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
+        Excise.Core.Text.Segmentation.WidthPolicy.FixedMarker;
     private bool _isRedactionMode;
     private PdfPageRect? _currentRedactionPageArea;
     // Whether the user has already confirmed editing a signed document this

@@ -2639,6 +2639,7 @@ namespace Excise.Core.Text.Segmentation
         CollapsePreserveLayout = 0,
         CloseGap = 1,
         OvershootPreserveLayout = 2,
+        FixedMarker = 3,
     }
     public sealed class WordWrapTermCandidate : System.IEquatable<Excise.Core.Text.Segmentation.WordWrapTermCandidate>
     {

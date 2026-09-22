@@ -25,11 +25,15 @@ namespace Excise.Rendering.Tests.Differential;
 /// <para><b>What this file pins.</b> Two secrets of very different length, in
 /// the same fixture between the same neighbouring words:</para>
 /// <list type="bullet">
-///   <item><see cref="WidthPolicy.CollapsePreserveLayout"/> (the default) —
-///   the boxes have DIFFERENT rendered widths. The channel is open. Pinned as a
-///   fact, not fixed silently.</item>
+///   <item><see cref="WidthPolicy.CollapsePreserveLayout"/> (the pre-#1755
+///   default) — the boxes have DIFFERENT rendered widths. The channel is open.
+///   Pinned as a fact, not fixed silently.</item>
 ///   <item><see cref="WidthPolicy.OvershootPreserveLayout"/> — the boxes have
 ///   the SAME rendered width. The rendered channel is closed.</item>
+///   <item><see cref="WidthPolicy.FixedMarker"/> (#1755, now the default) —
+///   the boxes have the SAME rendered width AND the content-stream advance is
+///   also closed, like CloseGap. The only policy that answers #1715 and #1725
+///   together.</item>
 /// </list>
 ///
 /// <para>⚠️ <b>And the part a self-congratulating gate would omit.</b> Overshoot
@@ -150,6 +154,68 @@ public class RedactionWidthPolicyTests : IDisposable
         FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.CloseGap)).Should().BeNull(
             "CloseGap emits no compensating advance at all");
         FirstNegativeTjAdjustment(Redact(SecretB, WidthPolicy.CloseGap)).Should().BeNull();
+    }
+
+    /// <summary>
+    /// #1755 — FixedMarker is the new DEFAULT. It has to answer both #1715
+    /// (the width channel Collapse leaves open, pinned above) and #1725
+    /// (CloseGap draws no box at all, so a width-closed redaction has no
+    /// visible mark) AT THE SAME TIME — this is the measurement that proves it
+    /// does, rather than trading one for the other.
+    /// </summary>
+    [Fact]
+    public void FixedMarker_MakesTheBoxTheSameWidthForBothSecrets_AndVisible()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var widthA = RenderedBoxWidth(Redact(SecretA, WidthPolicy.FixedMarker));
+        var widthB = RenderedBoxWidth(Redact(SecretB, WidthPolicy.FixedMarker));
+
+        // #1725: a mark is actually drawn — unlike CloseGap, which draws none
+        // once the gap is closed (Overshoot_DoesNotEatTheNeighbouringWords'
+        // sibling policy has a box; CloseGap has none).
+        widthA.Should().BeGreaterThan(0, "FixedMarker must leave a visible mark (#1725)");
+        widthB.Should().BeGreaterThan(0);
+
+        // #1715: unlike Overshoot (which rounds UP from the removed width and
+        // so still correlates with it, just more coarsely), FixedMarker's box
+        // is the SAME size regardless of what was removed — not merely
+        // "close enough", exactly equal, because the width computation never
+        // reads the removed run's own width at all.
+        Math.Abs(widthB - widthA).Should().BeLessThanOrEqualTo(2,
+            "the marker's width is a function of font size ONLY — it carries no " +
+            "information about the removed string's length, which is the whole " +
+            "point (allowing 2px for rasterisation)");
+    }
+
+    [Fact]
+    public void FixedMarker_ClosesTheContentStreamAdvance_LikeCloseGap()
+    {
+        // #1715/#1755: FixedMarker has to close the FILE-level channel too, not
+        // just the rendered one — the same honesty check
+        // Overshoot_LeavesTheContentStreamAdvanceIntact exists for, but with
+        // the opposite (passing) expectation: no surviving TJ adjustment for
+        // either secret, because FixedMarker closes the gap exactly as
+        // CloseGap does.
+        FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.FixedMarker)).Should().BeNull(
+            "FixedMarker closes the gap like CloseGap -- no compensating advance survives");
+        FirstNegativeTjAdjustment(Redact(SecretB, WidthPolicy.FixedMarker)).Should().BeNull();
+    }
+
+    [Fact]
+    public void FixedMarker_RemovesTheSecretAndKeepsTheNeighbours()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // Same shape as Overshoot_DoesNotEatTheNeighbouringWords: an
+        // INDEPENDENT extractor confirms the neighbours survive and the secret
+        // does not, under the new default.
+        var path = WriteTemp(Redact(SecretB, WidthPolicy.FixedMarker));
+        var text = MutoolTextExtractor.ExtractPage(path, 1) ?? "";
+
+        text.Should().Contain("Name", "the word before the redaction survives");
+        text.Should().Contain("Ref", "the word after the redaction survives");
+        text.Should().NotContain(SecretB, "the secret is removed");
     }
 
     [Fact]
