@@ -86,10 +86,10 @@ into a csproj path that matched zero tests and exited 0):
 
 | column | meaning |
 |---|---|
-| `name` | slug; equals the ledger row name. Chunk rows `<name>.chunkNN` are derived by `run-full-suite.sh` and inherit every column. |
+| `name` | slug; equals the ledger row name. Chunk rows `<name>.chunkNN` are derived by `runner_plan_expand_chunks` (`scripts/lib-runner.sh`, shared by `test-tier.sh` and `run-full-suite.sh` since #1774) and inherit every column. |
 | `class` | `BLOCK`, `IMPROVE`, `GRADE` or `SELFTEST` — see below. |
 | `tiers` | comma set of `t0,t1,full,t2` with the chain semantics above. |
-| `kind` | `script` (a command line run by `sh -c`), `test` (csproj/sln + `filter`), `project` (a whole csproj, unfiltered, trx emitted), `project-chunked` (whole csproj, split by class in `full`, whole elsewhere), `fn` (a `run_*_gate` function in `release-smoke.sh`; t2 only). |
+| `kind` | `script` (a command line run by `sh -c`), `test` (csproj/sln + `filter`), `project` (a whole csproj, unfiltered, trx emitted), `project-chunked` (whole csproj, split by class in `t1` and `full`; **`t0` never chunks** — the pre-push hook must stay cheap and nothing resumes a 3-minute run, #1774), `fn` (a `run_*_gate` function in `release-smoke.sh`; t2 only). |
 | `target` | the command line or the csproj/sln. Environment placeholders `$CONFIG $LOG_DIR $GATE_ASYMMETRY_BASE $RELEASE_VERSION $AOT_EXTRA_ARGS $RUNNER_BUILD_ARGS`; plan-time placeholders `{TRX:row}` (one unchunked trx), `{TRXARGS:row}` (`--trx …` or the chunk union), `{TRXARGS?:row}` (the same, or nothing when the producer is not in this plan). A cell is never `eval`ed. |
 | `filter` | `dotnet test --filter` for `kind=test`; `-` otherwise. |
 | `ratchet` | the checked-in floor an `IMPROVE` row compares against (must exist); the design/artifact a `GRADE` row grades from. |
@@ -544,6 +544,21 @@ tier alone.
   `architecture-docs` measured **0 s** against a note claiming 14 s. The full
   t1 saving is not yet measured end to end — no t1 ledger exists after these
   changes, and `app-tests-unchunked-evidence` at ~1150 s still dominates.
+- **t1 after #1774: the App suite runs CHUNKED, ~570 s instead of ~1150 s.**
+  Both numbers come from one commit and machine on 2026-09-21:
+  `logs/full-suite_Debug_20260921_125526` ran BOTH passes — 17 chunks summing
+  **574 s** (30/5/15/11/81/11/125/170/14/68/15/2/11/2/3/10/1) against the
+  unchunked evidence row's **1128 s** — and
+  `logs/test-tier_t1_20260921_190820` measured the unchunked row at **1154 s**.
+  The unchunked pass is not deleted: it is the cross-test-contamination
+  evidence run and now runs in `full` only, where a second reset row
+  (`gui-coverage-reset-evidence`) keeps it the sole contributor to
+  `gui-interaction-coverage`, exactly as before. The chunk union is what
+  `test-count-app`, `skip-budget-app` and `redaction-suites-union` read, in t1
+  and full alike. Chunking also costs one `dotnet build` (incremental, 0.6 s
+  observed on an up-to-date tree) plus one `--list-tests` per chunked project
+  at plan time — the build is new in #1774 and is what stops a class added
+  since the last build from landing in no chunk.
 - **full: ≈3 h.** The only complete ledger (2026-08-31) sums to ~80 min of
   executed rows with 24 checkpointed, so it is a floor, not a measurement.
   Now included by chain inheritance and the new rows: the t1 rows (56–57

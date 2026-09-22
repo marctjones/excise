@@ -96,7 +96,8 @@ Usage: scripts/test-tier.sh {t0|t1|full|t2|t3} [--resume]
                   selftests). Pre-push: the installed hook runs exactly this.
   t1     ~20–25m  t0 + the redaction suites + Rendering (deterministic AND the
                   independent-oracle subsets with their floors) + parity ratchets
-                  + skip budgets + the full Excise.App.Tests run. Merge gate.
+                  + skip budgets + Excise.App.Tests, CHUNKED (#1774; the
+                  unchunked evidence pass runs in full). Merge gate.
   full   ≈3 h     t1 + every project chunked + the corpus scans + the release
                   smoke rows + the GRADE benches. exec's scripts/run-full-suite.sh
                   under caffeinate; resumable there (--fresh restarts; --only <re>

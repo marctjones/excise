@@ -587,7 +587,7 @@ last run's report without running anything.
 | Tier | Cost (t0 measured 2026-09-04, t1 measured 2026-09-10, the others estimated — `LOCAL_GATES.md` "Timings") | What | When |
 |------|------|------|------|
 | `t0` | 2–4 min warm, ~5 min cold; 2–3× that under load (8m29s on 2026-09-05) | Build + Excise.Core/Cli/Avalonia tests + the static gates (doc freshness, gate-asymmetry, redaction architecture, registries, selftests) | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. Every clone runs that once; a hook installed before **2026-09-17 (#1600)** must be re-installed — it carries the old inline body, which read only the remote sha off stdin, so `git push origin <sha>:develop` gated the wrong range. The installed hook is now a stub over `scripts/pre-push-hook.sh`, so later fixes need no re-install. |
-| `t1` | 56–57 min measured 2026-09-10; ~44–47 min projected once `skip-budget-rendering` stopped re-running `Excise.Rendering.Tests` that day | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic, benchmark AND the independent-oracle subsets with their floors) + the parity ratchets + the skip budgets + the full `Excise.App.Tests` run | Before merging anything to `develop`. This is what CI used to block a PR on; there is no CI now (see `LOCAL_GATES.md`), so running it is on you. |
+| `t1` | 56–57 min measured 2026-09-10; ~44–47 min projected once `skip-budget-rendering` stopped re-running `Excise.Rendering.Tests` that day | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic, benchmark AND the independent-oracle subsets with their floors) + the parity ratchets + the skip budgets + `Excise.App.Tests` **chunked** (#1774; the unchunked evidence pass moved to `full`) | Before merging anything to `develop`. This is what CI used to block a PR on; there is no CI now (see `LOCAL_GATES.md`), so running it is on you. |
 | `full` | ≈3 h | `t1` + every project chunked + the four corpus scans + the release-smoke rows + the GRADE benches; `caffeinate -i scripts/run-full-suite.sh`, resumable | Weekly, and before a release candidate. |
 | `t2` | ~30 min | `scripts/release-smoke.sh --release-tests` — a curated Release-config set, not a superset of `t1` | Release candidate (`docs/RELEASE_CHECKLIST.md`). |
 | `t3` | — | `t2` on this machine, plus a printed reminder that Linux/Windows packaging is untested here — that packaging is a separate issue (`LOCAL_GATES.md`) | Before tagging a release. |
@@ -741,8 +741,20 @@ manufacture cross-test contamination (a real one existed — a shared
 `window.json` view-mode preference leaking between continuous-view tests, which
 only reproduced in a full-suite run). The chunks are for fast resumable
 feedback; the unchunked `app-tests-unchunked-evidence` step is what counts as
-evidence. `check-skip-budget.sh` likewise needs whole-project runs and keeps
-its own unchunked steps.
+evidence.
+
+⚠️ **Since #1774 that evidence step is `full`-only, and `t1` runs
+`Excise.App.Tests` CHUNKED.** Measured on one commit and machine
+(`logs/full-suite_Debug_20260921_125526`): 17 chunks summing 574 s against
+1128–1154 s unchunked in the same two runs. `test-count-app`,
+`skip-budget-app` and `redaction-suites-union` read the chunk UNION —
+`check-skip-budget.sh` and `check-test-count.sh` both accept repeated `--trx`
+and fail on one that is missing or empty, which is how a lost chunk reads as a
+failure rather than as "no skips there". The chunk plan itself is refused when
+any discovered test matches no chunk filter (`runner_verify_chunk_coverage`),
+and the runner builds the project before enumerating it, so a class added
+since the last build cannot land in no chunk. **`t0` still never chunks** —
+`Excise.Core.Tests` runs whole there.
 
 ### Skips must carry a reason IN CODE, not in an external allowlist (#1172)
 
