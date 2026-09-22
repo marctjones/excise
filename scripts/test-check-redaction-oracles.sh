@@ -68,3 +68,93 @@ if grep -qF 'redaction test file(s) with NO independent oracle' "$OUT"; then
 fi
 
 echo "PASS: per-method oracle gate detects one mutated assertion in a still-corroborated file (#1077)"
+
+# ── #1786: the local-variable shape ─────────────────────────────────────────
+#
+# check-redaction-oracles.sh's method gate used to require the self-oracle
+# READ and the leak ASSERTION on the very same line (`.Text.Should(...)`).
+# RedactionRoundTripTests.cs's original self-oracle theory assigned the
+# extraction to a local (`remaining`), derived a bool from it (`stillContains
+# Target`), and asserted on THAT a few lines later -- neither line alone
+# matched the chained pattern, so the method was invisible to the gate: not
+# allow-listed, not failing, unseen. Three stages, same method body evolving:
+# local-variable shape -> red; rewritten as the old chained shape -> still
+# red (the widening must not have narrowed the original detection); a mutool
+# assertion added -> green.
+rm -f "$WORK/Excise.Core.Tests/MethodOracleRedactionTests.cs"
+
+cat > "$WORK/Excise.Core.Tests/LocalVariableOracleRedactionTests.cs" <<'EOF'
+using Xunit;
+
+public sealed class LocalVariableOracleRedactionTests
+{
+    [Fact]
+    public void LeakAssertion_ThroughALocalVariable()
+    {
+        var remaining = reopened.GetPage(1).Text;
+        var stillContainsTarget = remaining.Contains("SECRET");
+        stillContainsTarget.Should().BeFalse("SECURITY: redacted text leaked");
+    }
+}
+EOF
+
+STAGE1="$WORK/stage1-local-variable.log"
+if "$WORK/scripts/check-redaction-oracles.sh" >"$STAGE1" 2>&1; then
+  cat "$STAGE1" >&2
+  fail "#1786: a self-oracle read assigned to a local, asserted on several lines later, " \
+       "with no independent oracle anywhere in the method, must fail -- it did not"
+fi
+grep -qF \
+  'Excise.Core.Tests/LocalVariableOracleRedactionTests.cs::LeakAssertion_ThroughALocalVariable' \
+  "$STAGE1" || fail "#1786: the local-variable self-oracle method was not named in the failure"
+
+# Stage 2: the SAME assertion, written the old chained way. Must still fail --
+# proves the widened detector did not accidentally narrow the original one.
+cat > "$WORK/Excise.Core.Tests/LocalVariableOracleRedactionTests.cs" <<'EOF'
+using Xunit;
+
+public sealed class LocalVariableOracleRedactionTests
+{
+    [Fact]
+    public void LeakAssertion_ThroughALocalVariable()
+    {
+        reopened.GetPage(1).Text.Should().NotContain("SECRET");
+    }
+}
+EOF
+
+STAGE2="$WORK/stage2-chained.log"
+if "$WORK/scripts/check-redaction-oracles.sh" >"$STAGE2" 2>&1; then
+  cat "$STAGE2" >&2
+  fail "#1786: the chained self-oracle shape (pre-existing detection) regressed"
+fi
+grep -qF \
+  'Excise.Core.Tests/LocalVariableOracleRedactionTests.cs::LeakAssertion_ThroughALocalVariable' \
+  "$STAGE2" || fail "#1786: the chained self-oracle method was not named in the failure"
+
+# Stage 3: add a mutool assertion in the SAME method. Must go green.
+cat > "$WORK/Excise.Core.Tests/LocalVariableOracleRedactionTests.cs" <<'EOF'
+using Xunit;
+
+public sealed class LocalVariableOracleRedactionTests
+{
+    [Fact]
+    public void LeakAssertion_ThroughALocalVariable()
+    {
+        var remaining = reopened.GetPage(1).Text;
+        var stillContainsTarget = remaining.Contains("SECRET");
+        stillContainsTarget.Should().BeFalse("SECURITY: redacted text leaked");
+        MutoolTextExtractor.ExtractPage("output.pdf", 1).Should().NotContain("SECRET");
+    }
+}
+EOF
+
+STAGE3="$WORK/stage3-with-mutool.log"
+if ! "$WORK/scripts/check-redaction-oracles.sh" >"$STAGE3" 2>&1; then
+  cat "$STAGE3" >&2
+  fail "#1786: a local-variable self-oracle read WITH a mutool assertion in the same " \
+       "method must pass -- an independent oracle anywhere in the method corroborates it"
+fi
+
+echo "PASS: local-variable self-oracle assertions are caught, the pre-existing chained " \
+     "shape is not regressed, and a corroborated method still passes (#1786)"

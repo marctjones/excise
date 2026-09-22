@@ -53,6 +53,35 @@ INDEPENDENT='Mutool|Qpdf|Ghostscript|Pdftocairo|Pdftoppm|PdfBox|PdfiumNative|Sav
 # both GetContentStream() and GetContentStreamBytes() as a substring.
 SELF='\.Text\.Should|ExtractAllText|\.Letters|GetLetters|GetContentStream'
 
+# #1786: SELF above only matches a self-oracle read CHAINED directly onto the
+# assertion (`.Text.Should(...)`). It went blind the moment a test assigned
+# the extraction to a local first -- `var remaining = reopened.GetPage(p).Text;`
+# ... `stillContainsTarget.Should().BeFalse(...)` a few lines later -- because
+# neither line alone matches the chained pattern. That shape is not rare: it is
+# what a multi-phase test naturally does. Two independent signals below, ANDed
+# together at the method level, catch it without caring whether the read and
+# the assertion share a line: SELF_READ is any self-oracle extraction call
+# (the bare form, not chained), LEAK_ASSERT is any leak-shaped assertion
+# (a "this text/value is gone" check). A method with both, and no INDEPENDENT
+# oracle anywhere in it, is the same defect the chained SELF pattern already
+# flags -- just one variable hop removed.
+# NOTE: no \b -- this feeds awk's ERE engine below (BWK/"one true" awk on
+# macOS does not support \b; it silently never matches rather than erroring,
+# which is worse than a compile failure). "([^A-Za-z0-9_]|$)" is the
+# \b-free word-boundary-after equivalent: a non-identifier character or
+# end of line, so ".Text;" / ".Text)" match but "MutoolTextExtractor" and
+# "x.TextValue" do not.
+#
+# Deliberately narrower than a bare "\.Text": the first cut of this pattern
+# matched ANY ".Text" anywhere in a method (UI control text, field names,
+# unrelated properties), which combined with LEAK_ASSERT's generic
+# NotContain/BeFalse/BeEmpty flagged ~50 methods across the suite that read
+# page text for something other than a leak claim, or asserted an unrelated
+# boolean in the same method. "GetPage(...).Text" is the ACTUAL shape #1786
+# is about (excise re-extracting a PAGE's text), so this stays tight to that.
+SELF_READ='GetPage\([^)]*\)\.Text([^A-Za-z0-9_]|$)|ExtractAllText|\.Letters|GetLetters|GetContentStream'
+LEAK_ASSERT='NotContain|BeFalse|BeEmpty|DoesNotContain'
+
 offenders=""
 method_offenders=""
 # #1122: the pattern used to be "*Redaction*Tests.cs" ONLY, which meant
@@ -104,9 +133,35 @@ offenders=$(printf '%s' "$offenders" | grep . || true)
 # allow-listed until that exists rather than pretending a regex proved them.
 while IFS= read -r f; do
   [[ -n "$f" ]] || continue
-  method_offenders+="$(awk -v self="$SELF" -v independent="$INDEPENDENT" '
+  # #1786: has_self (the CHAINED pattern, e.g. `.Text.Should(...)`) OR
+  # (has_read AND has_assert) -- a self-oracle READ (SELF_READ) and a
+  # leak-shaped ASSERTION (LEAK_ASSERT) ANYWHERE in the same method, whether
+  # or not they share a line. That second arm is what catches a self-oracle
+  # extraction assigned to a local variable and asserted on several lines
+  # later -- the exact shape the chained-only pattern went blind to.
+  #
+  # ENVIRON, not -v: `awk -v x="$SHELL_VAR"` re-parses the value as an awk
+  # STRING LITERAL, which silently eats a backslash before any character it
+  # does not recognize as an escape -- `\(` and `\)` survive as bare `(`/`)`,
+  # turning "GetPage\([^)]*\)\.Text" from a literal match into a regex
+  # GROUPING construct that no longer means what it says (found while adding
+  # SELF_READ's GetPage(...) pattern here: it silently matched nothing).
+  # `\.` happened to survive this undetected because an unescaped `.` still
+  # matches a literal dot, just also over-matches other characters -- ENVIRON
+  # values are not string-literal-parsed, so this stays correct for every
+  # pattern here, not by accident.
+  method_offenders+="$(SELF="$SELF" SELF_READ="$SELF_READ" LEAK_ASSERT="$LEAK_ASSERT" \
+      INDEPENDENT="$INDEPENDENT" awk '
+    BEGIN {
+      self = ENVIRON["SELF"]
+      selfread = ENVIRON["SELF_READ"]
+      leakassert = ENVIRON["LEAK_ASSERT"]
+      independent = ENVIRON["INDEPENDENT"]
+    }
     function flush() {
-      if (!in_test || !has_self || has_independent) return
+      if (!in_test) return
+      offends = has_self || (has_read && has_assert)
+      if (!offends || has_independent) return
       if (method == "") method = "<unresolved-method>"
       print FILENAME "::" method
     }
@@ -114,6 +169,8 @@ while IFS= read -r f; do
       flush()
       in_test = 1
       has_self = 0
+      has_read = 0
+      has_assert = 0
       has_independent = 0
       method = ""
       looking_for_method = 1
@@ -121,6 +178,8 @@ while IFS= read -r f; do
     {
       if (!in_test) next
       if ($0 ~ self) has_self = 1
+      if ($0 ~ selfread) has_read = 1
+      if ($0 ~ leakassert) has_assert = 1
       if ($0 ~ independent) has_independent = 1
       if (looking_for_method && $0 ~ /^[[:space:]]*(public|protected|internal|private)[[:space:]].*\(/) {
         signature = $0
