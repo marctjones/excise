@@ -145,6 +145,18 @@ semantic versioning.
   - `README.md` documents `excise unredact` for the first time.
 
 ### Fixed
+- **Square, Circle, Text Box, Stamp and Image Stamp annotations had no
+  working path through the GUI** (#1792). Clicking any of them from the
+  Annotate menu, the annotation toolbar row, or the floating palette always
+  produced "Drag a box on the page before adding a..." — no sequence of
+  clicks or drags ever got past it. They had no drawing mode of their own:
+  their Add\*FromDrag commands read the rect the *redaction* tool's drag
+  gesture stages, reachable only via a genuinely-enabled Redaction Mode —
+  and enabling that, then dragging a box, also immediately marked the area
+  as a pending redaction and cleared the rect as a side effect. Now give
+  these five the same one-drag-places-it interaction mode Ink/Line/Arrow/
+  Polygon/PolyLine and the sticky note already have, with no redaction
+  involved at any point.
 - **A pushbutton's custom caption text survived a term redaction** (#1760).
   `excise redact ... toggled` reported success while a page kept rendering
   "This Button can be toggled" — a widget's `/AP/N` appearance stream commonly
