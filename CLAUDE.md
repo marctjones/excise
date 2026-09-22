@@ -680,9 +680,9 @@ Peak RSS per testhost varies enormously by project, and an early note here
 claimed it did not — that claim was made from a partial sample (Core and one
 Rendering chunk) and was **wrong**. Measured over a full run:
 
-| step | peak RSS (2026-07) | re-measured 2026-08-16 | re-measured 2026-09-15/16 |
-|---|---:|---:|---:|
-| `Excise.App.Tests` unchunked (one process) | **8536 MB** | **3862 MB** | **7338 MB** (6339 / 6364 / 7338 over three consecutive runs) |
+| step | peak RSS (2026-07) | re-measured 2026-08-16 | re-measured 2026-09-15/16 | re-measured 2026-09-21 |
+|---|---:|---:|---:|---:|
+| `Excise.App.Tests` unchunked (one process) | **8536 MB** | **3862 MB** | **7338 MB** (6339 / 6364 / 7338 over three consecutive runs) | **8207 MB** (#1772) |
 | `Excise.App.Tests` heaviest chunk | 6576 MB (chunk05) | 3323 MB (chunk06) | not re-run (`--no-chunking`) |
 | `Excise.Rendering.Tests` heaviest chunk | 2389 MB (chunk02) | 2006 MB (chunk04) | not re-run |
 | `Excise.Core.Tests.*` (all 17 chunks) | ≤ 450 MB | not re-run (checkpointed) | not re-run |
@@ -704,9 +704,10 @@ work — this is also why it is serial by design and why CPU contention produces
 false reds here) is what survives, not any one figure. Tracked as #861.
 
 ⚠️ **"App.Tests has more than halved since #861" was true on 2026-08-16 and is
-false now** — it is back to 7338 MB, 1.9× the 2026-08-16 figure, and it rose
-across the three consecutive runs measured. That sentence stood here until
-2026-09-16 and is exactly the drift this table's own warning is about. The
+false now** — it reached 7338 MB on 2026-09-16 (1.9× the 2026-08-16 figure,
+rising across three consecutive runs) and **8207 MB on 2026-09-21** (#1772),
+which is back above the original 2026-07 measurement. That sentence stood here
+until 2026-09-16 and is exactly the drift this table's own warning is about. The
 biggest single consumer on the last full run was a corpus scan; on a
 `--no-chunking` App-only run it is App.Tests again.
 
