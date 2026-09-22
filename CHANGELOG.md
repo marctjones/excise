@@ -37,6 +37,18 @@ semantic versioning.
   hyphen case, so a THREE-OR-MORE-WORD name wrapping mid-phrase (e.g. "Mary
   Jane Smith" breaking after "Jane") is not yet caught — see
   `FindWordWrapCandidates`'s remarks.
+- **Optional annotation toolbar row and floating tool palette** (#1789).
+  Two new, independently toggleable, OFF-by-default ways to reach the 15
+  annotation commands the Annotate menu already exposes — a second toolbar
+  row and a movable floating palette, both in View ▸ (`Annotation Toolbar`,
+  `Floating Annotation Palette`). Either, both, or neither may be shown; the
+  Annotate menu is unchanged and remains the always-available fallback. Both
+  bind directly to the existing `MainWindowViewModel` commands — no new
+  command logic. The palette is an owned, non-modal window
+  (`AnnotationPaletteWindow`) that closes with its main window rather than
+  orphaning itself, and remembers its screen position; both toggle states and
+  the palette's position persist in `window.json` the same way the other
+  panel toggles do.
 - **Printing on Linux, through CUPS** (#1710). `DocumentPrinterFactory`
   returned `UnsupportedDocumentPrinter` on Linux, so File → Print… could not
   print at all there; the README and `CLAUDE.md` both said Linux printing was

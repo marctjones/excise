@@ -95,6 +95,10 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> ToggleAnnotationAuditModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleFormFieldHighlightingCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleClipboardSidebarCommand { get; private set; } = null!;
+    /// <summary>#1789 — View ▸ Annotation Toolbar (a second, optional toolbar row).</summary>
+    public ReactiveCommand<Unit, Unit> ToggleAnnotationToolbarCommand { get; private set; } = null!;
+    /// <summary>#1789 — View ▸ Floating Annotation Palette (an optional, movable tool window).</summary>
+    public ReactiveCommand<Unit, Unit> ToggleAnnotationPaletteCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleContinuousViewCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleRevealHiddenTextCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleRevealRasterizedHiddenCommand { get; private set; } = null!;
@@ -262,6 +266,8 @@ public partial class MainWindowViewModel
         ToggleAnnotationAuditModeCommand = ReactiveCommand.Create(ToggleAnnotationAuditMode);
         ToggleFormFieldHighlightingCommand = ReactiveCommand.Create(ToggleFormFieldHighlighting);
         ToggleClipboardSidebarCommand = ReactiveCommand.Create(ToggleClipboardSidebar);
+        ToggleAnnotationToolbarCommand = ReactiveCommand.Create(ToggleAnnotationToolbar);
+        ToggleAnnotationPaletteCommand = ReactiveCommand.Create(ToggleAnnotationPalette);
         ToggleContinuousViewCommand = ReactiveCommand.Create(ToggleContinuousView);
         ToggleRevealHiddenTextCommand = ReactiveCommand.Create(() => { RevealHiddenText = !RevealHiddenText; });
         ToggleRevealRasterizedHiddenCommand = ReactiveCommand.Create(() => { RevealRasterizedHidden = !RevealRasterizedHidden; });

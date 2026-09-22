@@ -143,8 +143,18 @@ public class GuiToggleStateRegressionTests
         var clipboardItems = NativeItems(menu, "Show Clipboard History").ToList();
         var revealHidden = RequiredNative(menu, "Reveal Hidden Text");
         var revealRasterized = RequiredNative(menu, "Reveal Rasterized Hidden Text");
+        // #1789: the in-window View menu is hidden on macOS (MainWindowViewModel
+        // has no say in that — MainWindow.axaml.cs hides MainMenuBar outright),
+        // so these two must exist here too or they are unreachable on the
+        // primary platform, exactly like Attachments above (#1563).
+        var annotationToolbar = RequiredNative(menu, "Annotation Toolbar");
+        var annotationPalette = RequiredNative(menu, "Floating Annotation Palette");
 
-        foreach (var item in new[] { outline, thumbnails, attachments, continuous, revealHidden, revealRasterized }.Concat(clipboardItems))
+        foreach (var item in new[]
+                 {
+                     outline, thumbnails, attachments, continuous, revealHidden, revealRasterized,
+                     annotationToolbar, annotationPalette,
+                 }.Concat(clipboardItems))
         {
             item.ToggleType.Should().Be(MenuItemToggleType.CheckBox);
             item.Command.Should().NotBeNull($"{item.Header} should execute a VM toggle command");
@@ -158,6 +168,8 @@ public class GuiToggleStateRegressionTests
         continuous.IsChecked.Should().BeTrue();
         revealHidden.IsChecked.Should().BeFalse();
         revealRasterized.IsChecked.Should().BeFalse();
+        annotationToolbar.IsChecked.Should().BeFalse("#1789: opt-in, off by default");
+        annotationPalette.IsChecked.Should().BeFalse("#1789: opt-in, off by default");
 
         outline.Command!.Execute(null);
         vm.IsOutlineSidebarVisible.Should().BeFalse();
@@ -170,6 +182,14 @@ public class GuiToggleStateRegressionTests
         attachments.Command!.Execute(null);
         vm.IsAttachmentsSidebarVisible.Should().BeFalse();
         attachments.IsChecked.Should().BeFalse();
+
+        annotationToolbar.Command!.Execute(null);
+        vm.IsAnnotationToolbarVisible.Should().BeTrue();
+        annotationToolbar.IsChecked.Should().BeTrue();
+
+        annotationPalette.Command!.Execute(null);
+        vm.IsAnnotationPaletteVisible.Should().BeTrue();
+        annotationPalette.IsChecked.Should().BeTrue();
 
         clipboardItems[0].Command!.Execute(null);
         vm.IsClipboardSidebarVisible.Should().BeTrue("#1654: off by default, so the command turns it on");

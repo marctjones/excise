@@ -775,4 +775,54 @@ public partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(StatusBarText));
         AnnotationsChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    // ── #1789: two optional, independently-toggleable surfaces for the same
+    // 15 annotation commands above — a second toolbar row and a floating
+    // palette window. Both are off by default; the Annotate menu is
+    // untouched and stays the one surface that always reaches every command.
+
+    private bool _isAnnotationToolbarVisible;
+
+    /// <summary>
+    /// View ▸ Annotation Toolbar. Shows a second toolbar row with every
+    /// annotation command, in addition to the main toolbar. Off by default;
+    /// the user's choice is persisted in <c>window.json</c> by the main window.
+    /// </summary>
+    public bool IsAnnotationToolbarVisible
+    {
+        get => _isAnnotationToolbarVisible;
+        set => this.RaiseAndSetIfChanged(ref _isAnnotationToolbarVisible, value);
+    }
+
+    /// <summary>View ▸ Annotation Toolbar.</summary>
+    public void ToggleAnnotationToolbar() =>
+        IsAnnotationToolbarVisible = !IsAnnotationToolbarVisible;
+
+    /// <summary>Restore the persisted toolbar-row preference (called by the main window at startup).</summary>
+    internal void ApplyAnnotationToolbarPreference(bool visible) =>
+        IsAnnotationToolbarVisible = visible;
+
+    private bool _isAnnotationPaletteVisible;
+
+    /// <summary>
+    /// View ▸ Floating Annotation Palette. Shows a movable, owned (non-modal)
+    /// window with icon buttons for every annotation command — a separate
+    /// surface from <see cref="IsAnnotationToolbarVisible"/>; either, both or
+    /// neither may be on. The window itself is view mechanics owned by
+    /// MainWindow's code-behind (like <see cref="AttachmentsPaneFocusRequested"/>
+    /// above); this flag is the one thing the View menu's checked-state binds to.
+    /// </summary>
+    public bool IsAnnotationPaletteVisible
+    {
+        get => _isAnnotationPaletteVisible;
+        set => this.RaiseAndSetIfChanged(ref _isAnnotationPaletteVisible, value);
+    }
+
+    /// <summary>View ▸ Floating Annotation Palette.</summary>
+    public void ToggleAnnotationPalette() =>
+        IsAnnotationPaletteVisible = !IsAnnotationPaletteVisible;
+
+    /// <summary>Restore the persisted palette preference (called by the main window at startup).</summary>
+    internal void ApplyAnnotationPalettePreference(bool visible) =>
+        IsAnnotationPaletteVisible = visible;
 }

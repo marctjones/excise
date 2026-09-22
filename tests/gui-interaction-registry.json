@@ -4,15 +4,15 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "47c0c1183409a081c74ea10480847bfbbe46a3fb",
+  "sourceRevision": "5559c4e6492df258679053247ec5a7eb06497854",
   "summary": {
-    "interactions": 165,
-    "menuItems": 108,
-    "buttons": 48,
+    "interactions": 196,
+    "menuItems": 110,
+    "buttons": 77,
     "mouseGestures": 9,
     "keyboardShortcuts": 28,
-    "declaredCommandIds": 113,
-    "commandIdsReachableFromTheGui": 104,
+    "declaredCommandIds": 115,
+    "commandIdsReachableFromTheGui": 106,
     "commandIdsWithNoGuiPath": 0,
     "cliOnlyCommandIds": 9,
     "controlsWithNoCommandId": 0,
@@ -86,6 +86,24 @@
     {
       "kind": "button",
       "path": "",
+      "label": "Approved",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "Approved",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "As Is",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "AsIs",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
       "label": "Clear All",
       "command": "ClearAllRedactionsCommand",
       "commandParameter": null,
@@ -104,11 +122,65 @@
     {
       "kind": "button",
       "path": "",
+      "label": "Confidential",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "Confidential",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Departmental",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "Departmental",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Draft",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "Draft",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Experimental",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "Experimental",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Expired",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "Expired",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
       "label": "Extract selected pages",
       "command": "ExtractSelectedPagesCommand",
       "commandParameter": null,
       "shortcut": null,
       "commandId": "document.extractSelectedPages"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Final",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "Final",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
     },
     {
       "kind": "button",
@@ -140,6 +212,24 @@
     {
       "kind": "button",
       "path": "",
+      "label": "For Comment",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "ForComment",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "For Public Release",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "ForPublicRelease",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
       "label": "Form Authoring Mode — drag to define a new field",
       "command": "ToggleFormAuthoringModeCommand",
       "commandParameter": null,
@@ -158,6 +248,15 @@
     {
       "kind": "button",
       "path": "",
+      "label": "Information Only",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "InformationOnly",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
       "label": "Move selected pages earlier",
       "command": "MoveSelectedPagesEarlierCommand",
       "commandParameter": null,
@@ -172,6 +271,24 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "document.moveSelectedPagesLater"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Not Approved",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "NotApproved",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Not For Public Release",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "NotForPublicRelease",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
     },
     {
       "kind": "button",
@@ -239,11 +356,29 @@
     {
       "kind": "button",
       "path": "",
+      "label": "Sold",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "Sold",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "button",
+      "path": "",
       "label": "Text Selection Mode (T)",
       "command": "ToggleTextSelectionModeCommand",
       "commandParameter": null,
       "shortcut": null,
       "commandId": "edit.selectTextMode"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Top Secret",
+      "command": "AddStampAnnotationFromDragCommand",
+      "commandParameter": "TopSecret",
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
     },
     {
       "kind": "button",
@@ -325,6 +460,132 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "search.close"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarArrowButton",
+      "label": "Draw Arrow",
+      "command": "ToggleArrowModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleArrowMode"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarCircleButton",
+      "label": "Add circle from drag",
+      "command": "AddCircleAnnotationFromDragCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addCircle"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarFreeTextButton",
+      "label": "Add text box from drag",
+      "command": "AddFreeTextAnnotationFromDragCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addFreeText"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarHighlightButton",
+      "label": "Add highlight from selected text",
+      "command": "AddHighlightAnnotationFromSelectionCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addHighlight"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarImageStampButton",
+      "label": "Add image stamp from drag",
+      "command": "AddImageStampAnnotationFromDragCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addImageStamp"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarInkButton",
+      "label": "Draw (Ink)",
+      "command": "ToggleFreehandModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleDrawMode"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarLineButton",
+      "label": "Draw Line",
+      "command": "ToggleLineModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleLineMode"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarPolyLineButton",
+      "label": "Draw PolyLine",
+      "command": "TogglePolyLineModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.togglePolyLineMode"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarPolygonButton",
+      "label": "Draw Polygon",
+      "command": "TogglePolygonModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.togglePolygonMode"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarSquareButton",
+      "label": "Add square from drag",
+      "command": "AddSquareAnnotationFromDragCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addSquare"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarSquigglyButton",
+      "label": "Add squiggly underline from selected text",
+      "command": "AddSquigglyAnnotationFromSelectionCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addSquiggly"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarStickyNoteButton",
+      "label": "Add sticky note",
+      "command": "AddStickyNoteAnnotationCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addStickyNote"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarStrikeOutButton",
+      "label": "Add strikeout from selected text",
+      "command": "AddStrikeOutAnnotationFromSelectionCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addStrikeOut"
+    },
+    {
+      "kind": "button",
+      "path": "AnnotationToolbarUnderlineButton",
+      "label": "Add underline from selected text",
+      "command": "AddUnderlineAnnotationFromSelectionCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addUnderline"
     },
     {
       "kind": "button",
@@ -1300,6 +1561,15 @@
     },
     {
       "kind": "menu",
+      "path": "View > Annotation Toolbar",
+      "label": "Annotation Toolbar",
+      "command": "ToggleAnnotationToolbarCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "view.toggleAnnotationToolbar"
+    },
+    {
+      "kind": "menu",
       "path": "View > Continuous Scroll",
       "label": "Continuous Scroll",
       "command": "ToggleContinuousViewCommand",
@@ -1324,6 +1594,15 @@
       "commandParameter": null,
       "shortcut": "Ctrl+D1",
       "commandId": "view.zoomFitWidth"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Floating Annotation Palette",
+      "label": "Floating Annotation Palette",
+      "command": "ToggleAnnotationPaletteCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "view.toggleAnnotationPalette"
     },
     {
       "kind": "menu",

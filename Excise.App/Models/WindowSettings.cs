@@ -122,6 +122,28 @@ public class WindowSettings
     /// <summary>Idle delay for <see cref="CacheTrimSoftTriggers"/>, in seconds.</summary>
     public int CacheTrimIdleSeconds { get; set; } = 30;
 
+    /// <summary>
+    /// The optional second annotation-tools toolbar row (#1789). Off by
+    /// default — the Annotate menu and main toolbar already cover access.
+    /// </summary>
+    public bool AnnotationToolbarVisible { get; set; }
+
+    /// <summary>
+    /// The floating annotation tool palette window (#1789). Off by default,
+    /// independent of <see cref="AnnotationToolbarVisible"/>.
+    /// </summary>
+    public bool AnnotationPaletteVisible { get; set; }
+
+    /// <summary>
+    /// The palette window's last screen position, in device pixels. Null
+    /// until the user has moved it once; the window parks near the main
+    /// window's top-right corner on its first show instead.
+    /// </summary>
+    public double? AnnotationPaletteX { get; set; }
+
+    /// <summary>See <see cref="AnnotationPaletteX"/>.</summary>
+    public double? AnnotationPaletteY { get; set; }
+
     // ── Preferences → Performance ────────────────────────────────────────────
     // Read through PerformanceSettings.FromWindowSettings, written through
     // PerformanceSettings.WriteTo. Every default below is the Balanced value,

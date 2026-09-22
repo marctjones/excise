@@ -137,6 +137,10 @@ public static class PdfCommandRegistry
         View(PdfCommandIds.ToggleFormFieldHighlighting, "Highlight Form Fields",
             "Tint fillable fields so they are easy to spot. Viewer chrome only — never included in an exported image.", null),
         View(PdfCommandIds.ToggleClipboardHistory, "Show Clipboard History", "Show or hide clipboard and redaction history."),
+        View(PdfCommandIds.ToggleAnnotationToolbar, "Annotation Toolbar",
+            "Show or hide a second toolbar row with every annotation tool, in addition to the main toolbar (#1789). Off by default.", null),
+        View(PdfCommandIds.ToggleAnnotationPalette, "Floating Annotation Palette",
+            "Show or hide a movable floating window with icon buttons for every annotation tool (#1789). Off by default; independent of the annotation toolbar.", null),
 
         Redaction(PdfCommandIds.ToggleRedactionMode, "Redaction Mode", "Toggle redaction mode.", "R"),
         Redaction(PdfCommandIds.ApplyRedaction, "Apply Redaction", "Apply the current redaction selection.", "Enter", isDestructive: true, isSecuritySensitive: true),

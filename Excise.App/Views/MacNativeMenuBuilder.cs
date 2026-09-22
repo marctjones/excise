@@ -101,6 +101,8 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _outlineItem;
         private readonly NativeMenuItem _thumbnailsItem;
         private readonly NativeMenuItem _attachmentsItem;
+        private readonly NativeMenuItem _annotationToolbarItem;
+        private readonly NativeMenuItem _annotationPaletteItem;
         private readonly NativeMenuItem _revealHiddenTextItem;
         private readonly NativeMenuItem _revealRasterizedHiddenItem;
         private readonly NativeMenuItem _formAuthoringItem;
@@ -135,6 +137,10 @@ internal static class MacNativeMenuBuilder
             // #1563: the in-window menu is hidden on macOS, so the pane toggle
             // must exist here too or it is unreachable on the primary platform.
             _attachmentsItem = ToggleItem("Show Attachments", _viewModel.ToggleAttachmentsCommand);
+            // #1789: same reason — the optional annotation toolbar row and
+            // floating palette have no other entry point on macOS.
+            _annotationToolbarItem = ToggleItem("Annotation Toolbar", _viewModel.ToggleAnnotationToolbarCommand);
+            _annotationPaletteItem = ToggleItem("Floating Annotation Palette", _viewModel.ToggleAnnotationPaletteCommand);
             _revealHiddenTextItem = ToggleItem("Reveal Hidden Text", _viewModel.ToggleRevealHiddenTextCommand);
             _revealRasterizedHiddenItem = ToggleItem("Reveal Rasterized Hidden Text", _viewModel.ToggleRevealRasterizedHiddenCommand);
             // #1476: the main toolbar hides low-priority actions when narrow, so
@@ -235,7 +241,10 @@ internal static class MacNativeMenuBuilder
                     _outlineItem,
                     _thumbnailsItem,
                     _attachmentsItem,
-                    _viewClipboardItem));
+                    _viewClipboardItem,
+                    Separator(),
+                    _annotationToolbarItem,
+                    _annotationPaletteItem));
 
             Add(menu,
                 Submenu("Document",
@@ -349,6 +358,8 @@ internal static class MacNativeMenuBuilder
             or nameof(MainWindowViewModel.IsOutlineSidebarVisible)
             or nameof(MainWindowViewModel.IsThumbnailsSidebarVisible)
             or nameof(MainWindowViewModel.IsAttachmentsSidebarVisible)
+            or nameof(MainWindowViewModel.IsAnnotationToolbarVisible)
+            or nameof(MainWindowViewModel.IsAnnotationPaletteVisible)
             or nameof(MainWindowViewModel.IsClipboardSidebarVisible)
             or nameof(MainWindowViewModel.RevealHiddenText)
             or nameof(MainWindowViewModel.RevealRasterizedHidden)
@@ -398,6 +409,8 @@ internal static class MacNativeMenuBuilder
             _outlineItem.IsChecked = _viewModel.IsOutlineSidebarVisible;
             _thumbnailsItem.IsChecked = _viewModel.IsThumbnailsSidebarVisible;
             _attachmentsItem.IsChecked = _viewModel.IsAttachmentsSidebarVisible;
+            _annotationToolbarItem.IsChecked = _viewModel.IsAnnotationToolbarVisible;
+            _annotationPaletteItem.IsChecked = _viewModel.IsAnnotationPaletteVisible;
             _viewClipboardItem.IsChecked = _viewModel.IsClipboardSidebarVisible;
             _redactionClipboardItem.IsChecked = _viewModel.IsClipboardSidebarVisible;
             _revealHiddenTextItem.IsChecked = _viewModel.RevealHiddenText;

@@ -17,7 +17,8 @@ using Xunit;
 namespace Excise.App.Tests.UI;
 
 /// <summary>
-/// Drives the eight view/tools toggle menu items (#1085) with REAL synthetic
+/// Drives the view/tools toggle menu items (#1085, plus the #1789 annotation
+/// toolbar/palette pair) with REAL synthetic
 /// input — a routed pointer press/release on the menu item (so
 /// <see cref="GuiInteractionRecorder"/> counts it exactly as it counts a user
 /// click) plus the real <c>MenuItem.Click</c> the pointer release stands in for
@@ -44,6 +45,8 @@ public class ViewToggleMenuInteractionTests
     [InlineData("RevealRasterizedHiddenMenuItem", "ToggleRevealRasterizedHiddenCommand", "RevealRasterizedHidden")]
     [InlineData("ViewClipboardMenuItem", "ToggleClipboardSidebarCommand", "IsClipboardSidebarVisible")]
     [InlineData("ViewAttachmentsMenuItem", "ToggleAttachmentsCommand", "IsAttachmentsSidebarVisible")]
+    [InlineData("ViewAnnotationToolbarMenuItem", "ToggleAnnotationToolbarCommand", "IsAnnotationToolbarVisible")]
+    [InlineData("ViewAnnotationPaletteMenuItem", "ToggleAnnotationPaletteCommand", "IsAnnotationPaletteVisible")]
     [FixedAvaloniaTheory]
     public async Task PointerAndClick_OnToggleMenuItem_FlipsBoundViewModelState(
         string menuItemName, string commandProperty, string stateProperty)
