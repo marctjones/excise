@@ -50,7 +50,11 @@ unfiltered, or under filters that partition them, elsewhere in the same tier.
 refuses to be a weaker gate three ways: every trx must be under **this run's**
 log directory (so a producer `--resume` took from a checkpoint is stale
 evidence and FAILS, naming the row to re-run — this is what `checkpoint=never`
-means once the evidence is borrowed); every `*.Tests.csproj` in `excise.sln`
+means once the evidence is borrowed; ⚠️ markers are cleared only by `--fresh`,
+so that is **every `full` run after the first green one on a branch**, not
+merely one after a crash — the old row paid 435 s on each of those and stayed
+green, and the strict rule trades that away on purpose); every
+`*.Tests.csproj` in `excise.sln`
 must be represented, which is the containment proof and needs no filter
 semantics at all; and `dotnet test excise.sln --list-tests --filter
 FullyQualifiedName~Redaction` supplies the authoritative population, every
