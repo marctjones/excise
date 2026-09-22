@@ -54,6 +54,57 @@ public class DocumentPermissionEnforcementTests : IDisposable
         return File.Exists(path) ? path : null;
     }
 
+    /// <summary>
+    /// #1768: a generated fixture BESIDE the poppler-corpus tests below, not
+    /// instead of them -- a mask excise writes and reads with its own
+    /// PdfEncryptionOptions is a self-oracle for whether excise's own /P
+    /// PARSING is correct (CLAUDE.md #1617), which is exactly what the
+    /// poppler `Gday garçon` fixture corroborates independently. This one
+    /// exists so the copy-block contract still has a row when that corpus is
+    /// absent (Linux CI, a fresh clone), covering the core case
+    /// (CopyTextCommand) rather than duplicating all 13 corpus-gated tests.
+    /// </summary>
+    private string SaveWithCopyForbidden(string text)
+    {
+        var plainPath = Path.Combine(_tempDir, "plain-for-encrypt.pdf");
+        using (var plain = Excise.Core.Document.PdfDocument.CreateNew())
+        {
+            var page = plain.Pages.AddBlank();
+            using (var g = page.GetGraphics())
+            {
+                g.DrawString(text, Excise.Core.Graphics.PdfFont.Helvetica(14),
+                    Excise.Core.Graphics.PdfBrush.Black, 72, page.Height - 100);
+                g.Flush();
+            }
+            plain.Save(plainPath);
+        }
+
+        var encryptedPath = Path.Combine(_tempDir, "generated-copy-forbidden.pdf");
+        using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(plainPath));
+        doc.Save(encryptedPath, new Excise.Core.Security.PdfEncryptionOptions
+        {
+            UserPassword = "",
+            OwnerPassword = "owner-1768",
+            Permissions = -4 & ~16L, // bit 5 (value 16) cleared: extraction not allowed
+        });
+        return encryptedPath;
+    }
+
+    [FixedAvaloniaFact]
+    public async Task CopyTextCommand_CopyForbiddenGeneratedFixture_BlocksWithToast_AndKeepsClipboardEmpty()
+    {
+        var fixturePath = SaveWithCopyForbidden("Copy-forbidden generated text");
+        var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath);
+        vm.SelectedText = "Copy-forbidden generated text";
+
+        await vm.CopyTextCommand.Execute();
+
+        vm.ClipboardHistory.Should().BeEmpty(
+            "a copy-forbidden document's text must not reach the clipboard or its history");
+        toasts.Should().ContainSingle(t => t.Message.Contains("Blocked by document permissions"),
+            "a blocked copy must give visible feedback, not silently no-op");
+    }
+
     private static (MainWindowViewModel vm, List<ToastService.ToastEventArgs> toasts) CreateViewModel()
     {
         var loggerFactory = NullLoggerFactory.Instance;
@@ -87,7 +138,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task CopyTextCommand_CopyForbiddenDocument_BlocksWithToast_AndKeepsClipboardEmpty()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
         vm.SelectedText = "garçon";
@@ -104,7 +155,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task SetSelectedTextAndCopyAsync_CopyForbidden_BlocksClipboard_ButKeepsSelection()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
 
@@ -140,7 +191,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task SetSelectedTextAndCopyAsync_IgnoreDocumentPermissions_Overrides()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
         vm.IgnoreDocumentPermissions = true;
@@ -158,7 +209,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task ExportCurrentPageToImage_CopyForbidden_BlocksWithToast_AndWritesNoFile()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
         var outputPath = Path.Combine(_tempDir, "blocked-export.png");
@@ -173,7 +224,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task ExportPagesToImages_CopyForbidden_BlocksDirectCaller_AndWritesNoFiles()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
         var outputFolder = Path.Combine(_tempDir, "blocked-bulk-export");
@@ -192,7 +243,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task ToggleTypewriterMode_ModifyForbidden_StaysOff_WithToast()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
 
@@ -206,7 +257,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task ToggleFormAuthoringMode_ModifyForbidden_StaysOff_WithToast()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
 
@@ -220,7 +271,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task AddStickyNoteAnnotation_AnnotateForbidden_BlocksWithToast()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
 
@@ -236,7 +287,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public void Search_CopyForbiddenDocument_StillFindsText()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         // Search is excise-internal extraction — the accessibility carve-out
         // and plain layering sense both say it must not be gated by bit 5.
@@ -250,7 +301,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task Rendering_CopyForbiddenDocument_StillRenders()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         using var document = PdfDocument.Open(File.ReadAllBytes(fixturePath!));
         using var bitmap = await Task.Run(() => new SkiaRenderer().RenderPage(
@@ -266,7 +317,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task ScriptExtractAllText_CopyForbidden_Throws_WithAccessibilityAndOverrideGuidance()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, _) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
 
@@ -282,7 +333,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task ScriptExtractAllText_ForAccessibility_HonoursBit10CarveOut()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, _) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
 
@@ -296,7 +347,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     public async Task ScriptExtractAllText_IgnoreDocumentPermissions_Overrides()
     {
         var fixturePath = RestrictedFixturePathOrNull();
-        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
 
         var (vm, _) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
         vm.IgnoreDocumentPermissions = true;
