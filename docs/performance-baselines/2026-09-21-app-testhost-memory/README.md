@@ -152,7 +152,7 @@ Answering the issue's question with data rather than taste:
 |---|---:|---:|
 | as it was | 147 | 64.8 s |
 | identical bytes at the same page, deduped | 100 | — |
-| + one page per document (with two exceptions) | **62** | **22.9 s** |
+| + one page per document (with two exceptions) | **62** | **22.9 s** (the sha256 pass is inside it) |
 
 **47 of the 147 cases were not distinct inputs at all.** `test-pdfs/smoke/*` is
 a byte-for-byte copy of `test-pdfs/federal/*` (sha256-verified) and both carry

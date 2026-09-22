@@ -198,7 +198,7 @@ public class PdfViewerHeadlessRenderTests
         // EXCISE_GUI_DISPLAY_COVERING_SET=0 for every discovered page.
         var coveringSet = Environment.GetEnvironmentVariable("EXCISE_GUI_DISPLAY_COVERING_SET") != "0"
                           && !includeAllContractPages;
-        var discoveredBeforeCovering = cases.Count;
+        var casesBeforeCovering = cases.Count;
         if (coveringSet)
             cases = SelectPlumbingCoveringCases(cases).ToList();
         var discoveredCaseCount = cases.Count;
@@ -241,7 +241,7 @@ public class PdfViewerHeadlessRenderTests
         _output.WriteLine(
             $"GUI display sweep: {cases.Count} page(s), " +
             $"{discoveredCaseCount} discovered before shard/range, " +
-            $"{(coveringSet ? $"plumbing-covering subset of {discoveredBeforeCovering}, " : "every discovered page, ")}" +
+            $"{(coveringSet ? $"plumbing-covering subset of {casesBeforeCovering}, " : "every discovered page, ")}" +
             $"{(includeAllContractPages ? "all contracted pages" : "representative contracted pages")}, " +
             $"{(includeAllContractGroups ? "all contract groups" : "renderer contract groups")}" +
             $"{(requestedContractGroups.Count == 0 ? "" : $", groups {string.Join(",", requestedContractGroups)}")}" +
@@ -295,7 +295,7 @@ public class PdfViewerHeadlessRenderTests
                 requestedContractGroups,
                 caseFilter,
                 coveringSet,
-                discoveredBeforeCovering,
+                casesBeforeCovering,
                 discoveredCaseCount,
                 cases.Count,
                 shardCount,
@@ -457,7 +457,7 @@ public class PdfViewerHeadlessRenderTests
             requestedContractGroups,
             caseFilter,
             coveringSet,
-            discoveredBeforeCovering,
+            casesBeforeCovering,
             discoveredCaseCount,
             cases.Count,
             shardCount,
@@ -1189,7 +1189,7 @@ public class PdfViewerHeadlessRenderTests
     /// different viewer state — are both exercised.</para>
     ///
     /// <para>Measured on the same 147 cases: 147 → 100 after (1) → 62 after (2),
-    /// and 64.8 s of case time → 23.6 s. <c>EXCISE_GUI_DISPLAY_COVERING_SET=0</c>
+    /// and 64.8 s of case time → 22.9 s, sha256 pass included. <c>EXCISE_GUI_DISPLAY_COVERING_SET=0</c>
     /// runs every discovered page; that is what a <c>full</c>-tier row should
     /// pass, and what to set before believing a bisect that lands here.</para>
     /// </summary>
@@ -1329,7 +1329,7 @@ public class PdfViewerHeadlessRenderTests
         IReadOnlyCollection<string> requestedContractGroups,
         string? caseFilter,
         bool plumbingCoveringSet,
-        int discoveredBeforeCovering,
+        int casesBeforeCovering,
         int discoveredTotal,
         int expectedTotal,
         int shardCount,
@@ -1348,7 +1348,7 @@ public class PdfViewerHeadlessRenderTests
             contractGroups = requestedContractGroups,
             caseFilter = caseFilter,
             plumbingCoveringSet = plumbingCoveringSet,
-            discoveredPagesBeforeCovering = discoveredBeforeCovering,
+            casesBeforeCovering = casesBeforeCovering,
             discoveredPages = discoveredTotal,
             total = expectedTotal,
             shardCount = shardCount,
@@ -1444,11 +1444,13 @@ public class PdfViewerHeadlessRenderTests
         public IReadOnlyCollection<string> contractGroups { get; set; } = Array.Empty<string>();
         public string? caseFilter { get; set; }
         // #1772: plumbingCoveringSet says the universe was reduced, and
-        // discoveredPagesBeforeCovering is what it was reduced FROM. Without
-        // both, "we checked everything" cannot be told from "we checked the
-        // subset" by reading the report.
+        // casesBeforeCovering is what it was reduced FROM. Without both, "we
+        // checked everything" cannot be told from "we checked the subset" by
+        // reading the report. It is the count AFTER any
+        // EXCISE_GUI_DISPLAY_CASE_FILTER, which is why it is named for cases
+        // and not for discovery.
         public bool plumbingCoveringSet { get; set; }
-        public int discoveredPagesBeforeCovering { get; set; }
+        public int casesBeforeCovering { get; set; }
         public int discoveredPages { get; set; }
         public int total { get; set; }
         public int shardCount { get; set; }
