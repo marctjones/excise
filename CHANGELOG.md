@@ -16,6 +16,17 @@ semantic versioning.
   persists as open and the popup round-trips through other PDF readers, not
   just excise. The existing `Add _Sticky Note...` modal-prompt command is
   unchanged and still available.
+- **Sticky notes now look and behave like a real post-it card** (#1794).
+  excise's own viewer replaces the old ~17pt icon-with-glyph rendering with a
+  post-it-sized card (default ~200x150pt) that shows its `/Contents` text,
+  wrapped, directly on the card — both at rest (`SkiaRenderer`) and while
+  being edited (the same card, in place, no separate popup or "Done"
+  button). Clicking an existing, resting note's card edits its text in
+  place; a press-and-drag on one moves it, updating its `/Rect`; Escape
+  commits an open card alongside the existing click-away. Viewer-only: the
+  underlying `/Text` + linked `/Popup` structure #1788 authors is unchanged,
+  so other PDF readers still show the traditional small icon + popup until
+  #1795 (a real `/AP` appearance stream) closes that gap.
 - **`WidthPolicy.FixedMarker` (`redact --fixed-marker`)** (#1755). Closes the
   width gap like `--close-width` (destroying the content-stream residue
   #1715 measured recoverable at 91% recall@5 under the default, not just the

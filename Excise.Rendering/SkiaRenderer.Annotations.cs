@@ -202,22 +202,33 @@ internal partial class RenderContext
         float ry1 = (float)Math.Min(annot.Rect.Bottom, annot.Rect.Top);
         float rx2 = (float)Math.Max(annot.Rect.Left, annot.Rect.Right);
         float ry2 = (float)Math.Max(annot.Rect.Bottom, annot.Rect.Top);
-        // /Text is drawn at a FIXED size and its /Rect is ignored for sizing
-        // (§12.5.6.4: "the annotation shall be drawn at a fixed size regardless
-        // of the magnification"). Producers therefore write a degenerate rect
-        // and mean it — veraPDF 6-3-3-t01-pass-a.pdf has /Rect [50 110 50 110],
-        // zero by zero. The guard below rejected that before anything could
-        // draw, while mutool (495 inked px), pdftocairo (917) and Ghostscript
-        // (1388) all place a ~16pt icon anchored at that point. This is the
-        // one subtype where a zero-size rect is normal rather than malformed,
-        // so it is normalised before the guard rather than exempted from it.
+        // §12.5.6.4 says /Text is drawn at a FIXED size regardless of /Rect —
+        // true of every OTHER reader, which draws a small icon (mutool 495
+        // inked px, pdftocairo 917, Ghostscript 1388 on veraPDF
+        // 6-3-3-t01-pass-a.pdf's degenerate /Rect [50 110 50 110]). excise's
+        // OWN viewer deliberately deviates (#1794): RenderStickyNoteDefault
+        // now draws a real post-it-sized card with the note's /Contents
+        // wrapped and visible on it, sized to the annotation's ACTUAL /Rect —
+        // #1788 already writes a real (non-degenerate) rect for every note
+        // this app places, and #1794's default is a ~200x150pt card. See
+        // issue #1795 for generating a real /AP so other readers see the
+        // post-it look too; until then they still fall back to the small icon
+        // §12.5.6.4 describes, because no /AP exists.
+        //
+        // A rect SMALLER than the fixed icon size — a foreign producer's
+        // genuinely degenerate/zero rect, or a pre-#1794 icon-sized note — is
+        // still normalised up to it: shrinking a post-it card that small
+        // would draw nothing legible, and the icon-size floor is what the
+        // viewer's own hit-test (PdfViewerControl.ContainsPoint) clamps to
+        // for the same reason, so the two must not drift.
         if (annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Text)
         {
-            // Shared with the viewer's hit-test — see PdfAnnotation.TextIconSize
-            // for why these must not drift. Oracles measure 16.3-18pt.
             const float noteSize = (float)Excise.Core.Document.PdfAnnotation.TextIconSize;
-            rx2 = rx1 + noteSize;
-            ry1 = ry2 - noteSize;
+            if (rx2 - rx1 < noteSize || ry2 - ry1 < noteSize)
+            {
+                rx2 = rx1 + noteSize;
+                ry1 = ry2 - noteSize;
+            }
         }
 
         if (rx2 - rx1 < 0.5f || ry2 - ry1 < 0.5f) return;
@@ -1254,151 +1265,169 @@ internal partial class RenderContext
     /// <c>rect.Top</c> is the visually LOW edge — which is why v is subtracted
     /// from <c>rect.Bottom</c>.</para>
     /// </remarks>
+    /// <summary>
+    /// A real post-it-sized card with <c>/Contents</c> wrapped and drawn
+    /// directly on it (#1794), replacing the old ~17pt icon-with-glyph
+    /// rendering (§12.5.6.4's <c>/Name</c> Table 172 no longer selects
+    /// anything here — see the removed switch this replaced in git history,
+    /// and issue #1795 for restoring per-icon meaning via a real <c>/AP</c>
+    /// other readers can show). <paramref name="rect"/> is already sized by
+    /// <see cref="RenderDefaultAppearance"/>: the annotation's actual /Rect
+    /// for a real card, or the fixed icon size only for a genuinely
+    /// degenerate/undersized one.
+    /// </summary>
     private void RenderStickyNoteDefault(Excise.Core.Document.PdfAnnotation annot, SKRect rect)
     {
         var fill = annot.Color is { } c
             ? RgbToColor(c.Item1, c.Item2, c.Item3)
-            : new SKColor(0xFF, 0xE1, 0x6B); // the usual note yellow
+            : new SKColor(0xFF, 0xF5, 0x9D); // classic post-it yellow
+        var border = DarkenColor(fill, 0.80f);
 
-        using var body = new SKPaint
+        // A soft drop shadow, offset down-right, so the card reads as
+        // sitting ON the page rather than painted flat onto it (#1794's
+        // "recognisably a Post-it" visual goal).
+        using (var shadow = new SKPaint
+               {
+                   IsAntialias = _options.AntiAlias,
+                   Style = SKPaintStyle.Fill,
+                   Color = new SKColor(0, 0, 0, 0x38),
+                   ImageFilter = SKImageFilter.CreateBlur(
+                       Math.Max(0.5f, rect.Width * 0.03f), Math.Max(0.5f, rect.Height * 0.03f)),
+               })
         {
-            IsAntialias = _options.AntiAlias,
-            Style = SKPaintStyle.Fill,
-            Color = fill,
-        };
-        using var ink = new SKPaint
-        {
-            IsAntialias = _options.AntiAlias,
-            Style = SKPaintStyle.Stroke,
-            StrokeWidth = Math.Max(1f, rect.Width * 0.07f),
-            StrokeCap = SKStrokeCap.Round,
-            StrokeJoin = SKStrokeJoin.Round,
-            Color = SKColors.Black,
-        };
-        using var inkFill = new SKPaint
-        {
-            IsAntialias = _options.AntiAlias,
-            Style = SKPaintStyle.Fill,
-            Color = SKColors.Black,
-        };
+            var offset = Math.Max(1f, Math.Min(rect.Width, rect.Height) * 0.03f);
+            var shadowRect = new SKRect(
+                rect.Left + offset, rect.Top + offset, rect.Right + offset, rect.Bottom + offset);
+            _canvas.DrawRoundRect(
+                new SKRoundRect(shadowRect, rect.Width * 0.06f, rect.Height * 0.06f), shadow);
+        }
 
-        var round = new SKRoundRect(rect, rect.Width * 0.15f, rect.Height * 0.15f);
-        _canvas.DrawRoundRect(round, body);
+        var round = new SKRoundRect(rect, rect.Width * 0.06f, rect.Height * 0.06f);
+        using (var body = new SKPaint { IsAntialias = _options.AntiAlias, Style = SKPaintStyle.Fill, Color = fill })
+            _canvas.DrawRoundRect(round, body);
         using (var outline = new SKPaint
                {
                    IsAntialias = _options.AntiAlias,
                    Style = SKPaintStyle.Stroke,
-                   StrokeWidth = 1f,
-                   Color = SKColors.Black,
+                   StrokeWidth = Math.Max(1f, Math.Min(rect.Width, rect.Height) * 0.012f),
+                   Color = border,
                })
-        {
             _canvas.DrawRoundRect(round, outline);
+
+        var contents = annot.Contents;
+        if (string.IsNullOrEmpty(contents))
+            return;
+
+        // #1363/#1381's rule applies here too: tofu is worse than an empty
+        // card. A card with no legible text still shows AS a note (the
+        // filled/bordered shape above), same failure mode as FreeText's
+        // "fail closed" — see TypesetFreeTextContents for the precedent this
+        // deliberately does NOT reuse (that path drives the full HarfBuzz
+        // typesetter through a /DA; a sticky note has no /DA to typeset
+        // against, so it declines rather than inventing one — #1795 tracks
+        // giving notes real text layout via /AP).
+        if (RequiresComplexShaping(contents))
+        {
+            AddDiagnostic(
+                "Sticky note /Contents not drawn: complex-script text needs the FreeText " +
+                "typesetter path, not yet wired for /Text (#1794/#1795).");
+            return;
         }
 
-        SKPoint P(float u, float v) =>
-            new(rect.Left + u * rect.Width, rect.Bottom - v * rect.Height);
+        DrawStickyNoteText(rect, contents, DarkenColor(fill, 0.35f));
+    }
 
-        void Line(float u1, float v1, float u2, float v2) =>
-            _canvas.DrawLine(P(u1, v1), P(u2, v2), ink);
+    /// <summary>
+    /// Simple greedy word-wrap for a sticky note's /Contents — no /DA, no
+    /// complex-script shaping (see the caller's fail-closed check), just
+    /// Helvetica top-aligned lines clipped to the card. Deliberately NOT the
+    /// FreeText content-stream/typesetter machinery: a /Text annotation
+    /// carries no /DA to typeset against, so there is no font/size/colour to
+    /// read from the file — Helvetica and a size proportional to the card are
+    /// excise's OWN viewer choice, same category of choice as the card's
+    /// colours (#1794's design decision, not a spec-derived value).
+    /// </summary>
+    private void DrawStickyNoteText(SKRect cardRect, string contents, SKColor textColor)
+    {
+        var typeface = ResolveRenderFont("Helvetica", null).Typeface;
+        if (typeface == null)
+            return; // fail closed — no covering font, nothing legible to draw
 
-        // §12.5.6.4 Table 172. An absent or unrecognised /Name is /Note, which
-        // the spec names as the default — so the switch falls through to it
-        // rather than drawing nothing.
-        //
-        // IconName is /Name. PdfAnnotation.Name is /NM, the annotation's
-        // IDENTIFIER — a different key that happens to read like this one, and
-        // which its own docstring warns against confusing. Switching on it drew
-        // the default glyph for all seven names and looked exactly like the bug
-        // being fixed.
-        switch (annot.IconName)
+        var padding = Math.Max(2f, Math.Min(cardRect.Width, cardRect.Height) * 0.08f);
+        var textRect = new SKRect(
+            cardRect.Left + padding, cardRect.Top + padding,
+            cardRect.Right - padding, cardRect.Bottom - padding);
+        if (textRect.Width < 2f || textRect.Height < 2f)
+            return;
+
+        var fontSize = Math.Clamp(cardRect.Height * 0.11f, 6f, 22f);
+        using var font = new SKFont(typeface, fontSize) { Subpixel = true };
+        using var paint = new SKPaint { IsAntialias = _options.AntiAlias, Color = textColor };
+
+        var lineHeight = fontSize * 1.25f;
+        var lines = WrapStickyNoteText(contents, font, paint, textRect.Width);
+        var maxLines = Math.Max(1, (int)(textRect.Height / lineHeight));
+
+        _canvas.Save();
+        try
         {
-            case "Comment":
-                // Speech bubble: rounded body plus a tail at the lower left.
-                using (var bubble = new SKPath())
-                {
-                    var b = new SKRect(P(0.18f, 0.60f).X, P(0.18f, 0.60f).Y,
-                                       P(0.82f, 0.26f).X, P(0.82f, 0.26f).Y);
-                    b = SKRect.Create(Math.Min(b.Left, b.Right), Math.Min(b.Top, b.Bottom),
-                                      Math.Abs(b.Width), Math.Abs(b.Height));
-                    bubble.AddRoundRect(new SKRoundRect(b, rect.Width * 0.10f));
-                    _canvas.DrawPath(bubble, ink);
-                }
-                using (var tail = new SKPath())
-                {
-                    tail.MoveTo(P(0.34f, 0.58f));
-                    tail.LineTo(P(0.30f, 0.80f));
-                    tail.LineTo(P(0.52f, 0.58f));
-                    tail.Close();
-                    _canvas.DrawPath(tail, inkFill);
-                }
-                break;
-
-            case "Help":
-                // Question mark: a hook over a separate dot.
-                using (var hook = new SKPath())
-                {
-                    hook.MoveTo(P(0.34f, 0.38f));
-                    hook.CubicTo(P(0.36f, 0.20f), P(0.68f, 0.20f), P(0.64f, 0.40f));
-                    hook.CubicTo(P(0.62f, 0.50f), P(0.50f, 0.50f), P(0.50f, 0.62f));
-                    _canvas.DrawPath(hook, ink);
-                }
-                _canvas.DrawCircle(P(0.50f, 0.76f), rect.Width * 0.055f, inkFill);
-                break;
-
-            case "Key":
-                // Key: ring bow on the left, shaft right, two teeth down.
-                _canvas.DrawCircle(P(0.32f, 0.46f), rect.Width * 0.13f, ink);
-                Line(0.45f, 0.46f, 0.80f, 0.46f);
-                Line(0.64f, 0.46f, 0.64f, 0.62f);
-                Line(0.76f, 0.46f, 0.76f, 0.60f);
-                break;
-
-            case "Insert":
-                // Proofreader's insertion caret, with the stem that
-                // distinguishes it from a plain chevron.
-                Line(0.26f, 0.70f, 0.50f, 0.36f);
-                Line(0.50f, 0.36f, 0.74f, 0.70f);
-                Line(0.50f, 0.36f, 0.50f, 0.22f);
-                break;
-
-            case "Paragraph":
-                // Pilcrow: filled bowl, two descending stems.
-                using (var bowl = new SKPath())
-                {
-                    var b = new SKRect(P(0.30f, 0.50f).X, P(0.30f, 0.50f).Y,
-                                       P(0.62f, 0.22f).X, P(0.62f, 0.22f).Y);
-                    b = SKRect.Create(Math.Min(b.Left, b.Right), Math.Min(b.Top, b.Bottom),
-                                      Math.Abs(b.Width), Math.Abs(b.Height));
-                    bowl.AddOval(b);
-                    _canvas.DrawPath(bowl, inkFill);
-                }
-                Line(0.56f, 0.22f, 0.56f, 0.80f);
-                Line(0.72f, 0.22f, 0.72f, 0.80f);
-                break;
-
-            case "NewParagraph":
-                // The pilcrow again, under a break rule — "start a new one".
-                Line(0.18f, 0.20f, 0.82f, 0.20f);
-                using (var bowl = new SKPath())
-                {
-                    var b = new SKRect(P(0.32f, 0.62f).X, P(0.32f, 0.62f).Y,
-                                       P(0.60f, 0.36f).X, P(0.60f, 0.36f).Y);
-                    b = SKRect.Create(Math.Min(b.Left, b.Right), Math.Min(b.Top, b.Bottom),
-                                      Math.Abs(b.Width), Math.Abs(b.Height));
-                    bowl.AddOval(b);
-                    _canvas.DrawPath(bowl, inkFill);
-                }
-                Line(0.55f, 0.36f, 0.55f, 0.84f);
-                Line(0.70f, 0.36f, 0.70f, 0.84f);
-                break;
-
-            default: // "Note", absent, or an unrecognised name (§12.5.6.4 default)
-                Line(0.24f, 0.34f, 0.76f, 0.34f);
-                Line(0.24f, 0.50f, 0.76f, 0.50f);
-                Line(0.24f, 0.66f, 0.58f, 0.66f);
-                break;
+            _canvas.ClipRect(cardRect, SKClipOperation.Intersect, _options.AntiAlias);
+            var baselineY = textRect.Top + fontSize;
+            for (var i = 0; i < lines.Count && i < maxLines; i++)
+            {
+                _canvas.DrawText(lines[i], textRect.Left, baselineY, font, paint);
+                baselineY += lineHeight;
+            }
+        }
+        finally
+        {
+            _canvas.Restore();
         }
     }
+
+    /// <summary>
+    /// Greedy word wrap to <paramref name="maxWidth"/>, honouring explicit
+    /// line breaks in the source text (§7.9.7 permits CR, LF or CRLF within a
+    /// PDF text string). A single word wider than <paramref name="maxWidth"/>
+    /// is left on its own (clipped) line rather than broken mid-word — this
+    /// is a card of short annotation text, not a paragraph layout engine.
+    /// </summary>
+    private static List<string> WrapStickyNoteText(string text, SKFont font, SKPaint paint, float maxWidth)
+    {
+        var lines = new List<string>();
+        foreach (var rawLine in text.Split('\r', '\n'))
+        {
+            if (rawLine.Length == 0)
+            {
+                lines.Add(string.Empty);
+                continue;
+            }
+
+            var current = string.Empty;
+            foreach (var word in rawLine.Split(' '))
+            {
+                var candidate = current.Length == 0 ? word : $"{current} {word}";
+                if (current.Length > 0 && font.MeasureText(candidate, paint) > maxWidth)
+                {
+                    lines.Add(current);
+                    current = word;
+                }
+                else
+                {
+                    current = candidate;
+                }
+            }
+            lines.Add(current);
+        }
+        return lines;
+    }
+
+    /// <summary>Multiply RGB by <paramref name="factor"/> (&lt; 1 darkens) — the post-it card's border/text derive from its fill this way rather than a fixed colour, so a /C-coloured note still looks coherent.</summary>
+    private static SKColor DarkenColor(SKColor color, float factor) => new(
+        (byte)Math.Clamp(color.Red * factor, 0, 255),
+        (byte)Math.Clamp(color.Green * factor, 0, 255),
+        (byte)Math.Clamp(color.Blue * factor, 0, 255),
+        color.Alpha);
 
     private void RenderShapeDefault(
         Excise.Core.Document.PdfAnnotation annot, SKRect rect, bool isEllipse)

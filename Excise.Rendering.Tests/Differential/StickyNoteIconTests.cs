@@ -10,23 +10,31 @@ namespace Excise.Rendering.Tests.Differential;
 /// <summary>
 /// #1071 — a /Text annotation picks its icon with <c>/Name</c> (§12.5.6.4
 /// Table 172). Every name drew the SAME two-bar glyph, so a Help marker and an
-/// Insert marker were indistinguishable. The icon is the only thing a /Text
-/// annotation draws, so that was the whole of its visible meaning.
+/// Insert marker were indistinguishable.
 ///
-/// <para><b>Why this gate compares excise to excise, which the house rule
-/// normally forbids.</b> The no-self-oracle rule exists for properties where
-/// there is an external truth to check against — does the text survive
-/// redaction, does the page render correctly. Here there is none: §12.5.6.4
-/// names the icons and says NOTHING about how they are drawn, and the three
-/// reference renderers each invent their own (mutool black strokes, pdftocairo
-/// a grey-green fill, Ghostscript grey plus black). Pixel-matching any one of
-/// them would be asserting a house style we did not choose.</para>
+/// <para><b>Superseded by #1794.</b> excise's OWN viewer no longer draws a
+/// small per-/Name icon at all: <c>RenderStickyNoteDefault</c> now draws a
+/// real post-it-sized card with the note's /Contents wrapped and visible on
+/// it, and /Name no longer selects anything (every icon name renders
+/// identically — the card and its text). So
+/// <c>EveryPairOfIcons_IsVisuallyDistinct</c>, this file's namesake gate, no
+/// longer has a claim to make; it is removed rather than left green on a
+/// property that stopped being true on the day #1071 was filed. The
+/// remaining tests below still hold: a note still draws SOMETHING visible
+/// (now the card, not a glyph), an unrecognised/absent name still doesn't
+/// vanish (it never depended on /Name), and a degenerate /Rect still falls
+/// back to a fixed-size box. Issue #1795 tracks restoring per-icon meaning
+/// via a real <c>/AP</c> other readers can show.</para>
 ///
-/// <para>So the property asserted is the one that actually carries the
-/// meaning: <b>the icons differ from each other</b>, and an unknown name falls
-/// back to the spec default. That is checkable without an oracle because it is
-/// a claim about excise's own output being internally distinguishable — not a
-/// claim about correctness that excise is refereeing for itself.</para>
+/// <para><b>Why the remaining gates compare excise to excise, which the
+/// house rule normally forbids.</b> The no-self-oracle rule exists for
+/// properties where there is an external truth to check against — does the
+/// text survive redaction, does the page render correctly. Here there is
+/// none for excise's OWN chosen post-it visual: no spec and no reference
+/// renderer has an opinion on it. What IS checkable without an oracle is
+/// that excise's own output is internally consistent — a note draws
+/// something, an unknown name doesn't erase it, a degenerate rect still gets
+/// a box.</para>
 /// </summary>
 public class StickyNoteIconTests : IDisposable
 {
@@ -50,70 +58,84 @@ public class StickyNoteIconTests : IDisposable
 
     [Theory]
     [MemberData(nameof(AllNames))]
-    public void EveryIconName_DrawsAMarker(string name)
+    public void EveryIconName_DrawsACard(string name)
     {
         using var bmp = RenderWithExcise(WriteTemp(StickyNotePdf(name)));
 
         InkPixels(bmp).Should().BeGreaterThan(200,
-            $"/Name /{name} must draw a visible marker — a /Text annotation draws " +
-            "nothing else, so an invisible one is an annotation the reviewer never sees " +
-            "while its /Contents still ships to the recipient");
+            $"/Name /{name} must still draw the post-it card (#1794) — a /Text annotation " +
+            "draws nothing else, so an invisible one is an annotation the reviewer never " +
+            "sees while its /Contents still ships to the recipient");
     }
 
     /// <summary>
-    /// The defect itself, and the reason this file is not one big smoke test:
-    /// before #1071 all 21 of these pairs were IDENTICAL.
-    /// </summary>
-    [Fact]
-    public void EveryPairOfIcons_IsVisuallyDistinct()
-    {
-        var glyphs = new Dictionary<string, bool[,]>();
-        foreach (var name in IconNames)
-        {
-            using var bmp = RenderWithExcise(WriteTemp(StickyNotePdf(name)));
-            glyphs[name] = InkMask(bmp);
-        }
-
-        var tooSimilar = new List<string>();
-        for (int i = 0; i < IconNames.Length; i++)
-            for (int j = i + 1; j < IconNames.Length; j++)
-            {
-                int diff = MaskDifference(glyphs[IconNames[i]], glyphs[IconNames[j]]);
-                if (diff < 150) tooSimilar.Add($"{IconNames[i]} vs {IconNames[j]} ({diff}px)");
-            }
-
-        tooSimilar.Should().BeEmpty(
-            "each /Name must be recognisable AS that name; two icons a reader cannot tell " +
-            "apart carry no more information than the single glyph they replaced");
-    }
-
-    /// <summary>
-    /// §12.5.6.4: /Note is the default. Both an absent /Name and a name from a
-    /// later extension must land there rather than drawing nothing — an
-    /// annotation that vanishes because its icon name was unfamiliar is the
-    /// worst of the available failures.
+    /// §12.5.6.4: /Note is the default icon name. #1794 stopped /Name
+    /// selecting anything drawn (every name renders the same post-it card),
+    /// which trivially satisfies "an unfamiliar name must not vanish the
+    /// annotation" — but the property is still worth pinning explicitly so a
+    /// future re-introduction of per-name art doesn't quietly regress it.
     /// </summary>
     [Theory]
     [InlineData(null)]
     [InlineData("SomeVendorExtensionIcon")]
-    public void UnknownOrAbsentName_FallsBackToTheNoteIcon(string? name)
+    public void UnknownOrAbsentName_StillDrawsTheCard(string? name)
     {
         using var actual = RenderWithExcise(WriteTemp(StickyNotePdf(name)));
         using var note = RenderWithExcise(WriteTemp(StickyNotePdf("Note")));
 
         MaskDifference(InkMask(actual), InkMask(note)).Should().BeLessThan(20,
-            "an unrecognised or absent /Name is /Note per Table 172 — silently drawing " +
-            "nothing would hide the annotation entirely");
+            "/Name no longer selects anything drawn (#1794) — an unrecognised or absent " +
+            "value must render identically to any other, never blank");
     }
 
     /// <summary>
-    /// The one thing here an external renderer CAN settle: that a marker belongs
-    /// at a degenerate /Rect at all. Producers write /Rect [50 110 50 110] and
-    /// mean it (§12.5.6.4 — the icon is a fixed size regardless of the rect), so
-    /// the renderer normalises to ~17pt before its zero-area guard.
+    /// #1794: two notes with DIFFERENT /Contents, same /Name (irrelevant now)
+    /// and same /Rect must render DIFFERENTLY — the text on the card is what
+    /// now carries the annotation's visible meaning, where /Name used to.
+    /// This is the direct successor to #1071's "the icons differ" property,
+    /// now asked of /Contents instead of /Name.
     /// </summary>
     [Fact]
-    public void DegenerateRect_StillDrawsAMarker_AsMutoolDoes()
+    public void DifferentContents_RenderDifferently()
+    {
+        using var a = RenderWithExcise(WriteTemp(StickyNotePdf("Note", contents: "Alpha review")));
+        using var b = RenderWithExcise(WriteTemp(StickyNotePdf("Note", contents: "Zulu escalation")));
+
+        MaskDifference(InkMask(a), InkMask(b)).Should().BeGreaterThan(20,
+            "different /Contents text on an otherwise-identical card must be visually " +
+            "distinguishable — a card that reads the same regardless of its text would " +
+            "carry no more information than the old undifferentiated icon did (#1071)");
+    }
+
+    /// <summary>
+    /// #1794: a REAL card-sized /Rect (bigger than the old fixed icon) draws
+    /// at that actual size rather than being clamped down to the ~17pt icon
+    /// box — the whole point of the post-it rework. A rect genuinely smaller
+    /// than the icon (the next test) still clamps UP to it.
+    /// </summary>
+    [Fact]
+    public void RealCardSizedRect_RendersAtItsActualSize_NotClampedToTheOldIconSize()
+    {
+        using var small = RenderWithExcise(WriteTemp(StickyNotePdf("Note", rect: "[20 20 44 44]")));
+        using var big = RenderWithExcise(
+            WriteTemp(StickyNotePdf("Note", rect: "[20 20 220 170]", pageSize: 260)));
+
+        InkPixels(big).Should().BeGreaterThan(InkPixels(small) * 4,
+            "a ~200x150pt card must ink far more of the page than a ~24x24pt one — if the " +
+            "renderer still clamped every /Text to the old icon size, the two would be the " +
+            "same size and roughly the same ink count");
+    }
+
+    /// <summary>
+    /// The one thing here an external renderer CAN settle: that a card
+    /// belongs at a degenerate /Rect at all. Producers write /Rect
+    /// [50 110 50 110] and mean it (§12.5.6.4 — the icon is a fixed size
+    /// regardless of the rect for THEIR reading of it), so excise's own
+    /// renderer normalises up to the same fixed floor before its zero-area
+    /// guard, same as before #1794.
+    /// </summary>
+    [Fact]
+    public void DegenerateRect_StillDrawsACard_AsMutoolDoes()
     {
         var path = WriteTemp(StickyNotePdf("Note", rect: "[40 40 40 40]"));
 
@@ -132,15 +154,17 @@ public class StickyNoteIconTests : IDisposable
 
     // ── fixtures ─────────────────────────────────────────────────────────────
 
-    private static byte[] StickyNotePdf(string? iconName, string rect = "[20 20 44 44]")
+    private static byte[] StickyNotePdf(
+        string? iconName, string rect = "[20 20 44 44]", string contents = "note", int? pageSize = null)
     {
+        var size = pageSize ?? PageSize;
         var annot = $"<< /Type /Annot /Subtype /Text /F 4 /Rect {rect} " +
-                    "/Contents (note) /C [1 0.85 0.2]" +
+                    $"/Contents ({contents}) /C [1 0.85 0.2]" +
                     (iconName == null ? "" : $" /Name /{iconName}") + " >>";
         return Assemble(new[]
         {
             "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
-            $"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 {PageSize} {PageSize}] >>\nendobj\n",
+            $"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 {size} {size}] >>\nendobj\n",
             "3 0 obj\n<< /Type /Page /Parent 2 0 R /Annots [4 0 R] >>\nendobj\n",
             $"4 0 obj\n{annot}\nendobj\n",
         });
