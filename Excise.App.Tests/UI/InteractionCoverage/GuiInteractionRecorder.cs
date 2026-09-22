@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -115,7 +116,7 @@ public static class GuiInteractionRecorder
         {
             lock (SurfaceLock)
             {
-                if (!SeenSurfaces.Add(root)) return;
+                if (!SeenSurfaces.TryAdd(root, null)) return;
             }
 
             // Dedupe across window INSTANCES too, not just within one. The suite
@@ -143,7 +144,17 @@ public static class GuiInteractionRecorder
     }
 
     private static readonly object SurfaceLock = new();
-    private static readonly HashSet<object> SeenSurfaces = new(ReferenceEqualityComparer.Instance);
+
+    // ⚠️ WEAK on purpose (#1772). This set answers ONE question — "have I already
+    // enumerated this window instance?" — and a strong HashSet answering it kept
+    // every window that ever received a pointer or key event alive for the whole
+    // process, together with its visual tree, viewer controls, tile caches and
+    // composites. Nothing ever removed an entry, so the App testhost carried the
+    // whole suite's GUI at once. A ConditionalWeakTable answers the same question
+    // by reference identity and lets the window go; the ids it produced are
+    // deduped separately and permanently through Inventoried, so a window that is
+    // collected and re-created still appends nothing twice.
+    private static readonly ConditionalWeakTable<TopLevel, object?> SeenSurfaces = new();
 
     private static void Record(RoutedEventArgs args, string modality)
     {
