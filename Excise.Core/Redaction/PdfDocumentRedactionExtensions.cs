@@ -182,6 +182,7 @@ public static class PdfDocumentRedactionExtensions
 
         var pageResults = new List<PageRedactionResult>();
         var hyphenCandidates = new List<HyphenatedTermCandidate>();
+        var wordWrapCandidates = new List<WordWrapTermCandidate>();
         var carrierResults = new List<CarrierResult>();
         var imageCounts = default(ImageRedactionCounts);   // #1187/#1195 surfacing
 
@@ -401,6 +402,11 @@ public static class PdfDocumentRedactionExtensions
             // joined (joining is #942; see HyphenatedTermCandidate).
             hyphenCandidates.AddRange(
                 FindHyphenWrappedCandidates(page.Letters, text, caseSensitive, pageNum));
+            // #1750: the same structural blind spot for a multi-word term
+            // split by an ORDINARY line wrap (no hyphen) — generalizes the
+            // #1372 detector rather than silently reporting "0 occurrences".
+            wordWrapCandidates.AddRange(
+                FindWordWrapCandidates(page.Letters, text, caseSensitive, pageNum));
 
             var remaining = CountOccurrences(page, text, caseSensitive, includeHiddenLayers, wholeWord);
             pageResults.Add(new PageRedactionResult(
@@ -576,6 +582,7 @@ public static class PdfDocumentRedactionExtensions
             ImageRegionsRedacted = imageCounts.RegionEdited,
             ImagesDroppedWhole = imageCounts.RemovedWhole,
             HyphenatedCandidates = hyphenCandidates,
+            WordWrapCandidates = wordWrapCandidates,
             Profile = profileOptions.Profile,
             Removals = profileRemovals,
             AccessibilityAndInteractivityRemoved =
@@ -838,6 +845,87 @@ public static class PdfDocumentRedactionExtensions
                 pageNumber,
                 beforeText.Substring(idx),
                 afterText.Substring(0, Math.Min(afterText.Length, idx + needle.Length - beforeText.Length))));
+        }
+
+        return found;
+    }
+
+    /// <summary>
+    /// Find occurrences of <paramref name="searchText"/> that an ORDINARY
+    /// (non-hyphenated) line wrap splits across two lines — a multi-word term
+    /// where the break falls between words, e.g. "…signed by Betty" /
+    /// "Mary on behalf of…" for the term "Betty Mary" (#1750).
+    /// </summary>
+    /// <remarks>
+    /// <para>Generalizes <see cref="FindHyphenWrappedCandidates"/> to the case a
+    /// hyphen does not mark: <see cref="FindTextMatches"/> never inserts a space
+    /// at a line wrap (<see cref="IsInferredWordGap"/> is same-line only, so a
+    /// hyphen-continued word is not corrupted by an invented space), so the
+    /// concatenated text at an ordinary wrap reads "…BettyMary…" with nothing
+    /// between the words and a multi-word needle with a space in it can never
+    /// match. Before this, that produced "Redacted 0 occurrence(s)" and exit 0
+    /// — a silent false success, not a miss anyone could see.</para>
+    ///
+    /// <para><b>Detection only, same reason as the hyphen case.</b> Actually
+    /// removing a wrapped match needs a removal box PER LINE, which is a change
+    /// to how a match's geometry is built (#942's lesson: one box spanning both
+    /// lines destroys everything between them). Until that exists, this reports
+    /// the occurrence rather than silently calling the redaction clean.</para>
+    ///
+    /// <para>The join here inserts a SPACE at the break (<c>beforeText + " " +
+    /// afterText</c>) — the opposite of the hyphen case, which joins with
+    /// nothing and drops the hyphen. That is the actual difference between the
+    /// two wrap kinds: a hyphen marks "this is one word, continued"; an ordinary
+    /// wrap is a word boundary the line break stands in for.</para>
+    ///
+    /// <para>Break points already reported by <see cref="FindHyphenWrappedCandidates"/>
+    /// are skipped here (<see cref="IsHyphen"/> on the last same-line letter) so
+    /// one break point does not produce two different, disagreeing notes.</para>
+    /// </remarks>
+    internal static List<WordWrapTermCandidate> FindWordWrapCandidates(
+        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, int pageNumber)
+    {
+        var found = new List<WordWrapTermCandidate>();
+        var needle = NormalizeText(searchText).Trim();
+        // A single-word needle cannot straddle a plain (non-hyphenated) wrap:
+        // with no hyphen consumed, whitespace normalization means the needle
+        // itself would need an internal space to span two words.
+        if (!needle.Contains(' ') || letters.Count == 0) return found;
+
+        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        var (view, _, _) = CollapseOverprintedGlyphs(letters);
+
+        for (var h = 0; h < view.Count; h++)
+        {
+            if (string.IsNullOrWhiteSpace(view[h].Value)) continue;
+            if (IsHyphen(view[h].Value)) continue;   // the hyphen detector owns this break
+
+            // The continuation is the next non-blank letter; it must be on a
+            // DIFFERENT line and this must be the LAST non-blank letter on its
+            // own line (otherwise h is mid-line, not a wrap point).
+            var next = h + 1;
+            while (next < view.Count && string.IsNullOrWhiteSpace(view[next].Value)) next++;
+            if (next >= view.Count || !OnDifferentLines(view[h], view[next])) continue;
+
+            var before = SameLineRun(view, h, needle.Length, forward: false, out var beforeText);
+            var after = SameLineRun(view, next, needle.Length, forward: true, out var afterText);
+            if (before == 0 || after == 0) continue;
+
+            // Join WITH a space — the wrap stands in for the word boundary a
+            // producer would otherwise have drawn as a literal space glyph.
+            var joined = NormalizeText(beforeText + " " + afterText);
+            var idx = joined.IndexOf(needle, comparison);
+            if (idx < 0) continue;
+            // The break sits right after beforeText in the joined string (one
+            // inserted space); the needle must actually straddle it.
+            if (idx + needle.Length <= beforeText.Length) continue;   // ends before the break
+            if (idx > beforeText.Length) continue;                   // starts after the break
+
+            found.Add(new WordWrapTermCandidate(
+                pageNumber,
+                beforeText.Substring(Math.Min(idx, beforeText.Length)),
+                afterText.Substring(0, Math.Min(afterText.Length,
+                    Math.Max(0, idx + needle.Length - beforeText.Length - 1)))));
         }
 
         return found;

@@ -154,6 +154,17 @@ internal static class RedactCommandHandler
                 "It is still readable in the output by tools that rejoin hyphenated words.");
         }
 
+        // #1750: the same structural blind spot for a multi-word term split by
+        // an ORDINARY line wrap (no hyphen) — generalizes #1372's reporting so
+        // this also does not print a bare "0 occurrence(s)" success.
+        foreach (var candidate in redaction.WordWrapCandidates)
+        {
+            carrierNotes.Add(
+                $"NOT REMOVED (line-wrapped): page {candidate.PageNumber} reads {candidate} — " +
+                $"'{request.Text}' wraps across a line break, so excise could not match it. " +
+                "It is still fully readable in the output.");
+        }
+
         foreach (var carrier in redaction.Carriers)
         {
             if (!carrier.Scrubbed)
@@ -200,7 +211,12 @@ internal static class RedactCommandHandler
             redaction.WholeWord,
             redaction.Attachments,
             redaction.Removals,
-            redaction.AccessibilityAndInteractivityRemoved);
+            redaction.AccessibilityAndInteractivityRemoved,
+            // #1750: a term excise located and structurally could not remove —
+            // still fully readable in the output — must not be indistinguishable
+            // from a clean run at the exit-code level, or a script sees success.
+            HasUnremovedWrappedOccurrence:
+                redaction.HyphenatedCandidates.Count > 0 || redaction.WordWrapCandidates.Count > 0);
     }
 
     private static void Validate(RedactCommandRequest request)
@@ -276,7 +292,13 @@ internal sealed record RedactCommandResult(
     // accessible. Printed, because a removal made without a term match is
     // destruction the user is entitled to know about.
     IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals = null,
-    bool AccessibilityRemoved = false)
+    bool AccessibilityRemoved = false,
+    // #1750: a hyphen- or line-wrapped occurrence excise located but could not
+    // structurally remove — still fully readable in the output. Distinct from
+    // "excise removed it and a re-read still finds it" (that is Count > 0
+    // already going through CarrierNotes' WARNING line); this is "excise never
+    // even formed the match".
+    bool HasUnremovedWrappedOccurrence = false)
 {
     /// <summary>Every attachment removed or kept (#1572); never null.</summary>
     public IReadOnlyList<AttachmentRedactionResult> Attachments =>

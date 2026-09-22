@@ -96,6 +96,37 @@ public sealed record HyphenatedTermCandidate(
 }
 
 /// <summary>
+/// An occurrence of a MULTI-WORD term that an ordinary (non-hyphenated) line
+/// wrap splits across two lines — the page really reads <c>…signed by Betty</c>
+/// / <c>Mary on behalf of…</c> for the term "Betty Mary" — so excise never
+/// forms a match and never removes it (#1750).
+/// </summary>
+/// <remarks>
+/// <para>The generalization of <see cref="HyphenatedTermCandidate"/> to a wrap
+/// with no hyphen: <see cref="PdfDocumentRedactionExtensions.FindTextMatches"/>
+/// never inserts a space at a line wrap (a hyphen-continued word must not gain
+/// an invented space), so a multi-word needle with a space in it cannot match
+/// text that wraps mid-phrase. Before this was reported, redacting such a term
+/// printed "Redacted 0 occurrence(s)" and exited 0 — a silent false success:
+/// the occurrence was still fully readable and nothing said so.</para>
+///
+/// <para><b>Reported, never silently removed</b> — same reasoning as the
+/// hyphen case: a match spanning two lines needs a removal box PER LINE, a
+/// change to match geometry that is feature-sized (#942 is the lesson for why
+/// one box covering both lines is not an acceptable substitute). Until that
+/// exists, the reviewer is TOLD the occurrence is there rather than handed a
+/// report that calls the redaction clean.</para>
+/// </remarks>
+public sealed record WordWrapTermCandidate(
+    int PageNumber,
+    string BeforeBreak,
+    string AfterBreak)
+{
+    /// <summary>How the page reads, e.g. <c>"...Betty" / "Mary..."</c>.</summary>
+    public override string ToString() => $"\"{BeforeBreak}\" / \"{AfterBreak}\"";
+}
+
+/// <summary>
 /// The result of <c>RedactText</c> — #1089.
 ///
 /// <para><b>Why this replaced an <c>int</c>.</b> The old return counted matches
@@ -138,6 +169,16 @@ public sealed class RedactionReport
     /// </summary>
     public IReadOnlyList<HyphenatedTermCandidate> HyphenatedCandidates { get; init; }
         = Array.Empty<HyphenatedTermCandidate>();
+
+    /// <summary>
+    /// Occurrences of a multi-word term split across an ORDINARY line wrap
+    /// (no hyphen), which excise did NOT match and did NOT remove (#1750).
+    /// Surfaced for the same reason as <see cref="HyphenatedCandidates"/>: a
+    /// reviewer must not be told the document is clean when a readable
+    /// occurrence remains. See <see cref="WordWrapTermCandidate"/>.
+    /// </summary>
+    public IReadOnlyList<WordWrapTermCandidate> WordWrapCandidates { get; init; }
+        = Array.Empty<WordWrapTermCandidate>();
 
     /// <summary>
     /// Whether this run matched WHOLE WORDS only (#1052). Recorded because the
@@ -230,6 +271,7 @@ public sealed class RedactionReport
         Survived == 0 &&
         Carriers.All(c => c.RefusedReason == null) &&
         HyphenatedCandidates.Count == 0 &&
+        WordWrapCandidates.Count == 0 &&
         Attachments.All(a => a.IsClean);
 
     /// <summary>A one-line summary safe to print. States the gap when there is one.</summary>
@@ -244,6 +286,8 @@ public sealed class RedactionReport
             parts.Add($"{c.Carrier} NOT scrubbed ({c.RefusedReason})");
         if (HyphenatedCandidates.Count > 0)
             parts.Add($"{HyphenatedCandidates.Count} hyphen-wrapped occurrence(s) NOT removed");
+        if (WordWrapCandidates.Count > 0)
+            parts.Add($"{WordWrapCandidates.Count} line-wrapped occurrence(s) NOT removed");
         var removedFiles = Attachments.Count(a => a.Disposition == Excise.Core.Document.AttachmentDisposition.Removed);
         if (removedFiles > 0)
             parts.Add($"{removedFiles} attachment(s) removed");

@@ -313,6 +313,99 @@ public class PdfDocumentRedactionExtensionsTests
         report.ToString().Should().Contain("hyphen-wrapped occurrence(s) NOT removed");
     }
 
+    /// <summary>Two lines, plain word wrap (no hyphen): "…signed by Betty" /
+    /// "Mary on behalf of…", 14pt apart.</summary>
+    private static Letter[] WordWrappedBettyMary()
+    {
+        Letter L(string v, double x, double y, double w) =>
+            new(v, new PdfRectangle(x, y, x + w, y + 12), 12, "F1", x, y, w, v.Length > 0 ? v[0] : ' ');
+
+        return
+        [
+            // line 1: "...by Betty"
+            L("b", 60, 700, 6), L("y", 66, 700, 6), L(" ", 72, 700, 4),
+            L("B", 76, 700, 8), L("e", 84, 700, 7), L("t", 91, 700, 4),
+            L("t", 95, 700, 4), L("y", 99, 700, 6),
+            // next line, 14pt lower — more than 0.5 * fontSize, so a new line
+            L("M", 100, 686, 9), L("a", 109, 686, 7), L("r", 116, 686, 5),
+            L("y", 121, 686, 6), L(" ", 127, 686, 4),
+            L("o", 131, 686, 7), L("n", 138, 686, 7),
+        ];
+    }
+
+    [Fact]
+    public void FindWordWrapCandidates_ReportsAMultiWordTermSplitAcrossALineBreak()
+    {
+        // #1750: "Betty Mary" wraps at the end of a line with no hyphen — the
+        // page really reads "…Betty" / "Mary…". FindTextMatches never inserts
+        // a space at a line wrap (a hyphen-continued word must not gain an
+        // invented one), so the concatenated text reads "...BettyMary..." and
+        // a needle with a space in it can never match.
+        var letters = WordWrappedBettyMary();
+
+        PdfDocumentRedactionExtensions.FindTextMatches(letters, "Betty Mary", caseSensitive: false)
+            .Should().BeEmpty("sanity: this is precisely why the occurrence survives unmatched");
+
+        var candidates = PdfDocumentRedactionExtensions
+            .FindWordWrapCandidates(letters, "Betty Mary", caseSensitive: false, pageNumber: 3);
+
+        candidates.Should().ContainSingle();
+        candidates[0].PageNumber.Should().Be(3);
+        candidates[0].BeforeBreak.Should().Be("Betty");
+        candidates[0].AfterBreak.Should().Be("Mary");
+        candidates[0].ToString().Should().Be("\"Betty\" / \"Mary\"",
+            "no hyphen was invented — the page reads two plain, whole words");
+    }
+
+    [Fact]
+    public void FindWordWrapCandidates_IgnoresATermThatDoesNotStraddleTheBreak()
+    {
+        // Anti-vacuity, same shape as the hyphen sibling test: "Mary" lies
+        // wholly on the second line, so FindTextMatches already handles it.
+        var letters = WordWrappedBettyMary();
+
+        PdfDocumentRedactionExtensions
+            .FindWordWrapCandidates(letters, "Mary", caseSensitive: false, pageNumber: 1)
+            .Should().BeEmpty("a single-word needle cannot straddle a wrap with no hyphen to " +
+                               "consume, and a term contained in one line is matched normally");
+    }
+
+    [Fact]
+    public void FindWordWrapCandidates_DoesNotFireOnAHyphenatedWrap()
+    {
+        // The hyphen detector owns a hyphen-marked break; the word-wrap
+        // detector must not ALSO report it, or one break point produces two
+        // disagreeing notes.
+        var letters = HyphenWrappedAnderson();
+
+        PdfDocumentRedactionExtensions
+            .FindWordWrapCandidates(letters, "Anderson", caseSensitive: false, pageNumber: 1)
+            .Should().BeEmpty("a hyphen-marked wrap is FindHyphenWrappedCandidates' case, not this one");
+    }
+
+    [Fact]
+    public void AWordWrappedOccurrence_MakesTheReportNotCleanSuccess()
+    {
+        // The behaviour that matters to a user, mirroring
+        // AHyphenWrappedOccurrence_MakesTheReportNotCleanSuccess: before #1750
+        // a document with a plain line-wrapped multi-word term reported plain
+        // success ("Redacted 0 occurrence(s)", exit 0) while the name sat
+        // fully readable in the output.
+        var report = new RedactionReport
+        {
+            Term = "Betty Mary",
+            Pages = [new PageRedactionResult(3, 0, 0, RedactionOutcome.NothingToRemove)],
+            Carriers = [],
+            WordWrapCandidates = [new WordWrapTermCandidate(3, "Betty", "Mary")],
+        };
+
+        report.Survived.Should().Be(0, "nothing excise matched was left behind");
+        report.IsCleanSuccess.Should().BeFalse(
+            "a readable occurrence remains — the gap FindTextMatches never even saw — so " +
+            "this must not be reported as a clean success (#1750)");
+        report.ToString().Should().Contain("line-wrapped occurrence(s) NOT removed");
+    }
+
     [Fact]
     public void FindTextMatches_DoesNotIncludeLeadingWhitespaceFromAnotherPageBand()
     {

@@ -293,7 +293,11 @@ internal static class RedactCommand
                 foreach (var note in result.CarrierNotes)
                     Console.WriteLine($"  note: {note}");
                 Console.WriteLine($"Output: {result.OutputPath}");
-                return 0;
+                // #1750: a term excise located but could not structurally
+                // remove (a hyphen- or line-wrapped occurrence) is still fully
+                // readable in the saved output. The notes above say so, but a
+                // caller that only checks the exit code must not see success.
+                return result.HasUnremovedWrappedOccurrence ? 3 : 0;
             }
             catch (Exception ex)
             {
