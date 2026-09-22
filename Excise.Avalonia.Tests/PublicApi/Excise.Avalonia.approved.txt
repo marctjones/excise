@@ -68,6 +68,7 @@ namespace Excise.Avalonia.Controls
         Typewriter = 5,
         PathAnnotation = 6,
         StickyNote = 7,
+        ShapeAnnotation = 8,
     }
     public class LinkClickedEventArgs : System.EventArgs
     {
@@ -177,6 +178,7 @@ namespace Excise.Avalonia.Controls
         public event System.EventHandler<Excise.Avalonia.Controls.LinkHoveredEventArgs>? LinkHovered;
         public event System.EventHandler<Excise.Avalonia.Controls.PageChangedEventArgs>? PageChanged;
         public event System.EventHandler<Excise.Avalonia.Controls.RedactionDrawnEventArgs>? RedactionDrawn;
+        public event System.EventHandler<Excise.Avalonia.Controls.ShapeAnnotationRectDrawnEventArgs>? ShapeAnnotationRectDrawn;
         public event System.EventHandler<Excise.Avalonia.Controls.StickyNoteClickedEventArgs>? StickyNoteClicked;
         public event System.EventHandler<Excise.Avalonia.Controls.StickyNotePlacementRequestedEventArgs>? StickyNotePlacementRequested;
         public event System.EventHandler<Excise.Avalonia.Controls.TextSelectedEventArgs>? TextSelected;
@@ -255,6 +257,12 @@ namespace Excise.Avalonia.Controls
         public Avalonia.Rect Area { get; }
         public Excise.Core.Document.PdfPageRect PageArea { get; }
         public int RenderDpi { get; }
+    }
+    public class ShapeAnnotationRectDrawnEventArgs : System.EventArgs
+    {
+        public ShapeAnnotationRectDrawnEventArgs(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
+        public int PageNumber { get; }
+        public Excise.Core.Document.PdfRectangle Rect { get; }
     }
     public class StickyNoteClickedEventArgs : System.EventArgs
     {

@@ -211,6 +211,7 @@ namespace Excise.Core.Automation
         public const string ToggleAnnotations = "view.toggleAnnotations";
         public const string ToggleArrowMode = "annotation.toggleArrowMode";
         public const string ToggleAttachments = "view.toggleAttachments";
+        public const string ToggleCircleMode = "annotation.toggleCircleMode";
         public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
         public const string ToggleCommentAnnotations = "view.toggleCommentAnnotations";
         public const string ToggleContinuousView = "view.toggleContinuous";
@@ -218,11 +219,15 @@ namespace Excise.Core.Automation
         public const string ToggleFieldAndLinkAnnotations = "view.toggleFieldAndLinkAnnotations";
         public const string ToggleFormAuthoring = "form.toggleAuthoring";
         public const string ToggleFormFieldHighlighting = "view.toggleFormFieldHighlighting";
+        public const string ToggleFreeTextMode = "annotation.toggleFreeTextMode";
+        public const string ToggleImageStampMode = "annotation.toggleImageStampMode";
         public const string ToggleLineMode = "annotation.toggleLineMode";
         public const string ToggleOutline = "view.toggleOutline";
         public const string TogglePolyLineMode = "annotation.togglePolyLineMode";
         public const string TogglePolygonMode = "annotation.togglePolygonMode";
         public const string ToggleRedactionMode = "redaction.toggleMode";
+        public const string ToggleSquareMode = "annotation.toggleSquareMode";
+        public const string ToggleStampMode = "annotation.toggleStampMode";
         public const string ToggleStickyNoteTool = "annotation.toggleStickyNoteTool";
         public const string ToggleThumbnails = "view.toggleThumbnails";
         public const string TypewriterDiscardPendingEdits = "typewriter.discardPendingEdits";
