@@ -6,7 +6,7 @@
 /// - Performance stability
 /// - Error recovery
 /// </summary>
-/// <returns>0 on success, 1 on failure</returns>
+/// <returns>0 on success, 1 on failure, 2 when the corpus is not present (#1768: distinguishable from success)</returns>
 
 using System;
 using System.IO;
@@ -31,14 +31,15 @@ if (repoRoot == null)
 
 var corpusRoot = Path.Combine(repoRoot, "test-pdfs", "verapdf-corpus");
 var testCount = 50; // Reduced from 100 - 50 is sufficient for stress testing
-var outputDir = "/tmp/excise-stress-test";
+// #1768: unique per run, not a fixed path every invocation clobbers.
+var outputDir = Path.Combine(Path.GetTempPath(), $"excise-stress-test-{Guid.NewGuid():N}");
 
 Directory.CreateDirectory(outputDir);
 
 if (!Directory.Exists(corpusRoot))
 {
     Console.WriteLine($"❌ SKIP: veraPDF corpus not found");
-    return 0;
+    return 2; // #1768: distinguishable from success (0) so the xunit caller can Assert.SkipWhen instead of silently passing
 }
 
 try
@@ -50,7 +51,7 @@ try
     if (allPdfs.Count == 0)
     {
         Console.WriteLine($"❌ SKIP: No PDFs found");
-        return 0;
+        return 2; // #1768: distinguishable from success
     }
 
     Console.WriteLine($"✅ Found {allPdfs.Count} PDFs");
