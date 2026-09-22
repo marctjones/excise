@@ -432,11 +432,20 @@ public class PdfViewerHeadlessRenderTests
                 suiteSw.ElapsedMilliseconds,
                 results,
                 current: null);
-            CollectGuiDisplaySweepGarbage();
+            // #1772: every 10th page and the last, on the same cadence as the
+            // progress line below, instead of after every page. A full blocking
+            // gen2 costs ~48 ms in a 200-600 MB chunk and ~270 ms in a
+            // multi-GiB process, and 147 of them buy nothing that 15 do not:
+            // the large buffers are already released by the `using`s in the
+            // loop body, and the collection only decides WHEN their native
+            // wrappers are finalised.
             if ((i + 1) % 10 == 0 || i + 1 == cases.Count)
+            {
+                CollectGuiDisplaySweepGarbage();
                 _output.WriteLine(
                     $"  {i + 1}/{cases.Count} checked, " +
                     $"{failures.Count} failure(s), elapsed {suiteSw.Elapsed:mm\\:ss}");
+            }
         }
 
         suiteSw.Stop();
