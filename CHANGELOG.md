@@ -29,8 +29,14 @@ semantic versioning.
   case #1372 already reported. Generalizes that detector
   (`FindHyphenWrappedCandidates` → `FindWordWrapCandidates`) to the far more
   common plain-word-wrap shape; the CLI now prints `NOT REMOVED
-  (line-wrapped)` and exits 3 when a wrapped occurrence survives (scoped to
-  this specific case only — general exit-code semantics are unchanged).
+  (line-wrapped)` and exits **3** — not 0 — when a hyphen- OR line-wrapped
+  occurrence survives (the pre-existing hyphen case exited 0 too, before this;
+  both share the exit-code fix now). Scoped to this specific case only —
+  general exit-code semantics are unchanged. Known limit, not yet closed:
+  the detector still stops each side at the nearest blank, inherited from the
+  hyphen case, so a THREE-OR-MORE-WORD name wrapping mid-phrase (e.g. "Mary
+  Jane Smith" breaking after "Jane") is not yet caught — see
+  `FindWordWrapCandidates`'s remarks.
 - **Printing on Linux, through CUPS** (#1710). `DocumentPrinterFactory`
   returned `UnsupportedDocumentPrinter` on Linux, so File → Print… could not
   print at all there; the README and `CLAUDE.md` both said Linux printing was

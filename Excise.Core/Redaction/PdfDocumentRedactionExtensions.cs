@@ -897,6 +897,22 @@ public static class PdfDocumentRedactionExtensions
     /// <para>Break points already reported by <see cref="FindHyphenWrappedCandidates"/>
     /// are skipped here (<see cref="IsHyphen"/> on the last same-line letter) so
     /// one break point does not produce two different, disagreeing notes.</para>
+    ///
+    /// <para>⚠️ <b>Known limit: catches a TWO-word straddle, not a longer
+    /// phrase wrapping mid-name.</b> <see cref="SameLineRun"/> stops at the
+    /// first blank on each side (inherited from the hyphen detector, where
+    /// that is correct — a hyphenated WORD has no internal blank to stop at).
+    /// For a phrase, that means <c>beforeText</c> is only the LAST word of the
+    /// first line and <c>afterText</c> only the FIRST word of the second. Two
+    /// words straddling the break ("Betty Mary") are found. A name that wraps
+    /// mid-phrase with a word fully on the near side of the break on EITHER
+    /// line — "Mary Jane Smith" breaking after "Jane", so <c>beforeText</c> is
+    /// "Jane" and <c>afterText</c> is "Smith" — is not: the 3-word needle
+    /// cannot be found in "Jane Smith", and this silently reports nothing for
+    /// that occurrence. Extending <see cref="SameLineRun"/> to walk multiple
+    /// words per side needs care with the raw-index/joined-index bookkeeping
+    /// this method already does (the <c>beforeText.Length</c> straddle math),
+    /// so it is left as a follow-up rather than done here.</para>
     /// </remarks>
     internal static List<WordWrapTermCandidate> FindWordWrapCandidates(
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, int pageNumber)
