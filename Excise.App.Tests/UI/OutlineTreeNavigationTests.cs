@@ -11,8 +11,10 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AwesomeAssertions;
 using Excise.App.Models;
+using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
+using Excise.Core.Document;
 using Xunit;
 namespace Excise.App.Tests.UI;
 
@@ -22,44 +24,62 @@ namespace Excise.App.Tests.UI;
 /// in the toc" — these tests drive the same code path the GUI uses
 /// (MainWindow + OutlineTree) and assert that selecting a node
 /// navigates the viewer.
+///
+/// #1768: every test here used to return at the top on a book path that was
+/// the empty string, so outline click → navigate had NO live test while the
+/// class reported four passes. They now run on a synthetic 8-page document
+/// with three bookmarks (pages 1, 3, 6), built in the test and owned by it.
 /// </summary>
 [Collection("AvaloniaTests")]
-public class OutlineTreeNavigationTests
+public class OutlineTreeNavigationTests : IDisposable
 {
     private readonly ITestOutputHelper _out;
+    private readonly ShownWindowTracker _windows = new();
+    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), "excise-outline-" + Guid.NewGuid().ToString("N"));
+
     public OutlineTreeNavigationTests(ITestOutputHelper o) { _out = o; }
 
-    // Legacy real-world coverage is disabled pending a redistributable fixture.
-    private const string PragmaticBook = "";
+    public void Dispose()
+    {
+        _windows.Dispose();
+        try { Directory.Delete(_tempDir, recursive: true); } catch { /* best effort */ }
+    }
+
+    /// <summary>An 8-page PDF whose outline points at pages 1, 3 and 6.</summary>
+    private string CreateOutlinedPdf()
+    {
+        Directory.CreateDirectory(_tempDir);
+        var plain = Path.Combine(_tempDir, "plain.pdf");
+        var outlined = Path.Combine(_tempDir, "outlined.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(plain, pageCount: 8);
+        using (var document = PdfDocument.Open(plain))
+        {
+            document.AddOutlineItem("Chapter One", 1);
+            document.AddOutlineItem("Chapter Two", 3);
+            document.AddOutlineItem("Chapter Three", 6);
+            document.Save(outlined);
+        }
+        return outlined;
+    }
+
+    private async Task<(MainWindowViewModel Vm, MainWindow Window)> OpenAsync()
+    {
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = _windows.Show(new MainWindow { DataContext = vm, Width = 1280, Height = 900 });
+        await Task.Delay(100);
+        await vm.LoadDocumentAsync(CreateOutlinedPdf());
+        await Task.Delay(100);
+        return (vm, window);
+    }
 
     [FixedAvaloniaFact]
     public async Task OutlineTree_PopulatesAfterDocumentLoad()
     {
-        if (!File.Exists(PragmaticBook)) return;
+        var (vm, window) = await OpenAsync();
 
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new Window
-        {
-            DataContext = vm,
-            Width = 1280,
-            Height = 900,
-            Content = new MainWindow().Content as Control
-        };
-        // Simpler: instantiate MainWindow with the VM as DataContext.
-        // The above just borrows the content tree; we want the real
-        // window so its xaml-defined named controls are wired up.
-        window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-        await Task.Delay(100);
-
-        await vm.LoadDocumentAsync(PragmaticBook);
-
-        // Outline parses synchronously during LoadDocumentAsync.
-        vm.OutlineNodes.Should().NotBeEmpty(
-            "the Pragmatic book ships with a /Outlines tree");
-        _out.WriteLine($"OutlineNodes top-level count: {vm.OutlineNodes.Count}");
-        foreach (var n in vm.OutlineNodes.Take(5))
-            _out.WriteLine($"  '{n.Title}' → page {n.PageNumber} ({n.Children.Count} children)");
+        vm.OutlineNodes.Select(n => (n.Title, n.PageNumber)).Should().Equal(
+            new (string, int?)[] { ("Chapter One", 1), ("Chapter Two", 3), ("Chapter Three", 6) },
+            "the outline must load with each bookmark's /Dest resolved to its 1-based page");
 
         var tree = FindNamedDescendant<TreeView>(window, "OutlineTree");
         tree.Should().NotBeNull("OutlineTree must exist in MainWindow");
@@ -70,24 +90,11 @@ public class OutlineTreeNavigationTests
     [FixedAvaloniaFact]
     public async Task OutlineTree_SettingSelectedItem_NavigatesToPage()
     {
-        if (!File.Exists(PragmaticBook)) return;
+        var (vm, _) = await OpenAsync();
 
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-        await Task.Delay(100);
-
-        await vm.LoadDocumentAsync(PragmaticBook);
-        await Task.Delay(100);
-
-        // Find a top-level outline node with a real destination.
-        var nav = vm.OutlineNodes
-            .FirstOrDefault(n => n.PageNumber.HasValue && n.PageNumber.Value > 1);
-        nav.Should().NotBeNull(
-            "we need at least one outline entry that points beyond page 1 to verify navigation");
-
-        var initialPage = vm.CurrentPageIndex;
-        _out.WriteLine($"Initial page: {initialPage + 1}, target: {nav!.PageNumber}");
+        // A bookmark that points beyond page 1, so navigation is observable.
+        var nav = vm.OutlineNodes.First(n => n.PageNumber > 1);
+        vm.CurrentPageIndex.Should().Be(0, "the document opens on page 1");
 
         // Set the SelectedItem the way the TwoWay binding would when the
         // user clicks a row. This is the *exact* path the click should
@@ -108,122 +115,55 @@ public class OutlineTreeNavigationTests
         // through the actual TreeView control: assign to TreeView.SelectedItem
         // → the TwoWay binding should propagate to vm.SelectedOutlineNode →
         // its setter calls JumpToOutline. Catches binding-mode regressions.
-        if (!File.Exists(PragmaticBook)) return;
-
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-        await Task.Delay(100);
-
-        await vm.LoadDocumentAsync(PragmaticBook);
-        await Task.Delay(100);
-
-        var nav = vm.OutlineNodes
-            .FirstOrDefault(n => n.PageNumber.HasValue && n.PageNumber.Value > 1);
-        nav.Should().NotBeNull();
+        var (vm, window) = await OpenAsync();
+        var nav = vm.OutlineNodes.Last();
 
         var tree = FindNamedDescendant<TreeView>(window, "OutlineTree");
         tree.Should().NotBeNull();
 
-        _out.WriteLine($"Setting TreeView.SelectedItem = '{nav!.Title}' → expect page {nav.PageNumber}");
+        _out.WriteLine($"Setting TreeView.SelectedItem = '{nav.Title}' → expect page {nav.PageNumber}");
         await Dispatcher.UIThread.InvokeAsync(() => { tree!.SelectedItem = nav; });
         await Task.Delay(200);
 
         vm.SelectedOutlineNode.Should().BeSameAs(nav,
             "TwoWay binding must push the selection back into VM.SelectedOutlineNode");
         vm.CurrentPageIndex.Should().Be(nav.PageNumber!.Value - 1,
-            $"after selecting via TreeView, CurrentPageIndex must equal node.PageNumber - 1");
+            "after selecting via TreeView, CurrentPageIndex must equal node.PageNumber - 1");
     }
 
     [FixedAvaloniaFact]
     public async Task OutlineTree_PointerClickOnRow_TriggersNavigation()
     {
         // The diagnostic test: simulate the actual pointer click the user
-        // makes. If THIS doesn't navigate, the bug is in the click→
-        // selection→VM path and the prior tests only proved the binding
-        // works post-selection. If THIS does navigate, the issue is
-        // somewhere else (real input, hit-testing, layout) and we need
-        // to look elsewhere.
-        if (!File.Exists(PragmaticBook)) return;
-
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
-        await Task.Delay(200);
-
-        await vm.LoadDocumentAsync(PragmaticBook);
-        // Let layout settle so TreeView realises its containers and we
-        // can compute the click point.
-        for (int i = 0; i < 10; i++) { await Task.Delay(100); window.UpdateLayout(); }
+        // makes. The two tests above prove the binding works once a row is
+        // SELECTED; this one proves a real click on a realised row selects it.
+        var (vm, window) = await OpenAsync();
+        for (int i = 0; i < 10; i++) { await Task.Delay(50); window.UpdateLayout(); }
 
         var tree = FindNamedDescendant<TreeView>(window, "OutlineTree");
         tree.Should().NotBeNull();
 
-        // Diagnostic dump.
-        _out.WriteLine($"TreeView Bounds={tree!.Bounds} IsVisible={tree.IsVisible}");
-        _out.WriteLine($"  ItemsSource null? {tree.ItemsSource == null}");
-        var sourceCount = (tree.ItemsSource as System.Collections.IEnumerable)
-            ?.Cast<object>().Count() ?? -1;
-        _out.WriteLine($"  ItemsSource count: {sourceCount}");
-
-        // Walk parents to find the first one with non-zero size — narrows
-        // down which container is collapsing.
-        Control? walk = tree;
-        for (int i = 0; i < 12 && walk != null; i++)
-        {
-            _out.WriteLine($"  ancestor[{i}] {walk.GetType().Name} Bounds={walk.Bounds} " +
-                           $"IsVisible={walk.IsVisible} Name='{walk.Name}'");
-            walk = walk.Parent as Control;
-        }
-
-        // Force container generation if it hasn't happened yet.
+        // Force container generation if layout has not realised the rows yet.
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            tree.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            tree!.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             tree.Arrange(new Rect(tree.Bounds.Size));
             window.UpdateLayout();
         });
         await Task.Delay(200);
 
-        // Probe ContainerFromIndex to coax realization.
-        var c0 = tree.ContainerFromIndex(0);
-        _out.WriteLine($"ContainerFromIndex(0) = {c0?.GetType().Name ?? "null"}");
+        var items = tree!.GetVisualDescendants().OfType<TreeViewItem>().ToList();
+        _out.WriteLine($"TreeView Bounds={tree.Bounds}; realised TreeViewItems: {items.Count}");
 
-        var allItems = tree.GetVisualDescendants().OfType<TreeViewItem>().ToList();
-        _out.WriteLine($"Realised TreeViewItems: {allItems.Count}");
-        var allDescendants = tree.GetVisualDescendants().ToList();
-        _out.WriteLine($"Total visual descendants: {allDescendants.Count}");
-        foreach (var d in allDescendants.Take(15))
-            _out.WriteLine($"  {d.GetType().Name} bounds={d.Bounds}");
-        foreach (var item in allItems.Take(8))
-        {
-            var dc = item.DataContext as OutlineNode;
-            _out.WriteLine($"  bounds={item.Bounds} dc='{dc?.Title}' page={dc?.PageNumber}");
-        }
+        // Click the row for a bookmark well away from page 1, found by
+        // DataContext rather than visual position so row-height drift cannot
+        // fool the test.
+        var targetNode = vm.OutlineNodes.First(n => n.PageNumber == 6);
+        var targetItem = items.First(it => ReferenceEquals(it.DataContext, targetNode));
+        _out.WriteLine($"Clicking item '{targetNode.Title}' at bounds {targetItem.Bounds}");
 
-        // Pick the TreeViewItem whose DataContext has the most distinctive
-        // page (not page 1, far enough from page 1 to detect navigation).
-        // Find the OutlineNode → TreeViewItem mapping by DataContext rather
-        // than visual position so a row-height drift doesn't fool us.
-        var targetNode = vm.OutlineNodes.FirstOrDefault(n =>
-            n.PageNumber.HasValue && n.PageNumber.Value > 5);
-        targetNode.Should().NotBeNull("Pragmatic book has outline entries past page 5");
-
-        var targetItem = allItems.First(it =>
-            ReferenceEquals(it.DataContext, targetNode));
-        _out.WriteLine($"Clicking item '{targetNode!.Title}' at bounds {targetItem.Bounds}");
-
-        // Click well inside the item's leftmost portion, in item-local
-        // coords (avoids the right-side overflow into clipped space).
-        var pointInItem = new Point(40, targetItem.Bounds.Height / 2);
-        var pointInWindow = targetItem.TranslatePoint(pointInItem, window) ?? default;
-        _out.WriteLine($"Click point in window coords: {pointInWindow}");
-
-        // Diagnose what's hit at that point before clicking.
-        var hit = window.InputHitTest(pointInWindow);
-        _out.WriteLine($"InputHitTest at click point = {hit?.GetType().Name} " +
-                       $"DC={(hit as Control)?.DataContext?.GetType().Name}");
-
+        // Click well inside the item's leftmost portion, in item-local coords.
+        var pointInWindow = targetItem.TranslatePoint(new Point(40, targetItem.Bounds.Height / 2), window) ?? default;
         var initialPage = vm.CurrentPageIndex;
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
