@@ -140,7 +140,7 @@ public class GuiClickSafetySweepTests
                     cmd.Execute(param);
                     await PumpBrieflyAsync(window);
                     invoked.Add(name);
-                    DumpCaptureIfRequested(Capture(viewer), $"after-{name}");
+                    DumpCaptureIfRequested(() => Capture(viewer), $"after-{name}");
                 }
                 catch (Exception ex)
                 {
@@ -293,11 +293,15 @@ public class GuiClickSafetySweepTests
 
     // ── capture + ink (mirrors ModeSwitchVisualTests' helpers) ──────────────────
 
-    private static void DumpCaptureIfRequested(SKBitmap bmp, string name)
+    // The capture is a lazy argument: it is a RenderTargetBitmap -> PNG -> SKBitmap round
+    // trip, and running it for every command before this env check cost ~4-6 s of a
+    // 10 s test to produce a bitmap nobody asked for (#1771).
+    private static void DumpCaptureIfRequested(Func<SKBitmap> capture, string name)
     {
         var dir = Environment.GetEnvironmentVariable("EXCISE_DUMP_CLICK_CAPTURES");
         if (string.IsNullOrEmpty(dir)) return;
         Directory.CreateDirectory(dir);
+        using var bmp = capture();
         using var img = SKImage.FromBitmap(bmp);
         using var data = img.Encode(SKEncodedImageFormat.Png, 100);
         // Sanitize the command name for a filename.

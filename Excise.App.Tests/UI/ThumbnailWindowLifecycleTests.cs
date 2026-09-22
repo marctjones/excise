@@ -118,11 +118,17 @@ public class ThumbnailWindowLifecycleTests
         var path = Path.Combine(Path.GetTempPath(), $"excise-thumb-prewarm-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 12);
         var vm = MainWindowViewModelTestFactory.Create(); // prewarm enabled (default)
+        // The default quiet period is 30 s, waited out in real time. What this test
+        // checks (the sweep completes and stays out of sidebar memory) does not
+        // depend on its length; the gate itself is ThumbnailPrewarmIdleGateTests'.
+        vm.ThumbnailPrewarmIdleDelay = TimeSpan.FromMilliseconds(50);
         try
         {
             await vm.LoadDocumentAsync(path);
             vm.ThumbnailPrewarmTask.Should().NotBeNull("first open should queue the idle pre-warm (#689)");
             await vm.ThumbnailPrewarmTask!.WaitAsync(TimeSpan.FromSeconds(120));
+            vm.ThumbnailRenderCountForTests.Should().BeGreaterThanOrEqualTo(12,
+                "the sweep rendered every page into the disk cache; a sweep that renders nothing must not pass");
 
             // Cache-only: the sweep must not have loaded bitmaps into the
             // sidebar (that would defeat the #687 memory bound).
