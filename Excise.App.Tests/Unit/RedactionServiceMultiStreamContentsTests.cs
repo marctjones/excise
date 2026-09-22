@@ -94,7 +94,14 @@ public class RedactionServiceMultiStreamContentsTests
     {
         var stream0 = StreamText("SECRET", 720);
         var stream1 = StreamText("Innocuous", 500);
-        using var doc = PdfDocument.Open(BuildMultiStreamPdf(stream0, stream1));
+        var sourceBytes = BuildMultiStreamPdf(stream0, stream1);
+        // #1769: the missing input-side control. Without it the FindTerm
+        // assertion at the end is equally consistent with a scanner that
+        // cannot read this hand-built file at all.
+        SavedPdfLeakScanner.FindTerm(sourceBytes, "SECRET").Should().NotBeEmpty(
+            "input-side control: the term must be findable in the source before the redaction");
+
+        using var doc = PdfDocument.Open(sourceBytes);
         var page = doc.GetPage(1);
 
         var service = new RedactionService(

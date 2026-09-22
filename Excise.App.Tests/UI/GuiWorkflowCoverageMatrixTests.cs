@@ -367,7 +367,12 @@ public class GuiWorkflowCoverageMatrixTests
             [
                 Capability.Covered("open, search, navigate, close", typeof(GoldenPathTests), nameof(GoldenPathTests.GoldenPath_OpenSearchNavigateClose)),
                 Capability.Covered("open, redact, apply, verify text is gone", typeof(GoldenPathTests), nameof(GoldenPathTests.GoldenPath_OpenRedactApplyVerifyTextGone)),
-                Capability.Covered("multi-page redaction", typeof(GoldenPathTests), nameof(GoldenPathTests.GoldenPath_MultiPageRedaction)),
+                // #1769: GoldenPath_MultiPageRedaction was deleted — its only
+                // post-apply assertions were "the document is still open" and
+                // "it still has 3 pages", which no redaction regression can
+                // falsify. The capability is covered by the scripted workflow,
+                // which asserts every page's saved bytes.
+                Capability.Covered("multi-page redaction", typeof(ScriptedGuiTests), nameof(ScriptedGuiTests.Script_RedactMultiplePages_AllPagesProcessed)),
                 Capability.Covered("malformed PDF fails gracefully", typeof(GoldenPathTests), nameof(GoldenPathTests.GoldenPath_MalformedPdfGracefulFailure)),
             ]),
         new("GUI responsiveness budgets for open and direct input handlers",
