@@ -371,8 +371,20 @@ public class GuiWorkflowCoverageMatrixTests
                 // post-apply assertions were "the document is still open" and
                 // "it still has 3 pages", which no redaction regression can
                 // falsify. The capability is covered by the scripted workflow,
-                // which asserts every page's saved bytes.
+                // which asserts every page's saved bytes. That covering test
+                // is EXCISE_SCRIPTING-only (Release compiles ScriptedGuiTests
+                // out), so Release has no covering test for this capability —
+                // declare it a gap there instead of referencing a type that
+                // does not exist in that build (#1790).
+#if EXCISE_SCRIPTING
                 Capability.Covered("multi-page redaction", typeof(ScriptedGuiTests), nameof(ScriptedGuiTests.Script_RedactMultiplePages_AllPagesProcessed)),
+#else
+                Capability.Gap("multi-page redaction",
+                    "Covered by ScriptedGuiTests.Script_RedactMultiplePages_AllPagesProcessed, which asserts " +
+                    "every page's saved bytes (#1769). That test is compiled out of Release builds along with " +
+                    "the rest of the EXCISE_SCRIPTING surface, so Release has no covering test for this " +
+                    "capability. See #1790."),
+#endif
                 Capability.Covered("malformed PDF fails gracefully", typeof(GoldenPathTests), nameof(GoldenPathTests.GoldenPath_MalformedPdfGracefulFailure)),
             ]),
         new("GUI responsiveness budgets for open and direct input handlers",
