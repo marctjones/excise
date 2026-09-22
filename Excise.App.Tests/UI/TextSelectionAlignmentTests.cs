@@ -14,6 +14,7 @@ using Excise.Avalonia.Controls;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
+using Excise.TestSupport;
 using ReactiveUI;
 using SkiaSharp;
 using Xunit;
@@ -36,23 +37,32 @@ namespace Excise.App.Tests.UI;
 [Collection("AvaloniaTests")]
 public class TextSelectionAlignmentTests
 {
-    private const string BookPath = "test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf";
+    private const string BookRelativePath = "test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf";
 
-    public static TheoryData<double, double> ZoomByDpr()
+    /// <summary>
+    /// #1768: cut from the full 3x2 = 6-row matrix to 3 rows. The zoom=1.0
+    /// rows duplicate what DefaultTextSelectionTests already covers at the
+    /// identity zoom (where a missed/doubled zoom factor is mathematically
+    /// invisible, the exact reason this class exists is to test zoom != 1),
+    /// so they add wall time without adding a defect this class could catch
+    /// that zoom=1.0 could not. Kept: one low zoom at dpr 1, one high zoom at
+    /// dpr 2 (the two ends of the range this class is about), and one
+    /// dpr-only row at zoom 1.0 so a dpr-only regression (no zoom factor
+    /// involved at all) still has coverage.
+    /// </summary>
+    public static TheoryData<double, double> ZoomByDpr() => new()
     {
-        var data = new TheoryData<double, double>();
-        foreach (var zoom in new[] { 1.0, 0.6, 1.5 })
-        foreach (var dpr in new[] { 1.0, 2.0 })
-            data.Add(zoom, dpr);
-        return data;
-    }
+        { 0.6, 1.0 },
+        { 1.5, 2.0 },
+        { 1.0, 2.0 },
+    };
 
     [FixedAvaloniaTheory]
     [MemberData(nameof(ZoomByDpr))]
     public async Task DragSelection_HighlightCoversTheSelectedText(double zoom, double dpr)
     {
         var book = FindBook();
-        Assert.SkipWhen(book == null, "local real-world book corpus not present");
+        Assert.SkipWhen(book == null, TestRepoLayout.AbsenceReason("local real-world book corpus", BookRelativePath));
 
         var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1100, Height = 900 };
@@ -135,7 +145,7 @@ public class TextSelectionAlignmentTests
     public async Task FitWidth_InsideSelectTextMode_ActuallyFitsTheViewport(double dpr)
     {
         var book = FindBook();
-        Assert.SkipWhen(book == null, "local real-world book corpus not present");
+        Assert.SkipWhen(book == null, TestRepoLayout.AbsenceReason("local real-world book corpus", BookRelativePath));
 
         var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1100, Height = 900 };
@@ -183,23 +193,27 @@ public class TextSelectionAlignmentTests
 
     // ── helpers ─────────────────────────────────────────────────────────────
 
-    private static string? FindBook()
-    {
-        var root = AppContext.BaseDirectory;
-        for (int i = 0; i < 8 && root != null; i++, root = System.IO.Path.GetDirectoryName(root))
-        {
-            var candidate = System.IO.Path.Combine(root, BookPath);
-            if (File.Exists(candidate)) return candidate;
-        }
-        return File.Exists(BookPath) ? System.IO.Path.GetFullPath(BookPath) : null;
-    }
+    private static string? FindBook() => TestRepoLayout.FindFile(BookRelativePath);
 
     private static double ZoomOf(PdfViewerControl viewer) => viewer.ZoomLevel;
 
     /// <summary>Wait until the single-page raster corresponds to the zoom×dpr scale.</summary>
+    /// <summary>
+    /// Wait until the single-page raster corresponds to the zoom x dpr scale.
+    /// #1768: this used to fall out of the loop on timeout and return
+    /// normally, silently handing the caller a page that never settled --
+    /// every assertion after it (drag targets, ink bounds, highlight
+    /// overlap) then ran against whatever the raster happened to be, which
+    /// could pass or fail for reasons that have nothing to do with what the
+    /// test names. A timeout here is itself the defect ("the fit button did
+    /// not zoom properly") this class exists to catch, so it now throws with
+    /// the last-observed pixel/layout numbers instead of proceeding blind.
+    /// </summary>
     private static async Task SettleAsync(Window window, PdfViewerControl viewer, double zoom, double dpr)
     {
         var deadline = Environment.TickCount64 + 20000;
+        double lastPxDelta = double.NaN, lastLayoutDelta = double.NaN;
+        bool sawBitmap = false;
         while (Environment.TickCount64 < deadline)
         {
             window.UpdateLayout();
@@ -207,22 +221,30 @@ public class TextSelectionAlignmentTests
             var host = viewer.FindControl<global::Avalonia.Controls.LayoutTransformControl>("ZoomHost");
             if (img?.Source is Bitmap src && !double.IsNaN(img.Width) && host != null)
             {
+                sawBitmap = true;
                 var scale = Math.Max(1.0, zoom * dpr);
                 // The bitmap is 96-stamped (#697), so the layout dip size lives
                 // on the Image's Width (120-dpi DIPs for these pages); the raster
                 // is at device resolution, 96/120 of that × zoom × dpr (#1487).
-                var pxOk = Math.Abs(src.PixelSize.Width - img.Width * (96.0 / 120.0) * scale) <= 10;
+                lastPxDelta = Math.Abs(src.PixelSize.Width - img.Width * (96.0 / 120.0) * scale);
+                var pxOk = lastPxDelta <= 10;
                 // The raster alone cannot distinguish two zooms whose device
                 // scale clamps to the same value (e.g. fit≈0.98 and 0.6 at
                 // dpr 1 both floor to scale 1 → 720 px): also require the
                 // LAYOUT to reflect the requested zoom. Displayed width =
                 // img dips × zoom × 96/renderDpi (#693 display unification;
                 // 120 = DefaultRenderDpi for these pages).
-                var layoutOk = Math.Abs(host.Bounds.Width - img.Width * zoom * (96.0 / 120.0)) <= 2;
+                lastLayoutDelta = Math.Abs(host.Bounds.Width - img.Width * zoom * (96.0 / 120.0));
+                var layoutOk = lastLayoutDelta <= 2;
                 if (pxOk && layoutOk) return;
             }
             await Task.Delay(50);
         }
+        throw new TimeoutException(
+            $"SettleAsync timed out after 20s waiting for zoom={zoom} dpr={dpr} to settle " +
+            (sawBitmap
+                ? $"(last pixel delta={lastPxDelta:F1} [want <=10], layout delta={lastLayoutDelta:F1} [want <=2])"
+                : "(PdfImage never got a Bitmap source)"));
     }
 
     private static SKBitmap Capture(PdfViewerControl viewer)
@@ -284,7 +306,7 @@ public class TextSelectionAlignmentTests
     public async Task FitAfterSelection_KeepsHighlightsOnRenderedText(double dpr)
     {
         var book = FindBook();
-        Assert.SkipWhen(book == null, "local real-world book corpus not present");
+        Assert.SkipWhen(book == null, TestRepoLayout.AbsenceReason("local real-world book corpus", BookRelativePath));
 
         var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1400, Height = 900 };
