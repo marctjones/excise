@@ -509,7 +509,7 @@ public partial class MainWindowViewModel
     private (int PageNumber, PdfRectangle Rect)? _currentShapeAnnotationArea;
 
     /// <summary>
-    /// Shape annotations (#912) come from a DRAG. Until #1791's follow-up this
+    /// Shape annotations (#912) come from a DRAG. Until #1792's follow-up this
     /// read <see cref="CurrentRedactionPageArea"/> — the SAME rect the
     /// redaction tool's own drag gesture stages, reachable only via a
     /// genuinely-enabled Redaction Mode, which also marks that area as a

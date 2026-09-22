@@ -652,7 +652,7 @@ public class TextMarkupAnnotationCommandTests
     /// <summary>The drag gesture shapes reuse — the redaction box rectangle.</summary>
     private static void DragABox(MainWindowViewModel vm)
     {
-        // #1791: shape annotations no longer read CurrentRedactionPageArea —
+        // #1792: shape annotations no longer read CurrentRedactionPageArea —
         // that was the redaction tool's OWN staged rect, reachable only via a
         // genuinely-enabled Redaction Mode and cleared as a side effect of
         // marking a pending redaction. StageShapeAnnotationRectForTests is

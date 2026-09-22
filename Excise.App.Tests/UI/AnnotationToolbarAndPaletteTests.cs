@@ -367,7 +367,7 @@ public class AnnotationToolbarAndPaletteTests
     /// FORWARD check (never relaxed). A real click must open the flyout, then a
     /// second real click on one of its 15 stamp choices must reach
     /// <see cref="MainWindowViewModel.ToggleStampModeCommand"/> and ARM stamp
-    /// mode with that name staged (#1791 — clicking a stamp choice used to
+    /// mode with that name staged (#1792 — clicking a stamp choice used to
     /// call AddStampAnnotationFromDragCommand directly, which always hit its
     /// own "Drag a box..." guard dialog here since no drag rect could ever be
     /// staged from a plain click; now it arms the mode a real drag completes).

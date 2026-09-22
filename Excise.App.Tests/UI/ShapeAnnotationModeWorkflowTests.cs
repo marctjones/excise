@@ -18,7 +18,7 @@ using Xunit;
 namespace Excise.App.Tests.UI;
 
 /// <summary>
-/// #1791 — Square/Circle/FreeText/Stamp/ImageStamp annotations had NO working
+/// #1792 — Square/Circle/FreeText/Stamp/ImageStamp annotations had NO working
 /// path through the GUI: their Add*FromDrag commands read
 /// CurrentRedactionPageArea, staged only by a genuinely-enabled Redaction
 /// Mode's own drag, which ALSO marks that area as a pending redaction and
@@ -61,7 +61,7 @@ public class ShapeAnnotationModeWorkflowTests
 
         vm.IsShapeAnnotationMode.Should().BeTrue("a real click on \"Draw Square\" must arm shape-annotation mode");
         vm.ShapeAnnotationKind.Should().Be(ShapeAnnotationKind.Square);
-        // The whole point of #1791: arming this mode must NOT touch redaction
+        // The whole point of #1792: arming this mode must NOT touch redaction
         // at all — the old, broken path borrowed IsRedactionMode's own drag.
         vm.IsRedactionMode.Should().BeFalse();
 
@@ -128,7 +128,7 @@ public class ShapeAnnotationModeWorkflowTests
 
     private static (string source, string output, string dir) MakePaths()
     {
-        var dir = Path.Combine(Path.GetTempPath(), $"excise-1791-{System.Guid.NewGuid():N}");
+        var dir = Path.Combine(Path.GetTempPath(), $"excise-1792-{System.Guid.NewGuid():N}");
         Directory.CreateDirectory(dir);
         return (Path.Combine(dir, "in.pdf"), Path.Combine(dir, "out.pdf"), dir);
     }

@@ -175,7 +175,7 @@ public partial class MainWindowViewModel
 
     /// <summary>
     /// When true, dragging a rectangle on the page becomes an annotation —
-    /// which one is <see cref="ShapeAnnotationKind"/> (#1791 follow-up: gives
+    /// which one is <see cref="ShapeAnnotationKind"/> (#1792 follow-up: gives
     /// Square/Circle/FreeText/Stamp/ImageStamp the same direct one-drag-
     /// places-it path <see cref="IsPathAnnotationMode"/> already has, instead
     /// of borrowing <see cref="IsRedactionMode"/>'s drag gesture). Mutually

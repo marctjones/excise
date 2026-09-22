@@ -1750,7 +1750,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// User finished dragging a rect in shape-annotation mode (#1791) — it
+    /// User finished dragging a rect in shape-annotation mode (#1792) — it
     /// becomes whichever of Square/Circle/FreeText/Stamp/ImageStamp the
     /// ViewModel's <c>ShapeAnnotationKind</c> currently selects.
     /// </summary>

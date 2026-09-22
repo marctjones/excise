@@ -76,7 +76,7 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> AddImageStampAnnotationFromDragCommand { get; private set; } = null!;
 
     /// <summary>
-    /// Arms/disarms shape-annotation mode (#1791) for the kind named in each
+    /// Arms/disarms shape-annotation mode (#1792) for the kind named in each
     /// property — a drag on the page directly places the annotation, the
     /// same one-gesture path <see cref="ToggleLineModeCommand"/> and its
     /// siblings already have. See <see cref="IsShapeAnnotationMode"/>.
