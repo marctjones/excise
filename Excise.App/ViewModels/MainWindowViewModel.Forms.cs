@@ -23,6 +23,7 @@ public partial class MainWindowViewModel
             if (IsTypewriterMode) return InteractionMode.Typewriter;
             if (IsPathAnnotationMode) return InteractionMode.PathAnnotation;
             if (IsStickyNoteToolActive) return InteractionMode.StickyNote;
+            if (IsShapeAnnotationMode) return InteractionMode.ShapeAnnotation;
             return InteractionMode.None;
         }
     }
@@ -60,6 +61,7 @@ public partial class MainWindowViewModel
                 if (_isTypewriterMode) IsTypewriterMode = false;
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
                 if (_isPathAnnotationMode) IsPathAnnotationMode = false;
+                if (_isShapeAnnotationMode) IsShapeAnnotationMode = false;
             }
             else
             {
@@ -98,6 +100,7 @@ public partial class MainWindowViewModel
                 if (_isTypewriterMode) IsTypewriterMode = false;
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
                 if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
+                if (_isShapeAnnotationMode) IsShapeAnnotationMode = false;
             }
             else
             {
@@ -168,6 +171,109 @@ public partial class MainWindowViewModel
         IsPathAnnotationMode = true;
     }
 
+    private bool _isShapeAnnotationMode;
+
+    /// <summary>
+    /// When true, dragging a rectangle on the page becomes an annotation —
+    /// which one is <see cref="ShapeAnnotationKind"/> (#1791 follow-up: gives
+    /// Square/Circle/FreeText/Stamp/ImageStamp the same direct one-drag-
+    /// places-it path <see cref="IsPathAnnotationMode"/> already has, instead
+    /// of borrowing <see cref="IsRedactionMode"/>'s drag gesture). Mutually
+    /// exclusive with the other editing modes, same as the others.
+    /// </summary>
+    public bool IsShapeAnnotationMode
+    {
+        get => _isShapeAnnotationMode;
+        set
+        {
+            if (_isShapeAnnotationMode == value)
+                return;
+
+            this.RaiseAndSetIfChanged(ref _isShapeAnnotationMode, value);
+            if (value)
+            {
+                ViewMode = PdfViewMode.SinglePage;
+                if (_isRedactionMode) IsRedactionMode = false;
+                if (_isTextSelectionMode) IsTextSelectionMode = false;
+                if (_isTypewriterMode) IsTypewriterMode = false;
+                if (_isFormAuthoringMode) IsFormAuthoringMode = false;
+                if (_isPathAnnotationMode) IsPathAnnotationMode = false;
+                if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
+            }
+            else
+            {
+                RestoreViewModeFromPreference();
+                if (!IsEditingModeActive) IsTextSelectionMode = true;
+            }
+
+            this.RaisePropertyChanged(nameof(InteractionMode));
+            this.RaisePropertyChanged(nameof(CurrentModeText));
+        }
+    }
+
+    private ShapeAnnotationKind _shapeAnnotationKind = ShapeAnnotationKind.Square;
+
+    /// <summary>
+    /// Which annotation a dragged rect becomes. Selecting the kind is what
+    /// the menu/toolbar/palette items do; the capture, the coordinate
+    /// conversion and the event are shared between them.
+    /// </summary>
+    public ShapeAnnotationKind ShapeAnnotationKind
+    {
+        get => _shapeAnnotationKind;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _shapeAnnotationKind, value);
+            this.RaisePropertyChanged(nameof(CurrentModeText));
+        }
+    }
+
+    private string? _stagedStampName;
+
+    /// <summary>
+    /// The stamp name to use when the next drawn rect becomes a Stamp
+    /// (<see cref="ShapeAnnotationKind.Stamp"/>) — set by
+    /// <see cref="ToggleStampMode"/>, one of the 15 preset names
+    /// <c>AddStampAnnotationFromDragCommand</c> already accepts.
+    /// </summary>
+    public string? StagedStampName
+    {
+        get => _stagedStampName;
+        private set => this.RaiseAndSetIfChanged(ref _stagedStampName, value);
+    }
+
+    /// <summary>
+    /// Enter shape-annotation mode with <paramref name="kind"/> selected, or
+    /// leave it if that (kind, stamp name) pair is already active — same
+    /// re-selection-not-exit rule as <see cref="TogglePathMode"/>, so picking
+    /// Circle while Square is active selects Circle rather than leaving the
+    /// mode. <paramref name="stampName"/> is only meaningful for
+    /// <see cref="ShapeAnnotationKind.Stamp"/>.
+    /// </summary>
+    private void ToggleShapeMode(ShapeAnnotationKind kind, string? stampName = null)
+    {
+        // #642: drawing an annotation is annotating — /P bit 6. Gate on
+        // entering; leaving is free.
+        var alreadyActive = IsShapeAnnotationMode && ShapeAnnotationKind == kind &&
+            (kind != ShapeAnnotationKind.Stamp || StagedStampName == stampName);
+
+        if (!alreadyActive && !EnsureDocumentPermission(p => p.CanAnnotate,
+                "Drawing annotations", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        if (alreadyActive)
+        {
+            IsShapeAnnotationMode = false;
+            return;
+        }
+
+        ShapeAnnotationKind = kind;
+        StagedStampName = kind == ShapeAnnotationKind.Stamp ? stampName : null;
+        IsShapeAnnotationMode = true;
+    }
+
     private bool _isFormAuthoringMode;
 
     /// <summary>
@@ -190,6 +296,7 @@ public partial class MainWindowViewModel
                 if (_isTextSelectionMode) IsTextSelectionMode = false;
                 if (_isTypewriterMode) IsTypewriterMode = false;
                 if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
+                if (_isShapeAnnotationMode) IsShapeAnnotationMode = false;
             }
             else
             {

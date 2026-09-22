@@ -1749,6 +1749,17 @@ public partial class MainWindow : Window
         await viewModel.OnAnnotationPathDrawnAsync(e.Strokes, e.PageNumber);
     }
 
+    /// <summary>
+    /// User finished dragging a rect in shape-annotation mode (#1791) — it
+    /// becomes whichever of Square/Circle/FreeText/Stamp/ImageStamp the
+    /// ViewModel's <c>ShapeAnnotationKind</c> currently selects.
+    /// </summary>
+    private async void OnShapeAnnotationRectDrawn(object? sender, ShapeAnnotationRectDrawnEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        await viewModel.OnShapeAnnotationRectDrawnAsync(e.Rect, e.PageNumber);
+    }
+
     private void OnTypewriterTextCreated(object? sender, TypewriterTextCreatedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel) return;

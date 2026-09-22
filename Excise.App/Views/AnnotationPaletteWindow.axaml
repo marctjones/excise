@@ -82,49 +82,49 @@
             <Separator Margin="2,4"/>
 
             <Button x:Name="PaletteSquareButton"
-                    Command="{Binding AddSquareAnnotationFromDragCommand}"
+                    Command="{Binding ToggleSquareModeCommand}"
                     Classes="modern-button toolbar-button"
                     IsEnabled="{Binding IsDocumentLoaded}"
-                    access:CommandAccessibility.CommandId="annotation.addSquare"
-                    ToolTip.Tip="Add square from drag"
-                    AutomationProperties.Name="Add Square">
+                    access:CommandAccessibility.CommandId="annotation.toggleSquareMode"
+                    ToolTip.Tip="Draw square"
+                    AutomationProperties.Name="Draw Square">
                 <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSquare}"/>
             </Button>
             <Button x:Name="PaletteCircleButton"
-                    Command="{Binding AddCircleAnnotationFromDragCommand}"
+                    Command="{Binding ToggleCircleModeCommand}"
                     Classes="modern-button toolbar-button"
                     IsEnabled="{Binding IsDocumentLoaded}"
-                    access:CommandAccessibility.CommandId="annotation.addCircle"
-                    ToolTip.Tip="Add circle from drag"
-                    AutomationProperties.Name="Add Circle">
+                    access:CommandAccessibility.CommandId="annotation.toggleCircleMode"
+                    ToolTip.Tip="Draw circle"
+                    AutomationProperties.Name="Draw Circle">
                 <PathIcon Classes="toolbar-icon" Data="{StaticResource IconCircle}"/>
             </Button>
             <Button x:Name="PaletteFreeTextButton"
-                    Command="{Binding AddFreeTextAnnotationFromDragCommand}"
+                    Command="{Binding ToggleFreeTextModeCommand}"
                     Classes="modern-button toolbar-button"
                     IsEnabled="{Binding IsDocumentLoaded}"
-                    access:CommandAccessibility.CommandId="annotation.addFreeText"
-                    ToolTip.Tip="Add text box from drag"
-                    AutomationProperties.Name="Add Text Box">
+                    access:CommandAccessibility.CommandId="annotation.toggleFreeTextMode"
+                    ToolTip.Tip="Draw text box"
+                    AutomationProperties.Name="Draw Text Box">
                 <PathIcon Classes="toolbar-icon" Data="{StaticResource IconFreeText}"/>
             </Button>
             <Button x:Name="PaletteStampButton"
-                    Command="{Binding AddStampAnnotationFromDragCommand}"
+                    Command="{Binding ToggleStampModeCommand}"
                     CommandParameter="Confidential"
                     Classes="modern-button toolbar-button"
                     IsEnabled="{Binding IsDocumentLoaded}"
-                    access:CommandAccessibility.CommandId="annotation.addStamp"
-                    ToolTip.Tip="Add &quot;Confidential&quot; stamp from drag — see the Annotate menu for other stamps"
-                    AutomationProperties.Name="Add Stamp">
+                    access:CommandAccessibility.CommandId="annotation.toggleStampMode"
+                    ToolTip.Tip="Draw &quot;Confidential&quot; stamp — see the Annotate menu for other stamps"
+                    AutomationProperties.Name="Draw Stamp">
                 <PathIcon Classes="toolbar-icon" Data="{StaticResource IconStamp}"/>
             </Button>
             <Button x:Name="PaletteImageStampButton"
-                    Command="{Binding AddImageStampAnnotationFromDragCommand}"
+                    Command="{Binding ToggleImageStampModeCommand}"
                     Classes="modern-button toolbar-button"
                     IsEnabled="{Binding IsDocumentLoaded}"
-                    access:CommandAccessibility.CommandId="annotation.addImageStamp"
-                    ToolTip.Tip="Add image stamp from drag"
-                    AutomationProperties.Name="Add Image Stamp">
+                    access:CommandAccessibility.CommandId="annotation.toggleImageStampMode"
+                    ToolTip.Tip="Draw image stamp"
+                    AutomationProperties.Name="Draw Image Stamp">
                 <PathIcon Classes="toolbar-icon" Data="{StaticResource IconImageStamp}"/>
             </Button>
 

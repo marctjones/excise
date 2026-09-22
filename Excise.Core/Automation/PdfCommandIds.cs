@@ -44,6 +44,21 @@ public static class PdfCommandIds
     /// <summary>Image stamp — a Stamp whose appearance is a chosen picture (#934).</summary>
     public const string AddImageStamp = "annotation.addImageStamp";
 
+    /// <summary>Toggle square-drawing; a drag becomes a Square annotation (#1791).</summary>
+    public const string ToggleSquareMode = "annotation.toggleSquareMode";
+
+    /// <summary>Toggle circle-drawing; a drag becomes a Circle annotation (#1791).</summary>
+    public const string ToggleCircleMode = "annotation.toggleCircleMode";
+
+    /// <summary>Toggle text-box-drawing; a drag becomes a FreeText box plus a text prompt (#1791).</summary>
+    public const string ToggleFreeTextMode = "annotation.toggleFreeTextMode";
+
+    /// <summary>Toggle stamp-drawing; a drag becomes the named preset stamp (#1791).</summary>
+    public const string ToggleStampMode = "annotation.toggleStampMode";
+
+    /// <summary>Toggle image-stamp-drawing; a drag becomes an image stamp plus an image-file prompt (#1791).</summary>
+    public const string ToggleImageStampMode = "annotation.toggleImageStampMode";
+
     /// <summary>Toggle free-form drawing; a finished stroke becomes an Ink annotation (#934).</summary>
     public const string ToggleDrawMode = "annotation.toggleDrawMode";
 

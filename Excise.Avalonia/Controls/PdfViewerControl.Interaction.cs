@@ -191,7 +191,8 @@ public partial class PdfViewerControl
         var currentPoint = GetPressPoint(e);
 
         if (InteractionMode == InteractionMode.Redaction ||
-            InteractionMode == InteractionMode.FormAuthoring)
+            InteractionMode == InteractionMode.FormAuthoring ||
+            InteractionMode == InteractionMode.ShapeAnnotation)
         {
             DrawTemporaryRedactionRectangle(_dragStart, currentPoint);
         }
@@ -264,6 +265,22 @@ public partial class PdfViewerControl
                     .Normalize();
                 FormFieldRectDrawn?.Invoke(this,
                     new FormFieldRectDrawnEventArgs(pdfRect, CurrentPage));
+            }
+        }
+        else if (InteractionMode == InteractionMode.ShapeAnnotation)
+        {
+            var endPoint = GetPressPoint(e);
+            var dipRect = CreateRect(_dragStart, endPoint);
+            ClearTemporaryDrawings();
+            if (Document != null && dipRect.Width > 4 && dipRect.Height > 4)
+            {
+                var page = Document.GetPage(CurrentPage);
+                var pdfRect = PdfCoordinateMapper
+                    .ToContentPoints(page, ViewerDipsRect(dipRect, CurrentPage))
+                    .ToPdfRectangle()
+                    .Normalize();
+                ShapeAnnotationRectDrawn?.Invoke(this,
+                    new ShapeAnnotationRectDrawnEventArgs(pdfRect, CurrentPage));
             }
         }
         else if (InteractionMode == InteractionMode.PathAnnotation)

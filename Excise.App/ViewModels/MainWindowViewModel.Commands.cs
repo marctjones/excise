@@ -74,6 +74,21 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> AddFreeTextAnnotationFromDragCommand { get; private set; } = null!;
     public ReactiveCommand<string, Unit> AddStampAnnotationFromDragCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddImageStampAnnotationFromDragCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Arms/disarms shape-annotation mode (#1791) for the kind named in each
+    /// property — a drag on the page directly places the annotation, the
+    /// same one-gesture path <see cref="ToggleLineModeCommand"/> and its
+    /// siblings already have. See <see cref="IsShapeAnnotationMode"/>.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ToggleSquareModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleCircleModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleFreeTextModeCommand { get; private set; } = null!;
+
+    /// <summary>As the others, but the parameter selects which of the 15 preset stamps.</summary>
+    public ReactiveCommand<string, Unit> ToggleStampModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleImageStampModeCommand { get; private set; } = null!;
+
     public ReactiveCommand<Unit, Unit> AddStickyNoteAnnotationCommand { get; private set; } = null!;
 
     /// <summary>
@@ -250,6 +265,12 @@ public partial class MainWindowViewModel
         AddFreeTextAnnotationFromDragCommand = ReactiveCommand.CreateFromTask(() => AddFreeTextAnnotationFromDragAsync(null));
         AddStampAnnotationFromDragCommand = ReactiveCommand.CreateFromTask<string>(AddStampAnnotationFromDragAsync);
         AddImageStampAnnotationFromDragCommand = ReactiveCommand.CreateFromTask(() => AddImageStampAnnotationFromDragAsync(null));
+        ToggleSquareModeCommand = ReactiveCommand.Create(() => ToggleShapeMode(ShapeAnnotationKind.Square));
+        ToggleCircleModeCommand = ReactiveCommand.Create(() => ToggleShapeMode(ShapeAnnotationKind.Circle));
+        ToggleFreeTextModeCommand = ReactiveCommand.Create(() => ToggleShapeMode(ShapeAnnotationKind.FreeText));
+        ToggleStampModeCommand = ReactiveCommand.Create<string>(
+            stampName => ToggleShapeMode(ShapeAnnotationKind.Stamp, stampName));
+        ToggleImageStampModeCommand = ReactiveCommand.Create(() => ToggleShapeMode(ShapeAnnotationKind.ImageStamp));
         AddStickyNoteAnnotationCommand = ReactiveCommand.CreateFromTask(() => AddStickyNoteAnnotationAsync());
         ToggleStickyNoteToolCommand = ReactiveCommand.Create(
             () => { IsStickyNoteToolActive = !IsStickyNoteToolActive; });

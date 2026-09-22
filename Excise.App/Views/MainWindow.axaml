@@ -240,52 +240,52 @@
                           IsEnabled="{Binding HasTextSelection}"
                           access:CommandAccessibility.CommandId="annotation.addSquiggly"/>
                 <Separator/>
-                <MenuItem Header="Add S_quare From Drag" Command="{Binding AddSquareAnnotationFromDragCommand}"
+                <MenuItem Header="Draw S_quare" Command="{Binding ToggleSquareModeCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
-                          access:CommandAccessibility.CommandId="annotation.addSquare"/>
-                <MenuItem Header="Add C_ircle From Drag" Command="{Binding AddCircleAnnotationFromDragCommand}"
+                          access:CommandAccessibility.CommandId="annotation.toggleSquareMode"/>
+                <MenuItem Header="Draw C_ircle" Command="{Binding ToggleCircleModeCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
-                          access:CommandAccessibility.CommandId="annotation.addCircle"/>
-                <MenuItem Header="Add _Text Box From Drag..." Command="{Binding AddFreeTextAnnotationFromDragCommand}"
+                          access:CommandAccessibility.CommandId="annotation.toggleCircleMode"/>
+                <MenuItem Header="Draw _Text Box..." Command="{Binding ToggleFreeTextModeCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
-                          access:CommandAccessibility.CommandId="annotation.addFreeText"/>
-                <MenuItem Header="Add Stam_p From Drag"
+                          access:CommandAccessibility.CommandId="annotation.toggleFreeTextMode"/>
+                <MenuItem Header="Draw Stam_p"
                           IsEnabled="{Binding IsDocumentLoaded}"
-                          access:CommandAccessibility.CommandId="annotation.addStamp">
-                    <MenuItem Header="Approved" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                          access:CommandAccessibility.CommandId="annotation.toggleStampMode">
+                    <MenuItem Header="Approved" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="Approved"/>
-                    <MenuItem Header="Experimental" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Experimental" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="Experimental"/>
-                    <MenuItem Header="Not Approved" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Not Approved" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="NotApproved"/>
-                    <MenuItem Header="As Is" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="As Is" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="AsIs"/>
-                    <MenuItem Header="Expired" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Expired" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="Expired"/>
-                    <MenuItem Header="Not For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Not For Public Release" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="NotForPublicRelease"/>
-                    <MenuItem Header="Confidential" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Confidential" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="Confidential"/>
-                    <MenuItem Header="Sold" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Sold" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="Sold"/>
-                    <MenuItem Header="Departmental" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Departmental" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="Departmental"/>
-                    <MenuItem Header="Top Secret" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Top Secret" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="TopSecret"/>
-                    <MenuItem Header="Draft" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Draft" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="Draft"/>
-                    <MenuItem Header="For Comment" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="For Comment" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="ForComment"/>
-                    <MenuItem Header="Final" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Final" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="Final"/>
-                    <MenuItem Header="For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="For Public Release" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="ForPublicRelease"/>
-                    <MenuItem Header="Information Only" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
+                    <MenuItem Header="Information Only" Command="{Binding ToggleStampModeCommand}" access:CommandAccessibility.CommandId="annotation.toggleStampMode"
                               CommandParameter="InformationOnly"/>
                 </MenuItem>
-                <MenuItem Header="Add I_mage Stamp From Drag..." Command="{Binding AddImageStampAnnotationFromDragCommand}"
+                <MenuItem Header="Draw I_mage Stamp..." Command="{Binding ToggleImageStampModeCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
-                          access:CommandAccessibility.CommandId="annotation.addImageStamp"/>
+                          access:CommandAccessibility.CommandId="annotation.toggleImageStampMode"/>
                 <MenuItem Header="_Draw (Ink)" Command="{Binding ToggleFreehandModeCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="annotation.toggleDrawMode"/>
@@ -1156,71 +1156,71 @@
 
                 <Button x:Name="AnnotationToolbarSquareButton"
                         toolbar:PriorityToolbarPanel.Priority="80"
-                        Command="{Binding AddSquareAnnotationFromDragCommand}"
+                        Command="{Binding ToggleSquareModeCommand}"
                         Classes="modern-button toolbar-button"
                         IsEnabled="{Binding IsDocumentLoaded}"
-                        access:CommandAccessibility.CommandId="annotation.addSquare"
-                        ToolTip.Tip="Add square from drag"
-                        AutomationProperties.Name="Add Square">
+                        access:CommandAccessibility.CommandId="annotation.toggleSquareMode"
+                        ToolTip.Tip="Draw square"
+                        AutomationProperties.Name="Draw Square">
                     <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSquare}"/>
                 </Button>
                 <Button x:Name="AnnotationToolbarCircleButton"
                         toolbar:PriorityToolbarPanel.Priority="75"
-                        Command="{Binding AddCircleAnnotationFromDragCommand}"
+                        Command="{Binding ToggleCircleModeCommand}"
                         Classes="modern-button toolbar-button"
                         IsEnabled="{Binding IsDocumentLoaded}"
-                        access:CommandAccessibility.CommandId="annotation.addCircle"
-                        ToolTip.Tip="Add circle from drag"
-                        AutomationProperties.Name="Add Circle">
+                        access:CommandAccessibility.CommandId="annotation.toggleCircleMode"
+                        ToolTip.Tip="Draw circle"
+                        AutomationProperties.Name="Draw Circle">
                     <PathIcon Classes="toolbar-icon" Data="{StaticResource IconCircle}"/>
                 </Button>
                 <Button x:Name="AnnotationToolbarFreeTextButton"
                         toolbar:PriorityToolbarPanel.Priority="70"
-                        Command="{Binding AddFreeTextAnnotationFromDragCommand}"
+                        Command="{Binding ToggleFreeTextModeCommand}"
                         Classes="modern-button toolbar-button"
                         IsEnabled="{Binding IsDocumentLoaded}"
-                        access:CommandAccessibility.CommandId="annotation.addFreeText"
-                        ToolTip.Tip="Add text box from drag"
-                        AutomationProperties.Name="Add Text Box">
+                        access:CommandAccessibility.CommandId="annotation.toggleFreeTextMode"
+                        ToolTip.Tip="Draw text box"
+                        AutomationProperties.Name="Draw Text Box">
                     <PathIcon Classes="toolbar-icon" Data="{StaticResource IconFreeText}"/>
                 </Button>
                 <Button x:Name="AnnotationToolbarStampButton"
                         toolbar:PriorityToolbarPanel.Priority="65"
                         Classes="modern-button toolbar-button"
                         IsEnabled="{Binding IsDocumentLoaded}"
-                        ToolTip.Tip="Add stamp from drag"
-                        AutomationProperties.Name="Add Stamp">
+                        ToolTip.Tip="Draw stamp"
+                        AutomationProperties.Name="Draw Stamp">
                     <PathIcon Classes="toolbar-icon" Data="{StaticResource IconStamp}"/>
                     <Button.Flyout>
                         <Flyout>
                             <StackPanel Spacing="2" Width="168">
-                                <Button Content="Approved" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Approved" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Experimental" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Experimental" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Not Approved" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="NotApproved" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="As Is" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="AsIs" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Expired" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Expired" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Not For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="NotForPublicRelease" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Confidential" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Confidential" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Sold" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Sold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Departmental" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Departmental" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Top Secret" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="TopSecret" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Draft" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Draft" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="For Comment" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="ForComment" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Final" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="Final" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="ForPublicRelease" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
-                                <Button Content="Information Only" Command="{Binding AddStampAnnotationFromDragCommand}" CommandParameter="InformationOnly" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.addStamp"/>
+                                <Button Content="Approved" Command="{Binding ToggleStampModeCommand}" CommandParameter="Approved" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Experimental" Command="{Binding ToggleStampModeCommand}" CommandParameter="Experimental" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Not Approved" Command="{Binding ToggleStampModeCommand}" CommandParameter="NotApproved" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="As Is" Command="{Binding ToggleStampModeCommand}" CommandParameter="AsIs" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Expired" Command="{Binding ToggleStampModeCommand}" CommandParameter="Expired" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Not For Public Release" Command="{Binding ToggleStampModeCommand}" CommandParameter="NotForPublicRelease" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Confidential" Command="{Binding ToggleStampModeCommand}" CommandParameter="Confidential" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Sold" Command="{Binding ToggleStampModeCommand}" CommandParameter="Sold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Departmental" Command="{Binding ToggleStampModeCommand}" CommandParameter="Departmental" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Top Secret" Command="{Binding ToggleStampModeCommand}" CommandParameter="TopSecret" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Draft" Command="{Binding ToggleStampModeCommand}" CommandParameter="Draft" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="For Comment" Command="{Binding ToggleStampModeCommand}" CommandParameter="ForComment" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Final" Command="{Binding ToggleStampModeCommand}" CommandParameter="Final" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="For Public Release" Command="{Binding ToggleStampModeCommand}" CommandParameter="ForPublicRelease" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
+                                <Button Content="Information Only" Command="{Binding ToggleStampModeCommand}" CommandParameter="InformationOnly" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" access:CommandAccessibility.CommandId="annotation.toggleStampMode"/>
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>
                 </Button>
                 <Button x:Name="AnnotationToolbarImageStampButton"
                         toolbar:PriorityToolbarPanel.Priority="60"
-                        Command="{Binding AddImageStampAnnotationFromDragCommand}"
+                        Command="{Binding ToggleImageStampModeCommand}"
                         Classes="modern-button toolbar-button"
                         IsEnabled="{Binding IsDocumentLoaded}"
-                        access:CommandAccessibility.CommandId="annotation.addImageStamp"
-                        ToolTip.Tip="Add image stamp from drag"
-                        AutomationProperties.Name="Add Image Stamp">
+                        access:CommandAccessibility.CommandId="annotation.toggleImageStampMode"
+                        ToolTip.Tip="Draw image stamp"
+                        AutomationProperties.Name="Draw Image Stamp">
                     <PathIcon Classes="toolbar-icon" Data="{StaticResource IconImageStamp}"/>
                 </Button>
 
@@ -1728,6 +1728,7 @@
                                                FormFieldEditRejected="OnFormFieldEditRejected"
                                                FormFieldRectDrawn="OnFormFieldRectDrawn"
                                                AnnotationPathDrawn="OnAnnotationPathDrawn"
+                                               ShapeAnnotationRectDrawn="OnShapeAnnotationRectDrawn"
                                                PathCaptureKind="{Binding PathCaptureKind}"
                                                TypewriterTextCreated="OnTypewriterTextCreated"
                                                TypewriterTextEdited="OnTypewriterTextEdited"

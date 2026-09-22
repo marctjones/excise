@@ -652,9 +652,14 @@ public class TextMarkupAnnotationCommandTests
     /// <summary>The drag gesture shapes reuse — the redaction box rectangle.</summary>
     private static void DragABox(MainWindowViewModel vm)
     {
-        vm.CurrentRedactionPageArea = PdfPageRect.ViewerDips(
+        // #1791: shape annotations no longer read CurrentRedactionPageArea —
+        // that was the redaction tool's OWN staged rect, reachable only via a
+        // genuinely-enabled Redaction Mode and cleared as a side effect of
+        // marking a pending redaction. StageShapeAnnotationRectForTests is
+        // the test seam for their own, decoupled staging.
+        vm.StageShapeAnnotationRectForTests(PdfPageRect.ViewerDips(
             1, x: 100, y: 100, width: 200, height: 120,
-            renderDpi: MainWindowViewModel.DefaultViewerRenderDpi);
+            renderDpi: MainWindowViewModel.DefaultViewerRenderDpi));
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

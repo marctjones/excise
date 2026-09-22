@@ -160,6 +160,23 @@ public class FormFieldRectDrawnEventArgs : EventArgs
 }
 
 /// <summary>
+/// Event arguments for a finished drag-rect in <see cref="InteractionMode.ShapeAnnotation"/>
+/// mode. Same shape as <see cref="FormFieldRectDrawnEventArgs"/> — the rect is
+/// in PDF points, bottom-left origin — because it is the same gesture; only
+/// what the host does with the rect differs.
+/// </summary>
+public class ShapeAnnotationRectDrawnEventArgs : EventArgs
+{
+    public PdfRectangle Rect { get; }
+    public int PageNumber { get; }
+    public ShapeAnnotationRectDrawnEventArgs(PdfRectangle rect, int pageNumber)
+    {
+        Rect = rect;
+        PageNumber = pageNumber;
+    }
+}
+
+/// <summary>
 /// Event arguments for a finished free-form drawing gesture in
 /// <see cref="InteractionMode.PathAnnotation"/> mode.
 ///
@@ -382,4 +399,22 @@ public enum InteractionMode
     /// <see cref="PdfViewerControl.StickyNoteClicked"/>, ambient like a link.
     /// </summary>
     StickyNote,
+
+    /// <summary>
+    /// Drag a rectangle that becomes a Square, Circle, FreeText box, Stamp or
+    /// Image Stamp annotation directly — which one is the host's own current
+    /// selection, not anything this control tracks. The host listens for
+    /// <see cref="PdfViewerControl.ShapeAnnotationRectDrawn"/>.
+    ///
+    /// Exists because these five annotation types used to have NO drawing
+    /// mode of their own: their Add*FromDrag commands read a rect staged by
+    /// <see cref="InteractionMode.Redaction"/>'s OWN drag gesture, which only
+    /// a genuinely-enabled Redaction Mode can produce — and doing so ALSO
+    /// marks that area as a pending redaction as a side effect, then clears
+    /// the rect it just staged. There was no gesture that left a shape
+    /// annotation both reachable and safe. This mode gives them the same
+    /// direct one-drag-places-it path <see cref="FormAuthoring"/> and
+    /// <see cref="PathAnnotation"/> already have.
+    /// </summary>
+    ShapeAnnotation,
 }

@@ -4,16 +4,16 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "57c9622074082607580ab204f69c4e3dad7cd5a0",
+  "sourceRevision": "88124a98173254fdb77425bfeabc086bb038a896",
   "summary": {
     "interactions": 197,
     "menuItems": 111,
     "buttons": 77,
     "mouseGestures": 9,
     "keyboardShortcuts": 28,
-    "declaredCommandIds": 116,
+    "declaredCommandIds": 121,
     "commandIdsReachableFromTheGui": 107,
-    "commandIdsWithNoGuiPath": 0,
+    "commandIdsWithNoGuiPath": 5,
     "cliOnlyCommandIds": 9,
     "controlsWithNoCommandId": 0,
     "duplicateShortcuts": 0,
@@ -87,19 +87,19 @@
       "kind": "button",
       "path": "",
       "label": "Approved",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "Approved",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
       "path": "",
       "label": "As Is",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "AsIs",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
@@ -123,46 +123,46 @@
       "kind": "button",
       "path": "",
       "label": "Confidential",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "Confidential",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
       "path": "",
       "label": "Departmental",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "Departmental",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
       "path": "",
       "label": "Draft",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "Draft",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
       "path": "",
       "label": "Experimental",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "Experimental",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
       "path": "",
       "label": "Expired",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "Expired",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
@@ -177,10 +177,10 @@
       "kind": "button",
       "path": "",
       "label": "Final",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "Final",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
@@ -213,19 +213,19 @@
       "kind": "button",
       "path": "",
       "label": "For Comment",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "ForComment",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
       "path": "",
       "label": "For Public Release",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "ForPublicRelease",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
@@ -249,10 +249,10 @@
       "kind": "button",
       "path": "",
       "label": "Information Only",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "InformationOnly",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
@@ -276,19 +276,19 @@
       "kind": "button",
       "path": "",
       "label": "Not Approved",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "NotApproved",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
       "path": "",
       "label": "Not For Public Release",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "NotForPublicRelease",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
@@ -357,10 +357,10 @@
       "kind": "button",
       "path": "",
       "label": "Sold",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "Sold",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
@@ -375,10 +375,10 @@
       "kind": "button",
       "path": "",
       "label": "Top Secret",
-      "command": "AddStampAnnotationFromDragCommand",
+      "command": "ToggleStampModeCommand",
       "commandParameter": "TopSecret",
       "shortcut": null,
-      "commandId": "annotation.addStamp"
+      "commandId": "annotation.toggleStampMode"
     },
     {
       "kind": "button",
@@ -473,20 +473,20 @@
     {
       "kind": "button",
       "path": "AnnotationToolbarCircleButton",
-      "label": "Add circle from drag",
-      "command": "AddCircleAnnotationFromDragCommand",
+      "label": "Draw circle",
+      "command": "ToggleCircleModeCommand",
       "commandParameter": null,
       "shortcut": null,
-      "commandId": "annotation.addCircle"
+      "commandId": "annotation.toggleCircleMode"
     },
     {
       "kind": "button",
       "path": "AnnotationToolbarFreeTextButton",
-      "label": "Add text box from drag",
-      "command": "AddFreeTextAnnotationFromDragCommand",
+      "label": "Draw text box",
+      "command": "ToggleFreeTextModeCommand",
       "commandParameter": null,
       "shortcut": null,
-      "commandId": "annotation.addFreeText"
+      "commandId": "annotation.toggleFreeTextMode"
     },
     {
       "kind": "button",
@@ -500,11 +500,11 @@
     {
       "kind": "button",
       "path": "AnnotationToolbarImageStampButton",
-      "label": "Add image stamp from drag",
-      "command": "AddImageStampAnnotationFromDragCommand",
+      "label": "Draw image stamp",
+      "command": "ToggleImageStampModeCommand",
       "commandParameter": null,
       "shortcut": null,
-      "commandId": "annotation.addImageStamp"
+      "commandId": "annotation.toggleImageStampMode"
     },
     {
       "kind": "button",
@@ -545,11 +545,11 @@
     {
       "kind": "button",
       "path": "AnnotationToolbarSquareButton",
-      "label": "Add square from drag",
-      "command": "AddSquareAnnotationFromDragCommand",
+      "label": "Draw square",
+      "command": "ToggleSquareModeCommand",
       "commandParameter": null,
       "shortcut": null,
-      "commandId": "annotation.addSquare"
+      "commandId": "annotation.toggleSquareMode"
     },
     {
       "kind": "button",
@@ -715,15 +715,6 @@
     },
     {
       "kind": "menu",
-      "path": "Annotate > Add Circle From Drag",
-      "label": "Add Circle From Drag",
-      "command": "AddCircleAnnotationFromDragCommand",
-      "commandParameter": null,
-      "shortcut": null,
-      "commandId": "annotation.addCircle"
-    },
-    {
-      "kind": "menu",
       "path": "Annotate > Add Highlight From Selection",
       "label": "Add Highlight From Selection",
       "command": "AddHighlightAnnotationFromSelectionCommand",
@@ -733,174 +724,12 @@
     },
     {
       "kind": "menu",
-      "path": "Annotate > Add Image Stamp From Drag...",
-      "label": "Add Image Stamp From Drag...",
-      "command": "AddImageStampAnnotationFromDragCommand",
-      "commandParameter": null,
-      "shortcut": null,
-      "commandId": "annotation.addImageStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Square From Drag",
-      "label": "Add Square From Drag",
-      "command": "AddSquareAnnotationFromDragCommand",
-      "commandParameter": null,
-      "shortcut": null,
-      "commandId": "annotation.addSquare"
-    },
-    {
-      "kind": "menu",
       "path": "Annotate > Add Squiggly From Selection",
       "label": "Add Squiggly From Selection",
       "command": "AddSquigglyAnnotationFromSelectionCommand",
       "commandParameter": null,
       "shortcut": null,
       "commandId": "annotation.addSquiggly"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag",
-      "label": "Add Stamp From Drag",
-      "command": null,
-      "commandParameter": null,
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Approved",
-      "label": "Approved",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "Approved",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > As Is",
-      "label": "As Is",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "AsIs",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Confidential",
-      "label": "Confidential",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "Confidential",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Departmental",
-      "label": "Departmental",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "Departmental",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Draft",
-      "label": "Draft",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "Draft",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Experimental",
-      "label": "Experimental",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "Experimental",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Expired",
-      "label": "Expired",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "Expired",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Final",
-      "label": "Final",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "Final",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > For Comment",
-      "label": "For Comment",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "ForComment",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > For Public Release",
-      "label": "For Public Release",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "ForPublicRelease",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Information Only",
-      "label": "Information Only",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "InformationOnly",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Not Approved",
-      "label": "Not Approved",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "NotApproved",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Not For Public Release",
-      "label": "Not For Public Release",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "NotForPublicRelease",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Sold",
-      "label": "Sold",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "Sold",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Stamp From Drag > Top Secret",
-      "label": "Top Secret",
-      "command": "AddStampAnnotationFromDragCommand",
-      "commandParameter": "TopSecret",
-      "shortcut": null,
-      "commandId": "annotation.addStamp"
     },
     {
       "kind": "menu",
@@ -919,15 +748,6 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "annotation.addStrikeOut"
-    },
-    {
-      "kind": "menu",
-      "path": "Annotate > Add Text Box From Drag...",
-      "label": "Add Text Box From Drag...",
-      "command": "AddFreeTextAnnotationFromDragCommand",
-      "commandParameter": null,
-      "shortcut": null,
-      "commandId": "annotation.addFreeText"
     },
     {
       "kind": "menu",
@@ -958,6 +778,24 @@
     },
     {
       "kind": "menu",
+      "path": "Annotate > Draw Circle",
+      "label": "Draw Circle",
+      "command": "ToggleCircleModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleCircleMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Image Stamp...",
+      "label": "Draw Image Stamp...",
+      "command": "ToggleImageStampModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleImageStampMode"
+    },
+    {
+      "kind": "menu",
       "path": "Annotate > Draw Line",
       "label": "Draw Line",
       "command": "ToggleLineModeCommand",
@@ -982,6 +820,168 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "annotation.togglePolygonMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Square",
+      "label": "Draw Square",
+      "command": "ToggleSquareModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleSquareMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp",
+      "label": "Draw Stamp",
+      "command": null,
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Approved",
+      "label": "Approved",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "Approved",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > As Is",
+      "label": "As Is",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "AsIs",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Confidential",
+      "label": "Confidential",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "Confidential",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Departmental",
+      "label": "Departmental",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "Departmental",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Draft",
+      "label": "Draft",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "Draft",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Experimental",
+      "label": "Experimental",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "Experimental",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Expired",
+      "label": "Expired",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "Expired",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Final",
+      "label": "Final",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "Final",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > For Comment",
+      "label": "For Comment",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "ForComment",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > For Public Release",
+      "label": "For Public Release",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "ForPublicRelease",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Information Only",
+      "label": "Information Only",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "InformationOnly",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Not Approved",
+      "label": "Not Approved",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "NotApproved",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Not For Public Release",
+      "label": "Not For Public Release",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "NotForPublicRelease",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Sold",
+      "label": "Sold",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "Sold",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Stamp > Top Secret",
+      "label": "Top Secret",
+      "command": "ToggleStampModeCommand",
+      "commandParameter": "TopSecret",
+      "shortcut": null,
+      "commandId": "annotation.toggleStampMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Text Box...",
+      "label": "Draw Text Box...",
+      "command": "ToggleFreeTextModeCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.toggleFreeTextMode"
     },
     {
       "kind": "menu",
@@ -1938,7 +1938,7 @@
   ],
   "duplicateShortcuts": {},
   "parameterisedCommandIds": {
-    "annotation.addStamp": [
+    "annotation.toggleStampMode": [
       "Approved",
       "AsIs",
       "Confidential",
@@ -1989,7 +1989,13 @@
       "{Binding PageIndex}"
     ]
   },
-  "commandIdsWithNoGuiPath": [],
+  "commandIdsWithNoGuiPath": [
+    "annotation.addCircle",
+    "annotation.addFreeText",
+    "annotation.addImageStamp",
+    "annotation.addSquare",
+    "annotation.addStamp"
+  ],
   "cliOnlyCommandIds": [
     "audit.hiddenText",
     "automation.batch",

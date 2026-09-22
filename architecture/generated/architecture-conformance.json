@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "57c9622074082607580ab204f69c4e3dad7cd5a0",
+  "sourceRevision": "88124a98173254fdb77425bfeabc086bb038a896",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7939,
+    "retainedSymbols": 7952,
     "observedComponentDependencies": 72,
     "declaredDependencies": 69,
     "acceptedExceptions": 1,
@@ -24,28 +24,28 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 460,
+      "references": 462,
       "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Views.MainWindow",
           "target": "Excise.App.ViewModels.MainWindowViewModel",
-          "references": 170
+          "references": 172
         }
       ]
     },
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 709,
-      "typeDependencyCount": 79,
+      "references": 725,
+      "typeDependencyCount": 80,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.App.Services.PdfDocumentService",
-          "references": 118
+          "references": 119
         }
       ]
     },
@@ -66,8 +66,8 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 405,
-      "typeDependencyCount": 25,
+      "references": 407,
+      "typeDependencyCount": 26,
       "classification": "declared",
       "evidence": [
         {

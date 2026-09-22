@@ -264,6 +264,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
                 if (_isTypewriterMode) IsTypewriterMode = false;
                 if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
+                if (_isShapeAnnotationMode) IsShapeAnnotationMode = false;
             }
 
             this.RaisePropertyChanged(nameof(IsContinuousView));
@@ -938,6 +939,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
                 if (_isTypewriterMode) IsTypewriterMode = false;
                 if (_isStickyNoteToolActive) IsStickyNoteToolActive = false;
+                if (_isShapeAnnotationMode) IsShapeAnnotationMode = false;
             }
             else
             {
@@ -1063,6 +1065,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 IsTypewriterMode = false;
             if (value && _isStickyNoteToolActive)
                 IsStickyNoteToolActive = false;
+            if (value && _isShapeAnnotationMode)
+                IsShapeAnnotationMode = false;
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));
         }

@@ -366,10 +366,11 @@ public class AnnotationToolbarAndPaletteTests
     /// would be an undeclared gap at scripts/check-gui-interaction-coverage.sh's
     /// FORWARD check (never relaxed). A real click must open the flyout, then a
     /// second real click on one of its 15 stamp choices must reach
-    /// AddStampAnnotationFromDragCommand and run it without throwing — it no-ops
-    /// via a dialog ("Drag a box... before adding a stamp") since no drag rect
-    /// is staged here, the same guarded-no-op shape as the "remaining buttons"
-    /// theory above, not a thrown exception.
+    /// <see cref="MainWindowViewModel.ToggleStampModeCommand"/> and ARM stamp
+    /// mode with that name staged (#1791 — clicking a stamp choice used to
+    /// call AddStampAnnotationFromDragCommand directly, which always hit its
+    /// own "Drag a box..." guard dialog here since no drag rect could ever be
+    /// staged from a plain click; now it arms the mode a real drag completes).
     /// </summary>
     [FixedAvaloniaFact]
     public async Task RealPointerClick_OnToolbarStampButton_OpensTheFlyoutAndClicksAChoice()
@@ -395,11 +396,14 @@ public class AnnotationToolbarAndPaletteTests
             var confidential = content!.GetLogicalDescendants().OfType<Button>()
                 .FirstOrDefault(b => b.Content as string == "Confidential");
             confidential.Should().NotBeNull("the flyout must offer the same 15 stamps the Annotate menu does");
-            confidential!.Command.Should().Be(vm.AddStampAnnotationFromDragCommand);
+            confidential!.Command.Should().Be(vm.ToggleStampModeCommand);
             confidential.CommandParameter.Should().Be("Confidential");
 
-            var act = async () => await ClickAsync(confidential, window);
-            await act.Should().NotThrowAsync();
+            await ClickAsync(confidential, window);
+
+            vm.IsShapeAnnotationMode.Should().BeTrue("a real click on a stamp choice must arm shape-annotation mode");
+            vm.ShapeAnnotationKind.Should().Be(ShapeAnnotationKind.Stamp);
+            vm.StagedStampName.Should().Be("Confidential");
         }
         finally
         {

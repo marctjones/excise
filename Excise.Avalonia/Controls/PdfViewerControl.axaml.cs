@@ -417,6 +417,14 @@ public partial class PdfViewerControl : UserControl
     public event EventHandler<FormFieldRectDrawnEventArgs>? FormFieldRectDrawn;
 
     /// <summary>
+    /// Fired when the user finishes drawing a rect in
+    /// <see cref="InteractionMode.ShapeAnnotation"/> mode. Carries the rect in
+    /// PDF points (bottom-left origin) plus the host page number — the host
+    /// decides which annotation type it becomes.
+    /// </summary>
+    public event EventHandler<ShapeAnnotationRectDrawnEventArgs>? ShapeAnnotationRectDrawn;
+
+    /// <summary>
     /// Raised when the user finishes a free-form drawing gesture in
     /// <see cref="InteractionMode.PathAnnotation"/> mode. Points are already in
     /// PDF content coordinates (#934 D).

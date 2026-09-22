@@ -501,12 +501,94 @@ public partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Shape annotations (#912) come from a DRAG, not a text selection — the
-    /// same gesture the redaction box already uses. Same conversion as the
-    /// text-selection path, different source rectangle.
+    /// The rect <see cref="OnShapeAnnotationRectDrawnAsync"/> just staged for
+    /// whichever Add*FromDrag method it is about to call — set immediately
+    /// before that call and cleared immediately after, so it is never stale
+    /// state a later, unrelated call could accidentally pick up.
+    /// </summary>
+    private (int PageNumber, PdfRectangle Rect)? _currentShapeAnnotationArea;
+
+    /// <summary>
+    /// Shape annotations (#912) come from a DRAG. Until #1791's follow-up this
+    /// read <see cref="CurrentRedactionPageArea"/> — the SAME rect the
+    /// redaction tool's own drag gesture stages, reachable only via a
+    /// genuinely-enabled Redaction Mode, which also marks that area as a
+    /// pending redaction and clears the rect as a side effect. There was no
+    /// gesture that left a shape annotation both reachable and safe.
+    /// <see cref="InteractionMode.ShapeAnnotation"/> now gives these five
+    /// types their own drag, already converted to PDF content coordinates by
+    /// the viewer (mirroring FormFieldRectDrawn) — no second conversion here.
     /// </summary>
     private bool TryGetCurrentShapeContentRect(out int pageNumber, out PdfRectangle contentRect)
-        => TryGetContentRect(CurrentRedactionPageArea, out pageNumber, out contentRect);
+    {
+        pageNumber = 0;
+        contentRect = default;
+
+        if (_currentShapeAnnotationArea is not { } area)
+            return false;
+
+        pageNumber = area.PageNumber;
+        contentRect = area.Rect;
+        return true;
+    }
+
+    /// <summary>
+    /// Called by MainWindow when the viewer raises ShapeAnnotationRectDrawn —
+    /// the user finished dragging a rect in <see cref="InteractionMode.ShapeAnnotation"/>
+    /// mode. Dispatches to whichever Add*FromDrag method <see cref="ShapeAnnotationKind"/>
+    /// currently selects; that method's own guard dialog ("Drag a box...")
+    /// cannot fire here since the rect this call stages is, by construction,
+    /// always present.
+    /// </summary>
+    public async Task OnShapeAnnotationRectDrawnAsync(PdfRectangle rect, int pageNumber)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        _currentShapeAnnotationArea = (pageNumber, rect);
+        try
+        {
+            switch (ShapeAnnotationKind)
+            {
+                case ShapeAnnotationKind.Square:
+                    await AddSquareAnnotationFromDragAsync();
+                    break;
+                case ShapeAnnotationKind.Circle:
+                    await AddCircleAnnotationFromDragAsync();
+                    break;
+                case ShapeAnnotationKind.FreeText:
+                    await AddFreeTextAnnotationFromDragAsync();
+                    break;
+                case ShapeAnnotationKind.Stamp:
+                    if (!string.IsNullOrWhiteSpace(StagedStampName))
+                        await AddStampAnnotationFromDragAsync(StagedStampName!);
+                    break;
+                case ShapeAnnotationKind.ImageStamp:
+                    await AddImageStampAnnotationFromDragAsync();
+                    break;
+            }
+        }
+        finally
+        {
+            _currentShapeAnnotationArea = null;
+        }
+    }
+
+    /// <summary>
+    /// Test seam: stages the rect an Add*FromDrag method consumes, the same
+    /// conversion <see cref="OnShapeAnnotationRectDrawnAsync"/> gets from a
+    /// real drag — without ALSO dispatching to whichever Add* command
+    /// <see cref="ShapeAnnotationKind"/> currently selects, so a test that
+    /// wants to call a specific Add*Command directly still can. Takes a
+    /// viewer-DIPs <see cref="PdfPageRect"/> (the shape a real drag gesture
+    /// naturally produces) rather than an already-converted PdfRectangle, so
+    /// a test fixture reads like "the user dragged this region."
+    /// </summary>
+    internal void StageShapeAnnotationRectForTests(PdfPageRect viewerArea)
+    {
+        if (TryGetContentRect(viewerArea, out var pageNumber, out var contentRect))
+            _currentShapeAnnotationArea = (pageNumber, contentRect);
+    }
 
     private bool TryGetCurrentTextSelectionContentRect(out int pageNumber, out PdfRectangle contentRect)
         => TryGetContentRect(CurrentTextSelectionPageArea, out pageNumber, out contentRect);
