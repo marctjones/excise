@@ -157,11 +157,7 @@ public class PdfDocumentSaveLifecycleTests
         }
     }
 
-    /// <summary>
-    /// #1683, measured: saving onto a symlink used to replace the link with a
-    /// regular file, and the file it pointed at never received the save. The
-    /// save now writes through the link.
-    /// </summary>
+    /// <summary>#1802: an owner-only file must stay owner-only after a save.</summary>
     [Fact]
     [System.Runtime.Versioning.UnsupportedOSPlatform("windows")]
     public void SaveToPath_KeepsTheFilesUnixPermissions()
@@ -188,6 +184,11 @@ public class PdfDocumentSaveLifecycleTests
         }
     }
 
+    /// <summary>
+    /// #1683, measured: saving onto a symlink used to replace the link with a
+    /// regular file, and the file it pointed at never received the save. The
+    /// save now writes through the link.
+    /// </summary>
     [Fact]
     public void SaveToPath_OntoASymlink_WritesThroughAndKeepsTheLink()
     {
