@@ -157,6 +157,33 @@ public class PdfDocumentSaveLifecycleTests
         }
     }
 
+    /// <summary>#1802: an owner-only file must stay owner-only after a save.</summary>
+    [Fact]
+    [System.Runtime.Versioning.UnsupportedOSPlatform("windows")]
+    public void SaveToPath_KeepsTheFilesUnixPermissions()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "Unix mode bits do not exist on Windows");
+        var dir = Directory.CreateTempSubdirectory("excise-mode-").FullName;
+        try
+        {
+            var path = SeedFile(Path.Combine(dir, "private.pdf"));
+            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+
+            using (var document = PdfDocument.Open(path))
+            {
+                document.Pages.AddBlank(100, 100);
+                document.Save(path);
+            }
+
+            File.GetUnixFileMode(path).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite,
+                "an owner-only file must not become readable by others after a save (#1802)");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
     /// <summary>
     /// #1683, measured: saving onto a symlink used to replace the link with a
     /// regular file, and the file it pointed at never received the save. The

@@ -103,6 +103,7 @@ internal static class AtomicFileReplace
             // the rename itself.
             if (expected is { } known && known.IsSameFileAs(fullPath))
                 known.ThrowIfChangedOnDisk();
+            CarryOverUnixMode(fullPath, temporary);
             MoveIntoPlace(temporary, fullPath);
         }
         catch
@@ -118,6 +119,20 @@ internal static class AtomicFileReplace
         }
 
         return OnDiskFileState.Capture(fullPath);
+    }
+
+    // #1802: the temporary is created with the umask default, so without this a
+    // 0600 file becomes readable by others after every save.
+    private static void CarryOverUnixMode(string target, string temporary)
+    {
+        if (OperatingSystem.IsWindows() || !File.Exists(target))
+            return;
+        try
+        {
+            File.SetUnixFileMode(temporary, File.GetUnixFileMode(target));
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
     }
 
     /// <summary>
