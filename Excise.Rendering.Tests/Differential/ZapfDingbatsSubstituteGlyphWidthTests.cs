@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.TestSupport;
 using Excise.Rendering.Differential;
 using SkiaSharp;
 using Xunit;
@@ -32,10 +33,11 @@ public sealed class ZapfDingbatsSubstituteGlyphWidthTests
     private readonly ITestOutputHelper _out;
     public ZapfDingbatsSubstituteGlyphWidthTests(ITestOutputHelper o) { _out = o; }
 
-    [FactSkippableIfNoMutool]
+    [Fact]
     public void SuitGlyphs_RenderAtConsistentWidth_MatchingMutool()
     {
-        var path = FindRepoFile("test-pdfs", "pdfjs", "issue15716.pdf");
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        var path = TestRepoLayout.FindFile("test-pdfs", "pdfjs", "issue15716.pdf");
         Assert.SkipWhen(path == null, "No pdf.js issue15716 fixture found.");
 
         using var doc = PdfDocument.Open(path!);
@@ -148,25 +150,5 @@ public sealed class ZapfDingbatsSubstituteGlyphWidthTests
             bands.Add((start, i - 1));
         }
         return bands;
-    }
-
-    private static string? FindRepoFile(params string[] parts)
-    {
-        var dir = System.IO.Directory.GetCurrentDirectory();
-        for (var i = 0; i < 8 && dir != null; i++, dir = System.IO.Directory.GetParent(dir)?.FullName)
-        {
-            var candidate = System.IO.Path.Combine(new[] { dir }.Concat(parts).ToArray());
-            if (System.IO.File.Exists(candidate)) return candidate;
-        }
-        return null;
-    }
-}
-
-public sealed class FactSkippableIfNoMutoolAttribute : FactAttribute
-{
-    public FactSkippableIfNoMutoolAttribute()
-    {
-        if (!MutoolReferenceRenderer.IsAvailable)
-            Skip = "mutool not installed";
     }
 }
