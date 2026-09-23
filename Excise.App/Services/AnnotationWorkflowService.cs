@@ -122,32 +122,10 @@ public sealed class AnnotationWorkflowService
     }
 
     /// <summary>
-    /// Drag-to-move (#1794): reposition an already-placed sticky note's
-    /// <c>/Rect</c>. Same "no separate viewer mirror write" shape as
-    /// <see cref="UpdateTextNote"/> — the caller resyncs the viewer document
-    /// from the save document afterward.
-    /// </summary>
-    /// <param name="pageNumber">1-based page the note lives on.</param>
-    /// <param name="oldRect">The note's CURRENT /Rect — the identity used to find it, same as <see cref="UpdateTextNote"/>.</param>
-    /// <param name="newRect">The note's new /Rect.</param>
-    internal PdfAnnotation MoveTextNote(int pageNumber, PdfRectangle oldRect, PdfRectangle newRect)
-    {
-        var saveDocument = GetLoadedDocument();
-        var saveAnnotation = FindTextAnnotationAt(saveDocument, pageNumber, oldRect)
-            ?? throw new InvalidOperationException(
-                $"No sticky note found at the given rect on page {pageNumber}.");
-
-        var moved = saveDocument.MoveTextAnnotation(pageNumber, saveAnnotation, newRect);
-
-        _logger.LogInformation("Moved sticky note on page {PageNumber}", pageNumber);
-        return moved;
-    }
-
-    /// <summary>
     /// Drag-to-move a note's CARD (#1797), not the note itself: repositions
     /// only the linked <c>/Popup</c>'s <c>/Rect</c>. <paramref name="iconRect"/>
     /// identifies the note by its own, never-moving <c>/Rect</c> — the same
-    /// identity <see cref="MoveTextNote"/> and <see cref="UpdateTextNote"/> use
+    /// identity <see cref="UpdateTextNote"/> uses
     /// — so a drag can never accidentally match the wrong note just because
     /// its card happened to be dragged near another one's.
     /// </summary>
