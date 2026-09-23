@@ -22,7 +22,7 @@
 
     <Style Selector="Button.modern-button:pointerover">
         <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
     </Style>
 
     <Style Selector="Button.modern-button:pressed">
