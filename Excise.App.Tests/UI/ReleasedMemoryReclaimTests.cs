@@ -138,19 +138,19 @@ public class ReleasedMemoryReclaimTests
         new(collections.Add, post: run => run());
 
     [FixedAvaloniaFact]
-    public async Task IdleTrim_WithFragmentationAtTheThreshold_ReclaimsOnce_ThenNotAgainUntilActivity()
+    public async Task IdleTrim_ReclaimsOnce_ThenNotAgainUntilActivity()
     {
         var collections = new List<HeapReclaimTrigger>();
         var trims = new List<PdfViewerCacheTrimLevel>();
         using var coordinator = new ViewerCacheTrimCoordinator(
-            trims.Add, IdleSoon, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
-            sampleFragmentedBytes: () => ViewerCacheTrimCoordinator.IdleReclaimThresholdBytes);
+            trims.Add, IdleSoon, () => (0, 0), memoryReclaimer: InlineReclaimer(collections));
 
         coordinator.OnActivity();
         await PumpUntilAsync(() => trims.Count > 0, TimeSpan.FromSeconds(10));
         trims.Should().Equal(PdfViewerCacheTrimLevel.Background);
         collections.Should().Equal(new[] { HeapReclaimTrigger.Idle },
-            "#1496: an idle trim over a fragmented heap asks for exactly one reclaim, tagged Idle");
+            "#1496/#1713: an idle trim asks for exactly one reclaim, tagged Idle, unconditionally — gating it on " +
+            "reported fragmentation (removed by #1713) missed most of what a reclaim actually freed");
 
         await PumpForAsync(TimeSpan.FromMilliseconds(400));
         trims.Should().HaveCount(1, "fixture: the one-shot idle timer does not fire again without activity");
@@ -166,36 +166,13 @@ public class ReleasedMemoryReclaimTests
     }
 
     [FixedAvaloniaFact]
-    public async Task IdleTrim_WithFragmentationBelowTheThreshold_RequestsNoReclaim()
+    public void DeactivateAndMinimize_NeverReclaim()
     {
         var collections = new List<HeapReclaimTrigger>();
         var trims = new List<PdfViewerCacheTrimLevel>();
-        int samples = 0;
-        using var coordinator = new ViewerCacheTrimCoordinator(
-            trims.Add, IdleSoon, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
-            sampleFragmentedBytes: () =>
-            {
-                samples++;
-                return ViewerCacheTrimCoordinator.IdleReclaimThresholdBytes - 1;
-            });
-
-        coordinator.OnActivity();
-        await PumpUntilAsync(() => trims.Count > 0, TimeSpan.FromSeconds(10));
-        await PumpForAsync(TimeSpan.FromMilliseconds(200));
-        samples.Should().Be(1, "fixture: the idle trim read the fragmentation");
-        collections.Should().BeEmpty("a heap with little committed-but-free memory is not worth a blocking collection");
-    }
-
-    [FixedAvaloniaFact]
-    public void DeactivateAndMinimize_NeverReclaim_HoweverFragmentedTheHeap()
-    {
-        var collections = new List<HeapReclaimTrigger>();
-        var trims = new List<PdfViewerCacheTrimLevel>();
-        int samples = 0;
         using var coordinator = new ViewerCacheTrimCoordinator(
             trims.Add, IdleSoon with { IdleDelay = TimeSpan.FromMinutes(10) }, () => (0, 0),
-            memoryReclaimer: InlineReclaimer(collections),
-            sampleFragmentedBytes: () => { samples++; return long.MaxValue; });
+            memoryReclaimer: InlineReclaimer(collections));
 
         coordinator.OnDeactivated();
         coordinator.OnMinimized();
@@ -205,34 +182,32 @@ public class ReleasedMemoryReclaimTests
         trims.Should().Equal(Enumerable.Repeat(PdfViewerCacheTrimLevel.Background, 3),
             "fixture: the soft triggers did trim");
         collections.Should().BeEmpty("a window switch must not pay a blocking compacting GC");
-        samples.Should().Be(0, "deactivate and minimize do not even read the fragmentation");
     }
 
     [FixedAvaloniaFact]
-    public void TryRequestBackgroundTrim_TakesTheSameFragmentationGatedReclaimPath_AsTheIdleTimer()
+    public void TryRequestBackgroundTrim_TakesTheSameReclaimPath_AsTheIdleTimer()
     {
-        long fragmented = ViewerCacheTrimCoordinator.IdleReclaimThresholdBytes - 1;
         var collections = new List<HeapReclaimTrigger>();
         var trims = new List<PdfViewerCacheTrimLevel>();
         using (var coordinator = new ViewerCacheTrimCoordinator(
                    trims.Add, IdleSoon with { IdleDelay = TimeSpan.FromMinutes(10) }, () => (0, 0),
-                   memoryReclaimer: InlineReclaimer(collections), sampleFragmentedBytes: () => fragmented))
+                   memoryReclaimer: InlineReclaimer(collections)))
         {
             coordinator.TryRequestBackgroundTrim().Should().BeTrue();
-            collections.Should().BeEmpty("below the threshold the #1497 harness trim does not reclaim either");
+            collections.Should().Equal(new[] { HeapReclaimTrigger.Idle },
+                "the #1497 harness trim reclaims exactly as the idle timer would");
 
-            fragmented = ViewerCacheTrimCoordinator.IdleReclaimThresholdBytes;
             coordinator.OnActivity();
             coordinator.TryRequestBackgroundTrim().Should().BeTrue();
-            collections.Should().Equal(new[] { HeapReclaimTrigger.Idle },
-                "at the threshold the harness trim reclaims exactly as the idle timer would");
+            collections.Should().Equal(new[] { HeapReclaimTrigger.Idle, HeapReclaimTrigger.Idle },
+                "activity started a new idle period, so this one reclaims again");
         }
         trims.Should().Equal(PdfViewerCacheTrimLevel.Background, PdfViewerCacheTrimLevel.Background);
 
         collections.Clear();
         using (var off = new ViewerCacheTrimCoordinator(
                    trims.Add, IdleSoon with { SoftTriggers = false }, () => (0, 0),
-                   memoryReclaimer: InlineReclaimer(collections), sampleFragmentedBytes: () => long.MaxValue))
+                   memoryReclaimer: InlineReclaimer(collections)))
         {
             off.TryRequestBackgroundTrim().Should().BeFalse("soft triggers off refuses the trim");
         }
@@ -246,11 +221,9 @@ public class ReleasedMemoryReclaimTests
         var gate = new IdleReclaimGate();
         var policy = IdleSoon with { IdleDelay = TimeSpan.FromMinutes(10) };
         using var first = new ViewerCacheTrimCoordinator(
-            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
-            sampleFragmentedBytes: () => long.MaxValue, idleReclaimGate: gate);
+            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections), idleReclaimGate: gate);
         using var second = new ViewerCacheTrimCoordinator(
-            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
-            sampleFragmentedBytes: () => long.MaxValue, idleReclaimGate: gate);
+            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections), idleReclaimGate: gate);
 
         first.TryRequestBackgroundTrim().Should().BeTrue();
         second.TryRequestBackgroundTrim().Should().BeTrue();
@@ -265,11 +238,9 @@ public class ReleasedMemoryReclaimTests
         // Unshared (the default), each coordinator keeps its own period.
         collections.Clear();
         using var alone1 = new ViewerCacheTrimCoordinator(
-            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
-            sampleFragmentedBytes: () => long.MaxValue);
+            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections));
         using var alone2 = new ViewerCacheTrimCoordinator(
-            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections),
-            sampleFragmentedBytes: () => long.MaxValue);
+            _ => { }, policy, () => (0, 0), memoryReclaimer: InlineReclaimer(collections));
         alone1.TryRequestBackgroundTrim();
         alone2.TryRequestBackgroundTrim();
         collections.Should().HaveCount(2, "fixture: without a shared gate the periods are independent");

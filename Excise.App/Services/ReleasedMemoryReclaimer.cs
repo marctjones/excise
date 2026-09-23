@@ -13,8 +13,10 @@ internal enum HeapReclaimTrigger
     OsPressure,
     GcMemoryLoad,
     /// <summary>
-    /// The idle soft trim, gated on the heap holding enough committed-but-free
-    /// memory to be worth a blocking collection (#1496).
+    /// The idle soft trim, once per idle period (#1496). Unconditional since
+    /// #1713: gating it on reported heap fragmentation missed most of what a
+    /// reclaim actually freed and made identical sessions land in two very
+    /// different memory states depending on run-to-run measurement noise.
     /// </summary>
     Idle,
 }
@@ -22,8 +24,8 @@ internal enum HeapReclaimTrigger
 /// <summary>
 /// Runs ONE compacting, blocking gen2 collection after the app has released a
 /// large amount of managed memory (#1481): a document closed or replaced, an
-/// OS-pressure cache trim at Warn or Critical, or an idle trim while the heap
-/// is fragmented (#1496).
+/// OS-pressure cache trim at Warn or Critical, or an idle trim, once per idle
+/// period (#1496, #1713).
 /// </summary>
 /// <remarks>
 /// <para>Why: the .NET GC does not run while the app is idle, so a replaced
