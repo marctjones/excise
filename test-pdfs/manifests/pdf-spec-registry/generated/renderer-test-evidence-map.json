@@ -26270,7 +26270,7 @@
       "path": "Excise.Rendering.Tests/Differential/ZapfDingbatsSubstituteGlyphWidthTests.cs",
       "class": "ZapfDingbatsSubstituteGlyphWidthTests",
       "method": "SuitGlyphs_RenderAtConsistentWidth_MatchingMutool",
-      "line": 36,
+      "line": 37,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
