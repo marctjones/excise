@@ -133,8 +133,22 @@ public partial class PdfDocument
     /// <see cref="Save(Stream, PdfEncryptionOptions?)"/>.
     /// </summary>
     public void Save(string path, PdfEncryptionOptions? encryptionOptions)
+    {
         // Sibling temp + rename (AtomicFileReplace): the target is never
         // truncated, which matters when the document is being read from that
-        // same path — the GUI's current document is (#1567).
-        => AtomicFileReplace.Write(path, stream => Save(stream, encryptionOptions));
+        // same path — the GUI's current document is (#1567). Saving back onto
+        // that file is refused if another program replaced or rewrote it since
+        // it was opened or last saved (#1683).
+        var saved = AtomicFileReplace.Write(
+            path, stream => Save(stream, encryptionOptions), expected: SourceFileState);
+        if (SourceFileState is { } source && source.IsSameFileAs(saved.FullPath))
+            SourceFileState = saved;
+    }
+
+    /// <summary>
+    /// The on-disk state of the file this document reads from, as of the open
+    /// or this document's last save onto it; null when it was not opened from
+    /// a file (#1683).
+    /// </summary>
+    internal OnDiskFileState? SourceFileState { get; private set; }
 }

@@ -350,7 +350,14 @@ public partial class PdfDocument : IDisposable
         => OpenCore(stream, ownsStream, allowEncrypted, userPassword);
 
     private static PdfDocument OpenCore(Stream stream, bool ownsStream, bool allowEncrypted, string? userPassword)
-        => PdfDocumentOpenPipeline.Open(stream, ownsStream, allowEncrypted, userPassword);
+    {
+        // Taken before parsing so it describes the bytes the document reads
+        // (#1683); see OnDiskFileState.FromSource.
+        var source = Writing.OnDiskFileState.FromSource(stream);
+        var document = PdfDocumentOpenPipeline.Open(stream, ownsStream, allowEncrypted, userPassword);
+        document.SourceFileState = source;
+        return document;
+    }
 
     /// <summary>
     /// Open a PDF document from a byte array.
