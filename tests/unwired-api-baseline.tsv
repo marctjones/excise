@@ -92,6 +92,7 @@ Excise.Core	tests-only	IsTaggedPdf	triage:public library/domain API; tests exerc
 Excise.Core	tests-only	IsTextMarkup	triage:public library/domain API; lost its only production caller (FdfSerializer/XfdfSerializer export filtering) when #921 retired FDF/XFDF; PdfAnnotation.IsTextMarkup is a basic subtype predicate, tests exercise contract; external callers may use it
 Excise.Core	tests-only	JavaScriptSource	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	KeyValue	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	MoveTextAnnotation	UNTRIAGED
 Excise.Core	tests-only	NamedActionName	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NextActions	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NumberedList	triage:public library/domain API; tests exercise contract; external callers may use it

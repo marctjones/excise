@@ -224,8 +224,10 @@ internal static class MacNativeMenuBuilder
 
             Add(menu,
                 Submenu("Annotate",
+                    TrackDocumentItem(CommandItem("Highlight Tool", _viewModel.ToggleHighlightModeCommand)),
                     TrackAnnotationSelectionItem(CommandItem("Add Highlight From Selection", _viewModel.AddHighlightAnnotationFromSelectionCommand)),
-                    TrackDocumentItem(CommandItem("Add Sticky Note...", _viewModel.AddStickyNoteAnnotationCommand))));
+                    TrackDocumentItem(CommandItem("Add Sticky Note...", _viewModel.AddStickyNoteAnnotationCommand)),
+                    TrackDocumentItem(CommandItem("Place Sticky Note (Click Page)", _viewModel.ToggleStickyNoteToolCommand))));
 
             Add(menu,
                 Submenu("View",
