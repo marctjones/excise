@@ -35,6 +35,18 @@ public class PdfStream : PdfDictionary
     // released and silently reverted to the original samples (#1468).
     private bool _decodedByDeferral;
 
+    // #1613: set by MarkReleasable — a stream the store decoded EAGERLY at
+    // resolve time (a page content stream) that may later drop its decoded
+    // bytes and re-decode them on the next read. Unlike an image, whose samples
+    // are only ever compared by eye, these bytes are what redaction and text
+    // extraction parse, so a release of one of these streams is VERIFIED:
+    // ReleaseHeld records a SHA-256 of the bytes it drops, and the re-decode
+    // must reproduce them exactly or the read throws. Both fields are guarded
+    // by the _deferral lock.
+    private bool _verifyRedecode;
+    private byte[]? _releasedFingerprint;
+    private bool _redecodeInProgress;
+
     /// <summary>
     /// How many bytes the /Filter pipeline's Flate stage is expected to produce,
     /// or 0 when unknown (#1207, #1468 — F1). Set by the object store at resolve
@@ -291,9 +303,18 @@ public class PdfStream : PdfDictionary
 
         void Write()
         {
+            // #1613: the re-decode of a verified release publishes only the
+            // bytes it released. Checked BEFORE the field is written, so the
+            // lock-free fast path in DecodedData can never see a mismatch even
+            // briefly; DecodeOnDemand turns the unpublished result into a throw.
+            if (_redecodeInProgress && _releasedFingerprint is { } expected
+                && (decoded == null || !System.Security.Cryptography.SHA256.HashData(decoded).AsSpan().SequenceEqual(expected)))
+                return;
+
             Touch();
             _decodedByDeferral = false;
             _pendingDecode = null;
+            _releasedFingerprint = null;
             if (encoded != null)
                 _encodedData = encoded;
             _decodedData = decoded;
@@ -344,6 +365,34 @@ public class PdfStream : PdfDictionary
     }
 
     /// <summary>
+    /// Makes a stream the store has just decoded EAGERLY releasable through
+    /// <see cref="TryReleaseDecoded()"/> (#1613), with <paramref name="decode"/>
+    /// — the same decode that produced the current bytes — as the re-decode.
+    /// </summary>
+    /// <remarks>
+    /// Same contract as <see cref="DeferDecode"/>: called once, at resolve time,
+    /// under the store's parse lock, before the stream is reachable from any
+    /// other thread, and only straight after the store's own decode of the
+    /// current encoded bytes succeeded. A no-op for a stream that is unfiltered,
+    /// not decoded (the decode refused) or already deferred. Nothing is
+    /// released here: until a caller asks, the stream reads exactly as before,
+    /// <see cref="IsDecoded"/> included. A release is verified on the way back
+    /// (see <see cref="_verifyRedecode"/>).
+    /// </remarks>
+    internal void MarkReleasable(Action<PdfStream> decode)
+    {
+        ArgumentNullException.ThrowIfNull(decode);
+        if (!IsFiltered || _decodedData == null || _deferral != null)
+            return;
+
+        var deferral = new DeferredDecode(decode);
+        _pendingDecode = null;
+        _decodedByDeferral = true;
+        _verifyRedecode = true;
+        _deferral = deferral;
+    }
+
+    /// <summary>
     /// Runs a pending deferred decode (#1468), if there is one, and reports
     /// whether the stream now holds decoded bytes. Never throws for a decode
     /// that refused; the reason, if any, is in <see cref="DecodeFailureReason"/>.
@@ -353,6 +402,11 @@ public class PdfStream : PdfDictionary
     /// For callers that branch on <see cref="IsDecoded"/> or on
     /// <see cref="DecodeFailureReason"/> and must see the same answer they
     /// saw when every filtered stream was decoded at resolve time.
+    /// <para>One deliberate exception to "never throws": the re-decode of a
+    /// released <see cref="MarkReleasable"/> stream that does not reproduce the
+    /// released bytes throws <see cref="InvalidOperationException"/> (#1613).
+    /// That is not a refusal — the same bytes decoded before — and reporting it
+    /// as one would let a best-effort reader skip page content silently.</para>
     /// </remarks>
     internal bool TryEnsureDecoded()
         => _decodedData != null || DecodeOnDemand() != null;
@@ -387,7 +441,15 @@ public class PdfStream : PdfDictionary
                 // bytes it writes are what the file says. Keep the object
                 // pristine across it so a releasing render can still evict it.
                 var wasPristine = IsPristine;
-                deferral.Decode(this);
+                _redecodeInProgress = true;
+                try
+                {
+                    deferral.Decode(this);
+                }
+                finally
+                {
+                    _redecodeInProgress = false;
+                }
                 if (wasPristine)
                     MarkPristine();
 
@@ -403,6 +465,12 @@ public class PdfStream : PdfDictionary
                 // writer. Nothing else can write in between — every writer
                 // takes this lock.
                 _decodedByDeferral = _decodedData != null;
+
+                // Still set: the re-decode of a verified release did not
+                // publish (it refused, or produced different bytes — Write
+                // declined them). The fingerprint is cleared only by a write.
+                if (_releasedFingerprint != null)
+                    FailUnverifiedRedecodeHeld(deferral);
             }
 
             return _decodedData;
@@ -410,9 +478,10 @@ public class PdfStream : PdfDictionary
     }
 
     /// <summary>
-    /// Drops the decoded bytes of a deferred image stream (#1468) and re-arms
-    /// its decode, so the next reader decodes the same encoded bytes again.
-    /// Returns whether anything was released.
+    /// Drops the decoded bytes of a deferred image stream (#1468), or of an
+    /// eagerly decoded stream the store marked releasable (#1613, see
+    /// <see cref="MarkReleasable"/>), and re-arms its decode, so the next reader
+    /// decodes the same encoded bytes again. Returns whether anything was released.
     /// </summary>
     /// <remarks>
     /// <para><b>What it will release.</b> Only bytes the deferred decode
@@ -495,11 +564,29 @@ public class PdfStream : PdfDictionary
         if (!_decodedByDeferral || decoded == null)
             return false;
 
+        if (_verifyRedecode)
+            _releasedFingerprint = System.Security.Cryptography.SHA256.HashData(decoded);
         _decodedByDeferral = false;
         _pendingDecode = deferral;
         _decodedData = null;
         releasedBytes = decoded.LongLength;
         return true;
+    }
+
+    // Caller holds the deferral lock, straight after a re-decode of a released
+    // eagerly-decoded stream (#1613) that did not reproduce the dropped bytes.
+    // A content stream that came back different — or not at all — would hand
+    // redaction and extraction content other than what the page held, and
+    // "not decodable" reads as "no content" and is skipped. Neither may be
+    // silent. The stream stays not-decoded with the decode pending, so EVERY
+    // later read fails the same way instead of one reader seeing wrong bytes.
+    private void FailUnverifiedRedecodeHeld(DeferredDecode deferral)
+    {
+        _decodedByDeferral = false;
+        _pendingDecode = deferral;
+        throw new InvalidOperationException(
+            $"Stream {ObjectNumber ?? 0} {GenerationNumber ?? 0} R did not re-decode to the bytes it released; " +
+            "refusing to hand back different content (#1613).");
     }
 
     private sealed class DeferredDecode
