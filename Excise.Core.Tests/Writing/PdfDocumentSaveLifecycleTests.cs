@@ -163,6 +163,7 @@ public class PdfDocumentSaveLifecycleTests
     /// save now writes through the link.
     /// </summary>
     [Fact]
+    [System.Runtime.Versioning.UnsupportedOSPlatform("windows")]
     public void SaveToPath_KeepsTheFilesUnixPermissions()
     {
         Assert.SkipWhen(OperatingSystem.IsWindows(), "Unix mode bits do not exist on Windows");
