@@ -50,6 +50,156 @@ public class PdfDocumentSaveLifecycleTests
         }
     }
 
+    private static string SeedFile(string path, int pages = 1)
+    {
+        using var seed = PdfDocument.CreateNew();
+        for (var i = 0; i < pages; i++)
+            seed.Pages.AddBlank(200, 200);
+        seed.Save(path);
+        return path;
+    }
+
+    private static FileStream OpenLikeTheGui(string path)
+        => new(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+
+    /// <summary>
+    /// #1683: a sync client (Dropbox, iCloud, OneDrive) replaces the file by
+    /// writing a sibling and renaming it over, while the GUI still reads the
+    /// old inode. A save back onto the path would put the stale document over
+    /// the newer one; it must be refused and the newer file left alone.
+    /// </summary>
+    [Fact]
+    public void SaveToPath_AfterAnotherProgramReplacedTheFile_RefusesAndKeepsTheNewerVersion()
+    {
+        var dir = Directory.CreateTempSubdirectory("excise-stale-").FullName;
+        try
+        {
+            var path = SeedFile(Path.Combine(dir, "doc.pdf"));
+            using var reader = OpenLikeTheGui(path);
+            using var document = PdfDocument.Open(reader, ownsStream: false);
+
+            var sibling = SeedFile(Path.Combine(dir, "sync-download.pdf"), pages: 3);
+            File.Move(sibling, path, overwrite: true);
+            var newer = File.ReadAllBytes(path);
+
+            document.Pages.AddBlank(100, 100);
+            var save = () => document.Save(path);
+
+            save.Should().Throw<FileChangedOnDiskException>()
+                .Which.Message.Should().Contain("changed on disk");
+            File.ReadAllBytes(path).Should().Equal(newer, "the newer version must survive");
+            Directory.GetFiles(dir, "*.tmp", SearchOption.AllDirectories)
+                .Should().BeEmpty("the refused save cleans up its temporary");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// #1683: the same guard for a program that rewrites the file in place
+    /// (same inode, same length) — only the modification time moves.
+    /// </summary>
+    [Fact]
+    public void SaveToPath_AfterTheFileWasTouchedOnDisk_Refuses()
+    {
+        var dir = Directory.CreateTempSubdirectory("excise-stale-").FullName;
+        try
+        {
+            var path = SeedFile(Path.Combine(dir, "doc.pdf"));
+            using var document = PdfDocument.Open(path);
+            File.SetLastWriteTimeUtc(path, File.GetLastWriteTimeUtc(path).AddMinutes(1));
+            var before = File.ReadAllBytes(path);
+
+            var save = () => document.Save(path);
+
+            save.Should().Throw<FileChangedOnDiskException>();
+            File.ReadAllBytes(path).Should().Equal(before);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// #1683: the guard's baseline moves with excise's own saves, so saving
+    /// the same open document twice is not mistaken for an outside change,
+    /// and Save As to another path is never refused.
+    /// </summary>
+    [Fact]
+    public void SaveToPath_RepeatedOwnSavesAndSaveAs_AreNotRefused()
+    {
+        var dir = Directory.CreateTempSubdirectory("excise-stale-").FullName;
+        try
+        {
+            var path = SeedFile(Path.Combine(dir, "doc.pdf"));
+            var other = SeedFile(Path.Combine(dir, "other.pdf"));
+            File.SetLastWriteTimeUtc(other, DateTime.UtcNow.AddMinutes(-5));
+            using var reader = OpenLikeTheGui(path);
+            using var document = PdfDocument.Open(reader, ownsStream: false);
+
+            document.Pages.AddBlank(100, 100);
+            document.Save(path);
+            document.Pages.AddBlank(100, 100);
+            document.Save(path);
+            document.Save(other);
+
+            using var saved = PdfDocument.Open(path);
+            saved.PageCount.Should().Be(3);
+            using var copy = PdfDocument.Open(other);
+            copy.PageCount.Should().Be(3);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// #1683, measured: saving onto a symlink used to replace the link with a
+    /// regular file, and the file it pointed at never received the save. The
+    /// save now writes through the link.
+    /// </summary>
+    [Fact]
+    public void SaveToPath_OntoASymlink_WritesThroughAndKeepsTheLink()
+    {
+        var dir = Directory.CreateTempSubdirectory("excise-link-").FullName;
+        try
+        {
+            var target = SeedFile(Path.Combine(dir, "target.pdf"));
+            var link = Path.Combine(dir, "link.pdf");
+            try
+            {
+                File.CreateSymbolicLink(link, "target.pdf");
+            }
+            catch (UnauthorizedAccessException) when (OperatingSystem.IsWindows())
+            {
+                Assert.Skip("creating a symlink needs Developer Mode or elevation on Windows");
+            }
+            catch (IOException) when (OperatingSystem.IsWindows())
+            {
+                Assert.Skip("creating a symlink needs Developer Mode or elevation on Windows");
+            }
+
+            using (var document = PdfDocument.Open(link))
+            {
+                document.Pages.AddBlank(100, 100);
+                document.Save(link);
+            }
+
+            new FileInfo(link).LinkTarget.Should().Be("target.pdf", "the link itself survives");
+            using var saved = PdfDocument.Open(target);
+            saved.PageCount.Should().Be(2, "the save went to the file the link points at");
+            Directory.GetFiles(dir, "*.tmp").Should().BeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
     [Fact]
     public void SaveToPath_WhenTheWriteFails_LeavesTheOriginalFileAndNoTemporary()
     {
