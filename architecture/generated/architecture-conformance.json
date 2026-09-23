@@ -2,7 +2,7 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "e71af582fdff661973b7eaafa7be886ddcda6514",
+  "sourceRevision": "2c1c0e6f1484f9dccfcc0310a7498b562680a6cc",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
@@ -24,7 +24,7 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 464,
+      "references": 466,
       "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [

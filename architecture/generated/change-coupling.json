@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "e71af582fdff661973b7eaafa7be886ddcda6514",
+  "sourceRevision": "2c1c0e6f1484f9dccfcc0310a7498b562680a6cc",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -19,9 +19,9 @@
   },
   "window": {
     "commitsRequested": 200,
-    "commitsObserved": 197,
+    "commitsObserved": 198,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "e71af582fdff661973b7eaafa7be886ddcda6514",
+    "newestProductionCommit": "2c1c0e6f1484f9dccfcc0310a7498b562680a6cc",
     "oldestProductionCommit": "d6edbff2c524b22d31a062159b15f9f5f8c5c73c"
   },
   "files": [
@@ -58,16 +58,16 @@
       "commits": 13
     },
     {
+      "path": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "commits": 12
+    },
+    {
       "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
       "commits": 12
     },
     {
       "path": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
       "commits": 12
-    },
-    {
-      "path": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "commits": 11
     },
     {
       "path": "Excise.Core/Primitives/PdfStream.cs",
@@ -1391,7 +1391,7 @@
       "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
       "target": "Excise.App/Views/MainWindow.axaml",
       "cochanges": 6,
-      "jaccard": 0.2143
+      "jaccard": 0.2069
     },
     {
       "source": "Excise.App/Views/MainWindow.axaml.cs",
@@ -1511,7 +1511,7 @@
       "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
       "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 5,
-      "jaccard": 0.1613
+      "jaccard": 0.1562
     },
     {
       "source": "Excise.App/Services/RedactionService.cs",
@@ -2336,12 +2336,6 @@
       "jaccard": 0.2
     },
     {
-      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
-      "cochanges": 3,
-      "jaccard": 0.2
-    },
-    {
       "source": "Excise.Cli/Commands/UnredactCommandHandler.cs",
       "target": "Excise.Core/Redaction/CarrierTextRecovery.cs",
       "cochanges": 3,
@@ -2361,7 +2355,7 @@
     },
     {
       "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "target": "Excise.Core/Automation/PdfCommandIds.cs",
+      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 3,
       "jaccard": 0.1875
     },
@@ -2370,6 +2364,12 @@
       "target": "Excise.Rendering/SkiaRenderer.cs",
       "cochanges": 3,
       "jaccard": 0.1875
+    },
+    {
+      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "target": "Excise.Core/Automation/PdfCommandIds.cs",
+      "cochanges": 3,
+      "jaccard": 0.1765
     },
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
@@ -2417,7 +2417,7 @@
       "source": "Excise.App/Models/WindowSettings.cs",
       "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
       "cochanges": 3,
-      "jaccard": 0.1429
+      "jaccard": 0.1364
     },
     {
       "source": "Excise.App/App.axaml.cs",
@@ -2567,7 +2567,7 @@
       "source": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
       "cochanges": 3,
-      "jaccard": 0.0968
+      "jaccard": 0.0938
     },
     {
       "source": "Excise.App/Views/MainWindow.axaml.cs",
@@ -3662,18 +3662,6 @@
       "jaccard": 0.2
     },
     {
-      "source": "Excise.App/Controls/PriorityToolbarLayout.cs",
-      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "cochanges": 2,
-      "jaccard": 0.1818
-    },
-    {
-      "source": "Excise.App/Controls/PriorityToolbarPanel.cs",
-      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "cochanges": 2,
-      "jaccard": 0.1818
-    },
-    {
       "source": "Excise.App/Services/Printing/IDocumentPrinter.cs",
       "target": "Excise.App/Views/PreferencesWindow.axaml",
       "cochanges": 2,
@@ -3838,6 +3826,18 @@
     {
       "source": "Excise.App/Composition/ApplicationComposition.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
+      "cochanges": 2,
+      "jaccard": 0.1667
+    },
+    {
+      "source": "Excise.App/Controls/PriorityToolbarLayout.cs",
+      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "cochanges": 2,
+      "jaccard": 0.1667
+    },
+    {
+      "source": "Excise.App/Controls/PriorityToolbarPanel.cs",
+      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
       "cochanges": 2,
       "jaccard": 0.1667
     },
@@ -4154,24 +4154,6 @@
       "jaccard": 0.1429
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Session.cs",
-      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "cochanges": 2,
-      "jaccard": 0.1429
-    },
-    {
-      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "target": "Excise.App/Workspace/DocumentSession.cs",
-      "cochanges": 2,
-      "jaccard": 0.1429
-    },
-    {
-      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "target": "Excise.App/Workspace/IDocumentSessionHost.cs",
-      "cochanges": 2,
-      "jaccard": 0.1429
-    },
-    {
       "source": "Excise.App/Views/PreferencesWindow.axaml",
       "target": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
       "cochanges": 2,
@@ -4228,6 +4210,24 @@
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
+      "cochanges": 2,
+      "jaccard": 0.1333
+    },
+    {
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Session.cs",
+      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "cochanges": 2,
+      "jaccard": 0.1333
+    },
+    {
+      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "target": "Excise.App/Workspace/DocumentSession.cs",
+      "cochanges": 2,
+      "jaccard": 0.1333
+    },
+    {
+      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "target": "Excise.App/Workspace/IDocumentSessionHost.cs",
       "cochanges": 2,
       "jaccard": 0.1333
     },
@@ -4328,12 +4328,6 @@
       "jaccard": 0.125
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "cochanges": 2,
-      "jaccard": 0.125
-    },
-    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
       "cochanges": 2,
@@ -4412,14 +4406,14 @@
       "jaccard": 0.1176
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
-      "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
       "cochanges": 2,
       "jaccard": 0.1176
     },
     {
-      "source": "Excise.App/ViewModels/PreferencesViewModel.cs",
-      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
+      "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
       "cochanges": 2,
       "jaccard": 0.1176
     },
@@ -4448,7 +4442,7 @@
       "jaccard": 0.1111
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
+      "source": "Excise.App/ViewModels/PreferencesViewModel.cs",
       "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
       "cochanges": 2,
       "jaccard": 0.1111
@@ -4484,8 +4478,8 @@
       "jaccard": 0.1053
     },
     {
-      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "target": "Excise.App/Views/PreferencesWindow.axaml",
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
+      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
       "cochanges": 2,
       "jaccard": 0.1053
     },
@@ -4520,6 +4514,12 @@
       "jaccard": 0.1
     },
     {
+      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "target": "Excise.App/Views/PreferencesWindow.axaml",
+      "cochanges": 2,
+      "jaccard": 0.1
+    },
+    {
       "source": "Excise.App/Views/PreferencesWindow.axaml",
       "target": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
       "cochanges": 2,
@@ -4535,7 +4535,7 @@
       "source": "Excise.App/App.axaml.cs",
       "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
       "cochanges": 2,
-      "jaccard": 0.0909
+      "jaccard": 0.087
     },
     {
       "source": "Excise.App/Controls/PriorityToolbarLayout.cs",

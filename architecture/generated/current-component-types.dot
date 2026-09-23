@@ -47,7 +47,7 @@ digraph excise_architecture {
     "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial\n149 retained symbols", fillcolor="#fff3bf"];
     "verification" [label="Repository verification system\npartial\n0 retained symbols", fillcolor="#fff3bf"];
   }
-  "app" -> "app-main-window" [label="464 refs / 31 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app" -> "app-main-window" [label="466 refs / 31 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "app" [label="740 refs / 81 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core" [label="7 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core-document" [label="445 refs / 29 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
