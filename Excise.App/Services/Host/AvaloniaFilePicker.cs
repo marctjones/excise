@@ -17,11 +17,17 @@ namespace Excise.App.Services.Host;
 /// mandatory (#1477) — a picker that skips it leaves Avalonia's macOS
 /// file-type accessory looping in AppKit layout, and
 /// <c>scripts/check-viewmodel-seams.sh</c> scans the source to keep it that way.
-/// The FOLDER picker deliberately does not: it was never routed through the
-/// helper, and routing it there now would newly schedule the macOS accessory
-/// cleanup after every folder pick — a behaviour change that does not belong
-/// in a structural step. Whether to route it or record the exception as
-/// correct is issue #1518.
+/// The FOLDER picker deliberately does not, and #1518 confirmed this is
+/// correct rather than an oversight: Avalonia's <see cref="FolderPickerOpenOptions"/>
+/// has no file-type-filter property (only <c>AllowMultiple</c> plus the
+/// <c>Title</c>/<c>SuggestedStartLocation</c>/<c>SuggestedFileName</c> it
+/// inherits from <c>PickerOptions</c>), and <see cref="StoragePickers"/>'s own
+/// remarks say the accessory view is only installed "whenever a filter is
+/// passed". With no filter data to reach the native directory-mode
+/// <c>NSOpenPanel</c>, it never gets that accessory view, so there is nothing
+/// for <see cref="MacFilePanelAccessoryCleanup"/> to tear down. Routing this
+/// picker through <see cref="StoragePickers"/> would only add a scheduled
+/// no-op cleanup after every folder pick.
 /// </remarks>
 internal sealed class AvaloniaFilePicker : IFilePicker
 {
@@ -88,9 +94,11 @@ internal sealed class AvaloniaFilePicker : IFilePicker
 
     /// <inheritdoc />
     /// <remarks>
-    /// Not routed through <see cref="StoragePickers"/> — see the class remarks.
-    /// Issue #1518 decides whether that exception is closed or recorded as
-    /// correct; do not "fix" it here without reading it first.
+    /// Intentionally not routed through <see cref="StoragePickers"/> — see the
+    /// class remarks and #1518. <see cref="FolderPickerOpenOptions"/> carries
+    /// no file-type filter, so the macOS accessory view #1477 tears down is
+    /// never installed for a directory-mode picker; routing through the
+    /// helper would only add a scheduled no-op cleanup on every call.
     /// </remarks>
     public async Task<string?> PickFolderAsync(string title)
     {
