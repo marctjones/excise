@@ -548,6 +548,103 @@ public class PdfPageTests
 
     #endregion
 
+    #region UserUnit Tests (#1566)
+
+    [Fact]
+    public void UserUnit_DefaultValue_One()
+    {
+        var pdfData = CreateMinimalPdf();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        page.UserUnit.Should().Be(1.0);
+    }
+
+    [Fact]
+    public void UserUnit_SetValid_Stores()
+    {
+        var pdfData = CreateMinimalPdf();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        page.UserUnit = 10.0;
+
+        page.UserUnit.Should().Be(10.0);
+        page.Dictionary.ContainsKey("UserUnit").Should().BeTrue();
+    }
+
+    [Fact]
+    public void UserUnit_SetOneAfterNonDefault_RemovesEntry()
+    {
+        var pdfData = CreateMinimalPdf();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        page.UserUnit = 10.0;
+        page.UserUnit = 1.0;
+
+        page.Dictionary.ContainsKey("UserUnit").Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(-1.0)]
+    public void UserUnit_SetNonPositive_ThrowsException(double value)
+    {
+        var pdfData = CreateMinimalPdf();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        var act = () => page.UserUnit = value;
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void UserUnit_MalformedNonPositiveValueInFile_FallsBackToOne()
+    {
+        // A foreign producer's degenerate /UserUnit 0 or negative value must
+        // not corrupt every physical-size computation downstream — same
+        // "a guess is the honest position" spirit as DefaultMediaBox.
+        using var doc = PdfDocument.CreateNew();
+        var page = doc.Pages.AddBlank();
+        page.Dictionary.SetNumber("UserUnit", 0.0);
+
+        page.UserUnit.Should().Be(1.0);
+    }
+
+    [Fact]
+    public void UserUnit_SurvivesSaveAndReload()
+    {
+        var pdfData = CreateMinimalPdf();
+        byte[] saved;
+        using (var doc = PdfDocument.Open(pdfData))
+        {
+            doc.GetPage(1).UserUnit = 25.0;
+            saved = doc.SaveToBytes();
+        }
+
+        using var reopened = PdfDocument.Open(saved);
+        reopened.GetPage(1).UserUnit.Should().Be(25.0);
+    }
+
+    [Fact]
+    public void UserUnit_NotInherited_EachPageReadsItsOwnValue()
+    {
+        // §14.11.2 (Table 31): /UserUnit is a direct page attribute, unlike
+        // /MediaBox, /CropBox, /Rotate and /Resources — it must NOT walk the
+        // /Parent chain the way GetInheritedRectangle/GetInheritedInt do.
+        using var doc = PdfDocument.CreateNew();
+        var page1 = doc.Pages.AddBlank();
+        var page2 = doc.Pages.AddBlank();
+        page1.UserUnit = 5.0;
+
+        page1.UserUnit.Should().Be(5.0);
+        page2.UserUnit.Should().Be(1.0, "UserUnit is not inheritable — page 2 must not pick up page 1's value");
+    }
+
+    #endregion
+
     #region Content Stream Tests
 
     [Fact]

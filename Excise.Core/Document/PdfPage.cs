@@ -195,6 +195,44 @@ public partial class PdfPage
     public PdfRectangle CropBox => GetInheritedRectangle("CropBox") ?? MediaBox;
 
     /// <summary>
+    /// #1566 — the scaling factor (§14.11.2, Table 293) that lets a page
+    /// represent real-world content larger than the 14,400-unit (200 in)
+    /// MediaBox cap: one point in <see cref="MediaBox"/> equals
+    /// <c>UserUnit</c>/72 inch instead of the usual 1/72 inch. Default 1.0
+    /// (i.e. the usual meaning of a point) when <c>/UserUnit</c> is absent.
+    ///
+    /// <para><b>This does NOT change the page's own coordinate system.</b>
+    /// Content-stream operators, <see cref="MediaBox"/> itself, annotation
+    /// <c>/Rect</c>s and everything <c>PdfCoordinateMapper</c> computes stay
+    /// in the page's ordinary (unscaled) user-space units — UserUnit only
+    /// relabels what one of those units means in the real world. A redaction
+    /// glyph rect, an annotation position, or a content-stream coordinate on a
+    /// UserUnit page is exactly as correct as on any other page: nothing in
+    /// this codebase's coordinate math needs to know UserUnit exists. Only a
+    /// PHYSICAL-size computation (a render's pixel dimensions at a given DPI,
+    /// a viewer's zoom-percentage-to-real-size correspondence) needs it.</para>
+    ///
+    /// <para>Not an inheritable page attribute (Table 31 lists it directly on
+    /// the page dictionary, unlike MediaBox/CropBox/Rotate/Resources) — read
+    /// straight from this page's own dictionary, same as <see cref="Duration"/>.</para>
+    /// </summary>
+    public double UserUnit
+    {
+        get => _pageDict.TryGetValue("UserUnit", out var unitObj) && unitObj.TryGetNumber(out var unit) && unit > 0
+            ? unit
+            : 1.0;
+        set
+        {
+            if (!(value > 0))
+                throw new ArgumentOutOfRangeException(nameof(value), "UserUnit must be positive.");
+            if (value == 1.0)
+                _pageDict.Remove("UserUnit"); // 1.0 is the implicit default (§14.11.2) — omit rather than write it out.
+            else
+                _pageDict.SetNumber("UserUnit", value);
+        }
+    }
+
+    /// <summary>
     /// The page box that a conforming viewer renders: the intersection of a
     /// valid <see cref="CropBox"/> and <see cref="MediaBox"/>, with a valid
     /// MediaBox used when the crop is empty or disjoint.

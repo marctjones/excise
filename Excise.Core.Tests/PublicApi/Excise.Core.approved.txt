@@ -899,6 +899,7 @@ namespace Excise.Core.Document
         public Excise.Core.Primitives.PdfStream? ThumbnailStream { get; }
         public Excise.Core.Document.PdfPageTransition? Transition { get; }
         public Excise.Core.Document.PdfRectangle TrimBox { get; }
+        public double UserUnit { get; set; }
         public double VisualHeight { get; }
         public double VisualWidth { get; }
         public double Width { get; }
