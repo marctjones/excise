@@ -85,11 +85,26 @@ public class StickyNotePopupWorkflowTests
             "a plain click (no drag) in sticky-note mode must place exactly one note, " +
             "like the real toolbar/menu gesture would");
 
-        // #1794: a real post-it-sized card, not the old ~17pt icon.
+        // #1797: the note's own /Rect is its TRUE ANCHOR — icon-sized, per
+        // §12.5.6.4 — and never moves again after this. The real post-it-sized
+        // card lives on the linked /Popup's independent /Rect instead
+        // (§12.5.6.14), so dragging the card can never look like it silently
+        // relocated the note.
         var rect = notes[0].Rect;
-        (rect.Right - rect.Left).Should().BeApproximately(MainWindowViewModel.DefaultStickyNoteWidth, 0.01,
-            "a freshly-placed note must default to the post-it card size, not the old icon size");
-        (rect.Top - rect.Bottom).Should().BeApproximately(MainWindowViewModel.DefaultStickyNoteHeight, 0.01);
+        (rect.Right - rect.Left).Should().BeApproximately(PdfAnnotation.TextIconSize, 0.01,
+            "the note's own /Rect is its anchor — icon-sized, not the card size");
+        (rect.Top - rect.Bottom).Should().BeApproximately(PdfAnnotation.TextIconSize, 0.01);
+
+        var popupRect = notes[0].PopupRect;
+        popupRect.Should().NotBeNull("a freshly-placed note must have a linked /Popup with its own /Rect");
+        (popupRect!.Value.Right - popupRect.Value.Left).Should().BeApproximately(
+            MainWindowViewModel.DefaultStickyNoteCardWidth, 0.01,
+            "the CARD (the popup's /Rect) must default to the post-it size, not the icon size");
+        (popupRect.Value.Top - popupRect.Value.Bottom).Should().BeApproximately(
+            MainWindowViewModel.DefaultStickyNoteCardHeight, 0.01);
+        popupRect.Value.Left.Should().BeApproximately(rect.Left, 0.01,
+            "the card must start exactly where the note was placed, same top-left as the anchor");
+        popupRect.Value.Top.Should().BeApproximately(rect.Top, 0.01);
 
         vm.StickyNotePopup.Should().NotBeNull(
             "placing a note must open it in edit mode immediately for typing, not just drop a resting card");
@@ -289,18 +304,24 @@ public class StickyNotePopupWorkflowTests
 
         vm.StickyNotePopup.Should().NotBeNull(
             "a press/release with no movement on a resting note must enter edit mode, not move it");
-        vm.StickyNotePopup!.Rect.Should().Be(originalRect, "a click must never change the note's /Rect");
+        // #1797: originalRect (from PlaceCardThenReturnToRestAsync) is the
+        // CARD's rect (the linked /Popup's /Rect) — a click reopens the
+        // editor exactly where the resting card was, and must never touch
+        // the note's own /Rect (its true anchor) either.
+        vm.StickyNotePopup!.DisplayRect.Should().Be(originalRect,
+            "a click must reopen the card exactly where it was resting, no visual jump");
 
         var note = vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
             .Single(a => a.Subtype == PdfAnnotationSubtype.Text);
-        note.Rect.Should().Be(originalRect);
+        note.PopupRect.Should().Be(originalRect, "a click must never change the card's /Rect");
+        note.Rect.Should().Be(vm.StickyNotePopup!.Rect, "a click must never change the note's own /Rect (its anchor)");
 
         window.Close();
         Cleanup(tempDir);
     }
 
     [FixedAvaloniaFact]
-    public async Task RealDragPastTheThreshold_OnARestingNote_MovesIt_QpdfIndependentlySeesTheNewRect()
+    public async Task RealDragPastTheThreshold_OnARestingNote_MovesItsCard_ButNeverTheNotesOwnAnchor_QpdfIndependentlySeesBoth()
     {
         // CLAUDE.md's no-self-oracle rule: prove the moved /Rect landed in
         // the SAVED BYTES via qpdf's own independent parse, not just excise's
@@ -312,7 +333,11 @@ public class StickyNotePopupWorkflowTests
         var (sourcePath, outputPath, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Drag fixture");
 
+        // #1797: originalRect is the CARD's rect (linked /Popup's /Rect) —
+        // what a drag actually targets and repositions.
         var (vm, window, viewer, originalRect) = await PlaceCardThenReturnToRestAsync(sourcePath);
+        var originalIconRect = vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
+            .Single(a => a.Subtype == PdfAnnotationSubtype.Text).Rect;
 
         var dragStart = PdfPointToWindow(
             window, viewer, vm,
@@ -328,15 +353,19 @@ public class StickyNotePopupWorkflowTests
         await Dispatcher.UIThread.InvokeAsync(() => window.MouseUp(dragEnd, MouseButton.Left));
         for (var i = 0; i < 5; i++) { await Task.Delay(100); window.UpdateLayout(); }
 
-        vm.StickyNotePopup.Should().BeNull("a drag must move the note, not enter edit mode");
+        vm.StickyNotePopup.Should().BeNull("a drag must move the card, not enter edit mode");
 
-        var movedRect = vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
-            .Single(a => a.Subtype == PdfAnnotationSubtype.Text).Rect;
-        movedRect.Should().NotBe(originalRect, "a real drag past the threshold must move the note's /Rect");
+        var note = vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
+            .Single(a => a.Subtype == PdfAnnotationSubtype.Text);
+        note.Rect.Should().Be(originalIconRect,
+            "dragging the card must NEVER move the note's own /Rect — its true anchor location (§12.5.6.14)");
+
+        var movedRect = note.PopupRect!.Value;
+        movedRect.Should().NotBe(originalRect, "a real drag past the threshold must move the CARD's /Rect");
         // Screen right+down maps to PDF right (+X) and down (-Y, bottom-left
         // origin) — CLAUDE.md's pdfY/screenY rule.
-        movedRect.Left.Should().BeGreaterThan(originalRect.Left, "dragging right on screen must move the note right in PDF space");
-        movedRect.Top.Should().BeLessThan(originalRect.Top, "dragging down on screen must lower the note's pdfY");
+        movedRect.Left.Should().BeGreaterThan(originalRect.Left, "dragging right on screen must move the card right in PDF space");
+        movedRect.Top.Should().BeLessThan(originalRect.Top, "dragging down on screen must lower the card's pdfY");
         (movedRect.Right - movedRect.Left).Should().BeApproximately(originalRect.Right - originalRect.Left, 0.5,
             "a move translates the rect — it must not resize the card");
         (movedRect.Top - movedRect.Bottom).Should().BeApproximately(originalRect.Top - originalRect.Bottom, 0.5);
@@ -347,10 +376,16 @@ public class StickyNotePopupWorkflowTests
         var annotations = QpdfReferenceTool.ListAnnotations(outputPath);
         annotations.Should().NotBeNull("qpdf must be able to enumerate the saved file's annotations");
         var savedNote = annotations!.Single(a => a.Subtype == "Text");
-        Math.Abs(savedNote.Left - movedRect.Left).Should().BeLessThan(0.5,
-            "qpdf's own independent parse of the saved bytes must see the MOVED /Rect, not the original — " +
-            "proof the position update reached the file, not just excise's own in-memory model");
-        Math.Abs(savedNote.Top - movedRect.Top).Should().BeLessThan(0.5);
+        Math.Abs(savedNote.Left - originalIconRect.Left).Should().BeLessThan(0.5,
+            "qpdf's own independent parse of the saved bytes must see the note's /Rect UNCHANGED — " +
+            "proof a drag never touches the anchor, not just excise's own in-memory model");
+        Math.Abs(savedNote.Top - originalIconRect.Top).Should().BeLessThan(0.5);
+
+        var savedPopup = annotations!.Single(a => a.Subtype == "Popup");
+        Math.Abs(savedPopup.Left - movedRect.Left).Should().BeLessThan(0.5,
+            "qpdf's own independent parse of the saved bytes must see the MOVED /Popup /Rect — " +
+            "proof the card's position update reached the file");
+        Math.Abs(savedPopup.Top - movedRect.Top).Should().BeLessThan(0.5);
 
         Cleanup(tempDir);
     }
@@ -575,10 +610,15 @@ public class StickyNotePopupWorkflowTests
         for (var i = 0; i < 5; i++) { await Task.Delay(100); window.UpdateLayout(); }
         vm.StickyNotePopup.Should().BeNull("precondition: back to resting before the test's own gesture");
 
-        var rect = vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
-            .Single(a => a.Subtype == PdfAnnotationSubtype.Text).Rect;
+        // #1797: callers use this rect to compute where to click/drag the
+        // RESTING CARD on screen — that's the linked /Popup's own /Rect now,
+        // not the note's icon-sized anchor (its own /Rect).
+        var note = vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
+            .Single(a => a.Subtype == PdfAnnotationSubtype.Text);
+        var cardRect = note.PopupRect
+            ?? throw new InvalidOperationException("precondition: a freshly-placed note must have a linked /Popup");
 
-        return (vm, window, viewer, rect);
+        return (vm, window, viewer, cardRect);
     }
 
     private static void RaisePointerPressRelease(Control target, Visual root)
