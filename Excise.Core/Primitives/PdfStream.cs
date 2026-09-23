@@ -337,9 +337,11 @@ public class PdfStream : PdfDictionary
     /// resolve time, before the stream is reachable from any other thread.
     /// </remarks>
     /// <summary>
-    /// F2: a forward-only stream of this stream's inflated bytes, or null when the
-    /// filter pipeline is not exactly one Flate stage or carries a predictor. Never
-    /// caches, never writes <c>_decodedData</c>: the point is that the inflated
+    /// F2: a forward-only stream of this stream's decoded bytes, or null when the
+    /// filter pipeline is not exactly one Flate stage or carries predictor parameters
+    /// the row-by-row unfilter does not take on. A <c>/Predictor</c> is undone one row
+    /// at a time with only the previous row held (#1677, <see cref="Filters.PdfPredictor.TryOpenDecodeStream"/>).
+    /// Never caches, never writes <c>_decodedData</c>: the point is that the decoded
     /// array never exists. The caller owns the returned stream.
     /// </summary>
     internal Stream? TryOpenFlateDecodeStream()
@@ -348,9 +350,11 @@ public class PdfStream : PdfDictionary
         if (filters.Count != 1 || filters[0] is not ("FlateDecode" or "Fl"))
             return null;
         var parms = DecodeParams.Count > 0 ? DecodeParams[0] : null;
-        if (parms != null && parms.GetInt("Predictor", 1) > 1)
-            return null;
-        return global::Excise.Core.Filters.FlateFilterDecoder.OpenDecodeStream(_encodedData);
+        var inflated = global::Excise.Core.Filters.FlateFilterDecoder.OpenDecodeStream(_encodedData);
+        var decoded = global::Excise.Core.Filters.PdfPredictor.TryOpenDecodeStream(inflated, parms);
+        if (decoded == null)
+            inflated.Dispose();
+        return decoded;
     }
 
     internal void DeferDecode(Action<PdfStream> decode)
