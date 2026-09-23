@@ -163,6 +163,31 @@ public class PdfDocumentSaveLifecycleTests
     /// save now writes through the link.
     /// </summary>
     [Fact]
+    public void SaveToPath_KeepsTheFilesUnixPermissions()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "Unix mode bits do not exist on Windows");
+        var dir = Directory.CreateTempSubdirectory("excise-mode-").FullName;
+        try
+        {
+            var path = SeedFile(Path.Combine(dir, "private.pdf"));
+            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+
+            using (var document = PdfDocument.Open(path))
+            {
+                document.Pages.AddBlank(100, 100);
+                document.Save(path);
+            }
+
+            File.GetUnixFileMode(path).Should().Be(UnixFileMode.UserRead | UnixFileMode.UserWrite,
+                "an owner-only file must not become readable by others after a save (#1802)");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
     public void SaveToPath_OntoASymlink_WritesThroughAndKeepsTheLink()
     {
         var dir = Directory.CreateTempSubdirectory("excise-link-").FullName;
