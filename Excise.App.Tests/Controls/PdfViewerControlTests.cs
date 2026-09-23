@@ -457,9 +457,11 @@ public class PdfViewerControlTests
     [FixedAvaloniaFact]
     public async Task PdfViewerControl_LoadDocumentWithAnnotations_AnnotationsLayerHasChildren()
     {
-        // Build a minimal in-memory PDF with a single Text annotation.
+        // Build a minimal in-memory PDF with a single Highlight annotation.
+        // NOT /Text (#1797) — see PdfViewerControl_TextAnnotation_ProducesNoOverlayRectangle
+        // just below for why that subtype is deliberately excluded from this layer.
         var pdf = MakePdfWithAnnotation(
-            "<< /Type /Annot /Subtype /Text /Rect [72 720 108 756] /Contents (test) >>");
+            "<< /Type /Annot /Subtype /Highlight /Rect [72 720 108 756] /Contents (test) >>");
         var control = new PdfViewerControl();
 
         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -496,14 +498,58 @@ public class PdfViewerControlTests
         control.Document?.Dispose();
     }
 
+    /// <summary>
+    /// #1797: a /Text (sticky note) annotation already gets a complete,
+    /// fully-styled card from SkiaRenderer.RenderStickyNoteDefault, baked
+    /// into the page raster this overlay sits ON TOP OF. An additional
+    /// translucent rect here duplicated it — filling the note's card-sized
+    /// /Rect with a semi-transparent tint over the SAME card SkiaRenderer
+    /// already drew solid ("messed up text display"). Every other subtype
+    /// still gets one (see the test above and below).
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task PdfViewerControl_TextAnnotation_ProducesNoOverlayRectangle()
+    {
+        var pdf = MakePdfWithAnnotation(
+            "<< /Type /Annot /Subtype /Text /Rect [72 720 108 756] /Contents (test) >>");
+        var control = new PdfViewerControl();
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var doc = PdfCoreDocument.Open(new System.IO.MemoryStream(pdf), false);
+            control.Document = doc;
+        });
+
+        // Give the (deliberately absent) overlay every chance to appear.
+        for (var i = 0; i < 10; i++)
+        {
+            await Task.Delay(50);
+            await Dispatcher.UIThread.InvokeAsync(() => { });
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var annotLayer = control.FindControl<Canvas>("AnnotationsLayer");
+            annotLayer.Should().NotBeNull("AnnotationsLayer canvas must exist");
+            annotLayer!.Children.Should().BeEmpty(
+                "a /Text annotation's card is already fully rendered by SkiaRenderer; " +
+                "this overlay must not also draw a translucent duplicate over it");
+        });
+
+        control.Document?.Dispose();
+    }
+
     [FixedAvaloniaFact]
     public async Task PdfViewerControl_SetAnnotationsDirectly_LayerMatchesCount()
     {
         // Set the Annotations property with 2 known annotations and verify
         // that the layer renders exactly 2 rectangles.
+        // Highlight + Square (not /Text — #1797's overlay exemption, covered
+        // by its own dedicated test above), so "N annotations -> N rects"
+        // stays an exact count.
         var pdf = MakePdfWithAnnotation(
             "<< /Type /Annot /Subtype /Highlight /Rect [10 10 200 30] >>" +
-            "<< /Type /Annot /Subtype /Text    /Rect [50 50 100 80] >>");
+            "<< /Type /Annot /Subtype /Square    /Rect [50 50 100 80] >>");
         var control = new PdfViewerControl();
 
         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -538,8 +584,11 @@ public class PdfViewerControlTests
     [FixedAvaloniaFact]
     public async Task PdfViewerControl_AnnotationsCleared_WhenDocumentSetToNull()
     {
+        // NOT /Text (#1797) — that subtype no longer produces an overlay
+        // rectangle at all, which would make "wait for it to appear" below
+        // wait out its own timeout for nothing.
         var pdf = MakePdfWithAnnotation(
-            "<< /Type /Annot /Subtype /Text /Rect [0 0 100 20] >>");
+            "<< /Type /Annot /Subtype /Highlight /Rect [0 0 100 20] >>");
         var control = new PdfViewerControl();
 
         await Dispatcher.UIThread.InvokeAsync(() =>

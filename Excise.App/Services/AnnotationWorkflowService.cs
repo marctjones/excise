@@ -144,6 +144,30 @@ public sealed class AnnotationWorkflowService
     }
 
     /// <summary>
+    /// Drag-to-move a note's CARD (#1797), not the note itself: repositions
+    /// only the linked <c>/Popup</c>'s <c>/Rect</c>. <paramref name="iconRect"/>
+    /// identifies the note by its own, never-moving <c>/Rect</c> — the same
+    /// identity <see cref="MoveTextNote"/> and <see cref="UpdateTextNote"/> use
+    /// — so a drag can never accidentally match the wrong note just because
+    /// its card happened to be dragged near another one's.
+    /// </summary>
+    /// <param name="pageNumber">1-based page the note lives on.</param>
+    /// <param name="iconRect">The note's own /Rect — its identity, unaffected by this call.</param>
+    /// <param name="newPopupRect">The card's new position/size.</param>
+    internal PdfAnnotation MoveTextNotePopup(int pageNumber, PdfRectangle iconRect, PdfRectangle newPopupRect)
+    {
+        var saveDocument = GetLoadedDocument();
+        var saveAnnotation = FindTextAnnotationAt(saveDocument, pageNumber, iconRect)
+            ?? throw new InvalidOperationException(
+                $"No sticky note found at the given rect on page {pageNumber}.");
+
+        var moved = saveDocument.MoveTextAnnotationPopup(saveAnnotation, newPopupRect);
+
+        _logger.LogInformation("Moved sticky note's card on page {PageNumber}", pageNumber);
+        return moved;
+    }
+
+    /// <summary>
     /// Rect-match tolerance for <see cref="UpdateTextNote"/>. Values placed by
     /// this session are bit-identical, and values round-tripped through a
     /// save/reload are still exact doubles — a tiny epsilon only guards
@@ -165,7 +189,7 @@ public sealed class AnnotationWorkflowService
         {
             AnnotationRectKind.TextNote => document.AddTextAnnotation(
                 request.PageNumber, request.Rect, request.Value ?? string.Empty,
-                open: request.Open, withPopup: true),
+                open: request.Open, withPopup: true, popupRect: request.PopupRect),
             AnnotationRectKind.Highlight => document.AddHighlightAnnotation(
                 request.PageNumber, request.Rect, request.Value ?? string.Empty),
             AnnotationRectKind.Underline => document.AddUnderlineAnnotation(
@@ -330,7 +354,11 @@ internal sealed record AnnotationRectRequest(
     string? Value = null,
     string? Contents = null,
     double FontSize = 12,
-    bool Open = false);
+    bool Open = false,
+    // #1797: TextNote only — the linked /Popup's own /Rect (the draggable
+    // CARD), independent of Rect (the note's true, never-moving anchor).
+    // Null defaults to Rect itself: the popup starts where the note is placed.
+    PdfRectangle? PopupRect = null);
 
 internal sealed record AnnotationRectResult(
     AnnotationRectRequest Request,

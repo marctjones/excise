@@ -179,12 +179,12 @@
             <Separator Margin="2,4"/>
 
             <Button x:Name="PaletteStickyNoteButton"
-                    Command="{Binding AddStickyNoteAnnotationCommand}"
+                    Command="{Binding ToggleStickyNoteToolCommand}"
                     Classes="modern-button toolbar-button"
                     IsEnabled="{Binding IsDocumentLoaded}"
-                    access:CommandAccessibility.CommandId="annotation.addStickyNote"
-                    ToolTip.Tip="Add sticky note"
-                    AutomationProperties.Name="Add Sticky Note">
+                    access:CommandAccessibility.CommandId="annotation.toggleStickyNoteTool"
+                    ToolTip.Tip="Sticky note tool: click the page to place a note"
+                    AutomationProperties.Name="Sticky Note Tool">
                 <PathIcon Classes="toolbar-icon" Data="{StaticResource IconNote}"/>
             </Button>
         </StackPanel>

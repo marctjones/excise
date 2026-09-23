@@ -97,6 +97,23 @@ internal static class PdfAnnotationParser
 
         bool hasAppearance = annot.GetOptional("AP") != null;
 
+        // #1797: the linked /Popup's OWN /Rect (§12.5.6.14) — independent of
+        // this annotation's own Rect. Only meaningful when /Popup resolves to
+        // a dictionary carrying a real /Rect; anything else (missing link,
+        // dangling reference, malformed popup) leaves PopupRect null rather
+        // than throwing — a note with an unreadable popup link should still
+        // parse, just fall back to its own Rect for display.
+        PdfRectangle? popupRect = null;
+        if (annot.GetOptional("Popup") is { } popupRef &&
+            doc.Resolve(popupRef) is PdfDictionary popupDict &&
+            doc.Resolve(popupDict.GetOptional("Rect") ?? (PdfObject)PdfNull.Instance) is PdfArray popupRectArr &&
+            popupRectArr.Count >= 4)
+        {
+            popupRect = new PdfRectangle(
+                popupRectArr.GetNumber(0), popupRectArr.GetNumber(1),
+                popupRectArr.GetNumber(2), popupRectArr.GetNumber(3));
+        }
+
         return new PdfAnnotation(
             subtype, rect, contents, author,
             modDate, creationDate, color, flags, name,
@@ -105,7 +122,8 @@ internal static class PdfAnnotationParser
             attachmentFileName, attachmentBytes, attachmentMimeType,
             borderWidth, interior, borderStyle, borderDash,
             hasAppearance,
-            annot);
+            annot,
+            popupRect);
     }
 
     private static bool TryNumber(PdfObject obj, out double v)

@@ -66,6 +66,18 @@ public sealed class PdfAnnotation
     /// <summary>Bounding rectangle in PDF points (Y-up).</summary>
     public PdfRectangle Rect { get; }
 
+    /// <summary>
+    /// #1797: the linked <c>/Popup</c> annotation's OWN <c>/Rect</c>
+    /// (§12.5.6.14, Table 183) — independent of this annotation's own
+    /// <see cref="Rect"/> by spec design. For a <c>/Text</c> (sticky note)
+    /// annotation, <see cref="Rect"/> is the note's true anchor location and
+    /// never moves once placed; <see cref="PopupRect"/> is where its open
+    /// window/card is displayed, and IS meant to be repositioned freely —
+    /// dragging the card must write here, never to <see cref="Rect"/>. Null
+    /// when this annotation has no linked <c>/Popup</c>, or is itself one.
+    /// </summary>
+    public PdfRectangle? PopupRect { get; }
+
     /// <summary>Tooltip / body text (/Contents).</summary>
     public string? Contents { get; }
 
@@ -240,10 +252,12 @@ public sealed class PdfAnnotation
         string? borderStyle,
         IReadOnlyList<double>? borderDashPattern,
         bool hasAppearance,
-        PdfDictionary rawDictionary)
+        PdfDictionary rawDictionary,
+        PdfRectangle? popupRect = null)
     {
         Subtype             = subtype;
         Rect                = rect;
+        PopupRect           = popupRect;
         Contents            = contents;
         Author              = author;
         ModDate             = modDate;

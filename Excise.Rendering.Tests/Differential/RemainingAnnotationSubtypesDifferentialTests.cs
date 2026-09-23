@@ -63,7 +63,11 @@ public class RemainingAnnotationSubtypesDifferentialTests : IDisposable
             reopened.GetPage(1),
             new RenderOptions { Dpi = Dpi, AntiAlias = false, BackgroundColor = SKColors.White });
 
-        var underlineBand = Box(105, 702, 395, 706);
+        // #1796: underline now draws BELOW the selection baseline
+        // (BuildTextMarkupAppearance), not 12% up from the rect bottom —
+        // for this 30pt-tall rect (700..730) that puts the line at ~697.3,
+        // below the old band and even below the rect's own old bottom edge.
+        var underlineBand = Box(105, 695, 395, 699);
         InkFraction(excise, underlineBand).Should().BeGreaterThan(0.1,
             "excise must stroke the authored underline");
         InkFraction(reference!, underlineBand).Should().BeGreaterThan(0.1,
@@ -76,9 +80,14 @@ public class RemainingAnnotationSubtypesDifferentialTests : IDisposable
 
     private void AssertMarkupPixels(SKBitmap bmp, string tool)
     {
-        var underlineBand = Box(105, 702, 395, 706);
+        // #1796: underline now draws BELOW the selection baseline
+        // (BuildTextMarkupAppearance), not 12% up from the rect bottom —
+        // for this 30pt-tall rect (700..730) that puts the line at ~697.3,
+        // below the old band and even below the rect's own old bottom edge.
+        var underlineBand = Box(105, 695, 395, 699);
         var strikeOutBand = Box(105, 642, 395, 646);
-        var squigglyBand = Box(105, 560.5, 395, 566);
+        // #1796: same below-baseline shift as underline, for this rect (560..590).
+        var squigglyBand = Box(105, 555, 395, 560);
         var gapBand = Box(105, 660, 395, 695);
         var emptyArea = Box(420, 500, 560, 600);
 

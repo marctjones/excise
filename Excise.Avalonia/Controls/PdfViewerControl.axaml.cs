@@ -469,8 +469,10 @@ public partial class PdfViewerControl : UserControl
     /// resting sticky note (#1794) — staged on press, resolved on release.
     /// See <c>PdfViewerControl.Interaction.cs</c>'s press/release handlers.
     /// </summary>
+    /// <param name="IconRect">The note's own /Rect — its identity, unaffected by a move (#1797).</param>
+    /// <param name="CardRect">The card's current /Rect (linked /Popup's own /Rect) — what a drag actually repositions.</param>
     private readonly record struct StickyNoteDragCandidate(
-        int PageNumber, PdfRectangle Rect, Point PressDips, double PressPdfX, double PressPdfY);
+        int PageNumber, PdfRectangle IconRect, PdfRectangle CardRect, Point PressDips, double PressPdfX, double PressPdfY);
 
     private StickyNoteDragCandidate? _stickyNoteDragCandidate;
 
@@ -850,6 +852,22 @@ public partial class PdfViewerControl : UserControl
         foreach (var a in annots)
         {
             var (fillColor, strokeColor) = AnnotationColors(a);
+
+            // #1797: a /Text (sticky note) annotation already gets a
+            // complete, fully-styled visual from SkiaRenderer.RenderStickyNoteDefault
+            // — baked into the page raster this ambient overlay sits ON TOP
+            // OF, not the small icon §12.5.6.4 describes. An additional
+            // translucent rect here (at either a.Rect, the note's tiny fixed
+            // anchor, or a.PopupRect, the already-opaque card) would only add
+            // visual noise over a card that already reads clearly on its own
+            // ("messed up text display" was THIS layer filling the old,
+            // unified 200x150pt /Rect with a translucent tint on top of the
+            // SAME card SkiaRenderer draws solid). Nothing else needs this
+            // ambient presence indicator the way Highlight/Underline/etc. do,
+            // so skip it entirely for Text.
+            if (a.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Text)
+                continue;
+
             var r = ToAvaloniaRect(ToViewerDips(ContentRect(a.Rect, CurrentPage)));
             double dipW = Math.Max(r.Width, 4);
             double dipH = Math.Max(r.Height, 4);

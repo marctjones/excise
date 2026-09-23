@@ -273,9 +273,9 @@ namespace Excise.Avalonia.Controls
     }
     public class StickyNoteMovedEventArgs : System.EventArgs
     {
-        public StickyNoteMovedEventArgs(int pageNumber, Excise.Core.Document.PdfRectangle oldRect, Excise.Core.Document.PdfRectangle newRect) { }
-        public Excise.Core.Document.PdfRectangle NewRect { get; }
-        public Excise.Core.Document.PdfRectangle OldRect { get; }
+        public StickyNoteMovedEventArgs(int pageNumber, Excise.Core.Document.PdfRectangle iconRect, Excise.Core.Document.PdfRectangle newCardRect) { }
+        public Excise.Core.Document.PdfRectangle IconRect { get; }
+        public Excise.Core.Document.PdfRectangle NewCardRect { get; }
         public int PageNumber { get; }
     }
     public class StickyNotePlacementRequestedEventArgs : System.EventArgs
@@ -289,8 +289,10 @@ namespace Excise.Avalonia.Controls
     {
         public TextSelectedEventArgs(Avalonia.Rect area) { }
         public TextSelectedEventArgs(Avalonia.Rect area, string text, System.Collections.Generic.IReadOnlyList<Avalonia.Rect> letterBoundsDips) { }
+        public TextSelectedEventArgs(Avalonia.Rect area, string text, System.Collections.Generic.IReadOnlyList<Avalonia.Rect> letterBoundsDips, Excise.Core.Document.PdfPageRect? pageArea) { }
         public Avalonia.Rect Area { get; }
         public System.Collections.Generic.IReadOnlyList<Avalonia.Rect> LetterBoundsDips { get; }
+        public Excise.Core.Document.PdfPageRect? PageArea { get; }
         public string Text { get; }
     }
     public class TypewriterTextBoundsChangedEventArgs : System.EventArgs

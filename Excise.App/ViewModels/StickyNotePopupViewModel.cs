@@ -25,8 +25,19 @@ public sealed class StickyNotePopupViewModel : ReactiveObject
     public int PageNumber { get; }
 
     /// <summary>The note's own /Rect — the identity <see cref="AnnotationWorkflowService"/>'s
-    /// rect-match uses to find the corresponding annotation in the save document.</summary>
+    /// rect-match uses to find the corresponding annotation in the save document.
+    /// Its true anchor location (#1797); never used for on-screen positioning —
+    /// see <see cref="DisplayRect"/>.</summary>
     public PdfRectangle Rect { get; }
+
+    /// <summary>
+    /// Where/how big the card appears on screen (#1797) — the linked
+    /// <c>/Popup</c>'s own <c>/Rect</c>, independent of <see cref="Rect"/>.
+    /// MainWindow's code-behind reads this (not <see cref="Rect"/>) to
+    /// position the editing overlay, so reopening a note the user dragged
+    /// away from its anchor opens exactly where the card now sits.
+    /// </summary>
+    public PdfRectangle DisplayRect { get; }
 
     private double _cardWidthDips = 200;
 
@@ -76,11 +87,12 @@ public sealed class StickyNotePopupViewModel : ReactiveObject
     public ReactiveCommand<Unit, Unit> CommitCommand { get; }
 
     public StickyNotePopupViewModel(
-        int pageNumber, PdfRectangle rect, string initialText, Func<string, Task> onCommit)
+        int pageNumber, PdfRectangle rect, PdfRectangle displayRect, string initialText, Func<string, Task> onCommit)
     {
         ArgumentNullException.ThrowIfNull(onCommit);
         PageNumber = pageNumber;
         Rect = rect;
+        DisplayRect = displayRect;
         _text = initialText;
         CommitCommand = ReactiveCommand.CreateFromTask(() => onCommit(Text));
     }

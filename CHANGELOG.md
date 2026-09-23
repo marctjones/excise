@@ -164,6 +164,18 @@ semantic versioning.
   - `README.md` documents `excise unredact` for the first time.
 
 ### Fixed
+- **Text markup landed off the selected text** (#1796). Highlight, Underline,
+  StrikeOut and Squiggly applied in the continuous view (the default) were
+  placed at the wrong position and size, scaled by the zoom factor (72 pt off
+  at 150 %), and on the wrong page when the selection was not on the
+  viewport's current page. The viewer now reports the selection with its page
+  and coordinate space.
+- **Sticky-note button on the annotation toolbar and palette arms the
+  click-to-place tool** (#1796), like every other tool on those surfaces;
+  it used to drop a note at a default spot on the current page before you
+  pointed anywhere. The main toolbar's quick-add button and the Annotate
+  menu's `Add _Sticky Note...` still add a note on the current page or text
+  selection.
 - **Pressing "Select Text Mode" while a markup tool was armed exited text
   interaction entirely instead of dropping back to plain selection** (#1793).
   `ToggleTextSelectionMode()` did a plain boolean flip; markup mode

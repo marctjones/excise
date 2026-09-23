@@ -4,7 +4,7 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "a196aa38b04af8c53385ba9012d5e0951baf5c0d",
+  "sourceRevision": "3d4891f564ce0a6fa3b8b2da3febd00eb77b9e30",
   "summary": {
     "interactions": 197,
     "menuItems": 111,
@@ -563,11 +563,11 @@
     {
       "kind": "button",
       "path": "AnnotationToolbarStickyNoteButton",
-      "label": "Add sticky note",
-      "command": "AddStickyNoteAnnotationCommand",
+      "label": "Sticky note tool: click the page to place a note",
+      "command": "ToggleStickyNoteToolCommand",
       "commandParameter": null,
       "shortcut": null,
-      "commandId": "annotation.addStickyNote"
+      "commandId": "annotation.toggleStickyNoteTool"
     },
     {
       "kind": "button",

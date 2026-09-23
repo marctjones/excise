@@ -76,9 +76,13 @@ public partial class PdfViewerControl
         var stickyNoteHit = HitTestStickyNoteForEvent(e, out var stickyNotePageNumber);
         if (stickyNoteHit != null)
         {
+            // #1797: the CARD (linked /Popup's own /Rect) is what a drag
+            // repositions — the note's own Rect is the identity carried
+            // alongside it, unaffected by the move.
+            var cardRect = stickyNoteHit.PopupRect ?? stickyNoteHit.Rect;
             _stickyNoteDragCandidate = TryMapPointerToContent(e, out _, out var pressPdfX, out var pressPdfY)
                 ? new StickyNoteDragCandidate(
-                    stickyNotePageNumber, stickyNoteHit.Rect, GetPressPoint(e), pressPdfX, pressPdfY)
+                    stickyNotePageNumber, stickyNoteHit.Rect, cardRect, GetPressPoint(e), pressPdfX, pressPdfY)
                 : null;
 
             // No content mapping (shouldn't happen — the hit test above just
@@ -167,6 +171,7 @@ public partial class PdfViewerControl
     {
         UpdateLinkHoverState(null);
         UpdateAnnotationHoverState(null);
+        UpdateHoverCursor(null, null);
     }
 
     private void OnInteractionLayerPointerMoved(object? sender, PointerEventArgs e)
@@ -198,17 +203,19 @@ public partial class PdfViewerControl
             try
             {
                 var hoveredLink = HitTestLinkForEvent(e);
+                // Link wins: it already owns the status line (#625), so an
+                // annotation hover is only reported when the pointer is not
+                // over a link.
+                var hoveredAnnotation = hoveredLink != null ? null : HitTestAnnotationForEvent(e);
                 UpdateLinkHoverState(hoveredLink);
-                // Link wins: it already owns the cursor and the status line
-                // (#625), so an annotation hover is only reported when the
-                // pointer is not over a link.
-                UpdateAnnotationHoverState(
-                    hoveredLink != null ? null : HitTestAnnotationForEvent(e));
+                UpdateAnnotationHoverState(hoveredAnnotation);
+                UpdateHoverCursor(hoveredLink, hoveredAnnotation);
             }
             catch
             {
                 UpdateLinkHoverState(null);
                 UpdateAnnotationHoverState(null);
+                UpdateHoverCursor(null, null);
             }
         }
 
@@ -377,7 +384,8 @@ public partial class PdfViewerControl
                 ? UnionRects(letterDips)
                 : null;
             TextSelected?.Invoke(this, new TextSelectedEventArgs(
-                bbox ?? new Rect(), text, letterDips));
+                bbox ?? new Rect(), text, letterDips,
+                bbox is { Width: > 0, Height: > 0 } b ? ViewerDipsRect(b, CurrentPage) : null));
         }
         else
         {
@@ -651,7 +659,7 @@ public partial class PdfViewerControl
         if (!movedPastThreshold)
         {
             StickyNoteClicked?.Invoke(
-                this, new StickyNoteClickedEventArgs(candidate.PageNumber, candidate.Rect));
+                this, new StickyNoteClickedEventArgs(candidate.PageNumber, candidate.IconRect));
             return;
         }
 
@@ -662,15 +670,17 @@ public partial class PdfViewerControl
             return;
         }
 
+        // #1797: translate the CARD by the drag delta — the note's own Rect
+        // (its true anchor) is carried as IconRect, untouched.
         var dx = releasePdfX - candidate.PressPdfX;
         var dy = releasePdfY - candidate.PressPdfY;
         var moved = new PdfRectangle(
-            candidate.Rect.Left + dx, candidate.Rect.Bottom + dy,
-            candidate.Rect.Right + dx, candidate.Rect.Top + dy);
-        var newRect = ClampRectToPage(moved, Document.GetPage(candidate.PageNumber));
+            candidate.CardRect.Left + dx, candidate.CardRect.Bottom + dy,
+            candidate.CardRect.Right + dx, candidate.CardRect.Top + dy);
+        var newCardRect = ClampRectToPage(moved, Document.GetPage(candidate.PageNumber));
 
         StickyNoteMoved?.Invoke(
-            this, new StickyNoteMovedEventArgs(candidate.PageNumber, candidate.Rect, newRect));
+            this, new StickyNoteMovedEventArgs(candidate.PageNumber, candidate.IconRect, newCardRect));
     }
 
     /// <summary>
@@ -702,13 +712,17 @@ public partial class PdfViewerControl
     /// can see and can never hover — so a rect SMALLER than the icon still
     /// clamps to it, matching the renderer's own fallback (see
     /// <see cref="PdfAnnotation.TextIconSize"/> and
-    /// <c>SkiaRenderer.RenderDefaultAppearance</c>). A note sized to the real
-    /// post-it card (#1794) is hit-tested at its ACTUAL rect instead — the
-    /// whole card is clickable/draggable, not just a 17pt corner of it.</para>
+    /// <c>SkiaRenderer.RenderDefaultAppearance</c>).</para>
+    /// <para>#1797: a note's CARD — <see cref="PdfAnnotation.PopupRect"/>,
+    /// the linked /Popup's own /Rect — is what's actually drawn and what a
+    /// click/drag targets, not <see cref="PdfAnnotation.Rect"/> (the note's
+    /// own, never-moving anchor). A note with no linked popup (a foreign
+    /// producer's file, or one predating #1797) falls back to its own Rect,
+    /// same as before.</para>
     /// </summary>
     private static bool ContainsPoint(PdfAnnotation a, double x, double y)
     {
-        var r = a.Rect;
+        var r = a.Subtype == PdfAnnotationSubtype.Text ? a.PopupRect ?? a.Rect : a.Rect;
         double left = Math.Min(r.Left, r.Right), right = Math.Max(r.Left, r.Right);
         double bottom = Math.Min(r.Bottom, r.Top), top = Math.Max(r.Bottom, r.Top);
 
@@ -846,19 +860,28 @@ public partial class PdfViewerControl
     private Cursor IbeamCursor => _ibeamCursor ??= new Cursor(StandardCursorType.Ibeam);
     private Cursor HandCursor => _handCursor ??= new Cursor(StandardCursorType.Hand);
 
-    private void UpdateLinkHoverState(PdfLink? link)
+    /// <summary>
+    /// Cursor reflects the affordance under the pointer on EVERY move: Hand
+    /// over a link or a sticky note (#1797 — hovering a note gave no visual
+    /// hint it was clickable), I-beam when text selection is active (#831),
+    /// else the default arrow. Called every move regardless of whether the
+    /// hover target CHANGED — <see cref="UpdateAnnotationHoverState"/>'s own
+    /// change-gate exists for firing its STATUS event once, not for the
+    /// cursor, which must keep reasserting Hand while the pointer sits still
+    /// over an unchanging note. Cursor instances are cached; setting the same
+    /// value is a no-op in Avalonia.
+    /// </summary>
+    private void UpdateHoverCursor(PdfLink? link, PdfAnnotation? annotation)
     {
-        // Cursor reflects the affordance under the pointer on EVERY move: Hand
-        // over a link, I-beam when text selection is active (#831), else the
-        // default arrow. This must run every move, not only on link enter/exit,
-        // so a link-less page (the common case) still shows the I-beam. Cursor
-        // instances are cached; setting the same value is a no-op in Avalonia.
-        Cursor = link != null
+        Cursor = link != null || annotation?.Subtype == PdfAnnotationSubtype.Text
             ? HandCursor
             : InteractionMode == InteractionMode.TextSelection
                 ? IbeamCursor
                 : Cursor.Default;
+    }
 
+    private void UpdateLinkHoverState(PdfLink? link)
+    {
         // The LinkHovered STATUS event only fires on a genuine enter/exit.
         if (ReferenceEquals(link, _lastHoveredLink))
             return;

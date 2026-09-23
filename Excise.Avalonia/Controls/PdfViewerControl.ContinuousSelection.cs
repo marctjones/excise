@@ -224,6 +224,7 @@ public partial class PdfViewerControl
 
         var parts = new List<string>(endpoints.Count);
         var singlePageRects = new List<Rect>();
+        var singlePageNumber = 0;
 
         foreach (var (p, from, to) in endpoints)
         {
@@ -239,6 +240,7 @@ public partial class PdfViewerControl
             // what a multi-page selection is for.
             if (endpoints.Count == 1)
             {
+                singlePageNumber = p;
                 var page = Document.GetPage(p);
                 singlePageRects = selection.VisualRange
                     .Select(l => ContinuousGlyphToPageLocalRect(page, l.GlyphRectangle))
@@ -248,7 +250,12 @@ public partial class PdfViewerControl
 
         var text = string.Join("\n", parts);
         Rect? bbox = singlePageRects.Count > 0 ? UnionRects(singlePageRects) : null;
-        TextSelected?.Invoke(this, new TextSelectedEventArgs(bbox ?? new Rect(), text, singlePageRects));
+        // Same space and scale ContinuousGlyphToPageLocalRect produced the rects in.
+        var pageArea = bbox is { Width: > 0, Height: > 0 } b
+            ? new PdfPageRect(singlePageNumber, b.X, b.Y, b.Width, b.Height,
+                PdfCoordinateSpace.ContinuousDips, PointsToDip * ZoomLevel)
+            : (PdfPageRect?)null;
+        TextSelected?.Invoke(this, new TextSelectedEventArgs(bbox ?? new Rect(), text, singlePageRects, pageArea));
     }
 
     /// <summary>Redraw the whole anchor→focus span, clearing every page first.</summary>

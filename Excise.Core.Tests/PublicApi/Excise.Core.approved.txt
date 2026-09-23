@@ -581,6 +581,7 @@ namespace Excise.Core.Document
         public System.ValueTuple<double, double, double, double>? LineEndpoints { get; }
         public System.DateTimeOffset? ModDate { get; }
         public string? Name { get; }
+        public Excise.Core.Document.PdfRectangle? PopupRect { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfRectangle>? QuadPoints { get; }
         public Excise.Core.Primitives.PdfDictionary RawDictionary { get; }
         public Excise.Core.Document.PdfRectangle Rect { get; }
@@ -614,9 +615,10 @@ namespace Excise.Core.Document
         public static Excise.Core.Document.PdfAnnotation AddSquigglyAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0) { }
         public static Excise.Core.Document.PdfAnnotation AddStampAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string stampName, string? contents = null, string? author = null) { }
         public static Excise.Core.Document.PdfAnnotation AddStrikeOutAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0) { }
-        public static Excise.Core.Document.PdfAnnotation AddTextAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents, string? author = null, bool open = false, string iconName = "Note", bool withPopup = false) { }
+        public static Excise.Core.Document.PdfAnnotation AddTextAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents, string? author = null, bool open = false, string iconName = "Note", bool withPopup = false, Excise.Core.Document.PdfRectangle? popupRect = default) { }
         public static Excise.Core.Document.PdfAnnotation AddUnderlineAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0) { }
         public static Excise.Core.Document.PdfAnnotation MoveTextAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfAnnotation existing, Excise.Core.Document.PdfRectangle newRect) { }
+        public static Excise.Core.Document.PdfAnnotation MoveTextAnnotationPopup(this Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfAnnotation existing, Excise.Core.Document.PdfRectangle newPopupRect) { }
         public static bool RemoveAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfAnnotation annotation) { }
         public static void SetAnnotationColor(this Excise.Core.Document.PdfAnnotation annotation, double red, double green, double blue) { }
         public static void SetAnnotationContents(this Excise.Core.Document.PdfAnnotation annotation, string? contents) { }

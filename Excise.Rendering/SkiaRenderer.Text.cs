@@ -1806,7 +1806,23 @@ internal partial class RenderContext
                         ? currentFont.Widths[idx]
                         : currentFont.MissingWidth;
                     var pdfGlyphWidth = Math.Max(0f, (w / 1000f) * effectiveSize);
-                    var naturalGlyphWidth = font.MeasureText(glyphText, measurePaint);
+                    // #1502: the substitute glyph's ADVANCE width is a poor
+                    // proxy for how wide it actually looks — a symbol-font
+                    // substitute (e.g. ZapfDingbats -> a system "Symbols"
+                    // face) can carry generous side bearings on some glyphs
+                    // (♥, ♣) and tight ones on others (♠, ♦) that have
+                    // nothing to do with the shape's visual size, so squeezing
+                    // by advance alone compressed only the wide-sidebearing
+                    // glyphs. The glyph's own INK bounds (the same outline
+                    // FillTextUsingGlyphPath below actually draws) is the
+                    // right measure of "how wide does this glyph look" — fall
+                    // back to advance width only when there is no usable
+                    // outline (e.g. a space).
+                    var naturalAdvanceWidth = font.MeasureText(glyphText, measurePaint);
+                    var glyphOutlineForWidth = GetCachedGlyphOutline(font, currentFont.Typeface!, glyphText);
+                    var naturalGlyphWidth = glyphOutlineForWidth is { IsEmpty: false } outline
+                        ? outline.TightBounds.Width
+                        : naturalAdvanceWidth;
                     var fallbackGlyphScale = pdfGlyphWidth > 0f && naturalGlyphWidth > 0f
                         ? Math.Min(1f, pdfGlyphWidth / naturalGlyphWidth)
                         : 1f;

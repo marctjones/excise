@@ -40,6 +40,12 @@ public static class PdfAnnotationAuthoring
     /// the rest all render a /Text annotation's icon fine, but its "comment"
     /// is only readable as a real pop-up when /Popup exists (#TODO issue).
     /// </param>
+    /// <param name="popupRect">
+    /// The linked <c>/Popup</c>'s own <c>/Rect</c> (§12.5.6.14, ignored unless
+    /// <paramref name="withPopup"/> is true) — independent of <paramref name="rect"/>
+    /// by spec design (#1797). Defaults to <paramref name="rect"/> itself, i.e.
+    /// the popup starts exactly where the note's anchor is.
+    /// </param>
     public static PdfAnnotation AddTextAnnotation(
         this PdfDocument document,
         int pageNumber,
@@ -48,10 +54,13 @@ public static class PdfAnnotationAuthoring
         string? author = null,
         bool open = false,
         string iconName = "Note",
-        bool withPopup = false)
+        bool withPopup = false,
+        PdfRectangle? popupRect = null)
     {
         ArgumentNullException.ThrowIfNull(document);
         ValidateRect(rect);
+        if (withPopup && popupRect is { } explicitPopupRect)
+            ValidateRect(explicitPopupRect);
 
         if (string.IsNullOrWhiteSpace(contents))
             throw new ArgumentException("Annotation contents must not be empty.", nameof(contents));
@@ -67,7 +76,8 @@ public static class PdfAnnotationAuthoring
         annot.SetName("Name", iconName);
 
         return withPopup
-            ? AttachTextAnnotationWithPopup(document, pageNumber, annot, normalized, open)
+            ? AttachTextAnnotationWithPopup(
+                document, pageNumber, annot, normalized, open, (popupRect ?? rect).Normalize())
             : AttachAnnotation(document, pageNumber, annot);
     }
 
@@ -162,6 +172,40 @@ public static class PdfAnnotationAuthoring
         var page = document.GetPage(pageNumber);
         return page.GetAnnotations().FirstOrDefault(a => ReferenceEquals(a.RawDictionary, raw))
             ?? existing;
+    }
+
+    /// <summary>
+    /// #1797: reposition a sticky note's CARD without moving the note itself.
+    /// Writes only the linked <c>/Popup</c>'s own <c>/Rect</c> (§12.5.6.14) —
+    /// <paramref name="existing"/>'s own <c>/Rect</c>, the note's true anchor
+    /// location, is untouched. This is what a drag-to-move gesture on a
+    /// RESTING note must call, never <see cref="MoveTextAnnotation"/>.
+    /// </summary>
+    /// <param name="document">The document that owns <paramref name="existing"/>.</param>
+    /// <param name="existing">The note whose popup to reposition. Must carry a linked <c>/Popup</c>.</param>
+    /// <param name="newPopupRect">The popup's new <c>/Rect</c>.</param>
+    public static PdfAnnotation MoveTextAnnotationPopup(
+        this PdfDocument document,
+        PdfAnnotation existing,
+        PdfRectangle newPopupRect)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(existing);
+        if (existing.Subtype != PdfAnnotationSubtype.Text)
+            throw new ArgumentException("Only a /Text annotation's popup can be moved this way.", nameof(existing));
+
+        var normalized = newPopupRect.Normalize();
+        ValidateRect(normalized);
+
+        var raw = existing.RawDictionary;
+        if (raw.GetOptional("Popup") is not { } popupRef || document.Resolve(popupRef) is not PdfDictionary popup)
+            throw new InvalidOperationException("This note has no linked /Popup to reposition.");
+
+        popup["Rect"] = PdfArray.FromRectangle(
+            normalized.Left, normalized.Bottom, normalized.Right, normalized.Top);
+        popup.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+
+        return existing;
     }
 
     /// <summary>
@@ -803,7 +847,17 @@ public static class PdfAnnotationAuthoring
         ValidateColor(blue, nameof(blue));
 
         var normalized = rect.Normalize();
-        var annot = NewAnnotationDict(subtype, normalized);
+
+        // #1796 follow-up: QuadPoints mark up the SELECTED TEXT — the letter
+        // cells ContentStreamWalker hands out run baseline -> baseline+fontSize
+        // for every glyph, with no descender allowance (Cell = AxisAlignedBox
+        // from the pen origin), so normalized.Bottom IS the baseline exactly,
+        // never below it. QuadPoints must stay this rect; only the /Rect and
+        // appearance for Underline/Squiggly grow downward from it — otherwise
+        // the annotation's own bounding box clips a line drawn below baseline.
+        var (apRect, apStream) = BuildTextMarkupAppearance(normalized, subtype, (red, green, blue));
+
+        var annot = NewAnnotationDict(subtype, apRect);
 
         if (!string.IsNullOrWhiteSpace(contents))
             annot.SetString("Contents", contents);
@@ -822,7 +876,6 @@ public static class PdfAnnotationAuthoring
             new PdfReal(normalized.Right), new PdfReal(normalized.Bottom));
 
         // Baked normal appearance so third-party viewers draw the same pixels.
-        var apStream = BuildTextMarkupAppearanceStream(normalized, subtype, (red, green, blue));
         var ap = new PdfDictionary();
         ap["N"] = document.AddIndirectObject(apStream);
         annot["AP"] = ap;
@@ -831,45 +884,64 @@ public static class PdfAnnotationAuthoring
     }
 
     /// <summary>
-    /// Build the <c>/AP /N</c> Form XObject for an Underline/StrikeOut/Squiggly
-    /// markup annotation. Draws a single stroked line (Underline/StrikeOut) or
-    /// a zig-zag (Squiggly) across the local BBox width, positioned per
-    /// conventional placement: underline near the baseline (~12% up from the
-    /// bottom), strikeout through the visual middle (~45% up), squiggly at the
-    /// underline height.
+    /// Build the <c>/Rect</c>-and-<c>/AP /N</c> pair for an Underline/StrikeOut/
+    /// Squiggly markup annotation: a single stroked line (Underline/StrikeOut)
+    /// or a zig-zag (Squiggly) across the marked-up width.
+    ///
+    /// <para><c>rect</c> is the marked-up text's own cell — <c>rect.Bottom</c> IS
+    /// the baseline (see the caller's remark). StrikeOut draws through the
+    /// visual middle of that cell, unchanged. Underline and Squiggly draw
+    /// BELOW the baseline — grown out of the cell, not "12% up from the
+    /// bottom" of it, which is 12% up from the baseline, i.e. through the
+    /// lower strokes of the letters, reading as a second strikeout. The
+    /// returned rect is padded down to hold that line without the Form
+    /// XObject's own BBox clipping it.</para>
     /// </summary>
-    private static PdfStream BuildTextMarkupAppearanceStream(
+    private static (PdfRectangle Rect, PdfStream Stream) BuildTextMarkupAppearance(
         PdfRectangle rect, string subtype, (double R, double G, double B) color)
     {
-        double w = rect.Width;
-        double h = rect.Height;
-        double lineWidth = Math.Max(0.5, h * 0.06);
+        bool belowBaseline = subtype is "Underline" or "Squiggly";
+        double pad = belowBaseline ? Math.Max(1.0, rect.Height * 0.15) : 0;
+        var apRect = belowBaseline
+            ? new PdfRectangle(rect.Left, rect.Bottom - pad, rect.Right, rect.Top)
+            : rect;
+
+        double w = apRect.Width;
+        double h = apRect.Height;
+        double lineWidth = Math.Max(0.5, rect.Height * 0.06);
 
         var sb = new StringBuilder();
         sb.Append($"{Num(color.R)} {Num(color.G)} {Num(color.B)} RG\n");
         sb.Append($"{Num(lineWidth)} w\n");
 
+        // Below-baseline placement, measured from the padded band (0 at
+        // apRect.Bottom = rect.Bottom - pad); through-the-cell placement is
+        // measured from the unpadded cell (0 at rect.Bottom == apRect.Bottom).
+        double y = subtype switch
+        {
+            "StrikeOut" => rect.Height * 0.45,
+            _ /* Underline, Squiggly */ => pad * 0.4,
+        };
+
         if (subtype == "Squiggly")
         {
-            double baseline = h * 0.12;
-            double amplitude = Math.Max(1, h * 0.06);
-            double period = Math.Max(2, h * 0.18);
-            sb.Append($"0 {Num(baseline)} m\n");
+            double amplitude = Math.Max(1, rect.Height * 0.06);
+            double period = Math.Max(2, rect.Height * 0.18);
+            sb.Append($"0 {Num(y)} m\n");
             bool up = true;
             int emitted = 0;
             for (double x = period; x <= w + period && emitted < 200; x += period, emitted++)
             {
-                double y = baseline + (up ? amplitude : -amplitude);
-                sb.Append($"{Num(Math.Min(x, w))} {Num(y)} l\n");
+                double sy = y + (up ? amplitude : -amplitude);
+                sb.Append($"{Num(Math.Min(x, w))} {Num(sy)} l\n");
                 up = !up;
             }
             if (emitted == 0)
-                sb.Append($"{Num(w)} {Num(baseline)} l\n");
+                sb.Append($"{Num(w)} {Num(y)} l\n");
             sb.Append("S\n");
         }
         else
         {
-            double y = subtype == "StrikeOut" ? h * 0.45 : h * 0.12;
             sb.Append($"0 {Num(y)} m\n{Num(w)} {Num(y)} l\nS\n");
         }
 
@@ -879,7 +951,7 @@ public static class PdfAnnotationAuthoring
         stream.SetInt("FormType", 1);
         stream["BBox"] = PdfArray.FromRectangle(0, 0, w, h);
         stream["Resources"] = new PdfDictionary();
-        return stream;
+        return (apRect, stream);
     }
 
     // ── Line / Arrow (#626, ISO 32000-2 §12.5.6.7) ───────────────────────────
@@ -1834,7 +1906,8 @@ public static class PdfAnnotationAuthoring
     /// the comment window without synthesising one from just the icon.
     /// </summary>
     private static PdfAnnotation AttachTextAnnotationWithPopup(
-        PdfDocument document, int pageNumber, PdfDictionary textAnnot, PdfRectangle textRect, bool open)
+        PdfDocument document, int pageNumber, PdfDictionary textAnnot, PdfRectangle textRect, bool open,
+        PdfRectangle popupRect)
     {
         var page = document.GetPage(pageNumber);
         var pageRef = FindPageRef(document, pageNumber);
@@ -1843,13 +1916,12 @@ public static class PdfAnnotationAuthoring
 
         var textRef = document.AddIndirectObject(textAnnot);
 
-        // Popup position is UI convenience only — nothing in the spec ties it
-        // to the note's rect, and no reference renderer draws it (§12.5.6.14,
-        // and AnnotationAppearancePolicy.SelectSynthesis has no Popup case).
-        // Offset to the right of the icon purely so a producer that DOES
-        // render it (rare) does not stack it exactly on top of the note.
-        var popupRect = new PdfRectangle(
-            textRect.Right, textRect.Top - 100, textRect.Right + 200, textRect.Top);
+        // #1797: the popup's position is independent of the note's own /Rect
+        // by spec design (§12.5.6.14) — excise's OWN viewer now reads it
+        // (SkiaRenderer.RenderDefaultAppearance) to draw the resting card
+        // wherever it was last dragged to, while textRect (the note's TRUE
+        // anchor) never moves. A caller with no opinion passes textRect back
+        // as popupRect — the popup starts exactly where the note is placed.
         var popup = NewAnnotationDict("Popup", popupRect);
         popup.SetBool("Open", open);
         popup["Parent"] = textRef;

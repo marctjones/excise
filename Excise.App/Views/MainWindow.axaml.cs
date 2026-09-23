@@ -1625,7 +1625,7 @@ public partial class MainWindow : Window
     private void OnStickyNoteMoved(object? sender, StickyNoteMovedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel) return;
-        _ = viewModel.MoveStickyNoteAsync(e.PageNumber, e.OldRect, e.NewRect);
+        _ = viewModel.MoveStickyNoteAsync(e.PageNumber, e.IconRect, e.NewCardRect);
     }
 
     /// <summary>
@@ -1671,7 +1671,9 @@ public partial class MainWindow : Window
         if (host == null || documentArea == null || _pdfViewerControl == null)
             return;
 
-        var dips = _pdfViewerControl.GetViewerPositionForPageRect(popup.PageNumber, popup.Rect);
+        // #1797: DisplayRect (the linked /Popup's own /Rect), not popup.Rect
+        // (the note's TRUE anchor, which stays fixed — see StickyNotePopupViewModel).
+        var dips = _pdfViewerControl.GetViewerPositionForPageRect(popup.PageNumber, popup.DisplayRect);
         if (dips == null)
             return;
 
@@ -1697,16 +1699,11 @@ public partial class MainWindow : Window
         // letter hit-testing, so the event already carries the joined
         // string — feed it directly.
         viewModel.CurrentTextSelectionArea = e.Area;
-        viewModel.CurrentTextSelectionPageArea =
-            e.Area.Width > 0 && e.Area.Height > 0
-                ? PdfPageRect.ViewerDips(
-                    viewModel.CurrentPage,
-                    e.Area.X,
-                    e.Area.Y,
-                    e.Area.Width,
-                    e.Area.Height,
-                    MainWindowViewModel.DefaultViewerRenderDpi)
-                : null;
+        // The viewer binds the rect to its page and coordinate space. Rebuilding
+        // it here as single-page DIPs at the default DPI on CurrentPage put every
+        // continuous-view markup off by the zoom factor, and on the wrong page
+        // when the selection was not on the viewport's current page (#1796).
+        viewModel.CurrentTextSelectionPageArea = e.PageArea;
         // #1645: selecting text does NOT copy it. This used to call
         // SetSelectedTextAndCopyAsync, which put every selection on the OS
         // clipboard and into Clipboard History — so an ordinary click, which is

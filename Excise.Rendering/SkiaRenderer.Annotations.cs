@@ -207,22 +207,34 @@ internal partial class RenderContext
         // inked px, pdftocairo 917, Ghostscript 1388 on veraPDF
         // 6-3-3-t01-pass-a.pdf's degenerate /Rect [50 110 50 110]). excise's
         // OWN viewer deliberately deviates (#1794): RenderStickyNoteDefault
-        // now draws a real post-it-sized card with the note's /Contents
-        // wrapped and visible on it, sized to the annotation's ACTUAL /Rect —
-        // #1788 already writes a real (non-degenerate) rect for every note
-        // this app places, and #1794's default is a ~200x150pt card. See
-        // issue #1795 for generating a real /AP so other readers see the
-        // post-it look too; until then they still fall back to the small icon
-        // §12.5.6.4 describes, because no /AP exists.
+        // draws a real post-it-sized card with the note's /Contents wrapped
+        // and visible on it. See issue #1795 for generating a real /AP so
+        // other readers see the post-it look too; until then they still fall
+        // back to the small icon §12.5.6.4 describes, because no /AP exists.
         //
-        // A rect SMALLER than the fixed icon size — a foreign producer's
-        // genuinely degenerate/zero rect, or a pre-#1794 icon-sized note — is
-        // still normalised up to it: shrinking a post-it card that small
-        // would draw nothing legible, and the icon-size floor is what the
-        // viewer's own hit-test (PdfViewerControl.ContainsPoint) clamps to
-        // for the same reason, so the two must not drift.
+        // #1797: the card is drawn at the linked /Popup's OWN /Rect when one
+        // is present, NOT annot.Rect — annot.Rect is the note's true anchor
+        // location and must never visibly move just because the card was
+        // dragged elsewhere (§12.5.6.14 gives /Popup its own independent
+        // /Rect for exactly this). A note with no popup (a foreign producer's
+        // file, or one authored before #1797) falls back to its own /Rect,
+        // unchanged from #1794's behavior.
         if (annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Text)
         {
+            if (annot.PopupRect is { } popupRect)
+            {
+                rx1 = (float)Math.Min(popupRect.Left, popupRect.Right);
+                ry1 = (float)Math.Min(popupRect.Bottom, popupRect.Top);
+                rx2 = (float)Math.Max(popupRect.Left, popupRect.Right);
+                ry2 = (float)Math.Max(popupRect.Bottom, popupRect.Top);
+            }
+
+            // A rect SMALLER than the fixed icon size — a foreign producer's
+            // genuinely degenerate/zero rect, or a pre-#1794 icon-sized note
+            // — is still normalised up to it: shrinking a post-it card that
+            // small would draw nothing legible, and the icon-size floor is
+            // what the viewer's own hit-test (PdfViewerControl.ContainsPoint)
+            // clamps to for the same reason, so the two must not drift.
             const float noteSize = (float)Excise.Core.Document.PdfAnnotation.TextIconSize;
             if (rx2 - rx1 < noteSize || ry2 - ry1 < noteSize)
             {
@@ -1368,14 +1380,22 @@ internal partial class RenderContext
         var lines = WrapStickyNoteText(contents, font, paint, textRect.Width);
         var maxLines = Math.Max(1, (int)(textRect.Height / lineHeight));
 
+        // #1797: the resting card is a flat raster — it cannot scroll. When
+        // there is more text than fits, say so rather than silently clipping
+        // mid-word; click the card to open it and read/edit the rest.
+        var truncated = lines.Count > maxLines;
+        var visibleLines = truncated ? maxLines : lines.Count;
+
         _canvas.Save();
         try
         {
             _canvas.ClipRect(cardRect, SKClipOperation.Intersect, _options.AntiAlias);
             var baselineY = textRect.Top + fontSize;
-            for (var i = 0; i < lines.Count && i < maxLines; i++)
+            for (var i = 0; i < visibleLines; i++)
             {
-                _canvas.DrawText(lines[i], textRect.Left, baselineY, font, paint);
+                var isLastVisible = truncated && i == visibleLines - 1;
+                var line = isLastVisible ? TruncateWithEllipsis(lines[i], font, paint, textRect.Width) : lines[i];
+                _canvas.DrawText(line, textRect.Left, baselineY, font, paint);
                 baselineY += lineHeight;
             }
         }
@@ -1383,6 +1403,23 @@ internal partial class RenderContext
         {
             _canvas.Restore();
         }
+    }
+
+    /// <summary>
+    /// Shortens <paramref name="line"/> so <c>line + "…"</c> fits
+    /// <paramref name="maxWidth"/> — the last visible line of a card whose
+    /// text overflows it (#1797). Falls back to just appending "…" if even
+    /// one character plus the ellipsis cannot fit; a card too small to show
+    /// anything legible already returned before reaching here.
+    /// </summary>
+    private static string TruncateWithEllipsis(string line, SKFont font, SKPaint paint, float maxWidth)
+    {
+        const string ellipsis = "…";
+        if (font.MeasureText(line + ellipsis, paint) <= maxWidth) return line + ellipsis;
+
+        var end = line.Length;
+        while (end > 0 && font.MeasureText(line[..end] + ellipsis, paint) > maxWidth) end--;
+        return end > 0 ? line[..end] + ellipsis : ellipsis;
     }
 
     /// <summary>

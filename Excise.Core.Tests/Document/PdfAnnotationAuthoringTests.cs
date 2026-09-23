@@ -669,6 +669,56 @@ public class PdfAnnotationAuthoringTests
             "strikeout sits through the middle of the text, well above the underline baseline position");
     }
 
+    /// <summary>
+    /// #1797: the selection rect's Bottom IS the baseline (letter cells run
+    /// baseline -> baseline+fontSize, no descender allowance — see
+    /// ContentStreamWalker's AxisAlignedBox). "12% up from the bottom" of that
+    /// cell is 12% up from the BASELINE — through the lower strokes of the
+    /// letters, reading as a second strikeout, not an underline. The drawn
+    /// line's ABSOLUTE position (not its local-coordinate offset, which lives
+    /// in a rect padded down for Underline/Squiggly) must land below the
+    /// selection's own baseline; StrikeOut is unaffected and stays inside the
+    /// cell, through its visual middle.
+    /// </summary>
+    [Theory]
+    [InlineData("Underline")]
+    [InlineData("Squiggly")]
+    public void UnderlineAndSquiggly_DrawBelowTheBaseline_NotThroughTheLetters(string kind)
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        var selection = new PdfRectangle(100, 700, 300, 720); // Bottom (700) == baseline.
+
+        var annotation = kind == "Underline"
+            ? doc.AddUnderlineAnnotation(1, selection)
+            : doc.AddSquigglyAnnotation(1, selection);
+
+        var ap = doc.Resolve(annotation.RawDictionary.GetOptional("AP")!) as Excise.Core.Primitives.PdfDictionary;
+        var n = doc.Resolve(ap!.GetOptional("N")!) as Excise.Core.Primitives.PdfStream;
+        double localY = double.Parse(
+            System.Text.RegularExpressions.Regex.Match(n.GetDecodedString(), @"0 ([\d.-]+) m")
+                .Groups[1].Value,
+            System.Globalization.CultureInfo.InvariantCulture);
+
+        var r = annotation.Rect.Normalize();
+        double absoluteY = r.Bottom + localY;
+
+        absoluteY.Should().BeLessThan(selection.Bottom,
+            $"{kind} must draw below the selection's baseline ({selection.Bottom}), not inside the glyph cell " +
+            $"(drew at absolute y={absoluteY:F2}) — otherwise it looks like a second, lower StrikeOut");
+
+        // /Rect still CONTAINS the appearance — a viewer that clips a Form
+        // XObject to its BBox, and BBox to /Rect, must not clip the line off.
+        r.Bottom.Should().BeLessThanOrEqualTo(absoluteY);
+        r.Top.Should().BeGreaterThanOrEqualTo(absoluteY);
+
+        // QuadPoints still mark up exactly the selected text, unaffected by
+        // the padded-down /Rect the appearance needed.
+        var quad = annotation.QuadPoints!.Single();
+        quad.Normalize().Bottom.Should().BeApproximately(selection.Bottom, 0.01,
+            "QuadPoints must stay the actual selection, not the padded appearance rect");
+    }
+
     [Fact]
     public void AddUnderlineAnnotation_RejectsInvalidColorAndRect()
     {

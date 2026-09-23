@@ -98,10 +98,18 @@ public class AnnotationStructuralOracleTests
             // so the assertion survives a legitimate padding rule while still
             // failing on a shifted or mis-scaled rect.
             const double slack = 4.0;
+            // #1796: Underline/Squiggly grow /Rect DOWN from the selection's
+            // own bottom (the baseline — see BuildTextMarkupAppearance's
+            // remarks) to hold a line drawn below it, by up to 15% of the
+            // selection height — deliberately more than the generic
+            // stroke-width slack every other subtype's padding stays inside.
+            var bottomSlack = subtype is "Underline" or "Squiggly"
+                ? Math.Max(slack, expected.Height * 0.15 + 1.0)
+                : slack;
             var q = match[0];
             q.Left.Should().BeInRange(expected.Left - slack, expected.Left + 0.5,
                 $"{subtype}: qpdf sees a /Rect left that is not where the caller asked");
-            q.Bottom.Should().BeInRange(expected.Bottom - slack, expected.Bottom + 0.5,
+            q.Bottom.Should().BeInRange(expected.Bottom - bottomSlack, expected.Bottom + 0.5,
                 $"{subtype}: qpdf sees a /Rect bottom that is not where the caller asked");
             q.Right.Should().BeInRange(expected.Right - 0.5, expected.Right + slack,
                 $"{subtype}: qpdf sees a /Rect right that is not where the caller asked");

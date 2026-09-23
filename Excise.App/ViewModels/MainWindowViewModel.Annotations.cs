@@ -22,6 +22,20 @@ public partial class MainWindowViewModel
     internal const double DefaultStickyNoteWidth = 200.0;
     internal const double DefaultStickyNoteHeight = 150.0;
 
+    /// <summary>
+    /// #1797: click-to-place (<see cref="PlaceStickyNoteAsync"/>) gives the
+    /// note two independent rects — <see cref="PdfAnnotation.TextIconSize"/>
+    /// for the note's own /Rect (its true anchor, never moves again) and
+    /// this size for the linked /Popup's /Rect (the draggable card everyone
+    /// actually reads/edits, §12.5.6.14). ~90pt tall fits roughly two
+    /// sentences of wrapped Helvetica at the card-proportional font size
+    /// <c>SkiaRenderer.DrawStickyNoteText</c> derives from it, with a "…" cue
+    /// (not literal scrolling — the resting card is a flat raster) when there
+    /// is more; click the card to read/edit the rest.
+    /// </summary>
+    internal const double DefaultStickyNoteCardWidth = 220.0;
+    internal const double DefaultStickyNoteCardHeight = 90.0;
+
     public event EventHandler? AnnotationsChanged;
 
     public async Task AddHighlightAnnotationFromSelectionAsync()
@@ -755,22 +769,31 @@ public partial class MainWindowViewModel
             return;
         }
 
-        // #1794: the click anchors the card's top-left corner (screenY down =
-        // pdfY down from the click), sized to the default post-it card rather
-        // than the old TextIconSize icon — then clamped so a note placed near
-        // a page edge doesn't hang off it.
-        var rawRect = new PdfRectangle(
-            pdfX, pdfY - DefaultStickyNoteHeight,
-            pdfX + DefaultStickyNoteWidth, pdfY);
+        // #1797: the click sets TWO independent rects — a small icon-sized
+        // /Rect (the note's TRUE anchor location; never moves again after
+        // this) and a separate, bigger /Popup /Rect (the draggable card
+        // everyone actually reads/edits). Both start at the same top-left
+        // corner (screenY down = pdfY down from the click) so the card
+        // visually "is" the note until the user drags it elsewhere — then
+        // clamped so neither hangs off a page edge.
         var document = _documentService.GetCurrentDocument();
-        var rect = document != null && pageNumber >= 1 && pageNumber <= document.PageCount
-            ? ClampRectToPage(rawRect, document.GetPage(pageNumber))
-            : rawRect;
+        var page = document != null && pageNumber >= 1 && pageNumber <= document.PageCount
+            ? document.GetPage(pageNumber)
+            : null;
+
+        var rawIconRect = new PdfRectangle(
+            pdfX, pdfY - PdfAnnotation.TextIconSize, pdfX + PdfAnnotation.TextIconSize, pdfY);
+        var iconRect = page != null ? ClampRectToPage(rawIconRect, page) : rawIconRect;
+
+        var rawCardRect = new PdfRectangle(
+            pdfX, pdfY - DefaultStickyNoteCardHeight, pdfX + DefaultStickyNoteCardWidth, pdfY);
+        var cardRect = page != null ? ClampRectToPage(rawCardRect, page) : rawCardRect;
 
         try
         {
             var request = new AnnotationRectRequest(
-                AnnotationRectKind.TextNote, pageNumber, rect, DefaultStickyNoteText, Open: true);
+                AnnotationRectKind.TextNote, pageNumber, iconRect, DefaultStickyNoteText,
+                Open: true, PopupRect: cardRect);
             var result = _annotationWorkflow.AddRect(request, _pdfCoreDocument);
             await MarkAnnotationChangedAsync(result.SuccessMessage);
             RecordAnnotationAdd(
@@ -779,7 +802,9 @@ public partial class MainWindowViewModel
                 result.Annotation,
                 () => _annotationWorkflow.ReplayRect(result.Request));
 
-            OpenStickyNotePopup(pageNumber, result.Annotation.Rect, result.Annotation.Contents ?? DefaultStickyNoteText);
+            OpenStickyNotePopup(
+                pageNumber, result.Annotation.Rect, result.Annotation.PopupRect ?? cardRect,
+                result.Annotation.Contents ?? DefaultStickyNoteText);
         }
         catch (Exception ex)
         {
@@ -813,13 +838,23 @@ public partial class MainWindowViewModel
         if (annotation == null)
             return;
 
-        OpenStickyNotePopup(pageNumber, annotation.Rect, annotation.Contents ?? string.Empty);
+        // #1797: reopen at wherever the CARD currently is (its /Popup /Rect —
+        // which may have been dragged away from the anchor), not back at the
+        // tiny icon rect.
+        OpenStickyNotePopup(
+            pageNumber, annotation.Rect, annotation.PopupRect ?? annotation.Rect,
+            annotation.Contents ?? string.Empty);
     }
 
-    private void OpenStickyNotePopup(int pageNumber, PdfRectangle rect, string initialText)
+    /// <param name="rect">The note's own /Rect — its identity for <see cref="CommitStickyNotePopupAsync"/>'s rect-match. Never displayed directly.</param>
+    /// <param name="displayRect">
+    /// Where/how big the editing card appears on screen (#1797) — the linked
+    /// /Popup's own /Rect, independent of <paramref name="rect"/>.
+    /// </param>
+    private void OpenStickyNotePopup(int pageNumber, PdfRectangle rect, PdfRectangle displayRect, string initialText)
     {
         StickyNotePopup = new StickyNotePopupViewModel(
-            pageNumber, rect, initialText,
+            pageNumber, rect, displayRect, initialText,
             onCommit: text => CommitStickyNotePopupAsync(pageNumber, rect, text));
     }
 
@@ -849,16 +884,20 @@ public partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Drag-to-move (#1794): <c>PdfViewerControl</c> raises
-    /// <c>StickyNoteMoved</c> when a press-and-drag on an existing,
-    /// NOT-currently-editing note exceeds its click/drag threshold — see that
-    /// control's <c>OnInteractionLayerPointerReleased</c> for the
-    /// disambiguation. Same "no separate viewer mirror write, caller
-    /// resyncs" shape as <see cref="CommitStickyNotePopupAsync"/>, and same
-    /// "not undo-tracked" precedent: a move is a light in-place edit, not a
-    /// structural add.
+    /// Drag-to-move (#1794, retargeted by #1797): <c>PdfViewerControl</c>
+    /// raises <c>StickyNoteMoved</c> when a press-and-drag on an existing,
+    /// NOT-currently-editing note's CARD exceeds its click/drag threshold —
+    /// see that control's <c>OnInteractionLayerPointerReleased</c> for the
+    /// disambiguation. This moves only the linked <c>/Popup</c>'s <c>/Rect</c>
+    /// — the note's own <paramref name="iconRect"/> (its true anchor
+    /// location, §12.5.6.14) never changes. Same "no separate viewer mirror
+    /// write, caller resyncs" shape as <see cref="CommitStickyNotePopupAsync"/>,
+    /// and same "not undo-tracked" precedent: a move is a light in-place
+    /// edit, not a structural add.
     /// </summary>
-    public async Task MoveStickyNoteAsync(int pageNumber, PdfRectangle oldRect, PdfRectangle newRect)
+    /// <param name="iconRect">The note's own /Rect — the identity used to find it, unaffected by the move.</param>
+    /// <param name="newPopupRect">The card's new position/size.</param>
+    public async Task MoveStickyNoteAsync(int pageNumber, PdfRectangle iconRect, PdfRectangle newPopupRect)
     {
         if (!_documentService.IsDocumentLoaded)
             return;
@@ -872,7 +911,7 @@ public partial class MainWindowViewModel
 
         try
         {
-            _annotationWorkflow.MoveTextNote(pageNumber, oldRect, newRect);
+            _annotationWorkflow.MoveTextNotePopup(pageNumber, iconRect, newPopupRect);
             MarkStickyNoteEdited();
             await RefreshAfterDocumentMutationAsync();
         }

@@ -38,12 +38,24 @@ public class TextSelectedEventArgs : EventArgs
     public IReadOnlyList<Rect> LetterBoundsDips { get; }
     /// <summary>Bounding box of the entire selection. Backwards-compat with the rect-only listeners.</summary>
     public Rect Area { get; }
+    /// <summary>
+    /// <see cref="Area"/> bound to its page and coordinate space — single-page
+    /// viewer DIPs or continuous page-local DIPs, each with its own scale. Null
+    /// when the selection spans pages or is empty. <see cref="Area"/> alone
+    /// cannot be converted: the same Rect means different points in the two
+    /// view modes, and a listener that guessed placed markup off the text (#1796).
+    /// </summary>
+    public PdfPageRect? PageArea { get; }
 
     public TextSelectedEventArgs(Rect area, string text, IReadOnlyList<Rect> letterBoundsDips)
+        : this(area, text, letterBoundsDips, null) { }
+
+    public TextSelectedEventArgs(Rect area, string text, IReadOnlyList<Rect> letterBoundsDips, PdfPageRect? pageArea)
     {
         Area = area;
         Text = text;
         LetterBoundsDips = letterBoundsDips;
+        PageArea = pageArea;
     }
 
     /// <summary>Backwards-compat ctor — area only, empty text/bounds.</summary>
@@ -155,13 +167,15 @@ public class StickyNotePlacementRequestedEventArgs : EventArgs
 public class StickyNoteMovedEventArgs : EventArgs
 {
     public int PageNumber { get; }
-    public PdfRectangle OldRect { get; }
-    public PdfRectangle NewRect { get; }
-    public StickyNoteMovedEventArgs(int pageNumber, PdfRectangle oldRect, PdfRectangle newRect)
+    /// <summary>The note's own /Rect — its identity, unaffected by the move (#1797).</summary>
+    public PdfRectangle IconRect { get; }
+    /// <summary>The card's (linked /Popup's) new /Rect.</summary>
+    public PdfRectangle NewCardRect { get; }
+    public StickyNoteMovedEventArgs(int pageNumber, PdfRectangle iconRect, PdfRectangle newCardRect)
     {
         PageNumber = pageNumber;
-        OldRect = oldRect;
-        NewRect = newRect;
+        IconRect = iconRect;
+        NewCardRect = newCardRect;
     }
 }
 
