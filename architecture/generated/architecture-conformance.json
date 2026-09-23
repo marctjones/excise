@@ -2,18 +2,18 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "e17013276d3ab3ec2e051da29e06b970f5bfe372",
+  "sourceRevision": "e71af582fdff661973b7eaafa7be886ddcda6514",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 7975,
-    "observedComponentDependencies": 72,
+    "retainedSymbols": 8008,
+    "observedComponentDependencies": 73,
     "declaredDependencies": 69,
     "acceptedExceptions": 1,
-    "undeclaredDependencies": 2,
+    "undeclaredDependencies": 3,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
     "unownedShippingSymbols": 0,
@@ -24,14 +24,14 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 466,
+      "references": 464,
       "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Views.MainWindow",
           "target": "Excise.App.ViewModels.MainWindowViewModel",
-          "references": 176
+          "references": 174
         }
       ]
     },
@@ -66,8 +66,8 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 427,
-      "typeDependencyCount": 28,
+      "references": 445,
+      "typeDependencyCount": 29,
       "classification": "declared",
       "evidence": [
         {
@@ -346,7 +346,7 @@
     {
       "source": "core-content",
       "target": "core-document",
-      "references": 108,
+      "references": 109,
       "typeDependencyCount": 18,
       "classification": "declared",
       "evidence": [
@@ -388,7 +388,7 @@
     {
       "source": "core-content",
       "target": "core-primitives",
-      "references": 305,
+      "references": 311,
       "typeDependencyCount": 43,
       "classification": "declared",
       "evidence": [
@@ -444,14 +444,14 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1462,
+      "references": 1473,
       "typeDependencyCount": 218,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfAnnotationAuthoring",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 103
+          "references": 106
         }
       ]
     },
@@ -465,6 +465,20 @@
         {
           "source": "Excise.Core.Document.AcroFormAuthoring",
           "target": "Excise.Core.Text.UnicodeTextSafety",
+          "references": 2
+        }
+      ]
+    },
+    {
+      "source": "core-document",
+      "target": "core-writing",
+      "references": 2,
+      "typeDependencyCount": 1,
+      "classification": "undeclared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Document.PdfDocument",
+          "target": "Excise.Core.Writing.OnDiskFileState",
           "references": 2
         }
       ]
@@ -514,7 +528,7 @@
     {
       "source": "core-parsing",
       "target": "core-primitives",
-      "references": 140,
+      "references": 143,
       "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [
@@ -528,8 +542,8 @@
     {
       "source": "core-primitives",
       "target": "core-parsing",
-      "references": 4,
-      "typeDependencyCount": 2,
+      "references": 6,
+      "typeDependencyCount": 3,
       "classification": "undeclared",
       "evidence": [
         {
@@ -540,6 +554,11 @@
         {
           "source": "Excise.Core.Primitives.PdfStream",
           "target": "Excise.Core.Filters.FlateFilterDecoder",
+          "references": 2
+        },
+        {
+          "source": "Excise.Core.Primitives.PdfStream",
+          "target": "Excise.Core.Filters.PdfPredictor",
           "references": 2
         }
       ]
@@ -973,7 +992,7 @@
     {
       "source": "rendering",
       "target": "core-document",
-      "references": 299,
+      "references": 301,
       "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "7da3c903a96e2de697c173638d26ad7228816e1baabe12429eb7977ec9dfe9bb",
+  "sourceFingerprint": "70ff51c78b9febddd1f6dda5d15a59a359bb5dad8a0ae15c44edbd221d231f10",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",

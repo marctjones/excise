@@ -7794,6 +7794,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingAReleasedImage_SavesTheSameBytesAsWithoutTheRelease",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -8555,15 +8562,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -11114,6 +11112,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.SaveToPath_KeepsTheFilesUnixPermissions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11530,15 +11535,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveDocument_EncryptedSource_PreservesPermissionsMask",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -12580,6 +12576,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.SaveToPath_KeepsTheFilesUnixPermissions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12996,15 +12999,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveDocument_EncryptedSource_PreservesPermissionsMask",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -14039,6 +14033,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.SaveToPath_KeepsTheFilesUnixPermissions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14455,15 +14456,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveDocument_EncryptedSource_PreservesPermissionsMask",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -15499,6 +15491,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.SaveToPath_KeepsTheFilesUnixPermissions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15915,15 +15914,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveDocument_EncryptedSource_PreservesPermissionsMask",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -21230,6 +21220,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingAReleasedImage_SavesTheSameBytesAsWithoutTheRelease",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -21994,15 +21991,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -22736,6 +22724,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingAReleasedImage_SavesTheSameBytesAsWithoutTheRelease",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23500,15 +23495,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -24203,6 +24189,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingAReleasedImage_SavesTheSameBytesAsWithoutTheRelease",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -24967,15 +24960,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -82282,6 +82266,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.UnderlineAndSquiggly_DrawBelowTheBaseline_NotThroughTheLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddUnderlineAnnotation_RejectsInvalidColorAndRect",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -83358,37 +83349,24 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate",
             "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasANonDegenerateRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_PreservesItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -83733,6 +83711,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.UnderlineAndSquiggly_DrawBelowTheBaseline_NotThroughTheLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddUnderlineAnnotation_RejectsInvalidColorAndRect",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -84809,37 +84794,24 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate",
             "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasANonDegenerateRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_PreservesItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -85184,6 +85156,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.UnderlineAndSquiggly_DrawBelowTheBaseline_NotThroughTheLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddUnderlineAnnotation_RejectsInvalidColorAndRect",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -86260,37 +86239,24 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate",
             "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasANonDegenerateRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_PreservesItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -86651,6 +86617,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.UnderlineAndSquiggly_DrawBelowTheBaseline_NotThroughTheLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddUnderlineAnnotation_RejectsInvalidColorAndRect",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -87727,37 +87700,24 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
             "keyword-facet-candidate",
             "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasANonDegenerateRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_PreservesItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -88237,6 +88197,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.UnderlineAndSquiggly_DrawBelowTheBaseline_NotThroughTheLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddUnderlineAnnotation_RejectsInvalidColorAndRect",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -89313,34 +89280,21 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasANonDegenerateRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_PreservesItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -89680,6 +89634,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.UnderlineAndSquiggly_DrawBelowTheBaseline_NotThroughTheLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddUnderlineAnnotation_RejectsInvalidColorAndRect",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -90756,34 +90717,21 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasANonDegenerateRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_PreservesItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -91116,6 +91064,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.UnderlineAndSquiggly_DrawBelowTheBaseline_NotThroughTheLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddUnderlineAnnotation_RejectsInvalidColorAndRect",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -92192,34 +92147,21 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasANonDegenerateRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_PreservesItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -92552,6 +92494,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.UnderlineAndSquiggly_DrawBelowTheBaseline_NotThroughTheLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddUnderlineAnnotation_RejectsInvalidColorAndRect",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -93628,34 +93577,21 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasANonDegenerateRect",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_PreservesItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.TextMarkup_QuadPointsLieWithinTheRect",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94236,6 +94172,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.ReleasingBetweenARedactionsReadAndItsWrite_DoesNotRevertTheRedaction",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AnImageRegionRedactorResult_IsNeverReleased",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94545,6 +94495,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs::RedactAreaCarrierScopeTests.Measure_WhichCarriersSurviveAnAreaRedaction",
@@ -95170,34 +95134,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverAWord_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_WithOverlayText_StillLeaksTheOriginal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverPartOfALine_RecoversTheMarkedRun",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95582,6 +95518,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.ReleasingBetweenARedactionsReadAndItsWrite_DoesNotRevertTheRedaction",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AnImageRegionRedactorResult_IsNeverReleased",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95891,6 +95841,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs::RedactAreaCarrierScopeTests.Measure_WhichCarriersSurviveAnAreaRedaction",
@@ -96516,34 +96480,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverAWord_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_WithOverlayText_StillLeaksTheOriginal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverPartOfALine_RecoversTheMarkedRun",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96942,6 +96878,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.ReleasingBetweenARedactionsReadAndItsWrite_DoesNotRevertTheRedaction",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AnImageRegionRedactorResult_IsNeverReleased",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97251,6 +97201,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs::RedactAreaCarrierScopeTests.Measure_WhichCarriersSurviveAnAreaRedaction",
@@ -97876,34 +97840,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverAWord_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_WithOverlayText_StillLeaksTheOriginal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverPartOfALine_RecoversTheMarkedRun",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98328,6 +98264,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.ReleasingBetweenARedactionsReadAndItsWrite_DoesNotRevertTheRedaction",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AnImageRegionRedactorResult_IsNeverReleased",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98637,6 +98587,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs::RedactAreaCarrierScopeTests.Measure_WhichCarriersSurviveAnAreaRedaction",
@@ -99262,34 +99226,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverAWord_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_WithOverlayText_StillLeaksTheOriginal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.UnappliedRedact_OverPartOfALine_RecoversTheMarkedRun",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.MarkedContent_ActualText_IsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -106454,6 +106390,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingAReleasedImage_SavesTheSameBytesAsWithoutTheRelease",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -107214,15 +107157,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -107908,6 +107842,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingAReleasedImage_SavesTheSameBytesAsWithoutTheRelease",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -108668,15 +108609,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -109973,6 +109905,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.SaveToPath_KeepsTheFilesUnixPermissions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -110389,15 +110328,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveDocument_EncryptedSource_PreservesPermissionsMask",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -111447,6 +111377,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.SaveToPath_KeepsTheFilesUnixPermissions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -111863,15 +111800,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveDocument_EncryptedSource_PreservesPermissionsMask",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112898,6 +112826,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.SaveToPath_KeepsTheFilesUnixPermissions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -113320,15 +113255,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveDocument_EncryptedSource_PreservesPermissionsMask",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [],
@@ -113395,8 +113321,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7590,
-    "testMethodsWithCapabilityCandidate": 4827,
+    "testMethods": 7627,
+    "testMethodsWithCapabilityCandidate": 4856,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
