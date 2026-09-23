@@ -33,6 +33,8 @@ internal sealed class RenderResourceScope : IDisposable
     // Image and mask streams whose samples THIS render caused to decode, when
     // RenderOptions.ReleaseDecodedImageSamples asked for them to be let go
     // (#1468). Null when it did not, so an unflagged render records nothing.
+    // An early release removes the stream, so the set never outlives its use
+    // of a stream (#1678).
     private readonly HashSet<PdfStream>? _decodedImageSampleStreams;
 
     // Every image and mask stream whose samples this render read, decoded or
@@ -89,10 +91,21 @@ internal sealed class RenderResourceScope : IDisposable
     /// releasing here holds one image's samples at a time instead of every
     /// image on the page. A no-op for a stream this render did not record.
     /// </summary>
+    /// <remarks>
+    /// The stream also leaves the record here, whether or not there was
+    /// anything to release (#1678). Keeping it would root the PdfStream, and
+    /// with it the ENCODED bytes, until the render ends: the streamed
+    /// subsampled decode (#1677 F2) never writes decoded samples, and the
+    /// object store has already forgotten the object (#1207 F3), so this set
+    /// was the only thing still holding ~120 MB of encoded image data on a
+    /// 75-image page. A later re-read in the same render is re-recorded by
+    /// <see cref="NoteImageSampleRead"/>, since a released stream is not
+    /// decoded.
+    /// </remarks>
     public void ReleaseImageSamplesEarly(PdfStream stream)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (_decodedImageSampleStreams?.Contains(stream) == true)
+        if (_decodedImageSampleStreams?.Remove(stream) == true)
             stream.TryReleaseDecoded();
     }
 

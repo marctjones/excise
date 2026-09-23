@@ -63,6 +63,38 @@ public sealed class RenderResourceScopeTests
         sink.Should().HaveCount(2, "a second dispose adds nothing");
     }
 
+    /// <summary>
+    /// #1678: an early release must also drop the scope's reference to the
+    /// stream. A streamed subsampled decode (#1677) has no decoded samples to
+    /// release, and the object store has already forgotten the object (#1207
+    /// F3), so the scope's record was the only thing keeping its encoded bytes
+    /// alive until the render ended — every image on the page at once.
+    /// </summary>
+    [Fact]
+    public void EarlyRelease_DropsTheScopesReference_SoTheStreamCanBeCollectedMidRender()
+    {
+        using var scope = new RenderResourceScope(releaseDecodedImageSamples: true);
+        var weak = NoteAndReleaseAnUndecodedStream(scope);
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        weak.IsAlive.Should().BeFalse("the scope is still live, but it is done with this stream");
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference NoteAndReleaseAnUndecodedStream(RenderResourceScope scope)
+    {
+        var stream = new PdfStream(
+            new PdfDictionary { ["Filter"] = new PdfName("FlateDecode") },
+            new byte[1024]);
+        stream.IsDecoded.Should().BeFalse("fixture");
+        scope.NoteImageSampleRead(stream);
+        scope.ReleaseImageSamplesEarly(stream);
+        return new WeakReference(stream);
+    }
+
     [Fact]
     public void WithoutASink_NothingIsRecorded()
     {
