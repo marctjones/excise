@@ -35,9 +35,8 @@ internal enum MemoryPressureLevel
 /// <item>Soft triggers, behind <see cref="CacheTrimPolicy.SoftTriggers"/>:
 /// window deactivation or minimize, and an idle delay after the last viewer
 /// activity. Both only ever ask for
-/// <see cref="PdfViewerCacheTrimLevel.Background"/>. The idle trim alone may
-/// also ask for a heap reclaim, once per idle period and only when the heap is
-/// fragmented (#1496); see <see cref="IdleReclaimThresholdBytes"/>.</item>
+/// <see cref="PdfViewerCacheTrimLevel.Background"/>. The idle trim alone also
+/// asks for a heap reclaim, once per idle period (#1496, #1713).</item>
 /// </list>
 /// The idle timer is ONE-SHOT: restarted by activity, stopped when it fires,
 /// and never armed while soft triggers are off. A periodic wake-up would undo
@@ -50,35 +49,10 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     /// <summary>Minimum time between two GC memory-load samples.</summary>
     internal static readonly TimeSpan GcSampleInterval = TimeSpan.FromSeconds(10);
 
-    /// <summary>
-    /// The idle trim asks for a heap reclaim only when the managed heap holds at
-    /// least this much fragmentation (#1496).
-    /// </summary>
-    /// <remarks>
-    /// The measure is <see cref="GCMemoryInfo.FragmentedBytes"/>, not
-    /// <c>TotalCommittedBytes - HeapSizeBytes</c>, because it is what the #1497
-    /// harness reports as <c>fragmentedMB</c> and what the compacting reclaim was
-    /// measured to return: on Altona after paging it read 239–442 MB, and a
-    /// Warn-level trim (which reclaims) took it from 239 to 4 MB and the
-    /// footprint down by 485 MB. The committed-minus-heap figure also counts the
-    /// free space the GC keeps in reserve for new allocations. That is not the
-    /// waste the #1496 measurements tracked, and no threshold was measured
-    /// against it. Like every
-    /// <see cref="GC.GetGCMemoryInfo()"/> field it describes the LAST GC. That
-    /// is the one we want: an idle app runs no GC, so the last one is the one
-    /// that left the fragmentation behind while scrolling.
-    /// 64 MB is roughly a quarter of the smallest Altona reading (239 MB is
-    /// 3.7× it), so the case #1496 is about always qualifies. A heap with only a
-    /// few MB of ordinary slack does not, and pays no blocking collection for
-    /// nothing.
-    /// </remarks>
-    internal const long IdleReclaimThresholdBytes = 64L * 1024 * 1024;
-
     private readonly Action<PdfViewerCacheTrimLevel> _trim;
     private readonly Action<PdfViewerCacheTrimLevel>? _trimThumbnails;
     private CacheTrimPolicy _policy;
     private readonly Func<(long MemoryLoadBytes, long HighMemoryLoadThresholdBytes)> _sampleGc;
-    private readonly Func<long> _sampleFragmentedBytes;
     private DispatcherTimer? _idleTimer;
     private readonly ReleasedMemoryReclaimer? _memoryReclaimer;
     private IDisposable? _pressureSource;
@@ -95,7 +69,6 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         Func<(long MemoryLoadBytes, long HighMemoryLoadThresholdBytes)>? sampleGc = null,
         Action<PdfViewerCacheTrimLevel>? trimThumbnails = null,
         ReleasedMemoryReclaimer? memoryReclaimer = null,
-        Func<long>? sampleFragmentedBytes = null,
         IdleReclaimGate? idleReclaimGate = null)
     {
         _trim = trim ?? throw new ArgumentNullException(nameof(trim));
@@ -103,7 +76,6 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         _memoryReclaimer = memoryReclaimer;
         _policy = policy;
         _sampleGc = sampleGc ?? SampleGcMemoryLoad;
-        _sampleFragmentedBytes = sampleFragmentedBytes ?? SampleGcFragmentedBytes;
         _idleReclaimGate = idleReclaimGate ?? new IdleReclaimGate();
         ConfigureIdleTimer(policy);
     }
@@ -344,8 +316,6 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         return (info.MemoryLoadBytes, info.HighMemoryLoadThresholdBytes);
     }
 
-    private static long SampleGcFragmentedBytes() => GC.GetGCMemoryInfo().FragmentedBytes;
-
     private void Request(CacheTrimTrigger trigger, PdfViewerCacheTrimLevel level)
     {
         AppMetrics.RecordCacheTrimRequest(trigger, level);
@@ -365,20 +335,34 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         // with 239–442 MB of the heap fragmented, and only a reclaim returns
         // it (a Warn trim, which reclaims, took fragmentation 239 → 4 MB and
         // the footprint down 485 MB). After the idle delay (30 s by default)
-        // the user is unlikely to be mid-gesture. Even so, the reclaim is asked
-        // for only when the heap is fragmented past IdleReclaimThresholdBytes,
-        // and at most once per idle period. The reclaimer posts, so it runs
-        // after both trims above.
+        // the user is unlikely to be mid-gesture.
+        //
+        // #1713: the reclaim used to run only when GC.GetGCMemoryInfo().
+        // FragmentedBytes read past a 64 MB threshold. A heap-dump diff of a
+        // reclaim that DID fire (336.8 -> 145.0 MB, 191.8 MB freed) found only
+        // 78.5 MB of that was FragmentedBytes; the other 99.1 MB was
+        // unreachable System.Byte[] the GC does not count as fragmentation
+        // until a collection actually runs. That under-counts by more than
+        // half, and it is noisy: measured fragmentation just before the gate,
+        // across identical sessions of the same scenario, was 41.6-64.4 MB on
+        // runs that did not fire and 77-114.1 MB on runs that did, a spread
+        // that straddles any fixed threshold. So identical sessions ended
+        // 145-146 MB or 248-272 MB live heap purely on which side of the gate
+        // that run's noise landed. The reclaim uses GCCollectionMode.Aggressive,
+        // which .NET documents for exactly this "app is going idle" use, and
+        // the compacting pause it measured was 33-105 ms, not user-visible
+        // after 30 s of inactivity. So the reclaim now runs unconditionally,
+        // still gated to once per idle period by _idleReclaimGate (activity
+        // resets it) — that gate is the only cooldown; there is no separate
+        // time-based one. The reclaimer posts, so it runs after both trims
+        // above.
         switch (trigger)
         {
             case CacheTrimTrigger.Idle when _memoryReclaimer != null && !_idleReclaimGate.Requested:
-                // Once per idle period whatever the reading: a heap that was
-                // not fragmented enough will not become more so while idle.
                 // The GC is process-wide, so with a shared gate the period is
                 // the app's: activity in any window starts a new one.
                 _idleReclaimGate.Requested = true;
-                if (_sampleFragmentedBytes() >= IdleReclaimThresholdBytes)
-                    _memoryReclaimer.Request(HeapReclaimTrigger.Idle);
+                _memoryReclaimer.Request(HeapReclaimTrigger.Idle);
                 break;
             case CacheTrimTrigger.OsPressure when level != PdfViewerCacheTrimLevel.Background:
                 _memoryReclaimer?.Request(HeapReclaimTrigger.OsPressure);
