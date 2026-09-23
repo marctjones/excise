@@ -234,6 +234,18 @@ semantic versioning.
   skipped** and silently omitted the rest, so a report over one channel read
   like one over seven (the #1181 Coverage rule). The list is derived from
   `RecoveryScanner.Channels.All` now.
+- **Three XAML resource references named keys nothing defines** (#1800).
+  The modern-button hover border and the status bar's operation text
+  referenced `AccentBrush`, and the Bates preview referenced
+  `MonospaceFontFamily`. A `DynamicResource` that resolves to nothing leaves
+  the property unset and reports nothing, so each was dead from the day it was
+  written. The two brushes now point at the brand blue; the status text uses
+  the darker shade (#005A9E) because #0078D4 on the status bar is under WCAG AA
+  for its size. `MonospaceFontFamily` is defined in `App.axaml`. The hover
+  border is still not visible: FluentAvalonia draws its own button state
+  colours over it (#1801). New t0 gate
+  `xaml-resource-keys` (with a selftest) fails on any `{DynamicResource}` /
+  `{StaticResource}` key in `Excise.App` that no `x:Key` defines.
 
 ## [3.10.0] - 2026-09-17
 

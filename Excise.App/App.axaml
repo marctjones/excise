@@ -15,6 +15,9 @@
                 <ResourceInclude Source="/Styles/Brushes.axaml"/>
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- Fonts -->
+            <FontFamily x:Key="MonospaceFontFamily">Consolas, Menlo, Monaco, monospace</FontFamily>
+
             <!-- Converters -->
             <local:BooleanToBrushConverter x:Key="BooleanToBrushConverter"/>
         </ResourceDictionary>
