@@ -303,6 +303,16 @@ internal sealed class PdfDocumentObjectStore : IDisposable
                     else
                     {
                         DecodeStream(filteredStream);
+
+                        // #1613: still decoded now, exactly as before, but a page
+                        // walk that has finished with the bytes may drop them
+                        // (PdfPage.ReleaseDecodedContentStreams) and the next
+                        // read re-runs this same decode on the same encoded bytes,
+                        // verified against a hash of what was dropped. Not object
+                        // streams: GetObjectFromStream decompresses those itself
+                        // when they read as undecoded, outside the stream's lock.
+                        if (filteredStream.GetNameOrNull("Type") != "ObjStm")
+                            filteredStream.MarkReleasable(DecodeDeferredStream);
                     }
                 }
             }
@@ -320,7 +330,9 @@ internal sealed class PdfDocumentObjectStore : IDisposable
     /// XObjects (§8.9.5 — <c>/Subtype /Image</c>, <c>/Type</c> absent or
     /// <c>/XObject</c>). Deliberately narrow. Object streams, content streams,
     /// fonts, ICC profiles and JBIG2 globals have callers that branch on
-    /// <see cref="PdfStream.IsDecoded"/> and stay decoded at resolve time.
+    /// <see cref="PdfStream.IsDecoded"/> and stay decoded at resolve time
+    /// (all but object streams are then marked releasable, #1613, but nothing
+    /// releases them except a page walk, for its own <c>/Contents</c>).
     /// </summary>
     /// <summary>
     /// The byte count a single-stage /FlateDecode image is expected to inflate

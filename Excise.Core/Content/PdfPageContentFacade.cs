@@ -160,6 +160,52 @@ public partial class PdfPage
         return true;
     }
 
+    /// <summary>
+    /// Drops the decoded bytes of this page's <c>/Contents</c> stream(s) for a
+    /// page walk that has finished with them (#1613), returning how many bytes
+    /// were released. Every page walked used to keep its inflated content for
+    /// the document's lifetime (~12.6 MiB on irs-1040-instructions.pdf once all
+    /// 126 pages were rendered).
+    /// </summary>
+    /// <remarks>
+    /// The stream objects stay in the object cache — same identity, so an edit
+    /// made through any reference still lands in what is saved — and only the
+    /// decoded array goes. The next read re-decodes the unchanged encoded bytes
+    /// under the stream's lock and must reproduce the dropped bytes exactly
+    /// (SHA-256) or the read throws (<see cref="PdfStream.MarkReleasable"/>).
+    /// Refused, per stream, for anything the store did not decode itself from
+    /// the current encoded bytes: bytes written by an edit or a redaction, a
+    /// stream added in-process, a refused decode. Also refused for a stream
+    /// whose dictionary was edited (not <see cref="PdfDictionary.IsPristine"/>),
+    /// since <c>/Filter</c> and <c>/DecodeParms</c> drive the re-decode.
+    /// </remarks>
+    internal long ReleaseDecodedContentStreams()
+    {
+        var contentsObj = _pageDict.GetOptional("Contents");
+        if (contentsObj == null)
+            return 0;
+
+        long released = 0;
+        switch (_document.Resolve(contentsObj))
+        {
+            case PdfStream stream:
+                released += Release(stream);
+                break;
+            case PdfArray array:
+                foreach (var item in array)
+                {
+                    if (_document.Resolve(item) is PdfStream element)
+                        released += Release(element);
+                }
+                break;
+        }
+
+        return released;
+
+        static long Release(PdfStream stream)
+            => stream.IsPristine && stream.TryReleaseDecoded(out var bytes) ? bytes : 0;
+    }
+
     private static bool TryGetImageOnlyContentFilter(PdfStream stream, out string filter)
     {
         foreach (var candidate in stream.Filters)

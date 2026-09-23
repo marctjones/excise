@@ -159,7 +159,19 @@ public class SkiaRenderer
             // 255 and the page-flavoured backdrop sync is the correct one
             // (#1510).
             rootBitmapIsTransparencyGroupBitmap: false);
-        context.Render();
+        try
+        {
+            context.Render();
+        }
+        finally
+        {
+            // #1613: the page's inflated content is not needed once it is
+            // drawn; without this every page rendered kept it until close.
+            // Same opt-in as the image samples, so the viewer (which keeps its
+            // pages warm) is untouched. A later read re-decodes, verified.
+            if (options.ReleaseDecodedImageSamples)
+                page.ReleaseDecodedContentStreams();
+        }
 
         // Paper last. Everything drawn above composited against a transparent
         // backdrop; DstOver puts the page colour UNDER it, which is the
