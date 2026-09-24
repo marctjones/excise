@@ -127,7 +127,18 @@ internal static class RedactionFeatureStripper
             Row("page thumbnail image(s)", RemoveThumbnails(document));
 
         if (options.RemoveHiddenAnnotationAppearances)
+        {
             Row("hidden annotation appearance stream(s)", RemoveHiddenAppearances(document));
+            // #1799: the appearance is only one carrier. A Hidden/NoView annotation's
+            // /Contents, /RC, /Subj and /T are invisible to the reviewer and readable
+            // by every other tool, so the annotation goes with them.
+            var (droppedAnnots, scrubbedAnnots) = RemoveHiddenAnnotationText(
+                document, options.KeepAttachments);
+            Row("hidden annotation(s) removed", droppedAnnots,
+                "Hidden or NoView flag set; markup annotations only");
+            Row("hidden widget/link annotation text carrier(s) scrubbed", scrubbedAnnots,
+                "the annotation stays: a hidden form field is still a field");
+        }
 
         // Gated on IncludeHiddenLayers as well: that flag is the caller saying
         // whether a hidden layer is in scope at all. A caller who asked NOT to
@@ -502,6 +513,86 @@ internal static class RedactionFeatureStripper
             if (hidden && annot.Remove("AP")) removed++;
         }
         return removed;
+    }
+
+    /// <summary>
+    /// Text-bearing keys of an annotation dictionary (§12.5.2 Table 170, §12.5.6.2
+    /// Table 178): the contents string, its rich-text form and the subject.
+    /// <c>/T</c> (author) is added for markup; on a Widget <c>/T</c> is the field
+    /// NAME and is not touched here.
+    /// </summary>
+    private static readonly string[] AnnotationTextKeys = { "Contents", "RC", "Subj" };
+
+    /// <summary>
+    /// #1799: drop every Hidden/NoView markup annotation whole, and scrub the
+    /// text keys of a Hidden Widget or Link, which must stay (a conditionally
+    /// hidden form field is still a field; removing its dictionary would orphan
+    /// it in <c>/AcroForm /Fields</c>).
+    /// </summary>
+    /// <remarks>
+    /// A dropped annotation's <c>/Popup</c> and reply (<c>/IRT</c>) children are
+    /// dropped with it: a Popup's <c>/Parent</c> would otherwise keep the dropped
+    /// dictionary, <c>/Contents</c> and all, reachable in the saved file. A
+    /// FileAttachment/Sound/Movie annotation is scrubbed instead of dropped when
+    /// <paramref name="keepAttachments"/> is set, because it is the only carrier
+    /// of its file (same rule as <see cref="RemoveAnnotations"/>). Annotations
+    /// hidden only by an optional-content layer are left to
+    /// <see cref="RemoveHiddenOptionalContent"/>.
+    /// </remarks>
+    private static (int Dropped, int Scrubbed) RemoveHiddenAnnotationText(
+        PdfDocument document, bool keepAttachments)
+    {
+        int dropped = 0, scrubbed = 0;
+        foreach (var page in SafePages(document))
+        {
+            if (Resolve(document, page.Dictionary.GetOptional("Annots") ?? PdfNull.Instance)
+                is not PdfArray annots) continue;
+
+            var removedDicts = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+            foreach (var item in annots)
+            {
+                if (Resolve(document, item) is not PdfDictionary annot) continue;
+                if ((annot.GetInt("F", 0) & (AnnotationFlagHidden | AnnotationFlagNoView)) == 0) continue;
+
+                var subtype = annot.GetNameOrNull("Subtype");
+                var isMarkup = subtype != null && MarkupSubtypes.Contains(subtype);
+                var carriesFile = isMarkup && keepAttachments
+                    && (FileSpecsUnder(document, annot).Any() || annot.GetOptional("Sound") != null);
+
+                if (isMarkup && !carriesFile)
+                {
+                    removedDicts.Add(annot);
+                    continue;
+                }
+
+                var keys = isMarkup ? AnnotationTextKeys.Append("T") : AnnotationTextKeys;
+                var any = false;
+                foreach (var key in keys) any |= annot.Remove(key);
+                if (any) scrubbed++;
+            }
+            if (removedDicts.Count == 0) continue;
+
+            var keep = new List<PdfObject>();
+            foreach (var item in annots)
+            {
+                if (Resolve(document, item) is PdfDictionary annot
+                    && (removedDicts.Contains(annot)
+                        || PointsAtRemoved(document, annot, "Parent", removedDicts)
+                        || PointsAtRemoved(document, annot, "IRT", removedDicts)))
+                {
+                    dropped++;
+                    continue;
+                }
+                keep.Add(item);
+            }
+            page.Dictionary["Annots"] = new PdfArray(keep);
+        }
+        return (dropped, scrubbed);
+
+        static bool PointsAtRemoved(
+            PdfDocument document, PdfDictionary annot, string key, HashSet<PdfDictionary> removed)
+            => Resolve(document, annot.GetOptional(key) ?? PdfNull.Instance) is PdfDictionary target
+               && removed.Contains(target);
     }
 
     // ───────────────────────── hidden optional content ─────────────────────
