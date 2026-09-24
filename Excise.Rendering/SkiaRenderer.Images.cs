@@ -1263,11 +1263,24 @@ internal partial class RenderContext
             + (_state.CurrentTransform.ScaleY * _state.CurrentTransform.ScaleY));
 
         var scale = Math.Max(1, _options.Dpi) / 72.0;
-        var targetWidth = userWidth > 0
-            ? Math.Clamp((int)Math.Round(userWidth * scale), 1, sourceWidth)
+        var deviceWidth = userWidth * scale;
+        var deviceHeight = userHeight * scale;
+
+        // The canvas matrix is what actually reaches the device: at decode time it maps the
+        // image's unit square to pixels. CurrentTransform alone misses any scale the canvas
+        // carries beyond the PDF's own CTM, notably a tiling pattern's matrix, so an image
+        // inside a pattern was estimated ~2x too small. That never showed while every JPEG
+        // fell back to a full-size decode; once the decode really reduces (#1821) it blurs.
+        // Take the larger of the two per axis: an image can only get sharper than before.
+        var canvas = _canvas.TotalMatrix;
+        deviceWidth = Math.Max(deviceWidth, Math.Sqrt((canvas.ScaleX * canvas.ScaleX) + (canvas.SkewY * canvas.SkewY)));
+        deviceHeight = Math.Max(deviceHeight, Math.Sqrt((canvas.SkewX * canvas.SkewX) + (canvas.ScaleY * canvas.ScaleY)));
+
+        var targetWidth = deviceWidth > 0
+            ? Math.Clamp((int)Math.Round(deviceWidth), 1, sourceWidth)
             : sourceWidth;
-        var targetHeight = userHeight > 0
-            ? Math.Clamp((int)Math.Round(userHeight * scale), 1, sourceHeight)
+        var targetHeight = deviceHeight > 0
+            ? Math.Clamp((int)Math.Round(deviceHeight), 1, sourceHeight)
             : sourceHeight;
 
         return (targetWidth, targetHeight);
