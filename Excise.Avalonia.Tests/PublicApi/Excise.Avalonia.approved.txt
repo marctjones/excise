@@ -121,6 +121,7 @@ namespace Excise.Avalonia.Controls
     public class PdfViewerControl : Avalonia.Controls.UserControl
     {
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfAnnotation>?> AnnotationsProperty;
+        public static readonly Avalonia.StyledProperty<int> ContextMenuPageNumberProperty;
         public static readonly Avalonia.StyledProperty<int> CurrentPageProperty;
         public static readonly Avalonia.StyledProperty<Excise.Core.Document.PdfDocument?> DocumentProperty;
         public static readonly Avalonia.StyledProperty<string?> ErrorMessageProperty;
@@ -144,6 +145,7 @@ namespace Excise.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<double> ZoomLevelProperty;
         public PdfViewerControl() { }
         public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfAnnotation>? Annotations { get; set; }
+        public int ContextMenuPageNumber { get; set; }
         public int ContinuousRenderConcurrency { get; set; }
         public long ContinuousTileCacheByteBudget { get; set; }
         public long ContinuousTileCacheResidentBytes { get; }
@@ -216,6 +218,7 @@ namespace Excise.Avalonia.Controls
         public void PreserveContinuousReadingPositionOnNextRebuild() { }
         public void PreviousPage() { }
         public void RefreshContinuousLayout() { }
+        public bool SelectAllText(int pageNumber = 0) { }
         public void TrimCaches(Excise.Avalonia.Controls.PdfViewerCacheTrimLevel level) { }
         public bool TryScrollViewportBy(double deltaY) { }
         public bool TrySetViewportVerticalFraction(double fraction) { }

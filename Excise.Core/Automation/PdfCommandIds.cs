@@ -23,6 +23,9 @@ public static class PdfCommandIds
 
     public const string SelectTextMode = "edit.selectTextMode";
     public const string CopyText = "edit.copyText";
+
+    /// <summary>Select all text on the current page (or the right-clicked page), #1814.</summary>
+    public const string SelectAll = "edit.selectAll";
     public const string TypewriterMode = "edit.typewriterMode";
     public const string AddHighlight = "annotation.addHighlight";
     public const string AddUnderline = "annotation.addUnderline";

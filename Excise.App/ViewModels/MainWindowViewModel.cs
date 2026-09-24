@@ -2226,6 +2226,21 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public event EventHandler? DocumentStructureChanged;
 
+    /// <summary>Asks the viewer to select all text on the target page (#1814).</summary>
+    public event EventHandler? SelectAllTextRequested;
+
+    /// <summary>
+    /// Select All Text. Leaves the app in text-selection mode when nothing else is active, so the
+    /// Copy command (enabled only in that mode) works on the result.
+    /// </summary>
+    private void SelectAllText()
+    {
+        if (!_documentService.IsDocumentLoaded) return;
+        if (InteractionMode == Excise.Avalonia.Controls.InteractionMode.None && !IsTextSelectionMode)
+            IsTextSelectionMode = true;
+        SelectAllTextRequested?.Invoke(this, EventArgs.Empty);
+    }
+
     private void RequestPreserveReadingPosition() =>
         PreserveReadingPositionRequested?.Invoke(this, EventArgs.Empty);
 

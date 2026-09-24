@@ -759,6 +759,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CloseDocumentCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? CloseSearchCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CombineDocumentsCommand { get; }
+        public int ContextMenuPageNumber { get; set; }
         public bool ContinuousScrollPreference { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CopyTextCommand { get; }
         public Excise.App.ViewModels.CurrentDocumentInfo? CurrentDocument { get; }
@@ -897,6 +898,7 @@ namespace Excise.App.ViewModels
         public bool SearchUseRegex { get; set; }
         public bool SearchWholeWords { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SecurityCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SelectAllTextCommand { get; }
         public Excise.App.Models.AttachmentEntry? SelectedAttachment { get; set; }
         public Excise.App.Models.OutlineNode? SelectedOutlineNode { get; set; }
         public int SelectedPageCount { get; }
@@ -980,6 +982,7 @@ namespace Excise.App.ViewModels
         public event System.EventHandler? AttachmentsPaneFocusRequested;
         public event System.EventHandler? DocumentStructureChanged;
         public event System.EventHandler? PreserveReadingPositionRequested;
+        public event System.EventHandler? SelectAllTextRequested;
         public System.Threading.Tasks.Task AddCircleAnnotationFromDragAsync() { }
         public System.Threading.Tasks.Task AddFreeTextAnnotationFromDragAsync(string? contentsOverride = null) { }
         public System.Threading.Tasks.Task AddHighlightAnnotationFromSelectionAsync() { }

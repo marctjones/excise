@@ -665,6 +665,11 @@ public partial class MainWindow : Window
         viewModel.DocumentStructureChanged += structureChanged;
         _viewModelUnsubscribers.Add(() => viewModel.DocumentStructureChanged -= structureChanged);
 
+        // #1814: Select All is a request to the viewer; the ViewModel owns no selection state.
+        EventHandler selectAllRequested = (_, _) => _pdfViewerControl?.SelectAllText();
+        viewModel.SelectAllTextRequested += selectAllRequested;
+        _viewModelUnsubscribers.Add(() => viewModel.SelectAllTextRequested -= selectAllRequested);
+
         // Subscribe to page changes to update redaction overlays
         System.ComponentModel.PropertyChangedEventHandler pageChanged = (_, args) =>
         {
@@ -1508,6 +1513,19 @@ public partial class MainWindow : Window
                 return;
 
             viewModel.RedoCommand?.Execute().Subscribe();
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+A: select all text on the page (#1814). Not while a text box has focus, so the
+        // search box and every dialog field keep their own select-all.
+        if (e.Key == Key.A && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
+            !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            if (FocusManager.GetFocusedElement() is TextBox)
+                return;
+
+            viewModel.SelectAllTextCommand.Execute().Subscribe();
             e.Handled = true;
             return;
         }

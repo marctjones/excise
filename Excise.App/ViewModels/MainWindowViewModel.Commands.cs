@@ -151,6 +151,9 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> SignDocumentCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> CopyTextCommand { get; private set; } = null!;
 
+    /// <summary>Select all text on the current or right-clicked page (#1814).</summary>
+    public ReactiveCommand<Unit, Unit> SelectAllTextCommand { get; private set; } = null!;
+
     /// <summary>Mark the selected text as a pending redaction (the right-click menu's Redact, #1659).</summary>
     public ReactiveCommand<Unit, Unit> RedactSelectionCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ZoomInCommand { get; private set; } = null!;
@@ -314,6 +317,7 @@ public partial class MainWindowViewModel
         ToggleRevealHiddenTextCommand = ReactiveCommand.Create(() => { RevealHiddenText = !RevealHiddenText; });
         ToggleRevealRasterizedHiddenCommand = ReactiveCommand.Create(() => { RevealRasterizedHidden = !RevealRasterizedHidden; });
         CopyTextCommand = ReactiveCommand.CreateFromTask(CopyTextAsync);
+        SelectAllTextCommand = ReactiveCommand.Create(SelectAllText);
         RedactSelectionCommand = ReactiveCommand.CreateFromTask(RedactSelectionAsync);
         ZoomInCommand = ReactiveCommand.Create(ZoomIn);
         ZoomOutCommand = ReactiveCommand.Create(ZoomOut);

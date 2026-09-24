@@ -220,6 +220,7 @@ internal static class MacNativeMenuBuilder
                     TrackDocumentItem(_formAuthoringItem),
                     _typewriterNextEditItem,
                     _typewriterDiscardItem,
+                    TrackDocumentItem(CommandItem("Select All Text", _viewModel.SelectAllTextCommand, Key.A)),
                     TrackTextSelectionItem(CommandItem("Copy Selected Text", _viewModel.CopyTextCommand, Key.C))));
 
             Add(menu,

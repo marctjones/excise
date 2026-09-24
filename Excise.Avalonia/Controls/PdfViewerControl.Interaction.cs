@@ -375,26 +375,7 @@ public partial class PdfViewerControl
                  _selectionAnchor != null && _selectionFocus != null &&
                  _readingOrderedLetters != null)
         {
-            // Highlight rects follow visual order (contiguous glyphs, incl.
-            // within an RTL run); the copied text is re-ordered to logical
-            // reading order so Arabic/Hebrew reads correctly (#373). Column
-            // gutters are respected so a column-local drag stays in-column.
-            var selection = TextSelectionEngine.BuildSelection(
-                _readingOrderedLetters,
-                _currentPageLetters ?? _readingOrderedLetters,
-                _selectionAnchor, _selectionFocus, _columnGapThreshold, WhitespaceMode);
-            var text = selection.Text;
-            var letterDips = selection.VisualRange
-                .Select(l => PdfRectangleToDips(l.GlyphRectangle))
-                .ToList();
-            // Bounding box of the whole run — keeps backwards compat with
-            // listeners that just want a single Rect.
-            Rect? bbox = letterDips.Count > 0
-                ? UnionRects(letterDips)
-                : null;
-            TextSelected?.Invoke(this, new TextSelectedEventArgs(
-                bbox ?? new Rect(), text, letterDips,
-                bbox is { Width: > 0, Height: > 0 } b ? ViewerDipsRect(b, CurrentPage) : null));
+            RaiseSinglePageTextSelected();
         }
         else
         {
@@ -402,6 +383,38 @@ public partial class PdfViewerControl
         }
 
         e.Handled = true;
+    }
+
+    /// <summary>
+    /// Build the selection for the current anchor and focus and raise <see cref="TextSelected"/>.
+    /// Shared by a finished drag and <see cref="SelectAllText"/>, so the two cannot report a
+    /// selection differently.
+    /// </summary>
+    private void RaiseSinglePageTextSelected()
+    {
+        if (_selectionAnchor == null || _selectionFocus == null || _readingOrderedLetters == null)
+            return;
+
+        // Highlight rects follow visual order (contiguous glyphs, incl.
+        // within an RTL run); the copied text is re-ordered to logical
+        // reading order so Arabic/Hebrew reads correctly (#373). Column
+        // gutters are respected so a column-local drag stays in-column.
+        var selection = TextSelectionEngine.BuildSelection(
+            _readingOrderedLetters,
+            _currentPageLetters ?? _readingOrderedLetters,
+            _selectionAnchor, _selectionFocus, _columnGapThreshold, WhitespaceMode);
+        var text = selection.Text;
+        var letterDips = selection.VisualRange
+            .Select(l => PdfRectangleToDips(l.GlyphRectangle))
+            .ToList();
+        // Bounding box of the whole run — keeps backwards compat with
+        // listeners that just want a single Rect.
+        Rect? bbox = letterDips.Count > 0
+            ? UnionRects(letterDips)
+            : null;
+        TextSelected?.Invoke(this, new TextSelectedEventArgs(
+            bbox ?? new Rect(), text, letterDips,
+            bbox is { Width: > 0, Height: > 0 } b ? ViewerDipsRect(b, CurrentPage) : null));
     }
 
     /// <summary>
