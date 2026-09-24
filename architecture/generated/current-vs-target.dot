@@ -83,7 +83,7 @@ digraph excise_architecture {
   "core-document" -> "core" [label="observed via parent boundary\n78 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-document" -> "core-encryption" [label="target + observed\n19 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core-parsing" [label="target + observed\n87 refs", color="#15803d", style="solid", penwidth=2];
-  "core-document" -> "core-primitives" [label="target + observed\n1486 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-primitives" [label="target + observed\n1487 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core-text" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-writing" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];
   "core-encryption" -> "core-parsing" [label="target + observed\n11 refs", color="#15803d", style="solid", penwidth=2];

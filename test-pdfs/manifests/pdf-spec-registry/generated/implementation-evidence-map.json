@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "89b69a1b8320aeaef68b9089fd8d3e1584a2148877ad6ac15f378d23104b6ae1",
+  "sourceFingerprint": "cc6ec707e09a29d77e1ed8877778e0e300f6c98f579af0cfafdfbc4cd41ac08e",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -5783,6 +5783,120 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Xfa/FormCalc/FormCalcAst.cs",
+      "path": "Excise.Core/Xfa/FormCalc/FormCalcAst.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/FormCalc/FormCalcBuiltins.Extra.cs",
+      "path": "Excise.Core/Xfa/FormCalc/FormCalcBuiltins.Extra.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/FormCalc/FormCalcBuiltins.cs",
+      "path": "Excise.Core/Xfa/FormCalc/FormCalcBuiltins.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/FormCalc/FormCalcHost.cs",
+      "path": "Excise.Core/Xfa/FormCalc/FormCalcHost.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/FormCalc/FormCalcInterpreter.cs",
+      "path": "Excise.Core/Xfa/FormCalc/FormCalcInterpreter.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/FormCalc/FormCalcLexer.cs",
+      "path": "Excise.Core/Xfa/FormCalc/FormCalcLexer.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/FormCalc/FormCalcParser.cs",
+      "path": "Excise.Core/Xfa/FormCalc/FormCalcParser.cs",
+      "kind": "source-file",
+      "facets": [
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/FormCalc/FormCalcValue.cs",
+      "path": "Excise.Core/Xfa/FormCalc/FormCalcValue.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Xfa/PdfXfaLayout.cs",
       "path": "Excise.Core/Xfa/PdfXfaLayout.cs",
       "kind": "source-file",
@@ -5919,6 +6033,16 @@
     {
       "id": "Excise.Core/Xfa/XfaRichText.cs",
       "path": "Excise.Core/Xfa/XfaRichText.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaScripts.cs",
+      "path": "Excise.Core/Xfa/XfaScripts.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -10756,15 +10880,15 @@
     }
   ],
   "summary": {
-    "records": 536,
+    "records": 545,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 19,
-      "document-structure": 34,
+      "document-structure": 35,
       "fonts": 31,
       "forms": 9,
       "images": 32,
-      "product-integration-general": 305,
+      "product-integration-general": 313,
       "redaction": 81,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 20,
@@ -10775,9 +10899,9 @@
       "pdf.17.content.streams:parse": 19,
       "pdf.17.content.streams:render": 19,
       "pdf.17.content.streams:write": 19,
-      "pdf.17.document.catalog-pages:parse": 34,
-      "pdf.17.document.catalog-pages:preserve": 34,
-      "pdf.17.document.catalog-pages:write": 34,
+      "pdf.17.document.catalog-pages:parse": 35,
+      "pdf.17.document.catalog-pages:preserve": 35,
+      "pdf.17.document.catalog-pages:write": 35,
       "pdf.17.document.metadata:mutate": 20,
       "pdf.17.document.metadata:preserve": 20,
       "pdf.17.document.metadata:write": 20,
@@ -10822,13 +10946,13 @@
       "pdf.17.syntax.encryption:parse": 20,
       "pdf.17.syntax.encryption:preserve": 20,
       "pdf.17.syntax.encryption:write": 20,
-      "pdf.17.syntax.file:parse": 34,
-      "pdf.17.syntax.file:preserve": 34,
-      "pdf.17.syntax.file:write": 34,
+      "pdf.17.syntax.file:parse": 35,
+      "pdf.17.syntax.file:preserve": 35,
+      "pdf.17.syntax.file:write": 35,
       "pdf.17.syntax.objects:mutate": 20,
-      "pdf.17.syntax.objects:parse": 34,
-      "pdf.17.syntax.objects:preserve": 51,
-      "pdf.17.syntax.objects:write": 51,
+      "pdf.17.syntax.objects:parse": 35,
+      "pdf.17.syntax.objects:preserve": 52,
+      "pdf.17.syntax.objects:write": 52,
       "pdf.17.transparency.model:parse": 2,
       "pdf.17.transparency.model:render": 2,
       "pdfe.product.security.attachments:extract": 4,
@@ -10843,7 +10967,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 20,
       "pdfe.product.security.signature-and-permission-warning:write": 20
     },
-    "fallbackRecords": 305,
+    "fallbackRecords": 313,
     "allRecordsMapped": true
   }
 }

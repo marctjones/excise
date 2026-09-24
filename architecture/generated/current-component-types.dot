@@ -24,7 +24,7 @@ digraph excise_architecture {
   subgraph cluster_foundation {
     label="foundation";
     color="#cbd5e1";
-    "core" [label="Excise.Core project\nimplemented\n559 retained symbols", fillcolor="#d8f3dc"];
+    "core" [label="Excise.Core project\nimplemented\n753 retained symbols", fillcolor="#d8f3dc"];
     "core-encryption" [label="Encryption contracts, permissions, and standard security handler\nimplemented\n45 retained symbols", fillcolor="#d8f3dc"];
     "core-parsing" [label="Parser, xref, filters, and hostile-input boundary\nimplemented\n574 retained symbols", fillcolor="#d8f3dc"];
     "core-primitives" [label="PDF primitives and object graph\nimplemented\n169 retained symbols", fillcolor="#d8f3dc"];
@@ -39,7 +39,7 @@ digraph excise_architecture {
     label="presentation";
     color="#cbd5e1";
     "app-main-window" [label="Main-window orchestration and feature state\npartial\n639 retained symbols", fillcolor="#fff3bf"];
-    "avalonia" [label="Excise.Avalonia project\npartial\n587 retained symbols", fillcolor="#fff3bf"];
+    "avalonia" [label="Excise.Avalonia project\npartial\n589 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_verification {
     label="verification";
@@ -77,7 +77,7 @@ digraph excise_architecture {
   "core-document" -> "core" [label="78 refs / 20 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-encryption" [label="19 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-parsing" [label="87 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-document" -> "core-primitives" [label="1486 refs / 219 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-document" -> "core-primitives" [label="1487 refs / 219 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-text" [label="2 refs / 1 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-writing" [label="2 refs / 1 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-encryption" -> "core-parsing" [label="11 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

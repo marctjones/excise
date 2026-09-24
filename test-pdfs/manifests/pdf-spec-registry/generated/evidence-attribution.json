@@ -8103,6 +8103,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddShapeAnnotations_SurviveSaveAndReload_WithAppearanceIntact",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -8551,15 +8558,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -21531,6 +21529,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddShapeAnnotations_SurviveSaveAndReload_WithAppearanceIntact",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -21978,15 +21983,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -23033,6 +23029,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddShapeAnnotations_SurviveSaveAndReload_WithAppearanceIntact",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23480,15 +23483,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -24496,6 +24490,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddShapeAnnotations_SurviveSaveAndReload_WithAppearanceIntact",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -24943,15 +24944,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -82096,6 +82088,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_WritesSpecCorrectDictionaryAndAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -83349,13 +83348,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -83538,6 +83530,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_WritesSpecCorrectDictionaryAndAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -84791,13 +84790,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -84980,6 +84972,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_WritesSpecCorrectDictionaryAndAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -86233,13 +86232,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -86438,6 +86430,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_WritesSpecCorrectDictionaryAndAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -87691,13 +87690,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -88015,6 +88007,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_WritesSpecCorrectDictionaryAndAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -89268,13 +89267,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -89450,6 +89442,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_WritesSpecCorrectDictionaryAndAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -90703,13 +90702,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -90878,6 +90870,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_WritesSpecCorrectDictionaryAndAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -92131,13 +92130,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -92306,6 +92298,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_WritesSpecCorrectDictionaryAndAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -93559,13 +93558,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -106647,6 +106639,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddShapeAnnotations_SurviveSaveAndReload_WithAppearanceIntact",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -107094,15 +107093,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -108097,6 +108087,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddShapeAnnotations_SurviveSaveAndReload_WithAppearanceIntact",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -108544,15 +108541,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113265,8 +113253,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7684,
-    "testMethodsWithCapabilityCandidate": 4886,
+    "testMethods": 7737,
+    "testMethodsWithCapabilityCandidate": 4917,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
