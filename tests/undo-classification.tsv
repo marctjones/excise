@@ -1,0 +1,152 @@
+# Undo classification (#1813): every command in PdfCommandRegistry, and what happens to the undo history when it runs.
+#
+# Enforced by Excise.App.Tests/Unit/UndoClassificationTests.cs. A command missing from this file, a row for a command
+# that no longer exists, or an unknown class fails the build. Adding a command therefore forces the question this file
+# answers: does it change the open document, and if so, can it be undone?
+#
+# Classes
+#   Recorded      changes the open document (or pending edits) and pushes onto the undo stack. Evidence: a test file that
+#                 calls UndoCommand. Annotation adds share one recorder (RecordAnnotationAdd / CommitRectAnnotationAsync),
+#                 so their evidence is the shared mechanism, not one test per annotation kind.
+#   ClearsHistory changes the open document IN PLACE and cannot be undone: clears the history, leaves the document
+#                 reading as changed (#1812). Also Save/Open/Close, which are history boundaries. Evidence: a test that
+#                 asserts CanUndo / the cleared history.
+#   WritesCopy    writes a new file; the open document is untouched, so there is nothing to undo.
+#   OwnUndoSurface pending marks with their own per-item removal (redaction marks); not document edits.
+#   CliOnly       automation with no GUI history.
+#   NotMutating   navigation, view, search, tool arming, selection, printing, copying to the clipboard.
+#   Gap           mutates and is not undoable yet. Evidence MUST name an open issue (#NNNN).
+#
+# What this file cannot see: mutations that have no registry command. Tool-arming commands (the draw, line,
+# arrow, polygon, polyline and typewriter modes) are NotMutating here; the annotation or text box they create
+# is committed by a pointer gesture and recorded by RecordAnnotationAdd / RecordTypewriterEdit, covered by
+# UI/UndoRedoWorkflowTests.cs. A new gesture-only mutation needs its own test; this gate will not notice it.
+#
+# id	class	evidence
+app.open	ClearsHistory	UI/UndoRedoWorkflowTests.cs
+app.save	ClearsHistory	UI/UndoRedoWorkflowTests.cs
+app.saveAs	ClearsHistory	UI/UndoRedoWorkflowTests.cs
+app.signDocument	WritesCopy	-
+edit.undo	NotMutating	-
+edit.redo	NotMutating	-
+app.exit	NotMutating	-
+typewriter.setColor	Recorded	UI/UndoRedoWorkflowTests.cs
+typewriter.setColor.black	Recorded	UI/UndoRedoWorkflowTests.cs
+typewriter.setColor.gray	Recorded	UI/UndoRedoWorkflowTests.cs
+typewriter.setColor.red	Recorded	UI/UndoRedoWorkflowTests.cs
+typewriter.setColor.orange	Recorded	UI/UndoRedoWorkflowTests.cs
+typewriter.setColor.green	Recorded	UI/UndoRedoWorkflowTests.cs
+typewriter.setColor.blue	Recorded	UI/UndoRedoWorkflowTests.cs
+typewriter.setColor.purple	Recorded	UI/UndoRedoWorkflowTests.cs
+typewriter.setColor.white	Recorded	UI/UndoRedoWorkflowTests.cs
+typewriter.discardPendingEdits	Recorded	UI/TypewriterDiscardUndoTests.cs
+typewriter.goToNextPendingEdit	NotMutating	-
+search.jumpToMatch	NotMutating	-
+app.closeDocument	ClearsHistory	UI/UndoRedoWorkflowTests.cs
+app.preferences	NotMutating	-
+app.keyboardShortcuts	NotMutating	-
+app.documentation	NotMutating	-
+app.about	NotMutating	-
+search.open	NotMutating	-
+search.find	NotMutating	-
+search.next	NotMutating	-
+search.previous	NotMutating	-
+search.close	NotMutating	-
+edit.selectTextMode	NotMutating	-
+edit.copyText	NotMutating	-
+edit.selectAll	NotMutating	-
+edit.typewriterMode	NotMutating	-
+annotation.addHighlight	Recorded	UI/UndoRedoWorkflowTests.cs
+annotation.addUnderline	Recorded	UI/UndoRedoWorkflowTests.cs
+annotation.addStrikeOut	Recorded	UI/UndoRedoWorkflowTests.cs
+annotation.addSquiggly	Recorded	UI/UndoRedoWorkflowTests.cs
+annotation.toggleHighlightMode	NotMutating	-
+annotation.toggleUnderlineMode	NotMutating	-
+annotation.toggleStrikeOutMode	NotMutating	-
+annotation.toggleSquigglyMode	NotMutating	-
+annotation.addSquare	Recorded	UI/UndoRedoWorkflowTests.cs
+annotation.addCircle	Recorded	UI/UndoRedoWorkflowTests.cs
+annotation.addFreeText	Recorded	UI/UndoRedoWorkflowTests.cs
+annotation.addStamp	Recorded	UI/UndoRedoWorkflowTests.cs
+annotation.addImageStamp	Recorded	UI/UndoRedoWorkflowTests.cs
+annotation.toggleSquareMode	NotMutating	-
+annotation.toggleCircleMode	NotMutating	-
+annotation.toggleFreeTextMode	NotMutating	-
+annotation.toggleStampMode	NotMutating	-
+annotation.toggleImageStampMode	NotMutating	-
+annotation.toggleDrawMode	NotMutating	-
+annotation.toggleLineMode	NotMutating	-
+annotation.toggleArrowMode	NotMutating	-
+annotation.togglePolygonMode	NotMutating	-
+annotation.togglePolyLineMode	NotMutating	-
+annotation.addStickyNote	Recorded	UI/StickyNoteUndoTests.cs
+annotation.toggleStickyNoteTool	NotMutating	-
+document.addPages	Recorded	UI/InsertPagesUndoTests.cs
+document.insertPagesBefore	Recorded	UI/InsertPagesUndoTests.cs
+document.insertPagesAfter	Recorded	UI/InsertPagesUndoTests.cs
+document.extractCurrentPage	WritesCopy	-
+document.extractSelectedPages	WritesCopy	-
+document.moveCurrentPageEarlier	Recorded	UI/UndoRedoWorkflowTests.cs
+document.moveCurrentPageLater	Recorded	UI/UndoRedoWorkflowTests.cs
+document.moveSelectedPagesEarlier	Recorded	UI/UndoRedoWorkflowTests.cs
+document.moveSelectedPagesLater	Recorded	UI/UndoRedoWorkflowTests.cs
+document.removeCurrentPage	Recorded	UI/UndoRedoWorkflowTests.cs
+document.removeSelectedPages	Recorded	UI/UndoRedoWorkflowTests.cs
+document.clearPageSelection	NotMutating	-
+document.rotateLeft	Recorded	UI/UndoRedoWorkflowTests.cs
+document.rotateRight	Recorded	UI/UndoRedoWorkflowTests.cs
+document.rotate180	Recorded	UI/UndoRedoWorkflowTests.cs
+document.exportCurrentPage	WritesCopy	-
+document.exportAllPages	WritesCopy	-
+document.print	NotMutating	-
+document.security	WritesCopy	-
+document.attachments	NotMutating	-
+document.saveAttachment	WritesCopy	-
+document.saveAllAttachments	WritesCopy	-
+document.removeAllAttachments	Recorded	UI/AttachmentsPanelTests.cs
+document.batesNumbering	Recorded	UI/BatesNumberingWorkflowTests.cs
+document.reduceFileSize	WritesCopy	-
+document.combine	WritesCopy	-
+document.split	WritesCopy	-
+view.previousPage	NotMutating	-
+view.nextPage	NotMutating	-
+view.goToPage	NotMutating	-
+view.zoomIn	NotMutating	-
+view.zoomOut	NotMutating	-
+view.zoomActualSize	NotMutating	-
+view.zoomFitWidth	NotMutating	-
+view.zoomFitPage	NotMutating	-
+view.toggleContinuous	NotMutating	-
+view.toggleOutline	NotMutating	-
+view.toggleThumbnails	NotMutating	-
+view.toggleAttachments	NotMutating	-
+view.toggleAnnotations	NotMutating	-
+view.toggleCommentAnnotations	NotMutating	-
+view.toggleFieldAndLinkAnnotations	NotMutating	-
+view.toggleAnnotationAuditMode	NotMutating	-
+view.toggleFormFieldHighlighting	NotMutating	-
+view.toggleClipboardHistory	NotMutating	-
+view.toggleAnnotationToolbar	NotMutating	-
+view.toggleAnnotationPalette	NotMutating	-
+redaction.toggleMode	NotMutating	-
+redaction.apply	OwnUndoSurface	-
+redaction.markSelection	OwnUndoSurface	-
+redaction.applyAll	WritesCopy	-
+redaction.clearAll	OwnUndoSurface	-
+redaction.removePending	OwnUndoSurface	-
+form.toggleAuthoring	NotMutating	-
+form.autoDetectFields	Recorded	UI/FormAuthoringUndoTests.cs
+form.saveFlattenedCopy	WritesCopy	-
+form.fillForm	Recorded	UI/ContinuousFormFillTests.cs
+form.addField	Recorded	UI/FormAuthoringUndoTests.cs
+document.info	CliOnly	-
+text.extract	CliOnly	-
+text.letters	CliOnly	-
+render.page	CliOnly	-
+automation.batch	CliOnly	-
+audit.hiddenText	NotMutating	-
+ocr.page	CliOnly	-
+tools.revealHiddenText	NotMutating	-
+tools.revealRasterizedHiddenText	NotMutating	-
+tools.verifySignatures	NotMutating	-
+tools.makeSearchable	ClearsHistory	Integration/MakeSearchableUndoPolicyTests.cs

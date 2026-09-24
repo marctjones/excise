@@ -260,7 +260,9 @@ public partial class MainWindowViewModel
             return;
 
         var discarded = TypewriterTextOperations.Count;
-        ClearPendingTypewriterText();
+        // #1813: discarding unsaved edits is itself undoable, through the same snapshot memento the
+        // other typewriter edits use, so a mis-click on the discard command cannot lose the work.
+        RecordTypewriterEdit("Discard type-over edits", ClearPendingTypewriterText);
         _logger.LogInformation("Discarded {Count} pending typewriter edit(s)", discarded);
     }
 
