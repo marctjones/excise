@@ -122,6 +122,16 @@ public sealed class AnnotationWorkflowService
     }
 
     /// <summary>
+    /// The text, open state and card rectangle of the sticky note at <paramref name="rect"/> as they
+    /// are now, or null when there is none. Read BEFORE an edit or a move so it can be undone (#1810).
+    /// </summary>
+    internal (string Contents, bool Open, PdfRectangle? PopupRect)? GetTextNoteState(int pageNumber, PdfRectangle rect)
+    {
+        var annotation = FindTextAnnotationAt(GetLoadedDocument(), pageNumber, rect);
+        return annotation == null ? null : (annotation.Contents ?? string.Empty, annotation.IsOpen, annotation.PopupRect);
+    }
+
+    /// <summary>
     /// Drag-to-move a note's CARD (#1797), not the note itself: repositions
     /// only the linked <c>/Popup</c>'s <c>/Rect</c>. <paramref name="iconRect"/>
     /// identifies the note by its own, never-moving <c>/Rect</c> — the same

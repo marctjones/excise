@@ -872,8 +872,17 @@ public partial class MainWindowViewModel
 
         try
         {
+            // #1810: read what the note held before, so the edit can be undone. Clicking away
+            // without changing the text is not an edit and must not add an undo entry.
+            var before = _annotationWorkflow.GetTextNoteState(pageNumber, rect);
             _annotationWorkflow.UpdateTextNote(pageNumber, rect, trimmed, open: false);
             MarkStickyNoteEdited();
+            if (before is { } prior && !string.Equals(prior.Contents, trimmed, StringComparison.Ordinal))
+            {
+                _history.Push("Edit sticky note",
+                    () => ApplyStickyNoteTextAsync(pageNumber, rect, prior.Contents, prior.Open, dirtyDelta: -1),
+                    () => ApplyStickyNoteTextAsync(pageNumber, rect, trimmed, false, dirtyDelta: +1));
+            }
             await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
@@ -911,8 +920,16 @@ public partial class MainWindowViewModel
 
         try
         {
+            var before = _annotationWorkflow.GetTextNoteState(pageNumber, iconRect);
             _annotationWorkflow.MoveTextNotePopup(pageNumber, iconRect, newPopupRect);
             MarkStickyNoteEdited();
+            // #1810: undo puts the CARD back where it was (the note's own /Rect never moves).
+            if (before?.PopupRect is { } oldPopupRect)
+            {
+                _history.Push("Move sticky note",
+                    () => ApplyStickyNoteMoveAsync(pageNumber, iconRect, oldPopupRect, dirtyDelta: -1),
+                    () => ApplyStickyNoteMoveAsync(pageNumber, iconRect, newPopupRect, dirtyDelta: +1));
+            }
             await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
@@ -961,6 +978,22 @@ public partial class MainWindowViewModel
         {
             _logger.LogError(ex, "Error flushing open sticky-note popup before save");
         }
+    }
+
+    /// <summary>Undo/redo of a sticky-note text edit. Goes straight to the workflow, never the recording path.</summary>
+    private async Task ApplyStickyNoteTextAsync(int pageNumber, PdfRectangle rect, string contents, bool open, int dirtyDelta)
+    {
+        _annotationWorkflow.UpdateTextNote(pageNumber, rect, contents, open);
+        AdjustAnnotationBookkeeping(dirtyDelta);
+        await RefreshAfterDocumentMutationAsync();
+    }
+
+    /// <summary>Undo/redo of a sticky-note card move.</summary>
+    private async Task ApplyStickyNoteMoveAsync(int pageNumber, PdfRectangle iconRect, PdfRectangle popupRect, int dirtyDelta)
+    {
+        _annotationWorkflow.MoveTextNotePopup(pageNumber, iconRect, popupRect);
+        AdjustAnnotationBookkeeping(dirtyDelta);
+        await RefreshAfterDocumentMutationAsync();
     }
 
     private void MarkStickyNoteEdited()
