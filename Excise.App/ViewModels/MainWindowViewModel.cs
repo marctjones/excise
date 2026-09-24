@@ -1550,11 +1550,27 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            var pagesBefore = _documentService.PageCount;
             var result = await _pageOrganizationWorkflow.InsertPagesFromFileAsync(sourcePdfPath, insertAtIndex);
             if (!result.DidChange)
                 return;
 
             MarkPageOrganizationChanged();
+
+            // #1809: Add/Insert Pages join the undo stack. The inserted pages are the run of
+            // pages that now sits where the insert happened; undo removes exactly that run, and
+            // redo puts the captured pages back (RemoveAt keeps their object graph, like Remove Page).
+            var insertedCount = _documentService.PageCount - pagesBefore;
+            if (insertedCount > 0)
+            {
+                var start = Math.Clamp(insertAtIndex, 0, pagesBefore);
+                var insertedIndices = Enumerable.Range(start, insertedCount).ToArray();
+                var captured = CapturePages(insertedIndices);
+                _history.Push(start == pagesBefore ? "Add pages" : "Insert pages",
+                    () => RemovePagesInternalAsync(insertedIndices),
+                    () => ReinsertPagesAsync(captured));
+            }
+
             await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
