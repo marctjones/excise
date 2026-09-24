@@ -150,7 +150,8 @@ public class AnnotationGalleryTests
             window.UpdateLayout();
             using var frame = window.CaptureRenderedFrame();
             frame.Should().NotBeNull("the headless compositor must produce a frame");
-            frame!.Save(Path.Combine(outDir, $"annotation-gallery-page{page}.png"));
+            using var png = File.Create(Path.Combine(outDir, $"annotation-gallery-page{page}.png"));
+            frame!.Save(png, PngBitmapEncoderOptions.Default);
         }
 
         File.Exists(Path.Combine(outDir, "annotation-gallery-page1.png")).Should().BeTrue();

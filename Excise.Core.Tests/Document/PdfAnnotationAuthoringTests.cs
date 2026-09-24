@@ -696,7 +696,7 @@ public class PdfAnnotationAuthoringTests
         var ap = doc.Resolve(annotation.RawDictionary.GetOptional("AP")!) as Excise.Core.Primitives.PdfDictionary;
         var n = doc.Resolve(ap!.GetOptional("N")!) as Excise.Core.Primitives.PdfStream;
         double localY = double.Parse(
-            System.Text.RegularExpressions.Regex.Match(n.GetDecodedString(), @"0 ([\d.-]+) m")
+            System.Text.RegularExpressions.Regex.Match(n!.GetDecodedString(), @"0 ([\d.-]+) m")
                 .Groups[1].Value,
             System.Globalization.CultureInfo.InvariantCulture);
 

@@ -318,11 +318,22 @@ public class BatesNumberingWorkflowTests : IDisposable
         var psi = new ProcessStartInfo("pdftotext", $"-bbox -f 1 -l 1 \"{pdfPath}\" -")
         {
             RedirectStandardOutput = true,
+            RedirectStandardError = true,
             UseShellExecute = false,
         };
         using var process = Process.Start(psi)!;
-        var output = process.StandardOutput.ReadToEnd();
-        process.WaitForExit(30000);
+        // #1068/#1516: drain BOTH pipes concurrently and bound the WAIT, not just the process; a
+        // synchronous ReadToEnd() blocks forever if the pipe never reaches EOF, and xUnit's
+        // Timeout cannot abort it on the single Avalonia headless thread.
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(30000))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { /* gone */ }
+            throw new TimeoutException("pdftotext -bbox did not exit within 30s; killed it (#1516).");
+        }
+        _ = stderrTask.GetAwaiter().GetResult();
+        var output = stdoutTask.GetAwaiter().GetResult();
 
         var page = System.Text.RegularExpressions.Regex.Match(output, "<page width=\"([\\d.]+)\" height=\"([\\d.]+)\"");
         var box = System.Text.RegularExpressions.Regex.Match(output,
