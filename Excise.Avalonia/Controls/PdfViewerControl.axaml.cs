@@ -295,6 +295,22 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// The 1-based page under the pointer at the moment a right-click opened the context menu, or 0
+    /// when no menu is open (#1817). "Current page" commands run from that menu act on THIS page:
+    /// in continuous view the page under the pointer is not the page filling the viewport, and
+    /// rotating or removing the wrong one is the failure this exists to prevent. Set on the
+    /// right-press and cleared when the menu closes, so a toolbar command afterwards is unaffected.
+    /// </summary>
+    public static readonly StyledProperty<int> ContextMenuPageNumberProperty =
+        AvaloniaProperty.Register<PdfViewerControl, int>(nameof(ContextMenuPageNumber));
+
+    public int ContextMenuPageNumber
+    {
+        get => GetValue(ContextMenuPageNumberProperty);
+        set => SetValue(ContextMenuPageNumberProperty, value);
+    }
+
+    /// <summary>
     /// Supplies the AcroForm fields of ANY page by 1-based number. The continuous
     /// view shows many pages at once, so the current-page-only
     /// <see cref="FormFields"/> cannot feed it (#1807); each realized page slot
@@ -583,6 +599,15 @@ public partial class PdfViewerControl : UserControl
         });
         PageFormFieldsProviderProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
             control.RefreshContinuousFormFieldsIfChanged());
+
+        // #1817: forget the right-clicked page when its menu closes. Posted, not immediate: a menu
+        // item's command runs around the time the menu closes and must still see the page. Registered
+        // here, once per process, like every handler above (a per-instance class handler stacks).
+        ContextMenuProperty.Changed.AddClassHandler<PdfViewerControl>((control, e) =>
+        {
+            if (e.OldValue is ContextMenu closedOld) closedOld.Closed -= control.OnContextMenuClosed;
+            if (e.NewValue is ContextMenu added) added.Closed += control.OnContextMenuClosed;
+        });
         HiddenTextHighlightsProperty.Changed.AddClassHandler<PdfViewerControl>((control, e) =>
             control.OnHiddenTextHighlightsChanged(
                 e.OldValue as System.Collections.Generic.IEnumerable<HiddenTextHighlight>,
@@ -1275,6 +1300,9 @@ public partial class PdfViewerControl : UserControl
 
         InitializeContinuous();
     }
+
+    private void OnContextMenuClosed(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e) =>
+        Dispatcher.UIThread.Post(() => ContextMenuPageNumber = 0, DispatcherPriority.Background);
 
     /// <summary>
     /// The actual visible page area, in DIPs, *inside* the scroll bars.

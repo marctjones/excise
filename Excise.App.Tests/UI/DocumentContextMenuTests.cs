@@ -117,4 +117,84 @@ public class DocumentContextMenuTests : IDisposable
 
         window.Close();
     }
+    // ── #1817: page actions act on the page that was RIGHT-CLICKED ──────────────────────────
+
+    private static string Pdfinfo(string pdfPath)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo("pdfinfo", $"-f 1 -l 99 \"{pdfPath}\"")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        using var process = System.Diagnostics.Process.Start(psi)!;
+        // #1068/#1516: drain both pipes concurrently and bound the wait.
+        var stdout = process.StandardOutput.ReadToEndAsync();
+        var stderr = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(30000))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { }
+            throw new TimeoutException("pdfinfo did not exit within 30s (#1516).");
+        }
+        _ = stderr.GetAwaiter().GetResult();
+        return stdout.GetAwaiter().GetResult();
+    }
+
+    private static int PageRotation(string pdfinfoOutput, int page)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(pdfinfoOutput, $@"Page\s+{page} rot:\s+(\d+)");
+        m.Success.Should().BeTrue($"pdfinfo must report page {page}'s rotation");
+        return int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task PageActionFromTheMenu_ActsOnTheRightClickedPage_NotTheViewportPage()
+    {
+        Assert.SkipWhen(!System.IO.File.Exists("/opt/homebrew/bin/pdfinfo") && !System.IO.File.Exists("/usr/bin/pdfinfo")
+            && !System.IO.File.Exists("/usr/local/bin/pdfinfo"), "pdfinfo (poppler) is not installed [requires: tool:pdfinfo]");
+
+        var path = System.IO.Path.Combine(_dir, "four-small.pdf");
+        using (var doc = PdfDocument.CreateNew())
+        {
+            for (var i = 0; i < 4; i++) doc.Pages.AddBlank(200, 200);
+            doc.Save(path);
+        }
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        await Task.Delay(200);
+        await vm.LoadDocumentAsync(path);
+        vm.ViewMode = PdfViewMode.Continuous;
+        vm.ZoomLevel = 0.3;   // several small pages visible at once
+        await Task.Delay(600);
+        window.UpdateLayout();
+        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+        var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+
+        // Right-click the centre of the THIRD page, not the one the viewport considers current.
+        var container = items.ContainerFromIndex(2) as Control;
+        container.Should().NotBeNull("page 3 must be realized at this zoom");
+        var border = (container as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border ?? container as Border;
+        var centre = border!.TranslatePoint(new Point(border.Bounds.Width / 2, border.Bounds.Height / 2), window)!.Value;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            window.MouseDown(centre, MouseButton.Right);
+            window.MouseUp(centre, MouseButton.Right);
+        });
+        await Task.Delay(150);
+
+        viewer.ContextMenuPageNumber.Should().Be(3, "the menu was opened on the third page");
+        Item(viewer, "Rotate _Right").Command!.Execute(null);
+        await Task.Delay(400);
+
+        var saved = System.IO.Path.Combine(_dir, "four-small-out.pdf");
+        await vm.SaveFileAsAsync(saved);
+        var info = Pdfinfo(saved);
+        PageRotation(info, 3).Should().Be(90, "the right-clicked page is the one rotated");
+        foreach (var other in new[] { 1, 2, 4 })
+            PageRotation(info, other).Should().Be(0, $"page {other} was not right-clicked and must not rotate");
+
+        window.Close();
+    }
 }

@@ -1715,6 +1715,7 @@
                                                HiddenTextHighlights="{Binding HiddenTextHighlights}"
                                                FormFields="{Binding CurrentPageFormFields}"
                                                PageFormFieldsProvider="{Binding FormFieldsForPage}"
+                                               ContextMenuPageNumber="{Binding ContextMenuPageNumber, Mode=OneWayToSource}"
                                                TypewriterTextOperations="{Binding TypewriterTextOperations}"
                                                RedactionDrawn="OnRedactionDrawn"
                                                TextSelected="OnTextSelected"

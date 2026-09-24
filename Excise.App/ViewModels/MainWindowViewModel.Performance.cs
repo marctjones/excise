@@ -48,12 +48,22 @@ public partial class MainWindowViewModel
     internal Func<int?>? ViewerMostVisiblePageProvider { get; set; }
 
     /// <summary>
+    /// 1-based page the document context menu was opened on, 0 when none. Bound one-way-to-source
+    /// from <c>PdfViewerControl.ContextMenuPageNumber</c> (#1817).
+    /// </summary>
+    public int ContextMenuPageNumber { get; set; }
+
+    /// <summary>
     /// The 0-based page every "current page" command must operate on (#1650).
     /// </summary>
     internal int CommandTargetPageIndex
     {
         get
         {
+            // #1817: a command run from the right-click menu acts on the page that was right-clicked.
+            if (ContextMenuPageNumber >= 1 && ContextMenuPageNumber <= Math.Max(1, TotalPages))
+                return ContextMenuPageNumber - 1;
+
             var page = ViewerMostVisiblePageProvider?.Invoke();
             if (page is not int oneBased || oneBased < 1 || oneBased > Math.Max(1, TotalPages))
                 return CurrentPageIndex;

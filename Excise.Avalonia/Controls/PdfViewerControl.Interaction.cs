@@ -29,7 +29,11 @@ public partial class PdfViewerControl
         // Right-press opens the context menu (#1659); it must not begin a new
         // selection, which would clear the very selection the menu acts on.
         if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed)
+        {
+            // #1817: remember which page the menu was opened on.
+            ContextMenuPageNumber = TryMapPointerToContent(e, out var menuPage, out _, out _) ? menuPage : 0;
             return;
+        }
 
         // First chance: internal-link click in any mode (including None).
         // Links are treated as ambient affordances — like a browser, not
