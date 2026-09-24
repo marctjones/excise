@@ -63,6 +63,9 @@ partial class Program
             row["reason"] = result.FailureReason;
             row["omissions"] = result.Omissions;
             row["scripts"] = result.ScriptsNotRun;
+            row["scriptsRun"] = result.ScriptsRun;
+            row["scriptFailures"] = result.ScriptFailures;
+            row["fieldsWrittenByScripts"] = result.FieldsWrittenByScripts;
 
             if (result.ShowsForm)
             {

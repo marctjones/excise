@@ -49,8 +49,20 @@ named below), not to this page.
    direct `PdfDocumentSanitizer.ScrubTerms` call. The removal is reported as an
    `/XFA` carrier row (`PdfXfaLayout.RemoveXfaFormForRedaction`) and, for area
    redaction, on the redacted-copy report.
-6. **Scripts do not run.** FormCalc (#1570) and JavaScript (#1571) are separate
-   work. excise lays out the form's initial state and says so in the banner.
+6. **Only FormCalc `initialize` and `calculate` run (#1570); JavaScript never does.** The
+   interpreter is a tree-walker over our own AST under `Excise.Core/Xfa/FormCalc/`
+   (no reflection, no dynamic code, no `Get`/`Post`/`Put` and no host functions: absent, not
+   stubbed). A script reaches the form only through `IFcHost`/`IFcObject`, and can write two
+   things: a field's value and any object's `presence` (kept per instance in
+   `XfaFormNode.PresenceOverride`, never in the template element that repeated instances
+   share). Steps, call depth, string length, list size, `Eval` nesting and wall time are
+   bounded; a nested `Eval` spends its parent's remaining budget. Each script is a
+   transaction: a failure undoes its writes, is reported in `XfaLayoutResult.ScriptFailures`,
+   and the rest carry on. `calculate` repeats until the values settle, capped at ten passes.
+   Scripts run in `ApplyXfaLayout` at open and nowhere else: redaction, save, print-copy
+   creation and the command line never execute one (`FormCalcContainmentTests` reads the
+   sources and fails on a new caller). `XfaLayoutOptions.RunFormCalc` turns it off.
+   Not run: JavaScript (#1571), `validate`, `click`, `docReady` and every other event.
 7. **Display only.** Values are drawn as page content, not as AcroForm widgets.
    Filling and writing the datasets back is #1547 phase 3. Converting to
    AcroForm is #1569. A flattened static copy (layout applied, `/XFA` removed)
@@ -60,6 +72,11 @@ named below), not to this page.
    rendition ("1,234" for "1234") would let a term-redaction of the displayed
    text miss the stored value. Rule 5 covers that case anyway, but raw values
    keep search and redaction matching the stored data.
+   A value a script WRITES is derived data of the same kind: a term redaction cannot see
+   `Concat(A, B)` as the two strings that made it. Rule 5 covers it (redaction removes the
+   whole `/XFA` packet, script text included, and the page text is ordinary page content), and
+   `XfaFormCalcRedactionTests` pins both a secret written literally by a script and one that
+   only a calculation produces. `XfaLayoutResult.FieldsWrittenByScripts` names the fields.
 9. **Password fields never show their value.** A `passwordEdit` draws its
    `passwordChar` once per character.
 

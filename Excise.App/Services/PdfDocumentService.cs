@@ -165,9 +165,11 @@ public class PdfDocumentService
             var result = document.ApplyXfaLayout(
                 new XfaLayoutOptions { TimeLimit = XfaLayoutTimeLimit }, timeout.Token);
             _logger.LogInformation(
-                "Dynamic XFA form: {Status}, {Pages} page(s), omissions [{Omissions}], scripts not run [{Scripts}], reason {Reason}",
+                "Dynamic XFA form: {Status}, {Pages} page(s), omissions [{Omissions}], scripts run [{Ran}], not run [{Scripts}], failed [{Failures}], reason {Reason}",
                 result.Status, result.PageCount, string.Join("; ", result.Omissions),
+                string.Join(", ", result.ScriptsRun.Select(kv => $"{kv.Key}={kv.Value}")),
                 string.Join(", ", result.ScriptsNotRun.Select(kv => $"{kv.Key}={kv.Value}")),
+                string.Join("; ", result.ScriptFailures),
                 result.FailureReason);
             return result;
         }

@@ -29,6 +29,12 @@ public sealed class XfaLayoutOptions
 {
     /// <summary>Wall-clock limit for the whole run. The default is 15 seconds.</summary>
     public TimeSpan TimeLimit { get; init; } = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// Run the form's FormCalc <c>initialize</c> and <c>calculate</c> scripts before layout (#1570), so
+    /// computed values and script-driven show or hide are laid out. Default true. JavaScript never runs.
+    /// </summary>
+    public bool RunFormCalc { get; init; } = true;
 }
 
 /// <summary>What <see cref="PdfXfaLayout.ApplyXfaLayout"/> did, and what the rendition leaves out.</summary>
@@ -55,6 +61,18 @@ public sealed class XfaLayoutResult
     /// </summary>
     public IReadOnlyDictionary<string, int> ScriptsNotRun { get; init; } = new Dictionary<string, int>();
 
+    /// <summary>FormCalc scripts that ran to the end, by the event that ran them.</summary>
+    public IReadOnlyDictionary<string, int> ScriptsRun { get; init; } = new Dictionary<string, int>();
+
+    /// <summary>FormCalc scripts that failed (their writes were undone), one line each.</summary>
+    public IReadOnlyList<string> ScriptFailures { get; init; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Fields a script wrote a value onto. Those values are derived data: a term redaction cannot see
+    /// them as the text that produced them (docs/architecture/xfa-rendering.md, decision 8).
+    /// </summary>
+    public IReadOnlyCollection<string> FieldsWrittenByScripts { get; init; } = Array.Empty<string>();
+
     /// <summary>True when the document's pages now show the XFA form.</summary>
     public bool ShowsForm => Status is XfaLayoutStatus.LaidOut or XfaLayoutStatus.AlreadyLaidOut;
 }
@@ -71,7 +89,7 @@ public static class PdfXfaLayout
 
     /// <summary>
     /// Lay out a dynamic XFA form into ordinary pages, in memory. The document
-    /// is left untouched unless the whole layout succeeds. Scripts do not run.
+    /// is left untouched unless the whole layout succeeds. Only FormCalc initialize and calculate scripts run (see <see cref="XfaLayoutOptions.RunFormCalc"/>).
     /// </summary>
     /// <remarks>
     /// Costs one <see cref="PdfXfaDetection.DetectXfaForm"/> call on any other
@@ -110,6 +128,8 @@ public static class PdfXfaLayout
             var template = new XfaTemplate(packets!.Template, budget, report);
             var merge = new XfaMerge(budget, report, packets.DataRoot);
             var form = merge.Merge(template.Root);
+            if (options.RunFormCalc)
+                XfaScripts.Run(form, budget, report, cancellationToken);
             var layout = new XfaLayout(budget, report);
             var pageAreas = ReadPageAreas(template.Root, merge, layout, budget, report);
             var root = layout.Build(form, pageAreas[0].ContentAreas[0].W);
@@ -147,6 +167,9 @@ public static class PdfXfaLayout
             PageCount = document.PageCount,
             Omissions = report.Notes,
             ScriptsNotRun = new Dictionary<string, int>(report.ScriptEvents),
+            ScriptsRun = new Dictionary<string, int>(report.ScriptsRun),
+            ScriptFailures = report.ScriptFailures,
+            FieldsWrittenByScripts = report.ScriptWrites,
         };
     }
 

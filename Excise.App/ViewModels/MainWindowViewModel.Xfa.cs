@@ -14,7 +14,7 @@ namespace Excise.App.ViewModels;
 /// A dynamic XFA form holds only a placeholder page ("Please wait...") for
 /// viewers without an XFA engine. Since phase 2 excise lays the form out on
 /// open (<see cref="Services.PdfDocumentService.XfaLayout"/>); the banner then
-/// says that scripts do not run. When the layout fails the placeholder stays
+/// says that only FormCalc calculations run. When the layout fails the placeholder stays
 /// and so does the phase-1 warning. The notice is a persistent, closable
 /// banner rather than a toast, because what it explains stays on screen.
 /// </remarks>
@@ -25,7 +25,7 @@ public partial class MainWindowViewModel
         "excise can't display this kind of form yet. Open it in Adobe Acrobat Reader or Firefox to see and fill it.";
     internal const string LaidOutXfaNoticeTitle = "This PDF is a dynamic XFA form.";
     internal const string LaidOutXfaNoticeMessage =
-        "excise shows the form's initial layout. Its scripts don't run and its fields can't be filled here yet, so open it in Adobe Acrobat Reader or Firefox to fill it in.";
+        "excise shows the form's layout and runs its FormCalc calculations. JavaScript and button scripts don't run and its fields can't be filled here yet, so open it in Adobe Acrobat Reader or Firefox to fill it in.";
     internal const string StaticXfaNoticeTitle = "This form also contains XFA data.";
     internal const string StaticXfaNoticeMessage =
         "excise fills the standard form fields. Adobe Acrobat may show the XFA copy of the values instead.";

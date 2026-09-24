@@ -81,7 +81,7 @@ internal sealed class XfaLayout
     {
         XfaBudget.CheckDepth(depth);
         var e = node.Element;
-        if (e.TakesNoSpace())
+        if (node.TakesNoSpace)
             return null;
 
         _budget.CountBox();
@@ -95,7 +95,7 @@ internal sealed class XfaLayout
                 Leaf = leaf,
                 W = w,
                 H = h,
-                Invisible = e.Presence() == "invisible",
+                Invisible = node.Presence == "invisible",
             };
         }
 
@@ -103,7 +103,7 @@ internal sealed class XfaLayout
         var box = new XfaBox(node)
         {
             Margin = margin,
-            Invisible = e.Presence() == "invisible",
+            Invisible = node.Presence == "invisible",
             BreakBefore = ReadBreak(e, before: true),
             BreakAfter = ReadBreak(e, before: false),
         };
@@ -271,10 +271,10 @@ internal sealed class XfaLayout
         // Auto columns (-1 or missing) take the widest natural cell width.
         var rows = table.Children
             .Where(c => c.Kind == XfaNodeKind.Subform && c.Element.AttrOr("layout", "position") == "row"
-                        && !c.Element.TakesNoSpace())
+                        && !c.TakesNoSpace)
             .ToList();
         int columns = Math.Max(widths.Count,
-            rows.Count == 0 ? 0 : rows.Max(r => r.Children.Where(c => !c.Element.TakesNoSpace()).Sum(c => Math.Max(1, c.Element.IntAttr("colSpan", 1)))));
+            rows.Count == 0 ? 0 : rows.Max(r => r.Children.Where(c => !c.TakesNoSpace).Sum(c => Math.Max(1, c.Element.IntAttr("colSpan", 1)))));
         columns = Math.Min(columns, 1000);
         while (widths.Count < columns)
             widths.Add(-1);
@@ -287,7 +287,7 @@ internal sealed class XfaLayout
             foreach (var row in rows)
             {
                 int c = 0;
-                foreach (var cell in row.Children.Where(k => !k.Element.TakesNoSpace()))
+                foreach (var cell in row.Children.Where(k => !k.TakesNoSpace))
                 {
                     int span = cell.Element.IntAttr("colSpan", 1);
                     if (c == col && span == 1)
@@ -322,7 +322,7 @@ internal sealed class XfaLayout
     private XfaBox? BuildRow(XfaFormNode row, List<double> widths, int depth)
     {
         var e = row.Element;
-        if (e.TakesNoSpace())
+        if (row.TakesNoSpace)
             return null;
         _budget.CountBox();
 
@@ -330,7 +330,7 @@ internal sealed class XfaLayout
         var box = new XfaBox(row)
         {
             Margin = margin,
-            Invisible = e.Presence() == "invisible",
+            Invisible = row.Presence == "invisible",
             BreakBefore = ReadBreak(e, before: true),
             BreakAfter = ReadBreak(e, before: false),
         };
@@ -340,7 +340,7 @@ internal sealed class XfaLayout
         double x = 0;
         foreach (var cell in row.Children)
         {
-            if (cell.Element.TakesNoSpace())
+            if (cell.TakesNoSpace)
                 continue;
             int span = cell.Element.IntAttr("colSpan", 1);
             int end = span < 0 ? widths.Count : Math.Min(widths.Count, col + Math.Max(1, span));

@@ -183,7 +183,24 @@ public class XfaLayoutTests
     }
 
     [Fact]
-    public void Scripts_AreReportedByEvent_NotRun()
+    public void Scripts_AreReportedByEvent_NotRun_WhenFormCalcIsOff()
+    {
+        var template = XfaTestForms.Template(
+            "<field name=\"A\" w=\"2in\" h=\"0.3in\"><ui><textEdit/></ui>"
+            + "<event activity=\"initialize\"><script contentType=\"application/x-javascript\">this.rawValue = 'x';</script></event>"
+            + "<calculate><script>1 + 1</script></calculate></field>");
+        using var document = Open(XfaTestForms.BuildPdf(template));
+
+        var result = document.ApplyXfaLayout(
+            new XfaLayoutOptions { RunFormCalc = false }, TestContext.Current.CancellationToken);
+
+        result.ScriptsNotRun.Should().Contain(new KeyValuePair<string, int>("initialize", 1));
+        result.ScriptsNotRun.Should().Contain(new KeyValuePair<string, int>("calculate", 1));
+        result.ScriptsRun.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void FormCalcCalculate_Runs_ByDefault_WhileJavaScriptStaysNotRun()
     {
         var template = XfaTestForms.Template(
             "<field name=\"A\" w=\"2in\" h=\"0.3in\"><ui><textEdit/></ui>"
@@ -193,8 +210,10 @@ public class XfaLayoutTests
 
         var result = document.ApplyXfaLayout(cancellationToken: TestContext.Current.CancellationToken);
 
+        result.ScriptsRun.Should().ContainKey("calculate");
         result.ScriptsNotRun.Should().Contain(new KeyValuePair<string, int>("initialize", 1));
-        result.ScriptsNotRun.Should().Contain(new KeyValuePair<string, int>("calculate", 1));
+        result.ScriptsNotRun.Should().NotContainKey("calculate");
+        result.FieldsWrittenByScripts.Should().Contain("A");
     }
 
     [Fact]

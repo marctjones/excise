@@ -38,6 +38,17 @@ internal sealed class XfaFormNode
     /// <summary>Rich-text value (an <c>exData</c> or data element holding XHTML).</summary>
     public XElement? RichValue { get; set; }
 
+    /// <summary>
+    /// A presence a script set on THIS instance. The template element is shared by every instance of a
+    /// repeated subform, so a script's show or hide must not be written to it.
+    /// </summary>
+    public string? PresenceOverride { get; set; }
+
+    public string Presence => PresenceOverride ?? Element.Presence();
+
+    /// <summary>Hidden and inactive objects take no space; invisible ones do.</summary>
+    public bool TakesNoSpace => Presence is "hidden" or "inactive";
+
     public bool IsContainer => Kind is XfaNodeKind.Subform or XfaNodeKind.Area or XfaNodeKind.ExclGroup;
 }
 

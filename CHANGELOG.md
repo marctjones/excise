@@ -7,6 +7,19 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **FormCalc in dynamic XFA forms** (#1570). `initialize` and `calculate` scripts now run
+  when a dynamic XFA form is opened, so computed fields show their values and scripts that
+  show or hide a field are honoured. The interpreter is our own (a tree-walker under
+  `Excise.Core/Xfa/FormCalc/`): no JavaScript engine, no reflection, and no network, file or
+  host functions. Each script is bounded (steps, depth, string size, time) and a failing one is
+  undone and reported without affecting the others. JavaScript, `validate`, `click` and
+  `docReady` scripts still do not run. Redaction of a laid-out form removes the page text and
+  the whole `/XFA` packet as before; a value a script wrote is derived data, covered by two
+  new redaction tests. `XfaLayoutOptions.RunFormCalc` turns it off.
+- **Fillable-field overlays are the field's own size and quiet until hovered** . A form's
+  input boxes no longer inherit the theme's 32 x 64 minimum (on the IRS 1040, up to 18 dips too
+  tall and 45 too wide over the fields around them) and sit at a faint tint and border until
+  hovered or focused. Colours are unchanged.
 - **Highlight/Underline/StrikeOut/Squiggly: arm the tool, then select** (#1793).
   Click the Highlight tool (Annotate menu, annotation toolbar, or floating
   palette), drag over text, release the mouse — the markup applies

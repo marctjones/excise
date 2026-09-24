@@ -2795,15 +2795,19 @@ namespace Excise.Core.Xfa
     public sealed class XfaLayoutOptions
     {
         public XfaLayoutOptions() { }
+        public bool RunFormCalc { get; init; }
         public System.TimeSpan TimeLimit { get; init; }
     }
     public sealed class XfaLayoutResult
     {
         public XfaLayoutResult() { }
         public string? FailureReason { get; init; }
+        public System.Collections.Generic.IReadOnlyCollection<string> FieldsWrittenByScripts { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> Omissions { get; init; }
         public int PageCount { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> ScriptFailures { get; init; }
         public System.Collections.Generic.IReadOnlyDictionary<string, int> ScriptsNotRun { get; init; }
+        public System.Collections.Generic.IReadOnlyDictionary<string, int> ScriptsRun { get; init; }
         public bool ShowsForm { get; }
         public Excise.Core.Xfa.XfaLayoutStatus Status { get; init; }
     }
