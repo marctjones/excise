@@ -83349,28 +83349,25 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
+            "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -84794,28 +84791,25 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
+            "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -86239,28 +86233,25 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
+            "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -87700,28 +87691,25 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
+            "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -89280,27 +89268,25 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -90717,27 +90703,25 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -92147,27 +92131,25 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -93577,27 +93559,25 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.MaximumProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -94497,7 +94477,35 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_VisibleTextAnnotation_IsKept",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95106,34 +95114,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_OneDeep_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_TwoDeep_IsStillFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ThreeDeep_IsStillFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95843,7 +95823,35 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_VisibleTextAnnotation_IsKept",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96452,34 +96460,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_OneDeep_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_TwoDeep_IsStillFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ThreeDeep_IsStillFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97203,7 +97183,35 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_VisibleTextAnnotation_IsKept",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97812,34 +97820,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_OneDeep_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_TwoDeep_IsStillFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ThreeDeep_IsStillFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98589,7 +98569,35 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_LeaksContents",
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_DroppedAnnotation_LeavesNoPopupHoldingItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_VisibleTextAnnotation_IsKept",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99198,34 +99206,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_OneDeep_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_TwoDeep_IsStillFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ThreeDeep_IsStillFound",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.FormXObject_ChildScopedToTheForm_IsFound",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100634,6 +100614,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100710,15 +100697,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -102108,6 +102086,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -102184,15 +102169,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -103603,6 +103579,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103679,15 +103662,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -105038,6 +105012,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -105114,15 +105095,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.Guard_TheSecretIsInAFieldNameToBeginWith",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -113321,8 +113293,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7627,
-    "testMethodsWithCapabilityCandidate": 4856,
+    "testMethods": 7646,
+    "testMethodsWithCapabilityCandidate": 4869,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

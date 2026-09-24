@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1359,
-  "indexedContentSha256": "aee1cfa88e8c5f404bc3606a3310bde4038eb74eecf181a7fd1d94e0323a9756",
+  "indexedFileCount": 1363,
+  "indexedContentSha256": "b222239eaa739a03db61dd490c051486061982da405a57d65e41514cf160d45b",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -5651,7 +5651,8 @@
           "kind": "source",
           "matchedTerms": [
             "identifiers",
-            "information"
+            "information",
+            "pdfdocument"
           ]
         },
         {
@@ -8039,7 +8040,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 629
+      "candidateReferenceCount": 633
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8851,7 +8852,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 316
+      "candidateReferenceCount": 317
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9825,7 +9826,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 241
+      "candidateReferenceCount": 242
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -11402,7 +11403,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 175
+      "candidateReferenceCount": 176
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -12656,7 +12657,7 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs",
+          "path": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs",
           "kind": "test",
           "matchedTerms": [
             "form",
@@ -12664,7 +12665,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 175
+      "candidateReferenceCount": 176
     },
     {
       "id": "pdf.20.content.operators",
@@ -22866,7 +22867,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 118
+      "candidateReferenceCount": 119
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -33443,6 +33444,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/ImageInTilingPatternResolutionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dctdecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -33481,7 +33491,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 30
+      "candidateReferenceCount": 31
     },
     {
       "id": "pdf.20.image.requirement-013",
@@ -33818,6 +33828,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/ImageInTilingPatternResolutionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dctdecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -33856,7 +33875,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 30
+      "candidateReferenceCount": 31
     },
     {
       "id": "pdf.20.image.requirement-014",
@@ -38590,7 +38609,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 182
+      "candidateReferenceCount": 183
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -39223,6 +39242,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/ImageInTilingPatternResolutionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bitspercomponent",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/OutOfMemoryPropagationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -39369,7 +39397,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 76
+      "candidateReferenceCount": 77
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -40647,6 +40675,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/ImageInTilingPatternResolutionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/JpxImageDecoderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -40776,7 +40813,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 67
+      "candidateReferenceCount": 68
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -43322,6 +43359,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/ImageInTilingPatternResolutionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -43471,7 +43517,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 55
+      "candidateReferenceCount": 56
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -44208,6 +44254,17 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "widget",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -44441,19 +44498,9 @@
             "widget",
             "annotation"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/FileOpsCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "widget",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 91
+      "candidateReferenceCount": 92
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -45134,6 +45181,17 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "link",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -45343,19 +45401,9 @@
             "link",
             "annotation"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "link",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 109
+      "candidateReferenceCount": 111
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -46064,6 +46112,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationToolPlacementSweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -46205,7 +46262,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 61
+      "candidateReferenceCount": 62
     },
     {
       "id": "pdf.20.annotation.subtype-005",
@@ -46861,6 +46918,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "highlight",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationToolPlacementSweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -47109,7 +47175,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 77
+      "candidateReferenceCount": 78
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -47479,6 +47545,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "underline",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationToolPlacementSweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -47609,7 +47684,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 36
+      "candidateReferenceCount": 37
     },
     {
       "id": "pdf.20.annotation.subtype-007",
@@ -47978,6 +48053,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "strikeout",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationToolPlacementSweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -48089,7 +48173,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 34
+      "candidateReferenceCount": 35
     },
     {
       "id": "pdf.20.annotation.subtype-008",
@@ -48448,6 +48532,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "squiggly",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationToolPlacementSweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -48559,7 +48652,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 33
+      "candidateReferenceCount": 34
     },
     {
       "id": "pdf.20.annotation.subtype-009",
@@ -49241,6 +49334,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationHoverReadingTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -49433,7 +49535,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 74
+      "candidateReferenceCount": 75
     },
     {
       "id": "pdf.20.annotation.subtype-010",
@@ -49894,6 +49996,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "circle",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationToolPlacementSweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -50035,7 +50146,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 47
+      "candidateReferenceCount": 48
     },
     {
       "id": "pdf.20.annotation.subtype-011",
@@ -50970,7 +51081,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 215
+      "candidateReferenceCount": 216
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -51366,6 +51477,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "polygon",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationToolPlacementSweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -51517,7 +51637,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 40
+      "candidateReferenceCount": 41
     },
     {
       "id": "pdf.20.annotation.subtype-013",
@@ -51891,6 +52011,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "polyline",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationToolPlacementSweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -52001,7 +52130,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 34
+      "candidateReferenceCount": 35
     },
     {
       "id": "pdf.20.annotation.subtype-014",
@@ -52814,6 +52943,17 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -52923,20 +53063,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 163
+      "candidateReferenceCount": 165
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -53188,6 +53317,17 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -53266,6 +53406,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationToolPlacementSweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -53336,7 +53485,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 33
+      "candidateReferenceCount": 35
     },
     {
       "id": "pdf.20.annotation.subtype-016",
@@ -54343,6 +54492,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationToolPlacementSweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -54555,7 +54713,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 65
+      "candidateReferenceCount": 66
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -57707,7 +57865,8 @@
           "kind": "source",
           "matchedTerms": [
             "alpha",
-            "masks"
+            "masks",
+            "soft"
           ]
         },
         {
@@ -58287,7 +58446,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 211
+      "candidateReferenceCount": 213
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -58927,6 +59086,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "preview"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -59016,17 +59183,9 @@
             "output",
             "preview"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/GuiLatencyBenchmarkTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "preview"
-          ]
         }
       ],
-      "candidateReferenceCount": 99
+      "candidateReferenceCount": 100
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -60130,7 +60289,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 214
+      "candidateReferenceCount": 215
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -60684,6 +60843,7 @@
           "matchedTerms": [
             "annotations",
             "redaction",
+            "acroform",
             "action",
             "annotation",
             "redact"
@@ -61725,6 +61885,7 @@
           "matchedTerms": [
             "redaction",
             "review",
+            "acroform",
             "action",
             "annotation",
             "redact"
@@ -64059,7 +64220,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 188
+      "candidateReferenceCount": 190
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -66001,7 +66162,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 131
+      "candidateReferenceCount": 132
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -66148,6 +66309,16 @@
           "matchedTerms": [
             "annotations",
             "rich"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotations",
+            "rich",
+            "movie",
+            "sound"
           ]
         },
         {
@@ -66642,6 +66813,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationHoverReadingTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -66750,27 +66930,9 @@
             "media",
             "media"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/WindowsDocumentPrinterTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "media"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/AnnotationWorkflowServiceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "media"
-          ]
         }
       ],
-      "candidateReferenceCount": 87
+      "candidateReferenceCount": 89
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -68328,7 +68490,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 209
+      "candidateReferenceCount": 210
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -69880,7 +70042,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 677
+      "candidateReferenceCount": 681
     },
     {
       "id": "pdf.20.extension.developer",
@@ -70586,7 +70748,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 161
+      "candidateReferenceCount": 162
     },
     {
       "id": "pdf.20.profile.pdfa",
