@@ -547,6 +547,71 @@ public static class AcroFormAuthoring
         return widget;
     }
 
+    /// <summary>
+    /// Remove the field named <paramref name="fieldName"/>: its widgets from every page's
+    /// <c>/Annots</c>, and the field itself from <c>/AcroForm /Fields</c> (or the parent's
+    /// <c>/Kids</c>). The inverse of <c>AddTextField</c>, <c>AddCheckBox</c> and the other authoring
+    /// methods, so adding a field can be undone (#1811).
+    /// </summary>
+    /// <remarks>
+    /// Objects are matched by reference, never by name, so a same-named field elsewhere is left alone.
+    /// The now-unreachable indirect objects stay in the xref until the next full rewrite, like
+    /// <see cref="PdfAnnotationAuthoring.RemoveAnnotation"/>.
+    /// </remarks>
+    /// <returns>True when something was removed; false when no such field exists.</returns>
+    public static bool RemoveField(this PdfDocument document, string fieldName)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        var field = document.GetAcroForm()?.FindField(fieldName);
+        if (field == null) return false;
+
+        var targets = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance) { field.RawDictionary };
+        foreach (var widget in field.WidgetDictionaries) targets.Add(widget);
+
+        var removed = false;
+        for (var pageNumber = 1; pageNumber <= document.PageCount; pageNumber++)
+        {
+            if (document.Resolve(document.GetPage(pageNumber).Dictionary.GetOptional("Annots") ?? PdfNull.Instance)
+                is not PdfArray annots) continue;
+            for (var i = annots.Count - 1; i >= 0; i--)
+            {
+                if (document.Resolve(annots[i]) is PdfDictionary d && targets.Contains(d))
+                {
+                    annots.RemoveAt(i);
+                    removed = true;
+                }
+            }
+        }
+
+        if (document.Catalog.GetOptional("AcroForm") is { } acroFormObj &&
+            document.Resolve(acroFormObj) is PdfDictionary acroForm)
+        {
+            removed |= RemoveFromFieldTree(document, acroForm.GetOptional("Fields"), targets, depth: 0);
+        }
+
+        return removed;
+    }
+
+    private static bool RemoveFromFieldTree(
+        PdfDocument document, PdfObject? node, HashSet<PdfDictionary> targets, int depth)
+    {
+        if (node == null || depth > 64 || document.Resolve(node) is not PdfArray array) return false;
+
+        var removed = false;
+        for (var i = array.Count - 1; i >= 0; i--)
+        {
+            if (document.Resolve(array[i]) is not PdfDictionary d) continue;
+            if (targets.Contains(d))
+            {
+                array.RemoveAt(i);
+                removed = true;
+                continue;
+            }
+            removed |= RemoveFromFieldTree(document, d.GetOptional("Kids"), targets, depth + 1);
+        }
+        return removed;
+    }
+
     private static PdfField AttachWidget(
         PdfDocument document,
         int pageNumber,

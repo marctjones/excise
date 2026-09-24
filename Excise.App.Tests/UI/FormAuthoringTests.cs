@@ -25,7 +25,7 @@ public class FormAuthoringTests
     private readonly ITestOutputHelper _out;
     public FormAuthoringTests(ITestOutputHelper o) { _out = o; }
 
-    private static byte[] BarePdf(string contentStream = "")
+    internal static byte[] BarePdf(string contentStream = "")
     {
         var sb = new StringBuilder();
         sb.AppendLine("%PDF-1.7");
@@ -63,7 +63,7 @@ public class FormAuthoringTests
         return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
-    private static string WritePdf(byte[] bytes)
+    internal static string WritePdf(byte[] bytes)
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-author-{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, bytes);
