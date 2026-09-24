@@ -86,22 +86,52 @@ public partial class MainWindowViewModel
         var ocrService = new PdfOcrService(language: effectiveLanguage);
         var converter = new PdfSearchableConverter(ocrService);
 
-        // Known limitation: PdfSearchableConverter.MakeSearchable throws
-        // OperationCanceledException at the top of its per-page loop, after
-        // already having flushed invisible-text layers onto any pages
-        // processed before the cancellation. Because the exception means
-        // OnMakeSearchableCompletedAsync never runs, those already-written
-        // pages stay mutated in the live document but the app doesn't mark
-        // itself dirty for them (no doc-mutation "Completed" event fires).
-        // Each page's own flush is self-consistent (not corrupt), and on
-        // the common "cancel and discard" path this is arguably the right
-        // behavior anyway — but a "cancel then Save" sequence would silently
-        // keep the partial OCR layer without prompting a save. Not
-        // reworked here (would need copy-then-swap semantics); flag if it
-        // becomes a real workflow.
-        return Task.Run(
-            () => converter.MakeSearchable(document, force, progress, cancellationToken),
-            cancellationToken);
+        // PdfSearchableConverter.MakeSearchable throws OperationCanceledException at the top of its
+        // per-page loop, AFTER flushing invisible-text layers onto the pages it already did. Those
+        // pages stay written in the live document, so a cancelled run is not a no-op: it gets the
+        // same bookkeeping as a finished one (marked changed, history cleared) and tells the user
+        // how many pages were written (#1692, #1812). Each page's own flush is self-consistent, so
+        // the document is not corrupt; the user can close without saving to discard it.
+        var pagesDone = 0;
+        var tracking = new InlineProgress<(int Done, int Total)>(p =>
+        {
+            pagesDone = p.Done;
+            progress.Report(p);
+        });
+
+        return Task.Run(async () =>
+        {
+            try
+            {
+                return converter.MakeSearchable(document, force, tracking, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                await global::Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => OnMakeSearchableCancelledAsync(pagesDone));
+                throw;
+            }
+        }, CancellationToken.None);
+    }
+
+    /// <summary>Synchronous <see cref="IProgress{T}"/>: <c>Progress&lt;T&gt;</c> marshals asynchronously, which loses the last report at cancel.</summary>
+    private sealed class InlineProgress<T>(Action<T> report) : IProgress<T>
+    {
+        public void Report(T value) => report(value);
+    }
+
+    /// <summary>
+    /// A run cancelled after some pages were already written. Same bookkeeping as a finished run,
+    /// plus a toast saying what was left behind. Nothing to do when no page was written.
+    /// </summary>
+    internal async Task OnMakeSearchableCancelledAsync(int pagesDone)
+    {
+        if (pagesDone <= 0)
+            return;
+
+        await OnMakeSearchableCompletedAsync(new SearchableDocumentResult(pagesDone, 0, 0, 0, Array.Empty<SearchablePageResult>()));
+        _toastService.ShowWarning("Make Searchable cancelled",
+            $"{pagesDone} page(s) already have a searchable text layer. The document is marked as changed; " +
+            "close without saving to discard it.");
     }
 
     /// <summary>
@@ -123,8 +153,14 @@ public partial class MainWindowViewModel
                 return;
 
             // A baked text layer structurally rewrites the document; prior
-            // undo entries no longer apply cleanly (#782).
+            // undo entries no longer apply cleanly (#782), and this operation itself cannot be
+            // undone, so it clears the history instead of joining it (#1812).
             ClearEditHistory();
+
+            // The document now differs from the file on disk. This used to be missing, so a
+            // searchable copy that was never saved read as "no unsaved changes" and closing it
+            // discarded the OCR layer without a prompt.
+            FileState.PageEditsCount++;
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));
 

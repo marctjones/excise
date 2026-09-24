@@ -19,7 +19,7 @@
                        FontSize="18"
                        FontWeight="SemiBold"
                        Foreground="#f0f0f0"/>
-            <TextBlock Text="OCRs every page that doesn't already have extractable text and writes the recognized words back as an invisible, searchable layer. The page's visual appearance is unchanged."
+            <TextBlock Text="OCRs every page that doesn't already have extractable text and writes the recognized words back as an invisible, searchable layer. The page's visual appearance is unchanged. This cannot be undone: it clears the undo history and marks the document as changed, so close without saving to discard it."
                        TextWrapping="Wrap"
                        Foreground="#a0a0a0"
                        FontSize="12"/>
