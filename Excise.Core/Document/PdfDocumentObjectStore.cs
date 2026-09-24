@@ -711,8 +711,20 @@ internal sealed class PdfDocumentObjectStore : IDisposable
                         text.Bytes));
                     break;
                 case PdfDictionary dictionary:
-                    foreach (var (_, value) in dictionary)
+                    // ISO 32000-2 §7.6.2: the /Contents of a signature dictionary is a
+                    // PKCS#7 blob that is NOT encrypted (its /ByteRange covers the file
+                    // bytes as written). A signature dictionary is recognised by the pair,
+                    // not by /Type, which Adobe's usage-rights (UR3) signatures omit. AES-
+                    // decrypting it threw "not a complete block" and made such a file
+                    // (IRCC forms, most Reader-extended government forms) unsavable (#1823).
+                    var isSignatureValue = dictionary.GetOptional("ByteRange") is PdfArray
+                        && dictionary.GetOptional("Contents") is PdfString;
+                    foreach (var (key, value) in dictionary)
+                    {
+                        if (isSignatureValue && key == "Contents")
+                            continue;
                         stack.Push(value);
+                    }
                     break;
                 case PdfArray array:
                     foreach (var item in array)

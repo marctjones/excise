@@ -177,6 +177,11 @@ semantic versioning.
   - `README.md` documents `excise unredact` for the first time.
 
 ### Fixed
+- **Saving, and `decrypt`, on encrypted files with a usage-rights signature** (#1823). Files such as
+  the Canadian IRCC visa and work-permit forms opened and displayed but threw "The input data is not
+  a complete block" on Save. A signature dictionary's `/Contents` is not encrypted (ISO 32000-2
+  §7.6.2), and excise was AES-decrypting it. It is now left alone, recognised by its `/ByteRange` and
+  `/Contents` pair because Adobe's usage-rights signatures carry no `/Type`.
 - **Text markup landed off the selected text** (#1796). Highlight, Underline,
   StrikeOut and Squiggly applied in the continuous view (the default) were
   placed at the wrong position and size, scaled by the zoom factor (72 pt off
