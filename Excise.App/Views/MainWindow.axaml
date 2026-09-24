@@ -1744,27 +1744,39 @@
                              /P permission gating and its reason strings are shared. -->
                         <controls:PdfViewerControl.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="_Copy" Command="{Binding CopyTextCommand}"
+                                <MenuItem access:CommandAccessibility.CommandId="edit.copyText"
+                                          Header="_Copy" Command="{Binding CopyTextCommand}"
                                           IsVisible="{Binding HasTextSelection}"/>
-                                <MenuItem Header="_Highlight" Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                                <MenuItem access:CommandAccessibility.CommandId="annotation.addHighlight"
+                                          Header="_Highlight" Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
                                           IsVisible="{Binding HasTextSelection}"/>
-                                <MenuItem Header="_Underline" Command="{Binding AddUnderlineAnnotationFromSelectionCommand}"
+                                <MenuItem access:CommandAccessibility.CommandId="annotation.addUnderline"
+                                          Header="_Underline" Command="{Binding AddUnderlineAnnotationFromSelectionCommand}"
                                           IsVisible="{Binding HasTextSelection}"/>
-                                <MenuItem Header="Strike_through" Command="{Binding AddStrikeOutAnnotationFromSelectionCommand}"
+                                <MenuItem access:CommandAccessibility.CommandId="annotation.addStrikeOut"
+                                          Header="Strike_through" Command="{Binding AddStrikeOutAnnotationFromSelectionCommand}"
                                           IsVisible="{Binding HasTextSelection}"/>
-                                <MenuItem Header="S_quiggly" Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
+                                <MenuItem access:CommandAccessibility.CommandId="annotation.addSquiggly"
+                                          Header="S_quiggly" Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
                                           IsVisible="{Binding HasTextSelection}"/>
-                                <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
+                                <MenuItem access:CommandAccessibility.CommandId="annotation.addStickyNote"
+                                          Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
                                           IsVisible="{Binding HasTextSelection}"/>
-                                <MenuItem Header="_Redact Selection" Command="{Binding RedactSelectionCommand}"
+                                <MenuItem access:CommandAccessibility.CommandId="redaction.markSelection"
+                                          Header="_Redact Selection" Command="{Binding RedactSelectionCommand}"
                                           IsVisible="{Binding HasTextSelection}"/>
                                 <Separator IsVisible="{Binding HasTextSelection}"/>
-                                <MenuItem Header="Rotate _Left 90°" Command="{Binding RotatePageLeftCommand}"/>
-                                <MenuItem Header="Rotate _Right 90°" Command="{Binding RotatePageRightCommand}"/>
-                                <MenuItem Header="_Extract This Page..." Command="{Binding ExtractCurrentPageCommand}"/>
-                                <MenuItem Header="E_xport This Page..." Command="{Binding ExportCurrentPageCommand}"/>
+                                <MenuItem access:CommandAccessibility.CommandId="document.rotateLeft"
+                                          Header="Rotate _Left 90°" Command="{Binding RotatePageLeftCommand}"/>
+                                <MenuItem access:CommandAccessibility.CommandId="document.rotateRight"
+                                          Header="Rotate _Right 90°" Command="{Binding RotatePageRightCommand}"/>
+                                <MenuItem access:CommandAccessibility.CommandId="document.extractCurrentPage"
+                                          Header="_Extract This Page..." Command="{Binding ExtractCurrentPageCommand}"/>
+                                <MenuItem access:CommandAccessibility.CommandId="document.exportCurrentPage"
+                                          Header="E_xport This Page..." Command="{Binding ExportCurrentPageCommand}"/>
                                 <Separator/>
-                                <MenuItem Header="Remove This _Page" Command="{Binding RemoveCurrentPageCommand}"/>
+                                <MenuItem access:CommandAccessibility.CommandId="document.removeCurrentPage"
+                                          Header="Remove This _Page" Command="{Binding RemoveCurrentPageCommand}"/>
                             </ContextMenu>
                         </controls:PdfViewerControl.ContextMenu>
                     </controls:PdfViewerControl>

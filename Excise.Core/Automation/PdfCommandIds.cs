@@ -161,6 +161,12 @@ public static class PdfCommandIds
 
     public const string ToggleRedactionMode = "redaction.toggleMode";
     public const string ApplyRedaction = "redaction.apply";
+
+    /// <summary>
+    /// Mark the selected text as a pending redaction (the right-click menu's Redact Selection, #1659).
+    /// It only queues the area, like a drawn rectangle; nothing is removed until it is applied.
+    /// </summary>
+    public const string MarkSelectionForRedaction = "redaction.markSelection";
     public const string ApplyAllRedactions = "redaction.applyAll";
     public const string ClearAllRedactions = "redaction.clearAll";
     public const string RemovePendingRedaction = "redaction.removePending";

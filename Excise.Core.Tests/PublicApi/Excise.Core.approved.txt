@@ -168,6 +168,7 @@ namespace Excise.Core.Automation
         public const string JumpToSearchMatch = "search.jumpToMatch";
         public const string KeyboardShortcuts = "app.keyboardShortcuts";
         public const string MakeSearchable = "tools.makeSearchable";
+        public const string MarkSelectionForRedaction = "redaction.markSelection";
         public const string MoveCurrentPageEarlier = "document.moveCurrentPageEarlier";
         public const string MoveCurrentPageLater = "document.moveCurrentPageLater";
         public const string MoveSelectedPagesEarlier = "document.moveSelectedPagesEarlier";

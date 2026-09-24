@@ -78,6 +78,7 @@ Supported v2.23 batch command IDs:
 | `form.fillForm` | Set AcroForm values and optionally flatten. |
 | `form.addField` | Add a text, checkbox, choice, or signature field. |
 | `redaction.apply` | Remove matching text at the PDF content level. |
+| `redaction.markSelection` | Mark the selected text as a pending redaction (queues the area; nothing is removed until it is applied). |
 | `audit.hiddenText` | Detect hidden text from failed visual-only redactions. |
 
 CLI aliases such as `info`, `text`, `render`, `fill-form`, `add-field`,

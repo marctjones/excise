@@ -153,6 +153,7 @@ public static class PdfCommandRegistry
 
         Redaction(PdfCommandIds.ToggleRedactionMode, "Redaction Mode", "Toggle redaction mode.", "R"),
         Redaction(PdfCommandIds.ApplyRedaction, "Apply Redaction", "Apply the current redaction selection.", "Enter", isDestructive: true, isSecuritySensitive: true),
+        Redaction(PdfCommandIds.MarkSelectionForRedaction, "Mark Selection for Redaction", "Mark the selected text as a pending redaction; nothing is removed until it is applied."),
         Redaction(PdfCommandIds.ApplyAllRedactions, "Apply All Redactions", "Apply every pending redaction.", isDestructive: true, isSecuritySensitive: true),
         Redaction(PdfCommandIds.ClearAllRedactions, "Clear All Redactions", "Clear pending redactions without changing the PDF."),
         Redaction(PdfCommandIds.RemovePendingRedaction, "Remove Pending Redaction", "Remove one pending redaction from the queue."),
