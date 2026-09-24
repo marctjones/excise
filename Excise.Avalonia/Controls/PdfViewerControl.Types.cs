@@ -248,11 +248,21 @@ public class FormFieldEditedEventArgs : EventArgs
     public string FieldName { get; }
     public string? NewValue { get; }
     public int PageNumber { get; }
+
+    /// <summary>The value the field held before this edit (null if it was empty); what Undo restores.</summary>
+    public string? OldValue { get; }
+
     public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber)
+        : this(fieldName, newValue, pageNumber, oldValue: null)
+    {
+    }
+
+    public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber, string? oldValue)
     {
         FieldName = fieldName;
         NewValue = newValue;
         PageNumber = pageNumber;
+        OldValue = oldValue;
     }
 }
 

@@ -1191,6 +1191,7 @@ public partial class PdfViewerControl
             if (container.DataContext is not PdfPageSlot slot) continue;
             realized.Add(slot);
             if (slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) continue;
+            SyncContinuousSlotFormFields(slot);
 
             var cells = RequiredTileCells(
                 slot.DisplayWidth, slot.DisplayHeight, slot.TopDip,
@@ -1220,6 +1221,8 @@ public partial class PdfViewerControl
             {
                 if (slot.Bitmap != null && !realized.Contains(slot))
                     slot.ClearComposite();
+                if (slot.FormFieldControls.Count > 0 && !realized.Contains(slot))
+                    ClearContinuousFormFields(slot);
             }
             RefreshContinuousByteMirrors();
         }
@@ -2199,6 +2202,19 @@ public sealed class PdfPageSlot : INotifyPropertyChanged
     /// selection gesture; empty when nothing on this page is selected.
     /// </summary>
     internal System.Collections.ObjectModel.ObservableCollection<PdfSelectionHighlight> SelectionRects { get; } = new();
+
+    /// <summary>
+    /// The fillable AcroForm inputs for this page, positioned in page-local DIPs
+    /// (#1807). Filled only while the slot is realized and emptied when it
+    /// scrolls away, so a 400-page form never holds 400 pages of text boxes.
+    /// </summary>
+    internal System.Collections.ObjectModel.ObservableCollection<global::Avalonia.Controls.Control> FormFieldControls { get; } = new();
+
+    /// <summary>Zoom the current <see cref="FormFieldControls"/> were laid out for; NaN = none built.</summary>
+    internal double FormFieldsBuiltForZoom { get; set; } = double.NaN;
+
+    /// <summary>Cheap identity of the field set the controls were built from, to notice a changed page.</summary>
+    internal int FormFieldsSignature { get; set; }
 
     internal double TopDip { get => _topDip; private set => Set(ref _topDip, value); }
     public double DisplayWidth { get => _displayWidth; private set => Set(ref _displayWidth, value); }

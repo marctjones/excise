@@ -1028,4 +1028,15 @@ public partial class MainWindowViewModel
     /// <summary>Restore the persisted palette preference (called by the main window at startup).</summary>
     internal void ApplyAnnotationPalettePreference(bool visible) =>
         IsAnnotationPaletteVisible = visible;
+    /// <summary>
+    /// Right-click ▸ Redact on a text selection (#1659): the selection's page area becomes
+    /// a pending redaction through the same path a drawn rectangle takes, so the engine, the
+    /// pending list and the apply-all step are shared, not forked.
+    /// </summary>
+    private Task RedactSelectionAsync()
+    {
+        if (HasTextSelection && CurrentTextSelectionPageArea is { } area)
+            MarkRedactionPageArea(area);
+        return Task.CompletedTask;
+    }
 }

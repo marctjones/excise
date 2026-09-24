@@ -65,8 +65,8 @@
         <!-- Continuous (reading) view: a vertically-scrolling, render-virtualized
              stack of all pages. Shown only when ViewMode=Continuous; hidden (and
              not measured) otherwise so the single-page ScrollViewer above owns
-             the viewport. No editing overlays here by design — editing always
-             happens in single-page mode (#371). -->
+             the viewport. Form fields are fillable here (#1807); other editing
+             still happens in single-page mode (#371). -->
         <ScrollViewer Name="ContinuousScrollViewer"
                       IsVisible="False"
                       HorizontalScrollBarVisibility="Auto"
@@ -153,6 +153,19 @@
                                                        Fill="#603399FF" />
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <!-- Fillable AcroForm inputs (#1807), positioned in
+                                     page-local DIPs like the selection rects above but
+                                     hit-testable so a field can take focus. The items are
+                                     real controls, so each is its own container and
+                                     carries its Canvas.Left/Top. Empty except on realized
+                                     pages of a form. -->
+                                <ItemsControl ItemsSource="{Binding FormFieldControls}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Canvas />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
                                 </ItemsControl>
                             </Panel>
                         </Border>

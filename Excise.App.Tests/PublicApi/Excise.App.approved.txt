@@ -788,6 +788,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? FindNextCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? FindPreviousCommand { get; }
         public Excise.Core.Document.PdfFieldType FormAuthoringFieldType { get; set; }
+        public System.Func<int, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>> FormFieldsForPage { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> GoToNextPendingTypewriterEditCommand { get; }
         public ReactiveUI.ReactiveCommand<int, System.Reactive.Unit> GoToPageCommand { get; }
         public bool HasAttachments { get; }
@@ -863,6 +864,7 @@ namespace Excise.App.ViewModels
         public System.Collections.ObjectModel.ObservableCollection<string> RecentFiles { get; set; }
         public int RedactAnnotationCount { get; }
         public string? RedactAnnotationNotice { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RedactSelectionCommand { get; }
         public bool RedactionKeepAttachments { get; set; }
         public Excise.Core.Text.Segmentation.RedactionProfile RedactionProfile { get; set; }
         public bool RedactionWholeWord { get; set; }
@@ -1028,6 +1030,7 @@ namespace Excise.App.ViewModels
                 "Y"})] System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>> strokes, int pageNumber) { }
         public void OnFormFieldEditRejected(string fieldName, string message) { }
         public void OnFormFieldEdited(string fieldName, string? newValue) { }
+        public void OnFormFieldEdited(string fieldName, string? newValue, string? oldValue, bool recordUndo) { }
         public void OnFormFieldRectDrawn(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
         public System.Threading.Tasks.Task OnShapeAnnotationRectDrawnAsync(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
         public void OnTypewriterTextBoundsChanged(System.Guid operationId, Excise.Core.Document.PdfRectangle rect, int pageNumber) { }

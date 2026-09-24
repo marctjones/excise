@@ -462,6 +462,31 @@ public partial class MainWindowViewModel
     }
 
     /// <summary>
+    /// AcroForm fields of any page by 1-based number. Bound to
+    /// PdfViewerControl.PageFormFieldsProvider so the continuous view (the
+    /// default) can offer every visible page's fields, not just the current
+    /// one (#1807). A stable delegate: rebinding it would rebuild every slot.
+    /// </summary>
+    public Func<int, IReadOnlyList<PdfField>> FormFieldsForPage =>
+        _formFieldsForPage ??= GetFormFieldsForPage;
+
+    private Func<int, IReadOnlyList<PdfField>>? _formFieldsForPage;
+
+    private IReadOnlyList<PdfField> GetFormFieldsForPage(int pageNumber)
+    {
+        if (_pdfCoreDocument == null || pageNumber < 1 || pageNumber > TotalPages)
+            return Array.Empty<PdfField>();
+        try
+        {
+            return _pdfCoreDocument.GetPage(pageNumber).GetFormFields();
+        }
+        catch
+        {
+            return Array.Empty<PdfField>();
+        }
+    }
+
+    /// <summary>
     /// Called by MainWindow when PdfViewerControl raises FormFieldEdited.
     /// The viewer has already mutated the field value via PdfField.SetValue,
     /// so all that remains is to mark the document dirty so the Save command
@@ -469,7 +494,12 @@ public partial class MainWindowViewModel
     /// underlying bitmap is left as-is (the user sees the text in the input
     /// box, not a rasterized appearance, until they save and re-open).
     /// </summary>
-    public void OnFormFieldEdited(string fieldName, string? newValue)
+    public void OnFormFieldEdited(string fieldName, string? newValue) =>
+        OnFormFieldEdited(fieldName, newValue, oldValue: null, recordUndo: false);
+
+    /// <param name="oldValue">What the field held before; what Undo puts back.</param>
+    /// <param name="recordUndo">True when <paramref name="oldValue"/> is known, so the edit joins the undo stack (#1660).</param>
+    public void OnFormFieldEdited(string fieldName, string? newValue, string? oldValue, bool recordUndo)
     {
         if (_pdfCoreDocument == null) return;
 
@@ -483,6 +513,13 @@ public partial class MainWindowViewModel
         SyncFormFieldValueToServiceDocument(fieldName, newValue);
         FileState.FormFieldEditsCount++;
         NotifyFormDirtyStateChanged();
+        if (recordUndo)
+        {
+            _history.Push(
+                $"Edit field '{Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(fieldName)}'",
+                undo: () => ApplyFormFieldValueAsync(fieldName, oldValue, dirtyDelta: -1),
+                redo: () => ApplyFormFieldValueAsync(fieldName, newValue, dirtyDelta: +1));
+        }
         _logger.LogInformation("Form field '{Field}' set to '{Value}'",
             Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(fieldName), newValue);
     }
@@ -614,6 +651,21 @@ public partial class MainWindowViewModel
         _toastService.ShowError(
             $"Value for '{shownName}' was NOT saved",
             message);
+    }
+
+    /// <summary>
+    /// Undo/redo of a field edit: write the value into the save document, then rebuild
+    /// the viewer's document from it so the overlay shows what will be saved. Goes
+    /// through the sync helper, never <see cref="OnFormFieldEdited(string, string?, string?, bool)"/>,
+    /// so replay cannot re-enter the history.
+    /// </summary>
+    private async Task ApplyFormFieldValueAsync(string fieldName, string? value, int dirtyDelta)
+    {
+        SyncFormFieldValueToServiceDocument(fieldName, value);
+        FileState.FormFieldEditsCount = Math.Max(0, FileState.FormFieldEditsCount + dirtyDelta);
+        NotifyFormDirtyStateChanged();
+        RequestPreserveReadingPosition();
+        await RefreshAfterDocumentMutationAsync();
     }
 
     private void SyncFormFieldValueToServiceDocument(string fieldName, string? value)

@@ -295,6 +295,21 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// Supplies the AcroForm fields of ANY page by 1-based number. The continuous
+    /// view shows many pages at once, so the current-page-only
+    /// <see cref="FormFields"/> cannot feed it (#1807); each realized page slot
+    /// asks for its own page's fields. Null leaves the continuous view read-only.
+    /// </summary>
+    public static readonly StyledProperty<Func<int, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>>?> PageFormFieldsProviderProperty =
+        AvaloniaProperty.Register<PdfViewerControl, Func<int, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>>?>(nameof(PageFormFieldsProvider));
+
+    public Func<int, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>>? PageFormFieldsProvider
+    {
+        get => GetValue(PageFormFieldsProviderProperty);
+        set => SetValue(PageFormFieldsProviderProperty, value);
+    }
+
+    /// <summary>
     /// Highlights for hidden-behind-overlay text to paint on top of the
     /// rendered page. Bound to a VM observable collection; whenever it
     /// changes, <see cref="RefreshHiddenTextOverlays"/> redraws them.
@@ -562,7 +577,12 @@ public partial class PdfViewerControl : UserControl
         AnnotationsProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
             control.RedrawAnnotationsLayer());
         FormFieldsProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
-            control.RedrawFormFieldsLayer());
+        {
+            control.RedrawFormFieldsLayer();
+            control.RefreshContinuousFormFieldsIfChanged();
+        });
+        PageFormFieldsProviderProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
+            control.RefreshContinuousFormFieldsIfChanged());
         HiddenTextHighlightsProperty.Changed.AddClassHandler<PdfViewerControl>((control, e) =>
             control.OnHiddenTextHighlightsChanged(
                 e.OldValue as System.Collections.Generic.IEnumerable<HiddenTextHighlight>,
@@ -895,12 +915,7 @@ public partial class PdfViewerControl : UserControl
         var fields = FormFields;
         if (fields == null || Document == null || fields.Count == 0) return;
 
-        var orderedFields = fields
-            .Where(field => field.Rect.HasValue)
-            .OrderByDescending(field => field.Rect!.Value.Top)
-            .ThenBy(field => field.Rect!.Value.Left)
-            .ThenBy(field => field.FullName, StringComparer.Ordinal)
-            .ToList();
+        var orderedFields = OrderFormFieldsForTabbing(fields);
 
         for (var tabIndex = 0; tabIndex < orderedFields.Count; tabIndex++)
         {
@@ -911,22 +926,36 @@ public partial class PdfViewerControl : UserControl
             double dipW = Math.Max(viewerRect.Width, 12);
             double dipH = Math.Max(viewerRect.Height, 12);
 
-            Control? input = field.FieldType switch
-            {
-                Excise.Core.Document.PdfFieldType.Text   => CreateTextFieldInput(field, dipW, dipH),
-                Excise.Core.Document.PdfFieldType.Choice => CreateChoiceFieldInput(field, dipW, dipH),
-                Excise.Core.Document.PdfFieldType.Button => CreateButtonFieldInput(field, dipW, dipH),
-                _ => null,
-            };
+            var input = BuildFormFieldInput(field, dipW, dipH, tabIndex);
             if (input == null) continue;
 
-            input.Width = dipW;
-            input.Height = dipH;
-            ApplyFormFieldChrome(input, field, tabIndex);
             Canvas.SetLeft(input, viewerRect.X);
             Canvas.SetTop(input, viewerRect.Y);
             layer.Children.Add(input);
         }
+    }
+
+    /// <summary>
+    /// The one place a field becomes an input control, shared by the single-page
+    /// overlay and the continuous view's per-slot overlay (#1807) so the two can
+    /// never fill a field differently. Null for a field type with no input.
+    /// </summary>
+    private Control? BuildFormFieldInput(
+        Excise.Core.Document.PdfField field, double dipW, double dipH, int tabIndex)
+    {
+        Control? input = field.FieldType switch
+        {
+            Excise.Core.Document.PdfFieldType.Text   => CreateTextFieldInput(field, dipW, dipH),
+            Excise.Core.Document.PdfFieldType.Choice => CreateChoiceFieldInput(field, dipW, dipH),
+            Excise.Core.Document.PdfFieldType.Button => CreateButtonFieldInput(field, dipW, dipH),
+            _ => null,
+        };
+        if (input == null) return null;
+
+        input.Width = dipW;
+        input.Height = dipH;
+        ApplyFormFieldChrome(input, field, tabIndex);
+        return input;
     }
 
     private TextBox CreateTextFieldInput(Excise.Core.Document.PdfField field, double w, double h)
@@ -948,6 +977,11 @@ public partial class PdfViewerControl : UserControl
 
         // Commit on Enter (single-line), Ctrl+Enter (multiline), or focus loss.
         // Escape restores the last committed value.
+        //
+        // Focus loss commits only text the user changed since the last commit.
+        // Without that, Undo (which rebuilds the page and so blurs the old box)
+        // re-applied the box's stale text and undid the undo (#1660).
+        var committedText = box.Text ?? string.Empty;
         box.KeyDown += (_, e) =>
         {
             if (e.Key == Key.Enter && !field.IsMultiline)
@@ -963,6 +997,7 @@ public partial class PdfViewerControl : UserControl
             else if (e.Key == Key.Escape)
             {
                 box.Text = field.Value ?? string.Empty;
+                committedText = box.Text ?? string.Empty;
                 e.Handled = true;
             }
         };
@@ -972,8 +1007,11 @@ public partial class PdfViewerControl : UserControl
         // A refused value must not stay on screen as if it had been stored.
         void CommitTextBox()
         {
+            if (string.Equals(box.Text ?? string.Empty, committedText, StringComparison.Ordinal))
+                return;
             if (!CommitFieldEdit(field, box.Text))
                 box.Text = field.Value ?? string.Empty;
+            committedText = box.Text ?? string.Empty;
         }
     }
 
@@ -1088,6 +1126,7 @@ public partial class PdfViewerControl : UserControl
     {
         // Skip a no-op assignment so we don't fire spurious re-render events.
         if (string.Equals(field.Value, newValue, StringComparison.Ordinal)) return true;
+        var oldValue = field.Value;
         try
         {
             field.SetValue(newValue);
@@ -1101,8 +1140,10 @@ public partial class PdfViewerControl : UserControl
             return false;
         }
 
+        // The field's own page: in continuous view (#1807) several pages are
+        // editable at once, so CurrentPage is only the scroll anchor.
         FormFieldEdited?.Invoke(this,
-            new FormFieldEditedEventArgs(field.FullName, newValue, CurrentPage));
+            new FormFieldEditedEventArgs(field.FullName, newValue, field.PageNumber ?? CurrentPage, oldValue));
         return true;
     }
 

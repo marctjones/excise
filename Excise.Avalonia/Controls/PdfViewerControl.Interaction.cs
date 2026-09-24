@@ -18,12 +18,17 @@ public partial class PdfViewerControl
 
     private void OnInteractionLayerPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (IsTypewriterOverlayEvent(e))
+        if (IsTypewriterOverlayEvent(e) || IsFormFieldOverlayEvent(e))
             return;
 
         // Middle-button is reserved for pan (#827, handled in the dedicated pan
         // handlers). Never let it start a redaction/selection drag.
         if (e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed)
+            return;
+
+        // Right-press opens the context menu (#1659); it must not begin a new
+        // selection, which would clear the very selection the menu acts on.
+        if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed)
             return;
 
         // First chance: internal-link click in any mode (including None).
@@ -176,7 +181,7 @@ public partial class PdfViewerControl
 
     private void OnInteractionLayerPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (IsTypewriterOverlayEvent(e))
+        if (IsTypewriterOverlayEvent(e) || IsFormFieldOverlayEvent(e))
             return;
 
         // #1794: a sticky-note click/drag candidate is staged on the press
@@ -276,7 +281,7 @@ public partial class PdfViewerControl
 
     private void OnInteractionLayerPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        if (IsTypewriterOverlayEvent(e))
+        if (IsTypewriterOverlayEvent(e) || IsFormFieldOverlayEvent(e))
             return;
 
         // #1794: resolve the click-vs-drag candidate staged on press. This is

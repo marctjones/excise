@@ -32,6 +32,16 @@ public partial class MainWindowViewModel
             return;
         }
 
+        MarkRedactionPageArea(pageArea);
+        CurrentRedactionPageArea = null;
+    }
+
+    /// <summary>
+    /// The mark itself, shared by the drawn rectangle (which needs redaction mode) and
+    /// the right-click Redact on a text selection (#1659, which does not).
+    /// </summary>
+    private void MarkRedactionPageArea(PdfPageRect pageArea)
+    {
         var mark = _redactionWorkflowService.CaptureMark(
             new RedactionMarkRequest(_currentFilePath, pageArea));
         // #1205: extracted page text echoed into a log line.
@@ -45,8 +55,6 @@ public partial class MainWindowViewModel
 
         _logger.LogInformation("Redaction marked. Total pending: {Count}", RedactionWorkflow.PendingCount);
         _logger.LogInformation("DEBUG: RedactionWorkflow.PendingRedactions.Count = {Count}", RedactionWorkflow.PendingRedactions.Count);
-
-        CurrentRedactionPageArea = null;
     }
 
     /// <summary>

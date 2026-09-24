@@ -1744,7 +1744,7 @@ public partial class MainWindow : Window
     private void OnFormFieldEdited(object? sender, FormFieldEditedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel) return;
-        viewModel.OnFormFieldEdited(e.FieldName, e.NewValue);
+        viewModel.OnFormFieldEdited(e.FieldName, e.NewValue, e.OldValue, recordUndo: true);
     }
 
     private void OnFormFieldEditRejected(object? sender, FormFieldEditRejectedEventArgs e)

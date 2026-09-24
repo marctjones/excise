@@ -2445,6 +2445,8 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error saving document to: {FilePath}", filePath);
+            // #1803: a failed Save As was silent; plain Save already toasts.
+            _toastService.ShowError("Failed to save document", ex.Message);
         }
 
         await Task.CompletedTask;

@@ -150,6 +150,9 @@ public partial class MainWindowViewModel
     /// <summary>#1308 — apply a digital signature to the saved file.</summary>
     public ReactiveCommand<Unit, Unit> SignDocumentCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> CopyTextCommand { get; private set; } = null!;
+
+    /// <summary>Mark the selected text as a pending redaction (the right-click menu's Redact, #1659).</summary>
+    public ReactiveCommand<Unit, Unit> RedactSelectionCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ZoomInCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ZoomOutCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> NextPageCommand { get; private set; } = null!;
@@ -311,6 +314,7 @@ public partial class MainWindowViewModel
         ToggleRevealHiddenTextCommand = ReactiveCommand.Create(() => { RevealHiddenText = !RevealHiddenText; });
         ToggleRevealRasterizedHiddenCommand = ReactiveCommand.Create(() => { RevealRasterizedHidden = !RevealRasterizedHidden; });
         CopyTextCommand = ReactiveCommand.CreateFromTask(CopyTextAsync);
+        RedactSelectionCommand = ReactiveCommand.CreateFromTask(RedactSelectionAsync);
         ZoomInCommand = ReactiveCommand.Create(ZoomIn);
         ZoomOutCommand = ReactiveCommand.Create(ZoomOut);
         NextPageCommand = ReactiveCommand.CreateFromTask(NextPageAsync);

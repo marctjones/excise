@@ -35,8 +35,10 @@ namespace Excise.Avalonia.Controls
     public class FormFieldEditedEventArgs : System.EventArgs
     {
         public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber) { }
+        public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber, string? oldValue) { }
         public string FieldName { get; }
         public string? NewValue { get; }
+        public string? OldValue { get; }
         public int PageNumber { get; }
     }
     public class FormFieldRectDrawnEventArgs : System.EventArgs
@@ -128,6 +130,7 @@ namespace Excise.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<bool> HighlightFormFieldsProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.InteractionMode> InteractionModeProperty;
         public static readonly Avalonia.StyledProperty<bool> IsLoadingProperty;
+        public static readonly Avalonia.StyledProperty<System.Func<int, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>>?> PageFormFieldsProviderProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.PathCaptureKind> PathCaptureKindProperty;
         public static readonly Avalonia.StyledProperty<Excise.Core.Text.ReadingOrderStrategy> ReadingOrderStrategyProperty;
         public static readonly Avalonia.StyledProperty<long> RenderVersionProperty;
@@ -154,6 +157,7 @@ namespace Excise.Avalonia.Controls
         public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; set; }
         public bool IsLoading { get; }
         public int MostVisiblePage { get; }
+        public System.Func<int, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>>? PageFormFieldsProvider { get; set; }
         public Excise.Avalonia.Controls.PathCaptureKind PathCaptureKind { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
         public long RenderVersion { get; set; }

@@ -1714,6 +1714,7 @@
                                                InteractionMode="{Binding InteractionMode}"
                                                HiddenTextHighlights="{Binding HiddenTextHighlights}"
                                                FormFields="{Binding CurrentPageFormFields}"
+                                               PageFormFieldsProvider="{Binding FormFieldsForPage}"
                                                TypewriterTextOperations="{Binding TypewriterTextOperations}"
                                                RedactionDrawn="OnRedactionDrawn"
                                                TextSelected="OnTextSelected"
@@ -1735,7 +1736,38 @@
                                                TypewriterTextEdited="OnTypewriterTextEdited"
                                                TypewriterTextBoundsChanged="OnTypewriterTextBoundsChanged"
                                                TypewriterTextDeleted="OnTypewriterTextDeleted"
-                                               PageChanged="OnPageChanged" />
+                                               PageChanged="OnPageChanged">
+                        <!-- #1659: right-click (two-finger click or Control-click on a
+                             Mac trackpad). Selection actions show only while text is
+                             selected; page actions act on the page under the viewport
+                             (#1650). Each item is the SAME command the menu bar uses, so
+                             /P permission gating and its reason strings are shared. -->
+                        <controls:PdfViewerControl.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="_Copy" Command="{Binding CopyTextCommand}"
+                                          IsVisible="{Binding HasTextSelection}"/>
+                                <MenuItem Header="_Highlight" Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                                          IsVisible="{Binding HasTextSelection}"/>
+                                <MenuItem Header="_Underline" Command="{Binding AddUnderlineAnnotationFromSelectionCommand}"
+                                          IsVisible="{Binding HasTextSelection}"/>
+                                <MenuItem Header="Strike_through" Command="{Binding AddStrikeOutAnnotationFromSelectionCommand}"
+                                          IsVisible="{Binding HasTextSelection}"/>
+                                <MenuItem Header="S_quiggly" Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
+                                          IsVisible="{Binding HasTextSelection}"/>
+                                <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
+                                          IsVisible="{Binding HasTextSelection}"/>
+                                <MenuItem Header="_Redact Selection" Command="{Binding RedactSelectionCommand}"
+                                          IsVisible="{Binding HasTextSelection}"/>
+                                <Separator IsVisible="{Binding HasTextSelection}"/>
+                                <MenuItem Header="Rotate _Left 90°" Command="{Binding RotatePageLeftCommand}"/>
+                                <MenuItem Header="Rotate _Right 90°" Command="{Binding RotatePageRightCommand}"/>
+                                <MenuItem Header="_Extract This Page..." Command="{Binding ExtractCurrentPageCommand}"/>
+                                <MenuItem Header="E_xport This Page..." Command="{Binding ExportCurrentPageCommand}"/>
+                                <Separator/>
+                                <MenuItem Header="Remove This _Page" Command="{Binding RemoveCurrentPageCommand}"/>
+                            </ContextMenu>
+                        </controls:PdfViewerControl.ContextMenu>
+                    </controls:PdfViewerControl>
 
                     <!-- #1788: the interactive sticky-note card. An overlay in
                          the SAME window as the viewer (not a second OS Window)
