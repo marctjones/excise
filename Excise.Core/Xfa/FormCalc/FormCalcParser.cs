@@ -134,7 +134,20 @@ internal sealed class FormCalcParser
     private FcStmt ParseIf()
     {
         Advance();
-        var condition = ParseParenthesised();
+        Expect(LeftParen, "'('");
+        _nesting++;
+        var condition = ParseExpression();
+        if (_current.Kind == Comma)
+        {
+            // Not the statement at all: If(cond, a, b), the function, used as a statement.
+            var args = new List<FcExpr> { condition };
+            while (Accept(Comma)) args.Add(ParseExpression());
+            _nesting--;
+            Expect(RightParen, "')'");
+            return new FcExprStmt(new FcCall(new FcName("If"), args));
+        }
+        _nesting--;
+        Expect(RightParen, "')'");
         Expect(Then, "'then'");
         var then = ParseBlock();
         IReadOnlyList<FcStmt>? otherwise = null;
@@ -398,7 +411,15 @@ internal sealed class FormCalcParser
             {
                 case Number: return new FcNumber(Advance().Number);
                 case FormCalcTokenKind.String: return new FcString(Advance().Text);
-                case Null: Advance(); return new FcNull();
+                case Null:
+                    // Null is a keyword, and also a function with no arguments: Null().
+                    Advance();
+                    return _current.Kind == LeftParen ? new FcName("Null") : new FcNull();
+                case If when true:
+                    // "if" starts a statement, but in an expression If(cond, a, b) is the function.
+                    Advance();
+                    if (_current.Kind != LeftParen) throw Error("Expected '(' after If");
+                    return new FcName("If");
                 case This: Advance(); return new FcThis();
                 case Identifier: return new FcName(Advance().Text);
                 case LeftParen:
