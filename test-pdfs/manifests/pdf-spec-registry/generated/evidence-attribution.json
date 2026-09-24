@@ -7794,6 +7794,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_LeavesNoTraceOfTheFieldInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -8553,15 +8560,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -21220,6 +21218,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_LeavesNoTraceOfTheFieldInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -21982,15 +21987,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -22724,6 +22720,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_LeavesNoTraceOfTheFieldInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23486,15 +23489,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -24189,6 +24183,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_LeavesNoTraceOfTheFieldInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -24951,15 +24952,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99604,6 +99596,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_TakesTheFieldOutOfTheFormAndThePage_AndLeavesTheOtherAlone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_LeavesNoTraceOfTheFieldInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ReportsFalseForAFieldThatIsNotThere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ThenAddAgain_RestoresAWorkingField",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100665,38 +100685,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesOrphanedMergedWidgetValue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesLinkedFieldValue_WhenWidgetHasNoP",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -101076,6 +101064,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_TakesTheFieldOutOfTheFormAndThePage_AndLeavesTheOtherAlone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_LeavesNoTraceOfTheFieldInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ReportsFalseForAFieldThatIsNotThere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ThenAddAgain_RestoresAWorkingField",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -102137,38 +102153,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesOrphanedMergedWidgetValue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesLinkedFieldValue_WhenWidgetHasNoP",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -102569,6 +102553,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_TakesTheFieldOutOfTheFormAndThePage_AndLeavesTheOtherAlone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_LeavesNoTraceOfTheFieldInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ReportsFalseForAFieldThatIsNotThere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ThenAddAgain_RestoresAWorkingField",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103630,38 +103642,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesOrphanedMergedWidgetValue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesLinkedFieldValue_WhenWidgetHasNoP",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -104002,6 +103982,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_TakesTheFieldOutOfTheFormAndThePage_AndLeavesTheOtherAlone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_LeavesNoTraceOfTheFieldInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ReportsFalseForAFieldThatIsNotThere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ThenAddAgain_RestoresAWorkingField",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -105063,38 +105071,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesOrphanedMergedWidgetValue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesLinkedFieldValue_WhenWidgetHasNoP",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_RemovesItFromTheSavedBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/AuthoredWidgetAppearanceRedactionTests.cs::AuthoredWidgetAppearanceRedactionTests.RedactingAnAuthoredFieldValue_IsNotReadableByAnIndependentExtractor",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -106362,6 +106338,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_LeavesNoTraceOfTheFieldInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -107120,15 +107103,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -107814,6 +107788,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_LeavesNoTraceOfTheFieldInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -108572,15 +108553,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -113293,8 +113265,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7646,
-    "testMethodsWithCapabilityCandidate": 4869,
+    "testMethods": 7684,
+    "testMethodsWithCapabilityCandidate": 4886,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

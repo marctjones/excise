@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "6c0908f3a8dfb399e14191aca496dce48ba336ca39c60c744a0bf0368b26bf91",
+  "sourceFingerprint": "89b69a1b8320aeaef68b9089fd8d3e1584a2148877ad6ac15f378d23104b6ae1",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -10611,6 +10611,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.SelectAll.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.SelectAll.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Avalonia/Controls/PdfViewerControl.SinglePagePlaceholder.cs",
       "path": "Excise.Avalonia/Controls/PdfViewerControl.SinglePagePlaceholder.cs",
       "kind": "source-file",
@@ -10746,7 +10756,7 @@
     }
   ],
   "summary": {
-    "records": 535,
+    "records": 536,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 19,
@@ -10754,7 +10764,7 @@
       "fonts": 31,
       "forms": 9,
       "images": 32,
-      "product-integration-general": 304,
+      "product-integration-general": 305,
       "redaction": 81,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 20,
@@ -10833,7 +10843,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 20,
       "pdfe.product.security.signature-and-permission-warning:write": 20
     },
-    "fallbackRecords": 304,
+    "fallbackRecords": 305,
     "allRecordsMapped": true
   }
 }

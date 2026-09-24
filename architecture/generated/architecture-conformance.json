@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "08a7366db099d8e607713c1ad8b3b67edaeca40d",
+  "sourceRevision": "bf92b622ae79143a2b7ececede2615cb7df693f1",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 8023,
+    "retainedSymbols": 8053,
     "observedComponentDependencies": 73,
     "declaredDependencies": 69,
     "acceptedExceptions": 1,
@@ -24,28 +24,28 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 466,
+      "references": 469,
       "typeDependencyCount": 31,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Views.MainWindow",
           "target": "Excise.App.ViewModels.MainWindowViewModel",
-          "references": 174
+          "references": 176
         }
       ]
     },
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 746,
+      "references": 764,
       "typeDependencyCount": 81,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.App.Services.PdfDocumentService",
-          "references": 122
+          "references": 128
         }
       ]
     },
@@ -66,14 +66,14 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 467,
+      "references": 480,
       "typeDependencyCount": 29,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 89
+          "references": 91
         }
       ]
     },
@@ -94,14 +94,14 @@
     {
       "source": "avalonia",
       "target": "core-text",
-      "references": 50,
+      "references": 52,
       "typeDependencyCount": 7,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Text.TextSelectionEngine",
-          "references": 24
+          "references": 26
         }
       ]
     },
@@ -444,8 +444,8 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1473,
-      "typeDependencyCount": 218,
+      "references": 1486,
+      "typeDependencyCount": 219,
       "classification": "declared",
       "evidence": [
         {

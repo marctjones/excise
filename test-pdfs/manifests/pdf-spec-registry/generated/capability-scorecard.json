@@ -2016,8 +2016,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7646,
-    "testMethodsWithCapabilityCandidate": 4869,
+    "testMethods": 7684,
+    "testMethodsWithCapabilityCandidate": 4886,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   },
