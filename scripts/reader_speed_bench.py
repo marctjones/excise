@@ -57,6 +57,9 @@ ROOT = rb.ROOT
 PROBE = ROOT / "tools/screen-probe/bin/screen-probe"
 SPEED_DOCS = ["irs", "altona", "scan"]
 PAGE_TURNS = 20
+# --resources: sample footprint/RSS/CPU in the quiet gaps BETWEEN timed events (never inside one), so the
+# process spawns of `ps` and `footprint` cannot land in a measured window. Off by default.
+RESOURCES = False
 TURN_GAP_S = 1.5
 BURST = 10
 BURST_GAP_S = 0.05
@@ -228,6 +231,31 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
     pid, before, t0 = rb.launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env=extra_env)
     tracker = rb.Tracker(app, pid, before, t0)
     probe = None
+    log["resources"] = []
+
+    def mark(label):
+        """One resource sample, taken between events. Footprint is summed over every process the app owns."""
+        if not RESOURCES:
+            return
+        try:
+            rec = tracker.sample(label)
+        except Exception as e:                      # a sampler must not kill a run
+            log.setdefault("resourceErrors", []).append(f"{label}: {e}")
+            return
+        procs = list(rec["procs"].values())
+        log["resources"].append({
+            "label": label, "t": rec["t"], "procs": len(procs),
+            "fpMB": round(sum((q["fp"] or 0) for q in procs) / 1048576, 1),
+            "rssMB": round(sum(q["rss"] for q in procs) / 1048576, 1),
+            "cpuS": round(tracker.cpu_total(), 2)})
+
+    def gap(seconds, label):
+        """Sleep `seconds`; with --resources, sample ~1.2 s before the next input, not right after the last event."""
+        if RESOURCES and seconds > 1.5:
+            time.sleep(seconds - 1.2); mark(label); time.sleep(1.2)
+        else:
+            time.sleep(seconds)
+
     try:
         # Cold launch: time until a window exists, then until its content settles.
         deadline = time.time() + 60
@@ -242,6 +270,7 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
         log["phases"]["launch"]["settledTick"] = mach_now()
         if probe:
             probe.stop(); probe = None
+        mark("open-settled")
 
         rb.set_window(pid, cfg["window"])
         rb.wait_settled(tracker, cfg["settle"])
@@ -278,19 +307,21 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
         if expect is not None and page != expect:
             log["failures"].append(f"after turns: expected page {expect}, read {page!r}")
         log["events"].append({"kind": "marker", "what": "screenshot", "tick": mach_now()})
+        if RESOURCES:
+            mark("after-turns"); time.sleep(1.2)
 
         log["events"].append({"kind": "home", "tick": post_key(115)})
-        time.sleep(3.0)
+        gap(3.0, "after-home")
         burst_ticks = []
         for i in range(min(BURST, doc["pages"] - 1)):
             burst_ticks.append(post_key(nk["keyCode"], nk["modifiers"]))
             time.sleep(BURST_GAP_S)
         log["events"].append({"kind": "burst", "tick": burst_ticks[0], "ticks": burst_ticks})
-        time.sleep(3.0)
+        gap(3.0, "after-burst")
         log["events"].append({"kind": "end", "tick": post_key(119)})
-        time.sleep(3.0)
+        gap(3.0, "after-end")
         log["events"].append({"kind": "revisit", "tick": post_key(115)})
-        time.sleep(3.0)
+        gap(3.0, "after-revisit")
 
         # Steady scroll over the middle of the page area.
         wx, wy = cfg["window"]["x"], cfg["window"]["y"]
@@ -303,6 +334,7 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
             time.sleep(FRAME_S)
         log["events"].append({"kind": "scroll", "tick": scroll_ticks[0], "lastTick": scroll_ticks[-1]})
         time.sleep(2.5)
+        mark("after-scroll")
         rb.park_pointer()
         log["events"].append({"kind": "marker", "what": "end", "tick": mach_now()})
     except (rb.RunFailed, RuntimeError, subprocess.TimeoutExpired) as e:
@@ -604,7 +636,10 @@ def summarize(out):
             continue
         notes += [f"- {r['app']} {r['doc']} r{r['repeat']}: {f}" for f in r["failures"]]
         keyed.setdefault((r["doc"], r["app"]), []).append(r)
-    for doc in [d for d in SPEED_DOCS if any(k[0] == d for k in keyed)]:
+    # Every document that has runs, the standard three first: a hardcoded list silently dropped any
+    # extra --docs entry (plans-x20's runs were recorded and never summarized).
+    present = list(dict.fromkeys(k[0] for k in keyed))
+    for doc in [d for d in SPEED_DOCS if d in present] + [d for d in present if d not in SPEED_DOCS]:
         present = [a for a in ("excise", "preview", "chrome", "acrobat") if (doc, a) in keyed]
         if not present:
             continue
@@ -715,8 +750,35 @@ def calibrate(out, cfg, docs, excise_app, repeats):
 
 # ------------------------------------------------------------------ main
 
+def resources_report(out):
+    """Footprint (MB, all owned processes), peak, and CPU seconds per app and document, from --resources runs."""
+    rows = {}
+    for f in sorted(out.glob("*/*/r*/run.json")):
+        d = json.loads(f.read_text())
+        res = d.get("resources") or []
+        if res:
+            rows.setdefault((d["doc"], d["app"]), []).append(res)
+    if not rows:
+        return
+    labels = ["open-settled", "after-turns", "after-home", "after-burst", "after-end", "after-revisit", "after-scroll"]
+    print("\n## Resources (footprint MB summed over the app's processes; CPU seconds are cumulative)\n")
+    print("| doc | app | runs | " + " | ".join(labels) + " | peak MB | CPU s total | CPU s during interaction |")
+    print("|---|---|---:|" + "---:|" * (len(labels) + 3))
+    for (doc, app), runs in sorted(rows.items()):
+        def med(key, label):
+            v = [x[key] for r in runs for x in r if x["label"] == label]
+            return statistics.median(v) if v else None
+        cells = [f"{med('fpMB', l):.0f}" if med("fpMB", l) is not None else "-" for l in labels]
+        peak = statistics.median([max(x["fpMB"] for x in r) for r in runs])
+        total = statistics.median([r[-1]["cpuS"] for r in runs])
+        inter = statistics.median([r[-1]["cpuS"] - r[0]["cpuS"] for r in runs if len(r) > 1] or [0])
+        print(f"| {doc} | {app} | {len(runs)} | " + " | ".join(cells) + f" | {peak:.0f} | {total:.1f} | {inter:.1f} |")
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--resources", action="store_true",
+                    help="also sample footprint/RSS/CPU in the quiet gaps between timed events")
     ap.add_argument("--apps", default="excise,preview,chrome,acrobat")
     ap.add_argument("--docs", default=",".join(SPEED_DOCS))
     ap.add_argument("--repeats", type=int, default=3)
@@ -731,8 +793,11 @@ def main():
     ap.add_argument("--configs", help="multi-document configs to run (default: all in bench.json)")
     a = ap.parse_args()
 
+    global RESOURCES
+    RESOURCES = a.resources
     if a.analyze:
-        summarize(pathlib.Path(a.analyze).resolve()); return
+        summarize(pathlib.Path(a.analyze).resolve())
+        resources_report(pathlib.Path(a.analyze).resolve()); return
 
     cfg = json.loads(rb.CONFIG.read_text())
     apps = {k: v for k, v in cfg["apps"].items() if k in a.apps.split(",")}
@@ -764,6 +829,7 @@ def main():
             continue
         one_run(app, apps[app], docs[d], r, out, cfg, a.excise_app)
     summarize(out)
+    resources_report(out)
 
 
 def main_multi(a, cfg, apps):
