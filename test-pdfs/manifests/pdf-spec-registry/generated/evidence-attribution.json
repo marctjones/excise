@@ -10377,6 +10377,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Encryption/EncryptedSignatureContentsTests.cs::EncryptedSignatureContentsTests.EncryptedFormWithAUsageRightsSignature_OpensAndSaves",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.OpensRealEncryptedPdf_DecryptedContentIsValidPdfOperators",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11528,15 +11535,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -11841,6 +11839,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Encryption/EncryptedSignatureContentsTests.cs::EncryptedSignatureContentsTests.EncryptedFormWithAUsageRightsSignature_OpensAndSaves",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.OpensRealEncryptedPdf_DecryptedContentIsValidPdfOperators",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12992,15 +12997,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -13298,6 +13294,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Encryption/EncryptedSignatureContentsTests.cs::EncryptedSignatureContentsTests.EncryptedFormWithAUsageRightsSignature_OpensAndSaves",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.OpensRealEncryptedPdf_DecryptedContentIsValidPdfOperators",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14449,15 +14452,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -14756,6 +14750,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Encryption/EncryptedSignatureContentsTests.cs::EncryptedSignatureContentsTests.EncryptedFormWithAUsageRightsSignature_OpensAndSaves",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.OpensRealEncryptedPdf_DecryptedContentIsValidPdfOperators",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15907,15 +15908,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -109107,6 +109099,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Encryption/EncryptedSignatureContentsTests.cs::EncryptedSignatureContentsTests.EncryptedFormWithAUsageRightsSignature_OpensAndSaves",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.OpensRealEncryptedPdf_DecryptedContentIsValidPdfOperators",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -110257,15 +110256,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -110579,6 +110569,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Encryption/EncryptedSignatureContentsTests.cs::EncryptedSignatureContentsTests.EncryptedFormWithAUsageRightsSignature_OpensAndSaves",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.OpensRealEncryptedPdf_DecryptedContentIsValidPdfOperators",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -111729,15 +111726,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -112028,6 +112016,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Encryption/EncryptedSignatureContentsTests.cs::EncryptedSignatureContentsTests.EncryptedFormWithAUsageRightsSignature_OpensAndSaves",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.OpensRealEncryptedPdf_DecryptedContentIsValidPdfOperators",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -113178,15 +113173,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [],
@@ -113253,8 +113239,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7737,
-    "testMethodsWithCapabilityCandidate": 4917,
+    "testMethods": 7738,
+    "testMethodsWithCapabilityCandidate": 4918,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

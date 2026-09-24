@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1387,
-  "indexedContentSha256": "50ac53173d21222fb09b7fae7e1d30d92cef4a94addf36b024a355f59ed1a6c9",
+  "indexedFileCount": 1388,
+  "indexedContentSha256": "647174589c6c94079b1c065ac24facce54bc381753d960c4b2bcd108eb819b6e",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -2838,6 +2838,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Encryption/EncryptedSignatureContentsTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "encryption"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Filters/FilterSupportMapTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -3141,17 +3149,9 @@
             "filters",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "encryption"
-          ]
         }
       ],
-      "candidateReferenceCount": 114
+      "candidateReferenceCount": 115
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -12070,6 +12070,7 @@
           "path": "Excise.Core/Document/PdfDocumentObjectStore.cs",
           "kind": "source",
           "matchedTerms": [
+            "form",
             "streams",
             "xobjects",
             "contentstream"
@@ -64397,7 +64398,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 198
+      "candidateReferenceCount": 199
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -68831,6 +68832,7 @@
           "matchedTerms": [
             "byte",
             "dictionaries",
+            "signatures",
             "metadata"
           ]
         },
