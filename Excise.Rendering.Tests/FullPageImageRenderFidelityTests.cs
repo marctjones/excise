@@ -50,7 +50,9 @@ namespace Excise.Rendering.Tests;
 /// ⚠️ That difference is NOT observable end to end, and this file asserted the
 /// opposite from the code alone until #1438 measured it. Over nine scales in
 /// <see cref="MinificationKernel_IsTheSameForRawAndDct_MeasuredAcrossScales"/>
-/// the raw and DCT renders of the same image agree at every one. JPX stays
+/// the raw and DCT renders of the same image agree at every scale down to 50 dpi. Beyond an 8x
+/// reduction (36 and 24 dpi here) they diverge by design since #1821: the JPEG decoder now reduces
+/// in the DCT domain (area averaging), while raw stays nearest. JPX stays
 /// unmeasured -- no JPEG 2000 encoder here -- and is labelled so rather than
 /// asserted from its source.
 /// </summary>
@@ -350,19 +352,38 @@ public class FullPageImageRenderFidelityTests
                 $"dpi={dpi} out={raw.Width}x{raw.Height} raw={rawBetween} dct={dctBetween} " +
                 $"of {raw.Width * raw.Height}");
 
-            dctBetween.Should().Be(rawBetween,
-                $"at {dpi} dpi the DCT and raw/Flate renders of the SAME image must " +
-                "agree. #1438 predicted they would not - that a page renders " +
-                "differently at reduced size depending only on how it was " +
-                "compressed. Measured, they agree at every scale; if this ever " +
-                "fails, that prediction has become true and the asymmetry is real");
+            // #1821: a JPEG now decodes at the codec's own reduced scale (1/2, 1/4, 1/8), which
+            // is DCT-domain area averaging, instead of falling back to a full decode. At an 8x
+            // reduction that averages whole 8x8 blocks, and this fixture's 20-px bands straddle
+            // them, so band boundaries blend in the JPEG render while the raw render (nearest,
+            // #1403) stays hard-edged. That is the asymmetry #1438 predicted, and it is now real
+            // at this depth. It is the intended trade (averaging is what mutool, Preview and
+            // Acrobat do, and the raw path keeps nearest only for the palette-index reason).
+            // 2x and 4x reductions still agree because the band width is a multiple of both.
+            var reducedByEighth = ImageWidth / 8 >= raw.Width;
+            if (reducedByEighth)
+            {
+                dctBetween.Should().BeGreaterThanOrEqualTo(rawBetween,
+                    $"at {dpi} dpi the JPEG decoder's 1/8 DCT-domain reduction averages 8x8 " +
+                    "blocks; it can blend band boundaries the nearest-sampling raw render " +
+                    "keeps hard, and must never be SHARPER than it");
+            }
+            else
+            {
+                dctBetween.Should().Be(rawBetween,
+                    $"at {dpi} dpi the DCT and raw/Flate renders of the SAME image must " +
+                    "agree. #1438 predicted they would not - that a page renders " +
+                    "differently at reduced size depending only on how it was " +
+                    "compressed. Measured, they agree at every scale down to 50 dpi; " +
+                    "beyond an 8x reduction they diverge by design (#1821)");
+            }
 
             // What a linear kernel would have to leave behind: every band
             // boundary blends across the full height. Two orders of magnitude
             // above anything measured.
             var boundaries = (ImageWidth / bandWidth) - 1;
             var linearFloor = boundaries * raw.Height / 4;
-            if (raw.Width < ImageWidth)
+            if (raw.Width < ImageWidth && !reducedByEighth)
             {
                 dctBetween.Should().BeLessThan(Math.Max(linearFloor, 1),
                     $"a filtering minification of {boundaries} band boundaries over " +
