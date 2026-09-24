@@ -4,15 +4,15 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "08a7366db099d8e607713c1ad8b3b67edaeca40d",
+  "sourceRevision": "32e68e2e1c132acc9fc3b4fc8c79e5beb8bfef38",
   "summary": {
-    "interactions": 209,
-    "menuItems": 123,
+    "interactions": 213,
+    "menuItems": 127,
     "buttons": 77,
     "mouseGestures": 9,
-    "keyboardShortcuts": 28,
-    "declaredCommandIds": 126,
-    "commandIdsReachableFromTheGui": 112,
+    "keyboardShortcuts": 29,
+    "declaredCommandIds": 129,
+    "commandIdsReachableFromTheGui": 115,
     "commandIdsWithNoGuiPath": 5,
     "cliOnlyCommandIds": 9,
     "controlsWithNoCommandId": 0,
@@ -1012,6 +1012,15 @@
     },
     {
       "kind": "menu",
+      "path": "Delete Annotation",
+      "label": "Delete Annotation",
+      "command": "DeleteContextAnnotationCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.delete"
+    },
+    {
+      "kind": "menu",
       "path": "Document > Add Pages...",
       "label": "Add Pages...",
       "command": "AddPagesCommand",
@@ -1309,6 +1318,15 @@
     },
     {
       "kind": "menu",
+      "path": "Edit > Select All Text",
+      "label": "Select All Text",
+      "command": "SelectAllTextCommand",
+      "commandParameter": null,
+      "shortcut": "Ctrl+A",
+      "commandId": "edit.selectAll"
+    },
+    {
+      "kind": "menu",
       "path": "Edit > Select Text Mode",
       "label": "Select Text Mode",
       "command": "ToggleTextSelectionModeCommand",
@@ -1405,6 +1423,15 @@
       "commandParameter": "#FFFFFF",
       "shortcut": null,
       "commandId": "typewriter.setColor.white"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit Sticky Note",
+      "label": "Edit Sticky Note",
+      "command": "EditContextStickyNoteCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.editNote"
     },
     {
       "kind": "menu",
@@ -1585,6 +1612,15 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "document.rotateRight"
+    },
+    {
+      "kind": "menu",
+      "path": "Select All Text",
+      "label": "Select All Text",
+      "command": "SelectAllTextCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "edit.selectAll"
     },
     {
       "kind": "menu",
@@ -1922,6 +1958,11 @@
       "shortcut": "Ctrl+-",
       "path": "View > Zoom Out",
       "commandId": "view.zoomOut"
+    },
+    {
+      "shortcut": "Ctrl+A",
+      "path": "Edit > Select All Text",
+      "commandId": "edit.selectAll"
     },
     {
       "shortcut": "Ctrl+C",

@@ -18,10 +18,13 @@ namespace Excise.App.Automation
     public static class CommandAccessibility
     {
         public static readonly Avalonia.AttachedProperty<string?> CommandIdProperty;
+        public static readonly Avalonia.AttachedProperty<bool> KeepToolTipProperty;
         public static readonly Avalonia.AttachedProperty<bool> ShowToolTipProperty;
         public static string? GetCommandId(Avalonia.AvaloniaObject element) { }
+        public static bool GetKeepToolTip(Avalonia.AvaloniaObject element) { }
         public static bool GetShowToolTip(Avalonia.AvaloniaObject element) { }
         public static void SetCommandId(Avalonia.AvaloniaObject element, string? value) { }
+        public static void SetKeepToolTip(Avalonia.AvaloniaObject element, bool value) { }
         public static void SetShowToolTip(Avalonia.AvaloniaObject element, bool value) { }
     }
     public static class VisualTraceRunner
@@ -732,6 +735,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddStickyNoteAnnotationCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddStrikeOutAnnotationFromSelectionCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddUnderlineAnnotationFromSelectionCommand { get; }
+        public string? AnnotateDisabledReason { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ApplyAllRedactionsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ApplyRedactionCommand { get; }
         public bool AreAnnotationsVisible { get; set; }
@@ -747,6 +751,8 @@ namespace Excise.App.ViewModels
         public string AttachmentsSummary { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, int> AutoDetectFieldsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> BatesNumberingCommand { get; }
+        public bool CanAnnotateContent { get; }
+        public bool CanCopyContent { get; }
         public bool CanMoveSelectedPagesEarlier { get; }
         public bool CanMoveSelectedPagesLater { get; }
         public bool CanPrint { get; }
@@ -759,8 +765,11 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CloseDocumentCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? CloseSearchCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CombineDocumentsCommand { get; }
+        public Excise.Core.Document.PdfAnnotation? ContextMenuAnnotation { get; set; }
+        public bool ContextMenuAnnotationIsStickyNote { get; }
         public int ContextMenuPageNumber { get; set; }
         public bool ContinuousScrollPreference { get; }
+        public string? CopyDisabledReason { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CopyTextCommand { get; }
         public Excise.App.ViewModels.CurrentDocumentInfo? CurrentDocument { get; }
         public string CurrentModeText { get; }
@@ -775,9 +784,11 @@ namespace Excise.App.ViewModels
         public int CurrentSearchMatchIndex { get; set; }
         public Avalonia.Rect CurrentTextSelectionArea { get; set; }
         public Excise.Core.Document.PdfPageRect? CurrentTextSelectionPageArea { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> DeleteContextAnnotationCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> DiscardPendingTypewriterEditsCommand { get; }
         public int DisplayPageNumber { get; }
         public string DocumentName { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> EditContextStickyNoteCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ExitCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ExportCurrentPageCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ExportPagesCommand { get; }
@@ -793,6 +804,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> GoToNextPendingTypewriterEditCommand { get; }
         public ReactiveUI.ReactiveCommand<int, System.Reactive.Unit> GoToPageCommand { get; }
         public bool HasAttachments { get; }
+        public bool HasContextMenuAnnotation { get; }
         public bool HasOutline { get; }
         public bool HasPendingTypewriterEdits { get; }
         public bool HasRecentFiles { get; }
@@ -1003,6 +1015,7 @@ namespace Excise.App.ViewModels
         public int AutoDetectAndApplyFormFields() { }
         public void CommitOpenStickyNotePopup() { }
         public System.Threading.Tasks.Task<bool> ConfirmDiscardUnsavedChangesAsync(string actionDescription) { }
+        public System.Threading.Tasks.Task DeleteAnnotationAsync(int pageNumber, Excise.Core.Document.PdfAnnotation annotation) { }
         public void DiscardPendingTypewriterEdits() { }
         public System.Threading.Tasks.Task EnsureThumbnailLoadedAsync(int pageIndex, System.Threading.CancellationToken cancellationToken = default) { }
         public System.Threading.Tasks.Task ExportCurrentPageToImageAsync(string outputPath, int dpi = 150) { }
