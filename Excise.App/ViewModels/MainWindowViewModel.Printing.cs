@@ -85,6 +85,7 @@ public partial class MainWindowViewModel
         {
             this.RaisePropertyChanged(nameof(CanPrint));
             this.RaisePropertyChanged(nameof(PrintDisabledReason));
+            RaiseContentPermissionsChanged();   // #1816: the context menu's Copy/annotate items follow /P too
         }
     }
 

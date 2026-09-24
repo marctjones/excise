@@ -197,4 +197,82 @@ public class DocumentContextMenuTests : IDisposable
 
         window.Close();
     }
+    // ── #1816: items follow /P, with the reason as the tooltip ──────────────────────────────
+
+    private string SaveEncryptedWith(long permissions, string name)
+    {
+        var plain = Path.Combine(_dir, $"plain-{name}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(plain, pageCount: 1);
+        var encrypted = Path.Combine(_dir, $"{name}.pdf");
+        using var doc = PdfDocument.Open(System.IO.File.ReadAllBytes(plain));
+        doc.Save(encrypted, new Excise.Core.Security.PdfEncryptionOptions
+        {
+            UserPassword = "",
+            OwnerPassword = "owner-1816",
+            Permissions = permissions,
+        });
+        return encrypted;
+    }
+
+    private async Task<(MainWindowViewModel Vm, MainWindow Window, PdfViewerControl Viewer)> OpenFileAsync(string path)
+    {
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        await Task.Delay(200);
+        await vm.LoadDocumentAsync(path);
+        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+        await Task.Delay(300);
+        window.UpdateLayout();
+        return (vm, window, viewer);
+    }
+
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task ContextItems_AreDisabledWithTheReason_WhenTheDocumentForbidsCopyingAndAnnotating()
+    {
+        // Bits 5 (copy/extract, value 16) and 6 (annotate, value 32) cleared.
+        var path = SaveEncryptedWith(-4 & ~16L & ~32L, "restricted");
+
+        // The fixture is written and read by excise's own encryption code, so confirm the /P bits
+        // with qpdf, which is not excise (CLAUDE.md: a tool must not be its own oracle).
+        Assert.SkipUnless(Excise.Rendering.Differential.QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var qpdf = Excise.Rendering.Differential.QpdfReferenceTool.ShowEncryption(path);
+        qpdf.Should().Contain("extract for any purpose: not allowed");
+
+        var (vm, window, viewer) = await OpenFileAsync(path);
+        await RightClickAsync(window, viewer);
+
+        foreach (var header in new[] { "_Copy", "E_xport This Page" })
+        {
+            var item = Item(viewer, header);
+            item.IsEnabled.Should().BeFalse($"'{header}' needs /P bit 5, which this document denies");
+            ToolTip.GetTip(item).Should().BeOfType<string>().Which.Should().Contain("/P bit 5");
+        }
+
+        foreach (var header in new[] { "_Highlight", "_Underline", "Strike_through", "S_quiggly", "Add _Sticky Note" })
+        {
+            var item = Item(viewer, header);
+            item.IsEnabled.Should().BeFalse($"'{header}' needs /P bit 6, which this document denies");
+            ToolTip.GetTip(item).Should().BeOfType<string>().Which.Should().Contain("/P bit 6");
+        }
+
+        // Actions with no /P check anywhere in the app stay enabled: no permission is invented for them.
+        Item(viewer, "Rotate _Right").IsEnabled.Should().BeTrue();
+        window.Close();
+    }
+
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task ContextItems_AreEnabledWithNoReason_WhenTheDocumentAllowsEverything()
+    {
+        var (vm, window, viewer) = await OpenAsync();
+        await RightClickAsync(window, viewer);
+
+        foreach (var header in new[] { "_Copy", "E_xport This Page", "_Highlight", "Add _Sticky Note" })
+        {
+            var item = Item(viewer, header);
+            item.IsEnabled.Should().BeTrue($"'{header}' is allowed on an unrestricted document");
+            ToolTip.GetTip(item).Should().BeNull("no reason to show when nothing is denied");
+        }
+        window.Close();
+    }
 }

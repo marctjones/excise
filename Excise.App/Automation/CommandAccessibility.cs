@@ -21,6 +21,17 @@ public static class CommandAccessibility
             typeof(CommandAccessibility),
             defaultValue: true);
 
+    /// <summary>
+    /// The item binds its own <c>ToolTip.Tip</c> (a permission reason, #1816), so the command's
+    /// generic "Label (Shortcut)" tooltip must not replace it. ApplyMetadata re-runs once the control
+    /// is attached and would otherwise overwrite the binding with a plain string.
+    /// </summary>
+    public static readonly AttachedProperty<bool> KeepToolTipProperty =
+        AvaloniaProperty.RegisterAttached<Control, bool>(
+            "KeepToolTip",
+            typeof(CommandAccessibility),
+            defaultValue: false);
+
     static CommandAccessibility()
     {
         CommandIdProperty.Changed.AddClassHandler<Control>((control, args) =>
@@ -43,6 +54,12 @@ public static class CommandAccessibility
 
     public static string? GetCommandId(AvaloniaObject element) =>
         element.GetValue(CommandIdProperty);
+
+    public static void SetKeepToolTip(AvaloniaObject element, bool value) =>
+        element.SetValue(KeepToolTipProperty, value);
+
+    public static bool GetKeepToolTip(AvaloniaObject element) =>
+        element.GetValue(KeepToolTipProperty);
 
     public static void SetShowToolTip(AvaloniaObject element, bool value) =>
         element.SetValue(ShowToolTipProperty, value);
@@ -71,7 +88,8 @@ public static class CommandAccessibility
         AutomationProperties.SetHelpText(control, BuildHelpText(metadata));
         UpdateItemStatus(control, metadata);
 
-        ToolTip.SetTip(control, GetShowToolTip(control) ? BuildTooltip(metadata) : null);
+        if (!GetKeepToolTip(control))
+            ToolTip.SetTip(control, GetShowToolTip(control) ? BuildTooltip(metadata) : null);
     }
 
     private static string BuildHelpText(PdfCommandMetadata metadata)

@@ -48,7 +48,34 @@ public partial class MainWindowViewModel
             // Print… is the one command whose enablement follows /P (#1545).
             this.RaisePropertyChanged(nameof(CanPrint));
             this.RaisePropertyChanged(nameof(PrintDisabledReason));
+            RaiseContentPermissionsChanged();
         }
+    }
+
+    /// <summary>
+    /// Whether the document's /P flags allow copying or extracting content (bit 5), or the scripting
+    /// override is set. The right-click menu's Copy and Export This Page follow it (#1816), with
+    /// <see cref="CopyDisabledReason"/> as the tooltip; the menu-bar twins still explain by toast.
+    /// </summary>
+    public bool CanCopyContent => CurrentDocumentPermissions.CanCopy || IgnoreDocumentPermissions;
+
+    /// <summary>Why copying is unavailable, or null when it is available.</summary>
+    public string? CopyDisabledReason => CanCopyContent ? null
+        : "This document's security settings deny copying or extracting content (/P bit 5).";
+
+    /// <summary>Whether /P allows adding or modifying annotations (bit 6), or the override is set (#1816).</summary>
+    public bool CanAnnotateContent => CurrentDocumentPermissions.CanAnnotate || IgnoreDocumentPermissions;
+
+    /// <summary>Why annotating is unavailable, or null when it is available.</summary>
+    public string? AnnotateDisabledReason => CanAnnotateContent ? null
+        : "This document's security settings deny adding or modifying annotations (/P bit 6).";
+
+    private void RaiseContentPermissionsChanged()
+    {
+        this.RaisePropertyChanged(nameof(CanCopyContent));
+        this.RaisePropertyChanged(nameof(CopyDisabledReason));
+        this.RaisePropertyChanged(nameof(CanAnnotateContent));
+        this.RaisePropertyChanged(nameof(AnnotateDisabledReason));
     }
 
     private bool _ignoreDocumentPermissions;

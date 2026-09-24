@@ -373,6 +373,7 @@
                 <MenuItem Header="_Print..." Command="{Binding PrintCommand}" InputGesture="Ctrl+P"
                           IsEnabled="{Binding CanPrint}"
                           ToolTip.Tip="{Binding PrintDisabledReason}"
+                          access:CommandAccessibility.KeepToolTip="True"
                           access:CommandAccessibility.CommandId="document.print"/>
                 <Separator/>
                 <MenuItem Header="_Security..." Command="{Binding SecurityCommand}"
@@ -1750,22 +1751,40 @@
                             <ContextMenu>
                                 <MenuItem access:CommandAccessibility.CommandId="edit.copyText"
                                           Header="_Copy" Command="{Binding CopyTextCommand}"
-                                          IsVisible="{Binding HasTextSelection}"/>
+                                          IsVisible="{Binding HasTextSelection}"
+                                          IsEnabled="{Binding CanCopyContent}"
+                                          ToolTip.Tip="{Binding CopyDisabledReason}"
+                                          access:CommandAccessibility.KeepToolTip="True"/>
                                 <MenuItem access:CommandAccessibility.CommandId="annotation.addHighlight"
                                           Header="_Highlight" Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
-                                          IsVisible="{Binding HasTextSelection}"/>
+                                          IsVisible="{Binding HasTextSelection}"
+                                          IsEnabled="{Binding CanAnnotateContent}"
+                                          ToolTip.Tip="{Binding AnnotateDisabledReason}"
+                                          access:CommandAccessibility.KeepToolTip="True"/>
                                 <MenuItem access:CommandAccessibility.CommandId="annotation.addUnderline"
                                           Header="_Underline" Command="{Binding AddUnderlineAnnotationFromSelectionCommand}"
-                                          IsVisible="{Binding HasTextSelection}"/>
+                                          IsVisible="{Binding HasTextSelection}"
+                                          IsEnabled="{Binding CanAnnotateContent}"
+                                          ToolTip.Tip="{Binding AnnotateDisabledReason}"
+                                          access:CommandAccessibility.KeepToolTip="True"/>
                                 <MenuItem access:CommandAccessibility.CommandId="annotation.addStrikeOut"
                                           Header="Strike_through" Command="{Binding AddStrikeOutAnnotationFromSelectionCommand}"
-                                          IsVisible="{Binding HasTextSelection}"/>
+                                          IsVisible="{Binding HasTextSelection}"
+                                          IsEnabled="{Binding CanAnnotateContent}"
+                                          ToolTip.Tip="{Binding AnnotateDisabledReason}"
+                                          access:CommandAccessibility.KeepToolTip="True"/>
                                 <MenuItem access:CommandAccessibility.CommandId="annotation.addSquiggly"
                                           Header="S_quiggly" Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
-                                          IsVisible="{Binding HasTextSelection}"/>
+                                          IsVisible="{Binding HasTextSelection}"
+                                          IsEnabled="{Binding CanAnnotateContent}"
+                                          ToolTip.Tip="{Binding AnnotateDisabledReason}"
+                                          access:CommandAccessibility.KeepToolTip="True"/>
                                 <MenuItem access:CommandAccessibility.CommandId="annotation.addStickyNote"
                                           Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
-                                          IsVisible="{Binding HasTextSelection}"/>
+                                          IsVisible="{Binding HasTextSelection}"
+                                          IsEnabled="{Binding CanAnnotateContent}"
+                                          ToolTip.Tip="{Binding AnnotateDisabledReason}"
+                                          access:CommandAccessibility.KeepToolTip="True"/>
                                 <MenuItem access:CommandAccessibility.CommandId="redaction.markSelection"
                                           Header="_Redact Selection" Command="{Binding RedactSelectionCommand}"
                                           IsVisible="{Binding HasTextSelection}"/>
@@ -1779,7 +1798,10 @@
                                 <MenuItem access:CommandAccessibility.CommandId="document.extractCurrentPage"
                                           Header="_Extract This Page..." Command="{Binding ExtractCurrentPageCommand}"/>
                                 <MenuItem access:CommandAccessibility.CommandId="document.exportCurrentPage"
-                                          Header="E_xport This Page..." Command="{Binding ExportCurrentPageCommand}"/>
+                                          Header="E_xport This Page..." Command="{Binding ExportCurrentPageCommand}"
+                                          IsEnabled="{Binding CanCopyContent}"
+                                          ToolTip.Tip="{Binding CopyDisabledReason}"
+                                          access:CommandAccessibility.KeepToolTip="True"/>
                                 <Separator/>
                                 <MenuItem access:CommandAccessibility.CommandId="document.removeCurrentPage"
                                           Header="Remove This _Page" Command="{Binding RemoveCurrentPageCommand}"/>
