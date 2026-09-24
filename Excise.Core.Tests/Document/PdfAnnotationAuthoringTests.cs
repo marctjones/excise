@@ -72,6 +72,32 @@ public class PdfAnnotationAuthoringTests
         annotations.Should().Contain(a => a.Contents == "Persisted highlight");
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AddTextAnnotation_CarriesNoZoomAndNoRotate_AfterSaveAndReload(bool withPopup)
+    {
+        // ISO 32000-2 §12.5.6.4: /Text behaves as if NoZoom and NoRotate were set (#1798).
+        byte[] saved;
+        using (var doc = PdfDocument.CreateNew())
+        {
+            doc.Pages.AddBlank();
+            doc.AddTextAnnotation(1, new PdfRectangle(72, 700, 108, 736), "note", withPopup: withPopup);
+            saved = doc.SaveToBytes();
+        }
+
+        using var reopened = PdfDocument.Open(saved);
+        var note = reopened.GetPage(1).GetAnnotations().Single(a => a.Subtype == PdfAnnotationSubtype.Text);
+        note.Flags.Should().Be(
+            PdfAnnotationFlags.Print | PdfAnnotationFlags.NoZoom | PdfAnnotationFlags.NoRotate);
+
+        if (withPopup)
+        {
+            var popup = reopened.GetPage(1).GetAnnotations().Single(a => a.Subtype == PdfAnnotationSubtype.Popup);
+            popup.Flags.Should().Be(PdfAnnotationFlags.Print, "the popup is not a /Text annotation");
+        }
+    }
+
     // ── Shape annotations (#626, ISO 32000-2 §12.5.6.8) ─────────────────────
 
     [Fact]

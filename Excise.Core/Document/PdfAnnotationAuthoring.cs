@@ -69,6 +69,12 @@ public static class PdfAnnotationAuthoring
 
         var normalized = rect.Normalize();
         var annot = NewAnnotationDict("Text", normalized);
+        // §12.5.6.4: a /Text annotation behaves as if NoZoom and NoRotate were
+        // always set. Only the /Text carries them; its linked /Popup keeps the
+        // plain Print flag (§12.5.6.14 says nothing of the sort about popups).
+        // Our own viewer does not read either bit yet, so this changes no
+        // on-screen behaviour here; it lets readers that honour them do so (#1798).
+        annot.SetInt("F", (int)(PdfAnnotationFlags.Print | PdfAnnotationFlags.NoZoom | PdfAnnotationFlags.NoRotate));
         annot.SetString("Contents", contents);
         if (!string.IsNullOrWhiteSpace(author))
             annot.SetString("T", author);
