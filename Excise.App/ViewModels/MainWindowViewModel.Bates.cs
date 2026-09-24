@@ -91,6 +91,49 @@ public partial class MainWindowViewModel
     /// preserved as a copy (#1233). Bates numbering is applied to evidence
     /// sets; writing over the source in place is the last thing it should do.
     /// </remarks>
+    private static byte[][] SnapshotPageContent(Excise.Core.Document.PdfDocument document)
+    {
+        var snapshot = new byte[document.Pages.Count][];
+        for (var i = 0; i < snapshot.Length; i++)
+            snapshot[i] = document.Pages[i].GetContentStreamBytes();
+        return snapshot;
+    }
+
+    /// <summary>
+    /// Undo puts every page's content back to <paramref name="original"/> and keeps
+    /// the stamped bytes for redo. Later edits are undone first (a stack), so the
+    /// page count is the one the stamp was applied to; a mismatch means the
+    /// history was bypassed and restoring by index would corrupt pages, so refuse.
+    /// </summary>
+    private void RecordBatesUndo(byte[][] original)
+    {
+        byte[][]? stamped = null;
+
+        async Task Swap(byte[][] target, int dirtyDelta)
+        {
+            var document = _documentService.GetCurrentDocument();
+            if (document == null || document.Pages.Count != target.Length)
+                throw new InvalidOperationException(
+                    "The page count changed since Bates numbering was applied; it cannot be undone safely.");
+
+            for (var i = 0; i < target.Length; i++)
+                document.Pages[i].SetContentStreamBytes(target[i]);
+
+            FileState.PageEditsCount = Math.Max(0, FileState.PageEditsCount + dirtyDelta);
+            this.RaisePropertyChanged(nameof(SaveButtonText));
+            this.RaisePropertyChanged(nameof(StatusBarText));
+            await RefreshAfterDocumentMutationAsync();
+        }
+
+        _history.Push("Bates numbering",
+            undo: async () =>
+            {
+                stamped = SnapshotPageContent(_documentService.GetCurrentDocument()!);
+                await Swap(original, -1);
+            },
+            redo: () => Swap(stamped!, +1));
+    }
+
     internal void ApplyBatesNumbering(BatesOptions options)
     {
         var document = _documentService.GetCurrentDocument();
@@ -99,11 +142,17 @@ public partial class MainWindowViewModel
 
         try
         {
+            // #1805: the stamp is page content, so the inverse is the pages' own
+            // content bytes as they were. Taken before the stamp; the stamped
+            // bytes are captured at undo time, so redo needs nothing held now.
+            var original = SnapshotPageContent(document);
+
             _batesService.ApplyBatesNumbers(document, options);
 
             // Count it as a page edit so the document reads dirty and the
             // close/quit guard and Save-a-Copy routing both engage.
             FileState.PageEditsCount++;
+            RecordBatesUndo(original);
 
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));

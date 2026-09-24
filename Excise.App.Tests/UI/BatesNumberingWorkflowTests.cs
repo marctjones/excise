@@ -251,4 +251,120 @@ public class BatesNumberingWorkflowTests : IDisposable
 
         window.Close();
     }
+    // ------------------------------------------------------------- undo (#1805)
+
+    /// <summary>
+    /// The dialog calls the stamp "real page content", so it must be as undoable as a
+    /// rotation. Read back with Poppler, not excise: an undo that only reset a counter
+    /// would still leave the number on the page.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task BatesNumbering_CanBeUndone_AndTheStampLeavesThePage()
+    {
+        Assert.SkipWhen(!PdftotextAvailable(), "pdftotext is not installed [requires: tool:pdftotext]");
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1000, Height = 700 };
+        window.Show();
+        await vm.LoadDocumentAsync(NewPdf("undo.pdf", pages: 3));
+
+        vm.BatesOptionsOverride = () => new BatesOptions { Prefix = "DOE", StartNumber = 1 };
+        await vm.BatesNumberingCommand.Execute();
+
+        vm.CanUndo.Should().BeTrue("Bates numbering must join the undo stack");
+        vm.UndoMenuHeader.Should().Be("_Undo Bates numbering",
+            "Edit > Undo names what it will undo, the macOS convention");
+
+        await vm.UndoCommand.Execute();
+
+        var output = Path.Combine(_tempDir, "undo-out.pdf");
+        await vm.SaveFileAsAsync(output);
+        for (var page = 1; page <= 3; page++)
+            PdftotextPage(output, page).Should().NotContain("DOE",
+                $"page {page} still carries the stamp after Undo");
+
+        window.Close();
+    }
+
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task BatesNumbering_UndoThenRedo_RestoresTheStamp()
+    {
+        Assert.SkipWhen(!PdftotextAvailable(), "pdftotext is not installed [requires: tool:pdftotext]");
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1000, Height = 700 };
+        window.Show();
+        await vm.LoadDocumentAsync(NewPdf("redo.pdf", pages: 3));
+
+        vm.BatesOptionsOverride = () => new BatesOptions { Prefix = "DOE", StartNumber = 1 };
+        await vm.BatesNumberingCommand.Execute();
+        await vm.UndoCommand.Execute();
+        vm.CanRedo.Should().BeTrue();
+        await vm.RedoCommand.Execute();
+
+        var output = Path.Combine(_tempDir, "redo-out.pdf");
+        await vm.SaveFileAsAsync(output);
+        for (var page = 1; page <= 3; page++)
+            PdftotextPage(output, page).Should().Contain($"DOE{page:D6}");
+
+        window.Close();
+    }
+    // ------------------------------------------------------------- position
+
+    /// <summary>Poppler's word box for <paramref name="word"/>: yMin/yMax measured DOWN from the page top.</summary>
+    private static (double XMin, double YMin, double XMax, double YMax, double PageWidth, double PageHeight) PdftotextWordBox(
+        string pdfPath, string word)
+    {
+        var psi = new ProcessStartInfo("pdftotext", $"-bbox -f 1 -l 1 \"{pdfPath}\" -")
+        {
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+        };
+        using var process = Process.Start(psi)!;
+        var output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit(30000);
+
+        var page = System.Text.RegularExpressions.Regex.Match(output, "<page width=\"([\\d.]+)\" height=\"([\\d.]+)\"");
+        var box = System.Text.RegularExpressions.Regex.Match(output,
+            "<word xMin=\"([\\d.]+)\" yMin=\"([\\d.]+)\" xMax=\"([\\d.]+)\" yMax=\"([\\d.]+)\">" + word);
+        box.Success.Should().BeTrue($"Poppler must find '{word}' on the page");
+        double D(System.Text.RegularExpressions.Group g) => double.Parse(g.Value, System.Globalization.CultureInfo.InvariantCulture);
+        return (D(box.Groups[1]), D(box.Groups[2]), D(box.Groups[3]), D(box.Groups[4]), D(page.Groups[1]), D(page.Groups[2]));
+    }
+
+    /// <summary>
+    /// A Bates number is cited by where it sits; BottomRight is the convention for a
+    /// production. Judged by Poppler's own coordinates, not excise's (the stamp used to land
+    /// on the opposite edge and every text-only assertion above passed).
+    /// </summary>
+    [Theory]
+    [InlineData(BatesPosition.BottomRight, true, false)]
+    [InlineData(BatesPosition.BottomLeft, true, true)]
+    [InlineData(BatesPosition.TopRight, false, false)]
+    [InlineData(BatesPosition.TopLeft, false, true)]
+    public void BatesStamp_LandsInTheRequestedCorner_MeasuredByPoppler(
+        BatesPosition position, bool bottom, bool left)
+    {
+        Assert.SkipWhen(!PdftotextAvailable(), "pdftotext is not installed [requires: tool:pdftotext]");
+
+        var src = NewPdf($"pos-{position}.pdf", pages: 1);
+        using (var doc = Excise.Core.Document.PdfDocument.Open(src))
+        {
+            new BatesNumberingService(Microsoft.Extensions.Logging.Abstractions.NullLogger<BatesNumberingService>.Instance)
+                .ApplyBatesNumbers(doc, new BatesOptions { Prefix = "BATESPOS", Position = position });
+            doc.Save(Path.Combine(_tempDir, $"pos-{position}-out.pdf"));
+        }
+
+        var box = PdftotextWordBox(Path.Combine(_tempDir, $"pos-{position}-out.pdf"), "BATESPOS000001");
+
+        if (bottom)
+            box.YMin.Should().BeGreaterThan(box.PageHeight / 2, $"{position} is on the BOTTOM half of the page");
+        else
+            box.YMax.Should().BeLessThan(box.PageHeight / 2, $"{position} is on the TOP half of the page");
+
+        if (left)
+            box.XMax.Should().BeLessThan(box.PageWidth / 2, $"{position} is on the LEFT half of the page");
+        else
+            box.XMin.Should().BeGreaterThan(box.PageWidth / 2, $"{position} is on the RIGHT half of the page");
+    }
 }

@@ -200,45 +200,36 @@ public class BatesNumberingService
         };
     }
 
+    /// <summary>
+    /// Baseline origin of the stamp, in the y-UP page space <c>DrawString</c> takes.
+    /// </summary>
+    /// <remarks>
+    /// The vertical maths used to treat y as measured DOWN from the top of the page, so
+    /// "Bottom right" stamped the top edge and "Top left" the bottom (measured with
+    /// Poppler's <c>pdftotext -bbox</c>; the text-only tests could not see it). A Bates
+    /// number is cited by where it sits, and BottomRight is the convention for a
+    /// production, so a stamp on the wrong edge is a wrong evidence set. Here the
+    /// bottom margin is the baseline itself and the top margin is taken off the cap
+    /// height below the page's top edge.
+    /// </remarks>
     private (double x, double y) CalculatePosition(PdfPage page, PdfSize textSize, BatesOptions options)
     {
-        double x, y;
         var pageWidth = page.Width;
         var pageHeight = page.Height;
 
-        switch (options.Position)
+        var x = options.Position switch
         {
-            case BatesPosition.TopLeft:
-                x = options.MarginX;
-                y = options.MarginY + textSize.Height;
-                break;
+            BatesPosition.TopLeft or BatesPosition.BottomLeft => options.MarginX,
+            BatesPosition.TopCenter or BatesPosition.BottomCenter => (pageWidth - textSize.Width) / 2,
+            _ => pageWidth - textSize.Width - options.MarginX,
+        };
 
-            case BatesPosition.TopCenter:
-                x = (pageWidth - textSize.Width) / 2;
-                y = options.MarginY + textSize.Height;
-                break;
-
-            case BatesPosition.TopRight:
-                x = pageWidth - textSize.Width - options.MarginX;
-                y = options.MarginY + textSize.Height;
-                break;
-
-            case BatesPosition.BottomLeft:
-                x = options.MarginX;
-                y = pageHeight - options.MarginY;
-                break;
-
-            case BatesPosition.BottomCenter:
-                x = (pageWidth - textSize.Width) / 2;
-                y = pageHeight - options.MarginY;
-                break;
-
-            case BatesPosition.BottomRight:
-            default:
-                x = pageWidth - textSize.Width - options.MarginX;
-                y = pageHeight - options.MarginY;
-                break;
-        }
+        var y = options.Position switch
+        {
+            BatesPosition.TopLeft or BatesPosition.TopCenter or BatesPosition.TopRight
+                => pageHeight - options.MarginY - textSize.Height,
+            _ => options.MarginY,
+        };
 
         return (x, y);
     }
