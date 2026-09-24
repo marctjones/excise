@@ -4,16 +4,16 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "3d4891f564ce0a6fa3b8b2da3febd00eb77b9e30",
+  "sourceRevision": "08a7366db099d8e607713c1ad8b3b67edaeca40d",
   "summary": {
-    "interactions": 197,
-    "menuItems": 111,
+    "interactions": 209,
+    "menuItems": 123,
     "buttons": 77,
     "mouseGestures": 9,
     "keyboardShortcuts": 28,
-    "declaredCommandIds": 125,
-    "commandIdsReachableFromTheGui": 107,
-    "commandIdsWithNoGuiPath": 9,
+    "declaredCommandIds": 126,
+    "commandIdsReachableFromTheGui": 112,
+    "commandIdsWithNoGuiPath": 5,
     "cliOnlyCommandIds": 9,
     "controlsWithNoCommandId": 0,
     "duplicateShortcuts": 0,
@@ -715,6 +715,15 @@
     },
     {
       "kind": "menu",
+      "path": "Add Sticky Note...",
+      "label": "Add Sticky Note...",
+      "command": "AddStickyNoteAnnotationCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addStickyNote"
+    },
+    {
+      "kind": "menu",
       "path": "Annotate > Add Sticky Note...",
       "label": "Add Sticky Note...",
       "command": "AddStickyNoteAnnotationCommand",
@@ -991,6 +1000,15 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "annotation.toggleUnderlineMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Copy",
+      "label": "Copy",
+      "command": "CopyTextCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "edit.copyText"
     },
     {
       "kind": "menu",
@@ -1390,6 +1408,24 @@
     },
     {
       "kind": "menu",
+      "path": "Export This Page...",
+      "label": "Export This Page...",
+      "command": "ExportCurrentPageCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "document.exportCurrentPage"
+    },
+    {
+      "kind": "menu",
+      "path": "Extract This Page...",
+      "label": "Extract This Page...",
+      "command": "ExtractCurrentPageCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "document.extractCurrentPage"
+    },
+    {
+      "kind": "menu",
       "path": "File > <bound:SaveButtonText>",
       "label": "<bound:SaveButtonText>",
       "command": "SaveFileCommand",
@@ -1480,6 +1516,24 @@
     },
     {
       "kind": "menu",
+      "path": "Highlight",
+      "label": "Highlight",
+      "command": "AddHighlightAnnotationFromSelectionCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addHighlight"
+    },
+    {
+      "kind": "menu",
+      "path": "Redact Selection",
+      "label": "Redact Selection",
+      "command": "RedactSelectionCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "redaction.markSelection"
+    },
+    {
+      "kind": "menu",
       "path": "Redaction > Apply Redaction",
       "label": "Apply Redaction",
       "command": "ApplyRedactionCommand",
@@ -1504,6 +1558,51 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "view.toggleClipboardHistory"
+    },
+    {
+      "kind": "menu",
+      "path": "Remove This Page",
+      "label": "Remove This Page",
+      "command": "RemoveCurrentPageCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "document.removeCurrentPage"
+    },
+    {
+      "kind": "menu",
+      "path": "Rotate Left 90°",
+      "label": "Rotate Left 90°",
+      "command": "RotatePageLeftCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "document.rotateLeft"
+    },
+    {
+      "kind": "menu",
+      "path": "Rotate Right 90°",
+      "label": "Rotate Right 90°",
+      "command": "RotatePageRightCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "document.rotateRight"
+    },
+    {
+      "kind": "menu",
+      "path": "Squiggly",
+      "label": "Squiggly",
+      "command": "AddSquigglyAnnotationFromSelectionCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addSquiggly"
+    },
+    {
+      "kind": "menu",
+      "path": "Strikethrough",
+      "label": "Strikethrough",
+      "command": "AddStrikeOutAnnotationFromSelectionCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addStrikeOut"
     },
     {
       "kind": "menu",
@@ -1558,6 +1657,15 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "tools.verifySignatures"
+    },
+    {
+      "kind": "menu",
+      "path": "Underline",
+      "label": "Underline",
+      "command": "AddUnderlineAnnotationFromSelectionCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "annotation.addUnderline"
     },
     {
       "kind": "menu",
@@ -1992,13 +2100,9 @@
   "commandIdsWithNoGuiPath": [
     "annotation.addCircle",
     "annotation.addFreeText",
-    "annotation.addHighlight",
     "annotation.addImageStamp",
     "annotation.addSquare",
-    "annotation.addSquiggly",
-    "annotation.addStamp",
-    "annotation.addStrikeOut",
-    "annotation.addUnderline"
+    "annotation.addStamp"
   ],
   "cliOnlyCommandIds": [
     "audit.hiddenText",
