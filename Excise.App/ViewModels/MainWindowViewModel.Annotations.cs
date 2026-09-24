@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 using Excise.App.Services;
 using ReactiveUI;
 using System;
@@ -1071,5 +1072,95 @@ public partial class MainWindowViewModel
         if (HasTextSelection && CurrentTextSelectionPageArea is { } area)
             MarkRedactionPageArea(area);
         return Task.CompletedTask;
+    }
+    // ── Right-click on an annotation (#1815) ────────────────────────────────
+
+    /// <summary>Reopen the right-clicked sticky note's card for editing.</summary>
+    private void EditContextStickyNote()
+    {
+        var note = ContextMenuAnnotation;
+        var page = ContextMenuPageNumber;
+        if (note?.Subtype != PdfAnnotationSubtype.Text || page < 1)
+            return;
+
+        ReopenStickyNote(page, note.Rect);
+    }
+
+    private Task DeleteContextAnnotationAsync()
+    {
+        var annotation = ContextMenuAnnotation;
+        var page = ContextMenuPageNumber;
+        return annotation == null || page < 1 ? Task.CompletedTask : DeleteAnnotationAsync(page, annotation);
+    }
+
+    /// <summary>
+    /// Delete an annotation, and its linked popup, from a page. Undoable: the page's whole /Annots
+    /// array is snapshotted first, so undo restores the exact order (z-order) and the note-to-popup
+    /// link; the removed objects stay in the store (RemoveAnnotation only detaches them), so putting the
+    /// references back brings the annotation back verbatim.
+    /// </summary>
+    public async Task DeleteAnnotationAsync(int pageNumber, PdfAnnotation annotation)
+    {
+        var document = _documentService.GetCurrentDocument();
+        if (document == null || pageNumber < 1 || pageNumber > document.PageCount)
+            return;
+
+        // #642: /P bit 6 gates adding/modifying annotations; deleting one modifies them.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            "Deleting an annotation", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        try
+        {
+            var annots = document.Resolve(document.GetPage(pageNumber).Dictionary.GetOptional("Annots") ?? PdfNull.Instance) as PdfArray;
+            if (annots == null)
+                return;
+            var snapshot = annots.ToList();
+            var dictionary = annotation.RawDictionary;
+
+            if (!document.RemoveAnnotation(pageNumber, annotation))
+                return;
+
+            AdjustAnnotationBookkeeping(+1);
+            _history.Push("Delete annotation",
+                () => RestorePageAnnotationsAsync(pageNumber, snapshot, dirtyDelta: -1),
+                () => RemoveAnnotationByDictionaryAsync(pageNumber, dictionary));
+            await RefreshAfterDocumentMutationAsync();
+            RefreshRedactAnnotationCount();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting annotation");
+            _toastService.ShowError("Failed to delete annotation", ex.Message);
+        }
+    }
+
+    /// <summary>Undo of a delete: put the page's /Annots back exactly as it was.</summary>
+    private async Task RestorePageAnnotationsAsync(int pageNumber, IReadOnlyList<PdfObject> snapshot, int dirtyDelta)
+    {
+        var document = _documentService.GetCurrentDocument();
+        if (document?.Resolve(document.GetPage(pageNumber).Dictionary.GetOptional("Annots") ?? PdfNull.Instance) is PdfArray annots)
+        {
+            while (annots.Count > 0) annots.RemoveAt(annots.Count - 1);
+            foreach (var item in snapshot) annots.Add(item);
+        }
+
+        AdjustAnnotationBookkeeping(dirtyDelta);
+        await RefreshAfterDocumentMutationAsync();
+    }
+
+    /// <summary>Redo of a delete: find the annotation again by its dictionary and remove it.</summary>
+    private async Task RemoveAnnotationByDictionaryAsync(int pageNumber, PdfDictionary dictionary)
+    {
+        var document = _documentService.GetCurrentDocument();
+        var annotation = document?.GetPage(pageNumber).GetAnnotations()
+            .FirstOrDefault(a => ReferenceEquals(a.RawDictionary, dictionary));
+        if (document != null && annotation != null)
+            document.RemoveAnnotation(pageNumber, annotation);
+
+        AdjustAnnotationBookkeeping(+1);
+        await RefreshAfterDocumentMutationAsync();
     }
 }

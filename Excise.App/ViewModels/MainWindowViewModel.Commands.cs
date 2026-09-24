@@ -156,6 +156,12 @@ public partial class MainWindowViewModel
 
     /// <summary>Mark the selected text as a pending redaction (the right-click menu's Redact, #1659).</summary>
     public ReactiveCommand<Unit, Unit> RedactSelectionCommand { get; private set; } = null!;
+
+    /// <summary>Delete the annotation that was right-clicked (#1815). Undoable.</summary>
+    public ReactiveCommand<Unit, Unit> DeleteContextAnnotationCommand { get; private set; } = null!;
+
+    /// <summary>Reopen the right-clicked sticky note for editing (#1815).</summary>
+    public ReactiveCommand<Unit, Unit> EditContextStickyNoteCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ZoomInCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ZoomOutCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> NextPageCommand { get; private set; } = null!;
@@ -319,6 +325,8 @@ public partial class MainWindowViewModel
         CopyTextCommand = ReactiveCommand.CreateFromTask(CopyTextAsync);
         SelectAllTextCommand = ReactiveCommand.Create(SelectAllText);
         RedactSelectionCommand = ReactiveCommand.CreateFromTask(RedactSelectionAsync);
+        DeleteContextAnnotationCommand = ReactiveCommand.CreateFromTask(DeleteContextAnnotationAsync);
+        EditContextStickyNoteCommand = ReactiveCommand.Create(EditContextStickyNote);
         ZoomInCommand = ReactiveCommand.Create(ZoomIn);
         ZoomOutCommand = ReactiveCommand.Create(ZoomOut);
         NextPageCommand = ReactiveCommand.CreateFromTask(NextPageAsync);

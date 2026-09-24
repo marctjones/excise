@@ -90,6 +90,12 @@ public static class PdfCommandIds
     public const string TogglePolyLineMode = "annotation.togglePolyLineMode";
     public const string AddStickyNote = "annotation.addStickyNote";
 
+    /// <summary>Delete the annotation under the pointer when the context menu was opened (#1815). Undoable.</summary>
+    public const string DeleteAnnotation = "annotation.delete";
+
+    /// <summary>Reopen the sticky note under the pointer for editing (#1815).</summary>
+    public const string EditStickyNote = "annotation.editNote";
+
     /// <summary>Toggle click-to-place sticky-note mode: a click plants a note's
     /// icon at that point and opens its popup for typing (#1788).</summary>
     public const string ToggleStickyNoteTool = "annotation.toggleStickyNoteTool";

@@ -1,5 +1,7 @@
 using System;
 using Excise.App.Models;
+using Excise.Core.Document;
+using ReactiveUI;
 using Microsoft.Extensions.Logging;
 
 namespace Excise.App.ViewModels;
@@ -52,6 +54,27 @@ public partial class MainWindowViewModel
     /// from <c>PdfViewerControl.ContextMenuPageNumber</c> (#1817).
     /// </summary>
     public int ContextMenuPageNumber { get; set; }
+
+    private PdfAnnotation? _contextMenuAnnotation;
+
+    /// <summary>
+    /// The annotation that was right-clicked, or null (#1815). Bound one-way-to-source from
+    /// <c>PdfViewerControl.ContextMenuAnnotation</c>; reactive so the menu's Edit/Delete items show and hide with it.
+    /// </summary>
+    public PdfAnnotation? ContextMenuAnnotation
+    {
+        get => _contextMenuAnnotation;
+        set
+        {
+            if (ReferenceEquals(_contextMenuAnnotation, value)) return;
+            this.RaiseAndSetIfChanged(ref _contextMenuAnnotation, value);
+            this.RaisePropertyChanged(nameof(HasContextMenuAnnotation));
+            this.RaisePropertyChanged(nameof(ContextMenuAnnotationIsStickyNote));
+        }
+    }
+
+    public bool HasContextMenuAnnotation => _contextMenuAnnotation != null;
+    public bool ContextMenuAnnotationIsStickyNote => _contextMenuAnnotation?.Subtype == PdfAnnotationSubtype.Text;
 
     /// <summary>
     /// The 0-based page every "current page" command must operate on (#1650).

@@ -80,6 +80,8 @@ annotation.toggleArrowMode	NotMutating	-
 annotation.togglePolygonMode	NotMutating	-
 annotation.togglePolyLineMode	NotMutating	-
 annotation.addStickyNote	Recorded	UI/StickyNoteUndoTests.cs
+annotation.delete	Recorded	UI/AnnotationContextMenuTests.cs
+annotation.editNote	NotMutating	-
 annotation.toggleStickyNoteTool	NotMutating	-
 document.addPages	Recorded	UI/InsertPagesUndoTests.cs
 document.insertPagesBefore	Recorded	UI/InsertPagesUndoTests.cs

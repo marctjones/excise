@@ -1720,6 +1720,7 @@
                                                FormFields="{Binding CurrentPageFormFields}"
                                                PageFormFieldsProvider="{Binding FormFieldsForPage}"
                                                ContextMenuPageNumber="{Binding ContextMenuPageNumber, Mode=OneWayToSource}"
+                                               ContextMenuAnnotation="{Binding ContextMenuAnnotation, Mode=OneWayToSource}"
                                                TypewriterTextOperations="{Binding TypewriterTextOperations}"
                                                RedactionDrawn="OnRedactionDrawn"
                                                TextSelected="OnTextSelected"
@@ -1749,6 +1750,19 @@
                              /P permission gating and its reason strings are shared. -->
                         <controls:PdfViewerControl.ContextMenu>
                             <ContextMenu>
+                                <MenuItem access:CommandAccessibility.CommandId="annotation.editNote"
+                                          Header="Edit Sticky _Note" Command="{Binding EditContextStickyNoteCommand}"
+                                          IsVisible="{Binding ContextMenuAnnotationIsStickyNote}"
+                                          IsEnabled="{Binding CanAnnotateContent}"
+                                          ToolTip.Tip="{Binding AnnotateDisabledReason}"
+                                          access:CommandAccessibility.KeepToolTip="True"/>
+                                <MenuItem access:CommandAccessibility.CommandId="annotation.delete"
+                                          Header="_Delete Annotation" Command="{Binding DeleteContextAnnotationCommand}"
+                                          IsVisible="{Binding HasContextMenuAnnotation}"
+                                          IsEnabled="{Binding CanAnnotateContent}"
+                                          ToolTip.Tip="{Binding AnnotateDisabledReason}"
+                                          access:CommandAccessibility.KeepToolTip="True"/>
+                                <Separator IsVisible="{Binding HasContextMenuAnnotation}"/>
                                 <MenuItem access:CommandAccessibility.CommandId="edit.copyText"
                                           Header="_Copy" Command="{Binding CopyTextCommand}"
                                           IsVisible="{Binding HasTextSelection}"

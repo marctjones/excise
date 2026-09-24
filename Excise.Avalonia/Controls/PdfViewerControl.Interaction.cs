@@ -32,6 +32,7 @@ public partial class PdfViewerControl
         {
             // #1817: remember which page the menu was opened on.
             ContextMenuPageNumber = TryMapPointerToContent(e, out var menuPage, out _, out _) ? menuPage : 0;
+            ContextMenuAnnotation = HitTestAnnotationForContextMenu(e);   // #1815
             return;
         }
 
@@ -598,6 +599,28 @@ public partial class PdfViewerControl
             if (string.IsNullOrWhiteSpace(a.Contents) && string.IsNullOrWhiteSpace(a.Author))
                 continue;
 
+            if (ContainsPoint(a, pdfX, pdfY)) return a;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// The topmost annotation a right-click can act on (#1815): unlike <see cref="HitTestAnnotationForEvent"/>
+    /// it does not require text worth hovering, since a highlight or an ink stroke has none, but it skips
+    /// what a right-click must not delete: links, popups (they go with their note), form fields and hidden
+    /// annotations.
+    /// </summary>
+    private PdfAnnotation? HitTestAnnotationForContextMenu(PointerEventArgs e)
+    {
+        if (!TryMapPointerToContent(e, out var pageNumber, out var pdfX, out var pdfY))
+            return null;
+
+        var annots = GetPageAnnotations(pageNumber);
+        for (var i = annots.Count - 1; i >= 0; i--)
+        {
+            var a = annots[i];
+            if (a.Subtype is PdfAnnotationSubtype.Link or PdfAnnotationSubtype.Popup or PdfAnnotationSubtype.Widget) continue;
+            if (a.Flags.HasFlag(PdfAnnotationFlags.Hidden) || a.Flags.HasFlag(PdfAnnotationFlags.NoView)) continue;
             if (ContainsPoint(a, pdfX, pdfY)) return a;
         }
         return null;

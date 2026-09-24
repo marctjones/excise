@@ -84,6 +84,8 @@ public static class PdfCommandRegistry
         Annotate(PdfCommandIds.TogglePolygonMode, "Draw Polygon", "Toggle polygon drawing; each click plants a vertex and double-click or Enter closes the shape."),
         Annotate(PdfCommandIds.TogglePolyLineMode, "Draw PolyLine", "Toggle polyline drawing; each click plants a vertex and double-click or Enter ends the open path."),
         Annotate(PdfCommandIds.AddStickyNote, "Add Sticky Note", "Create a sticky-note annotation."),
+        Annotate(PdfCommandIds.DeleteAnnotation, "Delete Annotation", "Delete the annotation that was right-clicked. Undoable."),
+        Annotate(PdfCommandIds.EditStickyNote, "Edit Sticky Note", "Reopen the right-clicked sticky note for editing."),
         Annotate(PdfCommandIds.ToggleStickyNoteTool, "Place Sticky Note",
             "Toggle click-to-place sticky-note mode: click the page to plant a note there and start typing."),
 

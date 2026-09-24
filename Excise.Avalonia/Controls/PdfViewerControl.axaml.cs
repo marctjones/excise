@@ -311,6 +311,19 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// The annotation under the pointer when a right-click opened the context menu, or null (#1815).
+    /// Never a link, popup or form field, and never a hidden one. Cleared when the menu closes.
+    /// </summary>
+    public static readonly StyledProperty<Excise.Core.Document.PdfAnnotation?> ContextMenuAnnotationProperty =
+        AvaloniaProperty.Register<PdfViewerControl, Excise.Core.Document.PdfAnnotation?>(nameof(ContextMenuAnnotation));
+
+    public Excise.Core.Document.PdfAnnotation? ContextMenuAnnotation
+    {
+        get => GetValue(ContextMenuAnnotationProperty);
+        set => SetValue(ContextMenuAnnotationProperty, value);
+    }
+
+    /// <summary>
     /// Supplies the AcroForm fields of ANY page by 1-based number. The continuous
     /// view shows many pages at once, so the current-page-only
     /// <see cref="FormFields"/> cannot feed it (#1807); each realized page slot
@@ -1302,7 +1315,11 @@ public partial class PdfViewerControl : UserControl
     }
 
     private void OnContextMenuClosed(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e) =>
-        Dispatcher.UIThread.Post(() => ContextMenuPageNumber = 0, DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() =>
+        {
+            ContextMenuPageNumber = 0;
+            ContextMenuAnnotation = null;
+        }, DispatcherPriority.Background);
 
     /// <summary>
     /// The actual visible page area, in DIPs, *inside* the scroll bars.
