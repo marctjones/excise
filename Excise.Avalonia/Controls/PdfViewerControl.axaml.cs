@@ -961,8 +961,8 @@ public partial class PdfViewerControl : UserControl
             if (field.Rect is not Excise.Core.Document.PdfRectangle r) continue;
 
             var viewerRect = ToAvaloniaRect(ToViewerDips(ContentRect(r, CurrentPage)));
-            double dipW = Math.Max(viewerRect.Width, 12);
-            double dipH = Math.Max(viewerRect.Height, 12);
+            double dipW = Math.Max(viewerRect.Width, 4);
+            double dipH = Math.Max(viewerRect.Height, 4);
 
             var input = BuildFormFieldInput(field, dipW, dipH, tabIndex);
             if (input == null) continue;
@@ -1119,38 +1119,78 @@ public partial class PdfViewerControl : UserControl
         return checkBox;
     }
 
+    /// <summary>
+    /// How much of a field overlay's colour shows at rest. The tint and border colours are
+    /// the ones the controls are built with; at rest they are faint so a dense form (an IRS
+    /// 1040 has 128 fields on page 1) stays readable, the way Acrobat and Firefox draw a
+    /// field. Hovering a field shows its full border, and focus shows the blue one.
+    /// </summary>
+    private const byte RestingTintAlpha = 0x0A;
+    private const byte RestingBorderAlpha = 0x48;
+
     private static void ApplyFormFieldChrome(Control input, Excise.Core.Document.PdfField field, int tabIndex)
     {
         input.TabIndex = tabIndex;
         input.IsEnabled = input.IsEnabled && !field.IsReadOnly;
+        // The theme gives TextBox, ComboBox and CheckBox a 32 x 64 minimum size. On a form
+        // with 10 pt boxes that drew every overlay three times too tall and pushed its edge
+        // over the fields around it, so the overlay must be exactly the field's rectangle.
+        input.MinWidth = 0;
+        input.MinHeight = 0;
         // #1205: the field's fully-qualified NAME is an identifier the document
         // supplies and the tooltip is where the user reads it. Display only —
         // the field is still addressed and written by its real name.
         ToolTip.SetTip(input, Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(field.FullName));
 
-        input.GotFocus += (_, _) => SetFormFieldFocusChrome(input, focused: true);
-        input.LostFocus += (_, _) => SetFormFieldFocusChrome(input, focused: false);
+        var (tint, border) = FieldOverlayBrushes(input);
+        var focused = false;
+        var hovered = false;
+        void Apply() => SetFormFieldChrome(input, focused, hovered, tint, border);
+
+        Apply();
+        input.GotFocus += (_, _) => { focused = true; Apply(); };
+        input.LostFocus += (_, _) => { focused = false; Apply(); };
+        input.PointerEntered += (_, _) => { hovered = true; Apply(); };
+        input.PointerExited += (_, _) => { hovered = false; Apply(); };
     }
 
-    private static void SetFormFieldFocusChrome(Control input, bool focused)
+    private static (Color Tint, Color Border) FieldOverlayBrushes(Control input) => input switch
     {
-        var brush = new SolidColorBrush(focused
+        TextBox t => (ColorOf(t.Background), ColorOf(t.BorderBrush)),
+        ComboBox c => (ColorOf(c.Background), ColorOf(c.BorderBrush)),
+        CheckBox k => (ColorOf(k.Background), ColorOf(k.BorderBrush)),
+        _ => (Colors.Transparent, Colors.Transparent),
+    };
+
+    private static Color ColorOf(global::Avalonia.Media.IBrush? brush) =>
+        brush is ISolidColorBrush solid ? solid.Color : Colors.Transparent;
+
+    private static Color WithAlpha(Color c, byte alpha) => Color.FromArgb(alpha, c.R, c.G, c.B);
+
+    private static void SetFormFieldChrome(Control input, bool focused, bool hovered, Color tint, Color border)
+    {
+        var loud = focused || hovered;
+        var tintBrush = new SolidColorBrush(loud ? tint : WithAlpha(tint, Math.Min(tint.A, RestingTintAlpha)));
+        var borderBrush = new SolidColorBrush(focused
             ? Color.FromArgb(0xFF, 0x00, 0x5F, 0xCC)
-            : Color.FromArgb(0xFF, 0x88, 0x88, 0x88));
+            : hovered ? border : WithAlpha(border, Math.Min(border.A, RestingBorderAlpha)));
         var thickness = new Thickness(focused ? 2 : 1);
 
         switch (input)
         {
             case TextBox textBox:
-                textBox.BorderBrush = brush;
+                textBox.Background = tintBrush;
+                textBox.BorderBrush = borderBrush;
                 textBox.BorderThickness = thickness;
                 break;
             case ComboBox comboBox:
-                comboBox.BorderBrush = brush;
+                comboBox.Background = tintBrush;
+                comboBox.BorderBrush = borderBrush;
                 comboBox.BorderThickness = thickness;
                 break;
             case CheckBox checkBox:
-                checkBox.BorderBrush = brush;
+                checkBox.Background = tintBrush;
+                checkBox.BorderBrush = borderBrush;
                 checkBox.BorderThickness = thickness;
                 break;
         }

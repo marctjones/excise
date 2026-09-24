@@ -78,7 +78,7 @@ public partial class PdfViewerControl
                 page, PdfPageRect.FromContentPoints(page.PageNumber, field.Rect!.Value), unitsPerPoint);
 
             var input = BuildFormFieldInput(
-                field, Math.Max(dips.Width, 12), Math.Max(dips.Height, 12), tabIndex);
+                field, Math.Max(dips.Width, 4), Math.Max(dips.Height, 4), tabIndex);
             if (input == null) continue;
 
             input.Classes.Add(ContinuousFormFieldClass);
