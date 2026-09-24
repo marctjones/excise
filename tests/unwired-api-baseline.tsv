@@ -24,6 +24,7 @@ Excise.App	nowhere	LicenseKind	triage:app surface likely XAML/framework binding 
 Excise.App	nowhere	LicenseValue	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	MarkPageForOperation	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	SetCommandId	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	SetKeepToolTip	triage:attached-property accessor; the XAML attribute access:CommandAccessibility.KeepToolTip is the caller, like SetCommandId and SetShowToolTip (#1816)
 Excise.App	nowhere	SetShowToolTip	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	TypeIndicator	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	tests-only	AddPagesFromPdf	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
