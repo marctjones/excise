@@ -75,6 +75,7 @@ scripts/download-tessdata.ps1   # fetches an optional corpus/tool; prerequisites
 scripts/download-tessdata.sh   # fetches an optional corpus/tool; prerequisites are declared per row
 scripts/download-test-pdfs.sh   # fetches an optional corpus/tool; prerequisites are declared per row
 scripts/download-verapdf-arlington.sh   # pulls the veraPDF-Arlington container image pinned by digest (#1709); needs network and a container engine
+scripts/download-xfa-real-corpus.sh   # fetches four real-world dynamic XFA forms, each pinned by SHA-256 (#1727); network, on demand
 scripts/download-xray.sh   # fetches an optional corpus/tool; prerequisites are declared per row
 scripts/enrich-pdf-capability-registry.py   # registry curation
 scripts/extract-pdf20-requirements.py   # registry curation

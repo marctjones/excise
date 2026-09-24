@@ -101,9 +101,18 @@ public class FormOverlayFitTests
         {
             var psi = new System.Diagnostics.ProcessStartInfo("mutool", $"run \"{js}\"")
             { RedirectStandardOutput = true, UseShellExecute = false };
+            psi.RedirectStandardError = true;
             using var proc = System.Diagnostics.Process.Start(psi)!;
-            var text = proc.StandardOutput.ReadToEnd();
-            proc.WaitForExit(60000);
+            // Drain both pipes concurrently and bound the wait: a synchronous ReadToEnd can block forever (#1068).
+            var stdout = proc.StandardOutput.ReadToEndAsync();
+            var stderr = proc.StandardError.ReadToEndAsync();
+            if (!proc.WaitForExit(60000))
+            {
+                proc.Kill(entireProcessTree: true);
+                throw new TimeoutException("mutool run did not finish");
+            }
+            _ = stderr.GetAwaiter().GetResult();
+            var text = stdout.GetAwaiter().GetResult();
             var ci = System.Globalization.CultureInfo.InvariantCulture;
             return text.Split('\n', StringSplitOptions.RemoveEmptyEntries)
                 .Select(l => l.TrimEnd('\r').Split('\t')).Where(c => c.Length == 5)

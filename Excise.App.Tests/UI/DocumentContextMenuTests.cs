@@ -175,8 +175,8 @@ public class DocumentContextMenuTests : IDisposable
         // Right-click the centre of the THIRD page, not the one the viewport considers current.
         var container = items.ContainerFromIndex(2) as Control;
         container.Should().NotBeNull("page 3 must be realized at this zoom");
-        var border = (container as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border ?? container as Border;
-        var centre = border!.TranslatePoint(new Point(border.Bounds.Width / 2, border.Bounds.Height / 2), window)!.Value;
+        var border = ((container as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border ?? container as Border)!;
+        var centre = border.TranslatePoint(new Point(border.Bounds.Width / 2, border.Bounds.Height / 2), window)!.Value;
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             window.MouseDown(centre, MouseButton.Right);

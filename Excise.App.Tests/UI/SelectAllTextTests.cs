@@ -57,8 +57,8 @@ public class SelectAllTextTests : IDisposable
 
         var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
         var container = (Control)items.ContainerFromIndex(2)!;   // page 3, deliberately not the most-visible page
-        var border = (container as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border ?? container as Border;
-        var centre = border!.TranslatePoint(new Point(border.Bounds.Width / 2, border.Bounds.Height / 2), window)!.Value;
+        var border = ((container as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border ?? container as Border)!;
+        var centre = border.TranslatePoint(new Point(border.Bounds.Width / 2, border.Bounds.Height / 2), window)!.Value;
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             window.MouseDown(centre, MouseButton.Right);
