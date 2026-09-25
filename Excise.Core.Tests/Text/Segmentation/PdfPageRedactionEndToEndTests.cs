@@ -107,6 +107,96 @@ public class PdfPageRedactionEndToEndTests
         rawContent.Should().Contain("BANANA", "the middle word must survive");
     }
 
+    // #1834: the options overloads honour DrawBox and BoxColor, like RedactText.
+    // The GUI used to draw the area box itself through a Core internal.
+    [Fact]
+    public void RedactAreaOptions_DrawsTheBoxOverTheArea_InBoxColor()
+    {
+        using var doc = PdfDocument.Open(CreatePdfWithText("HELLO WORLD", fontSize: 12, x: 100, y: 700));
+        var page = doc.GetPage(1);
+        var worldBox = BoundingBoxOf(page.Letters.Skip(6).Take(5));
+
+        page.RedactArea(worldBox, RedactionOptions.Default with { BoxColor = (1.0, 0.0, 0.0) });
+
+        var box = FilledRectangles(page).Should().ContainSingle().Subject;
+        box.Fill.Should().Be((1.0, 0.0, 0.0));
+        ShouldCover(box, worldBox);
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "WORLD").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void RedactAreasOptions_DrawsOneBlackBoxPerArea_ByDefault()
+    {
+        using var doc = PdfDocument.Open(CreatePdfWithText("APPLE BANANA CHERRY", fontSize: 12, x: 100, y: 700));
+        var page = doc.GetPage(1);
+        var apple = BoundingBoxOf(page.Letters.Take(5));
+        var cherry = BoundingBoxOf(page.Letters.Skip(13).Take(6));
+
+        page.RedactAreas(new[] { apple, cherry }, RedactionOptions.Default);
+
+        var boxes = FilledRectangles(page);
+        boxes.Select(b => b.Fill).Should().Equal((0.0, 0.0, 0.0), (0.0, 0.0, 0.0));
+        ShouldCover(boxes[0], apple);
+        ShouldCover(boxes[1], cherry);
+        var saved = doc.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(saved, "APPLE").Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, "CHERRY").Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, "BANANA").Should().NotBeEmpty("the middle word must survive");
+    }
+
+    // CloseGap reflows the rest of the line into the area, so it draws no box
+    // there, the same rule RedactText applies to a run; FixedMarker still marks.
+    [Theory]
+    [InlineData(false, WidthPolicy.CollapsePreserveLayout, false)]
+    [InlineData(true, WidthPolicy.CloseGap, false)]
+    [InlineData(true, WidthPolicy.FixedMarker, true)]
+    public void RedactAreaOptions_DrawsNoBox_WhenDrawBoxIsOffOrTheGapIsClosed(
+        bool drawBox, WidthPolicy width, bool expectBox)
+    {
+        using var doc = PdfDocument.Open(CreatePdfWithText("HELLO WORLD", fontSize: 12, x: 100, y: 700));
+        var page = doc.GetPage(1);
+        var helloBox = BoundingBoxOf(page.Letters.Take(5));
+
+        page.RedactArea(helloBox, RedactionOptions.Default with { DrawBox = drawBox, Width = width });
+
+        FilledRectangles(page).Should().HaveCount(expectBox ? 1 : 0);
+        var saved = doc.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(saved, "HELLO").Should().BeEmpty(
+            "glyph removal does not depend on whether a box is drawn");
+        SavedPdfLeakScanner.FindTerm(saved, "WORLD").Should().NotBeEmpty();
+    }
+
+    private static void ShouldCover(
+        ((double R, double G, double B) Fill, double X, double Y, double W, double H) box, PdfRectangle area)
+    {
+        box.X.Should().BeApproximately(area.Left, 0.01);
+        box.Y.Should().BeApproximately(area.Bottom, 0.01);
+        box.W.Should().BeApproximately(area.Width, 0.01);
+        box.H.Should().BeApproximately(area.Height, 0.01);
+    }
+
+    /// <summary>Every <c>re</c> on the page with the fill colour in force when it was drawn.</summary>
+    private static List<((double R, double G, double B) Fill, double X, double Y, double W, double H)>
+        FilledRectangles(PdfPage page)
+    {
+        static double Num(Excise.Core.Primitives.PdfObject o) => o switch
+        {
+            Excise.Core.Primitives.PdfInteger i => i.Value,
+            Excise.Core.Primitives.PdfReal r => r.Value,
+            _ => double.NaN,
+        };
+        var fill = (0.0, 0.0, 0.0);
+        var found = new List<((double, double, double), double, double, double, double)>();
+        foreach (var op in page.GetContentStream().Operators)
+        {
+            if (op.Name == "rg")
+                fill = (Num(op.Operands[0]), Num(op.Operands[1]), Num(op.Operands[2]));
+            else if (op.Name == "re")
+                found.Add((fill, Num(op.Operands[0]), Num(op.Operands[1]), Num(op.Operands[2]), Num(op.Operands[3])));
+        }
+        return found;
+    }
+
     private static PdfRectangle BoundingBoxOf(IEnumerable<Excise.Core.Text.Letter> letters)
     {
         var list = letters.ToList();

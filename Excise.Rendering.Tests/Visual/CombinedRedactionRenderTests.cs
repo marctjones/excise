@@ -74,10 +74,9 @@ public class CombinedRedactionRenderTests
         using (var doc = PdfDocument.Open(pdfBytes))
         {
             var page = doc.GetPage(1);
-            page.RedactArea(new PdfRectangle(RedactLeft, RedactBottom, RedactRight, RedactTop));
-            // Draw a confirmation black rectangle the same way
-            // RedactionService / CLI do it.
-            AppendBlackRectangle(page, new PdfRectangle(RedactLeft, RedactBottom, RedactRight, RedactTop));
+            // The options overload also draws the black covering box (#1834).
+            page.RedactArea(new PdfRectangle(RedactLeft, RedactBottom, RedactRight, RedactTop),
+                RedactionOptions.Default);
             redactedBytes = doc.SaveToBytes();
         }
         File.WriteAllBytes("/tmp/combined-after.pdf", redactedBytes);
@@ -190,19 +189,6 @@ public class CombinedRedactionRenderTests
             if (c.Red < 20 && c.Green < 20 && c.Blue < 20) black++;
         }
         return total == 0 ? 0 : (double)black / total;
-    }
-
-    private static void AppendBlackRectangle(PdfPage page, PdfRectangle rect)
-    {
-        var content = page.GetContentStream();
-        var ops = new System.Collections.Generic.List<Excise.Core.Content.ContentOperator>(content.Operators);
-        ops.Add(Excise.Core.Content.ContentOperator.SaveState());
-        ops.Add(Excise.Core.Content.ContentOperator.SetFillRgb(0, 0, 0));
-        ops.Add(Excise.Core.Content.ContentOperator.Rectangle(
-            rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom));
-        ops.Add(Excise.Core.Content.ContentOperator.Fill());
-        ops.Add(Excise.Core.Content.ContentOperator.RestoreState());
-        page.SetContentStream(new Excise.Core.Content.ContentStream(ops));
     }
 
     /// <summary>

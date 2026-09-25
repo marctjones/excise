@@ -148,12 +148,11 @@ public static class PdfPageRedactionExtensions
     /// </remarks>
     /// <summary>
     /// Redact <paramref name="area"/> under a unified <see cref="RedactionOptions"/>
-    /// surface (#1187). Area redaction has no term, case, box or hidden-layer
-    /// concept, so only the geometry-relevant fields
-    /// (<see cref="RedactionOptions.Strategy"/>,
-    /// <see cref="RedactionOptions.ScrubDocumentCarriers"/>,
-    /// <see cref="RedactionOptions.Width"/>,
-    /// <see cref="RedactionOptions.KeepAttachments"/>) apply; the rest are RedactText-only.
+    /// surface (#1187). Area redaction has no term, case or hidden-layer concept,
+    /// so those fields are RedactText-only. The covering box is the area itself,
+    /// drawn under RedactText's rule (#1834): <see cref="RedactionOptions.DrawBox"/>
+    /// in <see cref="RedactionOptions.BoxColor"/>, and none when
+    /// <see cref="RedactionOptions.Width"/> closes the gap, except FixedMarker.
     /// </summary>
     public static void RedactArea(this PdfPage page, PdfRectangle area, RedactionOptions options)
         => page.RedactAreaWithReport(area, options);
@@ -179,20 +178,7 @@ public static class PdfPageRedactionExtensions
     /// </remarks>
     public static RedactionReport RedactAreaWithReport(
         this PdfPage page, PdfRectangle area, RedactionOptions options)
-    {
-        if (page == null) throw new System.ArgumentNullException(nameof(page));
-        if (options == null) throw new System.ArgumentNullException(nameof(options));
-        // #1586: the profile removals go first, for the same reasons as on the
-        // RedactText path — hidden optional content the profile deletes is not
-        // then walked for glyph removal, and the #1507 metadata strip runs
-        // before #1499's per-widget appearance decision reads TargetsPdfA.
-        var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
-        var imageCounts = page.RedactAreaInternal(area, area, options.Strategy,
-            options.ScrubDocumentCarriers, options.CloseWidth,
-            removeAttachments: !options.KeepAttachments);
-        return AreaReport(page.Document, options, metadataRow,
-            RedactionFeatureStripper.Apply(page.Document, options), imageCounts);
-    }
+        => page.RedactAreasWithReport(new[] { area }, options);
 
     public static void RedactArea(
         this PdfPage page,
@@ -330,7 +316,7 @@ public static class PdfPageRedactionExtensions
     /// <summary>
     /// Redact multiple areas under a unified <see cref="RedactionOptions"/>
     /// surface (#1187). As with <see cref="RedactArea(PdfPage, PdfRectangle, RedactionOptions)"/>,
-    /// only the geometry-relevant fields apply.
+    /// the term fields do not apply and each area gets its own box.
     /// </summary>
     public static void RedactAreas(
         this PdfPage page,
@@ -351,13 +337,22 @@ public static class PdfPageRedactionExtensions
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
         if (options == null) throw new System.ArgumentNullException(nameof(options));
+        // #1586: the profile removals go first, for the same reasons as on the
+        // RedactText path — hidden optional content the profile deletes is not
+        // then walked for glyph removal, and the #1507 metadata strip runs
+        // before #1499's per-widget appearance decision reads TargetsPdfA.
         var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
         var list = areas.Select(a => a.Normalize()).ToList();
         var imageCounts = page.RedactAreasInternal(list, list, options.Strategy,
             options.ScrubDocumentCarriers, options.CloseWidth,
             removeAttachments: !options.KeepAttachments);
-        return AreaReport(page.Document, options, metadataRow,
-            RedactionFeatureStripper.Apply(page.Document, options), imageCounts);
+        var removals = RedactionFeatureStripper.Apply(page.Document, options);
+        // #1834: RedactText's box rule. A closed gap reflows the rest of the
+        // line into the area, so only FixedMarker still draws there.
+        if (options.DrawBox && (options.FixedMarker || !options.CloseWidth))
+            foreach (var area in list)
+                PdfDocumentRedactionExtensions.AppendBlackRectangle(page, area, options.BoxColor);
+        return AreaReport(page.Document, options, metadataRow, removals, imageCounts);
     }
 
     /// <summary>

@@ -81,7 +81,8 @@ internal sealed class RedactionWorkflowService
                 request.Document.Pages[redaction.PageNumber - 1],
                 redaction.PageArea,
                 keepAttachments: !request.SafetyOptions.ScrubAttachments,
-                profile: request.SafetyOptions.Profile);   // #1586
+                profile: request.SafetyOptions.Profile,   // #1586
+                width: request.Width);
         }
 
         var appliedTypewriterOperations = PdfTypewriterTextApplier.Apply(
@@ -154,7 +155,8 @@ internal sealed record RedactionApplicationRequest(
     IReadOnlyList<PdfTypewriterTextOperation> TypewriterOperations,
     // #1188/#1169: which carriers the term scrub touches and HOW. Defaults
     // reproduce the pre-option behaviour exactly.
-    RedactedCopySafetyOptions? SafetyOptionsOverride = null)
+    RedactedCopySafetyOptions? SafetyOptionsOverride = null,
+    WidthPolicy Width = WidthPolicy.CollapsePreserveLayout)   // #1834
 {
     public RedactedCopySafetyOptions SafetyOptions =>
         SafetyOptionsOverride ?? RedactedCopySafetyOptions.Default;
@@ -163,7 +165,8 @@ internal sealed record RedactionApplicationRequest(
         PdfDocument document,
         IEnumerable<PendingRedaction> pendingRedactions,
         IEnumerable<PdfTypewriterTextOperation> typewriterOperations,
-        RedactedCopySafetyOptions? safetyOptions = null)
+        RedactedCopySafetyOptions? safetyOptions = null,
+        WidthPolicy width = WidthPolicy.CollapsePreserveLayout)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(pendingRedactions);
@@ -172,7 +175,8 @@ internal sealed record RedactionApplicationRequest(
             document,
             pendingRedactions.Select(RedactionAreaTransaction.FromPending).ToArray(),
             typewriterOperations.ToArray(),
-            safetyOptions);
+            safetyOptions,
+            width);
     }
 }
 
@@ -193,13 +197,15 @@ internal sealed record RedactedCopyRequest(
         IEnumerable<PdfTypewriterTextOperation> typewriterOperations,
         string outputPath,
         PdfEncryptionOptions? encryptionOptions,
-        RedactedCopySafetyOptions? safetyOptions = null) =>
+        RedactedCopySafetyOptions? safetyOptions = null,
+        WidthPolicy width = WidthPolicy.CollapsePreserveLayout) =>
         new(
             RedactionApplicationRequest.Capture(
                 document,
                 pendingRedactions,
                 typewriterOperations,
-                safetyOptions),
+                safetyOptions,
+                width),
             outputPath,
             encryptionOptions);
 }

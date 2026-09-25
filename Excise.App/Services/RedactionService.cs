@@ -61,7 +61,9 @@ public class RedactionService
         PdfPageRect area,
         bool keepAttachments = false,
         Excise.Core.Text.Segmentation.RedactionProfile profile
-            = Excise.Core.Text.Segmentation.RedactionProfile.Standard)   // #1586
+            = Excise.Core.Text.Segmentation.RedactionProfile.Standard,   // #1586
+        Excise.Core.Text.Segmentation.WidthPolicy width
+            = Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout)   // #1834
     {
         var visualArea = PdfCoordinateMapper.ToVisualPoints(page, area);
         if (!IntersectsVisualPage(visualArea, page.VisualWidth, page.VisualHeight))
@@ -71,30 +73,20 @@ public class RedactionService
                 page.VisualWidth, page.VisualHeight, visualArea.X, visualArea.Y, visualArea.Width, visualArea.Height);
         }
 
-        var coreRect = PdfCoordinateMapper.ToContentPoints(page, area).ToPdfRectangle().Normalize();
-
-        // Snapshot the words about to be removed — after RedactArea
-        // rewrites the content stream, extraction reports zero.
-        var removed = page.Letters
-            .Where(l => RedactionMath.Overlaps(l.GlyphRectangle, coreRect))
-            .Select(l => l.Value)
-            .ToList();
+        var coreRect = PdfCoordinateMapper.ToContentPoints(page, area).ToPdfRectangle();
 
         // The engine also strips the document's positionless carriers (/Info,
         // XMP) by default — see #897 and the note at the top of this class —
-        // and, unless kept, every attachment (#1572).
+        // and, unless kept, every attachment (#1572). It draws the covering box.
         page.RedactArea(coreRect,
             Excise.Core.Text.Segmentation.RedactionOptions.ForProfile(profile) with
             {
                 Strategy = GlyphRemovalStrategy.AnyOverlap,
                 KeepAttachments = keepAttachments,
+                Width = width,
             });
-        // #1450: the Core helper, not a GUI copy — it threads the tracked
-        // source spans/array boundaries RedactArea just produced through the
-        // append, instead of re-serializing the whole page a second time.
-        PdfDocumentRedactionExtensions.AppendBlackRectangle(page, coreRect);
 
-        _logger.LogInformation("Redacted {Count} characters on page", removed.Count);
+        _logger.LogInformation("Redacted area {Area} on page {Page}", coreRect, page.PageNumber);
     }
 
     private static bool IntersectsVisualPage(PdfPageRect visualArea, double visualPageWidth, double visualPageHeight)
@@ -238,13 +230,3 @@ public class RedactionService
               $"({confidence.Oracle}) on one or more pages of this document. Review the result before relying on it.";
 }
 
-/// <summary>Geometry helpers used to pre-filter letters before redaction.</summary>
-internal static class RedactionMath
-{
-    public static bool Overlaps(PdfRectangle glyph, PdfRectangle area)
-    {
-        var g = glyph.Normalize();
-        var a = area.Normalize();
-        return g.IntersectsWith(a);
-    }
-}
