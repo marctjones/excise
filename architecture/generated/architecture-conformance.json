@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "cfebb952e5e8b87e39aa395c1a185ce55873099e",
+  "sourceRevision": "861e091932d564c265f9aa3437522319a1a1e2cb",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8221,
+    "retainedSymbols": 8201,
     "observedComponentDependencies": 78,
     "declaredDependencies": 74,
     "acceptedExceptions": 1,
@@ -38,8 +38,8 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 758,
-      "typeDependencyCount": 78,
+      "references": 754,
+      "typeDependencyCount": 76,
       "classification": "declared",
       "evidence": [
         {
@@ -150,12 +150,12 @@
     {
       "source": "cli",
       "target": "core-document",
-      "references": 170,
-      "typeDependencyCount": 45,
+      "references": 179,
+      "typeDependencyCount": 53,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Commands.DocumentAssemblyHandler",
+          "source": "Excise.Cli.Commands.InfoCommandHandler",
           "target": "Excise.Core.Document.PdfDocument",
           "references": 12
         }
@@ -164,8 +164,8 @@
     {
       "source": "cli",
       "target": "core-encryption",
-      "references": 45,
-      "typeDependencyCount": 17,
+      "references": 39,
+      "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
@@ -416,8 +416,8 @@
     {
       "source": "core-document",
       "target": "core-encryption",
-      "references": 17,
-      "typeDependencyCount": 5,
+      "references": 24,
+      "typeDependencyCount": 6,
       "classification": "declared",
       "evidence": [
         {

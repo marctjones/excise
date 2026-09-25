@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "47fe555ecf901cea19586e337011311bf12f7457143c6c08e82d716b2f868349",
+  "sourceFingerprint": "81983bb25483d6b50cb23f136c33a1618903aecb6c395547e8801668ca329864",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -1064,6 +1064,50 @@
     {
       "id": "Excise.Core/Document/PdfDocumentDerivedState.cs",
       "path": "Excise.Core/Document/PdfDocumentDerivedState.cs",
+      "kind": "source-file",
+      "facets": [
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Document/PdfDocumentLifetime.cs",
+      "path": "Excise.Core/Document/PdfDocumentLifetime.cs",
       "kind": "source-file",
       "facets": [
         "document-structure"
@@ -3478,6 +3522,50 @@
             "mutate",
             "parse",
             "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Operations/PdfDocumentAssembly.cs",
+      "path": "Excise.Core/Operations/PdfDocumentAssembly.cs",
+      "kind": "source-file",
+      "facets": [
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
             "write"
           ],
           "mappingSources": [
@@ -10062,16 +10150,6 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.Cli/Commands/DocumentAssemblyHandler.cs",
-      "path": "Excise.Cli/Commands/DocumentAssemblyHandler.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
       "id": "Excise.Cli/Commands/EncryptCommand.cs",
       "path": "Excise.Cli/Commands/EncryptCommand.cs",
       "kind": "source-file",
@@ -10269,50 +10347,6 @@
         "product-integration-general"
       ],
       "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.Cli/Commands/PdfDocumentLifetime.cs",
-      "path": "Excise.Cli/Commands/PdfDocumentLifetime.cs",
-      "kind": "source-file",
-      "facets": [
-        "document-structure"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.document.catalog-pages",
-          "modes": [
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdf.17.syntax.file",
-          "modes": [
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdf.17.syntax.objects",
-          "modes": [
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
       "promotion": "review-required"
     },
     {
@@ -11033,11 +11067,11 @@
     "facets": {
       "annotations": 14,
       "content-and-graphics": 19,
-      "document-structure": 35,
+      "document-structure": 36,
       "fonts": 32,
       "forms": 9,
       "images": 33,
-      "product-integration-general": 313,
+      "product-integration-general": 312,
       "redaction": 81,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 23,
@@ -11048,9 +11082,9 @@
       "pdf.17.content.streams:parse": 19,
       "pdf.17.content.streams:render": 19,
       "pdf.17.content.streams:write": 19,
-      "pdf.17.document.catalog-pages:parse": 35,
-      "pdf.17.document.catalog-pages:preserve": 35,
-      "pdf.17.document.catalog-pages:write": 35,
+      "pdf.17.document.catalog-pages:parse": 36,
+      "pdf.17.document.catalog-pages:preserve": 36,
+      "pdf.17.document.catalog-pages:write": 36,
       "pdf.17.document.metadata:mutate": 20,
       "pdf.17.document.metadata:preserve": 20,
       "pdf.17.document.metadata:write": 20,
@@ -11095,13 +11129,13 @@
       "pdf.17.syntax.encryption:parse": 23,
       "pdf.17.syntax.encryption:preserve": 23,
       "pdf.17.syntax.encryption:write": 23,
-      "pdf.17.syntax.file:parse": 35,
-      "pdf.17.syntax.file:preserve": 35,
-      "pdf.17.syntax.file:write": 35,
+      "pdf.17.syntax.file:parse": 36,
+      "pdf.17.syntax.file:preserve": 36,
+      "pdf.17.syntax.file:write": 36,
       "pdf.17.syntax.objects:mutate": 20,
-      "pdf.17.syntax.objects:parse": 35,
-      "pdf.17.syntax.objects:preserve": 52,
-      "pdf.17.syntax.objects:write": 52,
+      "pdf.17.syntax.objects:parse": 36,
+      "pdf.17.syntax.objects:preserve": 53,
+      "pdf.17.syntax.objects:write": 53,
       "pdf.17.transparency.model:parse": 2,
       "pdf.17.transparency.model:render": 2,
       "pdfe.product.security.attachments:extract": 4,
@@ -11116,7 +11150,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 23,
       "pdfe.product.security.signature-and-permission-warning:write": 23
     },
-    "fallbackRecords": 313,
+    "fallbackRecords": 312,
     "allRecordsMapped": true
   }
 }

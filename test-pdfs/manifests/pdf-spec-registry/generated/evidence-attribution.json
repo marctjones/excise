@@ -8267,6 +8267,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentLifetimeTests.cs::PdfDocumentLifetimeTests.OpenInputForOutput_SamePathCanBeSavedBackToSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.Info_WithMetadata_ReturnsInfoDictionary",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -8539,15 +8548,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -21565,6 +21565,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentLifetimeTests.cs::PdfDocumentLifetimeTests.OpenInputForOutput_SamePathCanBeSavedBackToSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.Info_WithMetadata_ReturnsInfoDictionary",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -21836,15 +21845,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -23063,6 +23063,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentLifetimeTests.cs::PdfDocumentLifetimeTests.OpenInputForOutput_SamePathCanBeSavedBackToSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.Info_WithMetadata_ReturnsInfoDictionary",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23334,15 +23343,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -24522,6 +24522,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentLifetimeTests.cs::PdfDocumentLifetimeTests.OpenInputForOutput_SamePathCanBeSavedBackToSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.Info_WithMetadata_ReturnsInfoDictionary",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -24793,15 +24802,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -106531,6 +106531,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentLifetimeTests.cs::PdfDocumentLifetimeTests.OpenInputForOutput_SamePathCanBeSavedBackToSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.Info_WithMetadata_ReturnsInfoDictionary",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -106802,15 +106811,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -107977,6 +107977,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentLifetimeTests.cs::PdfDocumentLifetimeTests.OpenInputForOutput_SamePathCanBeSavedBackToSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.Info_WithMetadata_ReturnsInfoDictionary",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -108248,15 +108257,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112868,8 +112868,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7792,
-    "testMethodsWithCapabilityCandidate": 4957,
+    "testMethods": 7797,
+    "testMethodsWithCapabilityCandidate": 4963,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
