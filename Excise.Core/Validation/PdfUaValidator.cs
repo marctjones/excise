@@ -46,24 +46,26 @@ public static class PdfUaValidator
         if (document == null) throw new ArgumentNullException(nameof(document));
 
         var results = new List<ValidationResult>();
-        var tree = StructTreeAnalysis.Build(document);
+        bool hasStructTree = document.Resolve(document.Catalog.GetOptional("StructTreeRoot") ?? PdfNull.Instance)
+            is PdfDictionary;
+        var nodes = AllNodes(document.GetStructureTree()).ToList();
 
-        CheckTagged(document, tree, results);
+        CheckTagged(document, hasStructTree, results);
         CheckLanguage(document, results);
         CheckTitle(document, results);
         CheckDisplayDocTitle(document, results);
-        CheckRoleMap(tree, results);
-        CheckFigures(tree, results);
-        CheckHeadings(tree, results);
-        CheckTables(tree, results);
-        CheckLists(tree, results);
-        CheckContentTagged(document, tree, results);
+        CheckRoleMap(hasStructTree, nodes, results);
+        CheckFigures(nodes, results);
+        CheckHeadings(nodes, results);
+        CheckTables(nodes, results);
+        CheckLists(nodes, results);
+        CheckContentTagged(document, hasStructTree, nodes, results);
 
         return new ValidationReport(ConformanceStandard.PdfUA1, results, Uncovered);
     }
 
     // 7.1 — the document must be tagged and have a structure tree.
-    private static void CheckTagged(PdfDocument doc, StructTreeAnalysis tree, List<ValidationResult> results)
+    private static void CheckTagged(PdfDocument doc, bool hasStructTree, List<ValidationResult> results)
     {
         bool marked = doc.Resolve(doc.Catalog.GetOptional("MarkInfo") ?? PdfNull.Instance)
             is PdfDictionary mi && mi.GetBool("Marked");
@@ -79,7 +81,7 @@ public static class PdfUaValidator
             "UA-StructTreeRoot",
             "Document has a structure tree (/StructTreeRoot).",
             RuleSeverity.Error,
-            tree.StructTreeRoot != null ? RuleStatus.Pass : RuleStatus.Fail,
+            hasStructTree ? RuleStatus.Pass : RuleStatus.Fail,
             location: "Catalog/StructTreeRoot",
             reference: "ISO 14289-1 §7.1; Matterhorn 01-006"));
     }
@@ -126,9 +128,9 @@ public static class PdfUaValidator
     }
 
     // 7.1 — every non-standard structure type must be role-mapped to a standard one.
-    private static void CheckRoleMap(StructTreeAnalysis tree, List<ValidationResult> results)
+    private static void CheckRoleMap(bool hasStructTree, List<PdfStructElement> nodes, List<ValidationResult> results)
     {
-        if (tree.StructTreeRoot == null)
+        if (!hasStructTree)
         {
             results.Add(NotChecked("UA-RoleMap",
                 "Custom structure types map to standard types (/RoleMap).",
@@ -136,20 +138,21 @@ public static class PdfUaValidator
             return;
         }
 
-        var unmapped = tree.UnmappedCustomTypes;
+        var unmapped = nodes.Where(n => !IsStandard(n.Type) && !IsStandard(n.RoleMappedType))
+            .Select(n => n.Type).Distinct().ToList();
         results.Add(new ValidationResult(
             "UA-RoleMap",
             "Custom structure types are mapped to standard types via /RoleMap.",
             RuleSeverity.Error,
             unmapped.Count == 0 ? RuleStatus.Pass : RuleStatus.Fail,
-            location: unmapped.Count == 0 ? null : "unmapped types: " + string.Join(", ", unmapped.Select(t => "/" + t)),
+            location: unmapped.Count == 0 ? null : "unmapped types: " + string.Join(", ", unmapped),
             reference: "ISO 14289-1 §7.1; Matterhorn 02-001"));
     }
 
     // 7.3 — figures need a text alternative.
-    private static void CheckFigures(StructTreeAnalysis tree, List<ValidationResult> results)
+    private static void CheckFigures(List<PdfStructElement> nodes, List<ValidationResult> results)
     {
-        var figures = AllNodes(tree).Where(n => n.ResolvedType == "Figure").ToList();
+        var figures = nodes.Where(n => n.RoleMappedType == "/Figure").ToList();
         if (figures.Count == 0)
         {
             results.Add(NotApplicable("UA-Figure-Alt",
@@ -159,7 +162,7 @@ public static class PdfUaValidator
         }
 
         var missing = figures.Where(f =>
-            string.IsNullOrWhiteSpace(f.Alt) && string.IsNullOrWhiteSpace(f.ActualText)).ToList();
+            string.IsNullOrWhiteSpace(f.AltText) && string.IsNullOrWhiteSpace(f.ActualText)).ToList();
         results.Add(new ValidationResult(
             "UA-Figure-Alt",
             "Every /Figure has alternative text (/Alt or /ActualText).",
@@ -172,19 +175,16 @@ public static class PdfUaValidator
     }
 
     // 7.4.2 — heading levels must not skip (H1 → H3 without H2).
-    private static void CheckHeadings(StructTreeAnalysis tree, List<ValidationResult> results)
+    private static void CheckHeadings(List<PdfStructElement> nodes, List<ValidationResult> results)
     {
-        // Collect headings in document (reading) order. Level 0 == unnumbered /H.
-        var headings = new List<(int Level, string Type)>();
-        void Walk(StructNode n)
+        // Headings in document (reading) order. Level 0 == unnumbered /H.
+        var headings = new List<int>();
+        foreach (var type in nodes.Select(n => n.RoleMappedType))
         {
-            if (n.ResolvedType == "H") headings.Add((0, n.ResolvedType));
-            else if (n.ResolvedType.Length == 2 && n.ResolvedType[0] == 'H'
-                     && n.ResolvedType[1] is >= '1' and <= '6')
-                headings.Add((n.ResolvedType[1] - '0', n.ResolvedType));
-            foreach (var c in n.Children) Walk(c);
+            if (type == "/H") headings.Add(0);
+            else if (type.Length == 3 && type[1] == 'H' && type[2] is >= '1' and <= '6')
+                headings.Add(type[2] - '0');
         }
-        foreach (var r in tree.Roots) Walk(r);
 
         if (headings.Count == 0)
         {
@@ -194,8 +194,8 @@ public static class PdfUaValidator
             return;
         }
 
-        var numbered = headings.Where(h => h.Level > 0).Select(h => h.Level).ToList();
-        bool usesUnnumbered = headings.Any(h => h.Level == 0);
+        var numbered = headings.Where(level => level > 0).ToList();
+        bool usesUnnumbered = headings.Contains(0);
 
         // Mixing the strong (H1..H6) and weak (H) heading models is not conformant.
         if (numbered.Count > 0 && usesUnnumbered)
@@ -246,9 +246,9 @@ public static class PdfUaValidator
     }
 
     // 7.5 — table structure: Table → (THead/TBody/TFoot →)? TR → TH|TD.
-    private static void CheckTables(StructTreeAnalysis tree, List<ValidationResult> results)
+    private static void CheckTables(List<PdfStructElement> nodes, List<ValidationResult> results)
     {
-        var tables = AllNodes(tree).Where(n => n.ResolvedType == "Table").ToList();
+        var tables = nodes.Where(n => n.RoleMappedType == "/Table").ToList();
         if (tables.Count == 0)
         {
             results.Add(NotApplicable("UA-Table-Structure",
@@ -260,14 +260,14 @@ public static class PdfUaValidator
         var problems = new List<string>();
         foreach (var t in tables)
         {
-            var rows = new List<StructNode>();
+            var rows = new List<PdfStructElement>();
             foreach (var c in t.Children)
             {
-                if (c.ResolvedType == "TR") rows.Add(c);
-                else if (c.ResolvedType is "THead" or "TBody" or "TFoot")
-                    rows.AddRange(c.Children.Where(g => g.ResolvedType == "TR"));
-                else if (c.ResolvedType is not ("Caption"))
-                    problems.Add($"/Table has unexpected child /{c.ResolvedType}");
+                if (c.RoleMappedType == "/TR") rows.Add(c);
+                else if (c.RoleMappedType is "/THead" or "/TBody" or "/TFoot")
+                    rows.AddRange(c.Children.Where(g => g.RoleMappedType == "/TR"));
+                else if (c.RoleMappedType is not "/Caption")
+                    problems.Add($"/Table has unexpected child {c.RoleMappedType}");
             }
             if (rows.Count == 0)
             {
@@ -276,9 +276,9 @@ public static class PdfUaValidator
             }
             foreach (var tr in rows)
             {
-                var badCells = tr.Children.Where(cell => cell.ResolvedType is not ("TH" or "TD")).ToList();
+                var badCells = tr.Children.Where(cell => cell.RoleMappedType is not ("/TH" or "/TD")).ToList();
                 foreach (var bad in badCells)
-                    problems.Add($"/TR contains non-cell /{bad.ResolvedType}");
+                    problems.Add($"/TR contains non-cell {bad.RoleMappedType}");
             }
         }
 
@@ -294,10 +294,10 @@ public static class PdfUaValidator
     }
 
     // 7.6 — list structure: L → LI → (Lbl?, LBody).
-    private static void CheckLists(StructTreeAnalysis tree, List<ValidationResult> results)
+    private static void CheckLists(List<PdfStructElement> nodes, List<ValidationResult> results)
     {
-        var lists = AllNodes(tree).Where(n => n.ResolvedType == "L").ToList();
-        var strayLi = AllNodes(tree).Where(n => n.ResolvedType == "LI").ToList()
+        var lists = nodes.Where(n => n.RoleMappedType == "/L").ToList();
+        var strayLi = nodes.Where(n => n.RoleMappedType == "/LI")
             .Where(li => !lists.Any(l => l.Children.Contains(li))).ToList();
 
         if (lists.Count == 0 && strayLi.Count == 0)
@@ -311,10 +311,10 @@ public static class PdfUaValidator
         var problems = new List<string>();
         foreach (var l in lists)
         {
-            var items = l.Children.Where(c => c.ResolvedType == "LI").ToList();
-            var nonItems = l.Children.Where(c => c.ResolvedType is not ("LI" or "Caption")).ToList();
+            var items = l.Children.Where(c => c.RoleMappedType == "/LI").ToList();
+            var nonItems = l.Children.Where(c => c.RoleMappedType is not ("/LI" or "/Caption")).ToList();
             if (items.Count == 0) problems.Add("/L has no /LI items");
-            foreach (var bad in nonItems) problems.Add($"/L has non-item child /{bad.ResolvedType}");
+            foreach (var bad in nonItems) problems.Add($"/L has non-item child {bad.RoleMappedType}");
         }
         foreach (var _ in strayLi) problems.Add("/LI is not a child of an /L");
 
@@ -327,10 +327,10 @@ public static class PdfUaValidator
             reference: "ISO 14289-1 §7.6; Matterhorn 16-001/16-003"));
 
         // Recommended (not strictly required): each LI has an LBody.
-        var allItems = lists.SelectMany(l => l.Children).Where(c => c.ResolvedType == "LI").ToList();
+        var allItems = lists.SelectMany(l => l.Children).Where(c => c.RoleMappedType == "/LI").ToList();
         if (allItems.Count > 0)
         {
-            var noBody = allItems.Where(li => !li.Children.Any(c => c.ResolvedType == "LBody")).ToList();
+            var noBody = allItems.Where(li => !li.Children.Any(c => c.RoleMappedType == "/LBody")).ToList();
             results.Add(new ValidationResult(
                 "UA-List-ItemBody",
                 "Each /LI contains an /LBody (recommended list-item structure).",
@@ -342,9 +342,10 @@ public static class PdfUaValidator
     }
 
     // 7.1 — real (non-artifact) page content must be inside the structure tree.
-    private static void CheckContentTagged(PdfDocument doc, StructTreeAnalysis tree, List<ValidationResult> results)
+    private static void CheckContentTagged(
+        PdfDocument doc, bool hasStructTree, List<PdfStructElement> nodes, List<ValidationResult> results)
     {
-        if (tree.StructTreeRoot == null)
+        if (!hasStructTree)
         {
             results.Add(NotChecked("UA-Content-Tagged",
                 "Real page content is tagged (inside the structure tree or marked /Artifact).",
@@ -352,7 +353,16 @@ public static class PdfUaValidator
             return;
         }
 
-        var (qualified, agnostic) = tree.TaggedContent();
+        // Tagged (page, MCID) pairs. A reference with no /Pg of its own or on its
+        // element matches that MCID on any page, so a single-page document, where
+        // the page is unambiguous, still matches.
+        var qualified = new HashSet<(int, int)>();
+        var agnostic = new HashSet<int>();
+        foreach (var reference in nodes.SelectMany(n => n.MarkedContent))
+        {
+            if (reference.PageNumber is int page) qualified.Add((page, reference.Mcid));
+            else agnostic.Add(reference.Mcid);
+        }
         var untaggedPages = new List<string>();
 
         for (int p = 1; p <= doc.PageCount; p++)
@@ -375,8 +385,11 @@ public static class PdfUaValidator
             reference: "ISO 14289-1 §7.1; Matterhorn 01-002"));
     }
 
-    private static IEnumerable<StructNode> AllNodes(StructTreeAnalysis tree) =>
-        tree.Roots.SelectMany(r => r.DescendantsAndSelf());
+    private static IEnumerable<PdfStructElement> AllNodes(PdfStructElement? element) =>
+        element == null ? [] : element.Children.SelectMany(AllNodes).Prepend(element);
+
+    private static bool IsStandard(string type) =>
+        PdfStructTreeParser.StandardStructureTypes.Contains(type.TrimStart('/'));
 
     // #1532: dc:title, parsed. Both serialisations XMP permits — an element
     // (<dc:title><rdf:Alt><rdf:li>T</rdf:li></rdf:Alt></dc:title>) and the

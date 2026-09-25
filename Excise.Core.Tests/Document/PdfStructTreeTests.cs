@@ -111,8 +111,7 @@ public class PdfStructTreeTests
 
         tree.Should().NotBeNull();
         tree!.Type.Should().Be("/P");
-        tree.MarkedContentIds.Should().HaveCount(1);
-        tree.MarkedContentIds[0].Should().Be(42);
+        tree.MarkedContent.Select(r => r.Mcid).Should().Equal(42);
     }
 
     [Fact]
@@ -139,9 +138,7 @@ public class PdfStructTreeTests
         tree.Should().NotBeNull();
         tree!.Type.Should().Be("/P");
         tree.Children.Should().HaveCount(2);
-        tree.MarkedContentIds.Should().HaveCount(2);
-        tree.MarkedContentIds[0].Should().Be(5);
-        tree.MarkedContentIds[1].Should().Be(10);
+        tree.MarkedContent.Select(r => r.Mcid).Should().Equal(5, 10);
     }
 
     [Fact]
@@ -159,8 +156,7 @@ public class PdfStructTreeTests
 
         var paragraph = tree.Children[0];
         paragraph.Type.Should().Be("/P");
-        paragraph.MarkedContentIds.Should().HaveCount(1);
-        paragraph.MarkedContentIds[0].Should().Be(0);
+        paragraph.MarkedContent.Select(r => r.Mcid).Should().Equal(0);
     }
 
     // Helper: Create a minimal tagged PDF

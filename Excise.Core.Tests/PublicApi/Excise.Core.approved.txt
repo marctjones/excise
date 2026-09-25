@@ -851,6 +851,12 @@ namespace Excise.Core.Document
     {
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfLink> Parse(Excise.Core.Document.PdfDocument doc, Excise.Core.Primitives.PdfDictionary pageDict, System.Collections.Generic.Dictionary<string, Excise.Core.Primitives.PdfObject>? namedDests) { }
     }
+    public readonly struct PdfMarkedContentReference : System.IEquatable<Excise.Core.Document.PdfMarkedContentReference>
+    {
+        public PdfMarkedContentReference(int Mcid, int? PageNumber) { }
+        public int Mcid { get; init; }
+        public int? PageNumber { get; init; }
+    }
     public sealed class PdfOcg : System.IEquatable<Excise.Core.Document.PdfOcg>
     {
         public PdfOcg(string Name, bool IsVisibleByDefault, Excise.Core.Primitives.PdfDictionary RawDictionary) { }
@@ -1015,14 +1021,15 @@ namespace Excise.Core.Document
     }
     public sealed class PdfStructElement
     {
-        public PdfStructElement(string type, string? altText = null, string? actualText = null, string? language = null, int? pageNumber = default, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfStructElement>? children = null, System.Collections.Generic.IReadOnlyList<int>? markedContentIds = null, Excise.Core.Primitives.PdfDictionary? rawDictionary = null) { }
+        public PdfStructElement(string type, string? altText = null, string? actualText = null, string? language = null, int? pageNumber = default, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfStructElement>? children = null, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfMarkedContentReference>? markedContent = null, Excise.Core.Primitives.PdfDictionary? rawDictionary = null, string? roleMappedType = null) { }
         public string? ActualText { get; }
         public string? AltText { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfStructElement> Children { get; }
         public string? Language { get; }
-        public System.Collections.Generic.IReadOnlyList<int> MarkedContentIds { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfMarkedContentReference> MarkedContent { get; }
         public int? PageNumber { get; }
         public Excise.Core.Primitives.PdfDictionary RawDictionary { get; }
+        public string RoleMappedType { get; }
         public string Type { get; }
         public override string ToString() { }
     }

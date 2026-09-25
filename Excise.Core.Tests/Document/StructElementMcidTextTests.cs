@@ -106,20 +106,25 @@ public class StructElementMcidTextTests
             .SaveToBytes());
 
         var root = doc.GetStructureTree();
-        var headings = Descendants(root)
-            .Where(element => element.Type == "/H1")
-            .ToList();
-        headings.Should().HaveCount(2);
-        var secondPageHeading = headings[1];
-
+        var secondPageHeading = Headings(root)[1];
+        secondPageHeading.PageNumber.Should().Be(2);
         doc.ResolveStructElementText(secondPageHeading).Trim().Should().Be("Second page");
 
         doc.Pages.Move(1, 0);
 
-        doc.ResolveStructElementText(secondPageHeading).Trim().Should().Be("Second page",
+        var moved = doc.GetStructureTree();
+        moved.Should().NotBeSameAs(root, "the parsed structure projection embeds page positions");
+        var movedHeading = Headings(moved)[1];
+        movedHeading.PageNumber.Should().Be(1, "the page the heading's /Pg names is now first");
+        doc.ResolveStructElementText(movedHeading).Trim().Should().Be("Second page",
             "the page-dictionary index is rebuilt after a page-tree mutation");
-        doc.GetStructureTree().Should().NotBeSameAs(root,
-            "the parsed structure projection can embed page positions");
+    }
+
+    private static List<PdfStructElement> Headings(PdfStructElement? root)
+    {
+        var headings = Descendants(root).Where(element => element.Type == "/H1").ToList();
+        headings.Should().HaveCount(2);
+        return headings;
     }
 
     [Fact]

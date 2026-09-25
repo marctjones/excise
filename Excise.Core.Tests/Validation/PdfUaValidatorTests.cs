@@ -174,6 +174,16 @@ public class PdfUaValidatorTests
     }
 
     [Fact]
+    public void CustomTypeMappedOnlyToAnotherCustomType_FailsRoleMap()
+    {
+        // Matterhorn 02-001: the mapping must terminate in a standard type.
+        var roleMap = new PdfDictionary();
+        roleMap.SetName("Chapter", "Division");
+        var doc = Craft(new PdfArray(SE("Document", new PdfArray(SE("Chapter")))), roleMap: roleMap);
+        Status(PdfUaValidator.Validate(doc), "UA-RoleMap").Should().Be(RuleStatus.Fail);
+    }
+
+    [Fact]
     public void RoleMappedCustomHeading_IsEvaluatedAsHeading()
     {
         // Chapter->H1, Section->H3 : a skipped level even though the raw types are custom.
