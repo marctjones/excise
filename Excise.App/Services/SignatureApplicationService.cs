@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.Crypto;

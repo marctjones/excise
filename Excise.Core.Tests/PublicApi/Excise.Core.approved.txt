@@ -1068,6 +1068,58 @@ namespace Excise.Core.Document
 }
 namespace Excise.Core.Editing
 {
+    public class BatesDocumentResult
+    {
+        public BatesDocumentResult() { }
+        public string? ErrorMessage { get; set; }
+        public string FileName { get; set; }
+        public string FilePath { get; set; }
+        public string FirstBatesNumber { get; set; }
+        public string LastBatesNumber { get; set; }
+        public string OutputPath { get; set; }
+        public int PageCount { get; set; }
+        public bool Success { get; set; }
+    }
+    public class BatesNumberingService
+    {
+        public BatesNumberingService(System.Action<string>? diagnostics = null) { }
+        public void ApplyBatesNumbers(Excise.Core.Document.PdfDocument document, Excise.Core.Editing.BatesOptions options) { }
+        public Excise.Core.Editing.BatesResult ApplyBatesNumbersToSet(System.Collections.Generic.IEnumerable<string> filePaths, Excise.Core.Editing.BatesOptions options) { }
+        public int CalculateNextNumber(System.Collections.Generic.IEnumerable<string> filePaths, int startNumber) { }
+    }
+    public class BatesOptions
+    {
+        public BatesOptions() { }
+        public string FontName { get; set; }
+        public double FontSize { get; set; }
+        public double MarginX { get; set; }
+        public double MarginY { get; set; }
+        public int NumberOfDigits { get; set; }
+        public string? OutputDirectory { get; set; }
+        public string OutputSuffix { get; set; }
+        public Excise.Core.Editing.BatesPosition Position { get; set; }
+        public string Prefix { get; set; }
+        public int StartNumber { get; set; }
+        public string Suffix { get; set; }
+    }
+    public enum BatesPosition
+    {
+        TopLeft = 0,
+        TopCenter = 1,
+        TopRight = 2,
+        BottomLeft = 3,
+        BottomCenter = 4,
+        BottomRight = 5,
+    }
+    public class BatesResult
+    {
+        public BatesResult() { }
+        public System.Collections.Generic.List<Excise.Core.Editing.BatesDocumentResult> Documents { get; set; }
+        public string FirstBatesNumber { get; set; }
+        public string LastBatesNumber { get; set; }
+        public int NextBatesNumber { get; set; }
+        public int TotalPages { get; set; }
+    }
     public sealed class PdfEditOperation : System.IEquatable<Excise.Core.Editing.PdfEditOperation>
     {
         public Excise.Core.Document.PdfRectangle Bounds { get; }
@@ -2167,6 +2219,28 @@ namespace Excise.Core.Security
         public byte[] DecryptString(int objNum, int gen, byte[] cipherBytes) { }
         public static Excise.Core.Security.PdfStandardSecurityHandler Build(Excise.Core.Primitives.PdfDictionary encryptDict, byte[] firstId, byte[] userPassword) { }
         public static Excise.Core.Security.PdfStandardSecurityHandler Build(Excise.Core.Primitives.PdfDictionary encryptDict, byte[] firstId, string? userPassword) { }
+    }
+}
+namespace Excise.Core.Signatures
+{
+    public class SignatureTrustEvaluator
+    {
+        public SignatureTrustEvaluator() { }
+        public SignatureTrustEvaluator(System.Collections.Generic.IReadOnlyList<System.Security.Cryptography.X509Certificates.X509Certificate2> customTrustAnchors) { }
+        public virtual Excise.Core.Signatures.SignatureTrustResult Evaluate(byte[] signerCertificate, System.Collections.Generic.IReadOnlyList<byte[]> candidateChainCertificates) { }
+    }
+    public sealed class SignatureTrustResult
+    {
+        public SignatureTrustResult() { }
+        public string Details { get; init; }
+        public Excise.Core.Signatures.SignatureTrustStatus Status { get; init; }
+    }
+    public enum SignatureTrustStatus
+    {
+        NotEvaluated = 0,
+        Trusted = 1,
+        Untrusted = 2,
+        Indeterminate = 3,
     }
 }
 namespace Excise.Core.Text

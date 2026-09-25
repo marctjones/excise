@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
 using Excise.Core.Primitives;

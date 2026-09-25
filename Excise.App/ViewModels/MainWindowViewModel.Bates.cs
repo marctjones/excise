@@ -1,3 +1,4 @@
+using Excise.Core.Editing;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -33,7 +34,7 @@ namespace Excise.App.ViewModels;
 public partial class MainWindowViewModel
 {
     private readonly BatesNumberingService _batesService =
-        new(NullLogger<BatesNumberingService>.Instance);
+        new();
 
     /// <summary>
     /// Test seam: supply the options directly instead of showing the dialog.

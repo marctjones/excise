@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Cms;
