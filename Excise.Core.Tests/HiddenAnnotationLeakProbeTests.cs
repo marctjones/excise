@@ -34,7 +34,7 @@ public class HiddenAnnotationLeakProbeTests
         using var doc = HiddenTextAnnotationDoc(secret);
 
         RedactionFeatureStripper.Apply(doc,
-            RedactionOptions.Default with { RemoveHiddenAnnotationAppearances = false });
+            RedactionOptions.Default with { RemoveHiddenAnnotationAppearances = false }, new List<CarrierResult>());
 
         SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), secret).Should().NotBeEmpty();
     }
@@ -50,7 +50,7 @@ public class HiddenAnnotationLeakProbeTests
         const string secret = "SECRETPOPUPPARENTPROBE";
         using var doc = HiddenTextAnnotationDoc(secret);
 
-        var report = RedactionFeatureStripper.Apply(doc, RedactionOptions.Default);
+        var report = RedactionFeatureStripper.Apply(doc, RedactionOptions.Default, new List<CarrierResult>());
 
         SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), secret).Should().BeEmpty();
         report.Should().Contain(r => r.Feature == "hidden annotation(s) removed" && r.Count >= 1,
@@ -72,7 +72,7 @@ public class HiddenAnnotationLeakProbeTests
         field.RawDictionary.SetInt("F", (int)PdfAnnotationFlags.Hidden);
         field.RawDictionary.SetString("Contents", secret);
 
-        RedactionFeatureStripper.Apply(doc, RedactionOptions.Default);
+        RedactionFeatureStripper.Apply(doc, RedactionOptions.Default, new List<CarrierResult>());
         var saved = doc.SaveToBytes();
 
         SavedPdfLeakScanner.FindTerm(saved, secret).Should().BeEmpty();
@@ -89,7 +89,7 @@ public class HiddenAnnotationLeakProbeTests
         doc.Pages.AddBlank();
         doc.AddTextAnnotation(1, new PdfRectangle(100, 700, 117, 717), note);
 
-        RedactionFeatureStripper.Apply(doc, RedactionOptions.Default);
+        RedactionFeatureStripper.Apply(doc, RedactionOptions.Default, new List<CarrierResult>());
 
         SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), note).Should().NotBeEmpty(
             "Standard must not sweep annotations a reviewer can see");
@@ -125,7 +125,7 @@ public class HiddenAnnotationLeakProbeTests
         var annot = doc.AddTextAnnotation(1, new PdfRectangle(100, 700, 117, 717), secret);
         annot.RawDictionary.SetInt("F", (int)PdfAnnotationFlags.Hidden);
 
-        RedactionFeatureStripper.Apply(doc, RedactionOptions.ForProfile(profile));
+        RedactionFeatureStripper.Apply(doc, RedactionOptions.ForProfile(profile), new List<CarrierResult>());
         var saved = doc.SaveToBytes();
 
         // Independent scanner (decompresses streams, not excise's own reader)

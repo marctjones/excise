@@ -21,16 +21,23 @@ public static partial class CarrierTextRecovery
 
     private static void ScanAcroForm(PdfDocument doc, Collector c, InteractiveIndex index)
     {
-        if (doc.Resolve(doc.Catalog?.GetOptional("AcroForm") ?? PdfNull.Instance) is not PdfDictionary acro)
-            return;
-        if (doc.Resolve(acro.GetOptional("Fields") ?? PdfNull.Instance) is not PdfArray fields)
-            return;
-
+        var acro = doc.Resolve(doc.Catalog?.GetOptional("AcroForm") ?? PdfNull.Instance) as PdfDictionary;
         var pageOf = PageIndexByDictionary(doc);
-        var dr = doc.Resolve(acro.GetOptional("DR") ?? PdfNull.Instance) as PdfDictionary;
+        var dr = doc.Resolve(acro?.GetOptional("DR") ?? PdfNull.Instance) as PdfDictionary;
         var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         var stack = new Stack<(PdfObject Node, string ParentName)>();
-        for (var i = fields.Count - 1; i >= 0; i--) stack.Push((fields[i], ""));
+
+        // A widget no /Fields entry reaches still carries its field's values
+        // (§12.7.3.1 merged field/widget, #670), and is what a Maximum flatten
+        // leaves when it cannot flatten a field (#1857). Pushed first, so the
+        // /Fields walk visits, and names, every widget it does reach.
+        for (var p = 1; p <= doc.PageCount; p++)
+            if (doc.Resolve(doc.GetPage(p).Dictionary.GetOptional("Annots") ?? PdfNull.Instance) is PdfArray annots)
+                foreach (var item in annots)
+                    if (doc.Resolve(item) is PdfDictionary annot && annot.GetNameOrNull("Subtype") == "Widget")
+                        stack.Push((item, ""));
+        if (doc.Resolve(acro?.GetOptional("Fields") ?? PdfNull.Instance) is PdfArray fields)
+            for (var i = fields.Count - 1; i >= 0; i--) stack.Push((fields[i], ""));
 
         var guard = 0;
         while (stack.Count > 0 && guard++ < WalkGuard)

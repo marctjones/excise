@@ -252,7 +252,7 @@ public static class PdfDocumentRedactionExtensions
         var profileRemovals = new List<RedactedFeatureRemoval>();
         if (RedactionFeatureStripper.ApplyMetadataStrip(document, profileOptions) is { } metadataRow)
             profileRemovals.Add(metadataRow);
-        profileRemovals.AddRange(RedactionFeatureStripper.Apply(document, profileOptions));
+        profileRemovals.AddRange(RedactionFeatureStripper.Apply(document, profileOptions, carrierResults));
 
         var pageCount = document.PageCount;
         progress?.Invoke(0, pageCount);

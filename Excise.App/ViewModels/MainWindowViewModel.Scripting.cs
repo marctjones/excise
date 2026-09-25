@@ -387,11 +387,8 @@ public partial class MainWindowViewModel
                         text, i + 1, _pendingTextRedactions.Count);
 
                     var result = _redactionService.RedactText(
-                        currentInput, currentOutput, text, caseSensitive: false,
-                        allowLowConfidence: false, wholeWord: RedactionWholeWord,   // #1052
-                        width: RedactionWidthPolicy,                                // #1189
-                        keepAttachments: RedactionKeepAttachments,                  // #1572
-                        profile: RedactionProfile);                                 // #1586
+                        currentInput, currentOutput, text,
+                        BuildRedactionOptions() with { CaseSensitive = false });
 
                     if (!result.Success)
                     {

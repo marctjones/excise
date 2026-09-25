@@ -77,6 +77,9 @@ public class RedactProfileCommandTests
             result.AccessibilityRemoved.Should().BeTrue(
                 "the CLI must be able to PRINT the warning, so the flag has to reach it");
             result.Removals.Should().Contain(r => r.Feature.Contains("outline"));
+            result.CarrierNotes.Should().ContainSingle(n => n.Contains("NO LONGER accessible"),
+                "one channel (#1857): the safety pass's warning, which the GUI dialog reads too, is " +
+                "the one the CLI prints");
 
             using var redacted = PdfDocument.Open(outputPath);
             redacted.Catalog.GetOptional("Outlines").Should().BeNull();

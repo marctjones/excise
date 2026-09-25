@@ -78,12 +78,12 @@ internal static class RedactionFeatureStripper
     /// <remarks>
     /// ⚠️ Never throws for a malformed document: a removal that cannot be made
     /// is skipped and the row is simply absent, exactly as if the feature were
-    /// not there. That is the one place this differs from the carrier scrub,
-    /// which reports a refusal — here there is no "the term is still in it" to
-    /// report, because there was no term.
+    /// not there. The exception is the form flatten, whose promise is that no
+    /// interactive object survives: a form it could not flatten is added to
+    /// <paramref name="refusals"/> (#1857).
     /// </remarks>
     internal static IReadOnlyList<RedactedFeatureRemoval> Apply(
-        PdfDocument document, RedactionOptions options)
+        PdfDocument document, RedactionOptions options, ICollection<CarrierResult> refusals)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(options);
@@ -176,11 +176,24 @@ internal static class RedactionFeatureStripper
             if (reanchoredFromAnnots > 0) invalidate |= PdfDocumentDerivedStateScope.Attachments;
         }
 
+        // Before the name strip: the form parser skips a field with no /T, so
+        // stripping names first left the flatten nothing to flatten (#1857).
+        if (options.FlattenInteractiveContent)
+        {
+            var (flattened, signatures, unpainted, formRemains) = FlattenInteractive(document);
+            Row("interactive object(s) flattened into the page", flattened);
+            Row("signature field(s) removed", signatures,
+                "a redacted copy cannot keep a valid signature; its appearance was not painted");
+            Row("form widget(s) removed without being painted", unpainted,
+                "widgets the flattener could not paint, such as a field without a /T name or a widget "
+                + "outside /AcroForm");
+            if (formRemains)
+                refusals.Add(new CarrierResult("/AcroForm", false,
+                    "the form could not be flattened, so its field dictionaries and their values are still in the file"));
+        }
+
         if (options.RemoveFieldNames)
             Row("form field name(s) and tooltip(s)", RemoveFieldNames(document));
-
-        if (options.FlattenInteractiveContent)
-            Row("interactive object(s) flattened into the page", FlattenInteractive(document));
 
         if (invalidate != PdfDocumentDerivedStateScope.None)
             document.InvalidateDerivedState(invalidate);
@@ -1010,28 +1023,63 @@ internal static class RedactionFeatureStripper
     }
 
     /// <summary>
-    /// Flatten the AcroForm into page content so no widget survives to carry
-    /// text, using the existing <see cref="AcroFormFlattener"/>.
+    /// Flatten the AcroForm into page content through
+    /// <see cref="PdfDocument.FlattenAcroForm"/>, which also removes
+    /// <c>/AcroForm</c>: while <c>/Fields</c> references the field
+    /// dictionaries, the writer ships their <c>/V /DV /RV /MK</c> (#1857).
+    /// Then remove every widget still on a page: a signature, which the
+    /// flattener skips, and a widget the form parser cannot read. With
+    /// <c>/AcroForm</c> gone the carrier scrub no longer reaches either.
     /// </summary>
     /// <remarks>
-    /// Returns the number of fields that were flattened — 0 when the document
-    /// has no form, which is why this is a count and not a bool. Annotations
-    /// other than widgets are handled by the Maximum annotation removals
-    /// above; there is deliberately no separate "burn every annotation into the
-    /// page" step, because painting a comment's appearance into the content
-    /// stream would make its text part of the page rather than remove it.
+    /// Annotations other than widgets are handled by the Maximum annotation
+    /// removals above; there is deliberately no "burn every annotation into
+    /// the page" step, because painting a comment's appearance into the
+    /// content stream would make its text part of the page rather than remove
+    /// it.
     /// </remarks>
-    private static int FlattenInteractive(PdfDocument document)
+    private static (int Flattened, int Signatures, int Unpainted, bool FormRemains) FlattenInteractive(
+        PdfDocument document)
     {
-        PdfAcroForm? form;
-        try { form = document.GetAcroForm(); }
-        catch (Exception ex) when (ex is not OutOfMemoryException) { return 0; }
-        if (form == null || form.Fields.Count == 0) return 0;
+        var flattened = 0;
+        try { flattened = document.FlattenAcroForm(); }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { /* FormRemains reports it */ }
 
-        var count = form.Fields.Count;
-        try { AcroFormFlattener.Flatten(document, form); }
-        catch (Exception ex) when (ex is not OutOfMemoryException) { return 0; }
-        return count;
+        int signatures = 0, unpainted = 0;
+        foreach (var page in SafePages(document))
+        {
+            if (Resolve(document, page.Dictionary.GetOptional("Annots") ?? PdfNull.Instance)
+                is not PdfArray annots) continue;
+            var keep = new List<PdfObject>();
+            foreach (var item in annots)
+            {
+                if (Resolve(document, item) is PdfDictionary annot && annot.GetNameOrNull("Subtype") == "Widget")
+                {
+                    if (FieldType(document, annot) == "Sig") signatures++;
+                    else unpainted++;
+                    continue;
+                }
+                keep.Add(item);
+            }
+            if (keep.Count == annots.Count) continue;
+            page.Dictionary["Annots"] = new PdfArray(keep);
+            // A widget's appearance is page text (#669).
+            page.InvalidateTextExtractionCache();
+        }
+        return (flattened, signatures, unpainted,
+            Resolve(document, document.Catalog.GetOptional("AcroForm") ?? PdfNull.Instance) is PdfDictionary);
+    }
+
+    /// <summary>§12.7.4.1: <c>/FT</c> is inheritable, so a widget kid finds it on an ancestor.</summary>
+    private static string? FieldType(PdfDocument document, PdfDictionary field)
+    {
+        PdfDictionary? node = field;
+        for (var depth = 0; node != null && depth < 32; depth++)
+        {
+            if (node.GetNameOrNull("FT") is { } type) return type;
+            node = Resolve(document, node.GetOptional("Parent") ?? PdfNull.Instance) as PdfDictionary;
+        }
+        return null;
     }
 
     /// <summary>

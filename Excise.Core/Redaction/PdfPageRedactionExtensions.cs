@@ -346,13 +346,14 @@ public static class PdfPageRedactionExtensions
         var imageCounts = page.RedactAreasInternal(list, list, options.Strategy,
             options.ScrubDocumentCarriers, options.CloseWidth,
             removeAttachments: !options.KeepAttachments);
-        var removals = RedactionFeatureStripper.Apply(page.Document, options);
+        var carriers = new System.Collections.Generic.List<CarrierResult>();
+        var removals = RedactionFeatureStripper.Apply(page.Document, options, carriers);
         // #1834: RedactText's box rule. A closed gap reflows the rest of the
         // line into the area, so only FixedMarker still draws there.
         if (options.DrawBox && (options.FixedMarker || !options.CloseWidth))
             foreach (var area in list)
                 PdfDocumentRedactionExtensions.AppendBlackRectangle(page, area, options.BoxColor);
-        return AreaReport(page.Document, options, metadataRow, removals, imageCounts);
+        return AreaReport(page.Document, options, metadataRow, removals, carriers, imageCounts);
     }
 
     /// <summary>
@@ -365,12 +366,12 @@ public static class PdfPageRedactionExtensions
         RedactionOptions options,
         RedactedFeatureRemoval? metadataRow,
         System.Collections.Generic.IReadOnlyList<RedactedFeatureRemoval> removals,
+        System.Collections.Generic.List<CarrierResult> carriers,
         ImageRedactionCounts imageCounts)
     {
         var all = metadataRow == null
             ? removals.ToList()
             : new[] { metadataRow }.Concat(removals).ToList();
-        var carriers = new System.Collections.Generic.List<CarrierResult>();
 
         // #1586 trap: an image was blacked out, and the structure tree
         // describes an image in an /Alt with NO content link. Neither

@@ -100,7 +100,10 @@ public static class RedactedCopySafetyPolicy
         // through it — which is the point: the rows let the safety report say
         // what a redacted copy no longer contains, and the area path had no
         // other way to say it.
-        var profileRemovals = RedactionFeatureStripper.Apply(document, redaction);
+        var profileRefusals = new List<CarrierResult>();
+        var profileRemovals = RedactionFeatureStripper.Apply(document, redaction, profileRefusals);
+        foreach (var row in profileRefusals)
+            warnings.Add($"Carrier {row.Carrier}: {row.RefusedReason}");
 
         var infoFieldsBefore = options.ScrubMetadata
             ? CountScrubbableInfoFields(document)
