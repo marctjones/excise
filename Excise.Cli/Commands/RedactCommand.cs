@@ -311,12 +311,9 @@ internal static class RedactCommand
                 // between the profile and "the tool mangled my document".
                 foreach (var removal in result.Removals)
                     Console.WriteLine($"  removed: {removal}");
-                if (result.AccessibilityRemoved)
-                    Console.WriteLine(
-                        "  WARNING: the --profile maximum output is NO LONGER accessible or " +
-                        "interactive: forms and annotations are flattened, and bookmarks, links, " +
-                        "comments, field names and alternate text are gone.");
 
+                // The Maximum accessibility warning arrives here, from the
+                // safety pass the GUI dialog reads too (#1857).
                 foreach (var note in result.CarrierNotes)
                     Console.WriteLine($"  note: {note}");
                 Console.WriteLine($"Output: {result.OutputPath}");

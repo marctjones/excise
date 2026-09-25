@@ -100,23 +100,19 @@ public class RedactionService
     /// Unverified result never blocks; it's surfaced in
     /// <see cref="TextRedactionResult.Warnings"/> instead.
     /// </param>
-    /// <param name="wholeWord">
-    /// #1052 — require the match to be bounded by a non-word character on both
-    /// sides. Default false (substring, the #1000 decision). The rule that ran
-    /// is echoed back in <see cref="TextRedactionResult.WholeWord"/>.
+    /// <param name="options">
+    /// The caller's whole option set, carrier policy included: rebuilding it
+    /// here from a profile and a few scalars dropped the user's link-URI and
+    /// metadata preferences (#1857). The match rule that ran is echoed back in
+    /// <see cref="TextRedactionResult.WholeWord"/>.
     /// </param>
     public TextRedactionResult RedactText(
-        string inputPath, string outputPath, string textToRedact, bool caseSensitive = false,
-        bool allowLowConfidence = false, bool wholeWord = false,
-        Excise.Core.Text.Segmentation.WidthPolicy width =
-            Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout,
-        bool keepAttachments = false,
-        Excise.Core.Text.Segmentation.RedactionProfile profile
-            = Excise.Core.Text.Segmentation.RedactionProfile.Standard)   // #1586
+        string inputPath, string outputPath, string textToRedact,
+        Excise.Core.Text.Segmentation.RedactionOptions options, bool allowLowConfidence = false)
     {
         _logger.LogInformation(
             "RedactText: '{Text}' in {Input} (wholeWord={WholeWord}, profile={Profile})",
-            textToRedact, inputPath, wholeWord, profile);
+            textToRedact, inputPath, options.WholeWord, options.Profile);
 
         try
         {
@@ -137,14 +133,7 @@ public class RedactionService
 
             // #1089: VerifiedRemovals, not the located count. The old int was
             // an attempt counter and reported a term that survived as success.
-            var redaction = doc.RedactText(textToRedact,
-                Excise.Core.Text.Segmentation.RedactionOptions.ForProfile(profile) with
-                {
-                    CaseSensitive = caseSensitive,
-                    WholeWord = wholeWord,   // #1052
-                    Width = width,           // #1189
-                    KeepAttachments = keepAttachments,   // #1572
-                });
+            var redaction = doc.RedactText(textToRedact, options);
             int totalMatches = redaction.VerifiedRemovals;
             // #643: this path opens without a password, so only empty-user-
             // password encrypted sources reach here — their redacted output
@@ -165,8 +154,8 @@ public class RedactionService
 
             _logger.LogInformation(
                 "Redacted {Count} occurrence(s) of '{Text}' (wholeWord={WholeWord})",
-                totalMatches, textToRedact, wholeWord);
-            return TextRedactionResult.Succeeded(totalMatches, warnings, wholeWord);
+                totalMatches, textToRedact, options.WholeWord);
+            return TextRedactionResult.Succeeded(totalMatches, warnings, options.WholeWord);
         }
         catch (Exception ex)
         {

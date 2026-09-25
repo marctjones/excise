@@ -225,7 +225,7 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        var result = _service.RedactText(inputPath, outputPath, "RedactMe");
+        var result = _service.RedactText(inputPath, outputPath, "RedactMe", RedactionOptions.Default);
 
         // Assert
         File.Exists(outputPath).Should().BeTrue();
@@ -250,7 +250,7 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        _service.RedactText(inputPath, outputPath, "SecretTerm");
+        _service.RedactText(inputPath, outputPath, "SecretTerm", RedactionOptions.Default);
 
         // Assert — on the saved bytes, not on a list of what the service says it
         // did. A service can record a term it failed to remove.
@@ -272,7 +272,7 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        var result = _service.RedactText(inputPath, outputPath, "NonExistentTerm");
+        var result = _service.RedactText(inputPath, outputPath, "NonExistentTerm", RedactionOptions.Default);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -291,7 +291,7 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        _service.RedactText(inputPath, outputPath, "TestContent");
+        _service.RedactText(inputPath, outputPath, "TestContent", RedactionOptions.Default);
 
         // Assert - Verify we can open the output
         using var doc = PdfDocument.Open(File.ReadAllBytes(outputPath));
@@ -318,9 +318,9 @@ public class RedactionServiceTests : IDisposable
 
         // Act — the SAME wrong-case needle through both modes.
         var resultSensitive = _service.RedactText(
-            inputPath, sensitivePath, "testcontenttoken", caseSensitive: true);
+            inputPath, sensitivePath, "testcontenttoken", RedactionOptions.Default with { CaseSensitive = true });
         var resultInsensitive = _service.RedactText(
-            inputPath, insensitivePath, "testcontenttoken", caseSensitive: false);
+            inputPath, insensitivePath, "testcontenttoken", RedactionOptions.Default);
 
         // Assert
         resultSensitive.Success.Should().BeTrue();
@@ -341,7 +341,7 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        var result = _service.RedactText("/nonexistent/path.pdf", outputPath, "Term");
+        var result = _service.RedactText("/nonexistent/path.pdf", outputPath, "Term", RedactionOptions.Default);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -355,7 +355,7 @@ public class RedactionServiceTests : IDisposable
             TestPdfGenerator.CreateSimpleTextPdf(path, "RedactMe"));
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
-        var result = _service.RedactText(inputPath, outputPath, "RedactMe");
+        var result = _service.RedactText(inputPath, outputPath, "RedactMe", RedactionOptions.Default);
 
         result.Success.Should().BeTrue();
         result.Warnings.Should().NotBeNull();
@@ -369,7 +369,7 @@ public class RedactionServiceTests : IDisposable
             TestPdfGenerator.CreateSimpleTextPdf(path, "RedactMe"));
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
-        var result = _service.RedactText(inputPath, outputPath, "RedactMe", allowLowConfidence: true);
+        var result = _service.RedactText(inputPath, outputPath, "RedactMe", RedactionOptions.Default, allowLowConfidence: true);
 
         result.Success.Should().BeTrue();
         result.RedactionCount.Should().BeGreaterThan(0);
@@ -396,7 +396,7 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        var result = _service.RedactText(inputPath, outputPath, "Secret");
+        var result = _service.RedactText(inputPath, outputPath, "Secret", RedactionOptions.Default);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -513,7 +513,7 @@ public class RedactionServiceTests : IDisposable
         var finalPath = Path.Combine(_tempDir, "final.pdf");
 
         // Act - First do text redaction
-        var textResult = _service.RedactText(inputPath, intermediatePath, "Secret");
+        var textResult = _service.RedactText(inputPath, intermediatePath, "Secret", RedactionOptions.Default);
         textResult.Success.Should().BeTrue();
 
         // Then do area redaction on the result

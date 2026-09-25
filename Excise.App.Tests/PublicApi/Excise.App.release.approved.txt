@@ -375,7 +375,7 @@ namespace Excise.App.Services
     {
         public RedactionService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.RedactionService> logger, Microsoft.Extensions.Logging.ILoggerFactory _) { }
         public void RedactArea(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfPageRect area, Excise.Core.Text.Segmentation.RedactionOptions options) { }
-        public Excise.App.Models.TextRedactionResult RedactText(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false, bool allowLowConfidence = false, bool wholeWord = false, Excise.Core.Text.Segmentation.WidthPolicy width = 0, bool keepAttachments = false, Excise.Core.Text.Segmentation.RedactionProfile profile = 0) { }
+        public Excise.App.Models.TextRedactionResult RedactText(string inputPath, string outputPath, string textToRedact, Excise.Core.Text.Segmentation.RedactionOptions options, bool allowLowConfidence = false) { }
         public Excise.App.Models.TextRedactionResult RedactTextFlattenOcr(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false) { }
     }
     public sealed class SignatureVerificationSummaryFormatter
