@@ -12,6 +12,19 @@ semantic versioning.
   in every other reader (checked with mutool over a coloured page). A scan or photo of a signature on
   white paper offers to make the white transparent while keeping the ink, soft pen edges included. The
   picture keeps its own proportions inside the box you drag, instead of being stretched to fill it.
+- **`Excise.Native`: a NativeAOT shared library with a stable C ABI over `Excise.Core`.**
+  Open (bytes or path, with password), page count and size, text extraction, glyph-level
+  text and area redaction, save, encrypt and decrypt, from C, Python, Swift or Rust through
+  `include/excise.h`. Handle-based, no exception crosses the boundary (status codes plus
+  `excise_last_error`), redaction that is not clean returns an error instead of success.
+  Rendering is not included. Build with `scripts/build-native-lib.sh`; see `docs/native-api.md`.
+
+### Changed
+- **Digital-signature verification and application, and Bates numbering, moved from `Excise.App` into
+  `Excise.Core`** (`Excise.Core.Signatures`, `Excise.Core.Editing`), so the CLI, other apps and the C
+  library can use them. Logging is now an optional diagnostics callback instead of `ILogger`, and Core
+  takes a `BouncyCastle.Cryptography` reference (the version the app already shipped). Behaviour is
+  unchanged except that the app's signature diagnostics are all logged at Information level.
 
 ## [3.11.0] - 2026-09-24
 

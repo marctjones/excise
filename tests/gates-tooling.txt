@@ -19,6 +19,7 @@ scripts/build-bench-tiers.py   # regenerates tests/bench-tiers/*.tsv from corpor
 scripts/build-deb.sh   # Linux packaging; no Linux PACKAGING runner (#1596) — the advisory linux.yml builds and publishes but packages nothing
 scripts/build-image-feature-inventory.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-iso-table-checklist.py   # derives iso32000-2-table-checklist.json from Arlington's ISO mapping (#1709); needs the downloaded model, output is byte-stable
+scripts/build-native-lib.sh   # publishes the Excise.Native NativeAOT C-ABI library into dist/native/<rid>/; the build step of the native-lib row (scripts/test-native-lib.sh)
 scripts/build-macos-app.sh   # packaging (release-smoke package gate)
 scripts/build-gui-interaction-registry.py   # invoked by check-gui-interaction-registry.sh (row gui-interaction-registry, #1374)
 scripts/build-pdf-atomic-fixture-map.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)

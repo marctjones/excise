@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    NativeAOT shared library with a stable C ABI over Excise.Core (docs/native-api.md).
+    Core-only: no SkiaSharp/HarfBuzz natives, so no rendering here.
+    Publish: scripts/build-native-lib.sh. The public contract is include/excise.h.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>excise_native</AssemblyName>
+    <!-- Unix shared libraries are conventionally lib-prefixed: libexcise_native.{so,dylib}. -->
+    <AssemblyName Condition="'$(RuntimeIdentifier)' != '' and !$(RuntimeIdentifier.StartsWith('win'))">libexcise_native</AssemblyName>
+    <RootNamespace>Excise.Native</RootNamespace>
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Excise.Core\Excise.Core.csproj" />
+  </ItemGroup>
+
+</Project>
