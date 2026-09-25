@@ -105,6 +105,32 @@ public class NonPageCarrierRedactionLeakTests
             "visible in the reader's sidebar without even opening the page");
     }
 
+    /// <summary>
+    /// The safe-copy policy hands ScrubTerms every captured term at once. Each
+    /// term sits in a DIFFERENT /Info field, so a scrub that stops after the
+    /// first term reddens.
+    /// </summary>
+    [Fact]
+    public void Sanitizer_ScrubsEachOfSeveralTerms_FromItsOwnInfoField()
+    {
+        var pdf = PdfDocument.Open(BuildPdf());
+        pdf.SetTitle("SecretToken");
+        pdf.SetAuthor("PrivateToken");
+        pdf.SetSubject("ConfidentialToken");
+        var terms = new[] { "SecretToken", "PrivateToken", "ConfidentialToken" };
+        var before = Save(pdf);
+        foreach (var term in terms)
+            SavedPdfLeakScanner.FindTerm(before, term).Should().NotBeEmpty(
+                $"input-side control: '{term}' must be findable before the scrub");
+
+        PdfDocumentSanitizer.ScrubTerms(pdf, terms);
+
+        var saved = Save(pdf);
+        foreach (var term in terms)
+            SavedPdfLeakScanner.FindTerm(saved, term).Should().BeEmpty(
+                $"'{term}' must be scrubbed from its own /Info field");
+    }
+
     [Fact]
     public void Sanitizer_LeavesUnrelatedMetadataIntact()
     {

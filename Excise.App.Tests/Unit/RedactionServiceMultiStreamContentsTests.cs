@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Text;
-using Avalonia;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
@@ -13,7 +12,7 @@ namespace Excise.App.Tests.Unit;
 
 /// <summary>
 /// #1450: the GUI's click-to-redact area path
-/// (<see cref="RedactionService.RedactArea(PdfPage, Rect, int)"/>) used to
+/// (<see cref="RedactionService.RedactArea"/>) used to
 /// append its visual black-box marker through an untracked
 /// <c>page.GetContentStream()</c> / <c>page.SetContentStream(new
 /// ContentStream(ops))</c> — no <c>SourceBytes</c>, so the append
@@ -108,11 +107,9 @@ public class RedactionServiceMultiStreamContentsTests
             NullLogger<RedactionService>.Instance, new NullLoggerFactory());
 
         // PdfPageRect.FromContentPoints takes content-stream (bottom-left
-        // origin) coordinates directly, sidestepping the visual/DPI
-        // conversion the Rect overload does — a rect over ONLY the first
-        // (y=720) line's text, well clear of the second (y=500). This calls
-        // the exact RedactArea(PdfPage, PdfPageRect) overload whose
-        // AppendBlackRectangle call #1450 changed.
+        // origin) coordinates directly — a rect over ONLY the first (y=720)
+        // line's text, well clear of the second (y=500). This is the
+        // RedactArea whose AppendBlackRectangle call #1450 changed.
         service.RedactArea(page, PdfPageRect.FromContentPoints(
             page.PageNumber, new PdfRectangle(60, 710, 180, 740)));
 

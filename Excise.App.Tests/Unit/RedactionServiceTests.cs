@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Avalonia;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
@@ -48,12 +47,16 @@ public class RedactionServiceTests : IDisposable
 
     // Geometry these tests aim at: TestPdfGenerator.CreateMultiPagePdf draws
     // "Page N Content" at PDF y = height-100 and "Secret on Page N" at
-    // height-200. The Rect overload takes RENDERED-page coordinates (top-left
-    // origin) at the given DPI, so at the default 72 DPI the SECOND line sits
-    // around visual y 165-225 and the first is well above it.
+    // height-200. The areas take RENDERED-page coordinates (top-left origin);
+    // at 72 DPI the SECOND line sits around visual y 165-225 and the first is
+    // well above it.
     private const string TargetLine = "Secret on Page 1";
     private const string SurvivorLine = "Page 1 Content";
-    private static readonly Rect TargetLineVisualArea = new(40, 165, 460, 60);
+
+    private static PdfPageRect VisualArea(PdfPage page, double x, double y, double width, double height) =>
+        PdfPageRect.ViewerDips(page.PageNumber, x, y, width, height, renderDpi: 72);
+
+    private static PdfPageRect TargetLineArea(PdfPage page) => VisualArea(page, 40, 165, 460, 60);
 
     private string CreateTwoLinePdf(string name = "redact.pdf") =>
         CreateTestFile(name, path => TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 1));
@@ -75,7 +78,8 @@ public class RedactionServiceTests : IDisposable
             "or its absence afterwards proves nothing");
 
         using var doc = PdfDocument.Open(sourceBytes);
-        _service.RedactArea(doc.GetPage(1), TargetLineVisualArea);
+        var page = doc.GetPage(1);
+        _service.RedactArea(page, TargetLineArea(page));
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.FindTerm(saved, TargetLine).Should().BeEmpty(
@@ -98,7 +102,7 @@ public class RedactionServiceTests : IDisposable
         var page = doc.GetPage(1);
 
         // Large area covering page
-        var area = new Rect(0, 0, page.Width, page.Height);
+        var area = VisualArea(page, 0, 0, page.Width, page.Height);
 
         // Act
         _service.RedactArea(page, area);
@@ -130,7 +134,7 @@ public class RedactionServiceTests : IDisposable
         doc.SetTitle("SecretWord in the title");
         var page = doc.GetPage(1);
 
-        _service.RedactArea(page, new Rect(0, 0, page.Width, page.Height));
+        _service.RedactArea(page, VisualArea(page, 0, 0, page.Width, page.Height));
 
         var outputPath = Path.Combine(_tempDir, "carriers.pdf");
         doc.Save(outputPath);
@@ -153,7 +157,8 @@ public class RedactionServiceTests : IDisposable
         var filePath = CreateTwoLinePdf();
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        _service.RedactArea(doc.GetPage(1), new Rect(480, 600, 10, 10));
+        var page = doc.GetPage(1);
+        _service.RedactArea(page, VisualArea(page, 480, 600, 10, 10));
 
         var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
         saved.Should().Contain(TargetLine, "nothing was inside the rectangle");
@@ -171,7 +176,7 @@ public class RedactionServiceTests : IDisposable
         var page = doc.GetPage(1);
 
         // Area way outside page bounds
-        var area = new Rect(10000, 10000, 100, 100);
+        var area = VisualArea(page, 10000, 10000, 100, 100);
 
         // Act & Assert
         var action = () => _service.RedactArea(page, area);
@@ -193,145 +198,13 @@ public class RedactionServiceTests : IDisposable
         var page = doc.GetPage(1);
 
         // Act - Redact twice, covering both lines between them
-        _service.RedactArea(page, new Rect(0, 0, 300, 100));
-        _service.RedactArea(page, new Rect(0, 100, 300, 100));
+        _service.RedactArea(page, VisualArea(page, 0, 0, 300, 100));
+        _service.RedactArea(page, VisualArea(page, 0, 100, 300, 100));
 
         // Assert - both regions lost their glyphs, read from the SAVED BYTES.
         // The original version compared two counts of a harvested-word list
         // with >=, which a build that redacted nothing also satisfies; its
         // replacement read page.Text, which is excise grading excise (#1769).
-        var saved = doc.SaveToBytes();
-        SavedPdfLeakScanner.FindTerm(saved, "Line One").Should().BeEmpty();
-        SavedPdfLeakScanner.FindTerm(saved, "Line Two").Should().BeEmpty();
-    }
-
-    #endregion
-
-    #region RedactAreas Tests
-
-    /// <summary>
-    /// #1769: "RedactsAll" asserted only that the call did not throw. Every
-    /// line the rectangles cover must actually be gone from the saved file.
-    /// </summary>
-    [Fact]
-    public void RedactAreas_WithMultipleAreas_RedactsAll()
-    {
-        // Arrange
-        string[] lines = ["Line One", "Line Two", "Line Three"];
-        var filePath = CreateTestFile("redact.pdf", path =>
-            TestPdfGenerator.CreateTextOnlyPdf(path, lines));
-        var sourceBytes = File.ReadAllBytes(filePath);
-        foreach (var line in lines)
-            SavedPdfLeakScanner.FindTerm(sourceBytes, line).Should().NotBeEmpty(
-                $"input-side control: '{line}' must be findable before the redaction");
-
-        using var doc = PdfDocument.Open(sourceBytes);
-        var page = doc.GetPage(1);
-
-        var areas = new List<Rect>
-        {
-            new Rect(0, 0, 300, 100),
-            new Rect(0, 100, 300, 100),
-            new Rect(0, 200, 300, 100)
-        };
-
-        // Act
-        _service.RedactAreas(page, areas);
-
-        // Assert
-        var saved = doc.SaveToBytes();
-        foreach (var line in lines)
-            SavedPdfLeakScanner.FindTerm(saved, line).Should().BeEmpty(
-                $"'{line}' was inside one of the redacted rectangles");
-    }
-
-    /// <summary>
-    /// The empty-input crash guard, plus the property that makes it meaningful:
-    /// redacting NO areas must change nothing (#1769). "Did not throw" is also
-    /// true of a call that wipes the page.
-    /// </summary>
-    [Fact]
-    public void RedactAreas_WithEmptyList_DoesNothingAndDoesNotThrow()
-    {
-        // Arrange
-        var filePath = CreateTwoLinePdf();
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        var page = doc.GetPage(1);
-
-        // Act & Assert
-        var action = () => _service.RedactAreas(page, Array.Empty<Rect>());
-        action.Should().NotThrow();
-
-        var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
-        saved.Should().Contain(TargetLine, "no area was given, so nothing may be removed");
-        saved.Should().Contain(SurvivorLine, "no area was given, so nothing may be removed");
-    }
-
-    [Fact]
-    public void RedactAreas_WithSingleArea_RedactsThatArea()
-    {
-        // Arrange. The token is deliberately NOT the word "Content": a
-        // carrier-agnostic byte scan for that would match the /Contents key in
-        // every page dictionary and could never fail.
-        var filePath = CreateTestFile("redact.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "PageContentToken"));
-        var sourceBytes = File.ReadAllBytes(filePath);
-        SavedPdfLeakScanner.FindTerm(sourceBytes, "PageContentToken").Should().NotBeEmpty(
-            "input-side control: the token must be findable before the redaction");
-
-        using var doc = PdfDocument.Open(sourceBytes);
-        var page = doc.GetPage(1);
-
-        // The rectangle must actually contain the text, or the test's name is a
-        // lie. It previously used Rect(50, 50, 100, 100) — which does not cover
-        // where CreateSimpleTextPdf puts the text — under an assertion of
-        // `Count >= 0` that no build can fail, so nothing noticed.
-        var areas = new[] { new Rect(0, 0, page.Width, page.Height) };
-
-        // Act
-        _service.RedactAreas(page, areas);
-
-        // Assert — saved bytes, not page.Text (#1769: excise must not be its
-        // own oracle for removal).
-        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "PageContentToken").Should().BeEmpty(
-            "RedactAreas must remove the glyphs inside the rectangles it is given");
-    }
-
-    /// <summary>
-    /// #1769: "RedactsUnion" asserted only that the call did not throw — it
-    /// never checked that the union was redacted. Both lines lie inside the two
-    /// overlapping rectangles and must both be gone.
-    /// </summary>
-    [Fact]
-    public void RedactAreas_WithOverlappingAreas_RedactsUnion()
-    {
-        // Arrange
-        var filePath = CreateTestFile("redact.pdf", path =>
-            TestPdfGenerator.CreateTextOnlyPdf(path, new[] { "Line One", "Line Two" }));
-        var sourceBytes = File.ReadAllBytes(filePath);
-        SavedPdfLeakScanner.FindTerm(sourceBytes, "Line One").Should().NotBeEmpty(
-            "input-side control: the lines must be findable before the redaction");
-        SavedPdfLeakScanner.FindTerm(sourceBytes, "Line Two").Should().NotBeEmpty();
-
-        using var doc = PdfDocument.Open(sourceBytes);
-        var page = doc.GetPage(1);
-
-        // Overlapping areas, in 72-DPI rendered-page coordinates. The two lines
-        // sit around visual y 91-100 and 111-120; these rectangles cover one
-        // each and overlap in x 100-200, y 90-105. (The default 150 DPI made
-        // the old rectangles cover only the FIRST line, which nothing noticed
-        // because the test asserted only that the call returned.)
-        var areas = new List<Rect>
-        {
-            new Rect(0, 60, 200, 45),
-            new Rect(100, 90, 200, 45)
-        };
-
-        // Act
-        _service.RedactAreas(page, areas, renderDpi: 72);
-
-        // Assert
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.FindTerm(saved, "Line One").Should().BeEmpty();
         SavedPdfLeakScanner.FindTerm(saved, "Line Two").Should().BeEmpty();
@@ -562,309 +435,6 @@ public class RedactionServiceTests : IDisposable
 
     #endregion
 
-    #region RedactWithOptions Tests
-
-    /// <summary>
-    /// #1769: this asserted only "does not throw". A redaction with metadata
-    /// sanitization must remove BOTH the covered glyphs and the positionless
-    /// document carriers the engine strips by default (#897) — a name sitting
-    /// in <c>/Title</c> is shown by a reader before the page is ever opened.
-    /// </summary>
-    [Fact]
-    public void RedactWithOptions_WithSanitizeMetadataTrue_RemovesGlyphsAndDocumentCarriers()
-    {
-        // Arrange
-        var filePath = CreateTwoLinePdf();
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        doc.SetTitle("TitleCarrierToken in the title");
-        var page = doc.GetPage(1);
-
-        var options = new RedactionOptions { SanitizeMetadata = true };
-
-        // Act
-        _service.RedactWithOptions(doc, page, new[] { TargetLineVisualArea }, options, renderDpi: 72);
-
-        // Assert
-        var saved = doc.SaveToBytes();
-        SavedPdfLeakScanner.FindTerm(saved, TargetLine).Should().BeEmpty(
-            "the covered line must be gone from the saved file");
-        SavedPdfLeakScanner.FindTerm(saved, "TitleCarrierToken").Should().BeEmpty(
-            "the document title is a carrier with no position; sanitization must take it too");
-    }
-
-    /// <summary>
-    /// #1769: "does not throw" replaced by the removal <c>RemoveAllMetadata</c>
-    /// names — asserted unconditionally on a fixture that definitely HAS an
-    /// <c>/Info</c> dictionary, so the check cannot be skipped by a document
-    /// that never had one.
-    /// </summary>
-    [Fact]
-    public void RedactWithOptions_WithRemoveAllMetadataTrue_RemovesTheInfoDictionary()
-    {
-        // Arrange
-        var filePath = CreateTwoLinePdf();
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        doc.SetTitle("InfoDictTitleToken");
-        doc.Trailer.ContainsKey("Info").Should().BeTrue("precondition: the fixture has an /Info");
-        var page = doc.GetPage(1);
-
-        var options = new RedactionOptions { RemoveAllMetadata = true };
-
-        // Act
-        _service.RedactWithOptions(doc, page, new[] { TargetLineVisualArea }, options, renderDpi: 72);
-
-        // Assert
-        doc.Trailer.ContainsKey("Info").Should().BeFalse("RemoveAllMetadata drops /Info entirely");
-        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "InfoDictTitleToken").Should().BeEmpty();
-    }
-
-    [Fact]
-    public void RedactWithOptions_WithTypedPageAreas_DoesNotRequireLegacyRectConversion()
-    {
-        var filePath = CreateTestFile("typed-redact.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "TypedAreaToken"));
-        var sourceBytes = File.ReadAllBytes(filePath);
-        SavedPdfLeakScanner.FindTerm(sourceBytes, "TypedAreaToken").Should().NotBeEmpty(
-            "input-side control: the token must be findable before the redaction");
-
-        using var doc = PdfDocument.Open(sourceBytes);
-        var page = doc.GetPage(1);
-        var options = new RedactionOptions { SanitizeMetadata = true };
-        var areas = new[]
-        {
-            PdfPageRect.FromContentPoints(
-                page.PageNumber,
-                new PdfRectangle(0, 0, page.Width, page.Height))
-        };
-
-        _service.RedactWithOptions(doc, page, areas, options);
-
-        // #1769: the typed overload must not merely refrain from throwing — it
-        // has to redact, or a build that ignores typed areas passes.
-        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "TypedAreaToken").Should().BeEmpty(
-            "the typed-area overload must remove the glyphs inside the rectangle");
-    }
-
-    [Fact]
-    public void RedactWithOptions_CalledTwice_IsIdempotent()
-    {
-        // Arrange
-        var filePath = CreateTwoLinePdf();
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        var page = doc.GetPage(1);
-
-        var options = new RedactionOptions();
-        var areas = new[] { TargetLineVisualArea };
-
-        _service.RedactWithOptions(doc, page, areas, options, renderDpi: 72);
-        var afterFirst = doc.SaveToBytes();
-        SavedPdfLeakScanner.FindTerm(afterFirst, TargetLine).Should().BeEmpty(
-            "precondition: the first pass removed the covered line");
-
-        // Act - Call again. The document-carrier strip removes keys that are
-        // already gone the second time round, so this must stay a no-op.
-        var again = () => _service.RedactWithOptions(doc, page, areas, options, renderDpi: 72);
-
-        // Assert
-        again.Should().NotThrow();
-        var afterSecond = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
-        afterSecond.Should().Contain(SurvivorLine,
-            "a second pass over the same rectangle must not start eating content outside it");
-    }
-
-    /// <summary>
-    /// #1769: "does not throw" says nothing about precedence. With both flags
-    /// set, the wholesale removal must win — the titled <c>/Info</c> is gone
-    /// and its text is in no carrier of the saved file.
-    /// </summary>
-    [Fact]
-    public void RedactWithOptions_WithBothMetadataOptions_RemoveAllTakesPrecedence()
-    {
-        // Arrange
-        var filePath = CreateTwoLinePdf();
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        doc.SetTitle("BothOptionsTitleToken");
-        var page = doc.GetPage(1);
-
-        var options = new RedactionOptions
-        {
-            SanitizeMetadata = true,
-            RemoveAllMetadata = true
-        };
-
-        // Act
-        _service.RedactWithOptions(doc, page, new[] { TargetLineVisualArea }, options, renderDpi: 72);
-
-        // Assert
-        doc.Trailer.ContainsKey("Info").Should().BeFalse(
-            "RemoveAllMetadata is the stronger of the two and must take effect");
-        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "BothOptionsTitleToken").Should().BeEmpty();
-    }
-
-    #endregion
-
-    #region SanitizeMetadata Tests
-
-    /// <summary>
-    /// #1769: "does not throw" replaced by the scrub itself. The terms are
-    /// planted in <c>/Title</c> first, so absence afterwards is a removal and
-    /// not an empty document.
-    /// </summary>
-    [Fact]
-    public void SanitizeMetadata_WithValidDocument_RemovesTheTermsFromTheDocumentCarriers()
-    {
-        // Arrange
-        var filePath = CreateTestFile("meta.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "MetaBodyToken"));
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        doc.SetTitle("SecretToken and PrivateToken");
-        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "SecretToken").Should().NotBeEmpty(
-            "input-side control: the planted title must be findable before the scrub");
-
-        // Act
-        _service.SanitizeMetadata(doc, new[] { "SecretToken", "PrivateToken" });
-
-        // Assert
-        var saved = doc.SaveToBytes();
-        SavedPdfLeakScanner.FindTerm(saved, "SecretToken").Should().BeEmpty();
-        SavedPdfLeakScanner.FindTerm(saved, "PrivateToken").Should().BeEmpty();
-    }
-
-    /// <summary>
-    /// The empty-input guard, with the property that makes it meaningful: no
-    /// terms means no change. #1769 — "does not throw" is also true of a call
-    /// that wipes every carrier.
-    /// </summary>
-    [Fact]
-    public void SanitizeMetadata_WithEmptyTermsList_LeavesTheCarriersAlone()
-    {
-        // Arrange
-        var filePath = CreateTestFile("meta.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "MetaBodyToken"));
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        doc.SetTitle("KeptTitleToken");
-
-        // Act & Assert
-        var action = () => _service.SanitizeMetadata(doc, Array.Empty<string>());
-        action.Should().NotThrow();
-
-        doc.Title.Should().Be("KeptTitleToken", "an empty term list must scrub nothing");
-        SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes()).Should().Contain("MetaBodyToken");
-    }
-
-    /// <summary>
-    /// #1769: "ProcessesAll" asserted only that the call returned. Each term is
-    /// planted in a DIFFERENT carrier, so a scrub that handles only the first
-    /// one reddens.
-    /// </summary>
-    [Fact]
-    public void SanitizeMetadata_WithMultipleTerms_ProcessesAll()
-    {
-        // Arrange
-        var filePath = CreateTestFile("meta.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "MetaBodyToken"));
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        doc.SetTitle("SecretToken");
-        doc.SetAuthor("PrivateToken");
-        doc.SetSubject("ConfidentialToken");
-
-        var terms = new[] { "SecretToken", "PrivateToken", "ConfidentialToken" };
-        var before = doc.SaveToBytes();
-        foreach (var term in terms)
-            SavedPdfLeakScanner.FindTerm(before, term).Should().NotBeEmpty(
-                $"input-side control: '{term}' must be findable before the scrub");
-
-        // Act
-        _service.SanitizeMetadata(doc, terms);
-
-        // Assert
-        var saved = doc.SaveToBytes();
-        foreach (var term in terms)
-            SavedPdfLeakScanner.FindTerm(saved, term).Should().BeEmpty(
-                $"'{term}' must be scrubbed from its carrier");
-    }
-
-    #endregion
-
-    #region StripAllMetadata Tests
-
-    /// <summary>
-    /// #1769: "does not throw" replaced by the removal itself, on a document
-    /// that provably has an <c>/Info</c> to remove.
-    /// </summary>
-    [Fact]
-    public void StripAllMetadata_WithValidDocument_RemovesTheInfoText()
-    {
-        // Arrange
-        var filePath = CreateTestFile("meta.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "MetaBodyToken"));
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        doc.SetTitle("StripAllTitleToken");
-        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "StripAllTitleToken").Should().NotBeEmpty(
-            "input-side control: the planted title must be findable before the strip");
-
-        // Act
-        _service.StripAllMetadata(doc);
-
-        // Assert
-        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "StripAllTitleToken").Should().BeEmpty();
-    }
-
-    [Fact]
-    public void StripAllMetadata_RemovesInfoDictionary()
-    {
-        // Arrange. The title is set so the fixture DEFINITELY has an /Info —
-        // the assertion below used to hide behind `if (hasInfoBefore)`, which
-        // makes it vacuous on any document without one (#1769).
-        var filePath = CreateTestFile("meta.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "MetaBodyToken"));
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        doc.SetTitle("InfoPresenceToken");
-        doc.Trailer.ContainsKey("Info").Should().BeTrue("precondition: there is an /Info to remove");
-
-        // Act
-        _service.StripAllMetadata(doc);
-
-        // Assert — unconditional.
-        doc.Trailer.ContainsKey("Info").Should().BeFalse();
-    }
-
-    [Fact]
-    public void StripAllMetadata_CalledMultipleTimes_IsIdempotent()
-    {
-        // Arrange
-        var filePath = CreateTestFile("meta.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "MetaBodyToken"));
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        doc.SetTitle("IdempotentTitleToken");
-
-        // Act
-        _service.StripAllMetadata(doc);
-        var afterFirstCall = doc.Trailer.ContainsKey("Info");
-
-        var again = () => _service.StripAllMetadata(doc);
-
-        // Assert — BOTH false. `afterFirst.Should().Be(afterSecond)` was also
-        // satisfied by /Info surviving both calls (#1769).
-        again.Should().NotThrow();
-        afterFirstCall.Should().BeFalse("the first call removes /Info");
-        doc.Trailer.ContainsKey("Info").Should().BeFalse("the second call leaves it removed");
-    }
-
-    #endregion
-
-
-
     #region Integration Tests
 
     [Fact]
@@ -882,7 +452,7 @@ public class RedactionServiceTests : IDisposable
         using var doc = PdfDocument.Open(File.ReadAllBytes(inputPath));
         var page = doc.GetPage(1);
 
-        _service.RedactArea(page, TargetLineVisualArea);
+        _service.RedactArea(page, TargetLineArea(page));
         doc.Save(outputPath);
 
         // Assert
@@ -909,7 +479,10 @@ public class RedactionServiceTests : IDisposable
         // Act — the same rectangle on every page, over each page's own
         // "Secret on Page N" line.
         for (int i = 1; i <= 3; i++)
-            _service.RedactArea(doc.GetPage(i), TargetLineVisualArea);
+        {
+            var page = doc.GetPage(i);
+            _service.RedactArea(page, TargetLineArea(page));
+        }
 
         // Assert — #1769: this asserted only that the page count was unchanged,
         // which no redaction defect can falsify.
@@ -945,7 +518,7 @@ public class RedactionServiceTests : IDisposable
         // Then do area redaction on the result
         using var doc = PdfDocument.Open(File.ReadAllBytes(intermediatePath));
         var page = doc.GetPage(1);
-        _service.RedactArea(page, new Rect(0, 60, 612, 80));
+        _service.RedactArea(page, VisualArea(page, 0, 60, 612, 80));
         doc.Save(finalPath);
 
         // Assert — #1769: the page count was the only thing checked, so a build

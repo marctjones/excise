@@ -9,11 +9,11 @@
 # PublicApiApprovalTests, 1400+ members for Excise.Core alone. This script does
 # the other half: cross-reference each declared member against call sites.
 #
-# The motivating example is real. RedactionService.RedactWithOptions bundles
-# redaction with the metadata scrub — fully implemented, tested, and with ZERO
-# production callers. #896 shipped a leak through the CLI precisely because the
-# safe API existed and nothing used it. That was found by reading code. This
-# finds that shape mechanically.
+# The motivating example was real (RedactionService.RedactWithOptions, deleted in
+# #1834): it bundled redaction with the metadata scrub — fully implemented,
+# tested, and with ZERO production callers. #896 shipped a leak through the CLI
+# precisely because the safe API existed and nothing used it. That was found by
+# reading code. This finds that shape mechanically.
 #
 # WHAT IT IS NOT
 #

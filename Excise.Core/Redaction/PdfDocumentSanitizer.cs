@@ -526,8 +526,8 @@ public static class PdfDocumentSanitizer
     /// cut a term out of arbitrary bytes without risking corruption, so the safe
     /// action (the carrier policy: under-redaction over fidelity) is to REMOVE
     /// the attachment whose content contains the term — and ONLY that one, not
-    /// the wholesale strip <c>RemoveAllMetadata</c> does. Matches on the decoded
-    /// content, so an unrelated attachment survives.
+    /// every attachment. Matches on the decoded content, so an unrelated
+    /// attachment survives.
     /// </summary>
     /// <remarks>
     /// ⚠️ <see cref="CarrierScrubMode.Strip"/> and
