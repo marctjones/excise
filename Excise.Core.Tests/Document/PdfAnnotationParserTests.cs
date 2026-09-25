@@ -82,7 +82,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().BeEmpty();
     }
@@ -94,7 +94,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().BeEmpty();
     }
@@ -106,7 +106,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().BeEmpty();
     }
@@ -119,7 +119,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().BeEmpty();
     }
@@ -132,7 +132,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().BeEmpty();
     }
@@ -145,7 +145,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().BeEmpty();
     }
@@ -167,7 +167,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().HaveCount(1);
         var a = result[0];
@@ -217,7 +217,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().HaveCount(1);
         result[0].Subtype.Should().Be(expectedSubtype);
@@ -266,7 +266,7 @@ public class PdfAnnotationParserTests
         var pdf = MakePdfWithAnnots(annotsDef);
 
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
-        var result = PdfAnnotationParser.Parse(doc, doc.GetPage(1).Dictionary, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, doc.GetPage(1).Dictionary, null);
         result.Should().HaveCount(1, "guard: excise's own parser must find exactly one annotation");
 
         QpdfSeesAnnotSubtype(qpdf!, pdf, subtypeName).Should().BeTrue(
@@ -336,7 +336,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().HaveCount(1);
         result[0].Subtype.Should().Be(PdfAnnotationSubtype.Unknown);
@@ -352,7 +352,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().HaveCount(1);
         var color = result[0].Color;
@@ -370,7 +370,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var color = result[0].Color;
         color!.Value.R.Should().BeApproximately(1.0, 0.01);
@@ -387,7 +387,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var color = result[0].Color;
         color.Should().NotBeNull();
@@ -406,7 +406,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var color = result[0].Color;
         color!.Value.R.Should().BeApproximately(35.0 / 255.0, 0.01);
@@ -423,7 +423,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].Color.Should().BeNull();
     }
@@ -436,7 +436,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].Color.Should().BeNull();
     }
@@ -456,7 +456,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].QuadPoints.Should().NotBeNull().And.HaveCount(1);
         var quad = result[0].QuadPoints![0];
@@ -480,7 +480,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].QuadPoints.Should().NotBeNull().And.HaveCount(2);
     }
@@ -499,7 +499,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].QuadPoints.Should().BeNull();
     }
@@ -518,7 +518,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].QuadPoints.Should().BeNull();
     }
@@ -536,7 +536,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].QuadPoints.Should().BeNull();
     }
@@ -556,7 +556,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var quad = result[0].QuadPoints![0];
         quad.Left.Should().Be(10);
@@ -580,7 +580,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var date = result[0].ModDate;
         date.Should().NotBeNull();
@@ -602,7 +602,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var date = result[0].ModDate;
         date!.Value.Year.Should().Be(2025);
@@ -624,7 +624,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var date = result[0].ModDate;
         date.Should().NotBeNull();
@@ -644,7 +644,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var date = result[0].ModDate;
         date!.Value.Offset.Should().Be(new TimeSpan(-8, -30, 0));
@@ -663,7 +663,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].ModDate.Should().BeNull();
     }
@@ -681,7 +681,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].CreationDate.Should().NotBeNull();
         result[0].CreationDate!.Value.Year.Should().Be(2024);
@@ -695,11 +695,9 @@ public class PdfAnnotationParserTests
         var pdf = MakePdfWithMultiPageAnnot();
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
 
-        // Build page ref map (would be done by caller)
-        var pageRefMap = new Dictionary<(int, int), int> { { (3, 0), 1 }, { (4, 0), 2 } };
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, pageRefMap, null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var link = result.FirstOrDefault(a => a.Subtype == PdfAnnotationSubtype.Link);
         link.Should().NotBeNull();
@@ -719,7 +717,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var link = result[0];
         link.Uri.Should().Be("https://example.com");
@@ -727,15 +725,14 @@ public class PdfAnnotationParserTests
     }
 
     [Fact]
-    public void Parse_LinkWithoutPageInMap_NoDestinationPage()
+    public void Parse_LinkToObjectThatIsNotAPage_NoDestinationPage()
     {
-        var pdf = MakePdfWithMultiPageAnnot();
+        var annotsDef = @"[<< /Type /Annot /Subtype /Link /Rect [0 0 100 20] /Dest [99 0 R /Fit] >>]";
+        var pdf = MakePdfWithAnnots(annotsDef);
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
-
-        // Empty page ref map
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var link = result.FirstOrDefault(a => a.Subtype == PdfAnnotationSubtype.Link);
         link!.DestinationPage.Should().BeNull();
@@ -755,7 +752,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().HaveCount(3);
         result.Select(a => a.Subtype).Should().BeEquivalentTo(new[]
@@ -776,7 +773,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().HaveCount(2);
         result.Select(a => a.Subtype).Should().BeEquivalentTo(new[]
@@ -837,7 +834,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result.Should().HaveCount(1);
         result[0].Contents.Should().Be("From Ref");
@@ -854,7 +851,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var flags = result[0].Flags;
         flags.Should().HaveFlag(PdfAnnotationFlags.Invisible);
@@ -877,7 +874,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].Flags.Should().Be(PdfAnnotationFlags.None);
     }
@@ -896,7 +893,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].IsTextMarkup.Should().BeTrue();
     }
@@ -909,7 +906,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].IsTextMarkup.Should().BeFalse();
     }
@@ -924,7 +921,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].IsOpen.Should().BeTrue();
     }
@@ -937,7 +934,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].IsOpen.Should().BeFalse();
     }
@@ -950,7 +947,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].IsOpen.Should().BeFalse();
     }
@@ -963,7 +960,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].IconName.Should().Be("Comment");
     }
@@ -978,7 +975,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].RawDictionary.Should().NotBeNull();
         result[0].RawDictionary.GetNameOrNull("Subtype").Should().Be("Text");
@@ -997,7 +994,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].LineEndpoints.Should().NotBeNull();
         var (x1, y1, x2, y2) = result[0].LineEndpoints!.Value;
@@ -1012,7 +1009,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].LineEndpoints.Should().BeNull();
     }
@@ -1026,7 +1023,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].LineEndpoints.Should().BeNull();
     }
@@ -1042,7 +1039,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].Vertices.Should().NotBeNull();
         result[0].Vertices.Should().HaveCount(3);
@@ -1061,7 +1058,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].Vertices.Should().HaveCount(3);
     }
@@ -1080,7 +1077,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var ink = result[0].InkStrokes!;
         ink.Should().HaveCount(2);
@@ -1098,7 +1095,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].InkStrokes.Should().BeNull();
     }
@@ -1114,7 +1111,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].AttachmentFileName.Should().Be("data.csv");
         // No /EF embedded stream → bytes null
@@ -1132,7 +1129,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].AttachmentFileName.Should().Be("legacy.txt");
     }
@@ -1145,7 +1142,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].AttachmentFileName.Should().BeNull();
         result[0].AttachmentBytes.Should().BeNull();
@@ -1163,7 +1160,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].BorderWidth.Should().Be(2.5);
         result[0].BorderDashPattern.Should().NotBeNull();
@@ -1182,7 +1179,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].BorderWidth.Should().Be(4.0);
         result[0].BorderStyle.Should().Be("D");
@@ -1197,7 +1194,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].BorderWidth.Should().BeNull();
         result[0].BorderStyle.Should().BeNull();
@@ -1215,7 +1212,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].HasAppearance.Should().BeTrue();
     }
@@ -1228,7 +1225,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].HasAppearance.Should().BeFalse();
     }
@@ -1245,7 +1242,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].Vertices.Should().HaveCount(2);
     }
@@ -1261,7 +1258,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].LineEndpoints.Should().BeNull();
     }
@@ -1280,7 +1277,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].AttachmentFileName.Should().Be("missing.txt");
         result[0].AttachmentBytes.Should().BeNull();
@@ -1299,7 +1296,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].AttachmentFileName.Should().Be("test.txt");
         result[0].AttachmentBytes.Should().BeNull();
@@ -1317,7 +1314,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].AttachmentFileName.Should().Be("test.txt");
         result[0].AttachmentBytes.Should().BeNull();
@@ -1335,7 +1332,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].AttachmentFileName.Should().Be("test.txt");
         result[0].AttachmentBytes.Should().BeNull();
@@ -1353,7 +1350,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].AttachmentFileName.Should().BeNull();
         result[0].AttachmentBytes.Should().BeNull();
@@ -1374,7 +1371,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].BorderWidth.Should().Be(3.0);
         result[0].BorderStyle.Should().Be("S");
@@ -1395,7 +1392,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].BorderWidth.Should().Be(1.0);
         result[0].BorderStyle.Should().Be("D");
@@ -1414,7 +1411,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].BorderWidth.Should().BeApproximately(2.75, 0.01);
     }
@@ -1432,7 +1429,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].BorderWidth.Should().Be(2.0);
         result[0].BorderStyle.Should().BeNull();
@@ -1452,7 +1449,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         var link = result[0];
         link.DestinationPage.Should().BeNull();
@@ -1471,7 +1468,7 @@ public class PdfAnnotationParserTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var result = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         result[0].DestinationPage.Should().BeNull();
         result[0].Uri.Should().BeNull();

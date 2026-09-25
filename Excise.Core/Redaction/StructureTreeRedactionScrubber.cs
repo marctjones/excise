@@ -88,7 +88,8 @@ internal static class StructureTreeRedactionScrubber
         if (affectedMcids.Count == 0 && removedText.Count == 0)
             return false;
 
-        var pageRef = FindPageReference(doc, page);
+        // Struct elements point at their page by reference (/Pg).
+        var pageRef = doc.GetPageReference(page.PageNumber);
 
         var changed = false;
         var visited = new HashSet<PdfDictionary>();
@@ -284,17 +285,5 @@ internal static class StructureTreeRedactionScrubber
         var y = b.Normalize();
         return x.Left < y.Right && x.Right > y.Left &&
                x.Bottom < y.Top && x.Top > y.Bottom;
-    }
-
-    private static PdfReference? FindPageReference(PdfDocument doc, PdfPage page)
-    {
-        // Struct elements point at their page by reference (/Pg). We need the
-        // same reference to compare against.
-        for (int i = 1; i <= doc.PageCount; i++)
-        {
-            if (i != page.PageNumber) continue;
-            return doc.GetPageReference(i);
-        }
-        return null;
     }
 }

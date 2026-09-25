@@ -10,8 +10,6 @@ namespace Excise.Core.Document;
 /// </summary>
 public partial class PdfDocument
 {
-    private Dictionary<PdfDictionary, int>? _pagesByDict;
-
     /// <summary>
     /// How many pages of one document keep their <see cref="PdfPage.Letters"/>
     /// and <see cref="PdfPage.GetWords"/> cached at once (#1485).
@@ -196,19 +194,5 @@ public partial class PdfDocument
 
     // Map a dictionary's /Pg entry (a page reference) to its 1-based page number.
     private int? PageNumberFromPg(PdfDictionary dict)
-    {
-        var pgObj = dict.GetOptional("Pg");
-        if (pgObj == null)
-            return null;
-        if (Resolve(pgObj) is not PdfDictionary pageDict)
-            return null;
-
-        if (_pagesByDict == null)
-        {
-            _pagesByDict = new Dictionary<PdfDictionary, int>();
-            for (int i = 1; i <= PageCount; i++)
-                _pagesByDict[GetPage(i).Dictionary] = i;
-        }
-        return _pagesByDict.TryGetValue(pageDict, out int n) ? n : (int?)null;
-    }
+        => TryGetPageNumber(dict.GetOptional("Pg"), out var n) ? n : null;
 }

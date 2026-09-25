@@ -849,7 +849,7 @@ namespace Excise.Core.Document
     }
     public static class PdfLinkParser
     {
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfLink> Parse(Excise.Core.Document.PdfDocument doc, Excise.Core.Primitives.PdfDictionary pageDict, System.Collections.Generic.Dictionary<System.ValueTuple<int, int>, int> pageRefToNumber, System.Collections.Generic.Dictionary<string, Excise.Core.Primitives.PdfObject>? namedDests) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfLink> Parse(Excise.Core.Document.PdfDocument doc, Excise.Core.Primitives.PdfDictionary pageDict, System.Collections.Generic.Dictionary<string, Excise.Core.Primitives.PdfObject>? namedDests) { }
     }
     public sealed class PdfOcg : System.IEquatable<Excise.Core.Document.PdfOcg>
     {
@@ -883,7 +883,6 @@ namespace Excise.Core.Document
     public static class PdfOutlineParser
     {
         public static System.Collections.Generic.Dictionary<string, Excise.Core.Primitives.PdfObject>? BuildNamedDestinations(Excise.Core.Document.PdfDocument doc) { }
-        public static System.Collections.Generic.Dictionary<System.ValueTuple<int, int>, int> BuildPageRefMap(Excise.Core.Document.PdfDocument doc) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOutlineItem> Parse(Excise.Core.Document.PdfDocument doc) { }
     }
     public class PdfPage

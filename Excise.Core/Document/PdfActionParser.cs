@@ -152,15 +152,7 @@ internal static class PdfActionParser
     }
 
     private static int? ResolveDestinationArrayPage(PdfDocument doc, PdfArray destArray)
-    {
-        if (destArray.Count == 0 || destArray[0] is not PdfReference pageRef)
-            return null;
-
-        var pageRefToNumber = PdfOutlineParser.BuildPageRefMap(doc);
-        return pageRefToNumber.TryGetValue((pageRef.ObjectNum, pageRef.Generation), out var pageNum)
-            ? pageNum
-            : null;
-    }
+        => destArray.Count > 0 && doc.TryGetPageNumber(destArray[0], out var pageNum) ? pageNum : null;
 
     /// <summary>
     /// Decode a /JS entry, which per spec may be either a text string or a stream

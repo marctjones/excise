@@ -15,7 +15,6 @@ internal static class PdfAnnotationParser
     public static IReadOnlyList<PdfAnnotation> Parse(
         PdfDocument doc,
         PdfDictionary pageDict,
-        System.Collections.Generic.Dictionary<(int, int), int> pageRefToNumber,
         System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
     {
         var annotsObj = pageDict.GetOptional("Annots");
@@ -27,7 +26,7 @@ internal static class PdfAnnotationParser
         {
             if (doc.Resolve(entry) is not PdfDictionary annot) continue;
 
-            var parsed = ParseOne(doc, annot, pageRefToNumber, namedDests);
+            var parsed = ParseOne(doc, annot, namedDests);
             if (parsed != null)
                 result.Add(parsed);
         }
@@ -37,7 +36,6 @@ internal static class PdfAnnotationParser
     private static PdfAnnotation? ParseOne(
         PdfDocument doc,
         PdfDictionary annot,
-        System.Collections.Generic.Dictionary<(int, int), int> pageRefToNumber,
         System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
     {
         // Rect is mandatory for all annotations
@@ -66,7 +64,7 @@ internal static class PdfAnnotationParser
         int? destPage = null;
         string? uri = null;
         if (subtype == PdfAnnotationSubtype.Link)
-            (destPage, uri) = ResolveLink(doc, annot, pageRefToNumber, namedDests);
+            (destPage, uri) = ResolveLink(doc, annot, namedDests);
 
         // Subtype-specific geometry
         var lineEndpoints = subtype == PdfAnnotationSubtype.Line ? ParseLineEndpoints(doc, annot) : null;
@@ -316,7 +314,6 @@ internal static class PdfAnnotationParser
     private static (int? destPage, string? uri) ResolveLink(
         PdfDocument doc,
         PdfDictionary annot,
-        System.Collections.Generic.Dictionary<(int, int), int> pageRefToNumber,
         System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
     {
         // Check for GoToR / URI action first
@@ -332,21 +329,20 @@ internal static class PdfAnnotationParser
             if (actionType == "GoTo")
             {
                 var d = action.GetOptional("D");
-                var page = ResolveDestPage(doc, d, pageRefToNumber, namedDests);
+                var page = ResolveDestPage(doc, d, namedDests);
                 return (page, null);
             }
             return (null, null);
         }
 
         var dest = annot.GetOptional("Dest");
-        var destPage2 = ResolveDestPage(doc, dest, pageRefToNumber, namedDests);
+        var destPage2 = ResolveDestPage(doc, dest, namedDests);
         return (destPage2, null);
     }
 
     private static int? ResolveDestPage(
         PdfDocument doc,
         PdfObject? dest,
-        System.Collections.Generic.Dictionary<(int, int), int> pageRefToNumber,
         System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
     {
         if (dest == null) return null;
@@ -358,13 +354,7 @@ internal static class PdfAnnotationParser
         else
             dest = doc.Resolve(dest);
 
-        if (dest is PdfArray arr && arr.Count > 0 &&
-            arr[0] is PdfReference pageRef &&
-            pageRefToNumber.TryGetValue((pageRef.ObjectNum, pageRef.Generation), out var pageNum))
-        {
-            return pageNum;
-        }
-        return null;
+        return dest is PdfArray arr && arr.Count > 0 && doc.TryGetPageNumber(arr[0], out var pageNum) ? pageNum : null;
     }
 
     /// <summary>Parse a PDF date string (D:YYYYMMDDHHmmSSOHH'mm') into DateTimeOffset.</summary>

@@ -32,8 +32,6 @@ public partial class PdfDocument
     /// <item><c>_pages</c>: <c>/Catalog/Pages</c>; its stable
     /// <see cref="PageCollection"/> refreshes its internal list itself after a
     /// <see cref="PdfDocumentDerivedStateScope.PageTree"/> mutation.</item>
-    /// <item><c>_pagesByDict</c>: page dictionary to current page number;
-    /// <see cref="PdfDocumentDerivedStateScope.PageTree"/>.</item>
     /// <item><c>_namedDestinationsCache</c>: <c>/Dests</c> and
     /// <c>/Names/Dests</c> plus current page order;
     /// <see cref="PdfDocumentDerivedStateScope.CatalogActionsAndNames"/> or
@@ -63,7 +61,6 @@ public partial class PdfDocument
     {
         if ((scopes & PdfDocumentDerivedStateScope.PageTree) != 0)
         {
-            _pagesByDict = null;
             _namedDestinationsCache = null;
             _structureTree = null;
         }
@@ -81,7 +78,6 @@ public partial class PdfDocument
         {
             _structureTree = null;
             _isTaggedPdf = null;
-            _pagesByDict = null;
         }
 
         if ((scopes & PdfDocumentDerivedStateScope.OptionalContent) != 0)

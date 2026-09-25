@@ -621,12 +621,10 @@ public static class AcroFormAuthoring
         var page = document.GetPage(pageNumber);
         var pageDict = page.Dictionary;
 
-        // 1. Wire the widget to its page via /P.
-        // We don't have the page's own indirect ref handy on PdfPage, so
-        // walk the catalog/pages chain via PageCollection. Using a fresh
-        // indirect object for the widget keeps it serializable as a
-        // top-level object the writer can emit.
-        var pageRef = FindPageRef(document, pageNumber);
+        // 1. Wire the widget to its page via /P. Using a fresh indirect
+        // object for the widget keeps it serializable as a top-level object
+        // the writer can emit.
+        var pageRef = document.GetPageReference(pageNumber);
         if (pageRef != null)
             widget["P"] = pageRef;
 
@@ -846,49 +844,6 @@ public static class AcroFormAuthoring
         EnsureDrFonts(document, acroForm);
 
         return acroForm;
-    }
-
-    /// <summary>
-    /// Walk the /Pages tree to find the indirect reference whose page index
-    /// matches <paramref name="pageNumber"/> (1-based). Returns null if the
-    /// pages were created inline rather than as indirect refs (rare).
-    /// </summary>
-    private static PdfReference? FindPageRef(PdfDocument document, int pageNumber)
-    {
-        var pagesObj = document.Catalog.GetOptional("Pages");
-        if (pagesObj == null) return null;
-        if (document.Resolve(pagesObj) is not PdfDictionary pages) return null;
-
-        int target = pageNumber - 1;
-        int counter = 0;
-        return WalkKids(document, pages, ref counter, target);
-    }
-
-    private static PdfReference? WalkKids(
-        PdfDocument document, PdfDictionary node, ref int counter, int target)
-    {
-        var kidsObj = node.GetOptional("Kids");
-        if (kidsObj == null || document.Resolve(kidsObj) is not PdfArray kids)
-            return null;
-
-        foreach (var kidObj in kids)
-        {
-            if (document.Resolve(kidObj) is not PdfDictionary kid) continue;
-            var type = kid.GetNameOrNull("Type");
-
-            if (type == "Page")
-            {
-                if (counter == target)
-                    return kidObj as PdfReference;
-                counter++;
-            }
-            else if (type == "Pages")
-            {
-                var hit = WalkKids(document, kid, ref counter, target);
-                if (hit != null) return hit;
-            }
-        }
-        return null;
     }
 
     private static void ValidateName(string fieldName)

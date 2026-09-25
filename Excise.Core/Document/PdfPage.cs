@@ -19,12 +19,18 @@ public partial class PdfPage
     /// <summary>
     /// Creates a new page wrapper.
     /// </summary>
-    internal PdfPage(PdfDocument document, PdfDictionary pageDict, int pageNumber)
+    internal PdfPage(PdfDocument document, PdfDictionary pageDict, int pageNumber, PdfReference? reference)
     {
         _document = document;
         _pageDict = pageDict;
         PageNumber = pageNumber;
+        Reference = reference;
     }
+
+    /// <summary>
+    /// The reference this page has in its parent's /Kids; null when it is inline.
+    /// </summary>
+    internal PdfReference? Reference { get; }
 
     /// <summary>
     /// The underlying page dictionary.
@@ -42,9 +48,8 @@ public partial class PdfPage
     /// </summary>
     public IReadOnlyList<PdfAnnotation> GetAnnotations()
     {
-        var pageMap    = PdfOutlineParser.BuildPageRefMap(_document);
         var namedDests = PdfOutlineParser.BuildNamedDestinations(_document);
-        return PdfAnnotationParser.Parse(_document, _pageDict, pageMap, namedDests);
+        return PdfAnnotationParser.Parse(_document, _pageDict, namedDests);
     }
 
     /// <summary>
@@ -93,12 +98,8 @@ public partial class PdfPage
     /// </summary>
     public IReadOnlyList<PdfLink> GetLinks()
     {
-        // Build the page-ref map and named-dest map fresh per call.
-        // Callers that want them across many pages should use the static
-        // PdfLinkParser.Parse with shared maps to avoid the redundant work.
-        var pageMap = PdfOutlineParser.BuildPageRefMap(_document);
         var namedDests = PdfOutlineParser.BuildNamedDestinations(_document);
-        return PdfLinkParser.Parse(_document, _pageDict, pageMap, namedDests);
+        return PdfLinkParser.Parse(_document, _pageDict, namedDests);
     }
 
     /// <summary>
