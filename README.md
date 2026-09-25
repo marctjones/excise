@@ -101,6 +101,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Verified against real-world fixtures (CT birth certificate, government forms) at the pixel and content-stream level
 
 ### AcroForm editing & authoring
+- **Dynamic XFA forms are displayed** — a dynamic XFA form (other readers show only a "Please wait…" placeholder, Preview included) is laid out from its XFA template and data when it opens, and the app says so in a banner. Its FormCalc `initialize` and `calculate` scripts run in excise's own interpreter (no JavaScript engine, no file or network functions, bounded in steps, depth and time; a failing script is undone and reported); JavaScript, `validate` and click scripts never run. Display only: these fields cannot be filled yet, and images, barcodes and some styling are not drawn (#1547, #1824, #1825). Static XFA forms, like the IRS forms, fill through their ordinary AcroForm fields.
 - `PdfField.SetValue(string?)` mutates `/V`, sets `/NeedAppearances`, updates `/AS` for buttons, and throws on read-only and signature fields
 - `PdfField` exposes effective `/Ff` flags plus widget metadata/export values so callers can distinguish checkboxes, radio groups, combo boxes, and push buttons
 - `PdfDocument.FlattenAcroForm()` bakes values into static page content, clips/wraps text to widget bounds, draws only the selected radio widget, and strips widget annotations
