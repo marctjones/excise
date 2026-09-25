@@ -393,7 +393,7 @@ public partial class MainWindowViewModel
 
         try
         {
-            if (!TryDecodeRgb(path!, out var rgb, out var w, out var h))
+            if (!ImageStampDecoder.TryDecode(path!, out var image))
             {
                 await _dialogService.ShowMessageAsync(
                     "Add Image Stamp",
@@ -402,16 +402,30 @@ public partial class MainWindowViewModel
                 return;
             }
 
+            // A scan or photo of a signature on white paper: offer to drop the paper, keeping the ink.
+            if (ImageStampDecoder.LooksLikeInkOnWhite(image) &&
+                await _dialogService.ShowConfirmAsync(
+                    "Add Image Stamp",
+                    "This image has a white background. Make the white transparent so only the ink shows on the page?"))
+            {
+                image = ImageStampDecoder.RemoveLightBackground(image);
+            }
+
+            // Keep the picture's proportions inside the dragged box instead of stretching it to fill it.
+            var placed = ImageStampDecoder.FitInside(contentRect, image.Width, image.Height);
+            var (rgb, alpha, w, h) = (image.Rgb, image.Alpha, image.Width, image.Height);
+
             var annotation = _annotationWorkflow.AddImageStamp(
                 pageNumber,
-                contentRect,
+                placed,
                 rgb,
                 w,
                 h,
-                viewerDocument: _pdfCoreDocument);
+                viewerDocument: _pdfCoreDocument,
+                alphaPixels: alpha);
             await MarkAnnotationChangedAsync("Image stamp added");
             RecordAnnotationAdd("Add image stamp", pageNumber, annotation,
-                () => _annotationWorkflow.AddImageStamp(pageNumber, contentRect, rgb, w, h));
+                () => _annotationWorkflow.AddImageStamp(pageNumber, placed, rgb, w, h, alphaPixels: alpha));
         }
         catch (Exception ex)
         {
@@ -433,39 +447,6 @@ public partial class MainWindowViewModel
         });
 
         return files.Count == 0 ? null : files[0];
-    }
-
-    /// <summary>
-    /// Decode to the tightly-packed 24-bit RGB Core requires. Core validates
-    /// that the buffer is exactly width*height*3 and throws otherwise, so any
-    /// stride or channel-count mistake here surfaces immediately rather than
-    /// producing a corrupt stamp.
-    /// </summary>
-    private static bool TryDecodeRgb(string path, out byte[] rgb, out int width, out int height)
-    {
-        rgb = Array.Empty<byte>();
-        width = height = 0;
-
-        using var bitmap = SkiaSharp.SKBitmap.Decode(path);
-        if (bitmap == null || bitmap.Width <= 0 || bitmap.Height <= 0)
-            return false;
-
-        width = bitmap.Width;
-        height = bitmap.Height;
-        rgb = new byte[(long)width * height * 3];
-
-        var i = 0;
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                var c = bitmap.GetPixel(x, y);
-                rgb[i++] = c.Red;
-                rgb[i++] = c.Green;
-                rgb[i++] = c.Blue;
-            }
-        }
-        return true;
     }
 
     public async Task AddStickyNoteAnnotationAsync(string? contentsOverride = null)

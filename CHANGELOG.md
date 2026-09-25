@@ -6,6 +6,13 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Transparent PNG signatures and image stamps.** An image stamp now keeps its alpha channel as a real
+  soft mask, so a PNG with a transparent background sits on the page instead of in a box, in excise and
+  in every other reader (checked with mutool over a coloured page). A scan or photo of a signature on
+  white paper offers to make the white transparent while keeping the ink, soft pen edges included. The
+  picture keeps its own proportions inside the box you drag, instead of being stretched to fill it.
+
 ## [3.11.0] - 2026-09-24
 
 ### Added

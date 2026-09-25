@@ -29,18 +29,19 @@ public sealed class AnnotationWorkflowService
     public PdfAnnotation AddImageStamp(
         int pageNumber, PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight,
         string? contents = null,
-        PdfDocument? viewerDocument = null)
+        PdfDocument? viewerDocument = null,
+        byte[]? alphaPixels = null)
     {
         var saveDocument = GetLoadedDocument();
         var annotation = saveDocument.AddImageStampAnnotation(
-            pageNumber, rect, rgbPixels, pixelWidth, pixelHeight, contents);
+            pageNumber, rect, rgbPixels, pixelWidth, pixelHeight, contents, alphaPixels: alphaPixels);
         if (viewerDocument is not null &&
             !ReferenceEquals(saveDocument, viewerDocument) &&
             pageNumber >= 1 &&
             pageNumber <= viewerDocument.PageCount)
         {
             viewerDocument.AddImageStampAnnotation(
-                pageNumber, rect, rgbPixels, pixelWidth, pixelHeight, contents);
+                pageNumber, rect, rgbPixels, pixelWidth, pixelHeight, contents, alphaPixels: alphaPixels);
         }
         _logger.LogInformation(
             "Added {W}x{H} image stamp to page {PageNumber}", pixelWidth, pixelHeight, pageNumber);

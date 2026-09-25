@@ -1502,6 +1502,12 @@ public static class PdfAnnotationAuthoring
     /// no padding between rows.</param>
     /// <param name="pixelWidth">Image width in pixels.</param>
     /// <param name="pixelHeight">Image height in pixels.</param>
+    /// <param name="alphaPixels">
+    /// Optional 8-bit opacity, one byte per pixel in the same top-down row-major order
+    /// (0 transparent, 255 opaque), written as the image's <c>/SMask</c> (ISO 32000-2
+    /// §11.6.5.3) so a PNG with a transparent background, a signature above all, sits on
+    /// the page instead of in a box. Null gives a fully opaque image.
+    /// </param>
     public static PdfAnnotation AddImageStampAnnotation(
         this PdfDocument document,
         int pageNumber,
@@ -1510,7 +1516,8 @@ public static class PdfAnnotationAuthoring
         int pixelWidth,
         int pixelHeight,
         string? contents = null,
-        string? author = null)
+        string? author = null,
+        byte[]? alphaPixels = null)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(rgbPixels);
@@ -1524,6 +1531,12 @@ public static class PdfAnnotationAuthoring
                 $"rgbPixels must be exactly pixelWidth*pixelHeight*3 bytes ({expected}), " +
                 $"got {rgbPixels.LongLength}.",
                 nameof(rgbPixels));
+        long expectedAlpha = (long)pixelWidth * pixelHeight;
+        if (alphaPixels != null && alphaPixels.LongLength != expectedAlpha)
+            throw new ArgumentException(
+                $"alphaPixels must be exactly pixelWidth*pixelHeight bytes ({expectedAlpha}), " +
+                $"got {alphaPixels.LongLength}.",
+                nameof(alphaPixels));
 
         var normalized = rect.Normalize();
         var annot = NewAnnotationDict("Stamp", normalized);
@@ -1534,7 +1547,7 @@ public static class PdfAnnotationAuthoring
             annot.SetString("T", author);
         annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
 
-        var apStream = BuildImageStampAppearanceStream(document, normalized, rgbPixels, pixelWidth, pixelHeight);
+        var apStream = BuildImageStampAppearanceStream(document, normalized, rgbPixels, pixelWidth, pixelHeight, alphaPixels);
         var ap = new PdfDictionary();
         ap["N"] = document.AddIndirectObject(apStream);
         annot["AP"] = ap;
@@ -1549,7 +1562,8 @@ public static class PdfAnnotationAuthoring
     /// mapping (§8.9.5.2).
     /// </summary>
     private static PdfStream BuildImageStampAppearanceStream(
-        PdfDocument document, PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight)
+        PdfDocument document, PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight,
+        byte[]? alphaPixels = null)
     {
         double w = rect.Width, h = rect.Height;
 
@@ -1560,6 +1574,21 @@ public static class PdfAnnotationAuthoring
         image.SetInt("Height", pixelHeight);
         image.SetName("ColorSpace", "DeviceRGB");
         image.SetInt("BitsPerComponent", 8);
+
+        // A soft mask is its own DeviceGray image of the same size: the reader multiplies the
+        // picture's opacity by it. Skipped when every pixel is opaque, which is the common case
+        // for a photograph and saves a whole extra image.
+        if (alphaPixels != null && alphaPixels.Any(a => a != 255))
+        {
+            var mask = PdfStream.CreateCompressed(alphaPixels);
+            mask.SetName("Type", "XObject");
+            mask.SetName("Subtype", "Image");
+            mask.SetInt("Width", pixelWidth);
+            mask.SetInt("Height", pixelHeight);
+            mask.SetName("ColorSpace", "DeviceGray");
+            mask.SetInt("BitsPerComponent", 8);
+            image["SMask"] = document.AddIndirectObject(mask);
+        }
         var imageRef = document.AddIndirectObject(image);
 
         var sb = new StringBuilder();
