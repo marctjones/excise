@@ -172,10 +172,10 @@ public static class PdfDocumentSanitizer
             rows.Add(new CarrierScrubResult(carrier, mode, scrub.TermFound, stageChanged,
                 // A carrier that DID run, but on a reduced term list, is not a
                 // clean outcome for the terms it could not act on.
-                belowFloor && mode != CarrierScrubMode.RemoveWhole
+                scrub.Unexamined ?? (belowFloor && mode != CarrierScrubMode.RemoveWhole
                     ? $"one or more terms are under {MinTermLength} characters and were not "
                       + $"scrubbed from this carrier (the {CarrierScrubMode.Strip} floor)"
-                    : null));
+                    : null)));
         }
 
         Stage(RedactionCarriers.Info, s => ScrubInfo(document, s), PdfDocumentDerivedStateScope.Metadata);
@@ -195,6 +195,7 @@ public static class PdfDocumentSanitizer
         Stage(RedactionCarriers.JavaScript, s => ScrubJavaScript(document, s), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1151
         Stage(RedactionCarriers.EmbeddedFiles, s => ScrubEmbeddedFiles(document, s), PdfDocumentDerivedStateScope.Attachments); // #1151
         Stage(RedactionCarriers.ActionUris, s => ScrubActionUris(document, s), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1168
+        Stage(RedactionCarriers.MarkedContent, s => ScrubMarkedContent(document, s)); // #1854
 
         if (invalidation != PdfDocumentDerivedStateScope.None)
             document.InvalidateDerivedState(invalidation);
@@ -237,6 +238,9 @@ public static class PdfDocumentSanitizer
 
         /// <summary>True once any value in this carrier was seen to hold a term.</summary>
         internal bool TermFound { get; private set; }
+
+        /// <summary>Why part of this carrier could not be examined; the row reports it.</summary>
+        internal string? Unexamined { get; set; }
 
         /// <summary>
         /// Record a hit a carrier detected its own way (XFA parses XML rather
@@ -477,6 +481,20 @@ public static class PdfDocumentSanitizer
             if (kids is PdfArray arr) foreach (var k in arr) stack.Push(k);
             else if (kids is PdfDictionary d) stack.Push(d);
         }
+        return changed;
+    }
+
+    /// <summary>
+    /// #1854 — marked-content <c>/ActualText</c>, <c>/Alt</c> and <c>/E</c>: the
+    /// page's text to every extractor, whatever glyphs the span paints.
+    /// </summary>
+    private static bool ScrubMarkedContent(PdfDocument document, CarrierScrub scrub)
+    {
+        var changed = Excise.Core.Text.Segmentation.MarkedContentCarrierScrubber.ScrubTerm(
+            document, value => scrub.TryApply(value, out var replacement) ? replacement : null, out var unreadable);
+        if (unreadable > 0)
+            scrub.Unexamined = $"{unreadable} content stream(s) could not be read, so their marked-content " +
+                               "property lists were not examined and may still hold the term";
         return changed;
     }
 

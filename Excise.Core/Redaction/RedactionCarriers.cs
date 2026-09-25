@@ -51,7 +51,13 @@ public enum RedactionCarriers
     /// <summary>Link/action <c>/URI</c> targets.</summary>
     ActionUris = 1 << 9,
 
+    /// <summary>
+    /// <c>/ActualText</c> / <c>/Alt</c> / <c>/E</c> in a marked-content property
+    /// list, inline or named through <c>/Properties</c>, in every content stream (#1854).
+    /// </summary>
+    MarkedContent = 1 << 10,
+
     /// <summary>Every carrier — the default and the safe choice.</summary>
     All = Info | Xmp | Xfa | Outlines | Annotations | FormFields
-        | StructTree | JavaScript | EmbeddedFiles | ActionUris,
+        | StructTree | JavaScript | EmbeddedFiles | ActionUris | MarkedContent,
 }

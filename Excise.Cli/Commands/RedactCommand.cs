@@ -107,7 +107,7 @@ internal static class RedactCommand
         {
             Description = "How a document-level carrier holding the term is handled: " +
                 "'<carrier>=<mode>', repeatable. Carriers: info, xmp, xfa, outlines, annotations, " +
-                "form-fields, struct-tree, javascript, embedded-files, uri, all. " +
+                "form-fields, struct-tree, javascript, embedded-files, uri, marked-content, all. " +
                 "Modes: strip (default; cut the term out), remove-whole (drop the entire value), " +
                 "report-only (change nothing and report it). " +
                 "Use remove-whole where the surrounding text is KNOWN -- stripping 'your' from " +
@@ -366,7 +366,7 @@ internal static class RedactCommand
             if (!TryParseCarrierName(parts[0].Trim(), out var carriers))
             {
                 error = $"unknown carrier '{parts[0].Trim()}' (info, xmp, xfa, outlines, annotations, " +
-                    "form-fields, struct-tree, javascript, embedded-files, uri, all)";
+                    "form-fields, struct-tree, javascript, embedded-files, uri, marked-content, all)";
                 return false;
             }
 
@@ -399,6 +399,7 @@ internal static class RedactCommand
             case "embedded-files": c = Excise.Core.Operations.RedactionCarriers.EmbeddedFiles; break;
             case "uri":
             case "action-uris": c = Excise.Core.Operations.RedactionCarriers.ActionUris; break;
+            case "marked-content": c = Excise.Core.Operations.RedactionCarriers.MarkedContent; break;
             case "all": c = Excise.Core.Operations.RedactionCarriers.All; break;
         }
 

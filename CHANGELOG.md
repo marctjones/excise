@@ -7,6 +7,15 @@ semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- **Redacting a term now removes it from marked-content `/ActualText`, `/Alt` and `/E`, whatever glyphs the
+  span paints.** A span whose `/ActualText` held the term over glyphs that did not spell it (a figure, a
+  scanned image with replacement text) kept it: `RedactText` reported nothing to remove, and mutool and
+  pdftotext both read the term as the page's text. The term is now cut from every property list, inline or
+  named through `/Properties`, in page content, form XObjects, annotation appearances, tiling patterns and
+  Type 3 glyphs, under a new `MarkedContent` carrier (`--carrier-policy marked-content=...`; Maximum drops the
+  whole value). A content stream excise cannot read is reported rather than skipped, and the redacted-copy
+  check and `unredact` now read these carriers too (checked with mutool, pdftotext and the saved-file
+  scanner) (#1854).
 - **The redaction audit judges a CMYK fill by the colour the page shows.** `unredact` and the hidden-text
   scan converted DeviceCMYK with `(1-c)(1-k)`, which paints 60% K as gray 0.40 where mutool and excise's
   renderer paint about 0.5, so a mid-gray bar counted as a redaction mark. The three detectors now share

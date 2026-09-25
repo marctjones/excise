@@ -18,21 +18,9 @@ namespace Excise.Core.Tests.Redaction.Recovery;
 /// dictionary is always EXCLUSIVE to its span and the conservative branch of
 /// that guard is never exercised from the recovery side.</para>
 ///
-/// <para><b>⚠️ What this file deliberately does NOT test.</b> The obvious
-/// assertion — "two spans share <c>/P1</c>, one is redacted, the carrier
-/// survives" — is satisfied by a scrubber that does nothing at all, and on
-/// THIS branch the scrubber does exactly that for named lists. That is #1599,
-/// still open: <see cref="MarkedContentTextRecovery"/>'s own summary records
-/// that the scrub side handles only the inline form. So a survival assertion
-/// here would pass for the wrong reason and would keep passing after #1599
-/// lands, which makes it a check that cannot fail.</para>
-///
-/// <para>The scrub-side pair — scrubbed when exclusive, KEPT when shared, with
-/// the redaction proven to have run — belongs with #1599, where the behaviour
-/// exists and both directions can be pinned against each other. Only the pair
-/// separates a working guard from one that never scrubs or always scrubs;
-/// either half alone is green under one of those two broken implementations.
-/// </para>
+/// <para>The scrub-side pair (scrubbed when exclusive, kept when shared) is
+/// pinned in <c>NamedMarkedContentCarrierTests</c>; a survival assertion here
+/// alone would pass under a scrubber that never scrubs.</para>
 ///
 /// <para><b>What IS testable here, and is a real question:</b> whether the
 /// recovery channel resolves a shared dictionary correctly — reporting the
@@ -46,17 +34,14 @@ public class SharedNamedPropertyListRecoveryTests
 
     /// <summary>
     /// The channel finds a carrier reached through <c>/Resources /Properties</c>
-    /// by more than one span. This is the leak #1599 exists to close, so the
-    /// detection side must see it.
+    /// by more than one span.
     /// </summary>
     [Fact]
     public void ACarrierSharedByTwoSpans_IsFound()
     {
         var findings = Scan();
 
-        findings.Should().NotBeEmpty(
-            "a named property list is a real carrier (§14.6.2) and the scrub side " +
-            "does not yet reach it — #1599 — so the recovery side must");
+        findings.Should().NotBeEmpty("a named property list is a real carrier (§14.6.2)");
         findings.Select(f => f.Text).Should().Contain(Carrier);
     }
 

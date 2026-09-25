@@ -254,6 +254,14 @@ internal static class CarrierTrapFixtures
                 "<< /Type /StructTreeRoot /K 7 0 R >>",
                 $"<< /Type /StructElem /S /P /P 6 0 R /ActualText ({t}) >>",
             }));
+        // #1854: a span whose /ActualText holds the token over glyphs that do
+        // not spell it (a figure's replacement text); mutool and pdftotext read
+        // it as the page's text. Named, so the glyph pass's removed-text match
+        // on the visible line cannot reach it: only the term stage does.
+        Add("marked-content-actualtext", "SPANACTUALTRAP", "marked-content /ActualText", Oracle.QpdfDump,
+            (t, v) => Doc(V(t, v), extraContent: "/Span /P1 BDC BT /F1 12 Tf 72 500 Td (Figure 1) Tj ET EMC",
+                resources: "/Properties << /P1 6 0 R >>",
+                extra: new[] { $"<< /ActualText (Figure of {t}) >>" }));
         Add("structure-title", "STRUCTTITLETRAP", "structure-tree /T", Oracle.QpdfDump,
             (t, v) => Doc(V(t, v), catalog: "/StructTreeRoot 6 0 R", extra: new[]
             {

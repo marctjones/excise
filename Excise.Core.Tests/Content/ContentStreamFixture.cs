@@ -105,12 +105,15 @@ internal static class ContentStreamFixture
     /// <c>/Resources</c> dictionary itself, e.g. an <c>/ExtGState</c>
     /// sub-dictionary. Used by the #990 gate, which needs a <c>gs</c> that
     /// carries a Table 58 <c>/Font</c> entry.</param>
+    /// <param name="extraPageEntries">Additional entries for the page
+    /// dictionary itself, e.g. <c>/Annots [6 0 R]</c>.</param>
     public static byte[] Build(
         string content,
         string fontObject = "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
         string extraObjects = "",
         string extraFontResources = "",
-        string extraResources = "")
+        string extraResources = "",
+        string extraPageEntries = "")
     {
         var body = Encoding.Latin1.GetBytes(content);
         using var ms = new MemoryStream();
@@ -130,7 +133,7 @@ internal static class ContentStreamFixture
         offsets[3] = ms.Position;
         W("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
           + "/Resources << /Font << /F1 5 0 R " + extraFontResources + " >> "
-          + extraResources + " >> >>\nendobj\n");
+          + extraResources + " >> " + extraPageEntries + " >>\nendobj\n");
         offsets[4] = ms.Position;
         W($"4 0 obj\n<< /Length {body.Length} >>\nstream\n");
         ms.Write(body);
