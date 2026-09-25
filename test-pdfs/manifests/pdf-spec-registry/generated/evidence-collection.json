@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1416,
-  "indexedContentSha256": "780cdfa138ec407d3fbcceb26f7874ff9281677ba8f88b3b761c63be64e7db45",
+  "indexedFileCount": 1418,
+  "indexedContentSha256": "a0bae0a96ad74a9930af92c692088c5117aba306272996f5aa626528adbce6b5",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -8046,7 +8046,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 646
+      "candidateReferenceCount": 647
     },
     {
       "id": "pdf.17.graphics.color",
@@ -13012,14 +13012,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "content-stream",
-            "iso"
-          ]
-        },
-        {
           "path": "Excise.Core/Redaction/PdfPageRedactionExtensions.cs",
           "kind": "source",
           "matchedTerms": [
@@ -13507,9 +13499,18 @@
             "contentoperator",
             "contentstream"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/HiddenTextDetectorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "iso",
+            "operators",
+            "contentstream"
+          ]
         }
       ],
-      "candidateReferenceCount": 133
+      "candidateReferenceCount": 132
     },
     {
       "id": "pdf.17.content.text-state",
@@ -51389,7 +51390,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 214
+      "candidateReferenceCount": 215
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -56289,7 +56290,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 193
+      "candidateReferenceCount": 194
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -58850,7 +58851,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 219
+      "candidateReferenceCount": 220
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -60694,7 +60695,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 220
+      "candidateReferenceCount": 221
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -61682,7 +61683,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 104
+      "candidateReferenceCount": 105
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -66562,7 +66563,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 136
+      "candidateReferenceCount": 137
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -67333,7 +67334,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 91
+      "candidateReferenceCount": 92
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -70448,7 +70449,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 708
+      "candidateReferenceCount": 709
     },
     {
       "id": "pdf.20.extension.developer",
@@ -71149,7 +71150,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 157
+      "candidateReferenceCount": 158
     },
     {
       "id": "pdf.20.profile.pdfa",

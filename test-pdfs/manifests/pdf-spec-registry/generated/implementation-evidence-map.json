@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "839370a50bb4b31f1087e27fb8d95a5c78203f6cca6448001ac7ddc35860acdd",
+  "sourceFingerprint": "56918eded8ed1ba2631d673da255c726b89631d269f0061c72a3615a5aa06628",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -5825,6 +5825,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Text/TermMatch.cs",
+      "path": "Excise.Core/Text/TermMatch.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Text/TextExtractor.cs",
       "path": "Excise.Core/Text/TextExtractor.cs",
       "kind": "source-file",
@@ -11038,7 +11048,7 @@
     }
   ],
   "summary": {
-    "records": 550,
+    "records": 551,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 18,
@@ -11046,7 +11056,7 @@
       "fonts": 33,
       "forms": 9,
       "images": 33,
-      "product-integration-general": 312,
+      "product-integration-general": 313,
       "redaction": 81,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 23,
@@ -11125,7 +11135,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 23,
       "pdfe.product.security.signature-and-permission-warning:write": 23
     },
-    "fallbackRecords": 312,
+    "fallbackRecords": 313,
     "allRecordsMapped": true
   }
 }

@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "1d0fb1c22c452d83c03312449f4983bbecbece9d",
+  "sourceRevision": "4aee9057461cfaecba5cfed7bd3689c3d2eb4856",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8126,
+    "retainedSymbols": 8125,
     "observedComponentDependencies": 79,
     "declaredDependencies": 74,
     "acceptedExceptions": 1,
@@ -594,7 +594,7 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1141,
+      "references": 1140,
       "typeDependencyCount": 148,
       "classification": "declared",
       "evidence": [
@@ -650,14 +650,14 @@
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 145,
-      "typeDependencyCount": 21,
+      "references": 163,
+      "typeDependencyCount": 26,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
           "target": "Excise.Core.Text.Letter",
-          "references": 42
+          "references": 44
         }
       ]
     },
