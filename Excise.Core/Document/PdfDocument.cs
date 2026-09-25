@@ -659,14 +659,16 @@ public partial class PdfDocument : IDisposable
     /// the signature appearance, not /V) and their widget annotations are
     /// preserved.
     /// </summary>
-    public void FlattenAcroForm()
+    /// <returns>The number of fields flattened: 0 without a form, and signature fields are not counted.</returns>
+    public int FlattenAcroForm()
     {
         var form = GetAcroForm();
-        if (form == null) return;
+        if (form == null) return 0;
 
         AcroFormFlattener.Flatten(this, form);
 
         Catalog.Remove("AcroForm");
+        return form.Fields.Count(f => f.FieldType != PdfFieldType.Signature);
     }
 
     /// <summary>

@@ -371,12 +371,194 @@ public class RedactionProfileTests
                 "Standard keeps field names: they are a screen reader's labels");
         }
 
+        // The flatten is off so the name strip's own reach is what runs: with it
+        // on, the form is flattened first and its field tree is gone before any
+        // name is visited (#1857).
         using (var doc = PdfDocument.Open(trap.Build(true)))
         {
-            var report = doc.RedactText(trap.Token, RedactionOptions.Maximum);
+            var report = doc.RedactText(trap.Token,
+                RedactionOptions.Maximum with { FlattenInteractiveContent = false });
             AllText(doc.SaveToBytes()).Should().NotContain("(parent)");
             report.Removals.Should().Contain(r => r.Feature.Contains("field name"));
         }
+    }
+
+    // ── forms under Maximum (#1857) ─────────────────────────────────────────
+
+    public enum EntryPoint { RedactText, RedactArea, SafetyPass }
+
+    private const string Flattened = "interactive object(s) flattened into the page";
+
+    /// <summary>
+    /// One entry point over <paramref name="input"/>, redacting nothing that is
+    /// in it: Maximum's flatten is a promise about every form, not about the
+    /// fields that happen to hold the term.
+    /// </summary>
+    private static (byte[] Saved, IReadOnlyList<RedactedFeatureRemoval> Removals, IReadOnlyList<string> Refusals)
+        RunProfile(byte[] input, EntryPoint entry, RedactionOptions options)
+    {
+        using var doc = PdfDocument.Open(input);
+        switch (entry)
+        {
+            case EntryPoint.RedactText:
+            {
+                var report = doc.RedactText("NOMATCHXYZ", options);
+                return (doc.SaveToBytes(), report.Removals,
+                    report.Carriers.Where(c => c.RefusedReason != null).Select(c => $"{c.Carrier}: {c.RefusedReason}").ToList());
+            }
+            case EntryPoint.RedactArea:
+            {
+                var report = doc.GetPage(1).RedactAreaWithReport(new PdfRectangle(400, 100, 500, 120), options);
+                return (doc.SaveToBytes(), report.Removals,
+                    report.Carriers.Where(c => c.RefusedReason != null).Select(c => $"{c.Carrier}: {c.RefusedReason}").ToList());
+            }
+            default:
+            {
+                var report = RedactedCopySafetyPolicy.Evaluate(doc,
+                    RedactedCopySafetyRequest.ForAreas(Array.Empty<RedactedCopySafetyArea>(), options));
+                return (doc.SaveToBytes(), report.Removals, report.Warnings);
+            }
+        }
+    }
+
+    public static TheoryData<string, EntryPoint> FormTraps()
+    {
+        var data = new TheoryData<string, EntryPoint>();
+        foreach (var id in new[] { "acroform-all-carriers", "acroform-dv", "acroform-rv", "widget-mk-ca" })
+            foreach (var entry in Enum.GetValues<EntryPoint>())
+                data.Add(id, entry);
+        return data;
+    }
+
+    /// <summary>The field-dictionary tokens of a trap, each naming its carrier.</summary>
+    private static string[] FieldOnlyTokens(string trapId)
+    {
+        var t = Token(trapId);
+        return trapId == "acroform-all-carriers"
+            ? new[] { t + "DEFAULT", t + "RICH", t + "CAPTION", t + "TOOLTIP" }
+            : new[] { t };
+    }
+
+    [Theory]
+    [MemberData(nameof(FormTraps))]
+    public void Maximum_FlattensTheForm_SoNoFieldCarrierSurvives_StandardKeepsThem(string trapId, EntryPoint entry)
+    {
+        var input = CarrierTrapFixtures.Get(trapId).Build(false);
+
+        // Standard, the planted failure: the form is kept, so every carrier is
+        // still in the file and the scanner can see it.
+        var standard = RunProfile(input, entry, RedactionOptions.Default);
+        foreach (var token in FieldOnlyTokens(trapId))
+            SavedPdfLeakScanner.FindTerm(standard.Saved, token).Should().NotBeEmpty(
+                $"{token}: Standard keeps the form, and the fixture must carry what Maximum is to remove");
+
+        var max = RunProfile(input, entry, RedactionOptions.Maximum);
+        foreach (var token in FieldOnlyTokens(trapId))
+            SavedPdfLeakScanner.FindTerm(max.Saved, token).Should().BeEmpty(
+                $"{token}: Maximum flattens the form, so the field dictionary goes with it. #1857: the name " +
+                "strip ran first, the form parser skipped every field without a /T, and nothing was flattened");
+        max.Removals.Should().Contain(r => r.Feature == Flattened && r.Count == 1,
+            "the flatten is a removal made without a term match, so the report must name it");
+        max.Removals.Should().NotContain(r => r.Feature == "form widget(s) removed without being painted",
+            "every widget of this form is one the flatten can paint");
+        max.Refusals.Should().NotContain(r => r.Contains("could not be flattened"));
+
+        using var reopened = PdfDocument.Open(max.Saved);
+        reopened.GetAcroForm().Should().BeNull(
+            "/AcroForm /Fields would keep every field dictionary reachable, and the writer ships what is reachable");
+        reopened.GetPage(1).GetAnnotations().Should().BeEmpty("no widget survives the flatten");
+    }
+
+    [Fact]
+    public void Maximum_PaintsTheFieldValueIntoThePage()
+    {
+        var trap = CarrierTrapFixtures.Get("acroform-all-carriers");
+        var max = RunProfile(trap.Build(false), EntryPoint.RedactText, RedactionOptions.Maximum);
+
+        using var reopened = PdfDocument.Open(max.Saved);
+        reopened.GetPage(1).Text.Should().Contain(trap.Token + "VALUE",
+            "flattening makes the value page content, which is what the reader saw; mutool corroborates this " +
+            "in RedactionProfileFormFlattenOracleTests");
+    }
+
+    /// <summary>
+    /// A field the form parser cannot read — a merged field/widget with no
+    /// <c>/T</c> — is not flattened. Once <c>/AcroForm</c> is gone the carrier
+    /// scrub cannot reach it either, so Maximum removes it and says so.
+    /// </summary>
+    [Theory]
+    [InlineData(EntryPoint.RedactText)]
+    [InlineData(EntryPoint.RedactArea)]
+    [InlineData(EntryPoint.SafetyPass)]
+    public void Maximum_RemovesAWidgetTheFlattenCannotRead_AndReportsIt(EntryPoint entry)
+    {
+        const string secret = "UNNAMEDFIELDTRAP";
+        var input = CarrierTrapFixtures.Field(null, $"/FT /Tx /V ({secret})");
+
+        SavedPdfLeakScanner.FindTerm(RunProfile(input, entry, RedactionOptions.Default).Saved, secret)
+            .Should().NotBeEmpty("planted failure: Standard keeps the field");
+
+        var max = RunProfile(input, entry, RedactionOptions.Maximum);
+
+        SavedPdfLeakScanner.FindTerm(max.Saved, secret).Should().BeEmpty();
+        max.Removals.Should().Contain(r => r.Feature == "form widget(s) removed without being painted" && r.Count == 1,
+            "CLAUDE.md rule 6: every removal is reported, and this one is not a flatten");
+        max.Removals.Should().NotContain(r => r.Feature == Flattened, "nothing was flattened");
+    }
+
+    /// <summary>
+    /// A form the flattener throws on (here: a page content stream no filter
+    /// decodes, so there is nothing to paint into) keeps <c>/AcroForm</c>.
+    /// Maximum must refuse loudly, never report a silent zero.
+    /// </summary>
+    [Fact]
+    public void Maximum_RefusesLoudly_WhenTheFormCannotBeFlattened()
+    {
+        const string secret = "UNFLATTENABLETRAP";
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        doc.AddTextField(1, new PdfRectangle(100, 600, 300, 620), "name").SetValue(secret);
+        doc.GetPage(1).Dictionary["Contents"] = new Excise.Core.Primitives.PdfStream(
+            new Excise.Core.Primitives.PdfDictionary { ["Filter"] = new Excise.Core.Primitives.PdfName("NoSuchDecode") },
+            new byte[] { 1, 2, 3 });
+
+        var report = RedactedCopySafetyPolicy.Evaluate(doc,
+            RedactedCopySafetyRequest.ForAreas(Array.Empty<RedactedCopySafetyArea>(), RedactionOptions.Maximum));
+
+        report.Warnings.Should().Contain(w => w.Contains("/AcroForm") && w.Contains("could not be flattened"),
+            "CLAUDE.md rule 6: a carrier the engine could not remove is reported, never skipped");
+        report.Removals.Should().NotContain(r => r.Feature == Flattened);
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), secret).Should().NotBeEmpty(
+            "the refusal is only honest if the value really is still there");
+    }
+
+    /// <summary>
+    /// The flattener paints values, and a signature has none to paint: it
+    /// keeps the widget. Maximum removes it and says so — a redacted copy
+    /// cannot carry a valid signature over bytes that changed, and the
+    /// signature dictionary names the signer.
+    /// </summary>
+    [Theory]
+    [InlineData(EntryPoint.RedactText)]
+    [InlineData(EntryPoint.RedactArea)]
+    [InlineData(EntryPoint.SafetyPass)]
+    public void Maximum_RemovesASignatureField_AndReportsIt(EntryPoint entry)
+    {
+        const string signer = "SIGNERNAMETRAP";
+        var input = CarrierTrapFixtures.Field(null, "/FT /Sig /T (Signature1) /V 7 0 R",
+            $"<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /adbe.pkcs7.detached /Name ({signer}) "
+            + "/Reason (Approval) /Contents <00> /ByteRange [0 0 0 0] >>");
+
+        SavedPdfLeakScanner.FindTerm(RunProfile(input, entry, RedactionOptions.Default).Saved, signer)
+            .Should().NotBeEmpty("planted failure: Standard keeps the signature field");
+
+        var max = RunProfile(input, entry, RedactionOptions.Maximum);
+
+        SavedPdfLeakScanner.FindTerm(max.Saved, signer).Should().BeEmpty();
+        max.Removals.Should().Contain(r => r.Feature == "signature field(s) removed" && r.Count == 1);
+        max.Refusals.Should().NotContain(r => r.Contains("could not be flattened"));
+        using var reopened = PdfDocument.Open(max.Saved);
+        reopened.GetPage(1).GetAnnotations().Should().BeEmpty();
     }
 
     // ── the report is the contract ──────────────────────────────────────────

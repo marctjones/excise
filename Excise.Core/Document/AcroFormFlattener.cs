@@ -63,9 +63,6 @@ internal static class AcroFormFlattener
             AppendFieldDrawing(document, page, targets);
             RemoveWidgetAnnotations(document, page, targets.Select(t => t.Field));
         }
-
-        // Drop catalog-level orphaned widgets that may not have been on any
-        // page (defensive — most PDFs don't do this).
     }
 
     private static void AddTarget(

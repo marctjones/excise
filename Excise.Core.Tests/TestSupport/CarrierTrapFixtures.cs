@@ -99,6 +99,11 @@ internal static class CarrierTrapFixtures
             (t, v) => Field(V(t, v), $"/FT /Btn /Ff 65536 /T (button) /MK << /CA (Go) /RC ({t}) >>"));
         Add("widget-mk-ac", "CAPTIONDOWNTRAP", "widget /MK /AC", Oracle.QpdfDump,
             (t, v) => Field(V(t, v), $"/FT /Btn /Ff 65536 /T (button) /MK << /CA (Go) /AC ({t}) >>"));
+        // #1857: every field carrier on ONE merged field/widget, each suffixed so
+        // a Maximum flatten that leaves one behind names which.
+        Add("acroform-all-carriers", "FORMCARRIERSTRAP", "acroform /DV", Oracle.QpdfDump,
+            (t, v) => Field(V(t, v), $"/FT /Tx /T (name) /TU (Enter {t}TOOLTIP here) /V ({t}VALUE) "
+                + $"/DV ({t}DEFAULT) /RV (<body><p>{t}RICH</p></body>) /MK << /CA ({t}CAPTION) >>"));
         Add("field-javascript", "FIELDSCRIPTTRAP", "JavaScript", Oracle.QpdfDump,
             (t, v) => Field(V(t, v), $"/FT /Tx /T (name) /AA << /K << /S /JavaScript /JS (var who = \"{t}\";) >> >>"));
         Add("field-javascript-stream", "FIELDSCRIPTSTREAMTRAP", "JavaScript", Oracle.QpdfDump,
@@ -389,7 +394,11 @@ internal static class CarrierTrapFixtures
             $"/FT /Tx /T (name) /V ({value}) /AP << /N 7 0 R >>",
             AppearanceStream($"BT /F1 10 Tf 2 4 Td ({appearanceText}) Tj ET", compress: false));
 
-    private static byte[] Field(string? visibleToken, string fieldEntries, params string[] extra) =>
+    /// <summary>
+    /// One merged field/widget (object 6) listed in <c>/AcroForm /Fields</c> and
+    /// the page's <c>/Annots</c>; <paramref name="extra"/> objects follow from 7.
+    /// </summary>
+    internal static byte[] Field(string? visibleToken, string fieldEntries, params string[] extra) =>
         FieldWithContent(visibleToken, "", fieldEntries, extra);
 
     private static byte[] FieldWithContent(string? visibleToken, string extraContent, string fieldEntries, params string[] extra)

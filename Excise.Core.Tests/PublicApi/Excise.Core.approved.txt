@@ -719,7 +719,7 @@ namespace Excise.Core.Document
         public Excise.Core.Primitives.PdfDictionary Trailer { get; }
         public string Version { get; }
         public void Dispose() { }
-        public void FlattenAcroForm() { }
+        public int FlattenAcroForm() { }
         public Excise.Core.Document.PdfAcroForm? GetAcroForm() { }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfEmbeddedFile> GetEmbeddedFiles() { }
         public System.Collections.Generic.IReadOnlyDictionary<string, Excise.Core.Document.NamedDestination> GetNamedDestinations() { }
