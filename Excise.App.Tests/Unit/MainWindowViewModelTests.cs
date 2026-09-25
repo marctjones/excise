@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using Avalonia;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
@@ -49,8 +50,7 @@ public class MainWindowViewModelTests
             new Mock<ILogger<PdfTextExtractionService>>().Object);
         _mockSearchService = new Mock<PdfSearchService>(
             new Mock<ILogger<PdfSearchService>>().Object);
-        _mockSignatureService = new Mock<SignatureVerificationService>(
-            new Mock<ILogger<SignatureVerificationService>>().Object);
+        _mockSignatureService = new Mock<SignatureVerificationService>(null!, null!);
         _mockFilenameSuggestionService = new Mock<FilenameSuggestionService>();
 
         // Create ViewModel with mocked dependencies

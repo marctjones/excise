@@ -1,8 +1,6 @@
-using Excise.Core.Signatures;
 using AwesomeAssertions;
-using Microsoft.Extensions.Logging.Abstractions;
-using Excise.App.Services;
 using Excise.App.Tests.Utilities;
+using Excise.Core.Signatures;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
 using SkiaSharp;
@@ -37,7 +35,7 @@ public class SignatureApplicationServiceTests : IDisposable
     public SignatureApplicationServiceTests()
     {
         _signer = new SignatureApplicationService(
-            NullLogger<SignatureApplicationService>.Instance);
+            null);
     }
 
     public void Dispose()
@@ -650,7 +648,7 @@ public class SignatureApplicationServiceTests : IDisposable
         // deterministic and machine-independent (#466).
         var anchorList = new List<X509Certificate2>(anchors);
         return new SignatureVerificationService(
-            NullLogger<SignatureVerificationService>.Instance,
+            null,
             new SignatureTrustEvaluator(anchorList));
     }
 

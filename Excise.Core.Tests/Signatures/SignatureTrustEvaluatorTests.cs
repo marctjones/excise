@@ -1,14 +1,12 @@
-using Excise.Core.Signatures;
 using AwesomeAssertions;
-using Excise.App.Services;
-using Excise.App.Tests.Utilities;
+using Excise.Core.Signatures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Xunit;
 
-namespace Excise.App.Tests.Unit;
+namespace Excise.Core.Tests.Signatures;
 
 /// <summary>
 /// Deterministic trust-chain tests for issue #466. Every trust anchor is

@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -103,7 +104,8 @@ public partial class MainWindowViewModel
             {
                 using var certificate = SigningCertificateFactory.LoadFromPkcs12(certificatePath, password);
                 var service = new SignatureApplicationService(
-                    _signingLogger ??= NullLogger<SignatureApplicationService>.Instance);
+                    msg => (_signingLogger ??= NullLogger<SignatureApplicationService>.Instance)
+                        .LogInformation("{Message}", msg));
                 service.SignFile(inputPath, outputPath, certificate, new SignatureApplicationOptions
                 {
                     Reason = "Approved in excise",

@@ -2223,6 +2223,24 @@ namespace Excise.Core.Security
 }
 namespace Excise.Core.Signatures
 {
+    public sealed class SignatureApplicationOptions
+    {
+        public SignatureApplicationOptions() { }
+        public System.Collections.Generic.IReadOnlyList<System.Security.Cryptography.X509Certificates.X509Certificate2>? AdditionalCertificates { get; init; }
+        public string? ContactInfo { get; init; }
+        public string FieldName { get; init; }
+        public string? Location { get; init; }
+        public string? Reason { get; init; }
+        public int SignatureCapacityBytes { get; init; }
+        public string? SignerName { get; init; }
+        public System.DateTimeOffset? SigningTime { get; init; }
+    }
+    public class SignatureApplicationService
+    {
+        public SignatureApplicationService(System.Action<string>? diagnostics = null) { }
+        public byte[] SignDocument(Excise.Core.Document.PdfDocument document, System.Security.Cryptography.X509Certificates.X509Certificate2 certificate, Excise.Core.Signatures.SignatureApplicationOptions? options = null) { }
+        public void SignFile(string inputPath, string outputPath, System.Security.Cryptography.X509Certificates.X509Certificate2 certificate, Excise.Core.Signatures.SignatureApplicationOptions? options = null) { }
+    }
     public class SignatureTrustEvaluator
     {
         public SignatureTrustEvaluator() { }
@@ -2241,6 +2259,43 @@ namespace Excise.Core.Signatures
         Trusted = 1,
         Untrusted = 2,
         Indeterminate = 3,
+    }
+    public class SignatureVerificationResult
+    {
+        public SignatureVerificationResult() { }
+        public bool ByteRangeIntegrityChecked { get; set; }
+        public bool ByteRangeIntegrityValid { get; set; }
+        public bool ByteRangeStructureChecked { get; set; }
+        public string ByteRangeStructureMessage { get; set; }
+        public bool ByteRangeStructureValid { get; set; }
+        public bool CoversWholeDocument { get; set; }
+        public bool IsValid { get; set; }
+        public string SignatureName { get; set; }
+        public string SignedBy { get; set; }
+        public System.DateTime SigningTime { get; set; }
+        public Excise.Core.Signatures.SignatureVerificationState State { get; }
+        public string StatusMessage { get; set; }
+        public string TrustDetails { get; set; }
+        public Excise.Core.Signatures.SignatureTrustStatus TrustStatus { get; set; }
+        public int UnsignedTrailingContentBytes { get; set; }
+    }
+    public class SignatureVerificationService
+    {
+        public SignatureVerificationService(System.Action<string>? diagnostics = null, Excise.Core.Signatures.SignatureTrustEvaluator? trustEvaluator = null) { }
+        public System.Collections.Generic.List<Excise.Core.Signatures.SignatureVerificationResult> VerifySignatures(string pdfPath) { }
+    }
+    public enum SignatureVerificationState
+    {
+        Indeterminate = 0,
+        Invalid = 1,
+        ValidUntrusted = 2,
+        ValidTrustUnknown = 3,
+        ValidTrusted = 4,
+    }
+    public static class SigningCertificateFactory
+    {
+        public static System.Security.Cryptography.X509Certificates.X509Certificate2 CreateSelfSigned(string subjectName, System.TimeSpan? lifetime = default) { }
+        public static System.Security.Cryptography.X509Certificates.X509Certificate2 LoadFromPkcs12(string path, string? password) { }
     }
 }
 namespace Excise.Core.Text

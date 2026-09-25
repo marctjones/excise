@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using System.Reactive.Linq;
 
 using AwesomeAssertions;
@@ -118,7 +119,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
             new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             new PdfSearchService(NullLogger<PdfSearchService>.Instance),
-            new SignatureVerificationService(NullLogger<SignatureVerificationService>.Instance),
+            new SignatureVerificationService(null),
             new FilenameSuggestionService(),
             toastService);
         return (vm, toasts);

@@ -33,6 +33,9 @@
 
   <ItemGroup>
     <PackageReference Include="CSJ2K" Version="3.0.0" />
+    <!-- Digital signatures (Excise.Core.Signatures). Pure managed, MIT. 2.7.0 tightened
+         CmsSignedData byte[] parsing; see SignatureContentsReader and #1494. Do NOT pin back to 2.6.2. -->
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
   </ItemGroup>
 
   <ItemGroup>

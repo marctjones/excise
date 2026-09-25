@@ -402,71 +402,15 @@ namespace Excise.App.Services
         public void SanitizeMetadata(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms) { }
         public void StripAllMetadata(Excise.Core.Document.PdfDocument document) { }
     }
-    public sealed class SignatureApplicationOptions
-    {
-        public SignatureApplicationOptions() { }
-        public System.Collections.Generic.IReadOnlyList<System.Security.Cryptography.X509Certificates.X509Certificate2>? AdditionalCertificates { get; init; }
-        public string? ContactInfo { get; init; }
-        public string FieldName { get; init; }
-        public string? Location { get; init; }
-        public string? Reason { get; init; }
-        public int SignatureCapacityBytes { get; init; }
-        public string? SignerName { get; init; }
-        public System.DateTimeOffset? SigningTime { get; init; }
-    }
-    public class SignatureApplicationService
-    {
-        public SignatureApplicationService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureApplicationService> logger) { }
-        public byte[] SignDocument(Excise.Core.Document.PdfDocument document, System.Security.Cryptography.X509Certificates.X509Certificate2 certificate, Excise.App.Services.SignatureApplicationOptions? options = null) { }
-        public void SignFile(string inputPath, string outputPath, System.Security.Cryptography.X509Certificates.X509Certificate2 certificate, Excise.App.Services.SignatureApplicationOptions? options = null) { }
-    }
-    public class SignatureVerificationResult
-    {
-        public SignatureVerificationResult() { }
-        public bool ByteRangeIntegrityChecked { get; set; }
-        public bool ByteRangeIntegrityValid { get; set; }
-        public bool ByteRangeStructureChecked { get; set; }
-        public string ByteRangeStructureMessage { get; set; }
-        public bool ByteRangeStructureValid { get; set; }
-        public bool CoversWholeDocument { get; set; }
-        public bool IsValid { get; set; }
-        public string SignatureName { get; set; }
-        public string SignedBy { get; set; }
-        public System.DateTime SigningTime { get; set; }
-        public Excise.App.Services.SignatureVerificationState State { get; }
-        public string StatusMessage { get; set; }
-        public string TrustDetails { get; set; }
-        public Excise.Core.Signatures.SignatureTrustStatus TrustStatus { get; set; }
-        public int UnsignedTrailingContentBytes { get; set; }
-    }
-    public class SignatureVerificationService
-    {
-        public SignatureVerificationService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationService> logger) { }
-        public SignatureVerificationService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationService> logger, Excise.Core.Signatures.SignatureTrustEvaluator? trustEvaluator) { }
-        public System.Collections.Generic.List<Excise.App.Services.SignatureVerificationResult> VerifySignatures(string pdfPath) { }
-    }
-    public enum SignatureVerificationState
-    {
-        Indeterminate = 0,
-        Invalid = 1,
-        ValidUntrusted = 2,
-        ValidTrustUnknown = 3,
-        ValidTrusted = 4,
-    }
     public sealed class SignatureVerificationSummaryFormatter
     {
         public SignatureVerificationSummaryFormatter() { }
-        public string Format(System.Collections.Generic.IReadOnlyList<Excise.App.Services.SignatureVerificationResult> results) { }
+        public string Format(System.Collections.Generic.IReadOnlyList<Excise.Core.Signatures.SignatureVerificationResult> results) { }
     }
     public sealed class SignatureVerificationWorkflowService
     {
-        public SignatureVerificationWorkflowService(Excise.App.Services.SignatureVerificationService signatureService, Excise.App.Services.SignatureVerificationSummaryFormatter summaryFormatter, Excise.App.Services.IUserDialogService dialogService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationWorkflowService> logger) { }
+        public SignatureVerificationWorkflowService(Excise.Core.Signatures.SignatureVerificationService signatureService, Excise.App.Services.SignatureVerificationSummaryFormatter summaryFormatter, Excise.App.Services.IUserDialogService dialogService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationWorkflowService> logger) { }
         public System.Threading.Tasks.Task VerifyAsync(bool isDocumentLoaded, string? currentFilePath) { }
-    }
-    public static class SigningCertificateFactory
-    {
-        public static System.Security.Cryptography.X509Certificates.X509Certificate2 CreateSelfSigned(string subjectName, System.TimeSpan? lifetime = default) { }
-        public static System.Security.Cryptography.X509Certificates.X509Certificate2 LoadFromPkcs12(string path, string? password) { }
     }
     public enum SplitMode
     {

@@ -2,7 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Excise.App.Services;
+namespace Excise.Core.Signatures;
 
 /// <summary>
 /// Creates and loads the signing identities <see cref="SignatureApplicationService"/>

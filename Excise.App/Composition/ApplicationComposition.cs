@@ -1,7 +1,9 @@
+using Excise.Core.Signatures;
 using Excise.App.Services;
 using Excise.App.Services.Host;
 using Excise.App.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace Excise.App.Composition;
@@ -40,7 +42,11 @@ internal static class ApplicationComposition
         services.AddSingleton<RedactionWorkflowService>();
         services.AddSingleton<PdfTextExtractionService>();
         services.AddSingleton<PdfSearchService>();
-        services.AddSingleton<SignatureVerificationService>();
+        services.AddSingleton(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<SignatureVerificationService>>();
+            return new SignatureVerificationService(msg => logger.LogInformation("{Message}", msg));
+        });
         services.AddSingleton<SignatureVerificationSummaryFormatter>();
         services.AddSingleton<DocumentImageExportWorkflowService>();
         services.AddSingleton<FilenameSuggestionService>();
