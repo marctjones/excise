@@ -63,6 +63,16 @@ public class PdfDocumentCreateNewRoundTripTests
         created.Permissions.Should().Be(Excise.Core.Security.PdfPermissions.AllAllowed);
     }
 
+    [Fact]
+    public void NewDocument_CarrierScanFindsNothing()
+    {
+        using var created = PdfDocument.CreateNew();
+        created.Pages.AddBlank();
+
+        Excise.Core.Text.Segmentation.CarrierTextRecovery.Scan(created, TestContext.Current.CancellationToken)
+            .Should().BeEmpty();
+    }
+
     private static void AssertStructureIsSane(PdfDocument document)
     {
         var rootRef = document.Trailer.GetReference("Root");
