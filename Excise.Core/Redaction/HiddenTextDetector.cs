@@ -118,8 +118,8 @@ public static class HiddenTextDetector
         var textEntries = new List<TextEntry>();
         var obstructions = new List<Obstruction>();
 
-        var ctm = Matrix23.Identity;
-        var ctmStack = new Stack<Matrix23>();
+        var ctm = ContentTransform.Identity;
+        var ctmStack = new Stack<ContentTransform>();
         // §8.6.8: the initial fill colour is BLACK. Starting white here made a
         // bar drawn before any colour operator read as non-obstructive, so text
         // under it was never reported hidden — the leak-detection half of the
@@ -164,11 +164,7 @@ public static class HiddenTextDetector
                 case "cm":
                     if (op.Operands.Count >= 6)
                     {
-                        var local = new Matrix23(
-                            op.GetNumber(0), op.GetNumber(1),
-                            op.GetNumber(2), op.GetNumber(3),
-                            op.GetNumber(4), op.GetNumber(5));
-                        ctm = local.Multiply(ctm);
+                        ctm = ContentTransform.FromOperands(op).Multiply(ctm);
                     }
                     break;
 
@@ -179,7 +175,7 @@ public static class HiddenTextDetector
                         var y = op.GetNumber(1);
                         var w = op.GetNumber(2);
                         var h = op.GetNumber(3);
-                        currentPath.Add(TransformRect(ctm, x, y, w, h));
+                        currentPath.Add(ctm.TransformBounds(new PdfRectangle(x, y, x + w, y + h)));
                     }
                     break;
 
@@ -219,7 +215,7 @@ public static class HiddenTextDetector
                 case "'":
                 case "\"":
                 {
-                    var text = op.TextContent ?? ExtractText(op);
+                    var text = op.TextContent ?? op.RawTextOperand;
                     if (string.IsNullOrEmpty(text)) break;
                     var matches = finder.FindOperationLetters(text, letters);
                     if (matches.Count == 0) break;
@@ -234,7 +230,7 @@ public static class HiddenTextDetector
                     // diverge, the visible text is beyond redaction's reach.
                     if (symbolMap != null
                         && TrySymbolCmapDivergence(
-                            ExtractText(op), symbolMap,
+                            op.RawTextOperand ?? "", symbolMap,
                             string.Concat(matches.Select(m => m.Letter.Value)),
                             out var visible))
                     {
@@ -251,7 +247,7 @@ public static class HiddenTextDetector
                         var xobj = page.GetXObject(name);
                         if (xobj is PdfStream s && s.GetNameOrNull("Subtype") == "Image")
                         {
-                            obstructions.Add(new Obstruction(i, $"image /{name}", TransformedUnitSquare(ctm), new Rgb(0.5,0.5,0.5)));
+                            obstructions.Add(new Obstruction(i, $"image /{name}", ctm.UnitSquareBounds(), new Rgb(0.5,0.5,0.5)));
                         }
                     }
                     break;
@@ -260,7 +256,7 @@ public static class HiddenTextDetector
                     // Inline image (#354): fills the CTM-mapped unit square,
                     // same as a named image XObject — count it as an obstruction
                     // so text drawn underneath it is flagged as hidden.
-                    obstructions.Add(new Obstruction(i, "inline image", TransformedUnitSquare(ctm), new Rgb(0.5,0.5,0.5)));
+                    obstructions.Add(new Obstruction(i, "inline image", ctm.UnitSquareBounds(), new Rgb(0.5,0.5,0.5)));
                     break;
             }
         }
@@ -515,21 +511,6 @@ public static class HiddenTextDetector
         return (text, BoundingBoxOf(run));
     }
 
-    private static string ExtractText(ContentOperator op)
-    {
-        if (op.Operands.Count == 0) return "";
-        if ((op.Name == "Tj" || op.Name == "'" || op.Name == "\"")
-            && op.Operands[^1] is PdfString s) return s.Value;
-        if (op.Name == "TJ" && op.Operands[0] is PdfArray arr)
-        {
-            var sb = new System.Text.StringBuilder();
-            foreach (var item in arr)
-                if (item is PdfString ps) sb.Append(ps.Value);
-            return sb.ToString();
-        }
-        return "";
-    }
-
     /// <summary>
     /// Returns the symbolic (3,0) symbol-cmap code→Unicode map for
     /// <paramref name="font"/> when it is the #796 class that renders text no
@@ -606,44 +587,7 @@ public static class HiddenTextDetector
         return !string.Equals(visible.Trim(), (extracted ?? string.Empty).Trim(), StringComparison.Ordinal);
     }
 
-    /// <summary>
-    /// AABB of a rectangle in user space after being transformed by
-    /// <paramref name="m"/>. Used for <c>re</c> paths drawn under the
-    /// current CTM.
-    /// </summary>
-    private static PdfRectangle TransformRect(Matrix23 m, double x, double y, double w, double h)
-    {
-        var c0 = m.Transform(x, y);
-        var c1 = m.Transform(x + w, y);
-        var c2 = m.Transform(x, y + h);
-        var c3 = m.Transform(x + w, y + h);
-        double minX = Math.Min(Math.Min(c0.x, c1.x), Math.Min(c2.x, c3.x));
-        double maxX = Math.Max(Math.Max(c0.x, c1.x), Math.Max(c2.x, c3.x));
-        double minY = Math.Min(Math.Min(c0.y, c1.y), Math.Min(c2.y, c3.y));
-        double maxY = Math.Max(Math.Max(c0.y, c1.y), Math.Max(c2.y, c3.y));
-        return new PdfRectangle(minX, minY, maxX, maxY);
-    }
-
-    /// <summary>AABB of the unit square transformed by <paramref name="m"/>.</summary>
-    private static PdfRectangle TransformedUnitSquare(Matrix23 m)
-        => TransformRect(m, 0, 0, 1, 1);
-
     private readonly record struct TextEntry(int Index, string Text, PdfRectangle Bbox, Rgb Fill, IReadOnlyList<LetterMatch> Matches);
     private readonly record struct Obstruction(int Index, string Description, PdfRectangle Bbox, Rgb Fill);
     private readonly record struct Rgb(double R, double G, double B);
-
-    /// <summary>Minimal 2×3 affine (PDF spec 8.3.3).</summary>
-    private readonly struct Matrix23
-    {
-        public readonly double A, B, C, D, E, F;
-        public Matrix23(double a, double b, double c, double d, double e, double f)
-        { A = a; B = b; C = c; D = d; E = e; F = f; }
-        public static Matrix23 Identity => new(1, 0, 0, 1, 0, 0);
-        public (double x, double y) Transform(double x, double y)
-            => (A * x + C * y + E, B * x + D * y + F);
-        public Matrix23 Multiply(Matrix23 o) => new(
-            A * o.A + B * o.C, A * o.B + B * o.D,
-            C * o.A + D * o.C, C * o.B + D * o.D,
-            E * o.A + F * o.C + o.E, E * o.B + F * o.D + o.F);
-    }
 }

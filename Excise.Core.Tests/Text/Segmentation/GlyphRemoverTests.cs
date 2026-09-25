@@ -161,6 +161,22 @@ public class GlyphRemoverTests
     }
 
     [Fact]
+    public void Process_CenterPoint_SelectsAZeroWidthGlyphCentredOnTheAreaEdge()
+    {
+        // TextSegmenter judged the centre by closed-set containment; this class
+        // first demanded a strict rectangle intersection, which a zero-width glyph
+        // on the area's edge fails, so the two disagreed about the same letter
+        // (#1830 F1830c). Under-selection is the direction that leaks.
+        var ops = SimpleTextBlock("A", x: 100, y: 700);
+        var letters = new[] { L("A", 100, width: 0) };
+
+        var result = _remover.ProcessOperations(
+            ops, letters, new PdfRectangle(100, 650, 200, 780), GlyphRemovalStrategy.CenterPoint);
+
+        result.Should().NotContain(o => o.Category == OperatorCategory.TextShowing);
+    }
+
+    [Fact]
     public void Process_Reconstruction_PreservesSourceTextMatrixInLocalCoordinates()
     {
         var text = WithText(

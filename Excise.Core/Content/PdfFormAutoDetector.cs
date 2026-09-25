@@ -53,8 +53,8 @@ public static class PdfFormAutoDetector
         int checkCounter = 1;
 
         // Path state (we only need a tiny subset for the heuristic).
-        var ctm = Matrix.Identity;
-        var ctmStack = new Stack<Matrix>();
+        var ctm = ContentTransform.Identity;
+        var ctmStack = new Stack<ContentTransform>();
         double curX = 0, curY = 0;
         double startX = 0, startY = 0;
         bool isSimpleLine = false;
@@ -81,11 +81,7 @@ public static class PdfFormAutoDetector
                 case "cm":
                     if (op.Operands.Count >= 6)
                     {
-                        var local = new Matrix(
-                            op.GetNumber(0), op.GetNumber(1),
-                            op.GetNumber(2), op.GetNumber(3),
-                            op.GetNumber(4), op.GetNumber(5));
-                        ctm = local.Multiply(ctm);
+                        ctm = ContentTransform.FromOperands(op).Multiply(ctm);
                     }
                     break;
 
@@ -199,14 +195,14 @@ public static class PdfFormAutoDetector
         bool isSimpleLine, bool hasNonLineOp,
         double mX, double mY, double endX, double endY,
         List<(double x, double y, double w, double h)> rectPath,
-        Matrix ctm,
+        ContentTransform ctm,
         ref int textCounter, ref int checkCounter)
     {
         // Single rectangle stroke → checkbox candidate.
         if (rectPath.Count == 1 && !hasNonLineOp && !isSimpleLine)
         {
             var (x, y, w, h) = rectPath[0];
-            var transformed = TransformRect(ctm, x, y, w, h);
+            var transformed = ctm.TransformBounds(new PdfRectangle(x, y, x + w, y + h));
             if (LooksLikeCheckbox(transformed))
             {
                 suggestions.Add(new SuggestedField(
@@ -222,8 +218,8 @@ public static class PdfFormAutoDetector
         // Single horizontal line → text-field candidate.
         if (isSimpleLine && !hasNonLineOp && rectPath.Count == 0)
         {
-            var (a, b) = TransformPoint(ctm, mX, mY);
-            var (c, d) = TransformPoint(ctm, endX, endY);
+            var (a, b) = ctm.TransformPoint(mX, mY);
+            var (c, d) = ctm.TransformPoint(endX, endY);
             double minX = Math.Min(a, c), maxX = Math.Max(a, c);
             double minY = Math.Min(b, d), maxY = Math.Max(b, d);
             double length = maxX - minX;
@@ -256,32 +252,5 @@ public static class PdfFormAutoDetector
         if (w == 0 || h == 0) return false;
         var aspect = Math.Abs(w / h - 1.0);
         return aspect <= CheckboxAspectTolerance;
-    }
-
-    private static PdfRectangle TransformRect(Matrix m, double x, double y, double w, double h)
-    {
-        var (x0, y0) = TransformPoint(m, x, y);
-        var (x1, y1) = TransformPoint(m, x + w, y + h);
-        return new PdfRectangle(
-            Math.Min(x0, x1), Math.Min(y0, y1),
-            Math.Max(x0, x1), Math.Max(y0, y1));
-    }
-
-    private static (double X, double Y) TransformPoint(Matrix m, double x, double y)
-        => (m.A * x + m.C * y + m.E, m.B * x + m.D * y + m.F);
-
-    private readonly struct Matrix
-    {
-        public readonly double A, B, C, D, E, F;
-        public Matrix(double a, double b, double c, double d, double e, double f)
-        { A = a; B = b; C = c; D = d; E = e; F = f; }
-        public static Matrix Identity => new(1, 0, 0, 1, 0, 0);
-        public Matrix Multiply(Matrix o) => new(
-            A * o.A + B * o.C,
-            A * o.B + B * o.D,
-            C * o.A + D * o.C,
-            C * o.B + D * o.D,
-            E * o.A + F * o.C + o.E,
-            E * o.B + F * o.D + o.F);
     }
 }

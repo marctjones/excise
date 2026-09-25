@@ -154,14 +154,7 @@ public static class CoveredContentRecovery
     private static PdfRectangle? UnitSquare(ContentOperator op)
     {
         if (op.GraphicsTransform is not { } m) return op.BoundingBox?.Normalize();
-        var corners = new[]
-        {
-            m.TransformPoint(0, 0), m.TransformPoint(1, 0),
-            m.TransformPoint(0, 1), m.TransformPoint(1, 1),
-        };
-        var box = new PdfRectangle(
-            corners.Min(c => c.X), corners.Min(c => c.Y),
-            corners.Max(c => c.X), corners.Max(c => c.Y));
+        var box = m.UnitSquareBounds();
         return box.Width < MinSidePt || box.Height < MinSidePt ? null : box;
     }
 

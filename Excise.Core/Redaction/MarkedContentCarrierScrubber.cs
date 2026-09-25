@@ -187,7 +187,7 @@ internal static class MarkedContentCarrierScrubber
                     break;
 
                 default:
-                    if (op.BoundingBox is not { } box || !Intersects(box, area)) continue;
+                    if (op.BoundingBox is not { } box || !box.IntersectsWith(area)) continue;
                     // Every enclosing carrier span covers glyphs being removed here.
                     foreach (var span in stack)
                         if (span != null) affected.Add(span);
@@ -249,7 +249,4 @@ internal static class MarkedContentCarrierScrubber
         return props != null &&
                StructureTreeRedactionScrubber.TextCarriers.Any(props.ContainsKey);
     }
-
-    private static bool Intersects(PdfRectangle a, PdfRectangle b) =>
-        a.Left < b.Right && a.Right > b.Left && a.Bottom < b.Top && a.Top > b.Bottom;
 }

@@ -107,6 +107,23 @@ public class PdfFormAutoDetectorTests
     }
 
     [Fact]
+    public void DetectsRotatedSquareOutline_UsingItsTrueBoundingBox()
+    {
+        // 30 degrees. The detector measured only two opposite corners of the
+        // rectangle, which is the box only for 90-degree turns: this square read
+        // 5pt wide and was dropped. All four corners give 14 * (cos + sin) = 19.1pt.
+        using var doc = PdfDocument.Open(BuildPdf(
+            "q 0.866025 0.5 -0.5 0.866025 200 200 cm 0 0 14 14 re S Q"));
+
+        var sugg = PdfFormAutoDetector.ScanPage(doc.GetPage(1));
+
+        sugg.Should().ContainSingle();
+        sugg[0].FieldType.Should().Be(PdfFieldType.Button);
+        sugg[0].Rect.Width.Should().BeApproximately(14 * (0.866025 + 0.5), 0.01);
+        sugg[0].Rect.Height.Should().BeApproximately(14 * (0.866025 + 0.5), 0.01);
+    }
+
+    [Fact]
     public void IgnoresLargeOutlines_NotCheckboxes()
     {
         // 400x400pt outline — page border, not a checkbox.

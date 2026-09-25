@@ -208,50 +208,10 @@ public class TextSegmenter
         PdfRectangle redactionArea,
         GlyphRemovalStrategy strategy)
     {
-        // Normalize rectangles for consistent comparison
-        var normalizedGlyph = glyphRect.Normalize();
-        var normalizedRedaction = redactionArea.Normalize();
-
-        // Get overlap type
-        var overlapType = GetOverlapType(normalizedGlyph, normalizedRedaction);
-
-        // Determine if we should remove based on the strategy
-        bool shouldRemove = strategy switch
-        {
-            // AnyOverlap: Remove if ANY part intersects (most secure)
-            GlyphRemovalStrategy.AnyOverlap => overlapType != GlyphOverlapType.None,
-
-            // FullyContained: Remove only if glyph is entirely inside redaction area
-            GlyphRemovalStrategy.FullyContained => overlapType == GlyphOverlapType.Full,
-
-            // CenterPoint: Remove if center is inside redaction area (legacy behavior)
-            GlyphRemovalStrategy.CenterPoint or _ => normalizedRedaction.Contains(
-                (normalizedGlyph.Left + normalizedGlyph.Right) / 2.0,
-                (normalizedGlyph.Bottom + normalizedGlyph.Top) / 2.0)
-        };
-
-        return (shouldRemove, overlapType);
-    }
-
-    /// <summary>
-    /// Determine the type of overlap between a glyph and redaction area.
-    /// </summary>
-    private GlyphOverlapType GetOverlapType(PdfRectangle glyph, PdfRectangle redaction)
-    {
-        // Check if rectangles intersect at all
-        if (!glyph.IntersectsWith(redaction))
-            return GlyphOverlapType.None;
-
-        // Check if glyph is fully contained
-        if (redaction.Contains(glyph.Left, glyph.Bottom) &&
-            redaction.Contains(glyph.Right, glyph.Top) &&
-            redaction.Contains(glyph.Left, glyph.Top) &&
-            redaction.Contains(glyph.Right, glyph.Bottom))
-        {
-            return GlyphOverlapType.Full;
-        }
-
-        // Partial overlap
-        return GlyphOverlapType.Partial;
+        var overlapType =
+            !glyphRect.IntersectsWith(redactionArea) ? GlyphOverlapType.None
+            : redactionArea.Contains(glyphRect) ? GlyphOverlapType.Full
+            : GlyphOverlapType.Partial;
+        return (strategy.Selects(glyphRect, redactionArea), overlapType);
     }
 }

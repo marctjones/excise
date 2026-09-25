@@ -202,7 +202,7 @@ internal static class StructureTreeRedactionScrubber
                 default:
                     if (stack.Count == 0) continue;
                     if (op.BoundingBox is not { } box) continue;
-                    if (!Intersects(box, area)) continue;
+                    if (!box.IntersectsWith(area)) continue;
 
                     // Every enclosing marked-content id is implicated: nested
                     // spans all describe the content we are about to delete.
@@ -271,19 +271,11 @@ internal static class StructureTreeRedactionScrubber
 
         foreach (var word in page.GetWords())
         {
-            if (!Intersects(word.BoundingBox, area)) continue;
+            if (!word.BoundingBox.IntersectsWith(area)) continue;
             if (string.IsNullOrWhiteSpace(word.Text)) continue;
             removed.Add(word.Text);
         }
 
         return removed;
-    }
-
-    private static bool Intersects(PdfRectangle a, PdfRectangle b)
-    {
-        var x = a.Normalize();
-        var y = b.Normalize();
-        return x.Left < y.Right && x.Right > y.Left &&
-               x.Bottom < y.Top && x.Top > y.Bottom;
     }
 }

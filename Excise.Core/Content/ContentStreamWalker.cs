@@ -393,23 +393,9 @@ internal sealed class ContentStreamWalker
     /// Axis-aligned extent of a rectangle's four corners transformed through
     /// the CTM.
     /// </summary>
-    public PdfRectangle TransformBounds(double minX, double minY, double maxX, double maxY)
-    {
-        var corners = new[]
-        {
-            TransformPoint(minX, minY),
-            TransformPoint(maxX, minY),
-            TransformPoint(minX, maxY),
-            TransformPoint(maxX, maxY)
-        };
-
-        return new PdfRectangle(
-            corners.Min(p => p.x),
-            corners.Min(p => p.y),
-            corners.Max(p => p.x),
-            corners.Max(p => p.y)
-        );
-    }
+    public PdfRectangle TransformBounds(double minX, double minY, double maxX, double maxY) =>
+        new ContentTransform(_state.Ctm_a, _state.Ctm_b, _state.Ctm_c, _state.Ctm_d, _state.Ctm_e, _state.Ctm_f)
+            .TransformBounds(new PdfRectangle(minX, minY, maxX, maxY));
 
     #endregion
 
