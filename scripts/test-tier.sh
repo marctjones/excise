@@ -338,8 +338,9 @@ run_tier() {
     local plan="$LOG_DIR/plan.tsv" n
     runner_manifest_plan "$1" > "$plan.manifest" || { echo "test-tier: tests/gates.tsv is defective; nothing ran." >&2; exit 2; }
     # project-chunked rows become <name>.chunkNN, through the SAME chunker
-    # run-full-suite.sh uses (#1774). t0 is exempt inside the helper — the
-    # pre-push hook must stay cheap, and nothing resumes a 3-minute run.
+    # run-full-suite.sh uses (#1774). t0 is exempt inside the helper: its rows
+    # stay whole projects. The pre-push hook does resume t0, for an identical
+    # tree only (#1845); a whole-project row is the unit it skips.
     runner_plan_expand_chunks "$1" "$plan.manifest" "$plan.rows"
     rm -f "$plan.manifest"
     n="$(grep -c . "$plan.rows")"

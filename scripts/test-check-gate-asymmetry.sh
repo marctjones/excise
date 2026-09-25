@@ -92,6 +92,8 @@ root="$(git rev-parse --show-toplevel)"
     echo "args=$*"
     echo "base=${GATE_ASYMMETRY_BASE-<unset>}"
     echo "head=${GATE_ASYMMETRY_HEAD-<unset>}"
+    echo "state=${RUNNER_STATE_ROOT-<unset>}"
+    echo "always=${RUNNER_ALWAYS_RUN-<unset>}"
 } > "$root/.tier-invocation"
 exit 0
 STUB
@@ -104,6 +106,8 @@ cd "$REPO"
 # repository. With `-C "$REPO"` a leaked variable can no longer silently
 # retarget them.
 git init -q -b develop "$REPO"
+# (#1845) the tree key hashes untracked files, so the stub's record and logs/ are not part of it.
+printf '.tier-invocation\nlogs/\n' >> "$REPO/.git/info/exclude"
 git -C "$REPO" config user.email selftest@example.com
 git -C "$REPO" config user.name Selftest
 git -C "$REPO" config commit.gpgsign false
@@ -250,6 +254,63 @@ case "$HOOK_RAN" in
     *"head=$REWRITE_SHA"*) ok ;;
     *) fail "#1600: the PUSHED sha must be exported as GATE_ASYMMETRY_HEAD: $HOOK_RAN" ;;
 esac
+
+# 6b. #1845: a stepped push re-verified an identical tree for every step. The hook now
+#     gives t0 --resume and a state directory keyed on the EXACT tree, and pins the
+#     rows that must run every push.
+state_of() { printf '%s\n' "$HOOK_RAN" | sed -n 's/^state=//p'; }
+case "$HOOK_RAN" in
+    *"args=t0 --resume"*) ok ;;
+    *) fail "#1845: the hook must run t0 with --resume: $HOOK_RAN" ;;
+esac
+KEY_CLEAN="$(state_of)"
+case "$KEY_CLEAN" in
+    */logs/runner-state/pre-push/????????????????) ok ;;
+    *) fail "#1845: the hook must give t0 a per-tree state directory, got '$KEY_CLEAN'" ;;
+esac
+case "$HOOK_RAN" in
+    *'always=^(Excise\.Core\.Tests|gate-asymmetry)$'*) ok ;;
+    *) fail "#1845: the Redaction suites' project and the range-dependent gate must be pinned to run every push: $HOOK_RAN" ;;
+esac
+run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
+[ "$(state_of)" = "$KEY_CLEAN" ] || fail "#1845: an identical tree must map to the SAME state directory"
+ok
+TRACKED="$(git -C "$REPO" ls-files | head -1)"
+echo "// edited" >> "$REPO/$TRACKED"
+run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
+KEY_DIRTY="$(state_of)"
+[ "$KEY_DIRTY" != "$KEY_CLEAN" ] || fail "#1845: an uncommitted edit to a tracked file must change the state directory (else a pass on OTHER code is reused)"
+ok
+echo "// edited again" >> "$REPO/$TRACKED"
+run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
+[ "$(state_of)" != "$KEY_DIRTY" ] || fail "#1845: two different edits to the same file must not share a state directory"
+ok
+git -C "$REPO" checkout -q -- "$TRACKED"
+run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
+[ "$(state_of)" = "$KEY_CLEAN" ] || fail "#1845: reverting the edit must return to the clean tree's state directory"
+ok
+echo "scratch" > "$REPO/untracked-file.txt"
+run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
+KEY_UNTRACKED="$(state_of)"
+[ "$KEY_UNTRACKED" != "$KEY_CLEAN" ] || fail "#1845: a new untracked file must change the state directory"
+ok
+echo "scratch, changed" > "$REPO/untracked-file.txt"
+run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
+[ "$(state_of)" != "$KEY_UNTRACKED" ] || fail "#1845: changing an untracked file's CONTENT must change the state directory"
+ok
+rm -f "$REPO/untracked-file.txt"
+# A different commit is a different tree.
+run_hook "refs/heads/develop $PERF_SHA refs/heads/develop $BASE_SHA"
+[ "$(state_of)" = "$KEY_CLEAN" ] || fail "#1845: a stepped push runs over the same working tree, so it must reuse the state directory"
+ok
+# A tree's state is dropped after an hour; a young one survives.
+mkdir -p "$REPO/logs/runner-state/pre-push/stale-tree" "$REPO/logs/runner-state/pre-push/young-tree"
+touch -t 200001010000 "$REPO/logs/runner-state/pre-push/stale-tree"
+run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
+[ ! -d "$REPO/logs/runner-state/pre-push/stale-tree" ] || fail "#1845: a tree state older than an hour must be dropped"
+[ -d "$REPO/logs/runner-state/pre-push/young-tree" ] || fail "#1845: a young tree state must survive the prune"
+ok
+rm -rf "$REPO/logs"
 
 # 7. A stepped push — an earlier commit of this same branch, which is the
 #    workflow #1600 was filed from. Allowed, with the range ending at the pushed

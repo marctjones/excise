@@ -236,4 +236,39 @@ fi
 # or tool invoked `git push`.
 [ -d "$HOME/.dotnet" ] && export PATH="$HOME/.dotnet:$PATH"
 
+# A STEPPED PUSH RE-VERIFIES THE SAME TREE (#1845). The gate-asymmetry rule forces a
+# batch that mixes a perf-path change and an expectation edit into several pushes, and
+# t0 runs over the WORKING TREE, so each step used to repeat a ~3 minute t0 on a tree
+# that had just passed. t0 now runs with --resume against a state directory keyed on
+# the EXACT tree: HEAD plus the tracked diff plus the content of every untracked file.
+# The runner's own resume state is keyed on branch and dirtiness, not on the commit
+# (#1027), so it must never be used unscoped here: a different tree gets an empty
+# directory and runs everything.
+#
+# What is reused is a row that already passed for this tree. What is NOT:
+#   * the build and every row the manifest marks checkpoint=never (the redaction
+#     family): CLAUDE.md gives them no skip, and RUNNER_NEVER_CHECKPOINT keeps them out;
+#   * Excise.Core.Tests, because it holds the Redaction test suites, which run at every
+#     push (RUNNER_ALWAYS_RUN);
+#   * gate-asymmetry, because its answer depends on the pushed range, not the tree.
+# A tree's state is dropped after 60 minutes, so a pass is never reused across a tool
+# upgrade or a corpus change.
+if [ -n "$head_sha" ]; then
+    state_root="$ROOT/logs/runner-state/pre-push"
+    [ -d "$state_root" ] && find "$state_root" -mindepth 1 -maxdepth 1 -type d -mmin +60 -exec rm -rf {} + 2>/dev/null
+    tree_key="$(
+        {
+            printf 'HEAD=%s\n' "$head_sha"
+            git diff HEAD --binary 2>/dev/null
+            git ls-files -z --others --exclude-standard 2>/dev/null \
+                | while IFS= read -r -d '' _f; do
+                    printf 'untracked %s %s\n' "$_f" "$(git hash-object -- "$_f" 2>/dev/null)"
+                done
+        } | git hash-object --stdin | cut -c1-16
+    )"
+    export RUNNER_STATE_ROOT="$state_root/$tree_key"
+    export RUNNER_ALWAYS_RUN='^(Excise\.Core\.Tests|gate-asymmetry)$'
+    exec "$ROOT/scripts/test-tier.sh" t0 --resume
+fi
+
 exec "$ROOT/scripts/test-tier.sh" t0

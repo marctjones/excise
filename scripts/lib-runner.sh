@@ -263,6 +263,11 @@ runner_marker_path() {
 # stays only as a backstop for a step no manifest declares. A row is read
 # through runner_manifest_field so Foo.chunkNN inherits Foo's answer.
 runner_is_never_checkpointed() {
+    # RUNNER_ALWAYS_RUN: rows a caller pins to run on every invocation even when a
+    # marker exists (the pre-push hook, which reuses a t0 pass for an identical tree, #1845).
+    if [ -n "${RUNNER_ALWAYS_RUN:-}" ] && printf '%s' "$1" | grep -qE "$RUNNER_ALWAYS_RUN"; then
+        return 0
+    fi
     local col=""
     [ -s "${RUNNER_MANIFEST:-}" ] && col="$(runner_manifest_field "$1" checkpoint 2>/dev/null)"
     case "$col" in never) return 0 ;; ok) return 1 ;; esac
