@@ -81816,6 +81816,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.LinkAnnotationDestination_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_AppendsWidgetToPageAnnots",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82577,13 +82584,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkWithoutPageInMap_NoDestinationPage",
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkToObjectThatIsNotAPage_NoDestinationPage",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_MultipleAnnotations_AllParsed",
@@ -83114,13 +83119,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -83258,6 +83256,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.LinkAnnotationDestination_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_AppendsWidgetToPageAnnots",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -84019,13 +84024,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkWithoutPageInMap_NoDestinationPage",
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkToObjectThatIsNotAPage_NoDestinationPage",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_MultipleAnnotations_AllParsed",
@@ -84556,13 +84559,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -84700,6 +84696,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.LinkAnnotationDestination_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_AppendsWidgetToPageAnnots",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -85461,13 +85464,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkWithoutPageInMap_NoDestinationPage",
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkToObjectThatIsNotAPage_NoDestinationPage",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_MultipleAnnotations_AllParsed",
@@ -85998,13 +85999,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -86158,6 +86152,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.LinkAnnotationDestination_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_AppendsWidgetToPageAnnots",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -86919,13 +86920,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkWithoutPageInMap_NoDestinationPage",
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkToObjectThatIsNotAPage_NoDestinationPage",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_MultipleAnnotations_AllParsed",
@@ -87456,13 +87455,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -87735,6 +87727,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.LinkAnnotationDestination_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_AppendsWidgetToPageAnnots",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -88496,13 +88495,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkWithoutPageInMap_NoDestinationPage",
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkToObjectThatIsNotAPage_NoDestinationPage",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_MultipleAnnotations_AllParsed",
@@ -89033,13 +89030,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -89170,6 +89160,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.LinkAnnotationDestination_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_AppendsWidgetToPageAnnots",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -89931,13 +89928,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkWithoutPageInMap_NoDestinationPage",
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkToObjectThatIsNotAPage_NoDestinationPage",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_MultipleAnnotations_AllParsed",
@@ -90468,13 +90463,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -90598,6 +90586,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.LinkAnnotationDestination_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_AppendsWidgetToPageAnnots",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -91359,13 +91354,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkWithoutPageInMap_NoDestinationPage",
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkToObjectThatIsNotAPage_NoDestinationPage",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_MultipleAnnotations_AllParsed",
@@ -91896,13 +91889,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -92026,6 +92012,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.LinkAnnotationDestination_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_AppendsWidgetToPageAnnots",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -92787,13 +92780,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkWithoutPageInMap_NoDestinationPage",
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_LinkToObjectThatIsNotAPage_NoDestinationPage",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_MultipleAnnotations_AllParsed",
@@ -93324,13 +93315,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_WithHiddenAnnotationKnobOff_StillLeaks",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99480,6 +99464,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.WidgetPageEntry_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_OnPdfWithoutAcroForm_CreatesAcroFormAndField",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100441,15 +100432,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs::SignatureVerificationServiceTests.VerifySignatures_PdfWithNoAcroForm_ReturnsEmptyList",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -100948,6 +100930,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.WidgetPageEntry_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_OnPdfWithoutAcroForm_CreatesAcroFormAndField",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -101909,15 +101898,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs::SignatureVerificationServiceTests.VerifySignatures_PdfWithNoAcroForm_ReturnsEmptyList",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -102437,6 +102417,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.WidgetPageEntry_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_OnPdfWithoutAcroForm_CreatesAcroFormAndField",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103398,15 +103385,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs::SignatureVerificationServiceTests.VerifySignatures_PdfWithNoAcroForm_ReturnsEmptyList",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -103866,6 +103844,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs::PageCollectionPageNumberTests.WidgetPageEntry_NamesTheTargetPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_OnPdfWithoutAcroForm_CreatesAcroFormAndField",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104827,15 +104812,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs::SignatureVerificationServiceTests.VerifySignatures_PdfWithNoAcroForm_ReturnsEmptyList",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -112892,8 +112868,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7785,
-    "testMethodsWithCapabilityCandidate": 4955,
+    "testMethods": 7792,
+    "testMethodsWithCapabilityCandidate": 4957,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

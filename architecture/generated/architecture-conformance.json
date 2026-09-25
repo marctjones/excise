@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "bf5e761723d4360ed6696f5780cea94dd98bcee0",
+  "sourceRevision": "cfebb952e5e8b87e39aa395c1a185ce55873099e",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8227,
+    "retainedSymbols": 8221,
     "observedComponentDependencies": 78,
     "declaredDependencies": 74,
     "acceptedExceptions": 1,
@@ -430,8 +430,8 @@
     {
       "source": "core-document",
       "target": "core-parsing",
-      "references": 79,
-      "typeDependencyCount": 14,
+      "references": 81,
+      "typeDependencyCount": 15,
       "classification": "declared",
       "evidence": [
         {
@@ -444,14 +444,14 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1482,
-      "typeDependencyCount": 223,
+      "references": 1425,
+      "typeDependencyCount": 219,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfAnnotationAuthoring",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 107
+          "references": 102
         }
       ]
     },
@@ -594,14 +594,14 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1206,
+      "references": 1202,
       "typeDependencyCount": 148,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.CarrierTextRecovery",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 115
+          "references": 114
         }
       ]
     },
@@ -636,7 +636,7 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 883,
+      "references": 880,
       "typeDependencyCount": 147,
       "classification": "declared",
       "evidence": [
@@ -692,7 +692,7 @@
     {
       "source": "core-security",
       "target": "core-document",
-      "references": 40,
+      "references": 39,
       "typeDependencyCount": 5,
       "classification": "declared",
       "evidence": [
@@ -706,8 +706,8 @@
     {
       "source": "core-security",
       "target": "core-primitives",
-      "references": 83,
-      "typeDependencyCount": 22,
+      "references": 81,
+      "typeDependencyCount": 21,
       "classification": "declared",
       "evidence": [
         {
@@ -748,7 +748,7 @@
     {
       "source": "core-text",
       "target": "core-document",
-      "references": 149,
+      "references": 148,
       "typeDependencyCount": 18,
       "classification": "declared",
       "evidence": [
@@ -776,7 +776,7 @@
     {
       "source": "core-text",
       "target": "core-primitives",
-      "references": 53,
+      "references": 52,
       "typeDependencyCount": 13,
       "classification": "declared",
       "evidence": [
