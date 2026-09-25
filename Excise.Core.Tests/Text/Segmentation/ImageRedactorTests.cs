@@ -5,6 +5,7 @@ using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Xunit;
 
@@ -371,9 +372,8 @@ public class ImageRedactorTests
         var result = ImageRedactor.ProcessOperations(
             originalOps, page, redactionArea, GlyphRemovalStrategy.AnyOverlap, out int removed);
 
-        // Assert
-        // Result should be valid regardless of transformation
-        result.Should().NotBeEmpty();
+        // Assert — two cm operators place the image at (100,600)-(200,700).
+        removed.Should().Be(1);
     }
 
     #endregion
@@ -458,32 +458,14 @@ public class ImageRedactorTests
     }
 
     /// <summary>
-    /// Build q / cm / BI / Q operations placing a unit-square inline image at
-    /// the given page-space rectangle. The BI carries embedded pixel bytes so
-    /// the test exercises the same operator shape the parser produces.
+    /// Parse q / cm / BI / Q placing a unit-square inline image at the given
+    /// page-space rectangle, so the BI carries the placement the parser stamps.
     /// </summary>
     private static List<ContentOperator> BuildInlineImageOps(
-        double x, double y, double w, double h)
-    {
-        var dict = new PdfDictionary
-        {
-            ["W"] = new PdfInteger(2),
-            ["H"] = new PdfInteger(2),
-            ["BPC"] = new PdfInteger(8),
-            ["CS"] = new PdfName("G"),
-        };
-        var bi = new ContentOperator("BI", new PdfObject[] { dict })
-        {
-            InlineImageData = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF },
-        };
-        return new List<ContentOperator>
-        {
-            ContentOperator.SaveState(),
-            ContentOperator.Transform(w, 0, 0, h, x, y),
-            bi,
-            ContentOperator.RestoreState(),
-        };
-    }
+        double x, double y, double w, double h) =>
+        new ContentStreamParser(Encoding.Latin1.GetBytes(
+            $"q {w} 0 0 {h} {x} {y} cm BI /W 2 /H 2 /BPC 8 /CS /G /L 4 ID \xDE\xAD\xBE\xEF EI Q"))
+            .Parse().Operators.ToList();
 
     #endregion
 

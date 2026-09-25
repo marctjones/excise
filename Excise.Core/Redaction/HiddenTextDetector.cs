@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Excise.Core.Content;
 using Excise.Core.Document;
 using Excise.Core.Fonts;
 using Excise.Core.Primitives;
@@ -41,9 +40,9 @@ public sealed record HiddenTextRecord(
 /// <remarks>
 /// <para>Algorithm:</para>
 /// <list type="number">
-///   <item>Walk the page's operator list in order, tracking the current
-///     transformation matrix (via <c>q</c>/<c>Q</c>/<c>cm</c>) and fill
-///     color (<c>rg</c>/<c>g</c>/<c>k</c>).</item>
+///   <item>Walk the page's operator list in order, tracking the fill
+///     color (<c>rg</c>/<c>g</c>/<c>k</c>) and placing geometry through the
+///     CTM the parser stamped on each operator.</item>
 ///   <item>For each text-showing op (<c>Tj</c>/<c>TJ</c>/<c>'</c>/<c>"</c>),
 ///     resolve its glyphs via <see cref="LetterFinder"/> and record
 ///     bounding box + stream index.</item>
@@ -118,8 +117,6 @@ public static class HiddenTextDetector
         var textEntries = new List<TextEntry>();
         var obstructions = new List<Obstruction>();
 
-        var ctm = ContentTransform.Identity;
-        var ctmStack = new Stack<ContentTransform>();
         // §8.6.8: the initial fill colour is BLACK. Starting white here made a
         // bar drawn before any colour operator read as non-obstructive, so text
         // under it was never reported hidden — the leak-detection half of the
@@ -146,28 +143,13 @@ public static class HiddenTextDetector
         {
             var op = ops[i];
 
-            // Colour operators, in one place (#1624). q/Q are NOT delegated
-            // here: this detector also stacks the CTM, so they keep their own
-            // cases below and call into the colour state there.
-            if (op.Name is not ("q" or "Q") && fillState.Apply(op)) continue;
+            // q/Q and every colour operator, in one place (#1624). The CTM is
+            // the parser's stamp: the operators come from this fresh parse, so
+            // a missing one throws rather than placing geometry at identity.
+            if (fillState.Apply(op)) continue;
 
             switch (op.Name)
             {
-                case "q":
-                    ctmStack.Push(ctm);
-                    fillState.Apply(op);            // colour half of the same save
-                    break;
-                case "Q":
-                    if (ctmStack.Count > 0) ctm = ctmStack.Pop();
-                    fillState.Apply(op);            // and of the same restore
-                    break;
-                case "cm":
-                    if (op.Operands.Count >= 6)
-                    {
-                        ctm = ContentTransform.FromOperands(op).Multiply(ctm);
-                    }
-                    break;
-
                 case "re":
                     if (op.Operands.Count >= 4)
                     {
@@ -175,7 +157,7 @@ public static class HiddenTextDetector
                         var y = op.GetNumber(1);
                         var w = op.GetNumber(2);
                         var h = op.GetNumber(3);
-                        currentPath.Add(ctm.TransformBounds(new PdfRectangle(x, y, x + w, y + h)));
+                        currentPath.Add(op.GraphicsTransform!.Value.TransformBounds(new PdfRectangle(x, y, x + w, y + h)));
                     }
                     break;
 
@@ -247,7 +229,7 @@ public static class HiddenTextDetector
                         var xobj = page.GetXObject(name);
                         if (xobj is PdfStream s && s.GetNameOrNull("Subtype") == "Image")
                         {
-                            obstructions.Add(new Obstruction(i, $"image /{name}", ctm.UnitSquareBounds(), new Rgb(0.5,0.5,0.5)));
+                            obstructions.Add(new Obstruction(i, $"image /{name}", op.GraphicsTransform!.Value.UnitSquareBounds(), new Rgb(0.5,0.5,0.5)));
                         }
                     }
                     break;
@@ -256,7 +238,7 @@ public static class HiddenTextDetector
                     // Inline image (#354): fills the CTM-mapped unit square,
                     // same as a named image XObject — count it as an obstruction
                     // so text drawn underneath it is flagged as hidden.
-                    obstructions.Add(new Obstruction(i, "inline image", ctm.UnitSquareBounds(), new Rgb(0.5,0.5,0.5)));
+                    obstructions.Add(new Obstruction(i, "inline image", op.BoundingBox!.Value, new Rgb(0.5,0.5,0.5)));
                     break;
             }
         }

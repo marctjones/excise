@@ -56,7 +56,8 @@ public class ContentOperator
 
     /// <summary>
     /// Graphics CTM active when this operator executed (§8.3.4). Populated
-    /// for every operator when the stream was parsed with operator metadata
+    /// for every operator but <c>BI</c> (its placement is its
+    /// <see cref="BoundingBox"/>) when the stream was parsed with operator metadata
     /// on (the default), not only text-showing operators -- a caller wanting
     /// page-space coordinates for a path-construction operator (<c>m/l/c/v/
     /// y/h/re</c>) transforms its raw <see cref="Operands"/> through this,
