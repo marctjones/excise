@@ -855,12 +855,3 @@ public readonly record struct PdfRectangle(double Left, double Bottom, double Ri
     /// <inheritdoc />
     public override string ToString() => $"[{Left:F2}, {Bottom:F2}, {Right:F2}, {Top:F2}]";
 }
-
-/// <summary>
-/// A point in PDF coordinates (bottom-left origin).
-/// </summary>
-public readonly record struct PdfPoint(double X, double Y)
-{
-    /// <inheritdoc />
-    public override string ToString() => $"({X:F2}, {Y:F2})";
-}

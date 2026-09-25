@@ -254,9 +254,9 @@ public class StickyNotePopupWorkflowTests
         // of the card's actual size (icon-sized pre-#1794, post-it-sized
         // after), as long as it is at least PdfAnnotation.TextIconSize on a
         // side, which #1794's default card comfortably is.
-        var pointInsideCardPdf = new PdfPoint(
-            noteAnnotation.Rect.Left + PdfAnnotation.TextIconSize / 2,
-            noteAnnotation.Rect.Top - PdfAnnotation.TextIconSize / 2);
+        var pointInsideCardPdf = (
+            X: noteAnnotation.Rect.Left + PdfAnnotation.TextIconSize / 2,
+            Y: noteAnnotation.Rect.Top - PdfAnnotation.TextIconSize / 2);
         var windowPoint = PdfPointToWindow(window, viewer!, vm, pointInsideCardPdf);
         windowPoint.Should().NotBeNull();
 
@@ -293,7 +293,7 @@ public class StickyNotePopupWorkflowTests
 
         var restingCenter = PdfPointToWindow(
             window, viewer, vm,
-            new PdfPoint((originalRect.Left + originalRect.Right) / 2, (originalRect.Top + originalRect.Bottom) / 2))!.Value;
+            (X: (originalRect.Left + originalRect.Right) / 2, Y: (originalRect.Top + originalRect.Bottom) / 2))!.Value;
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -341,7 +341,7 @@ public class StickyNotePopupWorkflowTests
 
         var dragStart = PdfPointToWindow(
             window, viewer, vm,
-            new PdfPoint((originalRect.Left + originalRect.Right) / 2, (originalRect.Top + originalRect.Bottom) / 2))!.Value;
+            (X: (originalRect.Left + originalRect.Right) / 2, Y: (originalRect.Top + originalRect.Bottom) / 2))!.Value;
         // Comfortably past PdfViewerControl's 5-DIP click/drag threshold in
         // both axes.
         var dragEnd = new Point(dragStart.X + 60, dragStart.Y + 40);
@@ -665,7 +665,7 @@ public class StickyNotePopupWorkflowTests
     }
 
     private static Point? PdfPointToWindow(
-        Window window, PdfViewerControl viewer, MainWindowViewModel vm, PdfPoint pdfPoint)
+        Window window, PdfViewerControl viewer, MainWindowViewModel vm, (double X, double Y) pdfPoint)
     {
         var overlay = viewer.FindControl<Canvas>("OverlayCanvas");
         if (overlay == null) return null;

@@ -439,28 +439,6 @@ public class TextSegmenterTests
     }
 
     [Fact]
-    public void Letter_StartBaseLine_Returns_CorrectPoint()
-    {
-        var rect = new PdfRectangle(100, 700, 110, 720);
-        var letter = new Letter("A", rect, 12, "F1", 100, 700, 10, 65);
-        var baseline = letter.StartBaseLine;
-
-        baseline.X.Should().Be(100);
-        baseline.Y.Should().Be(700);
-    }
-
-    [Fact]
-    public void Letter_EndBaseLine_Returns_CorrectPoint()
-    {
-        var rect = new PdfRectangle(100, 700, 110, 720);
-        var letter = new Letter("A", rect, 12, "F1", 100, 700, 10, 65);
-        var endBaseLine = letter.EndBaseLine;
-
-        endBaseLine.X.Should().Be(110); // StartX + Width
-        endBaseLine.Y.Should().Be(700);
-    }
-
-    [Fact]
     public void Letter_ToString_ReturnsFormattedString()
     {
         var rect = new PdfRectangle(100, 700, 110, 720);

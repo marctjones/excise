@@ -989,13 +989,6 @@ namespace Excise.Core.Document
         public string? Motion { get; init; }
         public Excise.Core.Document.PdfTransitionStyle Style { get; init; }
     }
-    public readonly struct PdfPoint : System.IEquatable<Excise.Core.Document.PdfPoint>
-    {
-        public PdfPoint(double X, double Y) { }
-        public double X { get; init; }
-        public double Y { get; init; }
-        public override string ToString() { }
-    }
     public sealed class PdfPortfolioRedactionException : System.InvalidOperationException
     {
         public PdfPortfolioRedactionException() { }
@@ -2363,7 +2356,6 @@ namespace Excise.Core.Text
         public int CharacterCode { get; }
         public int CodeByteLength { get; }
         public double DisplacementThousandths { get; set; }
-        public Excise.Core.Document.PdfPoint EndBaseLine { get; }
         public string FontName { get; }
         public double FontSize { get; }
         public Excise.Core.Document.PdfRectangle GlyphRectangle { get; }
@@ -2372,7 +2364,6 @@ namespace Excise.Core.Text
         public bool IsInvisible { get; }
         public int? MarkedContentId { get; set; }
         public int OperandByteOffset { get; set; }
-        public Excise.Core.Document.PdfPoint StartBaseLine { get; }
         public double StartX { get; }
         public double StartY { get; }
         public int TextRenderMode { get; }

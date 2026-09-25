@@ -126,16 +126,6 @@ public class Letter
     public double DisplacementThousandths { get; set; }
 
     /// <summary>
-    /// The baseline start point of the glyph.
-    /// </summary>
-    public PdfPoint StartBaseLine => new(StartX, StartY);
-
-    /// <summary>
-    /// The baseline end point of the glyph.
-    /// </summary>
-    public PdfPoint EndBaseLine => new(StartX + Width, StartY);
-
-    /// <summary>
     /// §9.3.6 text rendering mode in force when this glyph was shown. 0 (fill)
     /// is the default and by far the commonest; <b>3 is INVISIBLE</b> and 7 is
     /// clip-only — neither paints anything.

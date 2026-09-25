@@ -7,7 +7,7 @@ using Xunit;
 namespace Excise.Core.Tests.Document;
 
 /// <summary>
-/// Tests for PDF geometry types: PdfPoint, PdfRectangle, and PdfSize.
+/// Tests for PDF geometry types: PdfRectangle and PdfSize.
 /// </summary>
 public class PdfGeometryTests
 {
@@ -284,58 +284,4 @@ public class PdfGeometryTests
 
     #endregion
 
-    #region PdfPoint Tests
-
-    [Fact]
-    public void PdfPoint_Constructor_StoresCoordinates()
-    {
-        // Act
-        var point = new PdfPoint(100, 200);
-
-        // Assert
-        point.X.Should().Be(100);
-        point.Y.Should().Be(200);
-    }
-
-    [Fact]
-    public void PdfPoint_ToString_FormatsCorrectly()
-    {
-        var point = new PdfPoint(100.5, 200.75);
-
-        var str = point.ToString();
-
-        str.Should().Contain("100.50");
-        str.Should().Contain("200.75");
-    }
-
-    [Fact]
-    public void PdfPoint_Equality_WorksCorrectly()
-    {
-        var point1 = new PdfPoint(100, 200);
-        var point2 = new PdfPoint(100, 200);
-        var point3 = new PdfPoint(100, 201);
-
-        point1.Should().Be(point2);
-        point1.Should().NotBe(point3);
-    }
-
-    [Fact]
-    public void PdfPoint_NegativeCoordinates_Allowed()
-    {
-        var point = new PdfPoint(-100, -200);
-
-        point.X.Should().Be(-100);
-        point.Y.Should().Be(-200);
-    }
-
-    [Fact]
-    public void PdfPoint_ZeroCoordinates_Allowed()
-    {
-        var point = new PdfPoint(0, 0);
-
-        point.X.Should().Be(0);
-        point.Y.Should().Be(0);
-    }
-
-    #endregion
 }
