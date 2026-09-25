@@ -1,6 +1,7 @@
 using System.Text;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.Core.Text;
 
 namespace Excise.Core.Operations;
 
@@ -252,7 +253,7 @@ public static class PdfDocumentSanitizer
             if (string.IsNullOrEmpty(value)) return false;
             foreach (var term in _terms)
             {
-                if (IndexOfTerm(value, term, _caseSensitive, _wholeWord, 0) < 0) continue;
+                if (TermMatch.IndexOf(value, term, _caseSensitive, _wholeWord, 0) < 0) continue;
                 TermFound = true;
                 return true;
             }
@@ -975,7 +976,7 @@ public static class PdfDocumentSanitizer
             var from = 0;
             while (from <= result.Length - term.Length)
             {
-                var at = IndexOfTerm(result, term, caseSensitive, wholeWord, from);
+                var at = TermMatch.IndexOf(result, term, caseSensitive, wholeWord, from);
                 if (at < 0) break;
                 result = result.Remove(at, term.Length);
                 from = at;
@@ -983,34 +984,4 @@ public static class PdfDocumentSanitizer
         }
         return trim ? result.Trim() : result;
     }
-
-    /// <summary>
-    /// Index of the next occurrence of <paramref name="term"/> at or after
-    /// <paramref name="startIndex"/>, or -1. Under <paramref name="wholeWord"/>
-    /// an occurrence only counts when a non-word character (or the string edge)
-    /// bounds it on both sides — the same <c>\w</c> rule the page matcher uses.
-    /// </summary>
-    private static int IndexOfTerm(
-        string value, string term, bool caseSensitive, bool wholeWord, int startIndex)
-    {
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
-
-        var at = startIndex;
-        while (at <= value.Length - term.Length)
-        {
-            var found = value.IndexOf(term, at, comparison);
-            if (found < 0) return -1;
-            if (!wholeWord) return found;
-
-            var end = found + term.Length - 1;
-            var boundedLeft = found == 0 || !IsWordChar(value[found - 1]);
-            var boundedRight = end + 1 >= value.Length || !IsWordChar(value[end + 1]);
-            if (boundedLeft && boundedRight) return found;
-
-            at = found + 1;
-        }
-        return -1;
-    }
-
 }

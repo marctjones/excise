@@ -131,6 +131,30 @@ public sealed class WholeWordRedactionTests
     }
 
     [Fact]
+    public void WholeWord_TermAtALineEndOrLineStart_IsStillFound()
+    {
+        // #1834: the page's letters run on across a line change with no
+        // separator, so "alpha ZORBLAX" / "ZORBLAX beta" reads "alpha
+        // ZORBLAXZORBLAX beta". A neighbour on another line is a boundary; a
+        // whole word at the end or start of a line must not be left behind.
+        var pdf = Build(
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> >> >>",
+            Stream("", "BT /F1 12 Tf 72 700 Td (alpha ZORBLAX) Tj ET\nBT /F1 12 Tf 72 676 Td (ZORBLAX beta) Tj ET"),
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+
+        using var doc = PdfDocument.Open(pdf);
+        var report = doc.RedactText("ZORBLAX", RedactionOptions.Default with { WholeWord = true });
+
+        report.MatchesLocated.Should().Be(2);
+        report.Survived.Should().Be(0);
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "ZORBLAX").Should().BeEmpty(
+            "both whole-word occurrences, at a line end and a line start, are gone from the saved bytes");
+    }
+
+    [Fact]
     public void TheRuleThatRan_IsVisibleInTheResult()
     {
         // ⚠️ #1052's explicit requirement: not just at the moment of clicking.

@@ -1038,11 +1038,8 @@ public static class PdfDocumentRedactionExtensions
         {
             if (string.IsNullOrWhiteSpace(view[k - 1].Value) || string.IsNullOrWhiteSpace(view[k].Value))
                 continue;
-            var pa = view[k - 1].GlyphRectangle.Normalize();
-            var ca = view[k].GlyphRectangle.Normalize();
-            if (Math.Abs((pa.Bottom + pa.Top) / 2 - (ca.Bottom + ca.Top) / 2)
-                > 0.5 * Math.Max(view[k - 1].FontSize, view[k].FontSize)) continue;   // same line only
-            var adv = ca.Left - pa.Left;
+            if (!SameLine(view[k - 1], view[k])) continue;
+            var adv = view[k].GlyphRectangle.Normalize().Left - view[k - 1].GlyphRectangle.Normalize().Left;
             if (adv > 0) advances.Add(adv);
         }
         var medianAdvance = MedianAdvance(advances);
@@ -1115,8 +1112,15 @@ public static class PdfDocumentRedactionExtensions
                 // alternative would be an explicit choice rather than a silent
                 // global rule. This is that choice: a match must be bounded by a
                 // non-word character (or the start/end of the run) on BOTH sides,
-                // so redacting "Lee" no longer guts "Sleeman".
-                if (wholeWord && !IsWholeWordMatch(fullText, i, endIndex))
+                // so redacting "Lee" no longer guts "Sleeman". #1834: a
+                // neighbour on another line bounds it too. fullText has no
+                // separator at a line change (a wrapped term must match), so
+                // without this "Lee" ending one line reads as "Leetop".
+                bool BoundedBy(int neighbour, int inside) =>
+                    neighbour < 0 || neighbour >= fullText.Length
+                    || !TermMatch.IsWordChar(fullText[neighbour])
+                    || !SameLine(view[characterToLetter[neighbour]], view[characterToLetter[inside]]);
+                if (wholeWord && !(BoundedBy(i - 1, i) && BoundedBy(endIndex + 1, endIndex)))
                 {
                     i++;
                     continue;
@@ -1299,25 +1303,6 @@ public static class PdfDocumentRedactionExtensions
     }
 
     /// <summary>
-    /// #1052 — is the span <c>[start, end]</c> of <paramref name="text"/> bounded
-    /// by a non-word character (or the start/end of the text) on both sides?
-    /// </summary>
-    /// <remarks>
-    /// "Word character" is letter, digit or underscore — the ordinary <c>\w</c>
-    /// rule. Underscore counts, so whole-word <c>SECRET</c> does not match inside
-    /// <c>SECRET_KEY</c>; the point of the option is that the user gets the strict
-    /// reading when they ask for it.
-    /// </remarks>
-    private static bool IsWholeWordMatch(string text, int start, int end)
-    {
-        static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
-
-        if (start > 0 && IsWordChar(text[start - 1])) return false;
-        if (end + 1 < text.Length && IsWordChar(text[end + 1])) return false;
-        return true;
-    }
-
-    /// <summary>
     /// Collapse OVERPRINTED glyphs — runs of adjacent letters with the same
     /// value stamped on top of one another — into a single representative,
     /// returning the view plus, for each view index, the first and last
@@ -1388,6 +1373,15 @@ public static class PdfDocumentRedactionExtensions
             && Math.Abs(a.StartY - b.StartY) <= tolY;
     }
 
+    /// <summary>Do the two glyphs sit on one line: vertical centres within half a font size.</summary>
+    private static bool SameLine(Letter a, Letter b)
+    {
+        var ra = a.GlyphRectangle.Normalize();
+        var rb = b.GlyphRectangle.Normalize();
+        return !(Math.Abs((ra.Bottom + ra.Top) / 2 - (rb.Bottom + rb.Top) / 2)
+            > 0.5 * Math.Max(a.FontSize, b.FontSize));
+    }
+
     /// <summary>
     /// Reject text created only by concatenating distant reading-order runs.
     /// Reconstruction can reorder runs in the extracted sequence, and an
@@ -1406,12 +1400,12 @@ public static class PdfDocumentRedactionExtensions
     {
         if (string.IsNullOrWhiteSpace(prev.Value) || string.IsNullOrWhiteSpace(cur.Value))
             return false;
-        var a = prev.GlyphRectangle.Normalize();
-        var b = cur.GlyphRectangle.Normalize();
         var fontSize = Math.Max(prev.FontSize, cur.FontSize);
         if (fontSize <= 0) return false;
         // Same line only — a line wrap is not a word gap (a wrapped term must match).
-        if (Math.Abs((a.Bottom + a.Top) / 2 - (b.Bottom + b.Top) / 2) > 0.5 * fontSize) return false;
+        if (!SameLine(prev, cur)) return false;
+        var a = prev.GlyphRectangle.Normalize();
+        var b = cur.GlyphRectangle.Normalize();
         // Must be a real forward gap (overlapping/overprinted stamps are never a gap).
         if (b.Left <= a.Right) return false;
         // A font's glyph bounds do not tile perfectly: normal adjacent glyphs

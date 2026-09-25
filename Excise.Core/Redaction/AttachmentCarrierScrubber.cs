@@ -73,7 +73,7 @@ internal static class AttachmentCarrierScrubber
             // under, and a reader shows it. When it holds the term the file
             // goes, as it does when /F or /UF holds it (#1151).
             if (file.NameTreeKey is { } treeKey && file.FileSpec is { } keyedSpec
-                && terms.Any(t => WithoutTerm(treeKey, t, caseSensitive, wholeWord) != treeKey))
+                && terms.Any(t => TermMatch.Cut(treeKey, t, caseSensitive, wholeWord) != null))
             {
                 writes.Add(() => RemoveFromEmbeddedFilesTree(document, keyedSpec, terms, caseSensitive, wholeWord));
                 results.Add((file, Result(AttachmentDisposition.Removed,
@@ -96,7 +96,7 @@ internal static class AttachmentCarrierScrubber
                     var (encoding, preamble, text) = DecodeText(bytes);
                     var redacted = text;
                     foreach (var term in terms)
-                        redacted = WithoutTerm(redacted, term, caseSensitive, wholeWord);
+                        redacted = TermMatch.Cut(redacted, term, caseSensitive, wholeWord) ?? redacted;
 
                     if (redacted == text)
                     {
@@ -273,41 +273,10 @@ internal static class AttachmentCarrierScrubber
         foreach (var encoding in new Encoding[] { Encoding.Latin1, Encoding.UTF8, Encoding.Unicode, Encoding.BigEndianUnicode })
         {
             var text = encoding.GetString(bytes);
-            if (WithoutTerm(text, term, caseSensitive, wholeWord) != text)
+            if (TermMatch.Cut(text, term, caseSensitive, wholeWord) != null)
                 return true;
         }
         return false;
-    }
-
-    private static string WithoutTerm(string value, string term, bool caseSensitive, bool wholeWord)
-    {
-        if (string.IsNullOrEmpty(term)) return value;
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
-
-        var sb = new StringBuilder(value.Length);
-        var from = 0;
-        var at = 0;
-        var changed = false;
-        while (at <= value.Length - term.Length)
-        {
-            var found = value.IndexOf(term, at, comparison);
-            if (found < 0) break;
-            var end = found + term.Length;
-            if (wholeWord &&
-                ((found > 0 && IsWordChar(value[found - 1])) || (end < value.Length && IsWordChar(value[end]))))
-            {
-                at = found + 1;
-                continue;
-            }
-            sb.Append(value, from, found - from);
-            from = end;
-            at = end;
-            changed = true;
-        }
-        if (!changed) return value;
-        sb.Append(value, from, value.Length - from);
-        return sb.ToString();
     }
 
     private static void ReplacePayload(PdfDocument document, PdfStream payload, byte[] bytes)
@@ -354,7 +323,7 @@ internal static class AttachmentCarrierScrubber
                     if (document.Resolve(limits[i]) is not PdfString limit) continue;
                     var cut = limit.Value;
                     foreach (var term in terms)
-                        cut = WithoutTerm(cut, term, caseSensitive, wholeWord);
+                        cut = TermMatch.Cut(cut, term, caseSensitive, wholeWord) ?? cut;
                     if (cut != limit.Value)
                         limits[i] = new PdfString(cut);
                 }
