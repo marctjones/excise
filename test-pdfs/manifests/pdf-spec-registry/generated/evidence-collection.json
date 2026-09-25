@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1407,
-  "indexedContentSha256": "229362be0ee0113b40880ad905de3a9173166a87f95c4bfcf78a881a07c5709c",
+  "indexedFileCount": 1408,
+  "indexedContentSha256": "e58df95716459b846b99dd133393b3ebacc34f7f7d83ece69ff5851994dad7f4",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -9830,7 +9830,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 247
+      "candidateReferenceCount": 248
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -12257,7 +12257,6 @@
           "matchedTerms": [
             "form",
             "interpretation",
-            "contentoperator",
             "contentstream",
             "textextractor"
           ]
@@ -12955,7 +12954,6 @@
           "matchedTerms": [
             "iso",
             "operators",
-            "contentoperator",
             "contentstream",
             "textextractor"
           ]
@@ -13509,7 +13507,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 130
+      "candidateReferenceCount": 131
     },
     {
       "id": "pdf.17.content.text-state",
@@ -13651,6 +13649,7 @@
           "path": "Excise.Core/Content/ContentOperator.cs",
           "kind": "source",
           "matchedTerms": [
+            "character",
             "positioning",
             "showing",
             "contentoperator",
@@ -14511,7 +14510,8 @@
           "kind": "test",
           "matchedTerms": [
             "marked",
-            "property"
+            "property",
+            "contentstream"
           ]
         },
         {
@@ -37978,6 +37978,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Content/ContentOperator.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core/Content/ContentStreamParser.cs",
           "kind": "source",
           "matchedTerms": [
@@ -38718,18 +38727,9 @@
             "image",
             "jbig2"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PdfPageThumbnailTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "image",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 186
+      "candidateReferenceCount": 187
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -43407,6 +43407,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Content/SharedGeometryHelperTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/WalkedGlyphByteOffsetTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -43662,7 +43671,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 56
+      "candidateReferenceCount": 57
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -67369,6 +67378,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Content/ContentOperator.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "class",
+            "maps",
+            "metadata"
+          ]
+        },
+        {
           "path": "Excise.Core/Content/ContentStreamWalker.cs",
           "kind": "source",
           "matchedTerms": [
@@ -68029,19 +68047,9 @@
             "tagged-pdf",
             "tagged"
           ]
-        },
-        {
-          "path": "Excise.Core/Text/PdfPageTextFacade.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "class",
-            "structure",
-            "metadata",
-            "tagged"
-          ]
         }
       ],
-      "candidateReferenceCount": 399
+      "candidateReferenceCount": 400
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -70342,7 +70350,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 701
+      "candidateReferenceCount": 702
     },
     {
       "id": "pdf.20.extension.developer",
@@ -70462,12 +70470,19 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/GlyphRemovalStrategy.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/HiddenTextDetector.cs",
           "kind": "source",
           "matchedTerms": [
             "extension",
-            "extensions",
-            "pdfa"
+            "extensions"
           ]
         },
         {
@@ -71035,17 +71050,9 @@
             "extension",
             "extensions"
           ]
-        },
-        {
-          "path": "Excise.App/Workspace/DocumentSessionFactory.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
         }
       ],
-      "candidateReferenceCount": 157
+      "candidateReferenceCount": 158
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -77651,16 +77658,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Redaction/HiddenTextDetector.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "audit",
-            "local",
-            "ocr",
-            "redaction"
-          ]
-        },
-        {
           "path": "Excise.Core/Redaction/Recovery/CoveredContentRecovery.cs",
           "kind": "source",
           "matchedTerms": [
@@ -77703,15 +77700,6 @@
           "matchedTerms": [
             "audit",
             "log",
-            "redaction"
-          ]
-        },
-        {
-          "path": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "audit",
-            "local",
             "redaction"
           ]
         },
@@ -78196,9 +78184,27 @@
             "local",
             "redaction"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/HiddenTextDetectorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "audit",
+            "log",
+            "redaction"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "audit",
+            "log",
+            "redaction"
+          ]
         }
       ],
-      "candidateReferenceCount": 159
+      "candidateReferenceCount": 157
     },
     {
       "id": "pdfe.product.platform.printing",

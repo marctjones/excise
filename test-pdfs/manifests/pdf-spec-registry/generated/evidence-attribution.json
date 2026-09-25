@@ -39196,6 +39196,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/SharedGeometryHelperTests.cs::SharedGeometryHelperTests.UnitSquareBounds_IsWhereAnImageLands",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ReleasingADecodedImage_ThenReadingIt_ReturnsByteIdenticalSamples",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -40402,15 +40409,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.HuffmanTable_FromCanonicalLines_AssignsCodesByPrefixLength",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.HuffmanTable_LowerRange_SubtractsRangeTail",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -40677,6 +40675,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/SharedGeometryHelperTests.cs::SharedGeometryHelperTests.UnitSquareBounds_IsWhereAnImageLands",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ReleasingADecodedImage_ThenReadingIt_ReturnsByteIdenticalSamples",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -41892,15 +41897,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.HuffmanTable_LowerRange_SubtractsRangeTail",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.HuffmanTable_DecodesOutOfBandEntry",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -42143,6 +42139,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/SharedGeometryHelperTests.cs::SharedGeometryHelperTests.UnitSquareBounds_IsWhereAnImageLands",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ReleasingADecodedImage_ThenReadingIt_ReturnsByteIdenticalSamples",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -43358,15 +43361,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.HuffmanTable_LowerRange_SubtractsRangeTail",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.HuffmanTable_DecodesOutOfBandEntry",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -43707,6 +43701,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/SharedGeometryHelperTests.cs::SharedGeometryHelperTests.Selects_ReadsAnInvertedAreaAndGlyphAsTheirNormalisedSelves",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Type3FontMatrixWidthTests.cs::Type3FontMatrixWidthTests.Type3GlyphWidth_IsScaledThroughFontMatrix_NotReadAsThousandths",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -44872,15 +44873,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_RoundTripsThroughOpen_NoErrors",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_MeasureWidth_IsPositiveAndScalesWithText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -45182,6 +45174,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/SharedGeometryHelperTests.cs::SharedGeometryHelperTests.Selects_ReadsAnInvertedAreaAndGlyphAsTheirNormalisedSelves",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Type3FontMatrixWidthTests.cs::Type3FontMatrixWidthTests.Type3GlyphWidth_IsScaledThroughFontMatrix_NotReadAsThousandths",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46347,15 +46346,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_RoundTripsThroughOpen_NoErrors",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_MeasureWidth_IsPositiveAndScalesWithText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -46639,6 +46629,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/SharedGeometryHelperTests.cs::SharedGeometryHelperTests.Selects_ReadsAnInvertedAreaAndGlyphAsTheirNormalisedSelves",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Type3FontMatrixWidthTests.cs::Type3FontMatrixWidthTests.Type3GlyphWidth_IsScaledThroughFontMatrix_NotReadAsThousandths",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -47804,15 +47801,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_RoundTripsThroughOpen_NoErrors",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_MeasureWidth_IsPositiveAndScalesWithText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112862,8 +112850,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7809,
-    "testMethodsWithCapabilityCandidate": 4972,
+    "testMethods": 7826,
+    "testMethodsWithCapabilityCandidate": 4976,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
