@@ -183,8 +183,8 @@ public class ContinuousTileGridTests
     [InlineData(270, 0.87)]
     public void CellToRequest_ClipRect_MatchesCellDipRect(int rotation, double zoom)
     {
-        const double widthPt = 612, heightPt = 792;
-        var contentBox = new Excise.Core.Document.PdfRectangle(0, 0, widthPt, heightPt);
+        using var doc = OpenOnePage(rotation, "[0 0 612 792]");
+        var page = doc.GetPage(1);
         double dipPerPoint = PdfViewerControl.PointsToDip * zoom;
 
         // An interior cell positioned so it stays inside the content box under
@@ -193,7 +193,7 @@ public class ContinuousTileGridTests
         // legitimate edge clamp, not a mismatch, would trip the assertion.
         var cell = new PdfViewerControl.GridCell(1, 1, Q, Q, Q, Q);
 
-        var request = PdfViewerControl.CellToRequest(cell, zoom, rotation, contentBox);
+        var request = PdfViewerControl.CellToRequest(cell, zoom, page);
 
         request.XDip.Should().Be((int)Math.Floor(cell.XDip));
         request.YDip.Should().Be((int)Math.Floor(cell.YDip));
@@ -220,5 +220,85 @@ public class ContinuousTileGridTests
             clipW.Should().BeApproximately((float)cellWpt, 0.05f);
             clipH.Should().BeApproximately((float)cellHpt, 0.05f);
         }
+    }
+
+    /// <summary>
+    /// The visual TOP band of a Letter page, built as a grid cell, must clip the
+    /// content region the rotation puts at the top: the axis swap at 90/270 is the
+    /// #846 bug, and the origin-anchored regions below are hand-derived.
+    /// </summary>
+    [Theory]
+    [InlineData(0,   612, 396, 0,   396, 612, 792)]
+    [InlineData(90,  792, 306, 0,   0,   306, 792)]
+    [InlineData(180, 612, 396, 0,   0,   612, 396)]
+    [InlineData(270, 792, 306, 306, 0,   612, 792)]
+    public void CellToRequest_TopBand_ClipsTheContentRegionTheRotationPutsAtTheTop(
+        int rotation, double bandWidthPt, double bandHeightPt,
+        double left, double bottom, double right, double top)
+    {
+        using var doc = OpenOnePage(rotation, "[0 0 612 792]");
+        var page = doc.GetPage(1);
+        var cell = new PdfViewerControl.GridCell(
+            0, 0, 0, 0,
+            bandWidthPt * PdfViewerControl.PointsToDip,
+            bandHeightPt * PdfViewerControl.PointsToDip);
+
+        var clip = PdfViewerControl.CellToRequest(cell, 1.0, page).ClipRect;
+
+        ((double)clip.Left).Should().BeApproximately(left, 0.05);
+        ((double)clip.Top).Should().BeApproximately(bottom, 0.05);     // SKRect Top is the content Y-min
+        ((double)clip.Right).Should().BeApproximately(right, 0.05);
+        ((double)clip.Bottom).Should().BeApproximately(top, 0.05);     // SKRect Bottom is the content Y-max
+    }
+
+    /// <summary>
+    /// A cell reaching past the page is clipped to the visible (crop) box in content
+    /// space under every rotation: the renderer must never be asked to clip outside
+    /// the page, and the visible box (not the MediaBox) is the limit.
+    /// </summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(90)]
+    [InlineData(180)]
+    [InlineData(270)]
+    public void CellToRequest_CellPastThePage_IsClampedToTheEffectiveCropBox(int rotation)
+    {
+        using var doc = OpenOnePage(rotation, "[0 0 612 792]", "[50 100 400 700]");
+        var page = doc.GetPage(1);
+        var cell = new PdfViewerControl.GridCell(0, 0, 0, 0, 5000, 5000);
+
+        var clip = PdfViewerControl.CellToRequest(cell, 1.0, page).ClipRect;
+
+        ((double)clip.Left).Should().BeApproximately(50, 0.05);
+        ((double)clip.Top).Should().BeApproximately(100, 0.05);
+        ((double)clip.Right).Should().BeApproximately(400, 0.05);
+        ((double)clip.Bottom).Should().BeApproximately(700, 0.05);
+    }
+
+    private static Excise.Core.Document.PdfDocument OpenOnePage(
+        int rotate, string mediaBox, string? cropBox = null)
+    {
+        var rotateEntry = rotate == 0 ? "" : $" /Rotate {rotate}";
+        var cropBoxEntry = cropBox == null ? "" : $" /CropBox {cropBox}";
+        var bodies = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            $"<< /Type /Page /Parent 2 0 R /MediaBox {mediaBox}{cropBoxEntry}{rotateEntry} /Contents 4 0 R >>",
+            "<< /Length 0 >>\nstream\n\nendstream",
+        };
+
+        var sb = new System.Text.StringBuilder("%PDF-1.4\n");
+        var offsets = new int[bodies.Length];
+        for (int i = 0; i < bodies.Length; i++)
+        {
+            offsets[i] = sb.Length;
+            sb.Append($"{i + 1} 0 obj\n{bodies[i]}\nendobj\n");
+        }
+        int xref = sb.Length;
+        sb.Append($"xref\n0 {bodies.Length + 1}\n0000000000 65535 f \n");
+        foreach (var o in offsets) sb.Append($"{o:D10} 00000 n \n");
+        sb.Append($"trailer\n<< /Size {bodies.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
+        return Excise.Core.Document.PdfDocument.Open(System.Text.Encoding.Latin1.GetBytes(sb.ToString()));
     }
 }

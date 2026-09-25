@@ -152,6 +152,37 @@ public class PageRotationCoordinateTests
         roundTrip.Height.Should().BeApproximately(viewerRect.Height, 0.001);
     }
 
+    /// <summary>
+    /// The continuous view's tile clip (#846): the visual TOP band of a Letter
+    /// page maps to a distinct content region under each /Rotate — the axis swap
+    /// at 90/270 is what a visual-as-content clip got wrong. Expected regions are
+    /// hand-derived from the rotation, first at the origin and then shifted by a
+    /// non-zero MediaBox origin.
+    /// </summary>
+    [Theory]
+    [InlineData(0,   0,  0, 612, 396, 0,   396, 612, 792)]
+    [InlineData(90,  0,  0, 792, 306, 0,   0,   306, 792)]
+    [InlineData(180, 0,  0, 612, 396, 0,   0,   612, 396)]
+    [InlineData(270, 0,  0, 792, 306, 306, 0,   612, 792)]
+    [InlineData(0,   10, 20, 612, 396, 0,   396, 612, 792)]
+    [InlineData(90,  10, 20, 792, 306, 0,   0,   306, 792)]
+    [InlineData(180, 10, 20, 612, 396, 0,   0,   612, 396)]
+    [InlineData(270, 10, 20, 792, 306, 306, 0,   612, 792)]
+    public void VisualTopBand_MapsToContentRegion_ForEveryRotation(
+        int rotate, double ox, double oy, double vw, double vh,
+        double left, double bottom, double right, double top)
+    {
+        var page = PageWith(rotate, mediaBox: $"[{ox} {oy} {ox + 612} {oy + 792}]");
+
+        var content = PdfCoordinateMapper.ToContentPoints(
+            page, PdfPageRect.VisualPoints(page.PageNumber, 0, 0, vw, vh)).ToPdfRectangle();
+
+        content.Left.Should().BeApproximately(ox + left, 0.001);
+        content.Bottom.Should().BeApproximately(oy + bottom, 0.001);
+        content.Right.Should().BeApproximately(ox + right, 0.001);
+        content.Top.Should().BeApproximately(oy + top, 0.001);
+    }
+
     [Fact]
     public void EffectiveCropBox_ClampsToMediaBox_AndDefinesVisualDimensions()
     {
