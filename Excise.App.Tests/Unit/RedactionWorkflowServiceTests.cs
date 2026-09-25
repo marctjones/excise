@@ -137,9 +137,8 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
     }
 
     /// <summary>
-    /// The comment as qpdf decodes it, and the outline titles. The scanner
-    /// cannot see these: excise writes a UTF-16BE text string as hex or with
-    /// octal escapes, and FindTerm matches raw bytes (#1846).
+    /// The comment as qpdf decodes it, and the outline titles: each carrier
+    /// read on its own, so the surgical-scrub assertions can name it.
     /// </summary>
     private static (string Comment, string Titles) RemoteCarriers(string path)
     {
