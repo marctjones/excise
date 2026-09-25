@@ -109,10 +109,10 @@ public class RedactionReferenceVerificationTests : IDisposable
         // This is the project's central claim, stated as a pixel measurement and
         // checked by a renderer that is not ours:
         //
-        //   Excise.Core's RedactArea REMOVES glyphs. It does not draw a black box —
-        //   that is the GUI's cosmetic confirmation (RedactionService.
-        //   AppendBlackRectangle). So after a core redaction the region must come
-        //   back BLANK, not black.
+        //   Excise.Core's RedactArea REMOVES glyphs. This overload draws no black
+        //   box (the RedactionOptions overloads draw one as a cosmetic
+        //   confirmation, per DrawBox). So after it the region must come back
+        //   BLANK, not black.
         //
         // Blank is the strictly stronger result. A black box proves only that
         // something is on top of the text; blank proves the text is not there. If

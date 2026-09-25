@@ -4,6 +4,7 @@ using Excise.App.Services;
 using Excise.Core.Document;
 using Excise.Core.Editing;
 using Excise.Core.Text;
+using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -245,6 +246,32 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
         result.SkippedRedactionCount.Should().Be(1);
         result.SafetyReport.Warnings.Should().ContainSingle(
             warning => warning.Contains("skipped", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// #1834: the user's width policy reaches the area pass, and the engine
+    /// draws the box, not the App: under CloseGap it draws none.
+    /// </summary>
+    [Theory]
+    [InlineData(WidthPolicy.CollapsePreserveLayout, 1)]
+    [InlineData(WidthPolicy.CloseGap, 0)]
+    public void ApplyToDocument_RunsTheAreaPassUnderTheWidthPolicy(WidthPolicy width, int boxes)
+    {
+        var sourcePath = Path.Combine(_tempDir, "width.pdf");
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "WIDTHSECRET1834");
+        using var document = PdfDocument.Open(sourcePath);
+        int Rectangles() => document.GetPage(1).GetContentStream().Operators.Count(op => op.Name == "re");
+        var before = Rectangles();
+        var area = PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, 612, 792));
+
+        CreateWorkflow().ApplyToDocument(new RedactionApplicationRequest(
+            document,
+            new[] { new RedactionAreaTransaction(1, area, "WIDTHSECRET1834") },
+            Array.Empty<PdfTypewriterTextOperation>(),
+            Width: width));
+
+        Rectangles().Should().Be(before + boxes);
+        SavedPdfLeakScanner.FindTerm(document.SaveToBytes(), "WIDTHSECRET1834").Should().BeEmpty();
     }
 
     [Fact]

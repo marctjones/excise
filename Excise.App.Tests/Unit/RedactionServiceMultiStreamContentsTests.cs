@@ -18,9 +18,8 @@ namespace Excise.App.Tests.Unit;
 /// ContentStream(ops))</c> — no <c>SourceBytes</c>, so the append
 /// re-serialized the WHOLE page a second time even though
 /// <c>PdfPageRedactionExtensions.RedactArea</c> just did the #1093/#1449
-/// hardened splice a few lines earlier. It now calls Core's own
-/// <c>PdfDocumentRedactionExtensions.AppendBlackRectangle</c> instead of
-/// keeping a duplicate.
+/// hardened splice a few lines earlier. Core's <c>RedactArea</c> now draws
+/// the box itself (#1834).
 ///
 /// <para>These tests pin the property that duplicate existed to violate: on a
 /// multi-stream <c>/Contents</c> array, a GUI area redaction of one stream's
@@ -108,8 +107,7 @@ public class RedactionServiceMultiStreamContentsTests
 
         // PdfPageRect.FromContentPoints takes content-stream (bottom-left
         // origin) coordinates directly — a rect over ONLY the first (y=720)
-        // line's text, well clear of the second (y=500). This is the
-        // RedactArea whose AppendBlackRectangle call #1450 changed.
+        // line's text, well clear of the second (y=500).
         service.RedactArea(page, PdfPageRect.FromContentPoints(
             page.PageNumber, new PdfRectangle(60, 710, 180, 740)));
 

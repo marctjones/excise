@@ -132,7 +132,7 @@ internal sealed class DocumentPrintWorkflowService
             // Applies the pending type-over edits too; do not flatten them twice.
             var application = _redactionWorkflow.ApplyToDocument(
                 RedactionApplicationRequest.Capture(
-                    copy, job.PendingRedactions, job.PendingTypewriterOperations, job.SafetyOptions));
+                    copy, job.PendingRedactions, job.PendingTypewriterOperations, job.SafetyOptions, job.Width));
             report = application.SafetyReport;
             _logger.LogInformation(
                 "Print copy: applied {Applied} pending redaction(s), skipped {Skipped}, flattened {Typewriter} type-over edit(s)",
@@ -232,6 +232,7 @@ internal sealed record DocumentPrintJob(
     IReadOnlyList<PendingRedaction> PendingRedactions,
     IReadOnlyList<PdfTypewriterTextOperation> PendingTypewriterOperations,
     RedactedCopySafetyOptions? SafetyOptions,
+    WidthPolicy Width,
     string JobTitle,
     PrintScalingMode Scaling,
     Window? Owner)
@@ -241,6 +242,7 @@ internal sealed record DocumentPrintJob(
         IEnumerable<PendingRedaction> pendingRedactions,
         IEnumerable<PdfTypewriterTextOperation> typewriterOperations,
         RedactedCopySafetyOptions? safetyOptions,
+        WidthPolicy width,
         string jobTitle,
         PrintScalingMode scaling,
         Window? owner) =>
@@ -249,6 +251,7 @@ internal sealed record DocumentPrintJob(
             pendingRedactions.ToArray(),
             typewriterOperations.Where(operation => operation.IsPending && operation.HasText).ToArray(),
             safetyOptions,
+            width,
             jobTitle,
             scaling,
             owner);

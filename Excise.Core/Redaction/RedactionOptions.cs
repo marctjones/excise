@@ -165,7 +165,7 @@ public sealed record RedactionOptions
     /// </remarks>
     public WidthPolicy Width { get; init; } = WidthPolicy.CollapsePreserveLayout;
 
-    /// <summary>Draw the covering box over each redacted run (visual
+    /// <summary>Draw the covering box over each redacted run or area (visual
     /// confirmation only — removal is what secures). Default true. Enforced by: Core.</summary>
     public bool DrawBox { get; init; } = true;
 
