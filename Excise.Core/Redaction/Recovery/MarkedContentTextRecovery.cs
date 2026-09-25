@@ -70,56 +70,37 @@ public static class MarkedContentTextRecovery
         try { ops = page.GetContentStream().Operators; }
         catch { return; }
 
-        var properties = page.Resources?.ResolveDictionary(document, "Properties");
-
-        // One entry per open marked-content span, innermost last. Carrier spans
-        // accumulate the geometry of everything drawn inside them, including
-        // inside nested spans, so an /ActualText on an outer span still gets the
-        // box of the glyphs a nested span painted.
-        var open = new List<Span>();
-
-        // #1672: collected per page, then reduced. A NAMED list referenced by
-        // several spans is ONE carrier and must be reported once.
-        var onThisPage = new List<(MarkedContentText Text, string? Name)>();
-
+        // A span's box accumulates everything drawn inside it, nested spans
+        // included, so an /ActualText on an outer span still gets the box of
+        // the glyphs a nested span painted.
+        var drawn = new Dictionary<ContentOperator, PdfRectangle>();
         foreach (var op in ops)
         {
-            switch (op.Name)
-            {
-                case "BMC":
-                    open.Add(new Span(null, false));
-                    break;
-
-                case "BDC":
-                {
-                    var (props, named, name) = ResolveProperties(document, op, properties);
-                    open.Add(new Span(props, named, name));
-                    break;
-                }
-
-                case "EMC":
-                {
-                    if (open.Count == 0) break;   // unbalanced EMC: §14.6 violation, not fatal here
-                    var span = open[^1];
-                    open.RemoveAt(open.Count - 1);
-                    Emit(document, span, pageNumber, onThisPage);
-                    // The closed span's geometry belongs to its parent too.
-                    if (open.Count > 0 && span.Box is { } box) open[^1].Add(box);
-                    break;
-                }
-
-                default:
-                {
-                    if (op.BoundingBox is not { } box || open.Count == 0) break;
-                    foreach (var span in open) span.Add(box);
-                    break;
-                }
-            }
+            if (op.BoundingBox is not { } box) continue;
+            var b = box.Normalize();
+            foreach (var span in op.EnclosingSpans)
+                drawn[span] = drawn.TryGetValue(span, out var e)
+                    ? new PdfRectangle(
+                        Math.Min(e.Left, b.Left), Math.Min(e.Bottom, b.Bottom),
+                        Math.Max(e.Right, b.Right), Math.Max(e.Top, b.Top))
+                    : b;
         }
 
-        // §14.6: a BDC left unclosed at end-of-stream is malformed, but its
-        // carrier is still in the file and still readable, so it is reported.
-        foreach (var span in open) Emit(document, span, pageNumber, onThisPage);
+        var properties = page.Resources?.ResolveDictionary(document, "Properties");
+
+        // #1672: collected per page, then reduced. A NAMED list referenced by
+        // several spans is ONE carrier and must be reported once. §14.6: a BDC
+        // left unclosed at end-of-stream is malformed, but its carrier is still
+        // in the file and still readable, so every BDC is read.
+        var onThisPage = new List<(MarkedContentText Text, string? Name)>();
+        foreach (var op in ops)
+        {
+            if (op.Name != "BDC") continue;
+            var (props, named, name) = ResolveProperties(document, op, properties);
+            if (props != null)
+                Emit(document, props, named, name, drawn.TryGetValue(op, out var box) ? box : null,
+                    pageNumber, onThisPage);
+        }
 
         found.AddRange(Reduce(page, onThisPage));
     }
@@ -203,11 +184,14 @@ public static class MarkedContentTextRecovery
         catch { return Array.Empty<PdfRectangle>(); }
     }
 
+    // `name` is the /Properties key of the NAMED form, null for inline. #1672
+    // groups a shared dictionary by (page, name), not by instance: §14.6.2
+    // resolves a name through the page's own /Properties, so two spans naming
+    // /P1 on one page ARE one carrier, whatever instance Resolve hands back.
     private static void Emit(
-        PdfDocument document, Span span, int pageNumber,
-        List<(MarkedContentText Text, string? Name)> found)
+        PdfDocument document, PdfDictionary props, bool named, string? name, PdfRectangle? box,
+        int pageNumber, List<(MarkedContentText Text, string? Name)> found)
     {
-        if (span.Properties is not { } props) return;
         foreach (var carrier in Carriers)
         {
             if (!props.ContainsKey(carrier)) continue;
@@ -215,35 +199,8 @@ public static class MarkedContentTextRecovery
             var value = (document.Resolve(props.GetOptional(carrier) ?? PdfNull.Instance) as PdfString)?.Value;
             if (string.IsNullOrWhiteSpace(value)) continue;
             found.Add((new MarkedContentText(
-                pageNumber, $"marked-content /{carrier}", value!, span.Box, span.Named),
-                span.ResourceName));
-        }
-    }
-
-    private sealed class Span(PdfDictionary? properties, bool named, string? resourceName = null)
-    {
-        public PdfDictionary? Properties { get; } = properties;
-        public bool Named { get; } = named;
-
-        /// <summary>
-        /// The <c>/Properties</c> key for the NAMED form, null for inline.
-        /// #1672 identifies a shared dictionary by (page, this), NOT by
-        /// <see cref="PdfDictionary"/> reference — §14.6.2 resolves a name
-        /// through the page's own /Properties, so two spans naming /P1 on one
-        /// page ARE the same carrier by definition, whether or not
-        /// <c>Resolve</c> happens to hand back the same instance.
-        /// </summary>
-        public string? ResourceName { get; } = resourceName;
-        public PdfRectangle? Box { get; private set; }
-
-        public void Add(PdfRectangle box)
-        {
-            var b = box.Normalize();
-            Box = Box is { } existing
-                ? new PdfRectangle(
-                    Math.Min(existing.Left, b.Left), Math.Min(existing.Bottom, b.Bottom),
-                    Math.Max(existing.Right, b.Right), Math.Max(existing.Top, b.Top))
-                : b;
+                pageNumber, $"marked-content /{carrier}", value!, box, named),
+                name));
         }
     }
 }

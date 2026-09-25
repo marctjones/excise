@@ -175,43 +175,18 @@ internal static class StructureTreeRedactionScrubber
 
     /// <summary>
     /// The /MCID values whose marked content intersects the redaction area.
-    /// Walks the page's operators keeping a marked-content stack, exactly as a
-    /// renderer would, so nesting is handled.
+    /// Every span enclosing an operator in the area is implicated: nested spans
+    /// all describe the content we are about to delete.
     /// </summary>
     private static HashSet<int> CollectAffectedMcids(PdfPage page, PdfRectangle area)
     {
         var affected = new HashSet<int>();
-        var stack = new Stack<int?>();
-
         foreach (var op in page.GetContentStream().Operators)
         {
-            switch (op.Name)
-            {
-                case "BDC":
-                    stack.Push(ExtractMcid(op));
-                    break;
-
-                case "BMC":
-                    stack.Push(null);   // marked content with no id
-                    break;
-
-                case "EMC":
-                    if (stack.Count > 0) stack.Pop();
-                    break;
-
-                default:
-                    if (stack.Count == 0) continue;
-                    if (op.BoundingBox is not { } box) continue;
-                    if (!box.IntersectsWith(area)) continue;
-
-                    // Every enclosing marked-content id is implicated: nested
-                    // spans all describe the content we are about to delete.
-                    foreach (var mcid in stack)
-                        if (mcid is { } id) affected.Add(id);
-                    break;
-            }
+            if (op.BoundingBox is not { } box || !box.IntersectsWith(area)) continue;
+            foreach (var span in op.EnclosingSpans)
+                if (ExtractMcid(span) is { } id) affected.Add(id);
         }
-
         return affected;
     }
 

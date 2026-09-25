@@ -79,6 +79,10 @@ public class ContentStreamParser
     private readonly List<ContentOperator> _operators = new();
     private ContentOperator? _current;
 
+    // The marked-content sequences open at the current operator (§14.6). None
+    // is open where a content stream starts; a /Contents array is one stream.
+    private IReadOnlyList<ContentOperator> _openSpans = [];
+
     // Current path for bounds calculation
     private double _pathMinX, _pathMinY, _pathMaxX, _pathMaxY;
     private bool _pathStarted;
@@ -122,6 +126,7 @@ public class ContentStreamParser
         _operators.Clear();
         _current = null;
         _spanCursor = 0;
+        _openSpans = [];
 
         var sink = new OperatorSink(this);
         _walker.Walk(ref sink, cancellationToken);
@@ -197,6 +202,12 @@ public class ContentStreamParser
             _walker.Ctm_a, _walker.Ctm_b, _walker.Ctm_c,
             _walker.Ctm_d, _walker.Ctm_e, _walker.Ctm_f);
 
+        // A BDC/BMC is stamped with the spans around it; an EMC returns to the
+        // stamp of the span it closes, and a stray one closes nothing.
+        op.EnclosingSpans = _openSpans;
+        if (name is "BDC" or "BMC") _openSpans = [.. _openSpans, op];
+        else if (name == "EMC" && _openSpans.Count > 0) _openSpans = _openSpans[^1].EnclosingSpans;
+
         if (AccumulatePathConstruction(name, operands)) return;
         if (AccumulatePathPainting(name, op)) return;
         AccumulateType3GlyphMetrics(name, operands, op);
@@ -210,7 +221,10 @@ public class ContentStreamParser
         // than merely absent.
         var op = new ContentOperator("BI", new PdfObject[] { imageParams });
         if (ComputeOperatorMetadata)
+        {
             op.BoundingBox = _walker.TransformBounds(0, 0, 1, 1);
+            op.EnclosingSpans = _openSpans;
+        }
         op.InlineImageData = imageData;
         _operators.Add(op);
         _current = op;
