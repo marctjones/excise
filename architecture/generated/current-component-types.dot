@@ -6,8 +6,8 @@ digraph excise_architecture {
   subgraph cluster_delivery {
     label="delivery";
     color="#cbd5e1";
-    "app" [label="Excise.App project\npartial\n1315 retained symbols", fillcolor="#fff3bf"];
-    "cli" [label="Excise.Cli project\npartial\n497 retained symbols", fillcolor="#fff3bf"];
+    "app" [label="Excise.App project\npartial\n1314 retained symbols", fillcolor="#fff3bf"];
+    "cli" [label="Excise.Cli project\npartial\n496 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
     label="engine";
@@ -25,7 +25,7 @@ digraph excise_architecture {
     label="foundation";
     color="#cbd5e1";
     "core" [label="Excise.Core project\nimplemented\n802 retained symbols", fillcolor="#d8f3dc"];
-    "core-encryption" [label="Encryption contracts, permissions, and standard security handler\nimplemented\n45 retained symbols", fillcolor="#d8f3dc"];
+    "core-encryption" [label="Encryption contracts, permissions, and standard security handler\nimplemented\n46 retained symbols", fillcolor="#d8f3dc"];
     "core-parsing" [label="Parser, xref, filters, and hostile-input boundary\nimplemented\n574 retained symbols", fillcolor="#d8f3dc"];
     "core-primitives" [label="PDF primitives and object graph\nimplemented\n169 retained symbols", fillcolor="#d8f3dc"];
   }
@@ -57,7 +57,7 @@ digraph excise_architecture {
   "cli" -> "core" [label="38 refs / 9 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-content" [label="10 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-document" [label="170 refs / 45 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "cli" -> "core-encryption" [label="27 refs / 9 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "cli" -> "core-encryption" [label="45 refs / 17 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-parsing" [label="2 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-redaction" [label="259 refs / 58 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-security" [label="28 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -107,7 +107,7 @@ digraph excise_architecture {
   "core-writing" -> "core-encryption" [label="62 refs / 9 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-writing" -> "core-primitives" [label="232 refs / 43 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "ocr" -> "core" [label="5 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "ocr" -> "core-document" [label="54 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "ocr" -> "core-document" [label="63 refs / 18 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "ocr" -> "core-encryption" [label="1 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "ocr" -> "core-redaction" [label="2 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "ocr" -> "ocr-native" [label="5 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

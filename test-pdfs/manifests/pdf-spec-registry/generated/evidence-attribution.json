@@ -10615,6 +10615,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Allows_FollowsTable22",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Requirement_NamesEveryActionWithItsBits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.UnsignedStorageOfP_DecodesIdenticallyToSigned",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11491,20 +11505,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -12049,6 +12049,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Allows_FollowsTable22",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Requirement_NamesEveryActionWithItsBits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.UnsignedStorageOfP_DecodesIdenticallyToSigned",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12925,20 +12939,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -13476,6 +13476,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Allows_FollowsTable22",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Requirement_NamesEveryActionWithItsBits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.UnsignedStorageOfP_DecodesIdenticallyToSigned",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14352,20 +14366,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -14904,6 +14904,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Allows_FollowsTable22",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Requirement_NamesEveryActionWithItsBits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.UnsignedStorageOfP_DecodesIdenticallyToSigned",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15780,20 +15794,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -109100,6 +109100,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Allows_FollowsTable22",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Requirement_NamesEveryActionWithItsBits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.UnsignedStorageOfP_DecodesIdenticallyToSigned",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -109976,20 +109990,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -110531,6 +110531,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Allows_FollowsTable22",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Requirement_NamesEveryActionWithItsBits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.UnsignedStorageOfP_DecodesIdenticallyToSigned",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -111407,20 +111421,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -111950,6 +111950,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Allows_FollowsTable22",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.Requirement_NamesEveryActionWithItsBits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/PdfPermissionsTests.cs::PdfPermissionsTests.UnsignedStorageOfP_DecodesIdenticallyToSigned",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -112826,20 +112840,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -112906,8 +112906,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7771,
-    "testMethodsWithCapabilityCandidate": 4942,
+    "testMethods": 7779,
+    "testMethodsWithCapabilityCandidate": 4949,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
