@@ -179,9 +179,9 @@ public partial class PdfDocument : IDisposable
     /// unencrypted documents (an unencrypted document genuinely has no
     /// restrictions, and callers at the action layer shouldn't have to
     /// null-check), and the decoded <c>/P</c> value for encrypted ones.
-    /// A malformed encrypted document with an unreadable /Encrypt or /P
-    /// also decodes as all-allowed — /P is advisory metadata, and failing
-    /// open on a broken mask matches every mainstream reader.
+    /// A malformed /P, or an unreadable /Encrypt opened with
+    /// <c>allowEncrypted</c>, also decodes as all-allowed — /P is advisory
+    /// metadata, and failing open on a broken mask matches every mainstream reader.
     ///
     /// This is the raw document policy; enforcement points should consult
     /// <see cref="EffectivePermissions"/>, which additionally accounts for
@@ -329,13 +329,12 @@ public partial class PdfDocument : IDisposable
     /// </summary>
     /// <param name="stream">Stream to read.</param>
     /// <param name="ownsStream">Whether the document should dispose the stream on close.</param>
-    /// <param name="allowEncrypted">When false (default), opening an encrypted
-    /// PDF throws <see cref="Excise.Core.Parsing.PdfEncryptionNotSupportedException"/>.
-    /// excise cannot yet decrypt encrypted streams (tracked: GitHub #324).
-    /// Without this guard, encrypted streams return ciphertext bytes — features
-    /// like text extraction and redaction would silently produce wrong output.
-    /// Pass true to bypass the guard for unencrypted-dict / encrypted-stream
-    /// inspection at the caller's own risk.</param>
+    /// <param name="allowEncrypted">When false (default), an encrypted PDF that no
+    /// security handler can decrypt (unsupported handler, wrong password, missing or
+    /// unreadable /Encrypt) throws <see cref="Excise.Core.Parsing.PdfEncryptionNotSupportedException"/>:
+    /// its streams would read as ciphertext, and extraction and redaction would find
+    /// nothing and report success. When true it opens for inspection with ciphertext
+    /// streams and <see cref="IsDecrypting"/> false.</param>
     public static PdfDocument Open(Stream stream, bool ownsStream = false, bool allowEncrypted = false)
         => OpenCore(stream, ownsStream, allowEncrypted, userPassword: null);
 
