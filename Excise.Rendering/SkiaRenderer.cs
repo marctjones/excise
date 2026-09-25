@@ -1,4 +1,3 @@
-using System.Text;
 using System.Threading;
 using BitMiracle.LibJpeg.Classic;
 using Excise.Core.ColorSpaces;
@@ -551,9 +550,6 @@ internal partial class RenderContext
         _state = new GraphicsState();
         _textState = new TextState();
         _inTextBlock = false;
-
-        // Register code pages encoding provider for Windows-1252, Mac Roman, etc.
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 
     public void Render()

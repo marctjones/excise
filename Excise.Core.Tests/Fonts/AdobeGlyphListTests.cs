@@ -73,4 +73,43 @@ public class AdobeGlyphListTests
         // only the underscore-JOINED convention changed.
         AdobeGlyphList.ToUnicode(glyphName).Should().Be(expected.ToString());
     }
+
+    /// <summary>
+    /// #1831: names the renderer drew but the extractor could not decode. The
+    /// code points are AGL glyphlist.txt's, and mutool and pdftotext extract the
+    /// same ones from a <c>/Differences</c> font (a109-a112 are ZapfDingbats
+    /// names, Annex D.6; pdftotext reads them under /ZapfDingbats).
+    /// </summary>
+    [Theory]
+    [InlineData("Delta", 0x2206)] // AGL: Delta;2206, Deltagreek;0394
+    [InlineData("caron", 0x02C7)]
+    [InlineData("breve", 0x02D8)]
+    [InlineData("ring", 0x02DA)]
+    [InlineData("ogonek", 0x02DB)]
+    [InlineData("hungarumlaut", 0x02DD)]
+    [InlineData("dotaccent", 0x02D9)]
+    [InlineData("fraction", 0x2044)]
+    [InlineData("Lslash", 0x0141)]
+    [InlineData("lslash", 0x0142)]
+    [InlineData("Lcaron", 0x013D)]
+    [InlineData("lcaron", 0x013E)]
+    [InlineData("lozenge", 0x25CA)]
+    [InlineData("integral", 0x222B)]
+    [InlineData("a109", 0x2660)]
+    [InlineData("a110", 0x2665)]
+    [InlineData("a111", 0x2666)]
+    [InlineData("a112", 0x2663)]
+    public void ToUnicode_NamesTheRendererAlsoDraws_DecodeToTheAglCodePoint(string glyphName, int codePoint)
+    {
+        AdobeGlyphList.ToUnicode(glyphName).Should().Be(char.ConvertFromUtf32(codePoint));
+        AdobeGlyphList.ToGlyphName(codePoint).Should().Be(glyphName);
+    }
+
+    [Fact]
+    public void ToGlyphName_GreekCapitalDelta_HasNoAglNameOnceDeltaIsIncrement()
+    {
+        // U+0394 is AGL "Deltagreek", which the table does not carry; callers
+        // fall back to "uni0394" (ContentStreamWalker's CFF width rung).
+        AdobeGlyphList.ToGlyphName(0x0394).Should().BeNull();
+    }
 }

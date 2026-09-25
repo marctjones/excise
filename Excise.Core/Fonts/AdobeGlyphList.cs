@@ -9,10 +9,12 @@ namespace Excise.Core.Text;
 /// directly — see issue #662.
 /// </summary>
 /// <remarks>
-/// This is deliberately a subset (~200 entries) covering StandardEncoding,
-/// WinAnsiEncoding, MacRomanEncoding, and a handful of common Symbol-font
+/// This is deliberately a subset covering StandardEncoding, WinAnsiEncoding,
+/// MacRomanEncoding, and a handful of common Symbol-font and ZapfDingbats
 /// glyph names — the names that actually show up in real-world
-/// <c>/Differences</c> arrays — not the full ~4300-entry AGL. The full AGL
+/// <c>/Differences</c> arrays — not the full ~4300-entry AGL. The renderer
+/// resolves glyph names through this table too, so the glyph it draws and the
+/// text extraction reads cannot come from different tables (#1831). The full AGL
 /// also defines an algorithmic convention for names not in this table
 /// (<c>uniXXXX</c> / <c>uXXXX[XX[XX]]</c>), which is handled separately in
 /// <see cref="TextExtractor"/> before this table is consulted.
@@ -340,7 +342,6 @@ internal static class AdobeGlyphList
         ["Alpha"] = "Α",
         ["Beta"] = "Β",
         ["Gamma"] = "Γ",
-        ["Delta"] = "Δ",
         ["Epsilon"] = "Ε",
         ["Zeta"] = "Ζ",
         ["Eta"] = "Η",
@@ -407,6 +408,28 @@ internal static class AdobeGlyphList
         ["arrowup"] = "↑",
         ["arrowdown"] = "↓",
         ["arrowboth"] = "↔",
+        ["Delta"] = "\u2206", // AGL Delta;2206 (increment). U+0394 is Deltagreek.
+        ["integral"] = "∫",
+        ["lozenge"] = "◊",
+        ["fraction"] = "⁄",
+
+        // Spacing accents and Latin Extended-A (StandardEncoding / MacRomanEncoding names)
+        ["breve"] = "˘",
+        ["caron"] = "ˇ",
+        ["dotaccent"] = "˙",
+        ["hungarumlaut"] = "˝",
+        ["ogonek"] = "˛",
+        ["ring"] = "˚",
+        ["Lslash"] = "Ł",
+        ["lslash"] = "ł",
+        ["Lcaron"] = "Ľ",
+        ["lcaron"] = "ľ",
+
+        // ZapfDingbats names (Annex D.6), which PDFs use in /Differences
+        ["a109"] = "♠",
+        ["a110"] = "♥",
+        ["a111"] = "♦",
+        ["a112"] = "♣",
     };
 
     // Built once from NameToUnicode. Declared AFTER it so the static field

@@ -1193,14 +1193,12 @@ internal partial class RenderContext
     {
         if (codeToUnicode != null)
             return codeToUnicode[code];
-        if (encodingName == "ZapfDingbatsEncoding")
-            return ZapfDingbatsEncodingTable[code];
-
-        var encoding = encodingName == "MacRomanEncoding"
-            ? Encoding.GetEncoding(10000)
-            : Encoding.GetEncoding(1252);
-        var s = encoding.GetString(new[] { code });
-        return s.Length > 0 ? s[0] : '\0';
+        return encodingName switch
+        {
+            "ZapfDingbatsEncoding" => ZapfDingbatsEncodingTable[code],
+            "MacRomanEncoding" => Excise.Core.Fonts.MacRomanEncoding.Decode(code),
+            _ => Excise.Core.Fonts.WinAnsiEncoding.Decode(code),
+        };
     }
 
     // Build code→Unicode (and inverse) tables for a font whose /Encoding is a
@@ -1261,21 +1259,9 @@ internal partial class RenderContext
 
     private static char[] BuildBaseEncodingTable(string encodingName)
     {
-        if (encodingName == "ZapfDingbatsEncoding")
-            return ZapfDingbatsEncodingTable.ToArray();
-
-        var encoding = encodingName == "MacRomanEncoding"
-            ? Encoding.GetEncoding(10000)
-            : Encoding.GetEncoding(1252);
-
         var map = new char[256];
-        var buffer = new byte[1];
         for (int b = 0; b < 256; b++)
-        {
-            buffer[0] = (byte)b;
-            var decoded = encoding.GetString(buffer);
-            map[b] = decoded.Length > 0 ? decoded[0] : '\0';
-        }
+            map[b] = GetUnicodeForCode((byte)b, null, encodingName);
         return map;
     }
 
@@ -3196,38 +3182,20 @@ internal partial class RenderContext
         // /BaseEncoding + /Differences-derived map. Without this, embedded
         // subset fonts (which remap codes like 3 → "N", 4 → "A" via
         // /Differences) decode as control characters and render invisibly.
+        // No font set yet (no Tf seen) defaults to WinAnsiEncoding.
         var codeToUnicode = _currentFont?.CodeToUnicode;
-        if (codeToUnicode != null)
-        {
-            var sb = new StringBuilder(bytes.Length);
-            foreach (var b in bytes)
-            {
-                var c = codeToUnicode[b];
-                if (c != '\0') sb.Append(c);
-            }
-            return sb.ToString();
-        }
-
-        // Named-encoding fast path. WinAnsiEncoding = cp1252 is the default
-        // for most modern PDFs. No font set yet (no Tf seen) falls back to
-        // the same WinAnsiEncoding default the old _currentFontEncoding
-        // field's constructor init used.
         var encodingName = _currentFont?.EncodingName ?? "WinAnsiEncoding";
-        if (encodingName == "ZapfDingbatsEncoding")
+
+        // A /Differences map and ZapfDingbats leave codes unmapped ('\0'), and
+        // those are dropped; WinAnsi and MacRoman map every byte, 0 included.
+        var dropUnmapped = codeToUnicode != null || encodingName == "ZapfDingbatsEncoding";
+        var sb = new StringBuilder(bytes.Length);
+        foreach (var b in bytes)
         {
-            var sb = new StringBuilder(bytes.Length);
-            foreach (var b in bytes)
-            {
-                var c = ZapfDingbatsEncodingTable[b];
-                if (c != '\0') sb.Append(c);
-            }
-
-            return sb.ToString();
+            var c = GetUnicodeForCode(b, codeToUnicode, encodingName);
+            if (c != '\0' || !dropUnmapped) sb.Append(c);
         }
-
-        if (encodingName == "MacRomanEncoding")
-            return Encoding.GetEncoding(10000).GetString(bytes);
-        return Encoding.GetEncoding(1252).GetString(bytes);
+        return sb.ToString();
     }
 
     #endregion

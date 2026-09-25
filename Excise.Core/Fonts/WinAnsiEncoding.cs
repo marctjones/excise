@@ -44,6 +44,21 @@ internal static class WinAnsiEncoding
         ['œ'] = 0x9C, ['ž'] = 0x9E, ['Ÿ'] = 0x9F,
     };
 
+    // HighMap inverted. The five codes CP1252 leaves undefined decode as
+    // themselves, as .NET's CP1252 decoder does.
+    private static readonly char[] HighDecode = BuildHighDecode();
+
+    private static char[] BuildHighDecode()
+    {
+        var table = new char[0x20];
+        for (var i = 0; i < table.Length; i++) table[i] = (char)(0x80 + i);
+        foreach (var (c, b) in HighMap) table[b - 0x80] = c;
+        return table;
+    }
+
+    /// <summary>The character for <paramref name="code"/>; a code outside 0x80–0x9F decodes as itself.</summary>
+    public static char Decode(int code) => code is >= 0x80 and <= 0x9F ? HighDecode[code - 0x80] : (char)code;
+
     /// <summary>The WinAnsi byte for <paramref name="c"/>, if it has one.</summary>
     public static bool TryMap(char c, out byte b)
     {
