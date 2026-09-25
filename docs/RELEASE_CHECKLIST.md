@@ -280,10 +280,14 @@ this section exists to catch.
 - Tag with an annotated `v*` tag.
 - Push the commit and the tag.
 - **Move `main` to the release**: `git push origin v<X.Y.Z>^{commit}:main`.
-  `main` is the stable release pointer, nothing more — it only ever advances
-  to release tags. A stale `main` caused community PRs #673/#676 to target
-  dead pre-rename code (fixed 2026-07-20: default branch switched to
-  `develop`, `main` repointed to v3.1.0; the old v2.28-era `main` tip is
-  preserved by the `v2.28.0` tag).
+  `main` is the stable release pointer, nothing more: it only ever advances to
+  a release tag, by fast-forward. The pre-push hook enforces exactly that (the
+  pushed commit must carry a `v*` tag, the push must be a fast-forward, and
+  `main` cannot be deleted) and does not apply the gate-asymmetry range to it,
+  because that range is every commit since the last release. If `main` is not
+  an ancestor of the release (its history was rewritten before v3.10.0), make
+  it one without changing any file, on `develop` before tagging:
+  `git merge -s ours origin/main`. That was done for v3.12.0; after it every
+  release fast-forwards `main`.
 - Create or verify the GitHub Release.
 - Verify `.sha256` files are present for each release artifact.

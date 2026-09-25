@@ -336,6 +336,56 @@ run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA" \
 [ "$HOOK_RC" -eq 0 ] || fail "one commit under two refs must be allowed, got rc=$HOOK_RC: $HOOK_OUT"
 ok
 
+# 13b. Pushes to main. main is the release pointer: a fast-forward to a v* tag
+#      commit, judged on that and NOT on remote-main..pushed, which after a release
+#      is every commit since the last one and mixes perf and test changes by
+#      construction (v3.12.0 was refused by that range until this case existed).
+run_hook "v9.9.9^{commit} $REWRITE_SHA refs/heads/main $BASE_SHA"
+[ "$HOOK_RC" -eq 0 ] || fail "a fast-forward of main to a tagged commit must be allowed, got rc=$HOOK_RC: $HOOK_OUT"
+case "$HOOK_RAN" in
+    *"args=t0"*"base=<unset>"*"head=<unset>"*) ok ;;
+    *) fail "a main push must run t0 WITHOUT a gate-asymmetry range (that range judges the whole history since the last release): $HOOK_RAN" ;;
+esac
+
+# 13c. A commit with no release tag is refused, and the tier never starts.
+run_hook "refs/heads/develop $PERF_SHA refs/heads/main $BASE_SHA"
+[ "$HOOK_RC" -eq 1 ] || fail "an untagged commit pushed to main must be refused, got rc=$HOOK_RC: $HOOK_OUT"
+[ "$HOOK_RAN" = "<not run>" ] || fail "a refused main push must not run the tier: $HOOK_RAN"
+case "$HOOK_OUT" in
+    *"release tag"*) ok ;;
+    *) fail "the refusal must say main only takes release tags: $HOOK_OUT" ;;
+esac
+
+# 13d. A tagged commit that is not a fast-forward of the remote main is refused,
+#      with the no-content-change way out named.
+run_hook "v9.9.9^{commit} $REWRITE_SHA refs/heads/main $SIDE_SHA"
+[ "$HOOK_RC" -eq 1 ] || fail "a non-fast-forward of main must be refused, got rc=$HOOK_RC: $HOOK_OUT"
+[ "$HOOK_RAN" = "<not run>" ] || fail "a refused main push must not run the tier: $HOOK_RAN"
+case "$HOOK_OUT" in
+    *"fast-forward"*"merge -s ours"*) ok ;;
+    *) fail "the refusal must say why and name the way out: $HOOK_OUT" ;;
+esac
+
+# 13e. Creating main (all-zero remote) at a tagged commit is allowed.
+run_hook "v9.9.9^{commit} $REWRITE_SHA refs/heads/main $ZERO"
+[ "$HOOK_RC" -eq 0 ] || fail "creating main at a tagged commit must be allowed, got rc=$HOOK_RC: $HOOK_OUT"
+ok
+
+# 13f. Deleting main is refused.
+run_hook "(delete) $ZERO refs/heads/main $BASE_SHA"
+[ "$HOOK_RC" -eq 1 ] || fail "deleting main must be refused, got rc=$HOOK_RC: $HOOK_OUT"
+[ "$HOOK_RAN" = "<not run>" ] || fail "a refused deletion must not run the tier: $HOOK_RAN"
+ok
+
+# 13g. develop AND main at the same commit in one push: develop keeps its range.
+run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA" \
+         "v9.9.9^{commit} $REWRITE_SHA refs/heads/main $PERF_SHA"
+[ "$HOOK_RC" -eq 0 ] || fail "develop and main at one tagged commit must be allowed, got rc=$HOOK_RC: $HOOK_OUT"
+case "$HOOK_RAN" in
+    *"base=$BASE_SHA"*"head=$REWRITE_SHA"*) ok ;;
+    *) fail "the develop range must survive a main ref in the same push (main's remote sha is not a base): $HOOK_RAN" ;;
+esac
+
 # 14. The installed hook is a STUB that execs the tracked script, so a fix lands
 #     without re-installing. Read out of test-tier.sh rather than installed,
 #     because hooks live in the shared git dir (see the header).

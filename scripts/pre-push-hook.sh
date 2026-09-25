@@ -49,6 +49,25 @@
 #     describe what is being pushed, and a gate that reports on the wrong tree
 #     is worse than no gate.
 #
+# PUSHES TO main
+#
+# `main` is the stable release pointer and nothing else (docs/RELEASE_CHECKLIST.md,
+# "Release"): it only ever advances to a release tag, by fast-forward. So a push
+# to refs/heads/main is judged on exactly that, and NOT on the gate-asymmetry
+# range. That range would be remote-main..pushed, which after a release is every
+# commit since the last one (2,462 of them for v3.6.0..v3.12.0) and mixes perf
+# changes with test changes by construction; those commits each went through
+# their own develop push, so re-judging them together says nothing and used to
+# refuse the release. For main:
+#   * the pushed commit must carry a v* tag, else REFUSED;
+#   * the push must be a fast-forward of the remote main, else REFUSED (make
+#     main an ancestor first: `git merge -s ours origin/main` on develop is the
+#     no-content-change way, see the checklist);
+#   * deleting main is REFUSED;
+#   * no GATE_ASYMMETRY_BASE/HEAD is exported for it, and t0 still runs over the
+#     working tree, so the pushed commit must still be HEAD or an ancestor.
+# A push that carries develop AND main keeps the develop range for develop.
+#
 # There is deliberately no env override. The supported route for the refused
 # case is printed in full: run t0 in a temporary worktree at that sha, then push
 # with --no-verify. That keeps the work visible instead of letting a variable
@@ -78,7 +97,23 @@ cd "$ROOT" || exit 1
 head_sha="$(git rev-parse --verify HEAD 2>/dev/null || true)"
 base=""
 pushed=""
+range_pushed=""
 tags=""
+
+refuse_main() {
+    echo ""
+    echo "pre-push: REFUSED — a push to main must be a fast-forward to a release tag."
+    echo ""
+    echo "  $1"
+    echo ""
+    echo "  main is the stable release pointer (docs/RELEASE_CHECKLIST.md, \"Release\"):"
+    echo "    git fetch origin"
+    echo "    git push origin vX.Y.Z^{commit}:main"
+    echo "  If main is not an ancestor of the release, make it one without changing any"
+    echo "  file:  git merge -s ours origin/main   (on develop, before tagging)."
+    echo ""
+    exit 1
+}
 
 if [ ! -t 0 ]; then
     while read -r _lref lsha _rref rsha; do
@@ -86,7 +121,12 @@ if [ ! -t 0 ]; then
         # An all-zero LOCAL sha is a ref deletion: there is no tree to test and
         # no range to check, so it contributes nothing. (Pushing a deletion
         # alongside a branch is how the base for the branch still gets read.)
-        case "$lsha" in *[!0]*) ;; *) continue ;; esac
+        case "$lsha" in
+            *[!0]*) ;;
+            *)
+                [ "${_rref:-}" != "refs/heads/main" ] || refuse_main "deleting main is not allowed."
+                continue ;;
+        esac
 
         # Peel to a commit. An annotated tag's local sha is the TAG OBJECT, so
         # comparing it raw to HEAD would refuse every `git tag -a` push.
@@ -98,7 +138,26 @@ if [ ! -t 0 ]; then
             *) pushed="${pushed:+$pushed }$lcommit" ;;
         esac
 
-        case "$rsha" in *[!0]*) base="$rsha" ;; esac
+        is_main=0
+        if [ "${_rref:-}" = "refs/heads/main" ]; then
+            is_main=1
+            git describe --exact-match --tags --match 'v*' "$lcommit" >/dev/null 2>&1 \
+                || refuse_main "$lcommit is not the commit of a v* release tag."
+            case "$rsha" in
+                *[!0]*)
+                    git merge-base --is-ancestor "$rsha" "$lcommit" 2>/dev/null \
+                        || refuse_main "remote main ($rsha) is not an ancestor of $lcommit (or is not fetched), so this is not a fast-forward."
+                    ;;
+            esac
+        else
+            # The gate-asymmetry range belongs to branches under review, not to the
+            # release pointer (see "PUSHES TO main" in the header).
+            case "$rsha" in *[!0]*) base="$rsha" ;; esac
+            case " $range_pushed " in
+                *" $lcommit "*) ;;
+                *) range_pushed="${range_pushed:+$range_pushed }$lcommit" ;;
+            esac
+        fi
 
         # #1627: remember the release tags being pushed, checked below.
         case "${_rref:-}" in
@@ -168,7 +227,7 @@ if [ "$pushed_count" -eq 1 ] && [ -n "$head_sha" ] && [ "$pushed" != "$head_sha"
 fi
 
 [ -n "$base" ] && export GATE_ASYMMETRY_BASE="$base"
-[ -n "$pushed" ] && export GATE_ASYMMETRY_HEAD="$pushed"
+[ -n "$range_pushed" ] && export GATE_ASYMMETRY_HEAD="$range_pushed"
 
 # git spawns hooks with the invoking process's environment, not a login shell, so a PATH
 # fixup living only in ~/.zprofile/~/.zshrc is invisible here. Prepend the official SDK
