@@ -11,45 +11,12 @@ namespace Excise.Rendering.Tests;
 /// #846 tile-clip: the continuous view builds the render ClipRect in VISUAL
 /// (rotated) space, but <see cref="SkiaRenderer"/> applies it in CONTENT
 /// (unrotated) space, so a rotated page's visible band clips the wrong content and
-/// its top is cut off. These pin the corrected mapping — as pure math AND as an
-/// end-to-end render against real pixels.
+/// its top is cut off. This pins the corrected mapping (through
+/// <see cref="PdfCoordinateMapper"/>) against real pixels; the per-rotation
+/// numbers are pinned in Excise.Core.Tests.
 /// </summary>
-public class ContinuousTileClipTests
+public class RotatedBandClipRenderTests
 {
-    private static readonly PdfRectangle Letter = new(0, 0, 612, 792);
-
-    [Fact]
-    public void Unrotated_VisualTopHalf_MapsToContentTopHalf()
-    {
-        // 0°: visual and content agree (Y just flips). Visual top half (Y 0..396)
-        // is the content TOP half (cy 396..792).
-        var clip = ContinuousTileClip.VisualBandToContentClip(0, Letter, 0, 0, 612, 396);
-        ((double)clip.Left).Should().BeApproximately(0, 0.5);
-        ((double)clip.Right).Should().BeApproximately(612, 0.5);
-        ((double)clip.Top).Should().BeApproximately(396, 0.5);   // content Y-min
-        ((double)clip.Bottom).Should().BeApproximately(792, 0.5); // content Y-max
-    }
-
-    [Fact]
-    public void Rotated90_VisualTopHalf_MapsToContentLEFTHalf_AxisSwap()
-    {
-        // 90°: VisualWidth=792, VisualHeight=612. The visual TOP half (vy 0..306)
-        // is the content LEFT half (cx 0..306) — the axis swap the buggy code missed.
-        var clip = ContinuousTileClip.VisualBandToContentClip(90, Letter, 0, 0, 792, 306);
-        ((double)clip.Left).Should().BeApproximately(0, 0.5);
-        ((double)clip.Right).Should().BeApproximately(306, 0.5);   // LEFT half of content
-        ((double)clip.Top).Should().BeApproximately(0, 0.5);
-        ((double)clip.Bottom).Should().BeApproximately(792, 0.5);
-    }
-
-    [Fact]
-    public void Rotated270_VisualTopHalf_MapsToContentRIGHTHalf()
-    {
-        var clip = ContinuousTileClip.VisualBandToContentClip(270, Letter, 0, 0, 792, 306);
-        ((double)clip.Left).Should().BeApproximately(306, 0.5);    // RIGHT half of content
-        ((double)clip.Right).Should().BeApproximately(612, 0.5);
-    }
-
     [Fact]
     public void Rendered_Rotated90_TopHalfBand_ShowsTheVisualTopContent_NotClippedOrShifted()
     {
@@ -62,10 +29,11 @@ public class ContinuousTileClipTests
         page.Rotation.Should().Be(90);
 
         double vw = page.VisualWidth, vh = page.VisualHeight; // 792 x 612
-        var contentBox = page.MediaBox.Normalize();
 
         // Corrected content clip for the visual top-half band.
-        var good = ContinuousTileClip.VisualBandToContentClip(90, contentBox, 0, 0, vw, vh / 2);
+        var content = PdfCoordinateMapper.ToContentPoints(
+            page, PdfPageRect.VisualPoints(page.PageNumber, 0, 0, vw, vh / 2)).ToPdfRectangle();
+        var good = new SKRect((float)content.Left, (float)content.Bottom, (float)content.Right, (float)content.Top);
         var goodTile = new SkiaRenderer().RenderPage(page, new Excise.Rendering.RenderOptions { Dpi = 72, ClipRect = good });
         InkFraction(goodTile).Should().BeGreaterThan(0.8,
             "the visual top-half band of the 90°-rotated page is the black content block; the corrected clip must render it");
