@@ -183,8 +183,7 @@ public class GraphicsStateTextParameterTests
     /// neither machine tracks text rendering mode, so setting it changes no
     /// observable and the sensitivity control above could never be satisfied for
     /// it. If this test ever FAILS, some machine started tracking Tr — add it to
-    /// the q/Q snapshot (GlyphRemover.TextStateTracker already carries it) and
-    /// promote it to a row in the theory above.
+    /// the q/Q snapshot and promote it to a row in the theory above.
     /// </summary>
     [Fact]
     public void TextRenderingMode_IsThisGatesBlindSpot()

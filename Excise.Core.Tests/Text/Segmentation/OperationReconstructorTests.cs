@@ -171,18 +171,39 @@ public class OperationReconstructorTests
     }
 
     [Fact]
-    public void Reconstruct_InvalidFontInputs_FallsBackToDefaults()
+    public void Reconstruct_InvalidFontSize_FallsBackTo12()
     {
         var segments = new List<TextSegment> { MakeSegment("x", 0, 0) };
         var ops = _reconstructor.ReconstructWithPositioning(
             segments,
-            new OperationReconstructor.Context { FontName = "", FontSize = -1 });
+            new OperationReconstructor.Context { FontName = "F1", FontSize = -1 });
 
         var tf = ops.First(o => o.Name == "Tf");
-        tf.GetName(0).Should().Be("F1", "empty font name should fall back to F1");
-
         var tm = ops.First(o => o.Name == "Tm");
         tf.GetNumber(1).Should().Be(12, "invalid font size should fall back to 12pt");
         tm.GetNumber(0).Should().Be(1);
+    }
+
+    [Fact]
+    public void Reconstruct_NoFontSelected_EmitsNoTf()
+    {
+        var ops = _reconstructor.ReconstructWithPositioning(
+            new List<TextSegment> { MakeSegment("x", 0, 0) },
+            new OperationReconstructor.Context { FontName = "", FontSize = 12 });
+
+        ops.Select(o => o.Name).Should().Equal(new[] { "q", "BT", "Tm", "Tj", "ET", "Q" },
+            "§9.3.1: Tf has no initial value, so naming a font here would invent a resource (#1830)");
+    }
+
+    [Fact]
+    public void Reconstruct_ExtGStateFont_ReappliesTheExtGStateInsteadOfTf()
+    {
+        var ops = _reconstructor.ReconstructWithPositioning(
+            new List<TextSegment> { MakeSegment("x", 0, 0) },
+            new OperationReconstructor.Context { FontName = "F1", FontExtGState = "GS0", FontSize = 18 });
+
+        ops.Select(o => o.Name).Should().Equal(new[] { "q", "BT", "gs", "Tm", "Tj", "ET", "Q" },
+            "§8.4.5 Table 58: the font came from the ExtGState, and F1 is the stale Tf before it (#1830)");
+        ops.Single(o => o.Name == "gs").GetName(0).Should().Be("GS0");
     }
 }

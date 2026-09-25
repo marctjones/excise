@@ -221,17 +221,9 @@ public class GlyphRemoverTests
     public void Process_ReconstructedBlock_UsesAmbientTextState()
     {
         // Non-default text state set before the Tj that gets redacted+reconstructed;
-        // the reconstructed block should carry those non-defaults back out.
-        var ops = new List<ContentOperator>
-        {
-            ContentOperator.BeginText(),
-            new("Tf", new PdfObject[] { new PdfName("F1"), new PdfReal(10) }),
-            new("Tc", new PdfObject[] { new PdfReal(0.5) }),
-            new("Tw", new PdfObject[] { new PdfReal(2.0) }),
-            ContentOperator.TextMatrix(10, 0, 0, 10, 100, 700),
-            WithText(new ContentOperator("Tj", new PdfObject[] { new PdfString("HELLO WORLD") }), "HELLO WORLD"),
-            ContentOperator.EndText(),
-        };
+        // the reconstructed block should carry those non-defaults back out. Parsed,
+        // so the Tj carries the text state the parser stamps on it (#1830).
+        var ops = Parse("BT /F1 10 Tf 0.5 Tc 2 Tw 10 0 0 10 100 700 Tm (HELLO WORLD) Tj ET");
         var letters = LettersFor("HELLO WORLD");
         // Redact just "WORLD".
         var redactionArea = new PdfRectangle(
@@ -240,39 +232,43 @@ public class GlyphRemoverTests
             letters[10].GlyphRectangle.Right,
             letters[10].GlyphRectangle.Top);
 
-        var result = _remover.ProcessOperations(ops, letters, redactionArea);
+        var rebuilt = Rebuilt(_remover.ProcessOperations(ops, letters, redactionArea));
 
-        // Since the single Tj had letters that intersected, the whole
-        // original block is replaced wholesale by the reconstructed one.
-        // Tc + Tw must come back out because they weren't at their defaults
-        // when the original Tj was drawn.
-        result.Select(o => o.Name).Should().Contain("Tc");
-        result.Select(o => o.Name).Should().Contain("Tw");
-        result.Select(o => o.Name).Should().Contain("Tj");
-        var reconstructedText = string.Concat(result.Where(o => o.Name == "Tj")
+        // Tf, Tc and Tw must come back out in the rebuilt block itself because
+        // they were in force when the original Tj was drawn.
+        rebuilt.Single(o => o.Name == "Tf").GetName(0).Should().Be("F1");
+        rebuilt.Single(o => o.Name == "Tc").GetNumber(0).Should().Be(0.5);
+        rebuilt.Single(o => o.Name == "Tw").GetNumber(0).Should().Be(2);
+        var reconstructedText = string.Concat(rebuilt.Where(o => o.Name == "Tj")
             .Select(o => ((PdfString)o.Operands[0]).Value));
         reconstructedText.Should().StartWith("HELLO");
     }
 
     [Fact]
+    public void Process_ReconstructedDoubleQuote_UsesTheSpacingItSets()
+    {
+        // `"` sets Tw and Tc before showing its string (§9.4.3), so the rebuilt
+        // run must carry them; the parser's stamp is taken after that (#1830).
+        var ops = Parse("BT /F1 10 Tf 12 TL 10 0 0 10 100 712 Tm 2 0.5 (HELLO WORLD) \" ET");
+        var letters = LettersFor("HELLO WORLD");
+        var redactionArea = new PdfRectangle(
+            letters[6].GlyphRectangle.Left,
+            letters[6].GlyphRectangle.Bottom,
+            letters[10].GlyphRectangle.Right,
+            letters[10].GlyphRectangle.Top);
+
+        var rebuilt = Rebuilt(_remover.ProcessOperations(ops, letters, redactionArea));
+
+        rebuilt.Single(o => o.Name == "Tw").GetNumber(0).Should().Be(2);
+        rebuilt.Single(o => o.Name == "Tc").GetNumber(0).Should().Be(0.5);
+    }
+
+    [Fact]
     public void Process_Reconstruction_InheritsFontAcrossTextBlocks()
     {
-        var target = WithText(
-            new ContentOperator("Tj", new PdfObject[] { new PdfString("KEEP SECRET") }),
-            "KEEP SECRET");
-        target.BoundingBox = new PdfRectangle(100, 680, 177, 692);
-        var ops = new List<ContentOperator>
-        {
-            ContentOperator.BeginText(),
-            new("Tf", new PdfObject[] { new PdfName("F2"), new PdfReal(12) }),
-            ContentOperator.TextMatrix(1, 0, 0, 1, 100, 700),
-            WithText(new ContentOperator("Tj", new PdfObject[] { new PdfString("ANCHOR") }), "ANCHOR"),
-            ContentOperator.EndText(),
-            ContentOperator.BeginText(),
-            ContentOperator.TextMatrix(1, 0, 0, 1, 100, 680),
-            target,
-            ContentOperator.EndText(),
-        };
+        var ops = Parse(
+            "BT /F2 12 Tf 1 0 0 1 100 700 Tm (ANCHOR) Tj ET " +
+            "BT 1 0 0 1 100 680 Tm (KEEP SECRET) Tj ET");
         var letters = LettersFor("ANCHOR", y: 700)
             .Concat(LettersFor("KEEP SECRET", y: 680)).ToList();
         var secret = letters.Skip(6 + 5).Take(6).ToList();
@@ -281,7 +277,20 @@ public class GlyphRemoverTests
             secret.Min(l => l.GlyphRectangle.Left), secret.Min(l => l.GlyphRectangle.Bottom),
             secret.Max(l => l.GlyphRectangle.Right), secret.Max(l => l.GlyphRectangle.Top)));
 
-        result.Last(o => o.Name == "Tf").GetName(0).Should().Be("F2");
+        Rebuilt(result).Single(o => o.Name == "Tf").GetName(0).Should().Be("F2");
+    }
+
+    // Parsed rather than synthesized: the parser stamps each text-showing
+    // operator with the text state it ran under, which reconstruction reads.
+    private static List<ContentOperator> Parse(string content) =>
+        new ContentStreamParser(System.Text.Encoding.Latin1.GetBytes(content)).Parse().Operators.ToList();
+
+    // The block reconstruction appends: from its q to the end.
+    private static List<ContentOperator> Rebuilt(List<ContentOperator> result)
+    {
+        var q = result.FindLastIndex(o => o.Name == "q");
+        q.Should().BeGreaterThanOrEqualTo(0, "the run must have been rebuilt");
+        return result.Skip(q).ToList();
     }
 
     [Fact]

@@ -140,7 +140,6 @@ public class GlyphRemover
     {
         var blocks = IdentifyTextBlocks(operations);
         var result = new List<ContentOperator>(operations.Count);
-        var state = new TextStateTracker();
 
         int i = 0;
         while (i < operations.Count)
@@ -151,13 +150,12 @@ public class GlyphRemover
                 // Not the start of a BT — copy through and advance. Operators
                 // inside a BT we've already processed are skipped via the
                 // jump at the end of the block branch.
-                state.Apply(operations[i]);
                 result.Add(operations[i]);
                 i++;
                 continue;
             }
 
-            ProcessBlock(operations, block, letters, redactionAreas, strategy, state, result);
+            ProcessBlock(operations, block, letters, redactionAreas, strategy, result);
             i = block.EtIndex + 1;
         }
 
@@ -177,14 +175,13 @@ public class GlyphRemover
         IReadOnlyList<Letter> letters,
         IReadOnlyList<PdfRectangle> redactionAreas,
         GlyphRemovalStrategy strategy,
-        TextStateTracker state,
         List<ContentOperator> output)
     {
         // Classify each text-showing operator in the block: either its
         // letters intersect the redaction area (→ reconstruct) or they
         // don't (→ keep as-is). State operators (Tf/Tc/Tm/etc.) always
-        // pass through; we use the running state to parameterize the
-        // reconstructed block if one gets emitted.
+        // pass through; the reconstructed block, if one gets emitted, is
+        // parameterized by the text state the parser stamped on the op.
         var intersectingTextOpIndices = new HashSet<int>();
         var blankedOperators = new Dictionary<int, ContentOperator>();
         var reconstructionJobs = new List<ReconstructionJob>();
@@ -192,8 +189,6 @@ public class GlyphRemover
         for (int idx = block.BtIndex; idx <= block.EtIndex; idx++)
         {
             var op = operations[idx];
-            state.Apply(op);
-
             if (op.Category != OperatorCategory.TextShowing)
                 continue;
 
@@ -244,26 +239,18 @@ public class GlyphRemover
 
             // #942: the EFFECTIVE size, not the Tf operand. Producers routinely
             // write `/F1 1 Tf` and carry the real scale in Tm (the W-9's fonts
-            // are all size 1 by Tf, 7-12 by matrix). state.FontSize is the Tf
-            // operand, so reconstructing with it drew kept text at 1pt — the
+            // are all size 1 by Tf, 7-12 by matrix). The stamped FontSize is the
+            // Tf operand, so reconstructing with it drew kept text at 1pt — the
             // matched letters' transformed glyph heights are the ground truth
-            // for what size this run actually renders at.
+            // for what size this run actually renders at; 0 means none, and the
+            // reconstructor falls back to the stamped size.
             var effectiveSize = MedianGlyphHeight(matches);
             reconstructionJobs.Add(new ReconstructionJob
             {
+                Source = op,
                 Text = text,
                 Matches = matches,
-                FontName = state.FontName,
-                FontSize = state.FontSize,
-                EffectiveFontSize = effectiveSize > 0.01 ? effectiveSize : state.FontSize,
-                CharacterSpacing = state.CharacterSpacing,
-                WordSpacing = state.WordSpacing,
-                HorizontalScaling = state.HorizontalScaling,
-                TextRenderingMode = state.TextRenderingMode,
-                TextRise = state.TextRise,
-                TextLeading = state.TextLeading,
-                GraphicsTransform = op.GraphicsTransform,
-                TextTransform = op.TextTransform,
+                EffectiveFontSize = effectiveSize > 0.01 ? effectiveSize : 0,
             });
         }
 
@@ -392,25 +379,36 @@ public class GlyphRemover
 
             if (segments.Count == 0) continue; // entire op fully redacted
 
-            var ctx = new OperationReconstructor.Context
-            {
-                FontName = job.FontName,
-                FontSize = job.FontSize,
-                CharacterSpacing = job.CharacterSpacing,
-                WordSpacing = job.WordSpacing,
-                HorizontalScaling = job.HorizontalScaling,
-                TextRenderingMode = job.TextRenderingMode,
-                TextRise = job.TextRise,
-                TextLeading = job.TextLeading,
-                CloseWidth = CloseWidth,   // #1145, opt-in on the remover instance
-            };
             var reconstructed = _reconstructor.ReconstructWithPositioning(
-                segments, ctx, job.GraphicsTransform, job.TextTransform, job.EffectiveFontSize);
+                segments, ReconstructionContext(job.Source.TextState),
+                job.Source.GraphicsTransform, job.Source.TextTransform, job.EffectiveFontSize);
             if (reconstructed.Count == 0) continue;
             result.AddRange(reconstructed);
         }
         return result;
     }
+
+    /// <summary>
+    /// The text state the parser stamped on the source operator (#1830). A
+    /// synthetic operator carries none, so no text-state operator is emitted and
+    /// the rebuilt run draws under the ambient state.
+    /// </summary>
+    private OperationReconstructor.Context ReconstructionContext(ContentStreamWalker.TextStateSnapshot? s) =>
+        s is null
+            ? new() { FontName = "", FontSize = 0, CloseWidth = CloseWidth }
+            : new()
+            {
+                FontName = s.FontName,
+                FontExtGState = s.FontExtGState,
+                FontSize = s.FontSize,
+                CharacterSpacing = s.CharSpacing,
+                WordSpacing = s.WordSpacing,
+                HorizontalScaling = s.HorizontalScaling,
+                TextRenderingMode = s.TextRenderMode,
+                TextRise = s.TextRise,
+                TextLeading = s.TextLeading,
+                CloseWidth = CloseWidth,   // #1145, opt-in on the remover instance
+            };
 
     private static PdfRectangle ComputeBoundsFromMatches(List<LetterMatch> matches)
     {
@@ -546,87 +544,12 @@ public class GlyphRemover
         public bool ImplicitEnd { get; init; }
     }
 
-    /// <summary>A text-op classified as needing reconstruction, with its
-    /// ambient text state captured.</summary>
+    /// <summary>A text-op classified as needing reconstruction.</summary>
     private sealed class ReconstructionJob
     {
+        public required ContentOperator Source { get; init; }
         public required string Text { get; init; }
         public required List<LetterMatch> Matches { get; init; }
-        public required string FontName { get; init; }
-        public required double FontSize { get; init; }
         public required double EffectiveFontSize { get; init; }
-        public required double CharacterSpacing { get; init; }
-        public required double WordSpacing { get; init; }
-        public required double HorizontalScaling { get; init; }
-        public required int TextRenderingMode { get; init; }
-        public required double TextRise { get; init; }
-        public required double TextLeading { get; init; }
-        public ContentTransform? GraphicsTransform { get; init; }
-        public ContentTransform? TextTransform { get; init; }
-    }
-
-    /// <summary>
-    /// Keeps a running snapshot of text-state operator parameters so
-    /// reconstructed text-ops can be reconstructed under the same state the
-    /// original was drawn in. Covers the state-affecting operators we emit
-    /// back out: Tf, Tc, Tw, Tz, Tr, Ts, TL.
-    /// </summary>
-    private sealed class TextStateTracker
-    {
-        public string FontName = "F1";
-        public double FontSize = 12;
-        public double CharacterSpacing;
-        public double WordSpacing;
-        public double HorizontalScaling = 100;
-        public int TextRenderingMode;
-        public double TextRise;
-        public double TextLeading;
-        private readonly Stack<Snapshot> _stack = new();
-
-        public void Apply(ContentOperator op)
-        {
-            switch (op.Name)
-            {
-                case "q":
-                    _stack.Push(new Snapshot(
-                        FontName, FontSize, CharacterSpacing, WordSpacing,
-                        HorizontalScaling, TextRenderingMode, TextRise, TextLeading));
-                    break;
-                case "Q" when _stack.Count > 0:
-                    var saved = _stack.Pop();
-                    FontName = saved.FontName;
-                    FontSize = saved.FontSize;
-                    CharacterSpacing = saved.CharacterSpacing;
-                    WordSpacing = saved.WordSpacing;
-                    HorizontalScaling = saved.HorizontalScaling;
-                    TextRenderingMode = saved.TextRenderingMode;
-                    TextRise = saved.TextRise;
-                    TextLeading = saved.TextLeading;
-                    break;
-                case "Tf":
-                    if (op.Operands.Count >= 2)
-                    {
-                        FontName = op.GetName(0);
-                        FontSize = op.GetNumber(1);
-                    }
-                    break;
-                case "Tc": CharacterSpacing = op.GetNumber(0); break;
-                case "Tw": WordSpacing = op.GetNumber(0); break;
-                case "Tz": HorizontalScaling = op.GetNumber(0); break;
-                case "Tr": TextRenderingMode = (int)op.GetNumber(0); break;
-                case "Ts": TextRise = op.GetNumber(0); break;
-                case "TL": TextLeading = op.GetNumber(0); break;
-            }
-        }
-
-        private readonly record struct Snapshot(
-            string FontName,
-            double FontSize,
-            double CharacterSpacing,
-            double WordSpacing,
-            double HorizontalScaling,
-            int TextRenderingMode,
-            double TextRise,
-            double TextLeading);
     }
 }

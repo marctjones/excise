@@ -71,6 +71,14 @@ public class ContentOperator
     internal ContentTransform? TextTransform { get; set; }
 
     /// <summary>
+    /// Text state active when this text-showing operator began, after the
+    /// implicit side effects of <c>'</c>/<c>"</c>: what redaction rebuilds the
+    /// operator's surviving glyphs under (#1830). Null when operator metadata
+    /// was not computed or the operator was built synthetically.
+    /// </summary>
+    internal ContentStreamWalker.TextStateSnapshot? TextState { get; set; }
+
+    /// <summary>
     /// For inline-image operators (<c>BI</c>), the raw binary image data
     /// that appeared between <c>ID</c> and <c>EI</c> in the source content
     /// stream. The single <see cref="Operands"/> entry holds the image

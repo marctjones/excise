@@ -72,6 +72,8 @@
          redaction gates at 2 of 195 assertions in every worktree session for
          a month; the bound differed per copy, so no single review caught it. -->
     <Compile Include="../Excise.Core.Tests/TestSupport/TestRepoLayout.cs" Link="TestSupport/TestRepoLayout.cs" />
+    <!-- #1830: the one-page content-stream fixture, same reasoning. -->
+    <Compile Include="../Excise.Core.Tests/Content/ContentStreamFixture.cs" Link="TestSupport/ContentStreamFixture.cs" />
     <!-- #1645: the failure-mode fixture corpus. Linked rather than duplicated
          for the same reason SavedPdfLeakScanner is: the confusion matrix needs
          both the fixtures (Core.Tests) and x-ray (Excise.Rendering), and a
