@@ -487,8 +487,8 @@ public static class RedactedCopySafetyPolicy
     private static int CountRasterOverlaps(PdfPage page, PdfRectangle redactionArea)
     {
         var count = 0;
-        var ctm = Matrix23.Identity;
-        var ctmStack = new Stack<Matrix23>();
+        var ctm = ContentTransform.Identity;
+        var ctmStack = new Stack<ContentTransform>();
 
         foreach (var op in page.GetContentStream().Operators)
         {
@@ -504,11 +504,7 @@ public static class RedactedCopySafetyPolicy
                 case "cm":
                     if (op.Operands.Count >= 6)
                     {
-                        var local = new Matrix23(
-                            op.GetNumber(0), op.GetNumber(1),
-                            op.GetNumber(2), op.GetNumber(3),
-                            op.GetNumber(4), op.GetNumber(5));
-                        ctm = local.Multiply(ctm);
+                        ctm = ContentTransform.FromOperands(op).Multiply(ctm);
                     }
                     break;
                 case "Do":
@@ -521,13 +517,13 @@ public static class RedactedCopySafetyPolicy
 
                     if (page.GetXObject(name) is PdfStream stream &&
                         string.Equals(stream.GetNameOrNull("Subtype"), "Image", StringComparison.Ordinal) &&
-                        TransformedUnitSquareAabb(ctm).IntersectsWith(redactionArea))
+                        ctm.UnitSquareBounds().IntersectsWith(redactionArea))
                     {
                         count++;
                     }
                     break;
                 case "BI":
-                    if (TransformedUnitSquareAabb(ctm).IntersectsWith(redactionArea))
+                    if (ctm.UnitSquareBounds().IntersectsWith(redactionArea))
                         count++;
                     break;
             }
@@ -581,51 +577,5 @@ public static class RedactedCopySafetyPolicy
         warnings.Add(warning);
         if (!failedStages.Contains(stage))
             failedStages.Add(stage);
-    }
-
-    private static PdfRectangle TransformedUnitSquareAabb(Matrix23 matrix)
-    {
-        var p00 = matrix.Transform(0, 0);
-        var p10 = matrix.Transform(1, 0);
-        var p01 = matrix.Transform(0, 1);
-        var p11 = matrix.Transform(1, 1);
-        var minX = Math.Min(Math.Min(p00.X, p10.X), Math.Min(p01.X, p11.X));
-        var maxX = Math.Max(Math.Max(p00.X, p10.X), Math.Max(p01.X, p11.X));
-        var minY = Math.Min(Math.Min(p00.Y, p10.Y), Math.Min(p01.Y, p11.Y));
-        var maxY = Math.Max(Math.Max(p00.Y, p10.Y), Math.Max(p01.Y, p11.Y));
-        return new PdfRectangle(minX, minY, maxX, maxY);
-    }
-
-    private readonly struct Matrix23
-    {
-        private readonly double _a;
-        private readonly double _b;
-        private readonly double _c;
-        private readonly double _d;
-        private readonly double _e;
-        private readonly double _f;
-
-        public Matrix23(double a, double b, double c, double d, double e, double f)
-        {
-            _a = a;
-            _b = b;
-            _c = c;
-            _d = d;
-            _e = e;
-            _f = f;
-        }
-
-        public static Matrix23 Identity => new(1, 0, 0, 1, 0, 0);
-
-        public (double X, double Y) Transform(double x, double y) =>
-            (_a * x + _c * y + _e, _b * x + _d * y + _f);
-
-        public Matrix23 Multiply(Matrix23 other) => new(
-            _a * other._a + _b * other._c,
-            _a * other._b + _b * other._d,
-            _c * other._a + _d * other._c,
-            _c * other._b + _d * other._d,
-            _e * other._a + _f * other._c + other._e,
-            _e * other._b + _f * other._d + other._f);
     }
 }

@@ -100,6 +100,29 @@ public class NamedMarkedContentCarrierTests
             "sanity: the value really is still there — the report above must match reality");
     }
 
+    /// <summary>
+    /// The span/area overlap test was one of three copies of "do these rectangles
+    /// intersect", and this one did not normalise (#1830 F1830c). Every production
+    /// entry point normalises the area first, so the drift was latent; pinned here
+    /// so it cannot become a skipped <c>/ActualText</c> if a caller ever stops.
+    /// </summary>
+    [Fact]
+    public void Scrub_TreatsAnInvertedAreaAsItsNormalisedSelf()
+    {
+        using var pdf = PdfDocument.Open(BuildPdf(twoSpans: false));
+        var page = pdf.GetPage(1);
+        var box = page.Letters.Select(l => l.GlyphRectangle.Normalize()).ToList();
+        var inverted = new PdfRectangle(
+            box.Max(b => b.Right) + 1, box.Max(b => b.Top) + 1,
+            box.Min(b => b.Left) - 1, box.Min(b => b.Bottom) - 1);
+
+        MarkedContentCarrierScrubber.Scrub(page.GetContentStream().Operators, page, inverted)
+            .Should().BeTrue("the span's glyphs lie inside the area whichever way it is written");
+
+        SavedPdfLeakScanner.FindTerm(Save(pdf), Secret).Should().BeEmpty(
+            "the carrier must be gone from the saved bytes, not merely reported removed");
+    }
+
     private static void RedactWord(PdfPage page, string word)
     {
         var letters = page.Letters.Where(l => word.Contains(l.Value)).ToList();

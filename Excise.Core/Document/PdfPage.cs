@@ -847,6 +847,14 @@ public readonly record struct PdfRectangle(double Left, double Bottom, double Ri
                a.Bottom < b.Top && a.Top > b.Bottom;
     }
 
+    /// <summary>True when <paramref name="other"/> lies within this rectangle, edges included.</summary>
+    internal bool Contains(PdfRectangle other)
+    {
+        var a = Normalize();
+        var b = other.Normalize();
+        return b.Left >= a.Left && b.Right <= a.Right && b.Bottom >= a.Bottom && b.Top <= a.Top;
+    }
+
     /// <summary>
     /// Check if a point is contained within this rectangle.
     /// </summary>

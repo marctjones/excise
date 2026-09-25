@@ -55,9 +55,6 @@ public static class RedactionMarkDetector
     /// <summary>Form XObjects nest, and a self-referencing one is a real corpus shape.</summary>
     private const int MaxFormDepth = 8;
 
-    /// <summary>ContentTransform declares no identity; this is it.</summary>
-    private static readonly ContentTransform Identity = new(1, 0, 0, 1, 0, 0);
-
     /// <summary>Scan every page.</summary>
     public static IReadOnlyList<RedactionMark> Detect(PdfDocument document)
     {
@@ -91,7 +88,7 @@ public static class RedactionMarkDetector
 
     private static void CollectContentFills(
         PdfPage page, List<(PdfRectangle, RedactionMarkKind, string)> found)
-        => CollectFills(page, null, Identity, found, depth: 0);
+        => CollectFills(page, null, ContentTransform.Identity, found, depth: 0);
 
     /// <summary>
     /// Dark fills in a content stream, in PAGE space. <paramref name="outer"/>
@@ -180,7 +177,7 @@ public static class RedactionMarkDetector
                     if (op.BoundingBox is not { } box) break;
                     var fill = new Rgb(fillState.Current.R, fillState.Current.G, fillState.Current.B);
                     if (Luminance(fill) > DarkLuminance) break;
-                    var r = Transform(box, outer).Normalize();
+                    var r = outer.TransformBounds(box);
                     if (r.Width < MinSidePt || r.Height < MinSidePt) break;
                     if (r.Width * r.Height > MaxPageAreaFraction * pageArea) break;
                     found.Add((r,
@@ -209,38 +206,10 @@ public static class RedactionMarkDetector
     {
         if (depth >= MaxFormDepth) return;
 
-        var matrix = form.GetOptional("Matrix") is PdfArray m && m.Count == 6
-            ? new ContentTransform(
-                m.GetNumber(0), m.GetNumber(1), m.GetNumber(2),
-                m.GetNumber(3), m.GetNumber(4), m.GetNumber(5))
-            : Identity;
+        var matrix = ContentTransform.FromArray(form.GetOptional("Matrix") as PdfArray);
 
-        try { CollectFills(page, form, Compose(matrix, ctm), found, depth + 1); }
+        try { CollectFills(page, form, matrix.Multiply(ctm), found, depth + 1); }
         catch { /* a form whose content will not parse contributes no marks */ }
-    }
-
-    /// <summary>Matrix product: <paramref name="inner"/> then <paramref name="outer"/>.</summary>
-    private static ContentTransform Compose(ContentTransform inner, ContentTransform outer) => new(
-        inner.A * outer.A + inner.B * outer.C,
-        inner.A * outer.B + inner.B * outer.D,
-        inner.C * outer.A + inner.D * outer.C,
-        inner.C * outer.B + inner.D * outer.D,
-        inner.E * outer.A + inner.F * outer.C + outer.E,
-        inner.E * outer.B + inner.F * outer.D + outer.F);
-
-    /// <summary>Axis-aligned bounds of a rectangle mapped through a transform.</summary>
-    private static PdfRectangle Transform(PdfRectangle rect, ContentTransform m)
-    {
-        if (m.Equals(Identity)) return rect;
-        var r = rect.Normalize();
-        var corners = new[]
-        {
-            m.TransformPoint(r.Left, r.Bottom), m.TransformPoint(r.Right, r.Bottom),
-            m.TransformPoint(r.Left, r.Top), m.TransformPoint(r.Right, r.Top),
-        };
-        return new PdfRectangle(
-            corners.Min(c => c.X), corners.Min(c => c.Y),
-            corners.Max(c => c.X), corners.Max(c => c.Y));
     }
 
     private static void CollectAnnotations(

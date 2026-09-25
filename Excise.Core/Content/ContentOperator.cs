@@ -141,29 +141,32 @@ public class ContentOperator
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Operands = operands ?? Array.Empty<PdfObject>();
         Category = CategorizeOperator(name);
-        TextContent = ExtractTextContent(name, Operands);
+        TextContent = RawTextOperand;
     }
 
-    private static string? ExtractTextContent(string name, IReadOnlyList<PdfObject> operands)
+    /// <summary>
+    /// The string a text-showing operator draws, as the undecoded character codes
+    /// in its operand; null for any other operator or when there is none. Read
+    /// from the END of the stack, as <see cref="ContentStreamWalker"/> trims it
+    /// (§9.4.3), so this agrees with what the walker draws.
+    /// </summary>
+    internal string? RawTextOperand
     {
-        switch (name)
+        get
         {
-            case "Tj":
-            case "'":
-                return operands.Count >= 1 ? (operands[0] as PdfString)?.Value : null;
-            case "\"":
-                return operands.Count >= 3 ? (operands[2] as PdfString)?.Value : null;
-            case "TJ":
-                if (operands.Count >= 1 && operands[0] is PdfArray arr)
-                {
+            switch (Name)
+            {
+                case "Tj" or "'" when Operands.Count >= 1:
+                case "\"" when Operands.Count >= 3:
+                    return (Operands[^1] as PdfString)?.Value;
+                case "TJ" when Operands.Count >= 1 && Operands[^1] is PdfArray arr:
                     var sb = new System.Text.StringBuilder();
                     foreach (var item in arr)
                         if (item is PdfString s) sb.Append(s.Value);
                     return sb.Length > 0 ? sb.ToString() : null;
-                }
-                return null;
-            default:
-                return null;
+                default:
+                    return null;
+            }
         }
     }
 
@@ -230,32 +233,14 @@ public class ContentOperator
     /// <summary>
     /// Check if this operator's bounding box intersects with a rectangle.
     /// </summary>
-    public bool IntersectsWith(PdfRectangle rect)
-    {
-        if (BoundingBox == null)
-            return false;
-
-        var a = BoundingBox.Value.Normalize();
-        var b = rect.Normalize();
-
-        return a.Left < b.Right && a.Right > b.Left &&
-               a.Bottom < b.Top && a.Top > b.Bottom;
-    }
+    public bool IntersectsWith(PdfRectangle rect) =>
+        BoundingBox is { } box && box.IntersectsWith(rect);
 
     /// <summary>
     /// Check if this operator's bounding box is contained within a rectangle.
     /// </summary>
-    public bool IsContainedIn(PdfRectangle rect)
-    {
-        if (BoundingBox == null)
-            return false;
-
-        var a = BoundingBox.Value.Normalize();
-        var b = rect.Normalize();
-
-        return a.Left >= b.Left && a.Right <= b.Right &&
-               a.Bottom >= b.Bottom && a.Top <= b.Top;
-    }
+    public bool IsContainedIn(PdfRectangle rect) =>
+        BoundingBox is { } box && rect.Contains(box);
 
     #region Factory Methods - Graphics State
 
@@ -573,6 +558,52 @@ public class ContentOperator
 public readonly record struct ContentTransform(
     double A, double B, double C, double D, double E, double F)
 {
+    /// <summary>The identity matrix. <c>default</c> is the ZERO matrix.</summary>
+    internal static ContentTransform Identity => new(1, 0, 0, 1, 0, 0);
+
+    /// <summary>The matrix of a <c>cm</c> operator's six operands.</summary>
+    internal static ContentTransform FromOperands(ContentOperator op) => new(
+        op.GetNumber(0), op.GetNumber(1), op.GetNumber(2),
+        op.GetNumber(3), op.GetNumber(4), op.GetNumber(5));
+
+    /// <summary>A six-number <c>/Matrix</c> array; identity when absent or short. A non-number reads as 0.</summary>
+    internal static ContentTransform FromArray(PdfArray? array)
+    {
+        if (array == null || array.Count < 6) return Identity;
+        double At(int i) => array[i].TryGetNumber(out var v) ? v : 0;
+        return new(At(0), At(1), At(2), At(3), At(4), At(5));
+    }
+
+    /// <summary>
+    /// This matrix followed by <paramref name="other"/>: applying the result maps
+    /// a point through this and then through <paramref name="other"/>. A
+    /// <c>cm</c> folds in as <c>local.Multiply(ctm)</c> (§8.3.4).
+    /// </summary>
+    internal ContentTransform Multiply(ContentTransform other) => new(
+        A * other.A + B * other.C,
+        A * other.B + B * other.D,
+        C * other.A + D * other.C,
+        C * other.B + D * other.D,
+        E * other.A + F * other.C + other.E,
+        E * other.B + F * other.D + other.F);
+
+    /// <summary>Axis-aligned extent of the four corners of <paramref name="rect"/> mapped through this matrix.</summary>
+    internal PdfRectangle TransformBounds(PdfRectangle rect)
+    {
+        var (x0, y0) = TransformPoint(rect.Left, rect.Bottom);
+        var (x1, y1) = TransformPoint(rect.Right, rect.Bottom);
+        var (x2, y2) = TransformPoint(rect.Left, rect.Top);
+        var (x3, y3) = TransformPoint(rect.Right, rect.Top);
+        return new PdfRectangle(
+            Math.Min(Math.Min(x0, x1), Math.Min(x2, x3)),
+            Math.Min(Math.Min(y0, y1), Math.Min(y2, y3)),
+            Math.Max(Math.Max(x0, x1), Math.Max(x2, x3)),
+            Math.Max(Math.Max(y0, y1), Math.Max(y2, y3)));
+    }
+
+    /// <summary>Where an image lands: §8.9.5 maps every image onto the unit square.</summary>
+    internal PdfRectangle UnitSquareBounds() => TransformBounds(new PdfRectangle(0, 0, 1, 1));
+
     internal bool TryInvert(out ContentTransform inverse)
     {
         var determinant = A * D - B * C;

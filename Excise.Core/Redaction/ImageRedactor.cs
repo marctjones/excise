@@ -91,8 +91,8 @@ internal static class ImageRedactor
         regionEditedCount = 0;
         var output = new List<ContentOperator>(operations.Count);
 
-        var ctm = Matrix23.Identity;
-        var ctmStack = new Stack<Matrix23>();
+        var ctm = ContentTransform.Identity;
+        var ctmStack = new Stack<ContentTransform>();
 
         foreach (var op in operations)
         {
@@ -109,12 +109,8 @@ internal static class ImageRedactor
                 case "cm":
                     if (op.Operands.Count >= 6)
                     {
-                        var local = new Matrix23(
-                            op.GetNumber(0), op.GetNumber(1),
-                            op.GetNumber(2), op.GetNumber(3),
-                            op.GetNumber(4), op.GetNumber(5));
                         // Concat: new-CTM = local × old-CTM (PDF spec 8.3.4).
-                        ctm = local.Multiply(ctm);
+                        ctm = ContentTransform.FromOperands(op).Multiply(ctm);
                     }
                     output.Add(op);
                     continue;
@@ -132,8 +128,7 @@ internal static class ImageRedactor
                         // image, try to destroy just the covered samples instead
                         // of dropping the whole image. Fail-secure: any decline
                         // falls through to whole-Do removal below.
-                        var quad = TransformedUnitSquareAabb(ctm);
-                        if (!QuadFullyInside(quad, redactionArea)
+                        if (!redactionArea.Contains(ctm.UnitSquareBounds())
                             && image != null
                             && ImageRegionRedactor.TryRegionRedact(
                                    page, image, ctm.A, ctm.B, ctm.C, ctm.D, ctm.E, ctm.F,
@@ -155,8 +150,7 @@ internal static class ImageRedactor
                     // the current CTM, exactly like a named image XObject. Drop
                     // the whole BI…ID…EI operator (and its embedded bytes) when
                     // that quad overlaps the redaction area.
-                    if (OverlapsByStrategy(
-                            TransformedUnitSquareAabb(ctm), redactionArea, strategy))
+                    if (strategy.Selects(ctm.UnitSquareBounds(), redactionArea))
                     {
                         removedCount++;
                         continue; // drop it — embedded pixel data goes with it
@@ -257,19 +251,10 @@ internal static class ImageRedactor
             ? stream : null;
     }
 
-    /// <summary>True when <paramref name="quad"/> lies entirely within <paramref name="area"/>.</summary>
-    private static bool QuadFullyInside(PdfRectangle quad, PdfRectangle area)
-    {
-        var q = quad.Normalize();
-        var a = area.Normalize();
-        return a.Contains(q.Left, q.Bottom) && a.Contains(q.Right, q.Top)
-            && a.Contains(q.Left, q.Top) && a.Contains(q.Right, q.Bottom);
-    }
-
     private static bool ShouldRemoveImageDo(
         ContentOperator op,
         PdfPage page,
-        Matrix23 ctm,
+        ContentTransform ctm,
         PdfRectangle redactionArea,
         GlyphRemovalStrategy strategy)
     {
@@ -286,79 +271,6 @@ internal static class ImageRedactor
 
         // The image occupies the unit square in its own object space. The
         // CTM at the Do site maps that square into page space.
-        var bbox = TransformedUnitSquareAabb(ctm);
-        return OverlapsByStrategy(bbox, redactionArea, strategy);
-    }
-
-    /// <summary>
-    /// Axis-aligned bounding box of the unit square (0,0)-(1,1) after
-    /// being transformed by <paramref name="m"/>.
-    /// </summary>
-    private static PdfRectangle TransformedUnitSquareAabb(Matrix23 m)
-    {
-        var p00 = m.Transform(0, 0);
-        var p10 = m.Transform(1, 0);
-        var p01 = m.Transform(0, 1);
-        var p11 = m.Transform(1, 1);
-
-        double minX = Math.Min(Math.Min(p00.x, p10.x), Math.Min(p01.x, p11.x));
-        double maxX = Math.Max(Math.Max(p00.x, p10.x), Math.Max(p01.x, p11.x));
-        double minY = Math.Min(Math.Min(p00.y, p10.y), Math.Min(p01.y, p11.y));
-        double maxY = Math.Max(Math.Max(p00.y, p10.y), Math.Max(p01.y, p11.y));
-
-        return new PdfRectangle(minX, minY, maxX, maxY);
-    }
-
-    private static bool OverlapsByStrategy(
-        PdfRectangle bbox, PdfRectangle area, GlyphRemovalStrategy strategy)
-    {
-        var b = bbox.Normalize();
-        var a = area.Normalize();
-        if (!b.IntersectsWith(a)) return false;
-
-        bool fullyContained =
-            a.Contains(b.Left, b.Bottom) && a.Contains(b.Right, b.Top) &&
-            a.Contains(b.Left, b.Top) && a.Contains(b.Right, b.Bottom);
-
-        return strategy switch
-        {
-            GlyphRemovalStrategy.FullyContained => fullyContained,
-            GlyphRemovalStrategy.CenterPoint => a.Contains(
-                (b.Left + b.Right) * 0.5, (b.Bottom + b.Top) * 0.5),
-            _ => true, // AnyOverlap
-        };
-    }
-
-    /// <summary>
-    /// Minimal 2×3 affine matrix (PDF spec 8.3.3). Row-major layout as
-    /// stored in a <c>cm</c> operator: <c>a b c d e f</c>.
-    /// </summary>
-    private readonly struct Matrix23
-    {
-        public readonly double A, B, C, D, E, F;
-
-        public Matrix23(double a, double b, double c, double d, double e, double f)
-        { A = a; B = b; C = c; D = d; E = e; F = f; }
-
-        public static Matrix23 Identity => new(1, 0, 0, 1, 0, 0);
-
-        /// <summary>
-        /// Transform the point (x, y) by this matrix.
-        /// Per PDF spec: x' = a*x + c*y + e, y' = b*x + d*y + f.
-        /// </summary>
-        public (double x, double y) Transform(double x, double y)
-            => (A * x + C * y + E, B * x + D * y + F);
-
-        /// <summary>
-        /// Matrix multiply: <c>this × other</c>. Used to fold a local
-        /// <c>cm</c> into the existing CTM.
-        /// </summary>
-        public Matrix23 Multiply(Matrix23 o) => new(
-            A * o.A + B * o.C,
-            A * o.B + B * o.D,
-            C * o.A + D * o.C,
-            C * o.B + D * o.D,
-            E * o.A + F * o.C + o.E,
-            E * o.B + F * o.D + o.F);
+        return strategy.Selects(ctm.UnitSquareBounds(), redactionArea);
     }
 }

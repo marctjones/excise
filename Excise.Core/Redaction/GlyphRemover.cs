@@ -192,14 +192,14 @@ public class GlyphRemover
             if (op.Category != OperatorCategory.TextShowing)
                 continue;
 
-            var text = op.TextContent ?? ExtractTextFromOperands(op);
+            var text = op.TextContent ?? op.RawTextOperand;
             if (string.IsNullOrEmpty(text)) continue;
 
             var matches = _letterFinder.FindOperationLetters(text, letters, op.BoundingBox);
             if (matches.Count == 0) continue;
 
             var matchesToRemove = matches
-                .Where(m => ShouldRemoveLetter(m.Letter, redactionAreas, strategy))
+                .Where(m => redactionAreas.Any(area => strategy.Selects(m.Letter.GlyphRectangle, area)))
                 .ToList();
             if (matchesToRemove.Count == 0) continue;
 
@@ -438,62 +438,6 @@ public class GlyphRemover
                              .OrderBy(h => h)
                              .ToList();
         return heights.Count == 0 ? 0 : heights[heights.Count / 2];
-    }
-
-    private static bool ShouldRemoveLetter(
-        Letter letter,
-        IReadOnlyList<PdfRectangle> redactionAreas,
-        GlyphRemovalStrategy strategy)
-    {
-        foreach (var area in redactionAreas)
-            if (ShouldRemoveLetter(letter, area, strategy)) return true;
-        return false;
-    }
-
-    private static bool ShouldRemoveLetter(
-        Letter letter, PdfRectangle redactionArea, GlyphRemovalStrategy strategy)
-    {
-        var g = letter.GlyphRectangle.Normalize();
-        var r = redactionArea.Normalize();
-
-        bool intersects = g.IntersectsWith(r);
-        if (!intersects) return false;
-
-        bool fullyContained =
-            r.Contains(g.Left, g.Bottom) && r.Contains(g.Right, g.Top) &&
-            r.Contains(g.Left, g.Top) && r.Contains(g.Right, g.Bottom);
-
-        return strategy switch
-        {
-            GlyphRemovalStrategy.FullyContained => fullyContained,
-            GlyphRemovalStrategy.CenterPoint => r.Contains(
-                (g.Left + g.Right) * 0.5,
-                (g.Bottom + g.Top) * 0.5),
-            _ => true, // AnyOverlap
-        };
-    }
-
-    // Fallback used when the parser didn't populate TextContent. Extracts
-    // text from Tj/TJ operands directly; good enough for simple fonts where
-    // bytes map to characters 1:1.
-    private static string ExtractTextFromOperands(ContentOperator op)
-    {
-        if (op.Operands.Count == 0) return "";
-
-        // Tj, ', " — first operand is the string.
-        if (op.Name == "Tj" || op.Name == "'" || op.Name == "\"")
-        {
-            if (op.Operands[^1] is PdfString s) return s.Value;
-        }
-        // TJ — operand is an array of strings and numbers. Concatenate strings.
-        if (op.Name == "TJ" && op.Operands[0] is PdfArray arr)
-        {
-            var sb = new System.Text.StringBuilder();
-            foreach (var item in arr)
-                if (item is PdfString ps) sb.Append(ps.Value);
-            return sb.ToString();
-        }
-        return "";
     }
 
     private static List<BlockInfo> IdentifyTextBlocks(IReadOnlyList<ContentOperator> ops)

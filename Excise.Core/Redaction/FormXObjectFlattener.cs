@@ -82,7 +82,7 @@ internal static class FormXObjectFlattener
         // The top level resolves names against the page's own resources;
         // merging that into itself yields an identity rename map.
         var pageResources = ctx.PageResources;
-        output = Flatten(ctx, operations, pageResources, Matrix.Identity, redactionArea,
+        output = Flatten(ctx, operations, pageResources, ContentTransform.Identity, redactionArea,
                          applyOverlapGate: true, depth: 0);
         inlinedFormObjects = ctx.InlinedFormObjects;
         return ctx.Changed;
@@ -171,7 +171,7 @@ internal static class FormXObjectFlattener
         Context ctx,
         IReadOnlyList<ContentOperator> ops,
         PdfDictionary sourceResources,
-        Matrix ctm,
+        ContentTransform ctm,
         PdfRectangle redactionArea,
         bool applyOverlapGate,
         int depth)
@@ -180,7 +180,7 @@ internal static class FormXObjectFlattener
         var rename = ctx.MergeResources(sourceResources);
 
         var output = new List<ContentOperator>(ops.Count);
-        var ctmStack = new Stack<Matrix>();
+        var ctmStack = new Stack<ContentTransform>();
 
         foreach (var op in ops)
         {
@@ -196,7 +196,7 @@ internal static class FormXObjectFlattener
                     continue;
                 case "cm":
                     if (op.Operands.Count >= 6)
-                        ctm = Matrix.FromOperands(op).Multiply(ctm);
+                        ctm = ContentTransform.FromOperands(op).Multiply(ctm);
                     output.Add(op);
                     continue;
                 case "Do":
@@ -217,7 +217,7 @@ internal static class FormXObjectFlattener
         ContentOperator op,
         PdfDictionary sourceResources,
         RenameMap rename,
-        Matrix ctm,
+        ContentTransform ctm,
         PdfRectangle redactionArea,
         bool applyOverlapGate,
         int depth,
@@ -241,7 +241,7 @@ internal static class FormXObjectFlattener
         // #1050: RESOLVE. An unresolved /Matrix read as absent, so the form
         // was flattened at identity — mispositioned, and its glyphs then
         // compared against the redaction area at the wrong coordinates.
-        var formMatrix = Matrix.FromArray(form.ResolveArray(ctx.Doc, "Matrix"));
+        var formMatrix = ContentTransform.FromArray(form.ResolveArray(ctx.Doc, "Matrix"));
 
         // Overlap gate (top level only): skip inlining a form whose page-space
         // BBox provably misses the redaction area. Indeterminate → inline.
@@ -277,11 +277,11 @@ internal static class FormXObjectFlattener
 
         // Recurse: nested forms are always inlined (no overlap gate below the
         // top level). The result is already fully in page space.
-        var inlined = Flatten(ctx, formOps, formResources, Matrix.Identity, redactionArea,
+        var inlined = Flatten(ctx, formOps, formResources, ContentTransform.Identity, redactionArea,
                               applyOverlapGate: false, depth: depth + 1);
 
         output.Add(ContentOperator.SaveState());
-        if (!formMatrix.IsIdentity)
+        if (formMatrix != ContentTransform.Identity)
             output.Add(ContentOperator.Transform(
                 formMatrix.A, formMatrix.B, formMatrix.C, formMatrix.D, formMatrix.E, formMatrix.F));
         EmitBBoxClip(form, ctx.Doc, output);
@@ -311,7 +311,7 @@ internal static class FormXObjectFlattener
     /// the given matrix vs. the redaction area. Missing/degenerate BBox →
     /// <c>true</c> (inline rather than risk a leak).
     /// </summary>
-    private static bool FormMayOverlap(PdfStream form, PdfDocument doc, Matrix m, PdfRectangle area)
+    private static bool FormMayOverlap(PdfStream form, PdfDocument doc, ContentTransform m, PdfRectangle area)
     {
         // #1050: unresolved /BBox meant "indeterminate", so the form was
         // inlined rather than skipped -- the fail-safe branch. Correct outcome,
@@ -322,20 +322,7 @@ internal static class FormXObjectFlattener
         double x0 = NumberAt(bbox, 0), y0 = NumberAt(bbox, 1);
         double x1 = NumberAt(bbox, 2), y1 = NumberAt(bbox, 3);
 
-        var c1 = m.Transform(x0, y0);
-        var c2 = m.Transform(x1, y0);
-        var c3 = m.Transform(x1, y1);
-        var c4 = m.Transform(x0, y1);
-
-        double minX = Math.Min(Math.Min(c1.x, c2.x), Math.Min(c3.x, c4.x));
-        double maxX = Math.Max(Math.Max(c1.x, c2.x), Math.Max(c3.x, c4.x));
-        double minY = Math.Min(Math.Min(c1.y, c2.y), Math.Min(c3.y, c4.y));
-        double maxY = Math.Max(Math.Max(c1.y, c2.y), Math.Max(c3.y, c4.y));
-
-        var formBox = new PdfRectangle(minX, minY, maxX, maxY).Normalize();
-        var a = area.Normalize();
-        return formBox.Left < a.Right && formBox.Right > a.Left &&
-               formBox.Bottom < a.Top && formBox.Top > a.Bottom;
+        return m.TransformBounds(new PdfRectangle(x0, y0, x1, y1)).IntersectsWith(area);
     }
 
     // ---- operator name rewriting ----
@@ -590,41 +577,5 @@ internal static class FormXObjectFlattener
             return _byCategory.TryGetValue(category, out var inner) &&
                    inner.TryGetValue(oldName, out newName!);
         }
-    }
-
-    /// <summary>Minimal 2×3 affine matrix (PDF spec 8.3.3): <c>a b c d e f</c>.</summary>
-    private readonly struct Matrix
-    {
-        public readonly double A, B, C, D, E, F;
-
-        public Matrix(double a, double b, double c, double d, double e, double f)
-        { A = a; B = b; C = c; D = d; E = e; F = f; }
-
-        public static Matrix Identity => new(1, 0, 0, 1, 0, 0);
-
-        public bool IsIdentity =>
-            A == 1 && B == 0 && C == 0 && D == 1 && E == 0 && F == 0;
-
-        public static Matrix FromOperands(ContentOperator op) => new(
-            op.GetNumber(0), op.GetNumber(1), op.GetNumber(2),
-            op.GetNumber(3), op.GetNumber(4), op.GetNumber(5));
-
-        public static Matrix FromArray(PdfArray? a)
-        {
-            if (a == null || a.Count < 6) return Identity;
-            return new Matrix(NumberAt(a, 0), NumberAt(a, 1), NumberAt(a, 2),
-                              NumberAt(a, 3), NumberAt(a, 4), NumberAt(a, 5));
-        }
-
-        public (double x, double y) Transform(double x, double y)
-            => (A * x + C * y + E, B * x + D * y + F);
-
-        public Matrix Multiply(Matrix o) => new(
-            A * o.A + B * o.C,
-            A * o.B + B * o.D,
-            C * o.A + D * o.C,
-            C * o.B + D * o.D,
-            E * o.A + F * o.C + o.E,
-            E * o.B + F * o.D + o.F);
     }
 }

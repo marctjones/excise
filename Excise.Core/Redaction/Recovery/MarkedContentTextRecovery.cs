@@ -188,7 +188,7 @@ public static class MarkedContentTextRecovery
             if (group.Count == 1) { result.Add(group[0]); continue; }
 
             marks ??= SafeMarks(page);
-            var under = group.FirstOrDefault(g => g.Enclosed is { } b && marks!.Any(m => Overlaps(m, b)));
+            var under = group.FirstOrDefault(g => g.Enclosed is { } b && marks!.Any(m => m.IntersectsWith(b)));
             result.Add(under.Text != null ? under : group[0]);
         }
 
@@ -201,13 +201,6 @@ public static class MarkedContentTextRecovery
         // finding; it only costs the location preference.
         try { return Text.Segmentation.HiddenTextDetector.DarkFilledBoxes(page); }
         catch { return Array.Empty<PdfRectangle>(); }
-    }
-
-    private static bool Overlaps(PdfRectangle mark, PdfRectangle box)
-    {
-        var m = mark.Normalize();
-        var b = box.Normalize();
-        return m.Left < b.Right && b.Left < m.Right && m.Bottom < b.Top && b.Bottom < m.Top;
     }
 
     private static void Emit(
