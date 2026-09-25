@@ -91,11 +91,9 @@ public sealed class PdfOcrService
     /// <summary>OCR a single PDF page.</summary>
     public OcrResult RecognizePage(PdfPage page)
     {
-        if (page == null) throw new ArgumentNullException(nameof(page));
-
-        var renderer = new SkiaRenderer();
-        using var bitmap = renderer.RenderPage(page, new RenderOptions { Dpi = _dpi });
-        return RecognizeBitmap(bitmap, page.Height);
+        ArgumentNullException.ThrowIfNull(page);
+        using var bitmap = new SkiaRenderer().RenderPage(page, new RenderOptions { Dpi = _dpi });
+        return RecognizeBitmap(bitmap, page);
     }
 
     /// <summary>OCR every page of a document, one result per page.</summary>
@@ -106,20 +104,21 @@ public sealed class PdfOcrService
     }
 
     /// <summary>
-    /// OCR an already-rendered bitmap. <paramref name="pageHeightPoints"/>
-    /// is the page height in PDF points so word bboxes can be reported
-    /// in page space (PDF bottom-left) rather than pixel space.
+    /// OCR <paramref name="bitmap"/>, which must be <paramref name="page"/> as
+    /// <see cref="SkiaRenderer.RenderPage(PdfPage, RenderOptions)"/> draws it at
+    /// this service's DPI. Word boxes are reported in the page's content points.
     /// </summary>
-    public OcrResult RecognizeBitmap(SKBitmap bitmap, double pageHeightPoints)
+    public OcrResult RecognizeBitmap(SKBitmap bitmap, PdfPage page)
     {
-        if (bitmap == null) throw new ArgumentNullException(nameof(bitmap));
+        ArgumentNullException.ThrowIfNull(bitmap);
+        ArgumentNullException.ThrowIfNull(page);
 
         // Opt-in FFI fast path (#1139): hand a grayscale buffer straight to
         // libtesseract, no PNG, no subprocess. Falls through to the subprocess
         // path when not enabled or the native backend is unavailable.
         if (NativeFastPathActive)
         {
-            var native = TryRecognizeBitmapNative(bitmap, pageHeightPoints);
+            var native = TryRecognizeBitmapNative(bitmap, page);
             if (native != null) return native;
         }
 
@@ -133,7 +132,7 @@ public sealed class PdfOcrService
                 data.SaveTo(fs);
             }
 
-            return RecognizePngFile(pngPath, pageHeightPoints);
+            return RecognizePngFile(pngPath, page);
         }
         finally
         {
@@ -158,7 +157,7 @@ public sealed class PdfOcrService
     /// Invoke tesseract on <paramref name="pngPath"/> with TSV output so
     /// we get per-word bounding boxes. Parse and return.
     /// </summary>
-    private OcrResult RecognizePngFile(string pngPath, double pageHeightPoints)
+    private OcrResult RecognizePngFile(string pngPath, PdfPage page)
     {
         // tesseract <input> stdout -l eng --psm 6 tsv
         // "stdout" as the output base tells tesseract to write to stdout.
@@ -227,7 +226,7 @@ public sealed class PdfOcrService
             throw new InvalidOperationException(
                 $"tesseract exited {proc.ExitCode}. stderr:\n{err}");
 
-        return ParseTsv(tsv, pageHeightPoints);
+        return ParseTsv(tsv, page);
     }
 
     // One native engine per (language, dpi) for the process. Init loads the
@@ -266,7 +265,7 @@ public sealed class PdfOcrService
     /// parity with the subprocess <c>--psm 6</c>, and reuses <see cref="ParseTsv"/>
     /// so word bboxes come out identical to the subprocess path.
     /// </summary>
-    private OcrResult? TryRecognizeBitmapNative(SKBitmap bitmap, double pageHeightPoints)
+    private OcrResult? TryRecognizeBitmapNative(SKBitmap bitmap, PdfPage page)
     {
         var engine = GetNativeEngine();
         if (engine == null) return null;
@@ -274,7 +273,7 @@ public sealed class PdfOcrService
         byte[] gray = ToGray8(bitmap, out int width, out int height);
         // PSM 6 == "assume a single uniform block of text", matching the CLI path.
         string tsv = engine.OcrRegionTsv(gray, width, height, pageSegMode: 6);
-        return ParseTsv(tsv, pageHeightPoints, hasHeader: false);
+        return ParseTsv(tsv, page, hasHeader: false);
     }
 
     /// <summary>
@@ -314,11 +313,10 @@ public sealed class PdfOcrService
     /// 7 left, 8 top, 9 width, 10 height, 11 conf, 12 text.
     /// Only rows at level 5 carry words.
     /// </summary>
-    private OcrResult ParseTsv(string tsv, double pageHeightPoints, bool hasHeader = true)
+    internal OcrResult ParseTsv(string tsv, PdfPage page, bool hasHeader = true)
     {
         var words = new List<OcrWord>();
         var textBuilder = new System.Text.StringBuilder();
-        double pixelsPerPoint = _dpi / 72.0;
 
         var lines = tsv.Split('\n');
         // The CLI's TSV renderer emits a `level\tpage_num\t...` header row;
@@ -343,13 +341,8 @@ public sealed class PdfOcrService
             int height = Parse(parts[9]);
             double conf = Parse(parts[10]) / 100.0;
 
-            // Pixel (top-left origin) → PDF points (bottom-left origin).
-            double x1 = left / pixelsPerPoint;
-            double x2 = (left + width) / pixelsPerPoint;
-            double yTop    = pageHeightPoints - (top / pixelsPerPoint);
-            double yBottom = pageHeightPoints - ((top + height) / pixelsPerPoint);
-
-            words.Add(new OcrWord(text, new PdfRectangle(x1, yBottom, x2, yTop), (float)conf));
+            var pixels = PdfPageRect.ViewerDips(page.PageNumber, left, top, width, height, _dpi);
+            words.Add(new OcrWord(text, PdfCoordinateMapper.ToContentPoints(page, pixels).ToPdfRectangle(), (float)conf));
             textBuilder.Append(text).Append(' ');
         }
 

@@ -62,13 +62,8 @@ public sealed class DifferentialOcrAuditor
     {
         // OCR the page as displayed.
         OcrResult asIs;
-        double pageHeight;
         using (var doc = PdfDocument.Open(pdfBytes))
-        {
-            var page = doc.GetPage(pageNumber);
-            pageHeight = page.Height;
-            asIs = _ocr.RecognizePage(page);
-        }
+            asIs = _ocr.RecognizePage(doc.GetPage(pageNumber));
 
         // OCR the page with obstructions stripped.
         OcrResult stripped;
