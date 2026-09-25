@@ -24,15 +24,17 @@ namespace Excise.Core.Redaction.Recovery;
 /// An accessibility-aware reader (<c>mutool -A</c>, a screen reader) reads it
 /// straight out.</para>
 ///
-/// <para><b>Both property-list forms are read, deliberately including the one
-/// the scrubber does not remove.</b> <c>BDC</c> takes either an inline
-/// dictionary or a NAME resolving through <c>/Resources /Properties</c>
-/// (§14.6.2). The scrubber handles only the inline form — the named dictionary
-/// can be shared between spans, so positional scrubbing could over-remove.
-/// Recovery has no such constraint: reading a carrier is never destructive, and
-/// a channel that skipped the named form would be blind to a leak that is
-/// physically present. Where this reports a named-form carrier, the scrub side
-/// cannot currently close it; see #1599.</para>
+/// <para><b>Both property-list forms are read.</b> <c>BDC</c> takes either an
+/// inline dictionary or a NAME resolving through <c>/Resources /Properties</c>
+/// (§14.6.2). Reading a carrier is never destructive, and a channel that
+/// skipped either form would be blind to a leak that is physically present.</para>
+///
+/// <para><b>Every content stream a page draws is read (#1854, #1849).</b> Form
+/// XObjects, tiling patterns and Type 3 glyph procedures through the resources,
+/// and annotation appearances, each once, under the first page that draws it
+/// and with no location: its operators are not in page space. This walks what
+/// the page DRAWS, not the object graph the term scrub walks, so the audit
+/// does not share the scrub's blind spots.</para>
 ///
 /// <para><b>Location comes from the enclosed glyphs, not the carrier.</b> A
 /// carrier has no geometry of its own. The span's own <c>/MCID</c> is not used
@@ -58,9 +60,56 @@ public static class MarkedContentTextRecovery
     {
         ArgumentNullException.ThrowIfNull(document);
         var found = new List<MarkedContentText>();
+        var seen = new HashSet<PdfStream>(ReferenceEqualityComparer.Instance);
         for (var p = 1; p <= document.PageCount; p++)
-            ScanPage(document, document.GetPage(p), p, found);
+        {
+            var page = document.GetPage(p);
+            ScanPage(document, page, p, found);
+            var pending = new Stack<(PdfStream Stream, PdfDictionary? Resources)>(
+                Drawn(document, page.Resources, page.Dictionary));
+            while (pending.TryPop(out var next))
+            {
+                if (!seen.Add(next.Stream)) continue;
+                IReadOnlyList<ContentOperator> ops;
+                try { ops = new ContentStreamParser(next.Stream.DecodedData) { ComputeOperatorMetadata = false }.Parse().Operators; }
+                catch { continue; }
+                Collect(document, page, p, ops, next.Resources?.ResolveDictionary(document, "Properties"), null, found);
+                foreach (var child in Drawn(document, next.Resources, null)) pending.Push(child);
+            }
+        }
         return found;
+    }
+
+    /// <summary>
+    /// The content streams <paramref name="resources"/> can draw, each with the
+    /// resources it runs under (its own, else the caller's), plus the appearance
+    /// streams of <paramref name="page"/>'s annotations.
+    /// </summary>
+    private static IEnumerable<(PdfStream, PdfDictionary?)> Drawn(
+        PdfDocument document, PdfDictionary? resources, PdfDictionary? page)
+    {
+        foreach (var category in new[] { "XObject", "Pattern", "Font" })
+        {
+            foreach (var (_, value) in resources?.ResolveDictionary(document, category) ?? new PdfDictionary())
+            {
+                if (document.Resolve(value) is not PdfDictionary item) continue;
+                var own = item.ResolveDictionary(document, "Resources") ?? resources;
+                if (item is PdfStream s
+                    && (s.GetNameOrNull("Subtype") == "Form" || s.GetOptional("PatternType") is PdfInteger { Value: 1 }))
+                    yield return (s, own);
+                foreach (var (_, proc) in item.ResolveDictionary(document, "CharProcs") ?? new PdfDictionary())
+                    if (document.Resolve(proc) is PdfStream glyph) yield return (glyph, own);
+            }
+        }
+
+        // Each appearance (/N, /R, /D) is a stream, or a dictionary of state streams.
+        foreach (var annot in page?.ResolveArray(document, "Annots") ?? new PdfArray())
+            foreach (var (_, state) in (document.Resolve(annot) as PdfDictionary)?.ResolveDictionary(document, "AP") ?? new PdfDictionary())
+                foreach (var ap in document.Resolve(state) is PdfStream one
+                             ? [one]
+                             : ((document.Resolve(state) as PdfDictionary) ?? new PdfDictionary())
+                                 .Select(kv => document.Resolve(kv.Value)).OfType<PdfStream>())
+                    yield return (ap, ap.ResolveDictionary(document, "Resources"));
     }
 
     private static void ScanPage(
@@ -86,23 +135,28 @@ public static class MarkedContentTextRecovery
                     : b;
         }
 
-        var properties = page.Resources?.ResolveDictionary(document, "Properties");
+        Collect(document, page, pageNumber, ops, page.Resources?.ResolveDictionary(document, "Properties"), drawn, found);
+    }
 
-        // #1672: collected per page, then reduced. A NAMED list referenced by
+    private static void Collect(
+        PdfDocument document, PdfPage page, int pageNumber, IReadOnlyList<ContentOperator> ops,
+        PdfDictionary? properties, Dictionary<ContentOperator, PdfRectangle>? drawn, List<MarkedContentText> found)
+    {
+        // #1672: collected per stream, then reduced. A NAMED list referenced by
         // several spans is ONE carrier and must be reported once. §14.6: a BDC
         // left unclosed at end-of-stream is malformed, but its carrier is still
-        // in the file and still readable, so every BDC is read.
-        var onThisPage = new List<(MarkedContentText Text, string? Name)>();
+        // in the file and still readable, so every BDC is read, and every DP.
+        var collected = new List<(MarkedContentText Text, string? Name)>();
         foreach (var op in ops)
         {
-            if (op.Name != "BDC") continue;
+            if (op.Name is not ("BDC" or "DP")) continue;
             var (props, named, name) = ResolveProperties(document, op, properties);
             if (props != null)
-                Emit(document, props, named, name, drawn.TryGetValue(op, out var box) ? box : null,
-                    pageNumber, onThisPage);
+                Emit(document, props, named, name, drawn != null && drawn.TryGetValue(op, out var box) ? box : null,
+                    pageNumber, collected);
         }
 
-        found.AddRange(Reduce(page, onThisPage));
+        found.AddRange(Reduce(page, collected));
     }
 
     private static (PdfDictionary? Props, bool Named, string? Name) ResolveProperties(

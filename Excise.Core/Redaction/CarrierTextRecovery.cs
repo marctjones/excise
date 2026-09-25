@@ -22,6 +22,8 @@ namespace Excise.Core.Text.Segmentation;
 /// </para>
 /// <list type="bullet">
 ///   <item>structure tree <c>/ActualText</c>, <c>/Alt</c>, <c>/E</c>, <c>/T</c> (#636);</item>
+///   <item>marked-content property lists, inline and named, in every content stream
+///     a page draws (#1854);</item>
 ///   <item>annotation <c>/Contents</c>, <c>/RC</c>, <c>/Subj</c>, <c>/OverlayText</c>,
 ///     markup author <c>/T</c>, and every annotation's appearance-stream text;</item>
 ///   <item>AcroForm <c>/V</c>, <c>/DV</c>, <c>/RV</c>, <c>/TU</c>, <c>/Opt</c> (both halves
@@ -156,6 +158,7 @@ public static partial class CarrierTextRecovery
     {
         var interactive = new InteractiveIndex();
         Guarded(c, "structure tree", () => ScanStructureTree(doc, c));
+        Guarded(c, "marked content", () => ScanMarkedContent(doc, c));
         Guarded(c, "annotations", () => ScanAnnotations(doc, c, interactive));
         Guarded(c, "AcroForm", () => ScanAcroForm(doc, c, interactive));
         Guarded(c, "actions", () => ScanActions(doc, c, interactive));
@@ -425,6 +428,13 @@ public static partial class CarrierTextRecovery
                     elem.GetNameOrNull("S") is { } s ? $"/{s}" : null, area);
             if (elem.GetOptional("K") is { } kids) stack.Push(kids);
         }
+    }
+
+    // #1854: read by walking what each page draws, not the term scrub's object walk.
+    private static void ScanMarkedContent(PdfDocument doc, Collector c)
+    {
+        foreach (var hit in Excise.Core.Redaction.Recovery.MarkedContentTextRecovery.Scan(doc))
+            c.Text(hit.Carrier, hit.Text, hit.PageNumber, area: hit.Enclosed);
     }
 
     /// <summary>

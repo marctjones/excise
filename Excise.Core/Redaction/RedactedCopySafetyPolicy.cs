@@ -515,6 +515,9 @@ public static class RedactedCopySafetyPolicy
         var parts = new List<string>();
         for (var pageNumber = 1; pageNumber <= document.PageCount; pageNumber++)
             parts.Add(document.GetPage(pageNumber).Text);
+        // #1854: a span's /ActualText is page text to every other extractor,
+        // whatever glyphs it encloses; the page text above is the glyphs.
+        parts.AddRange(Excise.Core.Redaction.Recovery.MarkedContentTextRecovery.Scan(document).Select(hit => hit.Text));
         return string.Join(" ", parts);
     }
 

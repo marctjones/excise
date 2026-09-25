@@ -297,9 +297,12 @@ public partial class PdfPage
     /// Parse the page content, optionally recording the source span of every
     /// operator so a later <see cref="SetContentStream"/> can re-emit the
     /// untouched ones VERBATIM instead of re-serializing the whole stream
-    /// (#1093). Editing paths pass true; read-only callers pay nothing.
+    /// (#1093). Editing paths pass true; read-only callers pay nothing. An edit
+    /// that reads only operands passes <paramref name="computeOperatorMetadata"/>
+    /// false and skips the font and geometry work.
     /// </summary>
-    internal Excise.Core.Content.ContentStream GetContentStream(bool trackSourceSpans)
+    internal Excise.Core.Content.ContentStream GetContentStream(
+        bool trackSourceSpans, bool computeOperatorMetadata = true)
     {
         IReadOnlyList<int>? arrayBoundaries = null;
         byte[] bytes;
@@ -322,6 +325,7 @@ public partial class PdfPage
         {
             TrackSourceSpans = trackSourceSpans,
             ArrayBoundaries = arrayBoundaries,
+            ComputeOperatorMetadata = computeOperatorMetadata,
         };
         return parser.Parse();
     }

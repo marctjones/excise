@@ -50,9 +50,118 @@ namespace Excise.Core.Text.Segmentation;
 /// <c>PdfDocumentRedactionExtensions.RedactTextCore</c>'s
 /// <c>UnscrubbedSharedMarkedContentCarriers</c> handling), never silently
 /// dropped.</para>
+///
+/// <para><b>By term (#1854).</b> Both signals above start from removed glyphs,
+/// so a span whose <c>/ActualText</c> holds the term over glyphs that do not
+/// spell it kept it. <see cref="ScrubTerm"/> is the document-wide term stage.</para>
 /// </summary>
 internal static class MarkedContentCarrierScrubber
 {
+    /// <summary>
+    /// <see cref="Mask"/> every property list in the document with the term
+    /// policy: each NAMED list in a reachable <c>/Properties</c>, shared or not
+    /// (the term leaves the document), and each INLINE list in every content
+    /// stream (§7.8). <paramref name="unreadable"/> counts the streams that
+    /// could not be read.
+    /// </summary>
+    internal static bool ScrubTerm(PdfDocument document, System.Func<string?, string?> apply, out int unreadable)
+    {
+        var changed = false;
+        var streams = new HashSet<PdfStream>(System.Collections.Generic.ReferenceEqualityComparer.Instance);
+        foreach (var dict in RedactionFeatureStripper.ReachableDictionaries(document))
+        {
+            if (document.Resolve(dict.GetOptional("Properties") ?? PdfNull.Instance) is PdfDictionary lists)
+                foreach (var (_, list) in lists)
+                    if (document.Resolve(list) is PdfDictionary props)
+                        changed |= Mask(document, props, apply);
+
+            if (dict is PdfStream stream
+                && (stream.GetNameOrNull("Subtype") == "Form" || stream.GetOptional("PatternType") is PdfInteger { Value: 1 }))
+                streams.Add(stream);
+            // Type 3 glyphs, and appearance streams whether or not they declare /Subtype /Form.
+            foreach (var key in new[] { "CharProcs", "AP" })
+                if (document.Resolve(dict.GetOptional(key) ?? PdfNull.Instance) is PdfDictionary procs)
+                    foreach (var (_, value) in procs)
+                        switch (document.Resolve(value))
+                        {
+                            case PdfStream s: streams.Add(s); break;
+                            case PdfDictionary states:
+                                foreach (var (_, state) in states)
+                                    if (document.Resolve(state) is PdfStream a) streams.Add(a);
+                                break;
+                        }
+        }
+
+        unreadable = 0;
+        for (var p = 1; p <= document.PageCount; p++)
+        {
+            var page = document.GetPage(p);
+            try
+            {
+                if (!MayHoldPropertyList(page.GetContentStreamBytes())) continue;
+                var content = page.GetContentStream(trackSourceSpans: true, computeOperatorMetadata: false);
+                if (!MaskInline(document, content.Operators, apply)) continue;
+                page.SetContentStream(content);
+                changed = true;
+            }
+            catch (System.Exception ex) when (ex is not System.OutOfMemoryException) { unreadable++; }
+        }
+
+        foreach (var stream in streams)
+        {
+            try
+            {
+                if (stream.IsFiltered && !stream.TryEnsureDecoded()) { unreadable++; continue; }
+                var bytes = stream.DecodedData;
+                if (!MayHoldPropertyList(bytes)) continue;
+                var content = new ContentStreamParser(bytes)
+                {
+                    TrackSourceSpans = true,
+                    ComputeOperatorMetadata = false,
+                }.Parse();
+                if (!MaskInline(document, content.Operators, apply)) continue;
+                stream.DecodedData = new ContentStreamWriter().Write(content, bytes);
+                changed = true;
+            }
+            catch (System.Exception ex) when (ex is not System.OutOfMemoryException) { unreadable++; }
+        }
+        return changed;
+    }
+
+    // Operator names cannot be escaped, so a stream without these bytes has no BDC or DP.
+    private static bool MayHoldPropertyList(byte[] bytes) =>
+        bytes.AsSpan().IndexOf("BDC"u8) >= 0 || bytes.AsSpan().IndexOf("DP"u8) >= 0;
+
+    private static bool MaskInline(PdfDocument document, IReadOnlyList<ContentOperator> ops, System.Func<string?, string?> apply)
+    {
+        var changed = false;
+        foreach (var op in ops)
+            if (op.Name is "BDC" or "DP" && op.Operands.OfType<PdfDictionary>().FirstOrDefault() is { } props)
+                changed |= Mask(document, props, apply);
+        return changed;
+    }
+
+    /// <summary>
+    /// Give each text carrier of <paramref name="props"/> what <paramref name="apply"/>
+    /// returns for its value (null when it is not a string): empty drops the
+    /// key, null leaves it.
+    /// </summary>
+    private static bool Mask(PdfDocument document, PdfDictionary props, System.Func<string?, string?> apply)
+    {
+        var changed = false;
+        foreach (var carrier in StructureTreeRedactionScrubber.TextCarriers)
+        {
+            if (!props.ContainsKey(carrier)) continue;
+            // /ActualText/Alt/E may be an indirect string (#1155).
+            var value = (document.Resolve(props.GetOptional(carrier)!) as PdfString)?.Value;
+            if (apply(value) is not { } replacement) continue;
+            if (replacement.Length == 0) props.Remove(carrier);
+            else props[carrier] = new PdfString(replacement);
+            changed = true;
+        }
+        return changed;
+    }
+
     /// <summary>
     /// Scrub inline marked-content carriers in <paramref name="ops"/> — the
     /// PRE-removal content operators — for a single redaction <paramref name="area"/>.
@@ -133,24 +242,11 @@ internal static class MarkedContentCarrierScrubber
             }
 
             var enclosesRemovedGlyphs = affectedSpans.Contains(op);
-
-            foreach (var carrier in StructureTreeRedactionScrubber.TextCarriers)
-            {
-                if (!props.ContainsKey(carrier)) continue;
-
-                // /ActualText/Alt/E may be an indirect string (#1155).
-                var value = (doc.Resolve(props.GetOptional(carrier) ?? PdfNull.Instance) as PdfString)?.Value;
-
-                var restatesRemovedText = value != null && removedText.Any(t =>
+            removedAny |= Mask(doc, props, value =>
+                enclosesRemovedGlyphs || (value != null && removedText.Any(t =>
                     t.Length >= StructureTreeRedactionScrubber.MinMatchLength &&
-                    value.Contains(t, System.StringComparison.Ordinal));
-
-                if (enclosesRemovedGlyphs || restatesRemovedText)
-                {
-                    props.Remove(carrier);
-                    removedAny = true;
-                }
-            }
+                    value.Contains(t, System.StringComparison.Ordinal)))
+                    ? "" : null);
         }
 
         unscrubbedSharedCarriers = shared is { Count: > 0 }

@@ -67,6 +67,7 @@
     <Compile Include="../Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/XfaTestForms.cs" Link="TestSupport/XfaTestForms.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs" Link="TestSupport/CarrierTrapFixtures.cs" />
+    <Compile Include="../Excise.Core.Tests/TestSupport/MarkedContentCarrierFixtures.cs" Link="TestSupport/MarkedContentCarrierFixtures.cs" />
     <!-- ONE fixture/corpus locator, same reasoning (#1527). Thirteen
          hand-rolled copies of "walk up N directories" is what put the
          redaction gates at 2 of 195 assertions in every worktree session for

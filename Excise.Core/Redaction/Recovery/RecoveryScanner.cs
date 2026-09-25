@@ -234,6 +234,8 @@ public static class RecoveryScanner
         foreach (var carrier in CarrierTextRecovery.Scan(document))
         {
             cancellationToken.ThrowIfCancellationRequested();
+            // Its own channel reports it, with the enclosed glyphs' location.
+            if (carrier.Carrier.StartsWith("marked-content", StringComparison.Ordinal)) continue;
 
             // The carrier scan classifies what it finds, and the recovery model
             // has a confidence class for each. Collapsing them all to Certain
@@ -282,9 +284,6 @@ public static class RecoveryScanner
         {
             cancellationToken.ThrowIfCancellationRequested();
             var carrier = hit.NamedPropertyList
-                // Worth saying out loud in the report: the scrub side cannot
-                // currently remove this form (#1599), so a leak reported here
-                // will still be there after a re-redaction.
                 ? $"{hit.Carrier} (named property list)"
                 : hit.Carrier;
             var location = hit.Enclosed is { } box
