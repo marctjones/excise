@@ -57,6 +57,90 @@ public class ObstructionStripperTests
         page.GetContentStream().Count.Should().Be(0);
     }
 
+    // ISO 32000-2 §8.4.1 Table 52: the initial fill colour is black. A bar that sets no colour
+    // is opaque black. The independent-renderer proof is
+    // GraphicsSyntaxContentVerificationTests.PathFillObstruction_IsGoneFromAnIndependentRender_TextElsewhereSurvives.
+    [Fact]
+    public void StripObstructions_BarWithNoColourOperator_UsesInitialBlackAndIsRemoved()
+    {
+        var page = GetTestPage();
+        page.SetContentStream(new ContentStream(new List<ContentOperator>
+        {
+            ContentOperator.Rectangle(10, 10, 100, 100),
+            ContentOperator.Fill(),
+        }));
+
+        ObstructionStripper.StripObstructions(page);
+
+        var result = page.GetContentStream();
+        result.Operators.Any(op => op.Name == "re").Should().BeFalse();
+        result.Operators.Any(op => op.Name == "f").Should().BeFalse();
+    }
+
+    // §8.4.2: Q restores the fill colour saved by q, so white set inside q...Q does not outlive it.
+    [Fact]
+    public void StripObstructions_WhiteSetInsideQ_BarAfterQRelyingOnDefaultIsRemoved()
+    {
+        var page = GetTestPage();
+        page.SetContentStream(new ContentStream(new List<ContentOperator>
+        {
+            ContentOperator.SaveState(),
+            ContentOperator.SetFillRgb(1, 1, 1),
+            ContentOperator.RestoreState(),
+            ContentOperator.Rectangle(10, 10, 100, 100),
+            ContentOperator.Fill(),
+        }));
+
+        ObstructionStripper.StripObstructions(page);
+
+        var result = page.GetContentStream();
+        result.Operators.Any(op => op.Name == "re").Should().BeFalse();
+        result.Operators.Any(op => op.Name == "f").Should().BeFalse();
+    }
+
+    [Fact]
+    public void StripObstructions_DarkSetInsideQ_WhiteBarAfterQIsKept()
+    {
+        var page = GetTestPage();
+        page.SetContentStream(new ContentStream(new List<ContentOperator>
+        {
+            ContentOperator.SetFillRgb(1, 1, 1),
+            ContentOperator.SaveState(),
+            ContentOperator.SetFillGray(0.1),
+            ContentOperator.RestoreState(),
+            ContentOperator.Rectangle(10, 10, 100, 100),
+            ContentOperator.Fill(),
+        }));
+
+        ObstructionStripper.StripObstructions(page);
+
+        var result = page.GetContentStream();
+        result.Operators.Any(op => op.Name == "re").Should().BeTrue();
+        result.Operators.Any(op => op.Name == "f").Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("sc", 0.2, false)]
+    [InlineData("scn", 0.2, false)]
+    [InlineData("sc", 1.0, true)]
+    [InlineData("scn", 1.0, true)]
+    public void StripObstructions_ScAndScnGray_SetTheFillColour(string opName, double gray, bool kept)
+    {
+        var page = GetTestPage();
+        page.SetContentStream(new ContentStream(new List<ContentOperator>
+        {
+            new ContentOperator(opName, new PdfObject[] { new PdfReal(gray) }),
+            ContentOperator.Rectangle(10, 10, 100, 100),
+            ContentOperator.Fill(),
+        }));
+
+        ObstructionStripper.StripObstructions(page);
+
+        var result = page.GetContentStream();
+        result.Operators.Any(op => op.Name == "re").Should().Be(kept);
+        result.Operators.Any(op => op.Name == "f").Should().Be(kept);
+    }
+
     [Fact]
     public void StripObstructions_BlackFillRectangle_RemovesPathAndFill()
     {
