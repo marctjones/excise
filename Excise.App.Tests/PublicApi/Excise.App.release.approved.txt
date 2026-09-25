@@ -375,25 +375,12 @@ namespace Excise.App.Services
         public string ExtractTextFromPage(string pdfPath, int pageIndex) { }
         public string ExtractTextFromPage(System.IO.Stream pdfStream, int pageIndex, string sourceName = "PDF") { }
     }
-    public class RedactionOptions
-    {
-        public RedactionOptions() { }
-        public bool RemoveAllMetadata { get; set; }
-        public bool SanitizeMetadata { get; set; }
-    }
     public class RedactionService
     {
         public RedactionService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.RedactionService> logger, Microsoft.Extensions.Logging.ILoggerFactory _) { }
-        public void RedactArea(Excise.Core.Document.PdfPage page, Avalonia.Rect area, int renderDpi = 72) { }
         public void RedactArea(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfPageRect area, bool keepAttachments = false, Excise.Core.Text.Segmentation.RedactionProfile profile = 0) { }
-        public void RedactAreas(Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfPageRect> areas) { }
-        public void RedactAreas(Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Avalonia.Rect> areas, int renderDpi = 150) { }
         public Excise.App.Models.TextRedactionResult RedactText(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false, bool allowLowConfidence = false, bool wholeWord = false, Excise.Core.Text.Segmentation.WidthPolicy width = 0, bool keepAttachments = false, Excise.Core.Text.Segmentation.RedactionProfile profile = 0) { }
         public Excise.App.Models.TextRedactionResult RedactTextFlattenOcr(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false) { }
-        public void RedactWithOptions(Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfPageRect> areas, Excise.App.Services.RedactionOptions options) { }
-        public void RedactWithOptions(Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Avalonia.Rect> areas, Excise.App.Services.RedactionOptions options, int renderDpi = 150) { }
-        public void SanitizeMetadata(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms) { }
-        public void StripAllMetadata(Excise.Core.Document.PdfDocument document) { }
     }
     public sealed class SignatureVerificationSummaryFormatter
     {

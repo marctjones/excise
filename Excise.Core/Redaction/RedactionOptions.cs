@@ -106,9 +106,7 @@ public enum WidthPolicy
 ///   layer.</description></item>
 ///   <item><term>Scorched-earth carrier scrub</term><description>the engine-level
 ///   per-carrier surface SHIPPED with #1188 — see <see cref="Carriers"/> (scope)
-///   and <see cref="CarrierPolicy"/> (mode). The App's own
-///   <c>RemoveAllMetadata</c> remains a separate, blunter wholesale strip that
-///   needs no term.</description></item>
+///   and <see cref="CarrierPolicy"/> (mode).</description></item>
 ///   <item><term>Sub-3-char carrier match</term><description>the carrier policy's
 ///   3-character scrub floor is REPORTED, not configurable — a term below it is
 ///   surfaced in <see cref="RedactionReport.Carriers"/>. (Whole-word matching

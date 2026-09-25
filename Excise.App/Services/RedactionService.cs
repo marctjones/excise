@@ -1,8 +1,6 @@
-using Avalonia;
 using Microsoft.Extensions.Logging;
 using Excise.App.Models;
 using Excise.Core.Document;
-using Excise.Core.Operations;
 using Excise.Core.Text.Segmentation;
 using Excise.Ocr;
 using System;
@@ -11,18 +9,6 @@ using System.IO;
 using System.Linq;
 
 namespace Excise.App.Services;
-
-/// <summary>
-/// Options for redaction operations.
-/// </summary>
-public class RedactionOptions
-{
-    /// <summary>Remove redacted terms from document metadata (Info dict).</summary>
-    public bool SanitizeMetadata { get; set; } = true;
-
-    /// <summary>Strip the entire /Info dictionary for maximum hygiene.</summary>
-    public bool RemoveAllMetadata { get; set; } = false;
-}
 
 /// <summary>
 /// GUI-facing redaction orchestrator. A thin shell over Excise.Core:
@@ -109,31 +95,6 @@ public class RedactionService
         PdfDocumentRedactionExtensions.AppendBlackRectangle(page, coreRect);
 
         _logger.LogInformation("Redacted {Count} characters on page", removed.Count);
-    }
-
-    /// <summary>
-    /// Redact a rectangular area expressed in rendered-page pixels/DIPs.
-    /// Prefer <see cref="RedactArea(PdfPage, PdfPageRect)"/> for new code.
-    /// </summary>
-    public void RedactArea(PdfPage page, Rect area, int renderDpi = 72)
-    {
-        RedactArea(
-            page,
-            PdfPageRect.ViewerDips(page.PageNumber, area.X, area.Y, area.Width, area.Height, renderDpi));
-    }
-
-    /// <summary>Redact multiple rectangles on the same page.</summary>
-    public void RedactAreas(PdfPage page, IEnumerable<PdfPageRect> areas)
-    {
-        foreach (var area in areas)
-            RedactArea(page, area);
-    }
-
-    /// <summary>Redact multiple rendered-page rectangles on the same page.</summary>
-    public void RedactAreas(PdfPage page, IEnumerable<Rect> areas, int renderDpi = 150)
-    {
-        foreach (var area in areas)
-            RedactArea(page, area, renderDpi);
     }
 
     private static bool IntersectsVisualPage(PdfPageRect visualArea, double visualPageWidth, double visualPageHeight)
@@ -275,61 +236,6 @@ public class RedactionService
               "excise's own extraction was used as-is; install one of those tools for a confidence check on future redactions."
             : $"Redaction succeeded, but excise's extraction differs somewhat from an independent check " +
               $"({confidence.Oracle}) on one or more pages of this document. Review the result before relying on it.";
-
-    /// <summary>
-    /// Full workflow: redact multiple areas on <paramref name="page"/>,
-    /// optionally sanitize/strip metadata on <paramref name="document"/>.
-    /// </summary>
-    public void RedactWithOptions(PdfDocument document, PdfPage page, IEnumerable<Rect> areas,
-        RedactionOptions options, int renderDpi = 150)
-    {
-        foreach (var area in areas)
-            RedactArea(page, area, renderDpi);
-
-        // #897: SanitizeMetadata is satisfied by the engine, which strips the
-        // positionless carriers during RedactArea. What used to be here — a
-        // term-derived scrub fed by words harvested from the box — corrupted
-        // unrelated metadata and is gone.
-        if (options.RemoveAllMetadata)
-            StripAllMetadata(document);
-    }
-
-    /// <summary>
-    /// Full workflow: redact multiple typed areas on <paramref name="page"/>,
-    /// optionally sanitize/strip metadata on <paramref name="document"/>.
-    /// </summary>
-    public void RedactWithOptions(PdfDocument document, PdfPage page, IEnumerable<PdfPageRect> areas,
-        RedactionOptions options)
-    {
-        foreach (var area in areas)
-            RedactArea(page, area);
-
-        // #897 — see the sibling overload.
-        if (options.RemoveAllMetadata)
-            StripAllMetadata(document);
-    }
-
-    /// <summary>
-    /// Remove every entry of <paramref name="terms"/> from the document's
-    /// non-page text carriers: <c>/Info</c>, the XMP <c>/Metadata</c> packet,
-    /// outline (bookmark) titles, and annotation <c>/Contents</c>.
-    /// </summary>
-    /// <remarks>
-    /// Delegates to <see cref="PdfDocumentSanitizer"/> (#608). This previously
-    /// scrubbed only <c>/Info</c>, which left three carriers holding the redacted
-    /// string in a document whose glyphs were perfectly removed — most visibly a
-    /// bookmark title, which a reader shows in the navigation sidebar without the
-    /// page ever being opened.
-    /// </remarks>
-    public void SanitizeMetadata(PdfDocument document, IEnumerable<string> terms) =>
-        PdfDocumentSanitizer.ScrubTerms(document, terms);
-
-    /// <summary>Remove the <c>/Info</c> dictionary entirely.</summary>
-    public void StripAllMetadata(PdfDocument document)
-    {
-        if (document.Trailer.ContainsKey("Info"))
-            document.Trailer.Remove("Info");
-    }
 }
 
 /// <summary>Geometry helpers used to pre-filter letters before redaction.</summary>

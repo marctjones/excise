@@ -59,9 +59,9 @@ def is_test_path(path):
     """A test project, by directory name rather than by file suffix.
 
     The distinction matters more than it looks. RedactionService.RedactWithOptions
-    — the API that motivated this script — has TWELVE references, all of them in
-    RedactionServiceTests, and ZERO in production. A single reference count would
-    call it healthy. "Tested but never wired up" is the shape that shipped #896's
+    — the API that motivated this script, deleted in #1834 — had TWELVE
+    references, all of them in RedactionServiceTests, and ZERO in production. A
+    single reference count would have called it healthy. "Tested but never wired up" is the shape that shipped #896's
     leak, and it is only visible when the two are counted apart.
     """
     parts = path.replace("\\", "/").split("/")
@@ -367,9 +367,9 @@ def main():
     print()
     print("    The [tests-only] list is the interesting one: an API that is")
     print("    implemented and tested but that no production code calls. That is")
-    print("    exactly RedactionService.RedactWithOptions, which bundles the")
-    print("    metadata scrub with redaction, has 12 test references and 0")
-    print("    production callers — and #896 shipped a leak through the CLI")
+    print("    exactly RedactionService.RedactWithOptions (deleted in #1834), which")
+    print("    bundled the metadata scrub with redaction, had 12 test references")
+    print("    and 0 production callers — and #896 shipped a leak through the CLI")
     print("    because the safe path existed and nothing used it.")
 
     return baseline_verdict(found, args)
