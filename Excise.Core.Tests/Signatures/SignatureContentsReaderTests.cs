@@ -1,11 +1,11 @@
+using Excise.Core.Signatures;
 using AwesomeAssertions;
-using Excise.App.Services;
 using Org.BouncyCastle.Asn1;
 using System;
 using System.Linq;
 using Xunit;
 
-namespace Excise.App.Tests.Unit;
+namespace Excise.Core.Tests.Signatures;
 
 /// <summary>
 /// The CMS object inside a signature's zero-padded <c>/Contents</c> placeholder has to be sized

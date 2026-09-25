@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using AwesomeAssertions;
 using System.Reactive.Linq;
 using Microsoft.Extensions.Logging;
@@ -61,7 +62,7 @@ public class ExternalLinkClickTests
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
             new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             new PdfSearchService(NullLogger<PdfSearchService>.Instance),
-            new SignatureVerificationService(NullLogger<SignatureVerificationService>.Instance),
+            new SignatureVerificationService(null),
             new FilenameSuggestionService(),
             new ToastService(),
             dialogService: dialog);

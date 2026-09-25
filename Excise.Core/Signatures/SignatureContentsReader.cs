@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using Org.BouncyCastle.Asn1;
 
-namespace Excise.App.Services;
+namespace Excise.Core.Signatures;
 
 /// <summary>
 /// Result of splitting a signature dictionary's <c>/Contents</c> value into the

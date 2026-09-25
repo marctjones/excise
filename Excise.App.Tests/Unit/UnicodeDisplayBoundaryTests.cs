@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using System.Collections.ObjectModel;
 using AwesomeAssertions;
 using Excise.App.Models;

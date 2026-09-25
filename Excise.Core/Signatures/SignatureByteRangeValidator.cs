@@ -1,7 +1,7 @@
 using Excise.Core.Primitives;
 using System;
 
-namespace Excise.App.Services;
+namespace Excise.Core.Signatures;
 
 internal sealed class SignatureByteRangeValidationResult
 {

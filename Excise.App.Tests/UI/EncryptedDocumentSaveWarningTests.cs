@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -77,7 +78,7 @@ public class EncryptedDocumentSaveWarningTests : IDisposable
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
             new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             new PdfSearchService(NullLogger<PdfSearchService>.Instance),
-            new SignatureVerificationService(NullLogger<SignatureVerificationService>.Instance),
+            new SignatureVerificationService(null),
             new FilenameSuggestionService(),
             new ToastService(),
             dialogService: dialog);

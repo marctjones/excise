@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -59,7 +60,7 @@ public class SignedDocumentEditWarningTests : IDisposable
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
             new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             new PdfSearchService(NullLogger<PdfSearchService>.Instance),
-            new SignatureVerificationService(NullLogger<SignatureVerificationService>.Instance),
+            new SignatureVerificationService(null),
             new FilenameSuggestionService(),
             new ToastService(),
             dialogService: dialog);
@@ -72,7 +73,7 @@ public class SignedDocumentEditWarningTests : IDisposable
         TestPdfGenerator.CreateSimpleTextPdf(basePath, "Signed document warning test");
 
         using var certificate = SigningCertificateFactory.CreateSelfSigned("Signed Edit Warning Test");
-        var signer = new SignatureApplicationService(NullLogger<SignatureApplicationService>.Instance);
+        var signer = new SignatureApplicationService(null);
         using var document = PdfDocument.Open(basePath);
         var signedBytes = signer.SignDocument(document, certificate);
 

@@ -1,7 +1,7 @@
 using Excise.Core.Document;
 using Excise.Core.Primitives;
 
-namespace Excise.App.Services;
+namespace Excise.Core.Signatures;
 
 /// <summary>
 /// Cheap in-memory check for "does this document have a signed /Sig field" --

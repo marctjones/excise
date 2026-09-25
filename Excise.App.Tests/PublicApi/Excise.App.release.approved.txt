@@ -240,58 +240,6 @@ namespace Excise.App.Services
         public System.Threading.Tasks.Task ShowMessageAsync(string title, string message) { }
         public System.Threading.Tasks.Task<Excise.App.Services.UnsavedChangesDecision> ShowUnsavedChangesAsync(string title, string message, string saveActionText) { }
     }
-    public class BatesDocumentResult
-    {
-        public BatesDocumentResult() { }
-        public string? ErrorMessage { get; set; }
-        public string FileName { get; set; }
-        public string FilePath { get; set; }
-        public string FirstBatesNumber { get; set; }
-        public string LastBatesNumber { get; set; }
-        public string OutputPath { get; set; }
-        public int PageCount { get; set; }
-        public bool Success { get; set; }
-    }
-    public class BatesNumberingService
-    {
-        public BatesNumberingService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.BatesNumberingService> logger) { }
-        public void ApplyBatesNumbers(Excise.Core.Document.PdfDocument document, Excise.App.Services.BatesOptions options) { }
-        public Excise.App.Services.BatesResult ApplyBatesNumbersToSet(System.Collections.Generic.IEnumerable<string> filePaths, Excise.App.Services.BatesOptions options) { }
-        public int CalculateNextNumber(System.Collections.Generic.IEnumerable<string> filePaths, int startNumber) { }
-    }
-    public class BatesOptions
-    {
-        public BatesOptions() { }
-        public string FontName { get; set; }
-        public double FontSize { get; set; }
-        public double MarginX { get; set; }
-        public double MarginY { get; set; }
-        public int NumberOfDigits { get; set; }
-        public string? OutputDirectory { get; set; }
-        public string OutputSuffix { get; set; }
-        public Excise.App.Services.BatesPosition Position { get; set; }
-        public string Prefix { get; set; }
-        public int StartNumber { get; set; }
-        public string Suffix { get; set; }
-    }
-    public enum BatesPosition
-    {
-        TopLeft = 0,
-        TopCenter = 1,
-        TopRight = 2,
-        BottomLeft = 3,
-        BottomCenter = 4,
-        BottomRight = 5,
-    }
-    public class BatesResult
-    {
-        public BatesResult() { }
-        public System.Collections.Generic.List<Excise.App.Services.BatesDocumentResult> Documents { get; set; }
-        public string FirstBatesNumber { get; set; }
-        public string LastBatesNumber { get; set; }
-        public int NextBatesNumber { get; set; }
-        public int TotalPages { get; set; }
-    }
     public sealed class DocumentTextIndex
     {
         public DocumentTextIndex(Excise.Core.Document.PdfDocument doc, Microsoft.Extensions.Logging.ILogger logger) { }
@@ -454,90 +402,15 @@ namespace Excise.App.Services
         public void SanitizeMetadata(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms) { }
         public void StripAllMetadata(Excise.Core.Document.PdfDocument document) { }
     }
-    public sealed class SignatureApplicationOptions
-    {
-        public SignatureApplicationOptions() { }
-        public System.Collections.Generic.IReadOnlyList<System.Security.Cryptography.X509Certificates.X509Certificate2>? AdditionalCertificates { get; init; }
-        public string? ContactInfo { get; init; }
-        public string FieldName { get; init; }
-        public string? Location { get; init; }
-        public string? Reason { get; init; }
-        public int SignatureCapacityBytes { get; init; }
-        public string? SignerName { get; init; }
-        public System.DateTimeOffset? SigningTime { get; init; }
-    }
-    public class SignatureApplicationService
-    {
-        public SignatureApplicationService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureApplicationService> logger) { }
-        public byte[] SignDocument(Excise.Core.Document.PdfDocument document, System.Security.Cryptography.X509Certificates.X509Certificate2 certificate, Excise.App.Services.SignatureApplicationOptions? options = null) { }
-        public void SignFile(string inputPath, string outputPath, System.Security.Cryptography.X509Certificates.X509Certificate2 certificate, Excise.App.Services.SignatureApplicationOptions? options = null) { }
-    }
-    public class SignatureTrustEvaluator
-    {
-        public SignatureTrustEvaluator() { }
-        public SignatureTrustEvaluator(System.Collections.Generic.IReadOnlyList<System.Security.Cryptography.X509Certificates.X509Certificate2> customTrustAnchors) { }
-        public virtual Excise.App.Services.SignatureTrustResult Evaluate(byte[] signerCertificate, System.Collections.Generic.IReadOnlyList<byte[]> candidateChainCertificates) { }
-    }
-    public sealed class SignatureTrustResult
-    {
-        public SignatureTrustResult() { }
-        public string Details { get; init; }
-        public Excise.App.Services.SignatureTrustStatus Status { get; init; }
-    }
-    public enum SignatureTrustStatus
-    {
-        NotEvaluated = 0,
-        Trusted = 1,
-        Untrusted = 2,
-        Indeterminate = 3,
-    }
-    public class SignatureVerificationResult
-    {
-        public SignatureVerificationResult() { }
-        public bool ByteRangeIntegrityChecked { get; set; }
-        public bool ByteRangeIntegrityValid { get; set; }
-        public bool ByteRangeStructureChecked { get; set; }
-        public string ByteRangeStructureMessage { get; set; }
-        public bool ByteRangeStructureValid { get; set; }
-        public bool CoversWholeDocument { get; set; }
-        public bool IsValid { get; set; }
-        public string SignatureName { get; set; }
-        public string SignedBy { get; set; }
-        public System.DateTime SigningTime { get; set; }
-        public Excise.App.Services.SignatureVerificationState State { get; }
-        public string StatusMessage { get; set; }
-        public string TrustDetails { get; set; }
-        public Excise.App.Services.SignatureTrustStatus TrustStatus { get; set; }
-        public int UnsignedTrailingContentBytes { get; set; }
-    }
-    public class SignatureVerificationService
-    {
-        public SignatureVerificationService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationService> logger) { }
-        public SignatureVerificationService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationService> logger, Excise.App.Services.SignatureTrustEvaluator? trustEvaluator) { }
-        public System.Collections.Generic.List<Excise.App.Services.SignatureVerificationResult> VerifySignatures(string pdfPath) { }
-    }
-    public enum SignatureVerificationState
-    {
-        Indeterminate = 0,
-        Invalid = 1,
-        ValidUntrusted = 2,
-        ValidTrustUnknown = 3,
-        ValidTrusted = 4,
-    }
     public sealed class SignatureVerificationSummaryFormatter
     {
         public SignatureVerificationSummaryFormatter() { }
-        public string Format(System.Collections.Generic.IReadOnlyList<Excise.App.Services.SignatureVerificationResult> results) { }
+        public string Format(System.Collections.Generic.IReadOnlyList<Excise.Core.Signatures.SignatureVerificationResult> results) { }
     }
     public sealed class SignatureVerificationWorkflowService
     {
-        public SignatureVerificationWorkflowService(Excise.App.Services.SignatureVerificationService signatureService, Excise.App.Services.SignatureVerificationSummaryFormatter summaryFormatter, Excise.App.Services.IUserDialogService dialogService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationWorkflowService> logger) { }
+        public SignatureVerificationWorkflowService(Excise.Core.Signatures.SignatureVerificationService signatureService, Excise.App.Services.SignatureVerificationSummaryFormatter summaryFormatter, Excise.App.Services.IUserDialogService dialogService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationWorkflowService> logger) { }
         public System.Threading.Tasks.Task VerifyAsync(bool isDocumentLoaded, string? currentFilePath) { }
-    }
-    public static class SigningCertificateFactory
-    {
-        public static System.Security.Cryptography.X509Certificates.X509Certificate2 CreateSelfSigned(string subjectName, System.TimeSpan? lifetime = default) { }
-        public static System.Security.Cryptography.X509Certificates.X509Certificate2 LoadFromPkcs12(string path, string? password) { }
     }
     public enum SplitMode
     {
@@ -619,14 +492,14 @@ namespace Excise.App.ViewModels
         public bool Confirmed { get; }
         public double FontSize { get; set; }
         public int NumberOfDigits { get; set; }
-        public Excise.App.Services.BatesPosition Position { get; set; }
+        public Excise.Core.Editing.BatesPosition Position { get; set; }
         public string Prefix { get; set; }
         public string Preview { get; }
         public int StartNumber { get; set; }
         public string Suffix { get; set; }
-        public static System.Collections.Generic.IReadOnlyList<Excise.App.Services.BatesPosition> Positions { get; }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Editing.BatesPosition> Positions { get; }
         public void Confirm() { }
-        public Excise.App.Services.BatesOptions ToOptions() { }
+        public Excise.Core.Editing.BatesOptions ToOptions() { }
     }
     public class CurrentDocumentInfo
     {

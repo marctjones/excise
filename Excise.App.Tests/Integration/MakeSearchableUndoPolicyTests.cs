@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -42,7 +43,7 @@ public class MakeSearchableUndoPolicyTests : IDisposable
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
             new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             new PdfSearchService(NullLogger<PdfSearchService>.Instance),
-            new SignatureVerificationService(NullLogger<SignatureVerificationService>.Instance),
+            new SignatureVerificationService(null),
             new FilenameSuggestionService(),
             toastService);
         await vm.LoadDocumentAsync(path);

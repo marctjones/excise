@@ -1,9 +1,8 @@
 using AwesomeAssertions;
-using Microsoft.Extensions.Logging;
-using Excise.App.Services;
+using Excise.Core.Editing;
 using Xunit;
 
-namespace Excise.App.Tests.Unit;
+namespace Excise.Core.Tests.Editing;
 
 /// <summary>
 /// Unit tests for BatesNumberingService.
@@ -12,12 +11,10 @@ namespace Excise.App.Tests.Unit;
 public class BatesNumberingServiceTests
 {
     private readonly BatesNumberingService _service;
-    private readonly ILogger<BatesNumberingService> _logger;
 
     public BatesNumberingServiceTests()
     {
-        _logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<BatesNumberingService>();
-        _service = new BatesNumberingService(_logger);
+        _service = new BatesNumberingService();
     }
 
     // ========================================================================

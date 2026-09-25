@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using AwesomeAssertions;
 using Excise.App.Services;
 using System;

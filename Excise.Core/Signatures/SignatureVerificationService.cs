@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+using Excise.Core.Signatures;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
 using System;
@@ -8,7 +8,7 @@ using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.X509;
 using System.Linq;
 
-namespace Excise.App.Services;
+namespace Excise.Core.Signatures;
 
 /// <summary>
 /// Consolidated per-signature verdict combining cryptographic validity and
@@ -101,27 +101,23 @@ public class SignatureVerificationResult
 /// </summary>
 public class SignatureVerificationService
 {
-    private readonly ILogger<SignatureVerificationService> _logger;
+    private readonly Action<string>? _diagnostics;
     private readonly SignatureTrustEvaluator _trustEvaluator;
 
-    public SignatureVerificationService(ILogger<SignatureVerificationService> logger)
-        : this(logger, trustEvaluator: null)
-    {
-    }
-
+    /// <param name="diagnostics">Optional sink for progress and warning messages.</param>
+    /// <param name="trustEvaluator">Trust evaluator; defaults to the OS trust store.</param>
     public SignatureVerificationService(
-        ILogger<SignatureVerificationService> logger,
-        SignatureTrustEvaluator? trustEvaluator)
+        Action<string>? diagnostics = null,
+        SignatureTrustEvaluator? trustEvaluator = null)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        _logger = logger;
+        _diagnostics = diagnostics;
         _trustEvaluator = trustEvaluator ?? new SignatureTrustEvaluator();
     }
 
     public List<SignatureVerificationResult> VerifySignatures(string pdfPath)
     {
         var results = new List<SignatureVerificationResult>();
-        _logger.LogInformation("Verifying signatures for {File}", Path.GetFileName(pdfPath));
+        _diagnostics?.Invoke($"Verifying signatures for {Path.GetFileName(pdfPath)}");
 
         try
         {
@@ -132,14 +128,14 @@ public class SignatureVerificationService
             var acroFormObj = document.Catalog.GetOptional("AcroForm");
             if (acroFormObj == null)
             {
-                _logger.LogInformation("No AcroForm found, document has no signatures.");
+                _diagnostics?.Invoke("No AcroForm found, document has no signatures.");
                 return results;
             }
 
             var acroForm = document.Resolve(acroFormObj) as PdfDictionary;
             if (acroForm == null)
             {
-                _logger.LogInformation("AcroForm is not a dictionary.");
+                _diagnostics?.Invoke("AcroForm is not a dictionary.");
                 return results;
             }
 
@@ -147,14 +143,14 @@ public class SignatureVerificationService
             var fieldsObj = acroForm.GetOptional("Fields");
             if (fieldsObj == null)
             {
-                _logger.LogInformation("No fields found in AcroForm.");
+                _diagnostics?.Invoke("No fields found in AcroForm.");
                 return results;
             }
 
             var fields = document.Resolve(fieldsObj) as PdfArray;
             if (fields == null)
             {
-                _logger.LogInformation("Fields is not an array.");
+                _diagnostics?.Invoke("Fields is not an array.");
                 return results;
             }
 
@@ -170,7 +166,7 @@ public class SignatureVerificationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error verifying signatures");
+            _diagnostics?.Invoke($"Error verifying signatures: {ex}");
             results.Add(new SignatureVerificationResult 
             { 
                 StatusMessage = $"Error: {ex.Message}", 
@@ -188,20 +184,20 @@ public class SignatureVerificationService
         if (type != "Sig") return;
 
         var name = fieldDict.GetStringOrNull("T") ?? "Unknown";
-        _logger.LogInformation("Found signature field: {Name}", name);
+        _diagnostics?.Invoke($"Found signature field: {name}");
 
         // Get the signature value dictionary (V)
         var valueObj = fieldDict.GetOptional("V");
         if (valueObj == null)
         {
-            _logger.LogWarning("Signature field {Name} has no value dictionary (unsigned)", name);
+            _diagnostics?.Invoke($"Signature field {name} has no value dictionary (unsigned)");
             return;
         }
 
         var valueDict = document.Resolve(valueObj) as PdfDictionary;
         if (valueDict == null)
         {
-            _logger.LogWarning("Signature field {Name} value is not a dictionary", name);
+            _diagnostics?.Invoke($"Signature field {name} value is not a dictionary");
             return;
         }
 
@@ -274,9 +270,7 @@ public class SignatureVerificationService
                 // Those bytes are covered by neither /ByteRange nor the CMS object, so
                 // nothing has authenticated them. Report rather than reject: the signature
                 // itself may still be perfectly valid (#1494).
-                _logger.LogWarning(
-                    "Signature {Name}: {Count} bytes of non-zero data follow the CMS object inside /Contents",
-                    name, contentsRead.PaddingLength);
+                _diagnostics?.Invoke($"Signature {name}: {contentsRead.PaddingLength} bytes of non-zero data follow the CMS object inside /Contents");
                 result.UnsignedTrailingContentBytes = contentsRead.PaddingLength;
             }
 
@@ -288,7 +282,7 @@ public class SignatureVerificationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to verify signature {Name}", name);
+            _diagnostics?.Invoke($"Failed to verify signature {name}: {ex}");
             result.IsValid = false;
             result.StatusMessage = $"Verification failed: {ex.Message}";
         }
@@ -408,7 +402,7 @@ public class SignatureVerificationService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Trust-chain evaluation failed for signer {Signer}", result.SignedBy);
+            _diagnostics?.Invoke($"Trust-chain evaluation failed for signer {result.SignedBy}: {ex}");
             result.TrustStatus = SignatureTrustStatus.Indeterminate;
             result.TrustDetails = $"trust evaluation failed: {ex.Message}";
         }
@@ -428,7 +422,7 @@ public class SignatureVerificationService
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Could not extract signing time for {Signer}", result.SignedBy);
+            _diagnostics?.Invoke($"Could not extract signing time for {result.SignedBy}: {ex}");
         }
     }
 }

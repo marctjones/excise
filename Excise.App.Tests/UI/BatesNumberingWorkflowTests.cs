@@ -1,3 +1,4 @@
+using Excise.Core.Editing;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using AwesomeAssertions;
@@ -361,7 +362,7 @@ public class BatesNumberingWorkflowTests : IDisposable
         var src = NewPdf($"pos-{position}.pdf", pages: 1);
         using (var doc = Excise.Core.Document.PdfDocument.Open(src))
         {
-            new BatesNumberingService(Microsoft.Extensions.Logging.Abstractions.NullLogger<BatesNumberingService>.Instance)
+            new BatesNumberingService()
                 .ApplyBatesNumbers(doc, new BatesOptions { Prefix = "BATESPOS", Position = position });
             doc.Save(Path.Combine(_tempDir, $"pos-{position}-out.pdf"));
         }

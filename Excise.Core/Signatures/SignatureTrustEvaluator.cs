@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Excise.App.Services;
+namespace Excise.Core.Signatures;
 
 /// <summary>
 /// Whether the signer certificate chains to a trusted root. Kept separate from

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+using Excise.Core.Signatures;
 using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Operators;
@@ -14,7 +14,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-namespace Excise.App.Services;
+namespace Excise.Core.Signatures;
 
 /// <summary>
 /// Options controlling how a signature is applied by
@@ -116,12 +116,12 @@ public class SignatureApplicationService
     private const string ByteRangePlaceholderToken =
         "/ByteRange [0 1000000000 1000000000 1000000000]";
 
-    private readonly ILogger<SignatureApplicationService> _logger;
+    private readonly Action<string>? _diagnostics;
 
-    public SignatureApplicationService(ILogger<SignatureApplicationService> logger)
+    /// <param name="diagnostics">Optional sink for progress messages.</param>
+    public SignatureApplicationService(Action<string>? diagnostics = null)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        _logger = logger;
+        _diagnostics = diagnostics;
     }
 
     /// <summary>
@@ -185,9 +185,7 @@ public class SignatureApplicationService
         SignatureAppearanceAuthoring.ApplyVisibleAppearance(
             document, fieldDictionary, BuildAppearanceLines(options, signerName, signingTime));
 
-        _logger.LogInformation(
-            "Signing document as {Subject} into field {Field}",
-            certificate.Subject, options.FieldName);
+        _diagnostics?.Invoke($"Signing document as {certificate.Subject} into field {options.FieldName}");
 
         // Pass 1: serialize with placeholders.
         var fileBytes = document.SaveToBytes();
@@ -202,9 +200,7 @@ public class SignatureApplicationService
             options.AdditionalCertificates);
         BackfillContents(fileBytes, holeStart, holeEnd, cmsSignature);
 
-        _logger.LogInformation(
-            "Applied {CmsBytes}-byte CMS signature; ByteRange [0 {Gap0} {Gap1} {Tail}] over {FileBytes} bytes",
-            cmsSignature.Length, holeStart, holeEnd, fileBytes.Length - holeEnd, fileBytes.Length);
+        _diagnostics?.Invoke($"Applied {cmsSignature.Length}-byte CMS signature; ByteRange [0 {holeStart} {holeEnd} {fileBytes.Length - holeEnd}] over {fileBytes.Length} bytes");
 
         return fileBytes;
     }

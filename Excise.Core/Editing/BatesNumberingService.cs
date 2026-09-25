@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
 using Excise.Core.Graphics;
 using System;
@@ -6,18 +5,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Excise.App.Services;
+namespace Excise.Core.Editing;
 
 /// <summary>
 /// Service for applying Bates numbering to PDF documents
 /// </summary>
 public class BatesNumberingService
 {
-    private readonly ILogger<BatesNumberingService> _logger;
+    private readonly Action<string>? _diagnostics;
 
-    public BatesNumberingService(ILogger<BatesNumberingService> logger)
+    /// <param name="diagnostics">Optional sink for progress and warning messages.</param>
+    public BatesNumberingService(Action<string>? diagnostics = null)
     {
-        _logger = logger;
+        _diagnostics = diagnostics;
     }
 
     /// <summary>
@@ -32,9 +32,8 @@ public class BatesNumberingService
     {
         EnsurePrefixAndSuffixDrawable(options);
 
-        _logger.LogInformation(
-            "Applying Bates numbers: Prefix={Prefix}, Start={Start}, Digits={Digits}, Position={Position}",
-            options.Prefix, options.StartNumber, options.NumberOfDigits, options.Position);
+        _diagnostics?.Invoke(
+            $"Applying Bates numbers: Prefix={options.Prefix}, Start={options.StartNumber}, Digits={options.NumberOfDigits}, Position={options.Position}");
 
         var currentNumber = options.StartNumber;
 
@@ -47,9 +46,8 @@ public class BatesNumberingService
             currentNumber++;
         }
 
-        _logger.LogInformation("Applied Bates numbers {Start} to {End}",
-            FormatBatesNumber(options.StartNumber, options),
-            FormatBatesNumber(currentNumber - 1, options));
+        _diagnostics?.Invoke(
+            $"Applied Bates numbers {FormatBatesNumber(options.StartNumber, options)} to {FormatBatesNumber(currentNumber - 1, options)}");
     }
 
     /// <summary>
@@ -64,15 +62,14 @@ public class BatesNumberingService
         var currentNumber = options.StartNumber;
         var processedFiles = new HashSet<string>(); // Track processed files to avoid duplicates
 
-        _logger.LogInformation("Applying Bates numbers to {Count} documents starting at {Start}",
-            files.Count, options.StartNumber);
+        _diagnostics?.Invoke($"Applying Bates numbers to {files.Count} documents starting at {options.StartNumber}");
 
         foreach (var filePath in files)
         {
             // Skip if already processed (defensive check)
             if (processedFiles.Contains(filePath))
             {
-                _logger.LogWarning("Skipping duplicate file: {File}", filePath);
+                _diagnostics?.Invoke($"Skipping duplicate file: {filePath}");
                 continue;
             }
             processedFiles.Add(filePath);
@@ -117,7 +114,7 @@ public class BatesNumberingService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to apply Bates numbers to {File}", filePath);
+                _diagnostics?.Invoke($"Failed to apply Bates numbers to {filePath}: {ex}");
                 result.Documents.Add(new BatesDocumentResult
                 {
                     FilePath = filePath,
@@ -132,9 +129,8 @@ public class BatesNumberingService
         result.LastBatesNumber = FormatBatesNumber(currentNumber - 1, options);
         result.NextBatesNumber = currentNumber;
 
-        _logger.LogInformation(
-            "Bates numbering complete. Range: {First} to {Last}, Total pages: {Pages}",
-            result.FirstBatesNumber, result.LastBatesNumber, result.TotalPages);
+        _diagnostics?.Invoke(
+            $"Bates numbering complete. Range: {result.FirstBatesNumber} to {result.LastBatesNumber}, Total pages: {result.TotalPages}");
 
         return result;
     }
@@ -154,7 +150,7 @@ public class BatesNumberingService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not count pages in {File}", filePath);
+                _diagnostics?.Invoke($"Could not count pages in {filePath}: {ex}");
             }
         }
         return startNumber + totalPages;

@@ -1,10 +1,8 @@
 using AwesomeAssertions;
-using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.Crypto.Operators;
 using Org.BouncyCastle.Security;
-using Excise.App.Services;
-using Excise.App.Tests.Utilities;
+using Excise.Core.Signatures;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +10,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Xunit;
 
-namespace Excise.App.Tests.Unit;
+namespace Excise.Core.Tests.Signatures;
 
 /// <summary>
 /// Unit tests for SignatureVerificationService.
@@ -25,12 +23,10 @@ public class SignatureVerificationServiceTests
     private static readonly string SignaturePlaceholderHex = new('F', SignaturePlaceholderHexLength);
 
     private readonly SignatureVerificationService _service;
-    private readonly ILogger<SignatureVerificationService> _logger;
 
     public SignatureVerificationServiceTests()
     {
-        _logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationService>();
-        _service = new SignatureVerificationService(_logger);
+        _service = new SignatureVerificationService();
     }
 
     // ========================================================================
@@ -85,12 +81,28 @@ public class SignatureVerificationServiceTests
     }
 
     [Fact]
-    public void SignatureVerificationService_WithNullLogger_ThrowsArgumentNullException()
+    public void SignatureVerificationService_ReportsProgressToTheDiagnosticsCallback()
     {
-        var action = () => new SignatureVerificationService(null!);
+        var messages = new List<string>();
+        var service = new SignatureVerificationService(messages.Add);
 
-        action.Should().Throw<ArgumentNullException>()
-            .WithParameterName("logger");
+        var path = Path.Combine(Path.GetTempPath(), $"excise-sigdiag-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var document = Excise.Core.Document.PdfDocument.CreateNew())
+            {
+                document.Pages.AddBlank(300, 400);
+                document.Save(path);
+            }
+
+            service.VerifySignatures(path);
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+        }
+
+        messages.Should().Contain(m => m.Contains("Verifying signatures for"));
     }
 
     // ========================================================================
@@ -350,7 +362,7 @@ public class SignatureVerificationServiceTests
         }
 
         return new SignatureVerificationService(
-            new Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationService>(),
+            null,
             new SignatureTrustEvaluator(anchorCertificates));
     }
 

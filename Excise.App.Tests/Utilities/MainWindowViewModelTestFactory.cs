@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using Excise.App.Services;
 using Excise.App.Services.Host;
 using Excise.App.Services.Printing;
@@ -70,7 +71,7 @@ internal static class MainWindowViewModelTestFactory
         toastService ??= new ToastService();
         dialogService ??= new NullUserDialogService();
         signatureService ??= new SignatureVerificationService(
-            NullLogger<SignatureVerificationService>.Instance);
+            null);
         signatureSummaryFormatter ??= new SignatureVerificationSummaryFormatter();
         signatureWorkflowService ??= new SignatureVerificationWorkflowService(
             signatureService,

@@ -1,3 +1,4 @@
+using Excise.Core.Editing;
 using System;
 using System.Collections.Generic;
 using System.IO;

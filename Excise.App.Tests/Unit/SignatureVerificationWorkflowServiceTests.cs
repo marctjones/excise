@@ -1,3 +1,4 @@
+using Excise.Core.Signatures;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
@@ -67,7 +68,7 @@ public class SignatureVerificationWorkflowServiceTests
 
     private static SignatureVerificationWorkflowService CreateWorkflow(IUserDialogService dialog) =>
         new(
-            new SignatureVerificationService(NullLogger<SignatureVerificationService>.Instance),
+            new SignatureVerificationService(null),
             new SignatureVerificationSummaryFormatter(),
             dialog,
             NullLogger<SignatureVerificationWorkflowService>.Instance);
