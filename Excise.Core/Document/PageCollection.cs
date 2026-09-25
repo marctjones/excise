@@ -510,10 +510,11 @@ public class PageCollection : IReadOnlyList<PdfPage>
             var leaf = page.Dictionary;
             if (ReferenceEquals(leaf, _pagesDict))
                 throw new PdfParseException("Page tree cannot be flattened for structural editing: its root is a page");
-            MaterializeInheritedKey(leaf, "Resources");
-            MaterializeInheritedKey(leaf, "MediaBox");
-            MaterializeInheritedKey(leaf, "CropBox");
-            MaterializeInheritedKey(leaf, "Rotate");
+            foreach (var key in PdfPage.InheritableKeys)
+            {
+                if (!leaf.ContainsKey(key) && page.GetInheritedRaw(key) is { } inherited)
+                    leaf[key] = inherited;
+            }
             leaf["Parent"] = pagesRef;
             // The leaf's ORIGINAL kid entry: its reference, or the inline dict.
             flat.Add((PdfObject?)page.Reference ?? leaf);
@@ -544,37 +545,6 @@ public class PageCollection : IReadOnlyList<PdfPage>
                 return false;
         }
         return true;
-    }
-
-    /// <summary>
-    /// Copy an inheritable attribute down onto a leaf that lacks it, taking
-    /// the RAW object (reference or inline) from the nearest ancestor that
-    /// carries it — so an indirect /Resources stays shared between leaves
-    /// rather than being duplicated.
-    /// </summary>
-    private void MaterializeInheritedKey(PdfDictionary leaf, string key)
-    {
-        if (leaf.GetOptional(key) != null)
-            return;
-
-        var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance) { leaf };
-        var current = leaf;
-        for (var depth = 0; depth <= MaxPageTreeDepth; depth++)
-        {
-            var parentRef = current.GetReferenceOrNull("Parent");
-            if (parentRef == null)
-                return;
-            if (_document.GetObject(parentRef) is not PdfDictionary parent || !visited.Add(parent))
-                return;
-
-            var value = parent.GetOptional(key);
-            if (value != null)
-            {
-                leaf[key] = value;
-                return;
-            }
-            current = parent;
-        }
     }
 
     /// <summary>

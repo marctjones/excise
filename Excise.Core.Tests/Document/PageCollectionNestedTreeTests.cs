@@ -1,6 +1,8 @@
 using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Operations;
+using Excise.Core.Primitives;
 using Xunit;
 
 namespace Excise.Core.Tests.Document;
@@ -61,6 +63,50 @@ public class PageCollectionNestedTreeTests
         AddContentStream(objects, 7, "% marker-page-ONE\n");
         AddContentStream(objects, 8, "% marker-page-TWO\n");
         return BuildPdfBytes(objects);
+    }
+
+    /// <summary>
+    /// The inheritance a cloned page must carry with it (§7.7.3.4). Root
+    /// (/MediaBox [0 0 100 100]) → Pages(/MediaBox [0 0 400 300] /Rotate 90
+    /// /Resources 7 0 R) → p1, p2. The nearer /MediaBox must win; p2 declares
+    /// its own /Rotate 180, which must beat the inherited 90; both pages
+    /// inherit ONE indirect /Resources, which must stay one object.
+    /// </summary>
+    private static byte[] BuildInheritedAttributesPdf()
+    {
+        var objects = new List<(int objNum, string content)>
+        {
+            (1, "<< /Type /Catalog /Pages 2 0 R >>"),
+            (2, "<< /Type /Pages /Kids [3 0 R] /Count 2 /MediaBox [0 0 100 100] >>"),
+            (3, "<< /Type /Pages /Parent 2 0 R /Kids [4 0 R 5 0 R] /Count 2 /MediaBox [0 0 400 300] /Rotate 90 /Resources 7 0 R >>"),
+            (4, "<< /Type /Page /Parent 3 0 R /Contents 8 0 R >>"),
+            (5, "<< /Type /Page /Parent 3 0 R /Rotate 180 /Contents 9 0 R >>"),
+            (7, "<< /Font << /F1 6 0 R >> >>"),
+            (6, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"),
+        };
+        AddContentStream(objects, 8, "% marker-page-ONE\nBT /F1 24 Tf 50 100 Td (INHERITEDFONT) Tj ET\n");
+        AddContentStream(objects, 9, "% marker-page-TWO\nBT /F1 24 Tf 50 100 Td (INHERITEDFONT) Tj ET\n");
+        return BuildPdfBytes(objects);
+    }
+
+    private static void AssertInheritedAttributes(PdfPage page, int rotation)
+    {
+        page.Width.Should().Be(400, "the nearest ancestor /MediaBox wins, not the default 612");
+        page.Height.Should().Be(300);
+        page.Rotation.Should().Be(rotation);
+        var font = page.GetFont("F1");
+        font.Should().NotBeNull("/Resources lived on the Pages node, so the clone must carry it");
+        font!.GetNameOrNull("BaseFont").Should().Be("Helvetica");
+    }
+
+    /// <summary>Asserts on saved-and-reopened OUTPUT pages, not on the clones in memory.</summary>
+    private static List<PdfPage> AssertInheritedAttributesLanded(PdfDocument output, params int[] rotations)
+    {
+        var pages = PdfDocument.Open(output.SaveToBytes()).GetPages().ToList();
+        pages.Should().HaveCount(rotations.Length);
+        foreach (var (page, rotation) in pages.Zip(rotations))
+            AssertInheritedAttributes(page, rotation);
+        return pages;
     }
 
     private static string Marker(PdfPage page)
@@ -157,6 +203,47 @@ public class PageCollectionNestedTreeTests
         // from the other document); positions 0/2/3 keep this doc's order.
         Markers(doc).Should().Equal(
             "marker-page-ONE", "marker-page-ONE", "marker-page-TWO", "marker-page-THREE");
+    }
+
+    [Fact]
+    public void Insert_FromNestedSource_CarriesTheInheritedAttributes()
+    {
+        using var target = PdfDocument.Open(BuildNestedTreePdf());
+        using var source = PdfDocument.Open(BuildInheritedAttributesPdf());
+
+        target.Pages.Insert(1, source.GetPage(1));
+        target.Pages.Insert(2, source.GetPage(2));
+
+        var inserted = target.GetPages().Skip(1).Take(2).ToList();
+        foreach (var (page, rotation) in inserted.Zip(new[] { 90, 180 }))
+            AssertInheritedAttributes(page, rotation);
+    }
+
+    [Fact]
+    public void Merge_FromNestedSource_CarriesTheInheritedAttributes()
+    {
+        using var source = PdfDocument.Open(BuildInheritedAttributesPdf());
+
+        using var merged = PdfDocumentMerger.Merge(new[] { (source, (IReadOnlyList<int>)new[] { 0, 1 }) });
+
+        var pages = AssertInheritedAttributesLanded(merged, 90, 180);
+        pages[0].Dictionary.GetOptional("Resources").Should().BeOfType<PdfReference>()
+            .Which.Should().Be(pages[1].Dictionary.GetOptional("Resources"),
+                "a shared indirect /Resources stays one object");
+    }
+
+    [Fact]
+    public void Split_FromNestedSource_CarriesTheInheritedAttributes()
+    {
+        using var source = PdfDocument.Open(BuildInheritedAttributesPdf());
+
+        var fragments = PdfDocumentSplitter.SplitToSinglePages(source);
+
+        fragments.Should().HaveCount(2);
+        AssertInheritedAttributesLanded(fragments[0], 90);
+        AssertInheritedAttributesLanded(fragments[1], 180);
+        foreach (var fragment in fragments)
+            fragment.Dispose();
     }
 
     /// <summary>

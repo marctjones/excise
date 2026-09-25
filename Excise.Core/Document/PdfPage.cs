@@ -621,25 +621,30 @@ public partial class PdfPage
 
     #region Inherited Properties
 
-    /// <summary>
-    /// Get an inherited integer value (walks up page tree).
-    /// </summary>
-    private int GetInheritedInt(string key, int defaultValue)
-    {
-        var current = _pageDict;
-        var visited = NewAncestorVisitedSet();
-        while (current != null)
-        {
-            if (current.ContainsKey(key))
-                return current.GetInt(key, defaultValue);
+    /// <summary>The page attributes ISO 32000-2 §7.7.3.4 lets a /Pages ancestor supply.</summary>
+    internal static readonly string[] InheritableKeys = ["Resources", "MediaBox", "CropBox", "Rotate"];
 
-            current = NextPageTreeAncestor(current, visited);
+    /// <summary>
+    /// The raw value (reference or inline) of <paramref name="key"/> from the
+    /// nearest node on the page's own dictionary or its ancestors that carries
+    /// it. Raw so an indirect /Resources stays shared when a caller copies it
+    /// (cloner memo, flattening) instead of being duplicated.
+    /// </summary>
+    internal PdfObject? GetInheritedRaw(string key)
+    {
+        foreach (var node in SelfAndAncestors())
+        {
+            if (node.GetOptional(key) is { } value)
+                return value;
         }
-        return defaultValue;
+        return null;
     }
 
+    private int GetInheritedInt(string key, int defaultValue)
+        => GetInheritedRaw(key) is { } value && value.TryGetNumber(out var n) ? (int)n : defaultValue;
+
     /// <summary>
-    /// Step to the next ancestor in the page tree, refusing to revisit a node.
+    /// The page dictionary, then each /Parent up the page tree, never revisiting a node.
     /// </summary>
     /// <remarks>
     /// A /Parent chain is attacker-controlled data and is not guaranteed to be
@@ -652,61 +657,38 @@ public partial class PdfPage
     /// That is a denial-of-service primitive for a tool whose entire input is
     /// documents someone else produced, and the file does not even look
     /// malformed. Descent through /Kids already had cycle detection; the
-    /// ascent through /Parent did not.
+    /// ascent through /Parent did not. A repeated node ends the walk as though
+    /// the tree ended, which yields the same answer an acyclic tree would for
+    /// an absent key.
     /// </remarks>
-    private PdfDictionary? NextPageTreeAncestor(PdfDictionary current, HashSet<PdfDictionary> visited)
+    private IEnumerable<PdfDictionary> SelfAndAncestors()
     {
-        var parentRef = current.GetReferenceOrNull("Parent");
-        if (parentRef == null)
-            return null;
-
-        if (_document.GetObject(parentRef) is not PdfDictionary parent)
-            return null;
-
-        // Already seen: the chain loops. Stop as though the tree ended, which
-        // yields the same answer an acyclic tree would for an absent key.
-        return visited.Add(parent) ? parent : null;
+        var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        var node = _pageDict;
+        while (node != null && visited.Add(node))
+        {
+            yield return node;
+            var parentRef = node.GetReferenceOrNull("Parent");
+            node = parentRef == null ? null : _document.GetObject(parentRef) as PdfDictionary;
+        }
     }
 
-    private HashSet<PdfDictionary> NewAncestorVisitedSet()
-        => new(ReferenceEqualityComparer.Instance) { _pageDict };
-
-    /// <summary>
-    /// Get an inherited dictionary value (walks up page tree).
-    /// </summary>
     private PdfDictionary? GetInheritedDictionary(string key)
     {
-        var current = _pageDict;
-        var visited = NewAncestorVisitedSet();
-        while (current != null)
+        foreach (var node in SelfAndAncestors())
         {
-            var obj = current.GetOptional(key);
-            if (obj != null)
-            {
-                var resolved = _document.Resolve(obj);
-                if (resolved is PdfDictionary dict)
-                    return dict;
-            }
-
-            current = NextPageTreeAncestor(current, visited);
+            if (node.GetOptional(key) is { } obj && _document.Resolve(obj) is PdfDictionary dict)
+                return dict;
         }
         return null;
     }
 
-    /// <summary>
-    /// Get an inherited rectangle (walks up page tree).
-    /// </summary>
     private PdfRectangle? GetInheritedRectangle(string key)
     {
-        var current = _pageDict;
-        var visited = NewAncestorVisitedSet();
-        while (current != null)
+        foreach (var node in SelfAndAncestors())
         {
-            var rect = GetRectangleFromDict(current, key);
-            if (rect.HasValue)
+            if (GetRectangleFromDict(node, key) is { } rect)
                 return rect;
-
-            current = NextPageTreeAncestor(current, visited);
         }
         return null;
     }
