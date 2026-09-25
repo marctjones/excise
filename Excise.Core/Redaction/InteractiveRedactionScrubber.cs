@@ -84,62 +84,6 @@ internal static class InteractiveRedactionScrubber
     }
 
     /// <summary>
-    /// <paramref name="value"/> with every occurrence of <paramref name="term"/>
-    /// cut out, or null when it contains none.
-    /// </summary>
-    private static string? WithoutTerm(
-        string value, string term, bool caseSensitive, bool wholeWord = false)
-    {
-        // #1052: the same \w boundary rule the page matcher uses. A field value
-        // must not be cut by a looser rule than the one that found the match —
-        // whole-word "Lee" would otherwise still turn "Sleeman" into "Sman"
-        // here, which is the #896 failure (a safe option honoured in one path
-        // and silently not in another).
-        var at = IndexOfTerm(value, term, caseSensitive, wholeWord, 0);
-        if (at < 0) return null;
-
-        var sb = new System.Text.StringBuilder(value.Length);
-        var from = 0;
-        while (at >= 0)
-        {
-            sb.Append(value, from, at - from);
-            from = at + term.Length;
-            at = IndexOfTerm(value, term, caseSensitive, wholeWord, from);
-        }
-        sb.Append(value, from, value.Length - from);
-        return sb.ToString();
-    }
-
-    /// <summary>
-    /// Next occurrence of <paramref name="term"/> at or after
-    /// <paramref name="startIndex"/>, or -1. Under <paramref name="wholeWord"/>
-    /// it must be bounded by a non-word character (or the string edge) on both
-    /// sides (#1052).
-    /// </summary>
-    private static int IndexOfTerm(
-        string value, string term, bool caseSensitive, bool wholeWord, int startIndex)
-    {
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
-
-        var at = startIndex;
-        while (at <= value.Length - term.Length)
-        {
-            var found = value.IndexOf(term, at, comparison);
-            if (found < 0) return -1;
-            if (!wholeWord) return found;
-
-            var end = found + term.Length - 1;
-            if ((found == 0 || !IsWordChar(value[found - 1])) &&
-                (end + 1 >= value.Length || !IsWordChar(value[end + 1])))
-                return found;
-
-            at = found + 1;
-        }
-        return -1;
-    }
-
-    /// <summary>
     /// Cut the term out of a value carrier in place. Returns false when the
     /// carrier does not hold the term — in which case it is LEFT ALONE, since
     /// deleting a value that never contained the match is pure destruction.
@@ -157,7 +101,7 @@ internal static class InteractiveRedactionScrubber
         if (raw == null) return false;
         if (document.Resolve(raw) is not PdfString str) return false;
 
-        var redacted = WithoutTerm(str.Value, term, caseSensitive, wholeWord);
+        var redacted = TermMatch.Cut(str.Value, term, caseSensitive, wholeWord);
         if (redacted == null) return false;
 
         // The old value may be its own indirect object still holding the term.
@@ -191,7 +135,7 @@ internal static class InteractiveRedactionScrubber
             switch (document.Resolve(options[i]))
             {
                 case PdfString entry:
-                    if (WithoutTerm(entry.Value, term, caseSensitive, wholeWord) is { } cut)
+                    if (TermMatch.Cut(entry.Value, term, caseSensitive, wholeWord) is { } cut)
                     {
                         options[i] = new PdfString(cut);
                         changed = true;
@@ -202,7 +146,7 @@ internal static class InteractiveRedactionScrubber
                     for (var j = 0; j < pair.Count; j++)
                     {
                         if (document.Resolve(pair[j]) is PdfString s2 &&
-                            WithoutTerm(s2.Value, term, caseSensitive, wholeWord) is { } cut2)
+                            TermMatch.Cut(s2.Value, term, caseSensitive, wholeWord) is { } cut2)
                         {
                             pair[j] = new PdfString(cut2);
                             changed = true;

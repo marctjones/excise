@@ -7,6 +7,14 @@ semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- **Whole-word search and whole-word redaction now use one rule.** Search compared whole tokens, so a
+  two-word term never matched and `Smith` did not match `Smith's`, while page annotations used a regex and
+  redaction used a third rule: a user who saw no whole-word hits could still lose occurrences on redaction.
+  Both searches now find the term as text and keep it when a non-word character (anything but a letter,
+  digit or underscore) or the line edge bounds it, which is the rule redaction uses. Redaction had its own
+  gap: a whole word ending one line and a word starting the next read as one word, so a whole-word
+  redaction left that term in place and reported success; a neighbour on another line is now a boundary
+  (checked with mutool and qpdf over one fixture) (#1834).
 - **An area redaction's preview text now names what the redaction removes, and the bookmark and comment
   scrub uses that text.** The app assembled the preview with its own rules: a glyph counted only when half
   of it lay inside the box (the engine removes any glyph the box touches), right-to-left text read

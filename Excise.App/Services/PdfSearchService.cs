@@ -115,10 +115,8 @@ public class PdfSearchService
                 var pageWords = index.GetPageWords(i);
                 if (useRegex)
                     matches.AddRange(SearchWithRegex(pageText, searchTerm, pageWords, i, caseSensitive));
-                else if (wholeWordsOnly)
-                    matches.AddRange(SearchWholeWords(pageWords, searchTerm, i, caseSensitive));
                 else
-                    matches.AddRange(SearchSubstring(pageText, pageWords, searchTerm, i, caseSensitive));
+                    matches.AddRange(SearchSubstring(pageText, pageWords, searchTerm, i, caseSensitive, wholeWordsOnly));
 
                 if (progress != null && ((i & 3) == 0 || i == totalPages - 1))
                     progress.Report(new SearchProgress(i + 1, totalPages, matches.Count));
@@ -226,13 +224,9 @@ public class PdfSearchService
             {
                 matches.AddRange(SearchWithRegex(pageText, searchTerm, words, pageIndex, caseSensitive));
             }
-            else if (wholeWordsOnly)
-            {
-                matches.AddRange(SearchWholeWords(words, searchTerm, pageIndex, caseSensitive));
-            }
             else
             {
-                matches.AddRange(SearchSubstring(pageText, words, searchTerm, pageIndex, caseSensitive));
+                matches.AddRange(SearchSubstring(pageText, words, searchTerm, pageIndex, caseSensitive, wholeWordsOnly));
             }
 
             // Annotation text (sticky-note bodies, free-text callouts,
@@ -329,9 +323,6 @@ public class PdfSearchService
         bool useRegex)
     {
         var rect = annot.Rect;
-        StringComparison cmp = caseSensitive
-            ? StringComparison.Ordinal
-            : StringComparison.OrdinalIgnoreCase;
 
         // Fold both sides into the canonical matching space — Arabic
         // presentation forms (#632), Latin ligatures (#722), canonical NFC
@@ -356,24 +347,11 @@ public class PdfSearchService
             yield break;
         }
 
-        if (wholeWordsOnly)
-        {
-            // Word boundaries via regex with the literal term escaped.
-            var pattern = $@"\b{Regex.Escape(searchTerm)}\b";
-            var regex = new Regex(pattern,
-                caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
-            foreach (Match match in regex.Matches(text))
-            {
-                yield return BuildAnnotationMatch(rect, pageIndex, match.Value, text, match.Index, match.Length, source);
-            }
-            yield break;
-        }
-
         // Substring search.
         int startIndex = 0;
         while (startIndex < text.Length)
         {
-            int found = text.IndexOf(searchTerm, startIndex, cmp);
+            int found = TermMatch.IndexOf(text, searchTerm, caseSensitive, wholeWordsOnly, startIndex);
             if (found < 0) break;
             yield return BuildAnnotationMatch(
                 rect, pageIndex,
@@ -469,53 +447,17 @@ public class PdfSearchService
     }
 
     /// <summary>
-    /// Search for whole words only
-    /// </summary>
-    private List<SearchMatch> SearchWholeWords(
-        IReadOnlyList<IndexedWord> words,
-        string searchTerm,
-        int pageIndex,
-        bool caseSensitive)
-    {
-        var matches = new List<SearchMatch>();
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-
-        // Fold both sides into the canonical matching space (#632, #722,
-        // #724).
-        searchTerm = MatchingNormalization.Fold(searchTerm);
-
-        foreach (var word in words)
-        {
-            if (MatchingNormalization.Fold(word.Text).Equals(searchTerm, comparison))
-            {
-                matches.Add(new SearchMatch
-                {
-                    PageIndex = pageIndex,
-                    MatchedText = word.Text,
-                    X = word.BoundingBox.Left,
-                    Y = word.BoundingBox.Bottom,
-                    Width = word.BoundingBox.Width,
-                    Height = word.BoundingBox.Height,
-                    Context = $"...{word.Text}..."
-                });
-            }
-        }
-
-        return matches;
-    }
-
-    /// <summary>
-    /// Search for substring matches
+    /// Search for substring matches; under <paramref name="wholeWord"/> only those a non-word character bounds (#1834)
     /// </summary>
     private List<SearchMatch> SearchSubstring(
         string pageText,
         IReadOnlyList<IndexedWord> words,
         string searchTerm,
         int pageIndex,
-        bool caseSensitive)
+        bool caseSensitive,
+        bool wholeWord)
     {
         var matches = new List<SearchMatch>();
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
         // Arabic can be stored as shaped presentation forms (#632), Latin
         // text as ligature code points (#722), and accents in either
@@ -528,7 +470,7 @@ public class PdfSearchService
         searchTerm = MatchingNormalization.Fold(searchTerm);
 
         int index = 0;
-        while ((index = pageText.IndexOf(searchTerm, index, comparison)) != -1)
+        while ((index = TermMatch.IndexOf(pageText, searchTerm, caseSensitive, wholeWord, index)) != -1)
         {
             if (TryFindWordBoundsAtPosition(
                 wordSpans,
