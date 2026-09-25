@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Excise.Core.Content;
 using Excise.Core.Document;
@@ -39,7 +38,7 @@ namespace Excise.Core.Redaction.Recovery;
 public static class RedactionMarkDetector
 {
     /// <summary>Luminance at or below this counts as a redaction-dark fill.</summary>
-    private const double DarkLuminance = 0.45;
+    internal const double DarkLuminance = 0.45;
 
     /// <summary>A fill covering more of the page than this is a background, not a mark.</summary>
     private const double MaxPageAreaFraction = 0.4;
@@ -175,16 +174,16 @@ public static class RedactionMarkDetector
                 case "b*":
                 {
                     if (op.BoundingBox is not { } box) break;
-                    var fill = new Rgb(fillState.Current.R, fillState.Current.G, fillState.Current.B);
-                    if (Luminance(fill) > DarkLuminance) break;
+                    var fill = fillState.Current;
+                    if (!fill.IsDark(DarkLuminance)) break;
                     var r = outer.TransformBounds(box);
                     if (r.Width < MinSidePt || r.Height < MinSidePt) break;
                     if (r.Width * r.Height > MaxPageAreaFraction * pageArea) break;
                     found.Add((r,
                         depth == 0 ? RedactionMarkKind.FilledBox : RedactionMarkKind.FormXObjectBox,
                         depth == 0
-                            ? $"{DescribeColor(fill)} filled rectangle"
-                            : $"{DescribeColor(fill)} filled rectangle inside a Form XObject"));
+                            ? $"{fill.Describe()} filled rectangle"
+                            : $"{fill.Describe()} filled rectangle inside a Form XObject"));
                     break;
                 }
             }
@@ -252,23 +251,13 @@ public static class RedactionMarkDetector
 
             var colour = annot.InteriorColor ?? annot.Color;
             if (colour is not { } c) continue;
-            var rgb = new Rgb(c.R, c.G, c.B);
-            if (Luminance(rgb) > DarkLuminance) continue;
+            var rgb = new FillColour(c.R, c.G, c.B);
+            if (!rgb.IsDark(DarkLuminance)) continue;
             var rect = annot.Rect.Normalize();
             if (rect.Width < MinSidePt || rect.Height < MinSidePt) continue;
             found.Add((rect, RedactionMarkKind.ShapeAnnotation,
-                $"/{annot.Subtype} annotation with {DescribeColor(rgb)} interior"));
+                $"/{annot.Subtype} annotation with {rgb.Describe()} interior"));
         }
-    }
-
-    private static double Luminance(Rgb c) => 0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B;
-
-    private static string DescribeColor(Rgb c)
-    {
-        if (c.R < 0.1 && c.G < 0.1 && c.B < 0.1) return "black";
-        if (Math.Abs(c.R - c.G) < 0.05 && Math.Abs(c.G - c.B) < 0.05) return "grey";
-        return string.Create(CultureInfo.InvariantCulture,
-            $"rgb({c.R:F2},{c.G:F2},{c.B:F2})");
     }
 
     /// <summary>Same mark drawn twice: within a point on every edge.</summary>
@@ -279,6 +268,4 @@ public static class RedactionMarkDetector
         return Math.Abs(x.Left - y.Left) < 1 && Math.Abs(x.Right - y.Right) < 1
             && Math.Abs(x.Bottom - y.Bottom) < 1 && Math.Abs(x.Top - y.Top) < 1;
     }
-
-    private readonly record struct Rgb(double R, double G, double B);
 }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Redaction.Recovery;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
 using SkiaSharp;
@@ -247,7 +248,69 @@ public class GraphicsSyntaxContentVerificationTests : IDisposable
             "would pass the assertion above for the wrong reason");
     }
 
+    // ── #1830: the audit's colour verdicts agree with an independent render ──
+
+    private static readonly PdfRectangle CmykBar = new(90, 590, 290, 630);
+
+    // Text under a DeviceCMYK bar. mutool, not excise, says whether the bar hides the text and how
+    // dark it is painted; the audit must reach the same verdicts. 60% and 70% K are the rows
+    // (1-c)(1-k) got wrong: it read them as gray 0.40 and 0.30, mutool paints 0.51 and 0.43.
+    [Theory]
+    [InlineData("0.6 0.4 0.4 1 k")]   // rich black
+    [InlineData("0 0 0 1 k")]         // pure K
+    [InlineData("0 0 0 0.5 k")]
+    [InlineData("0 0 0 0.6 k")]
+    [InlineData("0 0 0 0.7 k")]
+    public void CmykBarOverText_AuditVerdictsAgreeWithMutool(string fill)
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var text = $"BT /F1 24 Tf {CmykBar.Left + 10} {CmykBar.Bottom + 12} Td (SECRET) Tj ET ";
+        var barePath = TempPath();
+        File.WriteAllBytes(barePath, PagePdf(text));
+        using var bare = MutoolReferenceRenderer.RenderPage(barePath, 1, dpi: 150);
+        using var doc = PdfDocument.Open(PagePdf(
+            text + $"q {fill} {CmykBar.Left} {CmykBar.Bottom} {CmykBar.Width} {CmykBar.Height} re f Q"));
+        var page = doc.GetPage(1);
+        using var barred = MutoolReferenceRenderer.RenderPage(SaveTemp(doc), 1, dpi: 150);
+        bare.Should().NotBeNull();
+        barred.Should().NotBeNull();
+
+        InkFractionIn(bare!, CmykBar, page.Height).Should().BeInRange(0.02, 0.9,
+            "guard: the text inks part of the bar's area, so full ink below is the bar's own");
+        var inside = new PdfRectangle(CmykBar.Left + 2, CmykBar.Bottom + 2, CmykBar.Right - 2, CmykBar.Top - 2);
+        var deviation = MaxDeviationIn(barred!, inside, page.Height, out var painted);
+        (InkFractionIn(barred!, CmykBar, page.Height) > 0.99 && deviation <= 8).Should().BeTrue(
+            "mutool paints the bar as one flat colour over the whole text");
+        HiddenTextDetector.ScanPage(page).Should().Contain(h => h.Text.Contains("SECRET"),
+            "the audit must agree with the independent render that this bar hides the text");
+
+        var mutoolColour = new FillColour(painted.Red / 255.0, painted.Green / 255.0, painted.Blue / 255.0);
+        RedactionMarkDetector.DetectPage(page, 1).Any().Should().Be(
+            mutoolColour.IsDark(RedactionMarkDetector.DarkLuminance),
+            $"mutool paints {fill} as {mutoolColour.Describe()}, luminance {mutoolColour.Luminance:F3}; " +
+            "the audit's mark verdict must follow the colour on the page, not a CMYK formula no renderer uses");
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
+
+    /// <summary>Largest per-channel distance from the rect's centre pixel, which it returns.</summary>
+    private static int MaxDeviationIn(SKBitmap bmp, PdfRectangle box, double pageHeight, out SKColor centre)
+    {
+        const double scale = 150.0 / 72.0;
+        int x0 = (int)(box.Left * scale), x1 = (int)(box.Right * scale);
+        int y0 = (int)((pageHeight - box.Top) * scale), y1 = (int)((pageHeight - box.Bottom) * scale);
+        centre = bmp.GetPixel((x0 + x1) / 2, (y0 + y1) / 2);
+        var max = 0;
+        for (int y = y0; y <= y1; y++)
+        for (int x = x0; x <= x1; x++)
+        {
+            var p = bmp.GetPixel(x, y);
+            max = Math.Max(max, Math.Max(Math.Abs(p.Red - centre.Red),
+                Math.Max(Math.Abs(p.Green - centre.Green), Math.Abs(p.Blue - centre.Blue))));
+        }
+        return max;
+    }
 
     /// <summary>Fraction of non-white pixels inside a content-space rect.</summary>
     private static double InkFractionIn(SKBitmap bmp, PdfRectangle box, double pageHeight)
@@ -276,12 +339,13 @@ public class GraphicsSyntaxContentVerificationTests : IDisposable
     /// separate, non-overlapping visible text that must survive stripping.
     /// </summary>
     private static byte[] ObstructedPagePdf(string prelude)
-    {
-        var content =
+        => PagePdf(
             prelude +
             $"{ObstructionBlock.Left} {ObstructionBlock.Bottom} {ObstructionBlock.Width} {ObstructionBlock.Height} re f " +
-            $"BT /F1 24 Tf {KeptTextBlock.Left} {KeptTextBlock.Bottom} Td (KEEP TEXT VISIBLE) Tj ET";
+            $"BT /F1 24 Tf {KeptTextBlock.Left} {KeptTextBlock.Bottom} Td (KEEP TEXT VISIBLE) Tj ET");
 
+    private static byte[] PagePdf(string content)
+    {
         var sb = new StringBuilder();
         var offsets = new List<int>();
         void Obj(string s) { offsets.Add(sb.Length); sb.Append(s); }

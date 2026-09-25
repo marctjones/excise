@@ -35,7 +35,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// </summary>
 public static class CoveredContentRecovery
 {
-    private const double DarkLuminance = 0.45;
+    private const double DarkLuminance = 0.45;   // a fill at or below this hides what it covers
     private const double CoveredFraction = 0.5;
     private const double MinSidePt = RecoveryGeometry.MinSidePt;   // #1625: one threshold, not three
 
@@ -117,8 +117,7 @@ public static class CoveredContentRecovery
                     if (box.Width < MinSidePt || box.Height < MinSidePt) break;
 
                     var isFill = op.Name is not ("S" or "s");
-                    var fill = new Rgb(fillState.Current.R, fillState.Current.G, fillState.Current.B);
-                    if (isFill && fillState.Set && Luminance(fill) <= DarkLuminance &&
+                    if (isFill && fillState.Set && fillState.Current.IsDark(DarkLuminance) &&
                         box.Width * box.Height <= 0.9 * pageArea)
                     {
                         obstructions.Add((i, box));
@@ -157,8 +156,4 @@ public static class CoveredContentRecovery
         var box = m.UnitSquareBounds();
         return box.Width < MinSidePt || box.Height < MinSidePt ? null : box;
     }
-
-    private static double Luminance(Rgb c) => 0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B;
-
-    private readonly record struct Rgb(double R, double G, double B);
 }
