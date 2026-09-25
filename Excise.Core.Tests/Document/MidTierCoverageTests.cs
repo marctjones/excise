@@ -239,7 +239,7 @@ public class MidTierCoverageTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var parsed = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         parsed.Should().HaveCount(1);
         parsed[0].ModDate.Should().NotBeNull();
@@ -260,7 +260,7 @@ public class MidTierCoverageTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var parsed = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         parsed.Should().HaveCount(1);
         parsed[0].ModDate.Should().NotBeNull();
@@ -279,7 +279,7 @@ public class MidTierCoverageTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var parsed = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         parsed.Should().HaveCount(1);
         parsed[0].DestinationPage.Should().BeNull();
@@ -298,7 +298,7 @@ public class MidTierCoverageTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var parsed = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         parsed.Should().HaveCount(1);
         parsed[0].DestinationPage.Should().BeNull();
@@ -317,7 +317,7 @@ public class MidTierCoverageTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var parsed = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         parsed.Should().HaveCount(1);
         // CMYK (0,0,0,0) converts to white: R=1, G=1, B=1
@@ -340,7 +340,7 @@ public class MidTierCoverageTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
         var pageDict = doc.GetPage(1).Dictionary;
 
-        var parsed = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
+        var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
 
         parsed.Should().HaveCount(1);
         parsed[0].QuadPoints.Should().BeNull(); // Should be rejected

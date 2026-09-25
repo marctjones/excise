@@ -20,9 +20,6 @@ internal static class PdfAcroFormParser
             "NeedAppearances",
             defaultValue: acroFormDict.GetBool("NeedsAppearances", defaultValue: false));
 
-        // Build a page-ref → page-number map for fast lookup
-        var pageRefToNumber = PdfOutlineParser.BuildPageRefMap(doc);
-
         // Widget → page association from every page's own /Annots array
         // (#671: /P is optional per spec, so this is the fallback — and for
         // some widgets, the only source of truth at all).
@@ -35,7 +32,7 @@ internal static class PdfAcroFormParser
         {
             foreach (var fieldRef in fieldsArray)
             {
-                ParseFieldTree(doc, fieldRef, parentName: "", fields, pageRefToNumber, widgetToPage);
+                ParseFieldTree(doc, fieldRef, parentName: "", fields, widgetToPage);
             }
         }
 
@@ -51,7 +48,6 @@ internal static class PdfAcroFormParser
         PdfObject? fieldObj,
         string parentName,
         List<PdfField> outputFields,
-        Dictionary<(int, int), int> pageRefToNumber,
         Dictionary<PdfDictionary, int> widgetToPage)
     {
         // Resolve indirect reference
@@ -83,21 +79,21 @@ internal static class PdfAcroFormParser
 
                 if (allPureWidgets)
                 {
-                    var field = ExtractField(doc, fieldDict, fullName, partialName, pageRefToNumber, widgetToPage);
+                    var field = ExtractField(doc, fieldDict, fullName, partialName, widgetToPage);
                     if (field != null)
                         outputFields.Add(field);
                 }
                 else
                 {
                     foreach (var kidRef in kidsArray)
-                        ParseFieldTree(doc, kidRef, fullName, outputFields, pageRefToNumber, widgetToPage);
+                        ParseFieldTree(doc, kidRef, fullName, outputFields, widgetToPage);
                 }
             }
         }
         else
         {
             // Terminal field (leaf). Extract its properties and create a PdfField.
-            var field = ExtractField(doc, fieldDict, fullName, partialName, pageRefToNumber, widgetToPage);
+            var field = ExtractField(doc, fieldDict, fullName, partialName, widgetToPage);
             if (field != null)
                 outputFields.Add(field);
         }
@@ -111,8 +107,8 @@ internal static class PdfAcroFormParser
         PdfDictionary fieldDict,
         string fullName,
         string partialName,
-        Dictionary<(int, int), int> pageRefToNumber,
-        Dictionary<PdfDictionary, int> widgetToPage)
+        Dictionary<PdfDictionary, int> widgetToPage,
+        bool consultP = true)
     {
         // Get field type (/FT: /Btn, /Tx, /Ch, /Sig). FT may be inherited from
         // a parent field — walk /Parent chain if not present locally.
@@ -151,7 +147,7 @@ internal static class PdfAcroFormParser
         if (subtype == "Widget")
         {
             widgetDicts.Add(fieldDict);
-            (rect, pageNumber) = ExtractWidgetInfo(doc, fieldDict, pageRefToNumber, widgetToPage);
+            (rect, pageNumber) = ExtractWidgetInfo(doc, fieldDict, widgetToPage, consultP);
             if (rect != null)
                 widgets.Add(new PdfFieldWidget(rect.Value, pageNumber, ExtractWidgetExportValue(doc, fieldDict)));
         }
@@ -162,7 +158,7 @@ internal static class PdfAcroFormParser
             widgetDicts.AddRange(widgetKids);
             foreach (var widget in widgetKids)
             {
-                var (widgetRect, widgetPageNumber) = ExtractWidgetInfo(doc, widget, pageRefToNumber, widgetToPage);
+                var (widgetRect, widgetPageNumber) = ExtractWidgetInfo(doc, widget, widgetToPage, consultP);
                 if (widgetRect != null)
                     widgets.Add(new PdfFieldWidget(widgetRect.Value, widgetPageNumber, ExtractWidgetExportValue(doc, widget)));
             }
@@ -222,8 +218,8 @@ internal static class PdfAcroFormParser
     private static (PdfRectangle? rect, int? pageNumber) ExtractWidgetInfo(
         PdfDocument doc,
         PdfDictionary widgetDict,
-        Dictionary<(int, int), int> pageRefToNumber,
-        Dictionary<PdfDictionary, int> widgetToPage)
+        Dictionary<PdfDictionary, int> widgetToPage,
+        bool consultP)
     {
         PdfRectangle? rect = null;
         int? pageNumber = null;
@@ -243,12 +239,8 @@ internal static class PdfAcroFormParser
         }
 
         // Extract page number from /P (page reference)
-        var pageRef = widgetDict.GetOptional("P");
-        if (pageRef is PdfReference pr)
-        {
-            if (pageRefToNumber.TryGetValue((pr.ObjectNum, pr.Generation), out var pn))
-                pageNumber = pn;
-        }
+        if (consultP && doc.TryGetPageNumber(widgetDict.GetOptional("P"), out var pn))
+            pageNumber = pn;
 
         // #671: /P is OPTIONAL per spec (§12.5.2) — page association can be
         // established purely by the widget appearing in that page's own
@@ -300,8 +292,8 @@ internal static class PdfAcroFormParser
 
             // The widget's page is already known — it came from this page's
             // own /Annots — so a single-entry map is enough for ExtractField's
-            // page-resolution fallback; there's no /P vs. /Annots ambiguity
-            // to settle here.
+            // page resolution, and /P is not consulted: there's no /P vs.
+            // /Annots ambiguity to settle here.
             var widgetToPage = new Dictionary<PdfDictionary, int>(ReferenceEqualityComparer.Instance)
             {
                 [widget] = pageNumber
@@ -309,15 +301,13 @@ internal static class PdfAcroFormParser
 
             var field = ExtractField(
                 doc, widget, fullName: partialName, partialName: partialName,
-                pageRefToNumber: EmptyPageRefMap, widgetToPage: widgetToPage);
+                widgetToPage: widgetToPage, consultP: false);
             if (field != null)
                 (result ??= new List<PdfField>()).Add(field);
         }
 
         return (IReadOnlyList<PdfField>?)result ?? Array.Empty<PdfField>();
     }
-
-    private static readonly Dictionary<(int, int), int> EmptyPageRefMap = new();
 
     /// <summary>
     /// Walk the /Parent chain to find an inherited name entry. Used for /FT,

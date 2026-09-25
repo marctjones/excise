@@ -67,13 +67,7 @@ public static class PdfLinkParser
     /// <summary>
     /// Extract internal-document link annotations from <paramref name="pageDict"/>.
     /// </summary>
-    /// <remarks>
-    /// We share PdfOutlineParser's page-ref → page-number map and named-dest
-    /// resolution because both ToC entries and link annotations use the
-    /// same /Dest mechanism under the hood.
-    /// </remarks>
     public static IReadOnlyList<PdfLink> Parse(PdfDocument doc, PdfDictionary pageDict,
-        System.Collections.Generic.Dictionary<(int, int), int> pageRefToNumber,
         System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
     {
         var annotsObj = pageDict.GetOptional("Annots");
@@ -94,7 +88,7 @@ public static class PdfLinkParser
                 (double)rectArr.GetNumber(2),
                 (double)rectArr.GetNumber(3));
 
-            var link = ResolveLink(doc, annot, rect, pageRefToNumber, namedDests);
+            var link = ResolveLink(doc, annot, rect, namedDests);
             if (link == null) continue;
 
             links.Add(link);
@@ -111,7 +105,6 @@ public static class PdfLinkParser
         new(System.StringComparer.OrdinalIgnoreCase) { "http", "https", "mailto" };
 
     private static PdfLink? ResolveLink(PdfDocument doc, PdfDictionary annot, PdfRectangle rect,
-        System.Collections.Generic.Dictionary<(int, int), int> pageRefToNumber,
         System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
     {
         var dest = annot.GetOptional("Dest");
@@ -167,12 +160,8 @@ public static class PdfLinkParser
             dest = doc.Resolve(dest);
         }
 
-        if (dest is PdfArray arr && arr.Count > 0 &&
-            arr[0] is PdfReference pageRef &&
-            pageRefToNumber.TryGetValue((pageRef.ObjectNum, pageRef.Generation), out var pageNum))
-        {
-            return new PdfLink(rect, pageNum);
-        }
-        return null;
+        return dest is PdfArray arr && arr.Count > 0 && doc.TryGetPageNumber(arr[0], out var pageNum)
+            ? new PdfLink(rect, pageNum)
+            : null;
     }
 }

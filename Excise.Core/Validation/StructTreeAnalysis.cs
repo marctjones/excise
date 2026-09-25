@@ -210,15 +210,7 @@ internal sealed class StructTreeAnalysis
 
     /// <summary>Map a /Pg page reference to a 1-based page number, or -1 if unknown.</summary>
     private int ResolvePageNumber(PdfObject? pgObj)
-    {
-        if (pgObj is not PdfReference pgRef) return -1;
-        for (int p = 1; p <= _doc.PageCount; p++)
-        {
-            if (_doc.GetPageReference(p) is { } r && r.Equals(pgRef))
-                return p;
-        }
-        return -1;
-    }
+        => _doc.TryGetPageNumber(pgObj, out var page) ? page : -1;
 
     /// <summary>
     /// The set of (page, MCID) pairs referenced anywhere in the structure tree —

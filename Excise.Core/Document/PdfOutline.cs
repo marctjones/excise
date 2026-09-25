@@ -41,10 +41,6 @@ public static class PdfOutlineParser
         var root = doc.Resolve(rootObj) as PdfDictionary;
         if (root == null) return System.Array.Empty<PdfOutlineItem>();
 
-        // Build a page-ref → page-number map once so destination lookups
-        // are O(1) per outline node instead of O(N) per node.
-        var pageRefToNumber = BuildPageRefMap(doc);
-
         // Build named-destinations map — PDF spec §12.3.2.3. Some outlines
         // reference destinations by name rather than direct page reference.
         var namedDests = BuildNamedDestinations(doc);
@@ -52,13 +48,12 @@ public static class PdfOutlineParser
         // Outline root has /First pointing to the first child.
         var firstObj = root.GetOptional("First");
         if (firstObj == null) return System.Array.Empty<PdfOutlineItem>();
-        return ParseSiblingChain(doc, firstObj, pageRefToNumber, namedDests, depth: 0);
+        return ParseSiblingChain(doc, firstObj, namedDests, depth: 0);
     }
 
     private const int MaxDepth = 32;
 
     private static List<PdfOutlineItem> ParseSiblingChain(PdfDocument doc, PdfObject firstObj,
-        Dictionary<(int, int), int> pageRefToNumber,
         Dictionary<string, PdfObject>? namedDests,
         int depth)
     {
@@ -76,11 +71,11 @@ public static class PdfOutlineParser
             }
 
             var title = current.GetStringOrNull("Title") ?? string.Empty;
-            var page = ResolveDestinationPage(doc, current, pageRefToNumber, namedDests);
+            var page = ResolveDestinationPage(doc, current, namedDests);
 
             var childFirst = current.GetOptional("First");
             var children = childFirst != null
-                ? ParseSiblingChain(doc, childFirst, pageRefToNumber, namedDests, depth + 1)
+                ? ParseSiblingChain(doc, childFirst, namedDests, depth + 1)
                 : (IReadOnlyList<PdfOutlineItem>)System.Array.Empty<PdfOutlineItem>();
 
             siblings.Add(new PdfOutlineItem(title, page, children));
@@ -98,7 +93,6 @@ public static class PdfOutlineParser
     /// destination array's first element is the page reference.
     /// </summary>
     private static int? ResolveDestinationPage(PdfDocument doc, PdfDictionary item,
-        Dictionary<(int, int), int> pageRefToNumber,
         Dictionary<string, PdfObject>? namedDests)
     {
         // /Dest can be a name, byte string, or array.
@@ -118,16 +112,7 @@ public static class PdfOutlineParser
 
         // Resolve named destinations to their array form.
         dest = ResolveNamedDestination(doc, dest, namedDests);
-        if (dest is PdfArray arr && arr.Count > 0)
-        {
-            var pageObj = arr[0];
-            if (pageObj is PdfReference pageRef)
-            {
-                if (pageRefToNumber.TryGetValue((pageRef.ObjectNum, pageRef.Generation), out var n))
-                    return n;
-            }
-        }
-        return null;
+        return dest is PdfArray arr && arr.Count > 0 && doc.TryGetPageNumber(arr[0], out var n) ? n : null;
     }
 
     private static PdfObject? ResolveNamedDestination(PdfDocument doc, PdfObject dest,
@@ -142,62 +127,6 @@ public static class PdfOutlineParser
             return namedDests != null && namedDests.TryGetValue(s.Value, out var arr) ? arr : null;
         }
         return doc.Resolve(dest);
-    }
-
-    /// <summary>
-    /// Map page object references → 1-based page numbers. Walks the
-    /// /Catalog/Pages tree once and records each leaf's indirect-ref
-    /// identity. Shared with <see cref="PdfLinkParser"/> so callers can
-    /// build it once and reuse for both outlines and link annotations.
-    /// </summary>
-    public static Dictionary<(int, int), int> BuildPageRefMap(PdfDocument doc)
-    {
-        var map = new Dictionary<(int, int), int>();
-        var pagesRoot = doc.Catalog.GetOptional("Pages");
-        if (pagesRoot != null && doc.Resolve(pagesRoot) is PdfDictionary rootDict)
-        {
-            var visited = new HashSet<(int, int)>();
-            if (pagesRoot is PdfReference rootRef)
-            {
-                visited.Add((rootRef.ObjectNum, rootRef.Generation));
-            }
-
-            int counter = 0;
-            WalkPages(doc, rootDict, map, ref counter, visited, depth: 0);
-        }
-        return map;
-    }
-
-    private static void WalkPages(PdfDocument doc, PdfDictionary node,
-        Dictionary<(int, int), int> map, ref int counter,
-        HashSet<(int, int)> visited, int depth)
-    {
-        if (depth > MaxDepth) return;
-
-        var kids = node.GetOptional("Kids");
-        if (kids != null && doc.Resolve(kids) is PdfArray kidsArr)
-        {
-            foreach (var kidObj in kidsArr)
-            {
-                if (kidObj is PdfReference kidRef &&
-                    doc.Resolve(kidRef) is PdfDictionary kidDict)
-                {
-                    var kidType = kidDict.GetNameOrNull("Type");
-                    if (kidType == "Page")
-                    {
-                        counter++;
-                        map[(kidRef.ObjectNum, kidRef.Generation)] = counter;
-                    }
-                    else if (kidType == "Pages")
-                    {
-                        if (!visited.Add((kidRef.ObjectNum, kidRef.Generation)))
-                            continue;
-
-                        WalkPages(doc, kidDict, map, ref counter, visited, depth + 1);
-                    }
-                }
-            }
-        }
     }
 
     /// <summary>

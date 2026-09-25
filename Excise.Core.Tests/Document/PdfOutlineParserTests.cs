@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 using Xunit;
 namespace Excise.Core.Tests.Document;
 
@@ -20,7 +21,7 @@ public class PdfOutlineParserTests
     private const string PragmaticBook = "";
 
     [Fact]
-    public void BuildPageRefMap_CyclicPagesTree_DoesNotRecurseForever()
+    public void TryGetPageNumber_CyclicPagesTree_DoesNotRecurseForever()
     {
         var pdf = Encoding.ASCII.GetBytes("""
             %PDF-1.7
@@ -44,7 +45,7 @@ public class PdfOutlineParserTests
 
         using var doc = PdfDocument.Open(pdf);
 
-        PdfOutlineParser.BuildPageRefMap(doc).Should().BeEmpty(
+        doc.TryGetPageNumber(new PdfReference(2, 0), out _).Should().BeFalse(
             "malformed /Pages cycles should be ignored instead of overflowing the stack");
     }
 

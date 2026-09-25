@@ -452,38 +452,28 @@ public partial class PdfDocument : IDisposable
     }
 
     /// <summary>
-    /// Find the indirect reference of a page (1-based) by walking the /Pages
-    /// tree. Returns null if pages are inline rather than indirect (rare).
-    /// Used by tagged-PDF authoring (/Pg) and form authoring.
+    /// The indirect reference of page <paramref name="pageNumber"/> (1-based)
+    /// as <see cref="Pages"/> recorded it; null when the page is inline.
+    /// Used by tagged-PDF authoring (/Pg) and annotation and form authoring (/P).
     /// </summary>
-    internal PdfReference? GetPageReference(int pageNumber)
-    {
-        var pagesObj = Catalog.GetOptional("Pages");
-        if (pagesObj == null || Resolve(pagesObj) is not PdfDictionary pages) return null;
-        int target = pageNumber - 1, counter = 0;
-        return WalkPageKids(pages, ref counter, target);
-    }
+    internal PdfReference? GetPageReference(int pageNumber) => Pages.GetPageReference(pageNumber);
 
-    private PdfReference? WalkPageKids(PdfDictionary node, ref int counter, int target)
+    /// <summary>
+    /// The 1-based number of the page a destination, <c>/P</c> or <c>/Pg</c>
+    /// names, by its reference or its dictionary. The one page-identity
+    /// lookup (#1833): it numbers pages exactly as <see cref="Pages"/> does.
+    /// </summary>
+    internal bool TryGetPageNumber(PdfObject? page, out int pageNumber)
     {
-        var kidsObj = node.GetOptional("Kids");
-        if (kidsObj == null || Resolve(kidsObj) is not PdfArray kids) return null;
-        foreach (var kidObj in kids)
+        pageNumber = 0;
+        try
         {
-            var kid = Resolve(kidObj) as PdfDictionary;
-            if (kid == null) continue;
-            if (kid.GetNameOrNull("Type") == "Pages")
-            {
-                var found = WalkPageKids(kid, ref counter, target);
-                if (found != null) return found;
-            }
-            else
-            {
-                if (counter == target) return kidObj as PdfReference;
-                counter++;
-            }
+            return page != null && Pages.TryGetPageNumber(page, out pageNumber);
         }
-        return null;
+        catch (PdfParseException ex) when (!ex.IsResourceGuard)
+        {
+            return false; // no loadable page tree names any page; outlines still parse
+        }
     }
 
     /// <summary>
@@ -1000,9 +990,6 @@ public partial class PdfDocument : IDisposable
     {
         var result = new Dictionary<string, NamedDestination>();
 
-        // Build page ref → page number map
-        var pageRefToNumber = PdfOutlineParser.BuildPageRefMap(this);
-
         // Get the raw named destination objects (name → destination array or dict)
         var rawDests = PdfOutlineParser.BuildNamedDestinations(this);
         if (rawDests == null)
@@ -1016,12 +1003,7 @@ public partial class PdfDocument : IDisposable
                 continue;
 
             // First element is the page reference
-            int? pageNumber = null;
-            if (destObj[0] is PdfReference pageRef &&
-                pageRefToNumber.TryGetValue((pageRef.ObjectNum, pageRef.Generation), out var pageNum))
-            {
-                pageNumber = pageNum;
-            }
+            int? pageNumber = TryGetPageNumber(destObj[0], out var pageNum) ? pageNum : null;
 
             // Parse the destination array: [page /Fit|/FitH|etc params...]
             var (fitMode, x, y, zoom) = ParseDestinationArray(destObj);

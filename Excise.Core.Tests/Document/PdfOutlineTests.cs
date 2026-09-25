@@ -673,7 +673,7 @@ public class PdfOutlineTests
     // ─── Test: page ref mapping ─────────────────────────────────────────────
 
     [Fact]
-    public void BuildPageRefMap_MultiplePages_AllMapped()
+    public void TryGetPageNumber_MultiplePages_AllNumbered()
     {
         var sb = new StringBuilder();
         sb.AppendLine("%PDF-1.7");
@@ -724,17 +724,15 @@ public class PdfOutlineTests
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
 
-        var result = PdfOutlineParser.BuildPageRefMap(doc);
-
-        result.Should().NotBeNull();
-        result.Should().HaveCount(3);
-        result[(3, 0)].Should().Be(1);
-        result[(4, 0)].Should().Be(2);
-        result[(5, 0)].Should().Be(3);
+        for (var obj = 3; obj <= 5; obj++)
+        {
+            doc.TryGetPageNumber(new PdfReference(obj, 0), out var page).Should().BeTrue();
+            page.Should().Be(obj - 2);
+        }
     }
 
     [Fact]
-    public void BuildPageRefMap_NoPages_ReturnsEmpty()
+    public void TryGetPageNumber_NoPages_NamesNoPage()
     {
         var sb = new StringBuilder();
         sb.AppendLine("%PDF-1.7");
@@ -760,9 +758,7 @@ public class PdfOutlineTests
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
 
-        var result = PdfOutlineParser.BuildPageRefMap(doc);
-
-        result.Should().BeEmpty();
+        doc.TryGetPageNumber(new PdfReference(1, 0), out _).Should().BeFalse();
     }
 
     // ─── Test: empty title handling ─────────────────────────────────────────

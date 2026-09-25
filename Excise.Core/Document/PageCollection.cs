@@ -12,6 +12,9 @@ public class PageCollection : IReadOnlyList<PdfPage>
 {
     private readonly PdfDocument _document;
     private readonly List<PdfPage> _pages;
+    // Each page by its /Kids reference (value equality on object and generation
+    // number) and by its dictionary instance (reference equality).
+    private readonly Dictionary<PdfObject, int> _pageNumbers = new();
     private readonly PdfDictionary _pagesDict;
     private PdfArray _kidsArray;
     private int _declaredCount;
@@ -52,10 +55,11 @@ public class PageCollection : IReadOnlyList<PdfPage>
     private void LoadPages()
     {
         _pages.Clear();
+        _pageNumbers.Clear();
         _malformedPageTree = false;
         _declaredCount = GetDeclaredRootPageCount();
         var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
-        LoadPagesRecursive(_pagesDict, 0, visited, depth: 0);
+        LoadPagesRecursive(_pagesDict, reference: null, visited, depth: 0);
     }
 
     /// <summary>
@@ -106,20 +110,20 @@ public class PageCollection : IReadOnlyList<PdfPage>
     /// against pdf.js's regression PDFs, which include exactly this
     /// shape of malformed input.
     /// </summary>
-    private int LoadPagesRecursive(
-        PdfDictionary node, int pageNumber,
+    private void LoadPagesRecursive(
+        PdfDictionary node, PdfReference? reference,
         HashSet<PdfDictionary> visited, int depth)
     {
         if (depth > MaxPageTreeDepth)
         {
             _malformedPageTree = true;
-            return 0;
+            return;
         }
 
         if (!visited.Add(node))
         {
             _malformedPageTree = true;
-            return 0; // cycle — already on this path
+            return; // cycle — already on this path
         }
 
         try
@@ -128,9 +132,8 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
             if (type == "Page")
             {
-                // This is a leaf page
-                _pages.Add(new PdfPage(_document, node, pageNumber + 1));
-                return 1;
+                AddLeaf(node, reference);
+                return;
             }
 
             // This is a Pages node
@@ -151,14 +154,13 @@ public class PageCollection : IReadOnlyList<PdfPage>
             if (kids == null && type != null && type != "Pages")
             {
                 _malformedPageTree = true;
-                _pages.Add(new PdfPage(_document, node, pageNumber + 1));
-                return 1;
+                AddLeaf(node, reference);
+                return;
             }
 
             if (kids == null)
-                return 0;
+                return;
 
-            int count = 0;
             foreach (var kidObj in kids)
             {
                 // Kids may be either indirect references (standard) or inline
@@ -168,16 +170,42 @@ public class PageCollection : IReadOnlyList<PdfPage>
                 var kid = ResolvePageTreeKid(kidObj);
                 if (kid == null) continue;
 
-                count += LoadPagesRecursive(kid, pageNumber + count, visited, depth + 1);
+                LoadPagesRecursive(kid, kidObj as PdfReference, visited, depth + 1);
             }
-
-            return count;
         }
         finally
         {
             visited.Remove(node);
         }
     }
+
+    /// <summary>
+    /// Accept a leaf and record its identity, so every destination, <c>/P</c>
+    /// and <c>/Pg</c> resolves to a page number by this walk's leaf rule
+    /// (#1833). The first occurrence wins when a tree lists one page twice.
+    /// </summary>
+    private void AddLeaf(PdfDictionary node, PdfReference? reference)
+    {
+        var pageNumber = _pages.Count + 1;
+        _pageNumbers.TryAdd(node, pageNumber);
+        if (reference != null)
+            _pageNumbers.TryAdd(reference, pageNumber);
+        _pages.Add(new PdfPage(_document, node, pageNumber, reference));
+    }
+
+    /// <summary>
+    /// The 1-based number of the page <paramref name="page"/> names: the
+    /// reference its parent's /Kids holds, or its dictionary.
+    /// </summary>
+    internal bool TryGetPageNumber(PdfObject page, out int pageNumber)
+        => _pageNumbers.TryGetValue(page, out pageNumber);
+
+    /// <summary>
+    /// The reference page <paramref name="pageNumber"/> (1-based) has in its
+    /// parent's /Kids; null for an inline page or one the tree does not hold.
+    /// </summary>
+    internal PdfReference? GetPageReference(int pageNumber)
+        => pageNumber >= 1 && pageNumber <= _pages.Count ? _pages[pageNumber - 1].Reference : null;
 
     /// <summary>
     /// Number of pages in the collection.
@@ -251,7 +279,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
             if (type == "Page")
             {
                 if (currentIndex == targetIndex)
-                    return new PdfPage(_document, node, targetIndex + 1);
+                    return new PdfPage(_document, node, targetIndex + 1, reference: null);
 
                 currentIndex++;
                 return null;
@@ -475,28 +503,20 @@ public class PageCollection : IReadOnlyList<PdfPage>
         if (KidsAreFlat())
             return;
 
-        // Collect each leaf's ORIGINAL kid entry (indirect reference or
-        // inline dict) in the same DFS order LoadPagesRecursive produces, so
-        // entry i corresponds to _pages[i].
-        var entries = new List<PdfObject>(_pages.Count);
-        CollectLeafEntries(_pagesDict, entries,
-            new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance), depth: 0);
-
-        if (entries.Count != _pages.Count)
-            throw new PdfParseException(
-                $"Page tree cannot be flattened for structural editing: walked {entries.Count} leaves, expected {_pages.Count}");
-
         var pagesRef = _document.Catalog.GetReference("Pages");
         var flat = new PdfArray();
-        for (var i = 0; i < _pages.Count; i++)
+        foreach (var page in _pages)
         {
-            var leaf = _pages[i].Dictionary;
+            var leaf = page.Dictionary;
+            if (ReferenceEquals(leaf, _pagesDict))
+                throw new PdfParseException("Page tree cannot be flattened for structural editing: its root is a page");
             MaterializeInheritedKey(leaf, "Resources");
             MaterializeInheritedKey(leaf, "MediaBox");
             MaterializeInheritedKey(leaf, "CropBox");
             MaterializeInheritedKey(leaf, "Rotate");
             leaf["Parent"] = pagesRef;
-            flat.Add(entries[i]);
+            // The leaf's ORIGINAL kid entry: its reference, or the inline dict.
+            flat.Add((PdfObject?)page.Reference ?? leaf);
         }
 
         _kidsArray = flat;
@@ -524,45 +544,6 @@ public class PageCollection : IReadOnlyList<PdfPage>
                 return false;
         }
         return true;
-    }
-
-    private void CollectLeafEntries(
-        PdfDictionary node, List<PdfObject> entries,
-        HashSet<PdfDictionary> visited, int depth)
-    {
-        if (depth > MaxPageTreeDepth || !visited.Add(node))
-            return;
-
-        try
-        {
-            var kids = node.ResolveArray(_document, "Kids");
-            if (kids == null)
-                return;
-
-            foreach (var kidObj in kids)
-            {
-                var kid = ResolvePageTreeKid(kidObj);
-                if (kid == null) continue;
-
-                var type = kid.GetNameOrNull("Type");
-                // Same leaf test as LoadPagesRecursive: /Type /Page, or the
-                // wrong-/Type recovery (a kid-less node claiming to be
-                // something other than /Pages).
-                if (type == "Page" ||
-                    (kid.ResolveArray(_document, "Kids") == null && type != null && type != "Pages"))
-                {
-                    entries.Add(kidObj);
-                }
-                else
-                {
-                    CollectLeafEntries(kid, entries, visited, depth + 1);
-                }
-            }
-        }
-        finally
-        {
-            visited.Remove(node);
-        }
     }
 
     /// <summary>

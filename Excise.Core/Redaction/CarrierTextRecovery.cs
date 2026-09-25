@@ -445,19 +445,7 @@ public static partial class CarrierTextRecovery
         PdfDictionary elem,
         Dictionary<int, IReadOnlyDictionary<int, PdfRectangle>> cache)
     {
-        if (elem.GetOptional("Pg") is not PdfReference pageRef) return (0, null);
-
-        var pageNumber = 0;
-        for (var i = 1; i <= doc.PageCount; i++)
-        {
-            var candidate = doc.GetPageReference(i);
-            if (candidate != null && candidate.ObjectNumber == pageRef.ObjectNumber)
-            {
-                pageNumber = i;
-                break;
-            }
-        }
-        if (pageNumber == 0) return (0, null);
+        if (!doc.TryGetPageNumber(elem.GetOptional("Pg"), out var pageNumber)) return (0, null);
 
         var mcids = CollectMcids(doc, elem.GetOptional("K")).ToList();
         if (mcids.Count == 0) return (pageNumber, null);
