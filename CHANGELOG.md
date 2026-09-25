@@ -7,6 +7,11 @@ semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- **A page merged, split or inserted from a nested page tree keeps its inherited size, rotation and fonts.**
+  When `/MediaBox`, `/Rotate`, `/CropBox` or `/Resources` sat on a `/Pages` node above the page (ISO 32000-2
+  §7.7.3.4), the copy landed as 612x792, unrotated and without its fonts. The page copy now takes those
+  four values from its nearest ancestor, and one shared ancestor walk replaces the two that existed
+  (checked against mutool for page size and text) (#1833).
 - **A `/Kids` cycle in a name or number tree no longer kills the process.** A malformed `/EmbeddedFiles`,
   `/Dests`, `/JavaScript` or `/PageLabels` tree whose `/Kids` pointed back at itself was a stack overflow
   (uncatchable in .NET) in four readers and in the attachment scrub. One guarded walk now serves all

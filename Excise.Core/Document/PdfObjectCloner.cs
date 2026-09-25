@@ -210,7 +210,8 @@ internal sealed class PdfObjectCloner
     /// Clone a top-level page dictionary (the page itself, not a reference
     /// to it — mirrors the old <c>PageCollection.ClonePageDictionary</c>).
     /// Does not set <c>/Parent</c>; the caller wires that to whatever
-    /// Pages node the clone is inserted under.
+    /// Pages node the clone is inserted under, so the attributes the source
+    /// page inherits from its ancestors (§7.7.3.4) are copied onto the clone.
     /// </summary>
     public PdfDictionary ClonePageDictionary(
         PdfPage sourcePage,
@@ -225,6 +226,12 @@ internal sealed class PdfObjectCloner
                 continue;
 
             newDict[kvp.Key.Value] = CloneObject(sourcePage.Document, kvp.Value, clonedRefs);
+        }
+
+        foreach (var key in PdfPage.InheritableKeys)
+        {
+            if (!newDict.ContainsKey(key) && sourcePage.GetInheritedRaw(key) is { } inherited)
+                newDict[key] = CloneObject(sourcePage.Document, inherited, clonedRefs);
         }
 
         newDict.SetName("Type", "Page");
