@@ -10679,8 +10679,8 @@
       "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
       "class": "GraphicsSyntaxContentVerificationTests",
       "method": "PathFillObstruction_IsGoneFromAnIndependentRender_TextElsewhereSurvives",
-      "line": 214,
-      "xunitKind": "fact",
+      "line": 218,
+      "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
         "content-streams",

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "4a7c99b2e8eeb3778b0d8a0bda0b8d389dd3d5796a193f230b18ee5683d24e6c",
+  "sourceFingerprint": "75daa4558edf8a8175fb6b8ae5926b565d51c62fef0c3b92ad302470c47d8b98",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -1380,6 +1380,26 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Document/PdfNameTree.cs",
+      "path": "Excise.Core/Document/PdfNameTree.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Document/PdfNumberTree.cs",
+      "path": "Excise.Core/Document/PdfNumberTree.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Document/PdfObjectCloner.cs",
       "path": "Excise.Core/Document/PdfObjectCloner.cs",
       "kind": "source-file",
@@ -2628,6 +2648,28 @@
     {
       "id": "Excise.Core/Fonts/AdobeGlyphList.cs",
       "path": "Excise.Core/Fonts/AdobeGlyphList.cs",
+      "kind": "source-file",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Fonts/CMapTokenizer.cs",
+      "path": "Excise.Core/Fonts/CMapTokenizer.cs",
       "kind": "source-file",
       "facets": [
         "fonts"
@@ -10952,15 +10994,15 @@
     }
   ],
   "summary": {
-    "records": 546,
+    "records": 549,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 19,
       "document-structure": 35,
-      "fonts": 31,
+      "fonts": 32,
       "forms": 9,
       "images": 33,
-      "product-integration-general": 311,
+      "product-integration-general": 313,
       "redaction": 81,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 22,
@@ -10981,9 +11023,9 @@
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
       "pdf.17.graphics.color:write": 1,
-      "pdf.17.graphics.fonts:extract": 31,
-      "pdf.17.graphics.fonts:parse": 31,
-      "pdf.17.graphics.fonts:render": 31,
+      "pdf.17.graphics.fonts:extract": 32,
+      "pdf.17.graphics.fonts:parse": 32,
+      "pdf.17.graphics.fonts:render": 32,
       "pdf.17.graphics.images:extract": 33,
       "pdf.17.graphics.images:parse": 33,
       "pdf.17.graphics.images:render": 33,
@@ -11039,7 +11081,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 22,
       "pdfe.product.security.signature-and-permission-warning:write": 22
     },
-    "fallbackRecords": 311,
+    "fallbackRecords": 313,
     "allRecordsMapped": true
   }
 }

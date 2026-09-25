@@ -10454,13 +10454,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_IgnoresBrokenEncryptForReadableContent",
+          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_RefusesAndDisposesOwnedStream",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_ZeroPaddedOverlongAes256EncryptionStrings_TrimsPadding",
@@ -11013,6 +11011,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_UnreadableEncryptObject_RefusesInsteadOfReadingCiphertext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11496,13 +11501,6 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -11890,13 +11888,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_IgnoresBrokenEncryptForReadableContent",
+          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_RefusesAndDisposesOwnedStream",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_ZeroPaddedOverlongAes256EncryptionStrings_TrimsPadding",
@@ -12449,6 +12445,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_UnreadableEncryptObject_RefusesInsteadOfReadingCiphertext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12932,13 +12935,6 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -13319,13 +13315,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_IgnoresBrokenEncryptForReadableContent",
+          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_RefusesAndDisposesOwnedStream",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_ZeroPaddedOverlongAes256EncryptionStrings_TrimsPadding",
@@ -13878,6 +13872,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_UnreadableEncryptObject_RefusesInsteadOfReadingCiphertext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14361,13 +14362,6 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -14749,13 +14743,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_IgnoresBrokenEncryptForReadableContent",
+          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_RefusesAndDisposesOwnedStream",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_ZeroPaddedOverlongAes256EncryptionStrings_TrimsPadding",
@@ -15308,6 +15300,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_UnreadableEncryptObject_RefusesInsteadOfReadingCiphertext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15791,13 +15790,6 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -25167,6 +25159,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -26500,15 +26499,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -26663,6 +26653,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -27996,15 +27993,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -28137,6 +28125,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -29470,15 +29465,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -29597,6 +29583,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -30930,15 +30923,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -31057,6 +31041,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -32390,15 +32381,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -32553,6 +32535,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -33886,15 +33875,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -34027,6 +34007,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -35360,15 +35347,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -35494,6 +35472,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -36827,15 +36812,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -48369,6 +48345,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -49702,15 +49685,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -49883,6 +49857,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -51216,15 +51197,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -51467,6 +51439,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -52800,15 +52779,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -52936,6 +52906,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamBytePreservationTests.cs::ContentStreamBytePreservationTests.ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -54269,15 +54246,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d0d1Operators_Type3Font_ParsesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_d1Operator_Type3FontWithMetrics_ParsesCorrectly",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94138,6 +94106,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/NameTreeCycleTests.cs::NameTreeCycleTests.EmbeddedFiles_KidsCycle_ScrubbingTheTermRemovesTheFileAndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94910,13 +94885,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95484,6 +95452,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/NameTreeCycleTests.cs::NameTreeCycleTests.EmbeddedFiles_KidsCycle_ScrubbingTheTermRemovesTheFileAndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96256,13 +96231,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96844,6 +96812,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/NameTreeCycleTests.cs::NameTreeCycleTests.EmbeddedFiles_KidsCycle_ScrubbingTheTermRemovesTheFileAndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97616,13 +97591,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98230,6 +98198,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/NameTreeCycleTests.cs::NameTreeCycleTests.EmbeddedFiles_KidsCycle_ScrubbingTheTermRemovesTheFileAndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -99002,13 +98977,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Stamp_IsDeliberatelyNotAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -108972,13 +108940,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_IgnoresBrokenEncryptForReadableContent",
+          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_RefusesAndDisposesOwnedStream",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_ZeroPaddedOverlongAes256EncryptionStrings_TrimsPadding",
@@ -109530,6 +109496,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_UnreadableEncryptObject_RefusesInsteadOfReadingCiphertext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -110013,13 +109986,6 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -110405,13 +110371,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_IgnoresBrokenEncryptForReadableContent",
+          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_RefusesAndDisposesOwnedStream",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_ZeroPaddedOverlongAes256EncryptionStrings_TrimsPadding",
@@ -110963,6 +110927,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_UnreadableEncryptObject_RefusesInsteadOfReadingCiphertext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -111446,13 +111417,6 @@
         },
         {
           "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.SaveOptimizedCopy_KeepsAnEncryptedSourceEncrypted",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -111826,13 +111790,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_IgnoresBrokenEncryptForReadableContent",
+          "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_MalformedIndirectEncryptObject_RefusesAndDisposesOwnedStream",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::ParserHardeningTests.PdfDocument_Open_ZeroPaddedOverlongAes256EncryptionStrings_TrimsPadding",
@@ -112384,6 +112346,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_UnreadableEncryptObject_RefusesInsteadOfReadingCiphertext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -112871,13 +112840,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs::PdfDocumentOptimizerTests.Optimize_WarnsThatASignedDocumentsSignaturesWillNotValidate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -112944,8 +112906,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7757,
-    "testMethodsWithCapabilityCandidate": 4937,
+    "testMethods": 7771,
+    "testMethodsWithCapabilityCandidate": 4942,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

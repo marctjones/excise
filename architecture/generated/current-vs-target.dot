@@ -81,9 +81,9 @@ digraph excise_architecture {
   "core-content" -> "core-parsing" [label="target + observed\n6 refs", color="#15803d", style="solid", penwidth=2];
   "core-content" -> "core-primitives" [label="target + observed\n311 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core" [label="observed via parent boundary\n96 refs", color="#2563eb", style="dashed", penwidth=1];
-  "core-document" -> "core-encryption" [label="target + observed\n19 refs", color="#15803d", style="solid", penwidth=2];
-  "core-document" -> "core-parsing" [label="target + observed\n87 refs", color="#15803d", style="solid", penwidth=2];
-  "core-document" -> "core-primitives" [label="target + observed\n1488 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-encryption" [label="target + observed\n17 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-parsing" [label="target + observed\n79 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-primitives" [label="target + observed\n1482 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core-text" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-writing" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];
   "core-encryption" -> "core-parsing" [label="target + observed\n11 refs", color="#15803d", style="solid", penwidth=2];
@@ -93,11 +93,11 @@ digraph excise_architecture {
   "core-parsing" -> "core-primitives" [label="target + observed\n143 refs", color="#15803d", style="solid", penwidth=2];
   "core-primitives" -> "core-parsing" [label="observed, undeclared\n6 refs", color="#d97706", style="dashed", penwidth=2];
   "core-redaction" -> "core" [label="observed via parent boundary\n8 refs", color="#2563eb", style="dashed", penwidth=1];
-  "core-redaction" -> "core-content" [label="target + observed\n280 refs", color="#15803d", style="solid", penwidth=2];
-  "core-redaction" -> "core-document" [label="target + observed\n1202 refs", color="#15803d", style="solid", penwidth=2];
+  "core-redaction" -> "core-content" [label="target + observed\n278 refs", color="#15803d", style="solid", penwidth=2];
+  "core-redaction" -> "core-document" [label="target + observed\n1206 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-fonts" [label="target + observed\n11 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-parsing" [label="target + observed\n6 refs", color="#15803d", style="solid", penwidth=2];
-  "core-redaction" -> "core-primitives" [label="target + observed\n892 refs", color="#15803d", style="solid", penwidth=2];
+  "core-redaction" -> "core-primitives" [label="target + observed\n883 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-text" [label="target + observed\n147 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-writing" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "core-security" -> "core" [label="observed via parent boundary\n5 refs", color="#2563eb", style="dashed", penwidth=1];
