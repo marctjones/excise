@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using System;
 using System.Reactive;
+using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
@@ -255,10 +256,9 @@ public partial class MainWindowViewModel
         ToggleTextSelectionModeCommand = ReactiveCommand.Create(ToggleTextSelectionMode);
         ToggleFormAuthoringModeCommand = ReactiveCommand.Create(() =>
         {
-            // #642: authoring fields modifies the document — /P bit 4.
+            // #642, #1829: creating or modifying form fields needs /P bits 4 and 6 (Table 22).
             // Block on entering the mode; leaving it is free.
-            if (!IsFormAuthoringMode && !EnsureDocumentPermission(p => p.CanModify,
-                "Form authoring", "modifying the document (/P bit 4)"))
+            if (!IsFormAuthoringMode && !EnsureDocumentPermission(DocumentAction.CreateFormField, "Form authoring"))
             {
                 return;
             }

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
@@ -45,8 +46,7 @@ public partial class MainWindowViewModel
             return;
 
         // #642: /P bit 6 gates adding/modifying annotations.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            "Adding a highlight annotation", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, "Adding a highlight annotation"))
         {
             return;
         }
@@ -110,8 +110,7 @@ public partial class MainWindowViewModel
 
         // #642: /P bit 6 gates adding/modifying annotations — same gate as
         // Highlight, and it must not be skipped just because this path is new.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            $"Adding a {kind} annotation", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, $"Adding a {kind} annotation"))
         {
             return;
         }
@@ -163,8 +162,7 @@ public partial class MainWindowViewModel
             return;
 
         // #642: /P bit 6 gates adding or modifying annotations.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            $"Adding a {kind} annotation", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, $"Adding a {kind} annotation"))
         {
             return;
         }
@@ -204,8 +202,7 @@ public partial class MainWindowViewModel
             return;
 
         // #642: /P bit 6 gates adding or modifying annotations.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            "Adding a free-text annotation", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, "Adding a free-text annotation"))
         {
             return;
         }
@@ -251,8 +248,7 @@ public partial class MainWindowViewModel
             return;
 
         // #642: /P bit 6 gates adding or modifying annotations.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            "Adding a stamp annotation", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, "Adding a stamp annotation"))
         {
             return;
         }
@@ -293,8 +289,7 @@ public partial class MainWindowViewModel
             return;
 
         // #642: /P bit 6 gates adding or modifying annotations.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            "Adding an ink annotation", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, "Adding an ink annotation"))
         {
             return;
         }
@@ -373,8 +368,7 @@ public partial class MainWindowViewModel
             return;
 
         // #642: /P bit 6 gates adding or modifying annotations.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            "Adding an image stamp", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, "Adding an image stamp"))
         {
             return;
         }
@@ -455,8 +449,7 @@ public partial class MainWindowViewModel
             return;
 
         // #642: /P bit 6 gates adding/modifying annotations.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            "Adding a sticky note", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, "Adding a sticky note"))
         {
             return;
         }
@@ -745,8 +738,7 @@ public partial class MainWindowViewModel
         // already checked this on entry, but the flag could arm before a
         // document loaded or permissions could be re-evaluated; re-check here
         // for the same reason every other Add* method in this file does.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            "Adding a sticky note", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, "Adding a sticky note"))
         {
             return;
         }
@@ -894,8 +886,7 @@ public partial class MainWindowViewModel
             return;
 
         // #642: /P bit 6 gates adding/modifying annotations.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            "Moving a sticky note", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, "Moving a sticky note"))
         {
             return;
         }
@@ -1087,8 +1078,7 @@ public partial class MainWindowViewModel
             return;
 
         // #642: /P bit 6 gates adding/modifying annotations; deleting one modifies them.
-        if (!EnsureDocumentPermission(p => p.CanAnnotate,
-            "Deleting an annotation", "adding or modifying annotations (/P bit 6)"))
+        if (!EnsureDocumentPermission(DocumentAction.Annotate, "Deleting an annotation"))
         {
             return;
         }

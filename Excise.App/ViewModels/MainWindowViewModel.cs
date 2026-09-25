@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using PdfCoreDocument = Excise.Core.Document.PdfDocument;
 
 using Excise.Core.Text;
+using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
@@ -1127,8 +1128,7 @@ public partial class MainWindowViewModel : ViewModelBase
         // annotations and search); what /P bit 5 gates is putting the text
         // on the OS clipboard (#642).
         SelectedText = text;
-        if (!EnsureDocumentPermission(p => p.CanCopy,
-            "Copying selected text", "copying or extracting content (/P bit 5)"))
+        if (!EnsureDocumentPermission(DocumentAction.Extract, "Copying selected text"))
         {
             return;
         }
@@ -1981,8 +1981,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // #642: user-initiated copy is gated on /P bit 5. Internal
         // extraction (search, accessibility tree) is deliberately not.
-        if (!EnsureDocumentPermission(p => p.CanCopy,
-            "Copying text", "copying or extracting content (/P bit 5)"))
+        if (!EnsureDocumentPermission(DocumentAction.Extract, "Copying text"))
         {
             return;
         }
@@ -2659,8 +2658,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        if (!EnsureDocumentPermission(p => p.CanCopy,
-            "Exporting the page as an image", "copying or extracting content (/P bit 5)"))
+        if (!EnsureDocumentPermission(DocumentAction.Extract, "Exporting the page as an image"))
         {
             return;
         }
@@ -2699,8 +2697,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Public entry point (also scripting-reachable) — gate here too so
         // no caller path bypasses the /P bit 5 check (#642).
-        if (!EnsureDocumentPermission(p => p.CanCopy,
-            "Exporting the page as an image", "copying or extracting content (/P bit 5)"))
+        if (!EnsureDocumentPermission(DocumentAction.Extract, "Exporting the page as an image"))
         {
             return;
         }
@@ -2728,8 +2725,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        if (!EnsureDocumentPermission(p => p.CanCopy,
-            "Exporting pages as images", "copying or extracting content (/P bit 5)"))
+        if (!EnsureDocumentPermission(DocumentAction.Extract, "Exporting pages as images"))
         {
             return;
         }
@@ -2755,8 +2751,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        if (!EnsureDocumentPermission(p => p.CanCopy,
-            "Exporting pages as images", "copying or extracting content (/P bit 5)"))
+        if (!EnsureDocumentPermission(DocumentAction.Extract, "Exporting pages as images"))
         {
             return;
         }

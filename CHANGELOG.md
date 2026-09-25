@@ -11,6 +11,10 @@ semantic versioning.
   `/Dests`, `/JavaScript` or `/PageLabels` tree whose `/Kids` pointed back at itself was a stack overflow
   (uncatchable in .NET) in four readers and in the attachment scrub. One guarded walk now serves all
   eight readers and scrubbers of these trees (#1833).
+- **Creating form fields now needs both /P bit 4 and bit 6** (ISO 32000-2 Table 22), in the app and in
+  `excise add-field` / `excise autodetect-fields --apply`. Both used to check bit 4 alone, so a document
+  that denied annotation editing still let you add fields. One table in `Excise.Core` now maps every
+  gated action to its /P bits, and the CLI and the app both ask it.
 
 ## [3.12.0] - 2026-09-25
 

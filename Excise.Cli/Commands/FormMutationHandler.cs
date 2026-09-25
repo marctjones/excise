@@ -1,5 +1,6 @@
 using System.Globalization;
 using Excise.Core.Document;
+using Excise.Core.Security;
 
 namespace Excise.Cli.Commands;
 
@@ -67,7 +68,7 @@ internal static class FormMutationHandler
         using var document = PdfDocumentLifetime.OpenInputForOutput(input.FullName, outputPath);
         DocumentPermissionGuard.Require(
             document,
-            DocumentAction.ModifyContents,
+            DocumentAction.CreateFormField,
             "adding form fields",
             request.IgnorePermissions);
 
@@ -135,7 +136,7 @@ internal static class FormMutationHandler
         {
             DocumentPermissionGuard.Require(
                 document,
-                DocumentAction.ModifyContents,
+                DocumentAction.CreateFormField,
                 "adding detected form fields (--apply)",
                 request.IgnorePermissions);
         }
