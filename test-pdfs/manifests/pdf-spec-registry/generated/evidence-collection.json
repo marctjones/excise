@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1412,
-  "indexedContentSha256": "115194e1aae2eb10a0a6989eb428da40d812429a9d8a3d393d117a201fd13ccc",
+  "indexedFileCount": 1414,
+  "indexedContentSha256": "b16eb07db1892c415bbc7c8a4472e12bbd1e75b490631e5c98ff37785d01cb46",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -114,7 +114,6 @@
           "path": "Excise.Core/Document/PdfDocument.cs",
           "kind": "source",
           "matchedTerms": [
-            "header",
             "structure",
             "syntax",
             "pdfdocumentwriter",
@@ -1386,6 +1385,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PdfDocumentCreateNewRoundTripTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "cross-reference",
+            "streams",
+            "trailer",
+            "xref"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -1503,20 +1512,9 @@
             "pdfparser",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Parsing/HybridReferenceXRefTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "cross-reference",
-            "incremental",
-            "trailer",
-            "update",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 198
+      "candidateReferenceCount": 199
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -2835,6 +2833,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PdfDocumentCreateNewRoundTripTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "encryption",
+            "permissions",
+            "xref"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -3140,17 +3148,9 @@
             "syntax",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "filters"
-          ]
         }
       ],
-      "candidateReferenceCount": 117
+      "candidateReferenceCount": 118
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -8044,7 +8044,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 644
+      "candidateReferenceCount": 645
     },
     {
       "id": "pdf.17.graphics.color",
@@ -68102,7 +68102,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 398
+      "candidateReferenceCount": 399
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -69617,7 +69617,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 202
+      "candidateReferenceCount": 203
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -70404,7 +70404,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 703
+      "candidateReferenceCount": 705
     },
     {
       "id": "pdf.20.extension.developer",
