@@ -62,10 +62,10 @@ digraph excise_architecture {
   "avalonia" -> "rendering" [label="target + observed\n26 refs", color="#15803d", style="solid", penwidth=2];
   "cli" -> "core" [label="target + observed\n38 refs", color="#15803d", style="solid", penwidth=2];
   "cli" -> "core-content" [label="observed via parent boundary\n10 refs", color="#2563eb", style="dashed", penwidth=1];
-  "cli" -> "core-document" [label="observed via parent boundary\n179 refs", color="#2563eb", style="dashed", penwidth=1];
+  "cli" -> "core-document" [label="observed via parent boundary\n178 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-encryption" [label="observed via parent boundary\n39 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-parsing" [label="observed via parent boundary\n2 refs", color="#2563eb", style="dashed", penwidth=1];
-  "cli" -> "core-redaction" [label="observed via parent boundary\n259 refs", color="#2563eb", style="dashed", penwidth=1];
+  "cli" -> "core-redaction" [label="observed via parent boundary\n266 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-security" [label="observed via parent boundary\n28 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-text" [label="observed via parent boundary\n8 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-writing" [label="observed via parent boundary\n34 refs", color="#2563eb", style="dashed", penwidth=1];
@@ -92,7 +92,7 @@ digraph excise_architecture {
   "core-fonts" -> "core-primitives" [label="target + observed\n77 refs", color="#15803d", style="solid", penwidth=2];
   "core-parsing" -> "core-primitives" [label="target + observed\n143 refs", color="#15803d", style="solid", penwidth=2];
   "core-primitives" -> "core-parsing" [label="observed, undeclared\n6 refs", color="#d97706", style="dashed", penwidth=2];
-  "core-redaction" -> "core" [label="observed via parent boundary\n8 refs", color="#2563eb", style="dashed", penwidth=1];
+  "core-redaction" -> "core" [label="observed via parent boundary\n12 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-redaction" -> "core-content" [label="target + observed\n293 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-document" [label="target + observed\n1140 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-fonts" [label="target + observed\n11 refs", color="#15803d", style="solid", penwidth=2];

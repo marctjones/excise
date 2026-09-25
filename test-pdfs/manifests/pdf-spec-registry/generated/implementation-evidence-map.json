@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "56918eded8ed1ba2631d673da255c726b89631d269f0061c72a3615a5aa06628",
+  "sourceFingerprint": "b116eff657a40e59e49dcb0bddd6835e923d1ee56482bbd8fc528beed70fa8c5",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -4733,6 +4733,29 @@
     {
       "id": "Excise.Core/Redaction/Recovery/CoveredContentRecovery.cs",
       "path": "Excise.Core/Redaction/Recovery/CoveredContentRecovery.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/Recovery/FillColour.cs",
+      "path": "Excise.Core/Redaction/Recovery/FillColour.cs",
       "kind": "source-file",
       "facets": [
         "redaction"
@@ -10055,29 +10078,6 @@
         "product-integration-general"
       ],
       "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.Cli/Commands/CliRedactedCopySafetyAdapter.cs",
-      "path": "Excise.Cli/Commands/CliRedactedCopySafetyAdapter.cs",
-      "kind": "source-file",
-      "facets": [
-        "redaction"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.security.redaction-content-removal",
-          "modes": [
-            "extract",
-            "mutate",
-            "render",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
       "promotion": "review-required"
     },
     {
