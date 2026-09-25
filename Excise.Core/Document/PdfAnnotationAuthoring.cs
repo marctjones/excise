@@ -121,7 +121,7 @@ public static class PdfAnnotationAuthoring
 
         var raw = existing.RawDictionary;
         raw.SetString("Contents", contents);
-        raw.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+        raw.SetString("M", PdfDate.Format(DateTimeOffset.UtcNow));
         if (open.HasValue)
         {
             raw.SetBool("Open", open.Value);
@@ -173,7 +173,7 @@ public static class PdfAnnotationAuthoring
         var raw = existing.RawDictionary;
         raw["Rect"] = PdfArray.FromRectangle(
             normalized.Left, normalized.Bottom, normalized.Right, normalized.Top);
-        raw.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+        raw.SetString("M", PdfDate.Format(DateTimeOffset.UtcNow));
 
         var page = document.GetPage(pageNumber);
         return page.GetAnnotations().FirstOrDefault(a => ReferenceEquals(a.RawDictionary, raw))
@@ -209,7 +209,7 @@ public static class PdfAnnotationAuthoring
 
         popup["Rect"] = PdfArray.FromRectangle(
             normalized.Left, normalized.Bottom, normalized.Right, normalized.Top);
-        popup.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+        popup.SetString("M", PdfDate.Format(DateTimeOffset.UtcNow));
 
         return existing;
     }
@@ -414,7 +414,7 @@ public static class PdfAnnotationAuthoring
             annot.SetString("T", author);
 
         // Markup annotations carry /CreationDate (§12.5.6.2 Table 172).
-        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+        annot.SetString("CreationDate", PdfDate.Format(DateTimeOffset.UtcNow));
 
         // /DA — required by Table 177. Fill color + base-14 Helvetica.
         annot.SetString("DA",
@@ -529,7 +529,7 @@ public static class PdfAnnotationAuthoring
             annot.SetString("T", author);
 
         // Markup annotations carry /CreationDate (§12.5.6.2 Table 172).
-        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+        annot.SetString("CreationDate", PdfDate.Format(DateTimeOffset.UtcNow));
 
         // /InkList — Table 182: an array of arrays; each inner array holds
         // alternating x/y page-space coordinates for one stroke.
@@ -847,7 +847,7 @@ public static class PdfAnnotationAuthoring
             annot.SetString("T", author);
 
         // Markup annotations carry /CreationDate (§12.5.6.2 Table 172).
-        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+        annot.SetString("CreationDate", PdfDate.Format(DateTimeOffset.UtcNow));
 
         annot["C"] = new PdfArray(new PdfReal(red), new PdfReal(green), new PdfReal(blue));
 
@@ -1041,7 +1041,7 @@ public static class PdfAnnotationAuthoring
             annot.SetString("Contents", contents);
         if (!string.IsNullOrWhiteSpace(author))
             annot.SetString("T", author);
-        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+        annot.SetString("CreationDate", PdfDate.Format(DateTimeOffset.UtcNow));
 
         annot["L"] = new PdfArray(new PdfReal(x1), new PdfReal(y1), new PdfReal(x2), new PdfReal(y2));
         annot["C"] = new PdfArray(new PdfReal(red), new PdfReal(green), new PdfReal(blue));
@@ -1248,7 +1248,7 @@ public static class PdfAnnotationAuthoring
             annot.SetString("Contents", contents);
         if (!string.IsNullOrWhiteSpace(author))
             annot.SetString("T", author);
-        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+        annot.SetString("CreationDate", PdfDate.Format(DateTimeOffset.UtcNow));
 
         var verticesArr = new PdfArray();
         foreach (var (x, y) in vertices)
@@ -1383,7 +1383,7 @@ public static class PdfAnnotationAuthoring
             annot.SetString("Contents", contents);
         if (!string.IsNullOrWhiteSpace(author))
             annot.SetString("T", author);
-        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+        annot.SetString("CreationDate", PdfDate.Format(DateTimeOffset.UtcNow));
 
         var color = StampColor(stampName);
         annot["C"] = new PdfArray(new PdfReal(color.R), new PdfReal(color.G), new PdfReal(color.B));
@@ -1521,7 +1521,7 @@ public static class PdfAnnotationAuthoring
             annot.SetString("Contents", contents);
         if (!string.IsNullOrWhiteSpace(author))
             annot.SetString("T", author);
-        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+        annot.SetString("CreationDate", PdfDate.Format(DateTimeOffset.UtcNow));
 
         var apStream = BuildImageStampAppearanceStream(document, normalized, rgbPixels, pixelWidth, pixelHeight, alphaPixels);
         var ap = new PdfDictionary();
@@ -1602,7 +1602,7 @@ public static class PdfAnnotationAuthoring
             annotation.RawDictionary.Remove("Contents");
         else
             annotation.RawDictionary.SetString("Contents", contents);
-        annotation.RawDictionary.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+        annotation.RawDictionary.SetString("M", PdfDate.Format(DateTimeOffset.UtcNow));
     }
 
     /// <summary>
@@ -1619,7 +1619,7 @@ public static class PdfAnnotationAuthoring
         ValidateColor(green, nameof(green));
         ValidateColor(blue, nameof(blue));
         annotation.RawDictionary["C"] = new PdfArray(new PdfReal(red), new PdfReal(green), new PdfReal(blue));
-        annotation.RawDictionary.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+        annotation.RawDictionary.SetString("M", PdfDate.Format(DateTimeOffset.UtcNow));
     }
 
     /// <summary>
@@ -1633,7 +1633,7 @@ public static class PdfAnnotationAuthoring
         if (double.IsNaN(opacity) || opacity < 0 || opacity > 1)
             throw new ArgumentOutOfRangeException(nameof(opacity), "Opacity must be between 0 and 1.");
         annotation.RawDictionary.SetNumber("CA", opacity);
-        annotation.RawDictionary.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+        annotation.RawDictionary.SetString("M", PdfDate.Format(DateTimeOffset.UtcNow));
     }
 
     /// <summary>
@@ -1776,7 +1776,7 @@ public static class PdfAnnotationAuthoring
             annot.SetString("T", author);
 
         // Markup annotations carry /CreationDate (§12.5.6.2 Table 172).
-        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+        annot.SetString("CreationDate", PdfDate.Format(DateTimeOffset.UtcNow));
 
         annot["C"] = new PdfArray(
             new PdfReal(red), new PdfReal(green), new PdfReal(blue));
@@ -1890,7 +1890,7 @@ public static class PdfAnnotationAuthoring
             normalized.Top);
         annot.SetInt("F", (int)PdfAnnotationFlags.Print);
         annot.SetString("NM", $"excise-{Guid.NewGuid():N}");
-        annot.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+        annot.SetString("M", PdfDate.Format(DateTimeOffset.UtcNow));
         return annot;
     }
 
@@ -1980,7 +1980,4 @@ public static class PdfAnnotationAuthoring
         if (value is < 0 or > 1 || double.IsNaN(value))
             throw new ArgumentOutOfRangeException(name, "Color components must be between 0 and 1.");
     }
-
-    private static string PdfDate(DateTimeOffset date)
-        => $"D:{date.UtcDateTime:yyyyMMddHHmmss}+00'00'";
 }

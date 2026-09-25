@@ -54,8 +54,8 @@ internal static class PdfAnnotationParser
         var iconName     = annot.GetNameOrNull("Name");
         var flags        = (PdfAnnotationFlags)annot.GetInt("F", 0);
         var isOpen       = annot.GetBool("Open", false);
-        var modDate      = ParseDate(annot.GetStringOrNull("M"));
-        var creationDate = ParseDate(annot.GetStringOrNull("CreationDate"));
+        var modDate      = PdfDate.Parse(annot.GetStringOrNull("M"));
+        var creationDate = PdfDate.Parse(annot.GetStringOrNull("CreationDate"));
         var color        = ParseColor(doc, annot);
         var interior     = ParseColorKey(doc, annot, "IC");
         var quadPoints   = ParseQuadPoints(doc, annot);
@@ -356,52 +356,4 @@ internal static class PdfAnnotationParser
 
         return dest is PdfArray arr && arr.Count > 0 && doc.TryGetPageNumber(arr[0], out var pageNum) ? pageNum : null;
     }
-
-    /// <summary>Parse a PDF date string (D:YYYYMMDDHHmmSSOHH'mm') into DateTimeOffset.</summary>
-    private static DateTimeOffset? ParseDate(string? raw)
-    {
-        if (raw == null) return null;
-        // Strip leading "D:" if present
-        var s = raw.StartsWith("D:") ? raw[2..] : raw;
-        if (s.Length < 4) return null;
-
-        try
-        {
-            int year   = Parse4(s, 0);
-            int month  = s.Length >= 6  ? Parse2(s, 4)  : 1;
-            int day    = s.Length >= 8  ? Parse2(s, 6)  : 1;
-            int hour   = s.Length >= 10 ? Parse2(s, 8)  : 0;
-            int minute = s.Length >= 12 ? Parse2(s, 10) : 0;
-            int second = s.Length >= 14 ? Parse2(s, 12) : 0;
-
-            TimeSpan offset = TimeSpan.Zero;
-            if (s.Length >= 15)
-            {
-                char sign = s[14];
-                if ((sign == '+' || sign == '-') && s.Length >= 20)
-                {
-                    int oh = Parse2(s, 15);
-                    int om = s.Length >= 20 && s[17] == '\'' ? Parse2(s, 18) : 0;
-                    offset = new TimeSpan(oh, om, 0);
-                    if (sign == '-') offset = -offset;
-                }
-                else if (sign == 'Z')
-                {
-                    offset = TimeSpan.Zero;
-                }
-            }
-
-            return new DateTimeOffset(year, month, day, hour, minute, second, offset);
-        }
-        catch (Exception __ex) when (__ex is not OutOfMemoryException)
-        {
-            return null;
-        }
-    }
-
-    private static int Parse4(string s, int i) =>
-        (s[i] - '0') * 1000 + (s[i+1] - '0') * 100 + (s[i+2] - '0') * 10 + (s[i+3] - '0');
-
-    private static int Parse2(string s, int i) =>
-        (s[i] - '0') * 10 + (s[i+1] - '0');
 }

@@ -3,6 +3,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Xunit;
+using PdfDateTests = Excise.Core.Tests.Primitives.PdfDateTests;
 
 namespace Excise.Core.Tests.Document;
 
@@ -648,6 +649,19 @@ public class PdfAnnotationParserTests
 
         var date = result[0].ModDate;
         date!.Value.Offset.Should().Be(new TimeSpan(-8, -30, 0));
+    }
+
+    [Theory]
+    [MemberData(nameof(PdfDateTests.Cases), MemberType = typeof(PdfDateTests))]
+    public void Parse_Date_ReadsEveryFormAllowedBySection794(string raw, string expectedIso)
+    {
+        var pdf = MakePdfWithAnnots($"[<< /Type /Annot /Subtype /Text /Rect [0 0 100 100] /M ({raw}) /CreationDate ({raw}) >>]");
+        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+
+        var result = PdfAnnotationParser.Parse(doc, doc.GetPage(1).Dictionary, null);
+
+        PdfDateTests.AssertSame(result[0].ModDate, expectedIso);
+        PdfDateTests.AssertSame(result[0].CreationDate, expectedIso);
     }
 
     [Fact]

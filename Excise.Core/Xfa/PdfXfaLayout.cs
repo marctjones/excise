@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Xml.Linq;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
@@ -145,7 +144,7 @@ public static class PdfXfaLayout
         try
         {
             var written = new XfaPdfWriter(document, budget, report).Write(pages);
-            var stamp = new PdfString("D:" + DateTime.UtcNow.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture) + "Z");
+            var stamp = new PdfString(PdfDate.Format(DateTimeOffset.UtcNow));
             foreach (var page in written)
                 Mark(page, stamp);
             for (int i = original - 1; i >= 0; i--)
