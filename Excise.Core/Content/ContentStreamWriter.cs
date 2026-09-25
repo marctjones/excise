@@ -203,8 +203,26 @@ public class ContentStreamWriter
             expected = op.SourceEnd;
         }
 
-        // Anything after the last operator is whitespace/comments; copying the
-        // source wholesale keeps it, which is what makes this byte-identical.
+        // The prefix tiling the source proves nothing about operators removed from
+        // the END. Copying the source wholesale is sound only when what follows the
+        // last operator is whitespace and comments, which it then keeps.
+        return IsBlankOrComment(source, expected);
+    }
+
+    private static bool IsBlankOrComment(byte[] source, int start)
+    {
+        for (int i = start; i < source.Length; i++)
+        {
+            var b = source[i];
+            if (b == '%')
+            {
+                while (i < source.Length && source[i] != '\n' && source[i] != '\r') i++;
+            }
+            else if (b != 0x20 && b != 0x09 && b != 0x0A && b != 0x0D && b != 0x0C && b != 0x00)
+            {
+                return false;
+            }
+        }
         return true;
     }
 
