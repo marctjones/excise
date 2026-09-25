@@ -184,13 +184,13 @@ public class SignatureAppearanceAuthoringTests
         using var doc = PdfDocument.CreateNew();
         var widget = WidgetWithRect(100, 600, 400, 660);
 
-        // '(' ')' '\' each need escaping; a control char and a non-ASCII
-        // letter both render as '?' in the printable-ASCII MVP.
+        // '(' ')' '\' each need escaping; a control char has no WinAnsi byte and
+        // renders as '?', while 'é' is written as its WinAnsi octal escape.
         SignatureAppearanceAuthoring.ApplyVisibleAppearance(
             doc, widget, new[] { "a(b)c\\d\u0001eéf" });
 
         var content = ContentOf(ResolveAppearance(doc, widget));
-        content.Should().Contain(@"a\(b\)c\\d?e?f");
+        content.Should().Contain(@"a\(b\)c\\d?e\351f");
     }
 
     [Fact]

@@ -269,6 +269,7 @@ internal static class AcroFormFlattener
         // top-down. PDF y grows upward, so the first line sits highest.
         var lines = WrapLines(value.Replace("\r\n", "\n").Replace('\r', '\n'), rect, fontSize).ToList();
         var leading = fontSize * 1.2;
+        var font = PdfFont.Helvetica(fontSize);
 
         var x = rect.Left + 2.0;
         var firstY = rect.Top - fontSize;     // top-aligned baseline
@@ -297,7 +298,7 @@ internal static class AcroFormFlattener
             {
                 sb.Append("0 ").Append(PdfNumberFormatter.Format(-leading)).Append(" Td\n");
             }
-            sb.Append('(').Append(EscapePdfString(lines[i])).Append(") Tj\n");
+            sb.Append(font.EncodeString(lines[i])).Append(" Tj\n");
         }
 
         sb.Append("ET\n");
@@ -371,28 +372,6 @@ internal static class AcroFormFlattener
             }
         }
         return 10.0;
-    }
-
-    private static string EscapePdfString(string value)
-    {
-        var sb = new StringBuilder(value.Length + 8);
-        foreach (var ch in value)
-        {
-            switch (ch)
-            {
-                case '\\': sb.Append("\\\\"); break;
-                case '(':  sb.Append("\\(");  break;
-                case ')':  sb.Append("\\)");  break;
-                case '\n': sb.Append("\\n");  break;
-                case '\r': sb.Append("\\r");  break;
-                case '\t': sb.Append("\\t");  break;
-                default:
-                    if (ch < 0x20 || ch > 0x7E) sb.Append('?'); // Latin1-only MVP
-                    else sb.Append(ch);
-                    break;
-            }
-        }
-        return sb.ToString();
     }
 
     private static void RemoveWidgetAnnotations(PdfDocument document, PdfPage page, IEnumerable<PdfField> fields)

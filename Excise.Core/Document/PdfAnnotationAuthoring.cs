@@ -674,7 +674,7 @@ public static class PdfAnnotationAuthoring
                 _ => pad
             };
             sb.Append($"{Num(x - prevX)} {Num(baseline - prevY)} Td\n");
-            sb.Append('(').Append(EscapePdfTextString(line)).Append(") Tj\n");
+            sb.Append(font.EncodeString(line)).Append(" Tj\n");
             prevX = x;
             prevY = baseline;
             baseline -= leading;
@@ -756,30 +756,6 @@ public static class PdfAnnotationAuthoring
         }
 
         return result;
-    }
-
-    /// <summary>
-    /// Escape a line for a PDF literal string in the appearance stream.
-    /// Printable-ASCII MVP: anything outside 0x20–0x7E draws as '?' (the
-    /// annotation's /Contents keeps the full text — this only affects the
-    /// baked appearance, which uses WinAnsi-encoded Helvetica).
-    /// </summary>
-    private static string EscapePdfTextString(string value)
-    {
-        var sb = new StringBuilder(value.Length + 8);
-        foreach (var ch in value)
-        {
-            switch (ch)
-            {
-                case '\\': sb.Append("\\\\"); break;
-                case '(':  sb.Append("\\(");  break;
-                case ')':  sb.Append("\\)");  break;
-                default:
-                    sb.Append(ch is < ' ' or > '~' ? '?' : ch);
-                    break;
-            }
-        }
-        return sb.ToString();
     }
 
     // ── Text markup: Underline / StrikeOut / Squiggly (#626, ISO 32000-2 §12.5.6.10) ──
@@ -1456,7 +1432,7 @@ public static class PdfAnnotationAuthoring
         sb.Append($"/HelvB {Num(fontSize)} Tf\n");
         sb.Append($"{Num(color.R)} {Num(color.G)} {Num(color.B)} rg\n");
         sb.Append($"{Num(x)} {Num(y)} Td\n");
-        sb.Append('(').Append(EscapePdfTextString(label)).Append(") Tj\n");
+        sb.Append(sized.EncodeString(label)).Append(" Tj\n");
         sb.Append("ET\n");
 
         var stream = new PdfStream(Encoding.ASCII.GetBytes(sb.ToString()));
