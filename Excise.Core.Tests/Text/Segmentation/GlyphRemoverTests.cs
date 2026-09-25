@@ -245,6 +245,25 @@ public class GlyphRemoverTests
     }
 
     [Fact]
+    public void Process_ReconstructedDoubleQuote_UsesTheSpacingItSets()
+    {
+        // `"` sets Tw and Tc before showing its string (§9.4.3), so the rebuilt
+        // run must carry them; the parser's stamp is taken after that (#1830).
+        var ops = Parse("BT /F1 10 Tf 12 TL 10 0 0 10 100 712 Tm 2 0.5 (HELLO WORLD) \" ET");
+        var letters = LettersFor("HELLO WORLD");
+        var redactionArea = new PdfRectangle(
+            letters[6].GlyphRectangle.Left,
+            letters[6].GlyphRectangle.Bottom,
+            letters[10].GlyphRectangle.Right,
+            letters[10].GlyphRectangle.Top);
+
+        var rebuilt = Rebuilt(_remover.ProcessOperations(ops, letters, redactionArea));
+
+        rebuilt.Single(o => o.Name == "Tw").GetNumber(0).Should().Be(2);
+        rebuilt.Single(o => o.Name == "Tc").GetNumber(0).Should().Be(0.5);
+    }
+
+    [Fact]
     public void Process_Reconstruction_InheritsFontAcrossTextBlocks()
     {
         var ops = Parse(

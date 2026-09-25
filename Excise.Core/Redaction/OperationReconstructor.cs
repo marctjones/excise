@@ -25,8 +25,13 @@ public class OperationReconstructor
     /// </summary>
     public sealed class Context
     {
-        /// <summary>Font resource name (e.g. "F1", "TT0"). Leading slash omitted.</summary>
+        /// <summary>Font resource name (e.g. "F1", "TT0"). Leading slash omitted.
+        /// Empty when no font was selected: no <c>Tf</c> is emitted, since
+        /// naming one would invent a resource (§9.3.1: Tf has no initial value).</summary>
         public required string FontName { get; init; }
+        /// <summary>The ExtGState that selected the font (§8.4.5 Table 58), which
+        /// is re-applied in place of <c>Tf</c> (#1830).</summary>
+        internal string? FontExtGState { get; init; }
         /// <summary>Font size in points, in the original text matrix's units.</summary>
         public required double FontSize { get; init; }
         public double CharacterSpacing { get; init; } = 0;
@@ -70,7 +75,6 @@ public class OperationReconstructor
         var ops = new List<ContentOperator>();
         if (segments.Count == 0) return ops;
 
-        var fontName = string.IsNullOrEmpty(context.FontName) ? "F1" : context.FontName;
         var sourceFontSize = (context.FontSize > 0 && context.FontSize < 1000) ? context.FontSize : 12.0;
         var normalizedFontSize = (effectiveFontSize > 0 && effectiveFontSize < 1000)
             ? effectiveFontSize
@@ -90,12 +94,17 @@ public class OperationReconstructor
 
         // Source-aware reconstruction retains the original Tf/Tm scale. The
         // synthetic fallback puts effective size in Tf and uses a unit Tm so
-        // text advances are not composed through the size twice (#942).
-        ops.Add(new ContentOperator("Tf", new PdfObject[]
-        {
-            new PdfName(fontName),
-            new PdfReal(fontSize),
-        }));
+        // text advances are not composed through the size twice (#942). A font
+        // selected through an ExtGState has no resource name, so that ExtGState
+        // is re-applied; it sets the font and its size together.
+        if (context.FontExtGState is { } extGState)
+            ops.Add(new ContentOperator("gs", new PdfObject[] { new PdfName(extGState) }));
+        else if (!string.IsNullOrEmpty(context.FontName))
+            ops.Add(new ContentOperator("Tf", new PdfObject[]
+            {
+                new PdfName(context.FontName),
+                new PdfReal(fontSize),
+            }));
 
         // Emit text-state operators only when they differ from PDF defaults,
         // mirroring the original renderer's behavior and keeping streams terse.

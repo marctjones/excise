@@ -186,6 +186,7 @@ internal sealed class ContentStreamWalker
     // 19 names on irs-1040-instructions.pdf). Value-equal, so nothing reads it
     // differently.
     private Dictionary<string, string>? _fontNames;
+    private string? _fontExtGState;
     private PdfDictionary? _currentFont;
     // The shared code→Unicode cascade (#981) — /ToUnicode, /Differences, the
     // embedded reverse cmap, the Mac glyph order and the symbol cmap all live
@@ -648,10 +649,8 @@ internal sealed class ContentStreamWalker
                     // parser did until #983: a producer that brackets a
                     // differently-styled run in q/Q left the font size, spacing
                     // and leading of that run applied to everything after the
-                    // `Q`. GlyphRemover.TextStateTracker has always done it, so
-                    // the redaction pipeline disagreed with itself. mutool
-                    // corroborates the spec reading (its stext reports the
-                    // pre-`q` size after `Q`).
+                    // `Q`. mutool corroborates the spec reading (its stext
+                    // reports the pre-`q` size after `Q`).
                     var saved = _state.Clone();
                     saved.SavedTextState = CaptureTextState();
                     _stateStack.Push(saved);
@@ -738,10 +737,20 @@ internal sealed class ContentStreamWalker
     /// The text matrix is deliberately ABSENT: Table 52 does not list it, it is
     /// reset by <c>BT</c>, and q/Q may not appear inside a text object (§8.2).
     /// #983.
+    ///
+    /// <para>A class, not a struct: <see cref="ContentStreamParser"/> stamps one
+    /// on every text-showing operator it emits (<see cref="ContentOperator.TextState"/>),
+    /// and a struct would widen every operator, not only those.</para>
     /// </summary>
-    private readonly record struct TextStateSnapshot(
+    /// <param name="FontExtGState">The ExtGState whose <c>/Font</c> entry
+    /// (§8.4.5 Table 58) selected the current font, or null when <c>Tf</c> did.
+    /// Such a font has no resource name for <paramref name="FontName"/> to hold,
+    /// so a consumer that re-emits text under this state re-applies the
+    /// ExtGState instead (#1830).</param>
+    internal sealed record TextStateSnapshot(
         double FontSize,
         string FontName,
+        string? FontExtGState,
         PdfDictionary? CurrentFont,
         Text.GlyphUnicodeDecoder Decoder,
         bool Is2ByteFont,
@@ -757,16 +766,17 @@ internal sealed class ContentStreamWalker
         double TextRise,
         int TextRenderMode);
 
-    private TextStateSnapshot CaptureTextState() => new(
-        _fontSize, _fontName, _currentFont, _decoder, _is2ByteFont,
+    internal TextStateSnapshot CaptureTextState() => new(
+        _fontSize, _fontName, _fontExtGState, _currentFont, _decoder, _is2ByteFont,
         _cidFontDict, _cidMetrics, _isVerticalWriting, _registeredEncodingCMap,
         _registeredCidToUnicode, _textLeading, _charSpacing, _wordSpacing,
         _horizontalScaling, _textRise, _textRenderMode);
 
-    private void RestoreTextState(in TextStateSnapshot s)
+    private void RestoreTextState(TextStateSnapshot s)
     {
         _fontSize = s.FontSize;
         _fontName = s.FontName;
+        _fontExtGState = s.FontExtGState;
         _currentFont = s.CurrentFont;
         _decoder = s.Decoder;
         _is2ByteFont = s.Is2ByteFont;
@@ -817,6 +827,7 @@ internal sealed class ContentStreamWalker
                 if (operands.Count >= 2)
                 {
                     _fontName = operands[0] is PdfName n ? ShareFontName(n.Value) : "";
+                    _fontExtGState = null;
                     _fontSize = GetNumber(operands[1]);
                     LoadFont();
                 }
@@ -1571,6 +1582,7 @@ internal sealed class ContentStreamWalker
             // The resource NAME is deliberately left alone: this font was
             // reached through the ExtGState, not through the /Font resource
             // dictionary, so it has no name to report.
+            _fontExtGState = gsName;
             _fontSize = GetNumber(_page.Document.Resolve(fontEntry[1]));
             SelectFont(gsFont);
         }

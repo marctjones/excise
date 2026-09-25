@@ -118,6 +118,29 @@ public class ExtGStateFontTests
             "§8.4.1 Table 52: Q restores the font, however it was set (#983/#990)");
     }
 
+    /// <summary>
+    /// The parser stamps each text-showing operator with its text state,
+    /// including which ExtGState selected the font, because redaction re-applies
+    /// that ExtGState when it rebuilds the run (#1830). A later <c>Tf</c> and a
+    /// <c>Q</c> both undo it. With neither operator there is no font at all
+    /// (§9.3.1: Tf has no initial value), not an invented one.
+    /// </summary>
+    [Theory]
+    [InlineData("BT /F1 12 Tf 1 0 0 1 72 700 Tm /GS1 gs (iiii) Tj ET", "F1", "GS1")]
+    [InlineData("BT /GS1 gs /F1 12 Tf 1 0 0 1 72 700 Tm (iiii) Tj ET", "F1", null)]
+    [InlineData("BT /F1 12 Tf ET q /GS1 gs Q BT 1 0 0 1 72 700 Tm (iiii) Tj ET", "F1", null)]
+    [InlineData("BT 1 0 0 1 72 700 Tm (iiii) Tj ET", "", null)]
+    public void Parser_StampsWhichExtGStateSelectedTheFont(string content, string fontName, string? extGState)
+    {
+        var page = BuildPage(content);
+        var state = new ContentStreamParser(page.GetContentStreamBytes(), page).Parse()
+            .Operators.Single(op => op.Name == "Tj").TextState;
+
+        state.Should().NotBeNull();
+        state!.FontName.Should().Be(fontName);
+        state.FontExtGState.Should().Be(extGState);
+    }
+
     private static IReadOnlyList<Letter> Letters(string content) =>
         new TextExtractor(BuildPage(content)) { IncludeFormFieldValues = false }
             .ExtractLetters();

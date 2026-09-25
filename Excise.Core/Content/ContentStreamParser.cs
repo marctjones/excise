@@ -353,6 +353,7 @@ public class ContentStreamParser
             op.TextTransform = new ContentTransform(
                 _walker.Tm_a, _walker.Tm_b, _walker.Tm_c,
                 _walker.Tm_d, _walker.Tm_e, _walker.Tm_f);
+            op.TextState = _walker.CaptureTextState();
         }
 
         _textContent.Clear();
