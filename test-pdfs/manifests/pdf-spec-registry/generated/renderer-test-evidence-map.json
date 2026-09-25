@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "d862c8d4170e1559c3fab54e97541b0ba23b758d234dbc90c2dc74497128d3d5",
+  "sourceFingerprint": "f13e84a4f5ddd89f13e70b6b9e6e8b6fe365e186bf7bfab5bc0977888ca49436",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -12991,6 +12991,57 @@
           "modes": [
             "extract",
             "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/LeakScannerTextStringOracleTests.cs::LeakScannerTextStringOracleTests.TextStringsQpdfDecodes_AreFoundByTheScanner",
+      "path": "Excise.Rendering.Tests/Differential/LeakScannerTextStringOracleTests.cs",
+      "class": "LeakScannerTextStringOracleTests",
+      "method": "TextStringsQpdfDecodes_AreFoundByTheScanner",
+      "line": 25,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "content-strings-and-text",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.content.text-state",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
             "render"
           ]
         },
@@ -47773,11 +47824,11 @@
     }
   ],
   "summary": {
-    "testMethods": 1322,
+    "testMethods": 1323,
     "facets": {
-      "content-streams": 373,
-      "content-strings-and-text": 7,
-      "differential-rendering": 740,
+      "content-streams": 374,
+      "content-strings-and-text": 8,
+      "differential-rendering": 741,
       "fonts": 223,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 316,
@@ -47788,20 +47839,20 @@
       "transparency": 84
     },
     "parentCapabilityModes": {
-      "pdf.17.content.streams:extract": 7,
-      "pdf.17.content.streams:parse": 380,
-      "pdf.17.content.streams:render": 890,
-      "pdf.17.content.text-state:extract": 7,
-      "pdf.17.content.text-state:parse": 7,
-      "pdf.17.content.text-state:render": 7,
+      "pdf.17.content.streams:extract": 8,
+      "pdf.17.content.streams:parse": 381,
+      "pdf.17.content.streams:render": 891,
+      "pdf.17.content.text-state:extract": 8,
+      "pdf.17.content.text-state:parse": 8,
+      "pdf.17.content.text-state:render": 8,
       "pdf.17.graphics.color:parse": 53,
       "pdf.17.graphics.color:render": 53,
       "pdf.17.graphics.fonts:extract": 223,
       "pdf.17.graphics.fonts:parse": 223,
-      "pdf.17.graphics.fonts:render": 886,
+      "pdf.17.graphics.fonts:render": 887,
       "pdf.17.graphics.images:extract": 232,
       "pdf.17.graphics.images:parse": 232,
-      "pdf.17.graphics.images:render": 887,
+      "pdf.17.graphics.images:render": 888,
       "pdf.17.graphics.paths-painting:parse": 316,
       "pdf.17.graphics.paths-painting:render": 316,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -47809,7 +47860,7 @@
       "pdf.17.graphics.state:parse": 316,
       "pdf.17.graphics.state:render": 316,
       "pdf.17.transparency.model:parse": 84,
-      "pdf.17.transparency.model:render": 774
+      "pdf.17.transparency.model:render": 775
     },
     "unclassified": 38,
     "allTestsMapped": true

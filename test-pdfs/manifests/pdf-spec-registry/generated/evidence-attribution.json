@@ -51201,6 +51201,13 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/LeakScannerTextStringOracleTests.cs::LeakScannerTextStringOracleTests.TextStringsQpdfDecodes_AreFoundByTheScanner",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/RedactionWidthPolicyTests.cs::RedactionWidthPolicyTests.Collapse_BoxWidthMeasuresTheRemovedString_TheChannelBeingClosed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -54236,6 +54243,13 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/LeakScannerTextStringOracleTests.cs::LeakScannerTextStringOracleTests.TextStringsQpdfDecodes_AreFoundByTheScanner",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/RedactionWidthPolicyTests.cs::RedactionWidthPolicyTests.Collapse_BoxWidthMeasuresTheRemovedString_TheChannelBeingClosed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -54366,6 +54380,13 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Rendering.Tests/Differential/LeakScannerTextStringOracleTests.cs::LeakScannerTextStringOracleTests.TextStringsQpdfDecodes_AreFoundByTheScanner",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/RedactionWidthPolicyTests.cs::RedactionWidthPolicyTests.Collapse_BoxWidthMeasuresTheRemovedString_TheChannelBeingClosed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -54493,6 +54514,13 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/LeakScannerTextStringOracleTests.cs::LeakScannerTextStringOracleTests.TextStringsQpdfDecodes_AreFoundByTheScanner",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Rendering.Tests/Differential/RedactionWidthPolicyTests.cs::RedactionWidthPolicyTests.Collapse_BoxWidthMeasuresTheRemovedString_TheChannelBeingClosed",
@@ -112798,8 +112826,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7854,
-    "testMethodsWithCapabilityCandidate": 5011,
+    "testMethods": 7865,
+    "testMethodsWithCapabilityCandidate": 5022,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

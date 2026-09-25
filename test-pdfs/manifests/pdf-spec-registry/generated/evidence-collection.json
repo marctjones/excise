@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1420,
-  "indexedContentSha256": "01041abbed80640e55a3fe47c27139cd1cefe19ce4aa9c52a8fd057b7e109f9f",
+  "indexedFileCount": 1421,
+  "indexedContentSha256": "8d3fbc0668c1c7afa533e4b9a2d9e1f0df348508fcf7fa2c439d938f0480ffe8",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -407,6 +407,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "structure",
+            "syntax",
+            "xref"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/PageTextOrderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -428,7 +437,8 @@
           "kind": "test",
           "matchedTerms": [
             "structure",
-            "syntax"
+            "syntax",
+            "xref"
           ]
         },
         {
@@ -660,7 +670,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 66
+      "candidateReferenceCount": 67
     },
     {
       "id": "pdf.17.syntax.objects",
@@ -2275,7 +2285,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 119
+      "candidateReferenceCount": 120
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -8045,7 +8055,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 649
+      "candidateReferenceCount": 650
     },
     {
       "id": "pdf.17.graphics.color",
@@ -9831,7 +9841,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 248
+      "candidateReferenceCount": 249
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -10672,7 +10682,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 189
+      "candidateReferenceCount": 190
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -13437,7 +13447,9 @@
           "path": "Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs",
           "kind": "test",
           "matchedTerms": [
+            "annex",
             "content-stream",
+            "iso",
             "operators"
           ]
         },
@@ -21840,6 +21852,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "streams",
+            "syntax"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -21931,7 +21951,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 21
+      "candidateReferenceCount": 22
     },
     {
       "id": "pdf.20.renderer.requirement-003",
@@ -51398,7 +51418,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 216
+      "candidateReferenceCount": 217
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -60703,7 +60723,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 221
+      "candidateReferenceCount": 222
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -66573,7 +66593,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 137
+      "candidateReferenceCount": 138
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -67167,6 +67187,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/LeakScannerTextStringOracleTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ShapeAnnotationSynthesisTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -67332,19 +67361,9 @@
             "media",
             "sound"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/TextMarkupAnnotationCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "media",
-            "threed"
-          ]
         }
       ],
-      "candidateReferenceCount": 93
+      "candidateReferenceCount": 94
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
