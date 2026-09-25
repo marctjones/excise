@@ -278,7 +278,6 @@
         "Excise.Cli/Commands/ValidationHandler.cs",
         "Excise.Cli/Commands/OcrInspectionHandler.cs",
         "Excise.Cli/Commands/AuditInspectionHandler.cs",
-        "Excise.Cli/Commands/PdfDocumentLifetime.cs",
         "Excise.Cli/Commands/RedactCommand.cs",
         "Excise.Cli/Commands/RedactCommandHandler.cs",
         "Excise.Cli/Commands/EncryptCommand.cs",

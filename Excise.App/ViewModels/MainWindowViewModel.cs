@@ -1596,7 +1596,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            await _pageOrganizationWorkflow.MergeDocumentsAsync(sourcePaths, outputPath);
+            await _pageOrganizationWorkflow.MergeDocumentsAsync(sourcePaths, outputPath, IgnoreDocumentPermissions);
             _toastService.ShowSuccess($"Combined {sourcePaths.Count} document(s) into {Path.GetFileName(outputPath)}");
         }
         catch (Exception ex)
@@ -1645,7 +1645,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             var result = await _pageOrganizationWorkflow.SplitDocumentAsync(
-                new SplitDocumentRequest(folderPath, parsed.Specification!));
+                folderPath, parsed.Specification!, IgnoreDocumentPermissions);
             _toastService.ShowSuccess($"Split into {result.WrittenPaths.Count} file(s)");
         }
         catch (Exception ex)
@@ -1676,7 +1676,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            await _pageOrganizationWorkflow.ExtractPagesToFileAsync(outputPath, pageIndices);
+            await _pageOrganizationWorkflow.ExtractPagesToFileAsync(outputPath, pageIndices, IgnoreDocumentPermissions);
             _toastService.ShowSuccess("Page extracted");
         }
         catch (Exception ex)

@@ -1,3 +1,4 @@
+using Excise.Core.Document;
 using Excise.Core.Parsing;
 using Excise.Core.Security;
 using Excise.Core.Writing;

@@ -1,4 +1,7 @@
 using System.CommandLine;
+using Excise.Core.Document;
+using Excise.Core.Operations;
+using Excise.Core.Security;
 
 namespace Excise.Cli.Commands;
 
@@ -101,13 +104,16 @@ internal static class SplitCommand
                         : bookmarks
                             ? SplitDocumentMode.Bookmarks
                             : SplitDocumentMode.Boundaries;
-                var result = DocumentAssemblyHandler.Split(new SplitDocumentRequest(
-                    input.FullName,
+                var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
+                using var document = PdfDocument.Open(input.FullName);
+                var result = PdfDocumentAssembly.Split(
+                    document,
+                    userPassword: null,
+                    new SplitDocumentSpecification(mode, every ?? 1, boundaries),
                     parseResult.GetValue(outputOption)!.FullName,
-                    mode,
-                    every,
-                    boundaries,
-                    parseResult.GetValue(ignorePermissionsOption)));
+                    Path.GetFileNameWithoutExtension(input.Name),
+                    (source, operation) => DocumentPermissionGuard.Require(
+                        source, DocumentAction.AssembleDocument, operation, ignorePermissions));
 
                 Console.WriteLine($"Split into {result.WrittenPaths.Count} file(s)");
                 foreach (var path in result.WrittenPaths)

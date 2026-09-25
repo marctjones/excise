@@ -1,4 +1,6 @@
 using System.CommandLine;
+using Excise.Core.Operations;
+using Excise.Core.Security;
 
 namespace Excise.Cli.Commands;
 
@@ -36,8 +38,8 @@ internal static class MergeCommand
                 return 1;
             }
 
-            // Keep the established adapter-level diagnostic. The typed handler
-            // also validates its request for non-CLI callers, but its exception
+            // Keep the established adapter-level diagnostic. PdfDocumentAssembly
+            // also validates its inputs for non-CLI callers, but its exception
             // text is not the CLI's public text-output contract.
             foreach (var path in inputs)
             {
@@ -50,12 +52,14 @@ internal static class MergeCommand
 
             try
             {
-                var result = DocumentAssemblyHandler.Merge(new MergeDocumentsRequest(
+                var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
+                var result = PdfDocumentAssembly.Merge(
                     inputs,
                     parseResult.GetValue(outputOption)!.FullName,
-                    parseResult.GetValue(ignorePermissionsOption)));
+                    (document, operation) => DocumentPermissionGuard.Require(
+                        document, DocumentAction.AssembleDocument, operation, ignorePermissions));
                 Console.WriteLine(
-                    $"Merged {result.InputPaths.Count} document(s), {result.PageCount} page(s) total");
+                    $"Merged {inputs.Length} document(s), {result.PageCount} page(s) total");
                 if (result.DroppedCatalogEntries.Count > 0)
                 {
                     Console.WriteLine(

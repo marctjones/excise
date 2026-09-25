@@ -15,6 +15,10 @@ semantic versioning.
   `excise add-field` / `excise autodetect-fields --apply`. Both used to check bit 4 alone, so a document
   that denied annotation editing still let you add fields. One table in `Excise.Core` now maps every
   gated action to its /P bits, and the CLI and the app both ask it.
+- **The app's Extract Pages, Combine Documents and Split Document keep an encrypted PDF encrypted, and
+  honour /P bit 11.** They wrote unprotected copies of a password-protected document and ignored a
+  document that denied page assembly; the CLI was fixed for this in #1343. The CLI and the app now share
+  one merge and split path in `Excise.Core` (#1829).
 
 ## [3.12.0] - 2026-09-25
 

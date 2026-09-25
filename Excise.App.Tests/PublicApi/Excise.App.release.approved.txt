@@ -295,12 +295,6 @@ namespace Excise.App.Services
         public Excise.Core.Document.PdfRectangle BoundingBox { get; init; }
         public string Text { get; init; }
     }
-    public sealed class PageOperationDiagnostics : System.IEquatable<Excise.App.Services.PageOperationDiagnostics>
-    {
-        public PageOperationDiagnostics(System.Collections.Generic.IReadOnlyList<string> Warnings) { }
-        public bool HasWarnings { get; }
-        public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
-    }
     public sealed class PageOrganizationResult : System.IEquatable<Excise.App.Services.PageOrganizationResult>
     {
         public PageOrganizationResult(bool DidChange, int? CurrentPageIndex, System.Collections.Generic.IReadOnlyList<int> SelectedPageIndices) { }
@@ -313,14 +307,14 @@ namespace Excise.App.Services
     public sealed class PageOrganizationWorkflowService
     {
         public PageOrganizationWorkflowService(Excise.App.Services.PdfDocumentService documentService, Excise.App.Services.IUserDialogService dialogService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PageOrganizationWorkflowService> logger) { }
-        public System.Threading.Tasks.Task ExtractPagesToFileAsync(string outputPath, System.Collections.Generic.IEnumerable<int> pageIndices) { }
+        public System.Threading.Tasks.Task ExtractPagesToFileAsync(string outputPath, System.Collections.Generic.IEnumerable<int> pageIndices, bool ignorePermissions) { }
         public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex) { }
-        public System.Threading.Tasks.Task MergeDocumentsAsync(System.Collections.Generic.IReadOnlyList<string> sourcePaths, string outputPath) { }
+        public System.Threading.Tasks.Task MergeDocumentsAsync(System.Collections.Generic.IReadOnlyList<string> sourcePaths, string outputPath, bool ignorePermissions) { }
         public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> MovePageAsync(int fromIndex, int toIndex) { }
         public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> MovePagesAsync(System.Collections.Generic.IEnumerable<int> pageIndices, int delta, int currentPageIndex) { }
         public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> RemovePageAsync(int pageIndex) { }
         public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> RemovePagesAsync(System.Collections.Generic.IEnumerable<int> pageIndices, int currentPageIndex) { }
-        public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string>> SplitDocumentAsync(string outputFolder, Excise.App.Services.SplitMode mode, int pagesPerChunk = 1, System.Collections.Generic.IReadOnlyList<int>? boundaries = null) { }
+        public System.Threading.Tasks.Task<Excise.Core.Operations.SplitDocumentResult> SplitDocumentAsync(string outputFolder, Excise.Core.Operations.SplitDocumentSpecification specification, bool ignorePermissions) { }
     }
     public class PdfDocumentService
     {
@@ -333,9 +327,8 @@ namespace Excise.App.Services
         public string PdfVersion { get; }
         public Excise.Core.Xfa.XfaLayoutResult? XfaLayout { get; }
         public void AddPagesFromPdf(string sourcePdfPath, System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
-        public Excise.App.Services.PageOperationDiagnostics AnalyzePageOperationPreservation(System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
         public void CloseDocument() { }
-        public void ExtractPagesToPdf(string outputPath, System.Collections.Generic.IEnumerable<int> pageIndices) { }
+        public void ExtractPagesToPdf(string outputPath, System.Collections.Generic.IEnumerable<int> pageIndices, bool ignorePermissions = false) { }
         public Excise.Core.Document.PdfDocument? GetCurrentDocument() { }
         public System.IO.MemoryStream? GetCurrentDocumentAsStream() { }
         public double GetPageHeight(int pageIndex) { }
@@ -343,7 +336,7 @@ namespace Excise.App.Services
         public Excise.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions() { }
         public void InsertPagesFromPdf(string sourcePdfPath, int insertAtIndex, System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
         public void LoadDocument(string filePath, string? userPassword = null) { }
-        public void MergeDocumentsToPdf(System.Collections.Generic.IReadOnlyList<string> sourcePaths, string outputPath) { }
+        public Excise.Core.Operations.MergeDocumentsResult MergeDocumentsToPdf(System.Collections.Generic.IReadOnlyList<string> sourcePaths, string outputPath, bool ignorePermissions = false) { }
         public void MovePage(int fromIndex, int toIndex) { }
         public System.Collections.Generic.IReadOnlyList<int> MovePages(System.Collections.Generic.IEnumerable<int> pageIndices, int delta) { }
         public void RemovePage(int pageIndex) { }
@@ -353,7 +346,7 @@ namespace Excise.App.Services
         public void RotatePageLeft(int pageIndex) { }
         public void RotatePageRight(int pageIndex) { }
         public void SaveDocument(string? filePath = null) { }
-        public System.Collections.Generic.IReadOnlyList<string> SplitDocument(string outputFolder, Excise.App.Services.SplitMode mode, int pagesPerChunk = 1, System.Collections.Generic.IReadOnlyList<int>? boundaries = null) { }
+        public Excise.Core.Operations.SplitDocumentResult SplitDocument(string outputFolder, Excise.Core.Operations.SplitDocumentSpecification specification, bool ignorePermissions = false) { }
         public bool VerifyPassword(string? candidate) { }
     }
     public class PdfSearchService
@@ -411,13 +404,6 @@ namespace Excise.App.Services
     {
         public SignatureVerificationWorkflowService(Excise.Core.Signatures.SignatureVerificationService signatureService, Excise.App.Services.SignatureVerificationSummaryFormatter summaryFormatter, Excise.App.Services.IUserDialogService dialogService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationWorkflowService> logger) { }
         public System.Threading.Tasks.Task VerifyAsync(bool isDocumentLoaded, string? currentFilePath) { }
-    }
-    public enum SplitMode
-    {
-        EveryNPages = 0,
-        PageBoundaries = 1,
-        SinglePages = 2,
-        Bookmarks = 3,
     }
     public sealed class ThumbnailCacheService : System.IDisposable
     {

@@ -1,9 +1,8 @@
 using AwesomeAssertions;
-using Excise.Cli.Commands;
 using Excise.Core.Document;
-using Xunit;
+using Excise.Core.Graphics;
 
-namespace Excise.Cli.Tests;
+namespace Excise.Core.Tests.Document;
 
 public sealed class PdfDocumentLifetimeTests : IDisposable
 {
@@ -33,7 +32,13 @@ public sealed class PdfDocumentLifetimeTests : IDisposable
     public void OpenInputForOutput_SamePathCanBeSavedBackToSource()
     {
         var path = Path.Combine(_tempDirectory, "same-path.pdf");
-        File.WriteAllBytes(path, TestPdfBuilder.SinglePage("SAME PATH"));
+        using (var source = PdfDocument.CreateNew())
+        {
+            var page = source.Pages.AddBlank();
+            using (var graphics = page.GetGraphics())
+                graphics.DrawString("SAME PATH", PdfFont.Helvetica(14), PdfBrush.Black, 72, 700);
+            source.Save(path);
+        }
 
         using (var document = PdfDocumentLifetime.OpenInputForOutput(path, path))
         {

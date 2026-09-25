@@ -1,10 +1,8 @@
-using Excise.Core.Document;
-
-namespace Excise.Cli.Commands;
+namespace Excise.Core.Document;
 
 /// <summary>
-/// Owns the CLI's input-document lifetime choice for workflows that may write
-/// back to the same path. Distinct outputs stream the input; same-path outputs
+/// The input-document lifetime choice for workflows that may write back to
+/// the same path. Distinct outputs stream the input; same-path outputs
 /// detach from the source file before save so Windows does not retain a read
 /// handle over the destination.
 /// </summary>
