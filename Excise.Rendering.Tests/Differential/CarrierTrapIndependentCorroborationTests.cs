@@ -205,7 +205,7 @@ public sealed class CarrierTrapIndependentCorroborationTests : IDisposable
         return sb.ToString();
     }
 
-    private static byte[]? RunTool(string exe, params string[] args)
+    internal static byte[]? RunTool(string exe, params string[] args)
     {
         var psi = new ProcessStartInfo(exe)
         {

@@ -159,6 +159,29 @@ public static partial class CarrierTextRecovery
         }
     }
 
+    // ── Name-tree keys (§7.9.6) ───────────────────────────────────────────
+
+    /// <summary>
+    /// The keys of every catalog name tree and of the legacy /Dests dictionary;
+    /// /EmbeddedFiles keys are reported as attachment names. Scanned last: a
+    /// hyperlinked book holds thousands of destination names, and they must not
+    /// spend the finding budget before the other carriers are read.
+    /// </summary>
+    private static void ScanNameTreeKeys(PdfDocument doc, Collector c)
+    {
+        if (Deref(doc, doc.Catalog?.GetOptional("Names"), out _) is PdfDictionary names)
+            foreach (var (tree, root) in names)
+            {
+                if (tree.Value == "EmbeddedFiles") continue;
+                Deref(doc, root, out var objNum);
+                foreach (var (key, _) in PdfNameTree.Enumerate(doc, root))
+                    c.Text($"name-tree key /{tree.Value}", ObjectText(doc, key), 0, objNum);
+            }
+        if (Deref(doc, doc.Catalog?.GetOptional("Dests"), out var destsObj) is PdfDictionary legacy)
+            foreach (var key in legacy.Keys)
+                c.Text("name-tree key (catalog /Dests)", key.Value, 0, destsObj);
+    }
+
     // ── Hidden optional content (§8.11) ───────────────────────────────────
 
     /// <summary>

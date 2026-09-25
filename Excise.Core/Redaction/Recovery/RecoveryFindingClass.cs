@@ -57,7 +57,7 @@ public enum RecoveryFindingClass
     /// <summary>
     /// Ordinary document furniture: document METADATA and NAVIGATION —
     /// <c>/Info</c>, XMP, link <c>/URI</c> targets, <c>/PieceInfo</c> private
-    /// data, annotation authors, page-label prefixes.
+    /// data, annotation authors, page-label prefixes, name-tree keys.
     ///
     /// <para>The line is drawn there because it is the only place it can be
     /// drawn without guessing: none of these is page text. Anything ABOUT page
@@ -94,6 +94,7 @@ public static class RecoveryFindingClassifier
         if (carrier.StartsWith("action /URI", StringComparison.Ordinal)) return RecoveryFindingClass.DocumentFurniture;
         if (carrier.StartsWith("annotation /T", StringComparison.Ordinal)) return RecoveryFindingClass.DocumentFurniture;
         if (carrier.StartsWith("page label", StringComparison.Ordinal)) return RecoveryFindingClass.DocumentFurniture;
+        if (carrier.StartsWith("name-tree key", StringComparison.Ordinal)) return RecoveryFindingClass.DocumentFurniture;
 
         return channel switch
         {

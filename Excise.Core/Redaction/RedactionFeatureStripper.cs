@@ -1184,7 +1184,7 @@ internal static class RedactionFeatureStripper
     /// (#1582): enumerate the reachable OBJECT NUMBERS, then descend through
     /// the direct objects inside each.
     /// </summary>
-    private static List<PdfDictionary> ReachableDictionaries(PdfDocument document)
+    internal static List<PdfDictionary> ReachableDictionaries(PdfDocument document)
     {
         var result = new List<PdfDictionary>();
         HashSet<int> reachable;

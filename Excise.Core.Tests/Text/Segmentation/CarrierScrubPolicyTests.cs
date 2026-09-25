@@ -324,7 +324,7 @@ public sealed class CarrierScrubPolicyTests
         two.ModeFor(RedactionCarriers.Xmp).Should().Be(CarrierScrubMode.RemoveWhole);
         two.ModeFor(RedactionCarriers.Outlines).Should().Be(CarrierScrubMode.Strip);
 
-        CarrierScrubPolicy.AllCarriers.Should().HaveCount(11, "every RedactionCarriers flag is covered");
+        CarrierScrubPolicy.AllCarriers.Should().HaveCount(12, "every RedactionCarriers flag is covered");
     }
 
     private static string Stream(string dictExtra, string content)

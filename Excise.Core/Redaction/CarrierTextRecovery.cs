@@ -34,7 +34,7 @@ namespace Excise.Core.Text.Segmentation;
 ///     <c>/Desc</c>, text-like payloads, and nested PDFs recursively;</item>
 ///   <item><c>/Info</c> (content keys only), XMP (content properties only), outline
 ///     titles, page-label prefixes, <c>/PieceInfo</c> private data, text in hidden
-///     optional content;</item>
+///     optional content, and the keys of the catalog's name trees and <c>/Dests</c>;</item>
 ///   <item>unreferenced (orphan) objects, and text an incremental update superseded
 ///     but left in an earlier revision.</item>
 /// </list>
@@ -169,9 +169,12 @@ public static partial class CarrierTextRecovery
         Guarded(c, "optional content", () => ScanHiddenOptionalContent(doc, c));
         Guarded(c, "page thumbnails", () => ScanThumbnails(doc, c));
         Guarded(c, "/PieceInfo", () => ScanPieceInfo(doc, c));
-        if (!includeHistory) return;
-        Guarded(c, "orphan objects", () => ScanOrphans(doc, c));
-        Guarded(c, "prior revisions", () => ScanPriorRevisions(doc, c));
+        if (includeHistory)
+        {
+            Guarded(c, "orphan objects", () => ScanOrphans(doc, c));
+            Guarded(c, "prior revisions", () => ScanPriorRevisions(doc, c));
+        }
+        Guarded(c, "name-tree keys", () => ScanNameTreeKeys(doc, c));
     }
 
     /// <summary>
