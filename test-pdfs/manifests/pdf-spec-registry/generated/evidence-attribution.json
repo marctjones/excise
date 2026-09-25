@@ -81022,6 +81022,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/AreaRedactionBoxTests.cs::AreaRedactionBoxTests.RedactArea_DrawsTheRequestedBox_AndRemovesTheText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/AreaRedactionDegenerateWidthTests.cs::AreaRedactionDegenerateWidthTests.TopHalfArea_OverUnitTfGlyphs_RemovesThemForAnIndependentExtractor",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81614,15 +81621,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.StructElementCount_MatchesQpdf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.StructElementCount_SurvivesAnOpenSaveRoundTrip",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94499,6 +94497,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RemovesExactlyTheCarriersWhoseSpanEnclosesTheArea",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RefusesAnOperatorWithNoSpanStamp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.StructureTreeScrubber_RemovesTheElementsOfEveryMcidEnclosingTheArea",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.Recovery_ReportsEveryCarrierAtTheUnionOfEverythingItsSpanDrew",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94773,34 +94799,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95845,6 +95843,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RemovesExactlyTheCarriersWhoseSpanEnclosesTheArea",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RefusesAnOperatorWithNoSpanStamp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.StructureTreeScrubber_RemovesTheElementsOfEveryMcidEnclosingTheArea",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.Recovery_ReportsEveryCarrierAtTheUnionOfEverythingItsSpanDrew",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96119,34 +96145,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97205,6 +97203,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RemovesExactlyTheCarriersWhoseSpanEnclosesTheArea",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RefusesAnOperatorWithNoSpanStamp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.StructureTreeScrubber_RemovesTheElementsOfEveryMcidEnclosingTheArea",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.Recovery_ReportsEveryCarrierAtTheUnionOfEverythingItsSpanDrew",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97479,34 +97505,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98591,6 +98589,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RemovesExactlyTheCarriersWhoseSpanEnclosesTheArea",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RefusesAnOperatorWithNoSpanStamp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.StructureTreeScrubber_RemovesTheElementsOfEveryMcidEnclosingTheArea",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.Recovery_ReportsEveryCarrierAtTheUnionOfEverythingItsSpanDrew",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98865,34 +98891,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Square_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesMarksTests.cs::FailureModeFixturesMarksTests.Annotation_Highlight_IsAlsoAMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112800,8 +112798,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7835,
-    "testMethodsWithCapabilityCandidate": 4992,
+    "testMethods": 7844,
+    "testMethodsWithCapabilityCandidate": 5001,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
