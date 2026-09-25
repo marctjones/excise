@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.12.0] - 2026-09-25
+
 ### Added
 - **Transparent PNG signatures and image stamps.** An image stamp now keeps its alpha channel as a real
   soft mask, so a PNG with a transparent background sits on the page instead of in a box, in excise and
