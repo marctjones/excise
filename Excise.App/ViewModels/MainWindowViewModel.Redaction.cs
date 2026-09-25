@@ -138,8 +138,7 @@ public partial class MainWindowViewModel
                 TypewriterTextOperations,
                 saveFilePath,
                 _documentService.GetReEncryptionOptions(),
-                BuildRedactedCopySafetyOptions(),   // #1188/#1169 per-carrier policy
-                RedactionWidthPolicy);
+                BuildRedactionOptions());
             var result = _redactionWorkflowService.CreateRedactedCopy(request);
             await PublishRedactedCopySuccessAsync(result);
         }

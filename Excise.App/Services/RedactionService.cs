@@ -53,17 +53,7 @@ public class RedactionService
     /// <summary>
     /// Redact a rectangular area on <paramref name="page"/>.
     /// </summary>
-    /// <param name="keepAttachments">Keep the document's embedded files
-    /// (#1572). Default false: the engine removes every attachment, since an
-    /// area has no term to check one against.</param>
-    public void RedactArea(
-        PdfPage page,
-        PdfPageRect area,
-        bool keepAttachments = false,
-        Excise.Core.Text.Segmentation.RedactionProfile profile
-            = Excise.Core.Text.Segmentation.RedactionProfile.Standard,   // #1586
-        Excise.Core.Text.Segmentation.WidthPolicy width
-            = Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout)   // #1834
+    public void RedactArea(PdfPage page, PdfPageRect area, RedactionOptions options)
     {
         var visualArea = PdfCoordinateMapper.ToVisualPoints(page, area);
         if (!IntersectsVisualPage(visualArea, page.VisualWidth, page.VisualHeight))
@@ -78,13 +68,7 @@ public class RedactionService
         // The engine also strips the document's positionless carriers (/Info,
         // XMP) by default — see #897 and the note at the top of this class —
         // and, unless kept, every attachment (#1572). It draws the covering box.
-        page.RedactArea(coreRect,
-            Excise.Core.Text.Segmentation.RedactionOptions.ForProfile(profile) with
-            {
-                Strategy = GlyphRemovalStrategy.AnyOverlap,
-                KeepAttachments = keepAttachments,
-                Width = width,
-            });
+        page.RedactArea(coreRect, options);
 
         _logger.LogInformation("Redacted area {Area} on page {Page}", coreRect, page.PageNumber);
     }

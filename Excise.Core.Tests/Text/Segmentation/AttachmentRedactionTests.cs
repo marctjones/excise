@@ -165,7 +165,8 @@ public class AttachmentRedactionTests
 
         doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720));
         var report = RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForAreas(
-            new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, new PdfRectangle(60, 690, 300, 720))) }));
+            new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, new PdfRectangle(60, 690, 300, 720))) },
+            RedactionOptions.Default));
 
         foreach (var secret in PayloadSecrets.Append(AnnotContentsSecret))
             SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), secret).Should().BeEmpty(secret);
@@ -184,7 +185,7 @@ public class AttachmentRedactionTests
         doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720));
         var report = RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForAreas(
             new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, new PdfRectangle(60, 690, 300, 720))) },
-            options: new RedactedCopySafetyOptions { ScrubAttachments = false }));
+            RedactionOptions.Default with { KeepAttachments = true }));
 
         report.AttachmentResults.Should().HaveCount(6)
             .And.OnlyContain(a => a.Disposition == AttachmentDisposition.Removed);
@@ -220,7 +221,7 @@ public class AttachmentRedactionTests
         text.Should().Throw<PdfPortfolioRedactionException>().WithMessage("*portfolio*");
         var area = () => doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720));
         area.Should().Throw<PdfPortfolioRedactionException>();
-        var copy = () => RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForTerms(new[] { "Public" }));
+        var copy = () => RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForTerms(new[] { "Public" }, RedactionOptions.Default));
         copy.Should().Throw<PdfPortfolioRedactionException>();
 
         var saved = doc.SaveToBytes();
@@ -386,10 +387,10 @@ public class AttachmentRedactionTests
         using var doc = PdfDocument.Open(BuildAllRoutesPdf());
         var area = new PdfRectangle(60, 690, 300, 720);
 
-        doc.GetPage(1).RedactArea(area, new RedactionOptions { KeepAttachments = true });
+        var options = new RedactionOptions { KeepAttachments = true };
+        doc.GetPage(1).RedactArea(area, options);
         var report = RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForAreas(
-            new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, area)) },
-            options: new RedactedCopySafetyOptions { ScrubAttachments = false }));
+            new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, area)) }, options));
 
         SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), DocSecret).Should().NotBeEmpty("kept");
         report.AttachmentsScrubbed.Should().BeFalse();
@@ -422,11 +423,10 @@ public class AttachmentRedactionTests
         using var doc = PdfDocument.Open(BuildAllRoutesPdf());
         var area = new PdfRectangle(60, 690, 300, 720);
 
-        var redaction = doc.GetPage(1).RedactAreaWithReport(
-            area, RedactionOptions.Maximum with { KeepAttachments = true });
+        var options = RedactionOptions.Maximum with { KeepAttachments = true };
+        var redaction = doc.GetPage(1).RedactAreaWithReport(area, options);
         var report = RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForAreas(
-            new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, area)) },
-            options: new RedactedCopySafetyOptions { ScrubAttachments = false }));
+            new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, area)) }, options));
 
         // ⚠️ The ANCHORING is what is asserted, not our own attachment count.
         // Measured: RedactedCopySafetyPolicy reports 6 either way, because the

@@ -101,7 +101,7 @@ internal static class RedactCommandHandler
         // redaction surface. The confidence oracle remains outside Core because
         // it depends on the optional OCR package.
         var profileOptions = RedactionOptions.ForProfile(request.Profile);
-        var redaction = document.RedactText(request.Text, profileOptions with
+        var options = profileOptions with
         {
             CaseSensitive = request.CaseSensitive,
             WholeWord = request.WholeWord,   // #1052
@@ -126,13 +126,22 @@ internal static class RedactCommandHandler
             // which is most of what that profile is (#1586).
             CarrierPolicy = request.CarrierPolicy ?? profileOptions.CarrierPolicy,
             KeepAttachments = request.KeepAttachments,   // #1572
-        }, guardedProgress);
+        };
+        var redaction = document.RedactText(request.Text, options, guardedProgress);
 
         // #916/#905: collect carriers the surgical CLI term policy could not
         // examine before saving, while the document still reflects the output.
-        var carrierNotes = CliRedactedCopySafetyAdapter
-            .AuditTermRedaction(document, request.Text)
-            .ToList();
+        // RedactText already scrubbed, verified and handled attachments.
+        var carrierNotes = RedactedCopySafetyPolicy.Evaluate(document,
+            RedactedCopySafetyRequest.ForTerms(new[] { request.Text }, options, new RedactedCopySafetyOptions
+            {
+                ScrubMetadata = false,
+                ScrubRequestedTerms = false,
+                VerifyRequestedTerms = false,
+                RunHiddenTextAudit = false,
+                RunRasterRedactionAudit = false,
+                InspectKeptAttachments = false,
+            })).Warnings.ToList();
         if (ocrResult != null)
         {
             carrierNotes.Add(

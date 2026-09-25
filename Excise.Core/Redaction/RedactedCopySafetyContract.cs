@@ -80,11 +80,13 @@ public sealed record RedactedCopySafetyArea(
     PdfPageRect PageArea,
     string? CapturedText = null);
 
-/// <summary>Which scrub and audit channels the shared policy should execute.</summary>
+/// <summary>
+/// Which scrub and audit stages the shared policy runs. What they remove is
+/// the caller's <see cref="RedactionOptions"/> on the request (#1830).
+/// </summary>
 public sealed record RedactedCopySafetyOptions
 {
     public bool ScrubMetadata { get; init; } = true;
-    public bool ScrubAttachments { get; init; } = true;
     public bool ScrubRequestedTerms { get; init; } = true;
     public bool RunCarrierAudit { get; init; } = true;
     public bool VerifyRequestedTerms { get; init; } = true;
@@ -100,57 +102,13 @@ public sealed record RedactedCopySafetyOptions
     public bool RefuseOnUnresolvedRedactAnnotations { get; init; } = true;
 
     /// <summary>
-    /// When <see cref="ScrubAttachments"/> is false, redact or report every
-    /// attachment the copy keeps (#1572): text files have the terms cut out,
-    /// nested PDFs are redacted, anything else — and everything when there is
-    /// no term — is reported as not checked. On by default; a caller that
-    /// already did this (the CLI, after <c>RedactText</c>) turns it off.
+    /// When <see cref="RedactionOptions.KeepAttachments"/> is set, redact or
+    /// report every attachment the copy keeps (#1572): text files have the
+    /// terms cut out, nested PDFs are redacted, anything else — and everything
+    /// when there is no term — is reported as not checked. On by default; a
+    /// caller that already did this (the CLI, after <c>RedactText</c>) turns it off.
     /// </summary>
     public bool InspectKeptAttachments { get; init; } = true;
-
-    /// <summary>
-    /// Per-carrier scrub MODE for the <see cref="ScrubRequestedTerms"/> pass
-    /// (#1188/#1169). Default: <see cref="Operations.CarrierScrubMode.Strip"/>
-    /// everywhere, unchanged from before the option existed.
-    /// </summary>
-    /// <remarks>
-    /// This is the delivery surface #1169 asks for: on a carrier whose value is
-    /// a KNOWN string (a URL, a templated metadata field), cutting the term out
-    /// leaves a hole the surrounding text can be read around, so the user can
-    /// choose to drop the whole value or be told and decide. A
-    /// <see cref="Operations.CarrierScrubMode.ReportOnly"/> carrier that holds
-    /// the term is surfaced in <see cref="RedactedCopySafetyReport.Warnings"/> —
-    /// it must never pass silently.
-    /// </remarks>
-    public Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
-        = Operations.CarrierScrubPolicy.Default;
-
-    /// <summary>
-    /// Which carriers the term scrub examines at all (#1188). Orthogonal to
-    /// <see cref="CarrierPolicy"/>: this is scope, that is mode.
-    /// </summary>
-    public Operations.RedactionCarriers Carriers { get; init; }
-        = Operations.RedactionCarriers.All;
-
-    /// <summary>
-    /// Match whole words only in the term scrub (#1052). Default false —
-    /// substring, the #1000 decision. Must agree with how the caller matched
-    /// page content: two different rules in one redaction is the #896 failure.
-    /// </summary>
-    public bool WholeWord { get; init; }
-
-    /// <summary>
-    /// The output profile this copy is produced under (#1586). Default
-    /// <see cref="RedactionProfile.Standard"/>.
-    /// </summary>
-    /// <remarks>
-    /// The engine already applied the profile on the <c>RedactArea</c> /
-    /// <c>RedactText</c> pass; this pass applies it again — idempotently, since
-    /// every step is a removal — so the SAFETY REPORT can account for what went.
-    /// A copy the dialog calls safe has to be able to say what it removed, and
-    /// before #1586 the area path had no return channel at all.
-    /// </remarks>
-    public RedactionProfile Profile { get; init; } = RedactionProfile.Standard;
 
     public static RedactedCopySafetyOptions Default { get; } = new();
 }
@@ -159,29 +117,39 @@ public sealed record RedactedCopySafetyOptions
 /// Delivery-neutral input for post-redaction scrub and audit policy. File I/O,
 /// encryption, dialogs, console text, JSON, and exit codes stay with callers.
 /// </summary>
+/// <param name="Redaction">
+/// The options the engine pass ran with. This pass applies them again —
+/// idempotently, since every step is a removal — so the report can account for
+/// what went (#1586). Required: a default here would silently undo Maximum (#1830).
+/// </param>
 public sealed record RedactedCopySafetyRequest(
     IReadOnlyList<RedactedCopySafetyArea> RedactionAreas,
     IReadOnlyList<string> RequestedTerms,
     int SkippedRedactionAreaCount,
+    RedactionOptions Redaction,
     RedactedCopySafetyOptions Options)
 {
     public static RedactedCopySafetyRequest ForAreas(
         IReadOnlyList<RedactedCopySafetyArea> areas,
+        RedactionOptions redaction,
         int skippedRedactionAreaCount = 0,
         RedactedCopySafetyOptions? options = null) =>
         new(
             areas,
             System.Array.Empty<string>(),
             skippedRedactionAreaCount,
+            redaction,
             options ?? RedactedCopySafetyOptions.Default);
 
     public static RedactedCopySafetyRequest ForTerms(
         IReadOnlyList<string> terms,
+        RedactionOptions redaction,
         RedactedCopySafetyOptions? options = null) =>
         new(
             System.Array.Empty<RedactedCopySafetyArea>(),
             terms,
             0,
+            redaction,
             options ?? RedactedCopySafetyOptions.Default);
 }
 

@@ -75,14 +75,10 @@ internal sealed class RedactionWorkflowService
                 continue;
             }
 
-            // #1572: the area pass removes attachments unless the copy keeps
-            // them — the same choice the safety policy below applies.
             _redactionService.RedactArea(
                 request.Document.Pages[redaction.PageNumber - 1],
                 redaction.PageArea,
-                keepAttachments: !request.SafetyOptions.ScrubAttachments,
-                profile: request.SafetyOptions.Profile,   // #1586
-                width: request.Width);
+                request.Redaction);
         }
 
         var appliedTypewriterOperations = PdfTypewriterTextApplier.Apply(
@@ -92,8 +88,8 @@ internal sealed class RedactionWorkflowService
             request.Document,
             RedactedCopySafetyRequest.ForAreas(
                 request.Redactions.Select(ToSafetyArea).ToArray(),
-                skippedCount,
-                request.SafetyOptions));
+                request.Redaction,
+                skippedCount));
 
         foreach (var failedStage in safetyReport.FailedStages)
         {
@@ -153,30 +149,23 @@ internal sealed record RedactionApplicationRequest(
     PdfDocument Document,
     IReadOnlyList<RedactionAreaTransaction> Redactions,
     IReadOnlyList<PdfTypewriterTextOperation> TypewriterOperations,
-    // #1188/#1169: which carriers the term scrub touches and HOW. Defaults
-    // reproduce the pre-option behaviour exactly.
-    RedactedCopySafetyOptions? SafetyOptionsOverride = null,
-    WidthPolicy Width = WidthPolicy.CollapsePreserveLayout)   // #1834
+    RedactionOptions Redaction)
 {
-    public RedactedCopySafetyOptions SafetyOptions =>
-        SafetyOptionsOverride ?? RedactedCopySafetyOptions.Default;
-
     public static RedactionApplicationRequest Capture(
         PdfDocument document,
         IEnumerable<PendingRedaction> pendingRedactions,
         IEnumerable<PdfTypewriterTextOperation> typewriterOperations,
-        RedactedCopySafetyOptions? safetyOptions = null,
-        WidthPolicy width = WidthPolicy.CollapsePreserveLayout)
+        RedactionOptions redaction)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(pendingRedactions);
         ArgumentNullException.ThrowIfNull(typewriterOperations);
+        ArgumentNullException.ThrowIfNull(redaction);
         return new(
             document,
             pendingRedactions.Select(RedactionAreaTransaction.FromPending).ToArray(),
             typewriterOperations.ToArray(),
-            safetyOptions,
-            width);
+            redaction);
     }
 }
 
@@ -197,15 +186,13 @@ internal sealed record RedactedCopyRequest(
         IEnumerable<PdfTypewriterTextOperation> typewriterOperations,
         string outputPath,
         PdfEncryptionOptions? encryptionOptions,
-        RedactedCopySafetyOptions? safetyOptions = null,
-        WidthPolicy width = WidthPolicy.CollapsePreserveLayout) =>
+        RedactionOptions redaction) =>
         new(
             RedactionApplicationRequest.Capture(
                 document,
                 pendingRedactions,
                 typewriterOperations,
-                safetyOptions,
-                width),
+                redaction),
             outputPath,
             encryptionOptions);
 }

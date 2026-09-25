@@ -40,11 +40,13 @@ public static class RedactedCopySafetyPolicy
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.RedactionAreas);
         ArgumentNullException.ThrowIfNull(request.RequestedTerms);
+        ArgumentNullException.ThrowIfNull(request.Redaction);
         ArgumentNullException.ThrowIfNull(request.Options);
 
         var warnings = new List<string>();
         var failedStages = new List<RedactedCopySafetyFailureStage>();
         var options = request.Options;
+        var redaction = request.Redaction;
 
         // #1430 — FIRST, before anything below mutates the document.
         //
@@ -82,21 +84,15 @@ public static class RedactedCopySafetyPolicy
         // the captured/requested terms, and refuses a nested PDF it cannot
         // redact.
         List<(Excise.Core.Document.PdfAttachmentGraph.Found File, AttachmentRedactionResult Result)>? keptAttachments = null;
-        if (options.ScrubAttachments)
+        if (!redaction.KeepAttachments)
         {
             Excise.Core.Document.PdfAttachmentGraph.ThrowIfPortfolio(document);
         }
         else if (options.InspectKeptAttachments)
         {
             keptAttachments = AttachmentCarrierScrubber.RedactKept(
-                document, terms, caseSensitive: false, options.WholeWord, depth: 0,
-                (nested, term) => nested.RedactText(term, new RedactionOptions
-                {
-                    WholeWord = options.WholeWord,
-                    Carriers = options.Carriers,
-                    CarrierPolicy = options.CarrierPolicy,
-                    KeepAttachments = true,
-                }));
+                document, terms, caseSensitive: false, redaction.WholeWord, depth: 0,
+                (nested, term) => nested.RedactText(term, redaction));
         }
 
         // #1586: the profile's non-metadata removals. The engine pass already
@@ -104,14 +100,7 @@ public static class RedactedCopySafetyPolicy
         // through it — which is the point: the rows let the safety report say
         // what a redacted copy no longer contains, and the area path had no
         // other way to say it.
-        var profileOptions = RedactionOptions.ForProfile(options.Profile) with
-        {
-            CarrierPolicy = options.CarrierPolicy,
-            Carriers = options.Carriers,
-            WholeWord = options.WholeWord,
-            KeepAttachments = !options.ScrubAttachments,
-        };
-        var profileRemovals = RedactionFeatureStripper.Apply(document, profileOptions);
+        var profileRemovals = RedactionFeatureStripper.Apply(document, redaction);
 
         var infoFieldsBefore = options.ScrubMetadata
             ? CountScrubbableInfoFields(document)
@@ -154,7 +143,7 @@ public static class RedactedCopySafetyPolicy
         // reported whatever this copy's own attachment choice is — a removal
         // the caller did not expect must still be named.
         removedAttachments.AddRange(document.RedactionLedger.RemovedAttachments);
-        if (options.ScrubAttachments)
+        if (!redaction.KeepAttachments)
         {
             // Every attachment, by every route, each one named.
             try
@@ -180,8 +169,8 @@ public static class RedactedCopySafetyPolicy
             try
             {
                 var outcome = PdfDocumentSanitizer.ScrubTerms(
-                    document, terms, caseSensitive: false, options.Carriers, options.CarrierPolicy,
-                    options.WholeWord);
+                    document, terms, caseSensitive: false, redaction.Carriers, redaction.CarrierPolicy,
+                    redaction.WholeWord);
 
                 // #1169: a carrier the user set to ReportOnly still holds the
                 // term, and a refused mode did nothing at all. Both are the
@@ -270,7 +259,7 @@ public static class RedactedCopySafetyPolicy
         // not a quiet field: the user chose a destructive profile and the copy
         // they are about to ship will not read correctly to a screen reader,
         // will not submit, and has no bookmarks, links or comments.
-        if (RedactionFeatureStripper.DestroysAccessibility(profileOptions))
+        if (RedactionFeatureStripper.DestroysAccessibility(redaction))
         {
             warnings.Add(
                 "Maximum profile: this copy is NO LONGER accessible or interactive. Forms and " +
@@ -302,10 +291,10 @@ public static class RedactedCopySafetyPolicy
             PdfAIdentificationPreserved: pdfAIdentificationPreserved,   // #1507
             Attachments: attachmentResults,                              // #1572
             XfaRemovals: document.RedactionLedger.XfaRemovals.ToList(), // #1574
-            Profile: options.Profile,                                    // #1586
+            Profile: redaction.Profile,                                  // #1586
             ProfileRemovals: profileRemovals,
             AccessibilityAndInteractivityRemoved:
-                RedactionFeatureStripper.DestroysAccessibility(profileOptions));
+                RedactionFeatureStripper.DestroysAccessibility(redaction));
     }
 
     /// <summary>

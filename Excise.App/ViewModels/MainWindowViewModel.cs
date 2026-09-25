@@ -440,19 +440,17 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// The redacted-copy scrub options the user's per-carrier choices describe
-    /// (#1188/#1169). All-default unless a policy was changed, so the redaction
-    /// path is byte-identical to before the option existed.
+    /// The redaction options the user's preferences describe, for the engine
+    /// pass and the redacted-copy safety pass alike (#1830). All-default unless a
+    /// preference was changed.
     /// </summary>
-    internal Excise.Core.Text.Segmentation.RedactedCopySafetyOptions BuildRedactedCopySafetyOptions()
+    internal Excise.Core.Text.Segmentation.RedactionOptions BuildRedactionOptions()
     {
         // #1586: start from the PROFILE's policy, not the all-Strip default.
         // Maximum's whole point is RemoveWhole on every kept carrier, and
-        // rebuilding from Default here would have silently thrown that away —
-        // the same mistake the CLI handler made and the reason both are
-        // written this way.
-        var policy = Excise.Core.Text.Segmentation.RedactionOptions
-            .ForProfile(RedactionProfile).CarrierPolicy;
+        // rebuilding from Default here would have silently thrown that away.
+        var options = Excise.Core.Text.Segmentation.RedactionOptions.ForProfile(RedactionProfile);
+        var policy = options.CarrierPolicy;
 
         // ⚠️ A per-carrier preference overrides the profile only when the user
         // MOVED it off Strip. Applying it unconditionally would have undone
@@ -470,12 +468,12 @@ public partial class MainWindowViewModel : ViewModelBase
                     | Excise.Core.Operations.RedactionCarriers.Xmp,
                 MetadataCarrierPolicy);
 
-        return Excise.Core.Text.Segmentation.RedactedCopySafetyOptions.Default with
+        return options with
         {
             CarrierPolicy = policy,
             WholeWord = RedactionWholeWord,   // #1052
-            ScrubAttachments = !RedactionKeepAttachments,   // #1572
-            Profile = RedactionProfile,   // #1586
+            KeepAttachments = RedactionKeepAttachments,   // #1572
+            Width = RedactionWidthPolicy,   // #1189
         };
     }
 

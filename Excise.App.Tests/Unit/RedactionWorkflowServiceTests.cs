@@ -117,7 +117,8 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
                 new RedactionApplicationRequest(
                     document,
                     new[] { new RedactionAreaTransaction(1, pageArea, mark.PreviewText) },
-                    Array.Empty<PdfTypewriterTextOperation>()),
+                    Array.Empty<PdfTypewriterTextOperation>(),
+                    RedactionOptions.Default),
                 outputPath,
                 EncryptionOptions: null));
         }
@@ -216,7 +217,8 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
         var request = RedactionApplicationRequest.Capture(
             document,
             new[] { pending },
-            Array.Empty<PdfTypewriterTextOperation>());
+            Array.Empty<PdfTypewriterTextOperation>(),
+            RedactionOptions.Default);
         pending.PageNumber = 2;
         pending.PreviewText = "changed";
 
@@ -240,7 +242,8 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
             new RedactionApplicationRequest(
                 document,
                 new[] { invalid },
-                Array.Empty<PdfTypewriterTextOperation>()));
+                Array.Empty<PdfTypewriterTextOperation>(),
+                RedactionOptions.Default));
 
         result.AppliedRedactionCount.Should().Be(0);
         result.SkippedRedactionCount.Should().Be(1);
@@ -268,7 +271,7 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
             document,
             new[] { new RedactionAreaTransaction(1, area, "WIDTHSECRET1834") },
             Array.Empty<PdfTypewriterTextOperation>(),
-            Width: width));
+            RedactionOptions.Default with { Width = width }));
 
         Rectangles().Should().Be(before + boxes);
         SavedPdfLeakScanner.FindTerm(document.SaveToBytes(), "WIDTHSECRET1834").Should().BeEmpty();
@@ -295,7 +298,8 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
                 new RedactionApplicationRequest(
                     document,
                     new[] { redaction },
-                    new[] { typewriter }),
+                    new[] { typewriter },
+                    RedactionOptions.Default),
                 outputPath,
                 EncryptionOptions: null));
 

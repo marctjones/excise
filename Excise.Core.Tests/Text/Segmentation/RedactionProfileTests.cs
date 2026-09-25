@@ -521,7 +521,7 @@ public class RedactionProfileTests
         var report = RedactedCopySafetyPolicy.Evaluate(doc,
             RedactedCopySafetyRequest.ForAreas(
                 new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, area)) },
-                options: new RedactedCopySafetyOptions { ScrubAttachments = false }));
+                RedactionOptions.Default with { KeepAttachments = true }));
 
         report.Warnings.Should().Contain(
             w => w.Contains("structure-tree /Alt") && w.Contains("could NOT be checked"),

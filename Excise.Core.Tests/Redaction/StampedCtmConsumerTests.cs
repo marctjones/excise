@@ -169,7 +169,6 @@ public class StampedCtmConsumerTests
         var rasterOnly = RedactedCopySafetyOptions.Default with
         {
             ScrubMetadata = false,
-            ScrubAttachments = false,
             ScrubRequestedTerms = false,
             RunCarrierAudit = false,
             VerifyRequestedTerms = false,
@@ -180,6 +179,7 @@ public class StampedCtmConsumerTests
         var report = RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForAreas(
             new[] { new RedactedCopySafetyArea(1,
                 PdfPageRect.FromContentPoints(1, new PdfRectangle(left, bottom, right, top))) },
+            RedactionOptions.Default with { KeepAttachments = true },
             options: rasterOnly));
 
         report.RemainingRasterOverlapCount.Should().Be(expected);

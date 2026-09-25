@@ -296,7 +296,8 @@ public partial class MainWindowViewModel
                 RedactionApplicationRequest.Capture(
                     document,
                     RedactionWorkflow.PendingRedactions,
-                    Array.Empty<Excise.Core.Editing.PdfTypewriterTextOperation>()));
+                    Array.Empty<Excise.Core.Editing.PdfTypewriterTextOperation>(),
+                    BuildRedactionOptions()));
 
             RedactionWorkflow.MoveToApplied();
             FileState.PendingRedactionsCount = 0;
@@ -425,8 +426,7 @@ public partial class MainWindowViewModel
                                     redaction.PageArea,
                                     redaction.PreviewText))
                                 .ToArray(),
-                            skippedRedactionAreaCount: 0,
-                            BuildRedactedCopySafetyOptions()));   // #1188/#1169/#1052
+                            BuildRedactionOptions()));
                     // #643: keep an encrypted source's protection on the final
                     // scripted output (the intermediate files carried it too —
                     // see RedactionService.RedactText).
@@ -462,7 +462,8 @@ public partial class MainWindowViewModel
                             RedactionWorkflow.PendingRedactions,
                             Array.Empty<Excise.Core.Editing.PdfTypewriterTextOperation>(),
                             filePath,
-                            _documentService.GetReEncryptionOptions()));
+                            _documentService.GetReEncryptionOptions(),
+                            BuildRedactionOptions()));
                     RedactionWorkflow.MoveToApplied();
                     FileState.PendingRedactionsCount = 0;
 
