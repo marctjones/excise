@@ -29,10 +29,6 @@ public class PdfFont
     /// </summary>
     public bool IsStandard14 { get; }
 
-    // Font metrics for standard fonts (approximate widths in 1000 units per em)
-    private readonly Dictionary<char, int> _widths;
-    private readonly int _defaultWidth;
-
     /// <summary>
     /// Creates a font with the specified parameters.
     /// </summary>
@@ -42,8 +38,6 @@ public class PdfFont
         BaseFont = baseFont ?? throw new ArgumentNullException(nameof(baseFont));
         Size = size > 0 ? size : throw new ArgumentOutOfRangeException(nameof(size), "Font size must be positive");
         IsStandard14 = IsStandard14Font(baseFont);
-        _widths = GetStandardFontWidths(baseFont);
-        _defaultWidth = GetDefaultWidth(baseFont);
     }
 
     /// <summary>
@@ -405,9 +399,16 @@ public class PdfFont
     /// </summary>
     private static bool TryMapToWinAnsi(char c, out byte b) => Fonts.WinAnsiEncoding.TryMap(c, out b);
 
-    private int GetCharWidth(char c)
+    // The advance of the byte EncodeString writes for c: '?' for a character it cannot encode.
+    // The AFM tables for codes 32-126 carry StandardEncoding's quoteright (39) and quoteleft (96);
+    // the WinAnsiEncoding CreateFontDictionary declares makes them quotesingle and grave.
+    private double GetCharWidth(char c)
     {
-        return _widths.TryGetValue(c, out var width) ? width : _defaultWidth;
+        if (!TryMapToWinAnsi(c, out var code)) code = (byte)'?';
+        if (code is 39 or 96 &&
+            Fonts.StandardFontMetrics.TryGetWidthByGlyphName(BaseFont, code == 39 ? "quotesingle" : "grave", out var named))
+            return named;
+        return Fonts.StandardFontMetrics.GetWidthOrFallback(BaseFont, code);
     }
 
     private static bool IsStandard14Font(string baseFont)
@@ -430,136 +431,6 @@ public class PdfFont
             StandardFonts.ZapfDingbats => true,
             _ => false
         };
-    }
-
-    private static int GetDefaultWidth(string baseFont)
-    {
-        // Courier is monospace - all characters are 600 units wide
-        if (baseFont.StartsWith("Courier"))
-            return 600;
-
-        // Default width for proportional fonts
-        return 500;
-    }
-
-    private static Dictionary<char, int> GetStandardFontWidths(string baseFont)
-    {
-        // Simplified character widths for standard fonts (in 1000 units per em)
-        // These are approximate values based on typical font metrics
-
-        if (baseFont.StartsWith("Courier"))
-        {
-            // Courier is monospace - all characters same width
-            var courier = new Dictionary<char, int>();
-            for (int i = 32; i < 127; i++)
-                courier[(char)i] = 600;
-            return courier;
-        }
-
-        // Helvetica-like widths (approximate)
-        var widths = new Dictionary<char, int>
-        {
-            [' '] = 278,
-            ['!'] = 278,
-            ['"'] = 355,
-            ['#'] = 556,
-            ['$'] = 556,
-            ['%'] = 889,
-            ['&'] = 667,
-            ['\''] = 191,
-            ['('] = 333,
-            [')'] = 333,
-            ['*'] = 389,
-            ['+'] = 584,
-            [','] = 278,
-            ['-'] = 333,
-            ['.'] = 278,
-            ['/'] = 278,
-            ['0'] = 556,
-            ['1'] = 556,
-            ['2'] = 556,
-            ['3'] = 556,
-            ['4'] = 556,
-            ['5'] = 556,
-            ['6'] = 556,
-            ['7'] = 556,
-            ['8'] = 556,
-            ['9'] = 556,
-            [':'] = 278,
-            [';'] = 278,
-            ['<'] = 584,
-            ['='] = 584,
-            ['>'] = 584,
-            ['?'] = 556,
-            ['@'] = 1015,
-            ['A'] = 667,
-            ['B'] = 667,
-            ['C'] = 722,
-            ['D'] = 722,
-            ['E'] = 667,
-            ['F'] = 611,
-            ['G'] = 778,
-            ['H'] = 722,
-            ['I'] = 278,
-            ['J'] = 500,
-            ['K'] = 667,
-            ['L'] = 556,
-            ['M'] = 833,
-            ['N'] = 722,
-            ['O'] = 778,
-            ['P'] = 667,
-            ['Q'] = 778,
-            ['R'] = 722,
-            ['S'] = 667,
-            ['T'] = 611,
-            ['U'] = 722,
-            ['V'] = 667,
-            ['W'] = 944,
-            ['X'] = 667,
-            ['Y'] = 667,
-            ['Z'] = 611,
-            ['['] = 278,
-            ['\\'] = 278,
-            [']'] = 278,
-            ['^'] = 469,
-            ['_'] = 556,
-            ['`'] = 333,
-            ['a'] = 556,
-            ['b'] = 556,
-            ['c'] = 500,
-            ['d'] = 556,
-            ['e'] = 556,
-            ['f'] = 278,
-            ['g'] = 556,
-            ['h'] = 556,
-            ['i'] = 222,
-            ['j'] = 222,
-            ['k'] = 500,
-            ['l'] = 222,
-            ['m'] = 833,
-            ['n'] = 556,
-            ['o'] = 556,
-            ['p'] = 556,
-            ['q'] = 556,
-            ['r'] = 333,
-            ['s'] = 500,
-            ['t'] = 278,
-            ['u'] = 556,
-            ['v'] = 500,
-            ['w'] = 722,
-            ['x'] = 500,
-            ['y'] = 500,
-            ['z'] = 500,
-            ['{'] = 334,
-            ['|'] = 260,
-            ['}'] = 334,
-            ['~'] = 584
-        };
-
-        // Times has slightly different widths, but use Helvetica as approximation
-        // for simplicity. A full implementation would have separate tables.
-
-        return widths;
     }
 
     /// <inheritdoc />
