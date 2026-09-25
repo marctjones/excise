@@ -24,10 +24,8 @@ public partial class MainWindowViewModel
     internal const string PrintDialogTitle = "Print";
     internal const string PrintNeedsDocumentMessage = "Open a PDF before printing.";
     internal const string PrintDeniedAction = "Printing";
-    internal const string PrintDeniedPermission = "printing (/P bit 3)";
-    internal const string PrintHighQualityDeniedPermission =
-        "full-quality printing (/P bit 12). excise prints and saves through the system print sheet at full " +
-        "quality and cannot produce the degraded output this document allows";
+    internal const string PrintHighQualityDeniedAction =
+        "Printing (excise prints at full quality and cannot produce the degraded output this document allows)";
 
     private PrintScalingMode _printScaling = PrintScalingMode.ShrinkOversized;
 
@@ -77,7 +75,7 @@ public partial class MainWindowViewModel
     internal void CancelPrintInProgress() => _printCancellation?.Cancel();
 
     private static bool IsPrintPermitted(PdfPermissions permissions) =>
-        permissions.CanPrint && permissions.CanPrintHighQuality;
+        permissions.Allows(DocumentAction.PrintHighQuality);
 
     private void RaiseCanPrintWithDocumentState(object? sender, PropertyChangedEventArgs e)
     {
@@ -101,8 +99,8 @@ public partial class MainWindowViewModel
             return;
         }
 
-        if (!EnsureDocumentPermission(p => p.CanPrint, PrintDeniedAction, PrintDeniedPermission) ||
-            !EnsureDocumentPermission(p => p.CanPrintHighQuality, PrintDeniedAction, PrintHighQualityDeniedPermission))
+        if (!EnsureDocumentPermission(DocumentAction.Print, PrintDeniedAction) ||
+            !EnsureDocumentPermission(DocumentAction.PrintHighQuality, PrintHighQualityDeniedAction))
         {
             return;
         }

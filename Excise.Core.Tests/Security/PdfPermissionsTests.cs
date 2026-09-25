@@ -29,14 +29,14 @@ public class PdfPermissionsTests
         // low-order bits 1-2 zero). qpdf reports everything "allowed".
         var p = new PdfPermissions(-4);
 
-        p.CanPrint.Should().BeTrue();
-        p.CanModify.Should().BeTrue();
-        p.CanCopy.Should().BeTrue();
-        p.CanAnnotate.Should().BeTrue();
-        p.CanFillForms.Should().BeTrue();
-        p.CanExtractForAccessibility.Should().BeTrue();
-        p.CanAssemble.Should().BeTrue();
-        p.CanPrintHighQuality.Should().BeTrue();
+        p.Allows(DocumentAction.Print).Should().BeTrue();
+        p.Allows(DocumentAction.ModifyContents).Should().BeTrue();
+        p.Allows(DocumentAction.Extract).Should().BeTrue();
+        p.Allows(DocumentAction.Annotate).Should().BeTrue();
+        p.Allows(DocumentAction.FillForms).Should().BeTrue();
+        p.Allows(DocumentAction.ExtractForAccessibility).Should().BeTrue();
+        p.Allows(DocumentAction.AssembleDocument).Should().BeTrue();
+        p.Allows(DocumentAction.PrintHighQuality).Should().BeTrue();
         p.RawValue.Should().Be(-4);
         p.Should().Be(PdfPermissions.AllAllowed);
     }
@@ -46,14 +46,14 @@ public class PdfPermissionsTests
     {
         var p = new PdfPermissions(-1);
 
-        p.CanPrint.Should().BeTrue();
-        p.CanModify.Should().BeTrue();
-        p.CanCopy.Should().BeTrue();
-        p.CanAnnotate.Should().BeTrue();
-        p.CanFillForms.Should().BeTrue();
-        p.CanExtractForAccessibility.Should().BeTrue();
-        p.CanAssemble.Should().BeTrue();
-        p.CanPrintHighQuality.Should().BeTrue();
+        p.Allows(DocumentAction.Print).Should().BeTrue();
+        p.Allows(DocumentAction.ModifyContents).Should().BeTrue();
+        p.Allows(DocumentAction.Extract).Should().BeTrue();
+        p.Allows(DocumentAction.Annotate).Should().BeTrue();
+        p.Allows(DocumentAction.FillForms).Should().BeTrue();
+        p.Allows(DocumentAction.ExtractForAccessibility).Should().BeTrue();
+        p.Allows(DocumentAction.AssembleDocument).Should().BeTrue();
+        p.Allows(DocumentAction.PrintHighQuality).Should().BeTrue();
     }
 
     [Fact]
@@ -68,14 +68,14 @@ public class PdfPermissionsTests
         //   modify forms/annotations/other: allowed
         var p = new PdfPermissions(-1028);
 
-        p.CanAssemble.Should().BeFalse("bit 11 (value 1024) is the only permission bit cleared in -1028");
-        p.CanPrint.Should().BeTrue();
-        p.CanPrintHighQuality.Should().BeTrue();
-        p.CanModify.Should().BeTrue();
-        p.CanCopy.Should().BeTrue();
-        p.CanAnnotate.Should().BeTrue();
-        p.CanFillForms.Should().BeTrue();
-        p.CanExtractForAccessibility.Should().BeTrue();
+        p.Allows(DocumentAction.AssembleDocument).Should().BeFalse("bit 11 (value 1024) is the only permission bit cleared in -1028");
+        p.Allows(DocumentAction.Print).Should().BeTrue();
+        p.Allows(DocumentAction.PrintHighQuality).Should().BeTrue();
+        p.Allows(DocumentAction.ModifyContents).Should().BeTrue();
+        p.Allows(DocumentAction.Extract).Should().BeTrue();
+        p.Allows(DocumentAction.Annotate).Should().BeTrue();
+        p.Allows(DocumentAction.FillForms).Should().BeTrue();
+        p.Allows(DocumentAction.ExtractForAccessibility).Should().BeTrue();
     }
 
     [Fact]
@@ -89,14 +89,14 @@ public class PdfPermissionsTests
         //   modify assembly/forms/annotations/other: NOT allowed
         var p = new PdfPermissions(-3392);
 
-        p.CanExtractForAccessibility.Should().BeTrue("bit 10 is the only permission bit set in -3392");
-        p.CanPrint.Should().BeFalse();
-        p.CanPrintHighQuality.Should().BeFalse();
-        p.CanModify.Should().BeFalse();
-        p.CanCopy.Should().BeFalse();
-        p.CanAnnotate.Should().BeFalse();
-        p.CanFillForms.Should().BeFalse();
-        p.CanAssemble.Should().BeFalse();
+        p.Allows(DocumentAction.ExtractForAccessibility).Should().BeTrue("bit 10 is the only permission bit set in -3392");
+        p.Allows(DocumentAction.Print).Should().BeFalse();
+        p.Allows(DocumentAction.PrintHighQuality).Should().BeFalse();
+        p.Allows(DocumentAction.ModifyContents).Should().BeFalse();
+        p.Allows(DocumentAction.Extract).Should().BeFalse();
+        p.Allows(DocumentAction.Annotate).Should().BeFalse();
+        p.Allows(DocumentAction.FillForms).Should().BeFalse();
+        p.Allows(DocumentAction.AssembleDocument).Should().BeFalse();
     }
 
     [Fact]
@@ -108,16 +108,16 @@ public class PdfPermissionsTests
 
         var p = new PdfPermissions(denyPrintOnly);
 
-        p.CanPrint.Should().BeFalse();
-        p.CanPrintHighQuality.Should().BeFalse(
+        p.Allows(DocumentAction.Print).Should().BeFalse();
+        p.Allows(DocumentAction.PrintHighQuality).Should().BeFalse(
             "bit 12 is still set, but high-quality printing is meaningless without bit 3 — " +
             "qpdf likewise reports both print resolutions as not allowed when only bit 3 is cleared");
-        p.CanModify.Should().BeTrue();
-        p.CanCopy.Should().BeTrue();
-        p.CanAnnotate.Should().BeTrue();
-        p.CanFillForms.Should().BeTrue();
-        p.CanExtractForAccessibility.Should().BeTrue();
-        p.CanAssemble.Should().BeTrue();
+        p.Allows(DocumentAction.ModifyContents).Should().BeTrue();
+        p.Allows(DocumentAction.Extract).Should().BeTrue();
+        p.Allows(DocumentAction.Annotate).Should().BeTrue();
+        p.Allows(DocumentAction.FillForms).Should().BeTrue();
+        p.Allows(DocumentAction.ExtractForAccessibility).Should().BeTrue();
+        p.Allows(DocumentAction.AssembleDocument).Should().BeTrue();
     }
 
     [Fact]
@@ -129,12 +129,58 @@ public class PdfPermissionsTests
         const long denyAnnotateKeepBit9 = -4 & ~32;
         var p = new PdfPermissions(denyAnnotateKeepBit9);
 
-        p.CanAnnotate.Should().BeFalse();
-        p.CanFillForms.Should().BeTrue("bit 9 grants form fill-in independently of bit 6");
+        p.Allows(DocumentAction.Annotate).Should().BeFalse();
+        p.Allows(DocumentAction.FillForms).Should().BeTrue("bit 9 grants form fill-in independently of bit 6");
 
         // And with both 6 and 9 clear, form fill-in is denied.
         var q = new PdfPermissions(-4 & ~32 & ~256);
-        q.CanFillForms.Should().BeFalse();
+        q.Allows(DocumentAction.FillForms).Should().BeFalse();
+    }
+
+    /// <summary>A /P value with only <paramref name="setBits"/> (1-based) set among bits 1-12; bits 13-32 set as the spec requires.</summary>
+    private static PdfPermissions Only(params int[] setBits)
+    {
+        var raw = 0xFFFFF000u;
+        foreach (var bit in setBits)
+            raw |= 1u << (bit - 1);
+        return new PdfPermissions(unchecked((int)raw));
+    }
+
+    // ISO 32000-2 Table 22, written out as literal expectations rather than re-deriving the rule.
+    [Theory]
+    [InlineData(DocumentAction.CreateFormField, new[] { 4, 6 }, true)]
+    [InlineData(DocumentAction.CreateFormField, new[] { 6 }, false)]        // bit 6 alone fills in; creating also needs bit 4
+    [InlineData(DocumentAction.CreateFormField, new[] { 4 }, false)]        // bit 4 alone cannot create fields
+    [InlineData(DocumentAction.CreateFormField, new[] { 4, 9 }, false)]     // bit 9 fills in existing fields only
+    [InlineData(DocumentAction.CreateFormField, new int[0], false)]
+    [InlineData(DocumentAction.FillForms, new[] { 6 }, true)]
+    [InlineData(DocumentAction.FillForms, new[] { 9 }, true)]               // "even if bit 6 is clear"
+    [InlineData(DocumentAction.FillForms, new[] { 4 }, false)]
+    [InlineData(DocumentAction.FillForms, new int[0], false)]
+    [InlineData(DocumentAction.AssembleDocument, new[] { 11 }, true)]       // "even if bit 4 is clear"
+    [InlineData(DocumentAction.AssembleDocument, new[] { 4 }, false)]
+    [InlineData(DocumentAction.Annotate, new[] { 6 }, true)]
+    [InlineData(DocumentAction.Annotate, new[] { 9 }, false)]
+    [InlineData(DocumentAction.ModifyContents, new[] { 4 }, true)]
+    [InlineData(DocumentAction.ModifyContents, new[] { 6, 9, 11 }, false)]  // bits 6, 9, 11 govern their own operations
+    [InlineData(DocumentAction.Extract, new[] { 5 }, true)]
+    [InlineData(DocumentAction.Extract, new[] { 10 }, false)]
+    [InlineData(DocumentAction.ExtractForAccessibility, new[] { 10 }, true)]
+    [InlineData(DocumentAction.ExtractForAccessibility, new[] { 5 }, false)]
+    [InlineData(DocumentAction.Print, new[] { 3 }, true)]
+    [InlineData(DocumentAction.PrintHighQuality, new[] { 3, 12 }, true)]
+    [InlineData(DocumentAction.PrintHighQuality, new[] { 12 }, false)]      // bit 12 is meaningless without bit 3
+    [InlineData(DocumentAction.PrintHighQuality, new[] { 3 }, false)]
+    public void Allows_FollowsTable22(DocumentAction action, int[] setBits, bool expected)
+    {
+        Only(setBits).Allows(action).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Requirement_NamesEveryActionWithItsBits()
+    {
+        foreach (var action in Enum.GetValues<DocumentAction>())
+            action.Requirement().Should().Contain("/P bit", $"{action} must say which bit a refusal is about");
     }
 
     [Fact]
@@ -147,8 +193,8 @@ public class PdfPermissionsTests
 
         unsigned.Should().Be(signed);
         unsigned.RawValue.Should().Be(-3392);
-        unsigned.CanCopy.Should().BeFalse();
-        unsigned.CanExtractForAccessibility.Should().BeTrue();
+        unsigned.Allows(DocumentAction.Extract).Should().BeFalse();
+        unsigned.Allows(DocumentAction.ExtractForAccessibility).Should().BeTrue();
     }
 
     [Fact]
@@ -197,9 +243,9 @@ public class PdfPermissionsTests
         using var reopened = PdfDocument.Open(buffer.ToArray());
         reopened.IsEncrypted.Should().BeTrue();
         reopened.Permissions.RawValue.Should().Be((int)denyCopyMask);
-        reopened.Permissions.CanCopy.Should().BeFalse();
-        reopened.Permissions.CanExtractForAccessibility.Should().BeTrue();
-        reopened.Permissions.CanPrint.Should().BeTrue();
+        reopened.Permissions.Allows(DocumentAction.Extract).Should().BeFalse();
+        reopened.Permissions.Allows(DocumentAction.ExtractForAccessibility).Should().BeTrue();
+        reopened.Permissions.Allows(DocumentAction.Print).Should().BeTrue();
         reopened.OpenedWithOwnerPassword.Should().BeFalse(
             "owner-password opening is #324 and unsupported; every open today is user-level");
         reopened.EffectivePermissions.Should().Be(reopened.Permissions);

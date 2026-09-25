@@ -1,23 +1,8 @@
 using System.CommandLine;
 using Excise.Core.Document;
+using Excise.Core.Security;
 
 namespace Excise.Cli;
-
-/// <summary>What a gated verb is about to do, mapped to the /P bit that governs it.</summary>
-internal enum DocumentAction
-{
-    /// <summary>Copy/extract content out of the document — /P bit 5 (with the bit 10 accessibility carve-out for text).</summary>
-    Extract,
-
-    /// <summary>Modify document contents (e.g. add form fields) — /P bit 4.</summary>
-    ModifyContents,
-
-    /// <summary>Fill in existing interactive form fields — /P bit 6 or bit 9.</summary>
-    FillForms,
-
-    /// <summary>Assemble the document — insert/rotate/delete pages, split, merge — /P bit 11.</summary>
-    AssembleDocument,
-}
 
 /// <summary>
 /// Thrown when a document's /P permissions deny the requested action and no
@@ -91,20 +76,12 @@ internal static class DocumentPermissionGuard
         string overrideHint = "--ignore-permissions")
     {
         var perms = doc.EffectivePermissions;
-        var (allowed, requirement) = action switch
-        {
-            DocumentAction.Extract => (
-                perms.CanCopy || (forAccessibility && perms.CanExtractForAccessibility),
-                "copy/extract permission (/P bit 5)"),
-            DocumentAction.ModifyContents => (perms.CanModify, "modify permission (/P bit 4)"),
-            DocumentAction.FillForms => (perms.CanFillForms, "form fill-in permission (/P bit 6 or 9)"),
-            DocumentAction.AssembleDocument => (perms.CanAssemble, "page-assembly permission (/P bit 11)"),
-            _ => (true, ""),
-        };
+        var allowed = perms.Allows(action)
+            || (action == DocumentAction.Extract && forAccessibility && perms.Allows(DocumentAction.ExtractForAccessibility));
 
         if (allowed)
         {
-            if (action == DocumentAction.Extract && forAccessibility && !perms.CanCopy)
+            if (action == DocumentAction.Extract && forAccessibility && !perms.Allows(DocumentAction.Extract))
             {
                 Console.Error.WriteLine(
                     "Note: this document denies general copy/extraction (/P bit 5); proceeding " +
@@ -122,10 +99,10 @@ internal static class DocumentPermissionGuard
         }
 
         var message =
-            $"Blocked by document permissions: {actionDescription} requires {requirement}, " +
+            $"Blocked by document permissions: {actionDescription} requires {action.Requirement()}, " +
             $"which this document denies ({perms}).";
         if (action == DocumentAction.Extract && !forAccessibility
-            && perms.CanExtractForAccessibility && accessibilityHint != null)
+            && perms.Allows(DocumentAction.ExtractForAccessibility) && accessibilityHint != null)
         {
             message += $" Extraction in support of accessibility is permitted (/P bit 10): pass {accessibilityHint}.";
         }

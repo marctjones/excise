@@ -65,7 +65,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     /// absent (Linux CI, a fresh clone), covering the core case
     /// (CopyTextCommand) rather than duplicating all 13 corpus-gated tests.
     /// </summary>
-    private string SaveWithCopyForbidden(string text)
+    private string SaveWithPermissions(string text, long permissions)
     {
         var plainPath = Path.Combine(_tempDir, "plain-for-encrypt.pdf");
         using (var plain = Excise.Core.Document.PdfDocument.CreateNew())
@@ -80,13 +80,13 @@ public class DocumentPermissionEnforcementTests : IDisposable
             plain.Save(plainPath);
         }
 
-        var encryptedPath = Path.Combine(_tempDir, "generated-copy-forbidden.pdf");
+        var encryptedPath = Path.Combine(_tempDir, $"generated-{permissions}.pdf");
         using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(plainPath));
         doc.Save(encryptedPath, new Excise.Core.Security.PdfEncryptionOptions
         {
             UserPassword = "",
             OwnerPassword = "owner-1768",
-            Permissions = -4 & ~16L, // bit 5 (value 16) cleared: extraction not allowed
+            Permissions = permissions,
         });
         return encryptedPath;
     }
@@ -94,7 +94,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
     [FixedAvaloniaFact]
     public async Task CopyTextCommand_CopyForbiddenGeneratedFixture_BlocksWithToast_AndKeepsClipboardEmpty()
     {
-        var fixturePath = SaveWithCopyForbidden("Copy-forbidden generated text");
+        var fixturePath = SaveWithPermissions("Copy-forbidden generated text", -4 & ~16L); // bit 5 cleared: extraction not allowed
         var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath);
         vm.SelectedText = "Copy-forbidden generated text";
 
@@ -266,6 +266,21 @@ public class DocumentPermissionEnforcementTests : IDisposable
 
         vm.IsFormAuthoringMode.Should().BeFalse("the fixture denies /P bit 4 (modify)");
         toasts.Should().ContainSingle(t => t.Message.Contains("Blocked by document permissions"));
+    }
+
+    [FixedAvaloniaFact]
+    public async Task ToggleFormAuthoringMode_AnnotateForbiddenButModifyAllowed_StaysOff_WithToast()
+    {
+        // Table 22: creating form fields needs bit 6 AND bit 4. Bit 6 (value 32) cleared, bit 4 kept.
+        var fixturePath = SaveWithPermissions("Bit 6 cleared", -4 & ~32L);
+        var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath);
+
+        await vm.ToggleFormAuthoringModeCommand.Execute();
+
+        vm.IsFormAuthoringMode.Should().BeFalse("bit 4 alone does not grant creating form fields");
+        toasts.Should().ContainSingle(t =>
+            t.Message.Contains("Blocked by document permissions") &&
+            t.Details != null && t.Details.Contains("/P bits 4 and 6"));
     }
 
     [FixedAvaloniaFact]

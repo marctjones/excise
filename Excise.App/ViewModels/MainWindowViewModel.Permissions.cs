@@ -57,18 +57,18 @@ public partial class MainWindowViewModel
     /// override is set. The right-click menu's Copy and Export This Page follow it (#1816), with
     /// <see cref="CopyDisabledReason"/> as the tooltip; the menu-bar twins still explain by toast.
     /// </summary>
-    public bool CanCopyContent => CurrentDocumentPermissions.CanCopy || IgnoreDocumentPermissions;
+    public bool CanCopyContent => CurrentDocumentPermissions.Allows(DocumentAction.Extract) || IgnoreDocumentPermissions;
 
     /// <summary>Why copying is unavailable, or null when it is available.</summary>
     public string? CopyDisabledReason => CanCopyContent ? null
-        : "This document's security settings deny copying or extracting content (/P bit 5).";
+        : $"This document's security settings do not grant {DocumentAction.Extract.Requirement()}.";
 
     /// <summary>Whether /P allows adding or modifying annotations (bit 6), or the override is set (#1816).</summary>
-    public bool CanAnnotateContent => CurrentDocumentPermissions.CanAnnotate || IgnoreDocumentPermissions;
+    public bool CanAnnotateContent => CurrentDocumentPermissions.Allows(DocumentAction.Annotate) || IgnoreDocumentPermissions;
 
     /// <summary>Why annotating is unavailable, or null when it is available.</summary>
     public string? AnnotateDisabledReason => CanAnnotateContent ? null
-        : "This document's security settings deny adding or modifying annotations (/P bit 6).";
+        : $"This document's security settings do not grant {DocumentAction.Annotate.Requirement()}.";
 
     private void RaiseContentPermissionsChanged()
     {
@@ -95,16 +95,12 @@ public partial class MainWindowViewModel
     /// showing a warning toast — blocked actions must be visible, never a
     /// silent no-op.
     /// </summary>
-    /// <param name="isAllowed">Which permission the action needs.</param>
+    /// <param name="action">Which permission the action needs.</param>
     /// <param name="actionDescription">Toast phrasing, e.g. "Copying text".</param>
-    /// <param name="permissionDescription">What the document denies, e.g. "copying or extracting content (/P bit 5)".</param>
-    private bool EnsureDocumentPermission(
-        Func<PdfPermissions, bool> isAllowed,
-        string actionDescription,
-        string permissionDescription)
+    private bool EnsureDocumentPermission(DocumentAction action, string actionDescription)
     {
         var permissions = CurrentDocumentPermissions;
-        if (isAllowed(permissions))
+        if (permissions.Allows(action))
             return true;
 
         if (IgnoreDocumentPermissions)
@@ -119,8 +115,8 @@ public partial class MainWindowViewModel
             "Blocked by document permissions ({Permissions}): {Action}", permissions, actionDescription);
         _toastService.ShowWarning(
             "Blocked by document permissions",
-            $"{actionDescription} is not allowed: this document's security settings deny " +
-            $"{permissionDescription}. Permissions bind user-password opens; owner-password " +
+            $"{actionDescription} is not allowed: this document's security settings do not grant " +
+            $"{action.Requirement()}. Permissions bind user-password opens; owner-password " +
             "opening is not yet supported (#324).");
         return false;
     }

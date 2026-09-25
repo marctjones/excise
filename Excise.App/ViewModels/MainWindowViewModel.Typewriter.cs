@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
@@ -57,8 +58,7 @@ public partial class MainWindowViewModel
     {
         // #642: adding text modifies the document — /P bit 4. Block on
         // entering the mode (clear feedback up front); leaving it is free.
-        if (!IsTypewriterMode && !EnsureDocumentPermission(p => p.CanModify,
-            "Adding text (typewriter)", "modifying the document (/P bit 4)"))
+        if (!IsTypewriterMode && !EnsureDocumentPermission(DocumentAction.ModifyContents, "Adding text (typewriter)"))
         {
             return;
         }
@@ -72,8 +72,7 @@ public partial class MainWindowViewModel
             return;
 
         // Defence in depth for callers that bypass the mode toggle (#642).
-        if (!EnsureDocumentPermission(p => p.CanModify,
-            "Adding text (typewriter)", "modifying the document (/P bit 4)"))
+        if (!EnsureDocumentPermission(DocumentAction.ModifyContents, "Adding text (typewriter)"))
         {
             return;
         }

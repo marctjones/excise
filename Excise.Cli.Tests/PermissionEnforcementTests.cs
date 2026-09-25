@@ -197,12 +197,35 @@ public class PermissionEnforcementTests : IDisposable
 
         var act = () => FormMutationTestDriver.RunAddField(pdf, output, "Text", "field1", 1, "100,100,300,130", null, []);
         act.Should().Throw<PdfPermissionDeniedException>()
-            .WithMessage("*bit 4*");
+            .WithMessage("*bits 4 and 6*");
         File.Exists(output).Should().BeFalse();
 
         FormMutationTestDriver.RunAddField(pdf, output, "Text", "field1", 1, "100,100,300,130", null, [],
             ignorePermissions: true);
         File.Exists(output).Should().BeTrue();
+    }
+
+    [Fact]
+    public void RunAddField_AnnotateForbidden_FailsClosed_EvenWhenModifyAllowed()
+    {
+        // Table 22: creating form fields needs bit 6 AND bit 4. Clear bit 6 (value 32), keep bits 4 and 9.
+        var pdf = RestrictedFixture(-4 & ~32);
+        var output = TempPath(".pdf");
+
+        var act = () => FormMutationTestDriver.RunAddField(pdf, output, "Text", "field1", 1, "100,100,300,130", null, []);
+        act.Should().Throw<PdfPermissionDeniedException>().WithMessage("*bits 4 and 6*");
+        File.Exists(output).Should().BeFalse();
+    }
+
+    [Fact]
+    public void RunAutodetectApply_AnnotateForbidden_FailsClosed_EvenWhenModifyAllowed()
+    {
+        var pdf = RestrictedFixture(-4 & ~32);
+        var output = TempPath(".pdf");
+
+        var act = () => FormMutationHandler.Autodetect(new AutodetectFieldsRequest(pdf, output, Apply: true, IgnorePermissions: false));
+        act.Should().Throw<PdfPermissionDeniedException>().WithMessage("*bits 4 and 6*");
+        File.Exists(output).Should().BeFalse();
     }
 
     // ---- page assembly: merge / split — #677 ---------------------------------

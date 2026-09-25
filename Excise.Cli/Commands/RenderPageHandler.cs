@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Diagnostics;
 using Excise.Core.Document;
+using Excise.Core.Security;
 using Excise.Rendering;
 
 namespace Excise.Cli.Commands;

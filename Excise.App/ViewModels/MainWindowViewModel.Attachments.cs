@@ -9,6 +9,7 @@ using ReactiveUI;
 using Excise.App.Models;
 using Excise.App.Services;
 using Excise.Core.Document;
+using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
@@ -188,7 +189,7 @@ public partial class MainWindowViewModel
 
     /// <summary>/P bit 5: an attachment's bytes are document content leaving excise.</summary>
     private bool EnsureAttachmentExtractionPermitted(string actionDescription) =>
-        EnsureDocumentPermission(p => p.CanCopy, actionDescription, "copying or extracting content (/P bit 5)");
+        EnsureDocumentPermission(DocumentAction.Extract, actionDescription);
 
     /// <summary>
     /// Save one attachment to <paramref name="outputPath"/>. Writes the decoded

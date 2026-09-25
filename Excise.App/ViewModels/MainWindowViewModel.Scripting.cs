@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
+using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
@@ -512,17 +513,17 @@ public partial class MainWindowViewModel
         // #642: scripted extraction is user-initiated export — gate on /P
         // bit 5 with the bit 10 accessibility carve-out, like the CLI.
         var permissions = CurrentDocumentPermissions;
-        var extractionAllowed = permissions.CanCopy
-            || (forAccessibility && permissions.CanExtractForAccessibility);
+        var extractionAllowed = permissions.Allows(DocumentAction.Extract)
+            || (forAccessibility && permissions.Allows(DocumentAction.ExtractForAccessibility));
         if (!extractionAllowed && !IgnoreDocumentPermissions)
         {
             _logger.LogWarning("[SCRIPT] ExtractAllText blocked by document permissions ({Permissions})", permissions);
-            var accessibilityHint = permissions.CanExtractForAccessibility && !forAccessibility
+            var accessibilityHint = permissions.Allows(DocumentAction.ExtractForAccessibility) && !forAccessibility
                 ? " Extraction in support of accessibility is permitted (/P bit 10): call ExtractAllText(forAccessibility: true)."
                 : string.Empty;
             throw new InvalidOperationException(
-                "Blocked by document permissions: text extraction requires copy/extract permission " +
-                $"(/P bit 5), which this document denies ({permissions}).{accessibilityHint} If you are " +
+                $"Blocked by document permissions: text extraction requires {DocumentAction.Extract.Requirement()}, " +
+                $"which this document denies ({permissions}).{accessibilityHint} If you are " +
                 "the document owner, set IgnoreDocumentPermissions = true to override — permissions bind " +
                 "user-password opens only, and excise cannot yet verify owner passwords (#324).");
         }
@@ -532,7 +533,7 @@ public partial class MainWindowViewModel
                 "[SCRIPT] Overriding document permissions ({Permissions}): ExtractAllText proceeds " +
                 "because IgnoreDocumentPermissions is set", permissions);
         }
-        else if (!permissions.CanCopy && forAccessibility)
+        else if (!permissions.Allows(DocumentAction.Extract) && forAccessibility)
         {
             _logger.LogInformation(
                 "[SCRIPT] ExtractAllText proceeding under the extract-for-accessibility permission (/P bit 10)");

@@ -419,7 +419,7 @@ public class DocumentPrintingTests : IDisposable
         var restricted = SaveEncrypted(CreateTwoTokenPdf("noprint-src.pdf"), "noprint.pdf", "", permissions: -4 & ~4L);
         await h.Vm.LoadDocumentAsync(restricted);
         h.Vm.IsDocumentLoaded.Should().BeTrue("an empty user password opens without a prompt");
-        h.DocumentService.GetCurrentDocument()!.EffectivePermissions.CanPrint.Should().BeFalse("fixture precondition");
+        h.DocumentService.GetCurrentDocument()!.EffectivePermissions.Allows(DocumentAction.Print).Should().BeFalse("fixture precondition");
 
         h.Vm.CanPrint.Should().BeFalse("Print… must be disabled when /P denies printing");
         h.Vm.PrintDisabledReason.Should().Contain("do not allow printing");
@@ -450,8 +450,8 @@ public class DocumentPrintingTests : IDisposable
         var degraded = SaveEncrypted(CreateTwoTokenPdf("lowq-src.pdf"), "lowq.pdf", "", permissions: -4 & ~2048L);
         await h.Vm.LoadDocumentAsync(degraded);
         var permissions = h.DocumentService.GetCurrentDocument()!.EffectivePermissions;
-        permissions.CanPrint.Should().BeTrue("fixture precondition");
-        permissions.CanPrintHighQuality.Should().BeFalse("fixture precondition");
+        permissions.Allows(DocumentAction.Print).Should().BeTrue("fixture precondition");
+        permissions.Allows(DocumentAction.PrintHighQuality).Should().BeFalse("fixture precondition");
 
         h.Vm.CanPrint.Should().BeFalse();
         await h.Vm.PrintCommand.Execute();

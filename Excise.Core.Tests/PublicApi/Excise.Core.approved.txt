@@ -2174,6 +2174,18 @@ namespace Excise.Core.Redaction.Recovery
 }
 namespace Excise.Core.Security
 {
+    public enum DocumentAction
+    {
+        Extract = 0,
+        ExtractForAccessibility = 1,
+        ModifyContents = 2,
+        Annotate = 3,
+        FillForms = 4,
+        CreateFormField = 5,
+        AssembleDocument = 6,
+        Print = 7,
+        PrintHighQuality = 8,
+    }
     public enum PdfEncryptionAlgorithm
     {
         Aes256 = 0,
@@ -2191,16 +2203,9 @@ namespace Excise.Core.Security
     public readonly struct PdfPermissions : System.IEquatable<Excise.Core.Security.PdfPermissions>
     {
         public PdfPermissions(long rawValue) { }
-        public bool CanAnnotate { get; }
-        public bool CanAssemble { get; }
-        public bool CanCopy { get; }
-        public bool CanExtractForAccessibility { get; }
-        public bool CanFillForms { get; }
-        public bool CanModify { get; }
-        public bool CanPrint { get; }
-        public bool CanPrintHighQuality { get; }
         public int RawValue { get; }
         public static Excise.Core.Security.PdfPermissions AllAllowed { get; }
+        public bool Allows(Excise.Core.Security.DocumentAction action) { }
         public bool Equals(Excise.Core.Security.PdfPermissions other) { }
         public override bool Equals(object? obj) { }
         public override int GetHashCode() { }

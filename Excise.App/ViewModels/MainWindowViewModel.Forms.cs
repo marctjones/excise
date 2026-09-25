@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
+using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
@@ -46,8 +47,7 @@ public partial class MainWindowViewModel
                 return;
 
             // #642: placing a sticky note is annotating — /P bit 6.
-            if (value && !EnsureDocumentPermission(p => p.CanAnnotate,
-                "Adding a sticky note", "adding or modifying annotations (/P bit 6)"))
+            if (value && !EnsureDocumentPermission(DocumentAction.Annotate, "Adding a sticky note"))
             {
                 return;
             }
@@ -157,8 +157,7 @@ public partial class MainWindowViewModel
         // #642: drawing an annotation is annotating — /P bit 6. Gate on
         // entering; leaving is free.
         if ((!IsPathAnnotationMode || PathAnnotationKind != kind) &&
-            !EnsureDocumentPermission(p => p.CanAnnotate,
-                "Drawing annotations", "adding or modifying annotations (/P bit 6)"))
+            !EnsureDocumentPermission(DocumentAction.Annotate, "Drawing annotations"))
         {
             return;
         }
@@ -260,8 +259,7 @@ public partial class MainWindowViewModel
         var alreadyActive = IsShapeAnnotationMode && ShapeAnnotationKind == kind &&
             (kind != ShapeAnnotationKind.Stamp || StagedStampName == stampName);
 
-        if (!alreadyActive && !EnsureDocumentPermission(p => p.CanAnnotate,
-                "Drawing annotations", "adding or modifying annotations (/P bit 6)"))
+        if (!alreadyActive && !EnsureDocumentPermission(DocumentAction.Annotate, "Drawing annotations"))
         {
             return;
         }
@@ -343,8 +341,7 @@ public partial class MainWindowViewModel
         // leaving is free.
         var alreadyActive = IsMarkupAnnotationMode && MarkupAnnotationKind == kind;
 
-        if (!alreadyActive && !EnsureDocumentPermission(p => p.CanAnnotate,
-                "Marking up text", "adding or modifying annotations (/P bit 6)"))
+        if (!alreadyActive && !EnsureDocumentPermission(DocumentAction.Annotate, "Marking up text"))
         {
             return;
         }
@@ -504,8 +501,7 @@ public partial class MainWindowViewModel
         if (_pdfCoreDocument == null) return;
 
         // #642: /P bit 6 or 9 gates filling interactive form fields.
-        if (!EnsureDocumentPermission(p => p.CanFillForms,
-            "Filling form fields", "filling in form fields (/P bit 6 or 9)"))
+        if (!EnsureDocumentPermission(DocumentAction.FillForms, "Filling form fields"))
         {
             return;
         }
@@ -534,9 +530,8 @@ public partial class MainWindowViewModel
     {
         if (_pdfCoreDocument == null) return;
 
-        // #642: creating new form fields modifies the document — /P bit 4.
-        if (!EnsureDocumentPermission(p => p.CanModify,
-            "Adding a form field", "modifying the document (/P bit 4)"))
+        // #642, #1829: creating form fields needs /P bits 4 and 6 (Table 22).
+        if (!EnsureDocumentPermission(DocumentAction.CreateFormField, "Adding a form field"))
         {
             return;
         }
@@ -581,9 +576,8 @@ public partial class MainWindowViewModel
     {
         if (_pdfCoreDocument == null) return 0;
 
-        // #642: applying detected fields modifies the document — /P bit 4.
-        if (!EnsureDocumentPermission(p => p.CanModify,
-            "Adding auto-detected form fields", "modifying the document (/P bit 4)"))
+        // #642, #1829: creating form fields needs /P bits 4 and 6 (Table 22).
+        if (!EnsureDocumentPermission(DocumentAction.CreateFormField, "Adding auto-detected form fields"))
         {
             return 0;
         }

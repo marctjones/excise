@@ -1,4 +1,5 @@
 using Excise.Core.Document;
+using Excise.Core.Security;
 
 namespace Excise.Cli.Commands;
 

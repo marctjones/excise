@@ -70,51 +70,23 @@ public readonly struct PdfPermissions : IEquatable<PdfPermissions>
 
     private bool Bit(int oneBasedBit) => (_bits & (1u << (oneBasedBit - 1))) != 0;
 
-    /// <summary>Bit 3: print the document (possibly degraded; see <see cref="CanPrintHighQuality"/>).</summary>
-    public bool CanPrint => Bit(3);
-
-    /// <summary>Bit 4: modify the contents (other than the operations controlled by bits 6, 9, 11).</summary>
-    public bool CanModify => Bit(4);
-
     /// <summary>
-    /// Bit 5: copy or otherwise extract text and graphics. Gates
-    /// user-initiated copy/export, NOT excise's internal extraction (search,
-    /// rendering, accessibility, redaction) — see the enforcement-policy
-    /// remarks on this type and the bit 10 carve-out
-    /// (<see cref="CanExtractForAccessibility"/>).
+    /// Whether /P grants <paramref name="action"/> (ISO 32000-2 Table 22). Creating a form field
+    /// needs bit 6 and bit 4; filling one in needs bit 6 or bit 9; assembly needs bit 11 alone.
     /// </summary>
-    public bool CanCopy => Bit(5);
-
-    /// <summary>Bit 6: add or modify text annotations and fill interactive form fields.</summary>
-    public bool CanAnnotate => Bit(6);
-
-    /// <summary>
-    /// Fill in existing interactive form fields: bit 9 (fill-in even when
-    /// annotation editing is denied) or bit 6 (annotate, which includes
-    /// form fill-in per Table 22).
-    /// </summary>
-    public bool CanFillForms => Bit(9) || Bit(6);
-
-    /// <summary>
-    /// Bit 10: extract text/graphics in support of accessibility to users
-    /// with disabilities. When set while bit 5 is clear, extraction *for
-    /// accessibility* stays available even though general copy/export is
-    /// denied (e.g. the CLI's <c>--for-accessibility</c> flag). Deprecated
-    /// in PDF 2.0 (readers should always allow accessibility extraction),
-    /// which is one more reason engine-internal extraction is never gated.
-    /// </summary>
-    public bool CanExtractForAccessibility => Bit(10);
-
-    /// <summary>Bit 11: assemble the document (insert, rotate, delete pages; create outline items/thumbnails).</summary>
-    public bool CanAssemble => Bit(11);
-
-    /// <summary>
-    /// Bit 12 (with bit 3): print to a representation from which a faithful
-    /// digital copy could be generated. False whenever <see cref="CanPrint"/>
-    /// is false; when printing is allowed but this is not, only degraded
-    /// printing is permitted.
-    /// </summary>
-    public bool CanPrintHighQuality => Bit(3) && Bit(12);
+    public bool Allows(DocumentAction action) => action switch
+    {
+        DocumentAction.Extract => Bit(5),
+        DocumentAction.ExtractForAccessibility => Bit(10),
+        DocumentAction.ModifyContents => Bit(4),
+        DocumentAction.Annotate => Bit(6),
+        DocumentAction.FillForms => Bit(6) || Bit(9),
+        DocumentAction.CreateFormField => Bit(6) && Bit(4),
+        DocumentAction.AssembleDocument => Bit(11),
+        DocumentAction.Print => Bit(3),
+        DocumentAction.PrintHighQuality => Bit(3) && Bit(12),
+        _ => throw new ArgumentOutOfRangeException(nameof(action)),
+    };
 
     /// <inheritdoc/>
     public bool Equals(PdfPermissions other) => _bits == other._bits;
@@ -136,14 +108,14 @@ public readonly struct PdfPermissions : IEquatable<PdfPermissions>
     public override string ToString()
     {
         var denied = new List<string>(8);
-        if (!CanPrint) denied.Add("print");
-        if (!CanModify) denied.Add("modify");
-        if (!CanCopy) denied.Add("copy");
-        if (!CanAnnotate) denied.Add("annotate");
-        if (!CanFillForms) denied.Add("fill-forms");
-        if (!CanExtractForAccessibility) denied.Add("extract-for-accessibility");
-        if (!CanAssemble) denied.Add("assemble");
-        if (!CanPrintHighQuality) denied.Add("high-quality print");
+        if (!Allows(DocumentAction.Print)) denied.Add("print");
+        if (!Allows(DocumentAction.ModifyContents)) denied.Add("modify");
+        if (!Allows(DocumentAction.Extract)) denied.Add("copy");
+        if (!Allows(DocumentAction.Annotate)) denied.Add("annotate");
+        if (!Allows(DocumentAction.FillForms)) denied.Add("fill-forms");
+        if (!Allows(DocumentAction.ExtractForAccessibility)) denied.Add("extract-for-accessibility");
+        if (!Allows(DocumentAction.AssembleDocument)) denied.Add("assemble");
+        if (!Allows(DocumentAction.PrintHighQuality)) denied.Add("high-quality print");
         return denied.Count == 0
             ? $"/P {RawValue} (all allowed)"
             : $"/P {RawValue} (denied: {string.Join(", ", denied)})";
