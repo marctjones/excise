@@ -352,12 +352,12 @@ public class FormXObjectRedactionTests
 
     // ---- builders ----
 
-    private const string HelveticaFont =
+    internal const string HelveticaFont =
         "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
 
-    private static byte[] Obj(string dict) => Encoding.Latin1.GetBytes(dict);
+    internal static byte[] Obj(string dict) => Encoding.Latin1.GetBytes(dict);
 
-    private static byte[] Stream(string dictExtra, string content)
+    internal static byte[] Stream(string dictExtra, string content)
     {
         var data = Encoding.Latin1.GetBytes(content);
         var head = Encoding.Latin1.GetBytes($"<< {dictExtra} /Length {data.Length} >>\nstream\n");
@@ -366,7 +366,7 @@ public class FormXObjectRedactionTests
     }
 
     /// <summary>Assemble object bodies (object 1..N) into a valid PDF file.</summary>
-    private static byte[] Build(params byte[][] objects)
+    internal static byte[] Build(params byte[][] objects)
     {
         using var ms = new MemoryStream();
         void W(string s) { var b = Encoding.Latin1.GetBytes(s); ms.Write(b, 0, b.Length); }
