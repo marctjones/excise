@@ -4,7 +4,7 @@
   "generator": {
     "name": "scripts/check_architecture_registry.py",
     "version": 1,
-    "sourceRevision": "966615eb93995a2b665a20c80e5425c7e8c915dd"
+    "sourceRevision": "f8d192a9eccdd279bb8deab5748b84632441f979"
   },
   "projects": [
     {
@@ -106,6 +106,14 @@
       "projectReferences": [
         "Excise.Core/Excise.Core.csproj",
         "Excise.Rendering/Excise.Rendering.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Native/Excise.Native.csproj",
+      "classification": "shipping",
+      "sourceRoot": "Excise.Native",
+      "projectReferences": [
+        "Excise.Core/Excise.Core.csproj"
       ]
     },
     {

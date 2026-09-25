@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "0c1ad975d813be226b965a50d37a947c6927b8a90607269729001aa98bf5b2bd",
+  "sourceFingerprint": "4a7c99b2e8eeb3778b0d8a0bda0b8d389dd3d5796a193f230b18ee5683d24e6c",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -1746,6 +1746,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Editing/BatesNumberingService.cs",
+      "path": "Excise.Core/Editing/BatesNumberingService.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -5239,6 +5249,251 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Signatures/SignatureApplicationService.cs",
+      "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Signatures/SignatureByteRangeValidator.cs",
+      "path": "Excise.Core/Signatures/SignatureByteRangeValidator.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Signatures/SignatureContentsReader.cs",
+      "path": "Excise.Core/Signatures/SignatureContentsReader.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Signatures/SignatureTrustEvaluator.cs",
+      "path": "Excise.Core/Signatures/SignatureTrustEvaluator.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Signatures/SignatureVerificationService.cs",
+      "path": "Excise.Core/Signatures/SignatureVerificationService.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Signatures/SignedFieldDetector.cs",
+      "path": "Excise.Core/Signatures/SignedFieldDetector.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Signatures/SigningCertificateFactory.cs",
+      "path": "Excise.Core/Signatures/SigningCertificateFactory.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Tagging/StructureTreeBuilder.cs",
       "path": "Excise.Core/Tagging/StructureTreeBuilder.cs",
       "kind": "source-file",
@@ -7656,16 +7911,6 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.App/Services/BatesNumberingService.cs",
-      "path": "Excise.App/Services/BatesNumberingService.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
       "id": "Excise.App/Services/DocumentImageExportWorkflowService.cs",
       "path": "Excise.App/Services/DocumentImageExportWorkflowService.cs",
       "kind": "source-file",
@@ -7872,6 +8117,28 @@
         "product-integration-general"
       ],
       "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/ImageStampDecoder.cs",
+      "path": "Excise.App/Services/ImageStampDecoder.cs",
+      "kind": "source-file",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
       "promotion": "review-required"
     },
     {
@@ -8210,181 +8477,6 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.App/Services/SignatureApplicationService.cs",
-      "path": "Excise.App/Services/SignatureApplicationService.cs",
-      "kind": "source-file",
-      "facets": [
-        "security-and-encryption"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.syntax.encryption",
-          "modes": [
-            "mutate",
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdfe.product.security.signature-and-permission-warning",
-          "modes": [
-            "mutate",
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.App/Services/SignatureByteRangeValidator.cs",
-      "path": "Excise.App/Services/SignatureByteRangeValidator.cs",
-      "kind": "source-file",
-      "facets": [
-        "security-and-encryption"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.syntax.encryption",
-          "modes": [
-            "mutate",
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdfe.product.security.signature-and-permission-warning",
-          "modes": [
-            "mutate",
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.App/Services/SignatureContentsReader.cs",
-      "path": "Excise.App/Services/SignatureContentsReader.cs",
-      "kind": "source-file",
-      "facets": [
-        "security-and-encryption"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.syntax.encryption",
-          "modes": [
-            "mutate",
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdfe.product.security.signature-and-permission-warning",
-          "modes": [
-            "mutate",
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.App/Services/SignatureTrustEvaluator.cs",
-      "path": "Excise.App/Services/SignatureTrustEvaluator.cs",
-      "kind": "source-file",
-      "facets": [
-        "security-and-encryption"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.syntax.encryption",
-          "modes": [
-            "mutate",
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdfe.product.security.signature-and-permission-warning",
-          "modes": [
-            "mutate",
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.App/Services/SignatureVerificationService.cs",
-      "path": "Excise.App/Services/SignatureVerificationService.cs",
-      "kind": "source-file",
-      "facets": [
-        "security-and-encryption"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.syntax.encryption",
-          "modes": [
-            "mutate",
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdfe.product.security.signature-and-permission-warning",
-          "modes": [
-            "mutate",
-            "parse",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
-      "promotion": "review-required"
-    },
-    {
       "id": "Excise.App/Services/SignatureVerificationSummaryFormatter.cs",
       "path": "Excise.App/Services/SignatureVerificationSummaryFormatter.cs",
       "kind": "source-file",
@@ -8452,26 +8544,6 @@
           ]
         }
       ],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.App/Services/SignedFieldDetector.cs",
-      "path": "Excise.App/Services/SignedFieldDetector.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.App/Services/SigningCertificateFactory.cs",
-      "path": "Excise.App/Services/SigningCertificateFactory.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -10880,18 +10952,18 @@
     }
   ],
   "summary": {
-    "records": 545,
+    "records": 546,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 19,
       "document-structure": 35,
       "fonts": 31,
       "forms": 9,
-      "images": 32,
-      "product-integration-general": 313,
+      "images": 33,
+      "product-integration-general": 311,
       "redaction": 81,
       "safe-save-and-metadata": 20,
-      "security-and-encryption": 20,
+      "security-and-encryption": 22,
       "transparency": 2
     },
     "parentCapabilityModes": {
@@ -10912,9 +10984,9 @@
       "pdf.17.graphics.fonts:extract": 31,
       "pdf.17.graphics.fonts:parse": 31,
       "pdf.17.graphics.fonts:render": 31,
-      "pdf.17.graphics.images:extract": 32,
-      "pdf.17.graphics.images:parse": 32,
-      "pdf.17.graphics.images:render": 32,
+      "pdf.17.graphics.images:extract": 33,
+      "pdf.17.graphics.images:parse": 33,
+      "pdf.17.graphics.images:render": 33,
       "pdf.17.graphics.paths-painting:author": 2,
       "pdf.17.graphics.paths-painting:mutate": 19,
       "pdf.17.graphics.paths-painting:parse": 19,
@@ -10942,10 +11014,10 @@
       "pdf.17.security.redaction-content-removal:mutate": 81,
       "pdf.17.security.redaction-content-removal:render": 81,
       "pdf.17.security.redaction-content-removal:write": 81,
-      "pdf.17.syntax.encryption:mutate": 20,
-      "pdf.17.syntax.encryption:parse": 20,
-      "pdf.17.syntax.encryption:preserve": 20,
-      "pdf.17.syntax.encryption:write": 20,
+      "pdf.17.syntax.encryption:mutate": 22,
+      "pdf.17.syntax.encryption:parse": 22,
+      "pdf.17.syntax.encryption:preserve": 22,
+      "pdf.17.syntax.encryption:write": 22,
       "pdf.17.syntax.file:parse": 35,
       "pdf.17.syntax.file:preserve": 35,
       "pdf.17.syntax.file:write": 35,
@@ -10962,12 +11034,12 @@
       "pdfe.product.security.privacy-clean-copy:mutate": 20,
       "pdfe.product.security.privacy-clean-copy:preserve": 20,
       "pdfe.product.security.privacy-clean-copy:write": 20,
-      "pdfe.product.security.signature-and-permission-warning:mutate": 20,
-      "pdfe.product.security.signature-and-permission-warning:parse": 20,
-      "pdfe.product.security.signature-and-permission-warning:preserve": 20,
-      "pdfe.product.security.signature-and-permission-warning:write": 20
+      "pdfe.product.security.signature-and-permission-warning:mutate": 22,
+      "pdfe.product.security.signature-and-permission-warning:parse": 22,
+      "pdfe.product.security.signature-and-permission-warning:preserve": 22,
+      "pdfe.product.security.signature-and-permission-warning:write": 22
     },
-    "fallbackRecords": 313,
+    "fallbackRecords": 311,
     "allRecordsMapped": true
   }
 }

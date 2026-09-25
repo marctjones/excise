@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1389,
-  "indexedContentSha256": "3aa704da07eeacc9da8197b5daeaa04fbc216c2c4e9ad1c50885c800d15006ff",
+  "indexedFileCount": 1394,
+  "indexedContentSha256": "4d9fd00e85e9918eccf99b363d768df997807ce0e8bae08b6933c8f60eeec63d",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -176,6 +176,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "header",
+            "structure",
+            "syntax",
+            "pdfobject"
+          ]
+        },
+        {
           "path": "Excise.Core/Tagging/StructureTreeBuilder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -219,16 +229,6 @@
           "matchedTerms": [
             "header",
             "structure"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "header",
-            "structure",
-            "syntax",
-            "pdfobject"
           ]
         },
         {
@@ -374,6 +374,15 @@
         },
         {
           "path": "Excise.Core.Tests/Security/EncryptionPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "header",
+            "structure",
+            "xref"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs",
           "kind": "test",
           "matchedTerms": [
             "header",
@@ -596,15 +605,6 @@
             "header",
             "structure",
             "syntax"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "header",
-            "structure",
-            "xref"
           ]
         },
         {
@@ -1100,6 +1100,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "incremental",
+            "syntax",
+            "update",
+            "pdfobject"
+          ]
+        },
+        {
           "path": "Excise.Core/Tagging/StructureTreeBuilder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -1169,16 +1179,6 @@
           "matchedTerms": [
             "indirect",
             "streams",
-            "pdfobject"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "incremental",
-            "syntax",
-            "update",
             "pdfobject"
           ]
         },
@@ -1962,6 +1962,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "parameters",
+            "syntax",
+            "pdfobject"
+          ]
+        },
+        {
           "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -2064,15 +2073,6 @@
           "matchedTerms": [
             "decode",
             "filters"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "parameters",
-            "syntax",
-            "pdfobject"
           ]
         },
         {
@@ -2597,6 +2597,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "crypt",
+            "encryption",
+            "syntax",
+            "pdfobject"
+          ]
+        },
+        {
           "path": "Excise.Core/Validation/PdfAStructuralValidator.cs",
           "kind": "source",
           "matchedTerms": [
@@ -2699,16 +2709,6 @@
           "matchedTerms": [
             "crypt",
             "encryption"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "crypt",
-            "encryption",
-            "syntax",
-            "pdfobject"
           ]
         },
         {
@@ -5468,6 +5468,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureVerificationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "dates",
+            "information",
+            "catalog",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.Core/Tagging/StructureTreeBuilder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -5562,6 +5572,15 @@
           ]
         },
         {
+          "path": "Excise.App/Composition/ApplicationComposition.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "dates",
+            "information",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.App/Controls/PriorityToolbarPanel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -5625,26 +5644,6 @@
             "metadata",
             "xmp",
             "metadata",
-            "pdfdocument"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "dates",
-            "information",
-            "catalog",
-            "pdfdocument"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureVerificationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "dates",
-            "information",
-            "catalog",
             "pdfdocument"
           ]
         },
@@ -6276,6 +6275,34 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "catalog",
+            "pdfdocument"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SignatureTrustEvaluator.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "collections",
+            "embedded"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SignatureVerificationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "catalog",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.Core/Validation/PdfAStructuralValidator.cs",
           "kind": "source",
           "matchedTerms": [
@@ -6348,34 +6375,6 @@
             "collections",
             "embedded",
             "metadata",
-            "pdfdocument"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "collections",
-            "embedded",
-            "catalog",
-            "pdfdocument"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureTrustEvaluator.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "collections",
-            "embedded"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureVerificationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "collections",
-            "embedded",
-            "catalog",
             "pdfdocument"
           ]
         },
@@ -7577,6 +7576,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Editing/BatesNumberingService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "line",
+            "path",
+            "pdfgraphics"
+          ]
+        },
+        {
           "path": "Excise.Core/Editing/PdfTypewriterTextApplier.cs",
           "kind": "source",
           "matchedTerms": [
@@ -7991,6 +7999,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "construction",
+            "line",
+            "path"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/Letter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -8031,26 +8048,9 @@
             "line",
             "path"
           ]
-        },
-        {
-          "path": "Excise.Core/Validation/PdfUaValidator.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "construction",
-            "line"
-          ]
-        },
-        {
-          "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "line",
-            "path",
-            "colorspace"
-          ]
         }
       ],
-      "candidateReferenceCount": 640
+      "candidateReferenceCount": 641
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8597,6 +8597,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "output",
+            "values"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/BidiReorderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -8852,17 +8860,9 @@
             "colorspace",
             "skiarenderer"
           ]
-        },
-        {
-          "path": "Excise.Rendering/Shadings/PdfMeshPatchBuilder.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "color",
-            "colour"
-          ]
         }
       ],
-      "candidateReferenceCount": 317
+      "candidateReferenceCount": 319
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9707,6 +9707,14 @@
           ]
         },
         {
+          "path": "Excise.App/Services/ImageStampDecoder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "images"
+          ]
+        },
+        {
           "path": "Excise.App/Services/Printing/WindowsDocumentPrinter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -9825,18 +9833,9 @@
             "images",
             "skiarenderer"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Authoring/PdfRasterPageAuthoringTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "inline",
-            "colorspace"
-          ]
         }
       ],
-      "candidateReferenceCount": 243
+      "candidateReferenceCount": 247
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -11135,6 +11134,14 @@
           ]
         },
         {
+          "path": "Excise.App/Services/ImageStampDecoder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "colour",
+            "scan"
+          ]
+        },
+        {
           "path": "Excise.App/Services/Printing/WindowsDocumentPrinter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -11150,6 +11157,15 @@
           "matchedTerms": [
             "conversion",
             "scan"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "conversion",
+            "scan",
+            "skiarenderer"
           ]
         },
         {
@@ -11395,25 +11411,9 @@
             "color",
             "scan"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "scan"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "scan"
-          ]
         }
       ],
-      "candidateReferenceCount": 176
+      "candidateReferenceCount": 180
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -12613,6 +12613,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "form",
+            "xobjects"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -12664,19 +12672,9 @@
             "xobjects",
             "contentstream"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PdfPageTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "form",
-            "streams",
-            "xobjects",
-            "contentstream"
-          ]
         }
       ],
-      "candidateReferenceCount": 178
+      "candidateReferenceCount": 179
     },
     {
       "id": "pdf.20.content.operators",
@@ -13060,6 +13058,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "iso",
+            "operators"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/BidiReorderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -13208,14 +13214,6 @@
             "contentstream",
             "textextractor",
             "textstate"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "iso",
-            "operators"
           ]
         },
         {
@@ -13430,6 +13428,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "iso",
+            "operators"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs",
           "kind": "test",
           "matchedTerms": [
@@ -13509,14 +13515,6 @@
             "iso",
             "operators",
             "contentstream"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/NonPageCarrierRedactionLeakTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "content-stream",
-            "iso"
           ]
         }
       ],
@@ -22829,6 +22827,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageStampTransparencyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
           "kind": "test",
           "matchedTerms": [
@@ -22882,18 +22889,9 @@
             "colour",
             "skiarenderer"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/SoftMaskIndependenceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 119
+      "candidateReferenceCount": 121
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -36042,6 +36040,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "smask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core/Parsing/PdfParser.cs",
           "kind": "source",
           "matchedTerms": [
@@ -36139,6 +36146,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "smask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36218,6 +36234,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageStampTransparencyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "smask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/UnredactionTierABench.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36266,7 +36291,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 24
+      "candidateReferenceCount": 27
     },
     {
       "id": "pdf.20.image.requirement-021",
@@ -36325,6 +36350,15 @@
       "candidateReferences": [
         {
           "path": "Excise.Core/Content/ContentStreamWalker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
           "kind": "source",
           "matchedTerms": [
             "image",
@@ -36572,6 +36606,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/ImageStampDecoder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36582,6 +36625,15 @@
         },
         {
           "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs",
           "kind": "test",
           "matchedTerms": [
             "image",
@@ -36800,6 +36852,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageStampTransparencyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37042,7 +37103,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 76
+      "candidateReferenceCount": 80
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -37103,6 +37164,15 @@
       "candidateReferences": [
         {
           "path": "Excise.Core/Content/ContentStreamWalker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
           "kind": "source",
           "matchedTerms": [
             "image",
@@ -37351,6 +37421,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/ImageStampDecoder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37361,6 +37440,15 @@
         },
         {
           "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs",
           "kind": "test",
           "matchedTerms": [
             "image",
@@ -37576,6 +37664,15 @@
             "mask",
             "image",
             "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageStampTransparencyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
           ]
         },
         {
@@ -37821,7 +37918,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 76
+      "candidateReferenceCount": 80
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -38425,6 +38522,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/ImageStampDecoder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App/Services/Printing/WindowsDocumentPrinter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -38564,6 +38670,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "decode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/ObjectCacheEvictionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -38612,30 +38727,9 @@
             "image",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Filters/FilterSupportMapTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "image",
-            "image",
-            "jbig2",
-            "jpx"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Filters/Jbig2/GenericRegionDecoderTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "image",
-            "image",
-            "jbig2"
-          ]
         }
       ],
-      "candidateReferenceCount": 183
+      "candidateReferenceCount": 186
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -38913,6 +39007,15 @@
             "image",
             "jbig2",
             "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bitspercomponent",
+            "image",
+            "image"
           ]
         },
         {
@@ -39423,7 +39526,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 77
+      "candidateReferenceCount": 78
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -39616,6 +39719,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core/Document/PdfDocumentObjectStore.cs",
           "kind": "source",
           "matchedTerms": [
@@ -39800,6 +39912,15 @@
             "image",
             "jbig2",
             "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image"
           ]
         },
         {
@@ -40143,7 +40264,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 57
+      "candidateReferenceCount": 59
     },
     {
       "id": "pdf.20.image.requirement-027",
@@ -42585,6 +42706,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageStampTransparencyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42593,20 +42723,9 @@
             "image",
             "jbig2"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/MisleadingImageFallbackTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image",
-            "jbig2",
-            "jpx"
-          ]
         }
       ],
-      "candidateReferenceCount": 136
+      "candidateReferenceCount": 137
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -44014,6 +44133,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "widget",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Core/Tagging/StructureTreeBuilder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -44154,16 +44283,6 @@
         },
         {
           "path": "Excise.App/Services/PdfSearchService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "widget",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
           "kind": "source",
           "matchedTerms": [
             "annotation",
@@ -50784,6 +50903,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/Letter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -51009,16 +51138,6 @@
             "line",
             "annotation",
             "redact"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation",
-            "pdfannotation"
           ]
         },
         {
@@ -52707,6 +52826,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Core/Tagging/StructureTreeBuilder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -52862,6 +52991,15 @@
             "ink",
             "annotation",
             "pdfannotation"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/ImageStampDecoder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation"
           ]
         },
         {
@@ -53173,29 +53311,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Redaction/Recovery/RecoveryOracleTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 169
+      "candidateReferenceCount": 171
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -54319,6 +54437,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/PdfPageTextFacade.cs",
           "kind": "source",
           "matchedTerms": [
@@ -54390,17 +54518,16 @@
           ]
         },
         {
-          "path": "Excise.App/Services/PdfSearchService.cs",
+          "path": "Excise.App/Services/ImageStampDecoder.cs",
           "kind": "source",
           "matchedTerms": [
             "annotation",
             "stamp",
-            "annotation",
-            "pdfannotation"
+            "annotation"
           ]
         },
         {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
+          "path": "Excise.App/Services/PdfSearchService.cs",
           "kind": "source",
           "matchedTerms": [
             "annotation",
@@ -54477,6 +54604,16 @@
             "annotation",
             "stamp",
             "annotation"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "pdfannotation"
           ]
         },
         {
@@ -54614,6 +54751,15 @@
         },
         {
           "path": "Excise.Rendering.Tests/Differential/CorpusAppearanceStreamTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageStampTransparencyTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
@@ -54850,17 +54996,6 @@
           ]
         },
         {
-          "path": "tests/unwired-api-baseline.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "stamp",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "docs/architecture/main-window-architecture.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -54872,7 +55007,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 67
+      "candidateReferenceCount": 69
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -57920,6 +58055,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "alpha",
+            "groups",
+            "soft"
+          ]
+        },
+        {
           "path": "Excise.Core/Fonts/GlyphUnicodeDecoder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -58294,11 +58438,30 @@
           ]
         },
         {
+          "path": "Excise.App/Services/AnnotationWorkflowService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "alpha",
+            "soft"
+          ]
+        },
+        {
           "path": "Excise.App/Services/Host/AvaloniaFilePicker.cs",
           "kind": "source",
           "matchedTerms": [
             "model",
             "soft"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/ImageStampDecoder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "alpha",
+            "blend",
+            "soft",
+            "transparency",
+            "transparency"
           ]
         },
         {
@@ -58417,6 +58580,7 @@
           "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
           "kind": "source",
           "matchedTerms": [
+            "alpha",
             "model",
             "soft"
           ]
@@ -58589,35 +58753,9 @@
             "model",
             "soft"
           ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Xfa.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "model",
-            "soft"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "groups",
-            "model",
-            "modes",
-            "soft"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/PreferencesViewModel.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "model",
-            "soft"
-          ]
         }
       ],
-      "candidateReferenceCount": 215
+      "candidateReferenceCount": 219
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -58773,6 +58911,14 @@
           "matchedTerms": [
             "output",
             "preview"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "output",
+            "parameters"
           ]
         },
         {
@@ -58961,14 +59107,6 @@
           "matchedTerms": [
             "output",
             "preview"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "output",
-            "parameters"
           ]
         },
         {
@@ -60047,6 +60185,17 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "flags",
+            "acroform",
+            "action",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/Letter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -60280,16 +60429,6 @@
           ]
         },
         {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "flags",
-            "acroform",
-            "annotation"
-          ]
-        },
-        {
           "path": "Excise.App/Threading/AvaloniaDispatcherScheduler.cs",
           "kind": "source",
           "matchedTerms": [
@@ -60465,7 +60604,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 220
+      "candidateReferenceCount": 221
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -64040,6 +64179,25 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureVerificationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "acroform",
+            "fields",
+            "acroform",
+            "action"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SignedFieldDetector.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "acroform",
+            "fields",
+            "acroform"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/TextExtractor.cs",
           "kind": "source",
           "matchedTerms": [
@@ -64300,24 +64458,6 @@
             "action",
             "annotation",
             "redact"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureVerificationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "acroform",
-            "fields",
-            "acroform"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignedFieldDetector.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "acroform",
-            "fields",
-            "acroform"
           ]
         },
         {
@@ -64998,6 +65138,17 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "including",
+            "uri",
+            "acroform",
+            "action",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/BidiReorderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -65223,16 +65374,6 @@
           ]
         },
         {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "including",
-            "uri",
-            "acroform",
-            "annotation"
-          ]
-        },
-        {
           "path": "Excise.App/StartupDocumentResolver.cs",
           "kind": "source",
           "matchedTerms": [
@@ -65337,7 +65478,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 184
+      "candidateReferenceCount": 182
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -65478,6 +65619,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SigningCertificateFactory.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "applications",
+            "usage"
+          ]
+        },
+        {
           "path": "Excise.Core/Validation/PdfUaValidator.cs",
           "kind": "source",
           "matchedTerms": [
@@ -65493,14 +65642,6 @@
             "applications",
             "usage",
             "action"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SigningCertificateFactory.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "applications",
-            "usage"
           ]
         },
         {
@@ -66086,6 +66227,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "media",
+            "sound",
+            "media",
+            "sound"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs",
           "kind": "test",
           "matchedTerms": [
@@ -66327,15 +66478,6 @@
           "matchedTerms": [
             "annotations",
             "media",
-            "media"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "media",
-            "screen",
             "media"
           ]
         }
@@ -67437,6 +67579,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Editing/BatesNumberingService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "class",
+            "maps"
+          ]
+        },
+        {
           "path": "Excise.Core/Filters/Jbig2/Jbig2Decoder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -67837,6 +67987,24 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attributes",
+            "class",
+            "structure"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SignatureVerificationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attributes",
+            "class",
+            "structure"
+          ]
+        },
+        {
           "path": "Excise.Core/Tagging/StructureTreeBuilder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -67892,33 +68060,6 @@
             "structure",
             "metadata",
             "tagged"
-          ]
-        },
-        {
-          "path": "Excise.Core/Text/TextExtractor.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "class",
-            "logical",
-            "structure",
-            "tagged"
-          ]
-        },
-        {
-          "path": "Excise.Core/Text/TextSelectionEngine.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "class",
-            "logical",
-            "structure"
-          ]
-        },
-        {
-          "path": "Excise.Core/Text/UnicodeTextSafety.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "class",
-            "logical"
           ]
         }
       ],
@@ -68290,6 +68431,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureVerificationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "data",
+            "dictionaries"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/PdfPageTextFacade.cs",
           "kind": "source",
           "matchedTerms": [
@@ -68493,14 +68642,6 @@
             "coordinate",
             "data",
             "metadata"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureVerificationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "data",
-            "dictionaries"
           ]
         },
         {
@@ -69054,6 +69195,63 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "digital",
+            "ranges",
+            "signatures"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SignatureByteRangeValidator.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "ranges",
+            "signatures",
+            "validation"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SignatureContentsReader.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "ranges",
+            "signatures"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SignatureTrustEvaluator.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "signatures"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SignatureVerificationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "dictionaries",
+            "digital",
+            "ranges",
+            "signatures",
+            "validation"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SigningCertificateFactory.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "digital",
+            "signatures"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/BidiReorderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -69266,51 +69464,12 @@
           ]
         },
         {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "byte",
-            "digital",
-            "ranges",
-            "signatures"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureByteRangeValidator.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "byte",
-            "ranges",
-            "validation"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureContentsReader.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "byte",
-            "ranges",
-            "signatures"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureVerificationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "byte",
-            "dictionaries",
-            "digital",
-            "ranges",
-            "signatures",
-            "validation"
-          ]
-        },
-        {
           "path": "Excise.App/Services/SignatureVerificationSummaryFormatter.cs",
           "kind": "source",
           "matchedTerms": [
             "byte",
-            "ranges"
+            "ranges",
+            "signatures"
           ]
         },
         {
@@ -69333,7 +69492,6 @@
           "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
           "kind": "source",
           "matchedTerms": [
-            "byte",
             "permissions",
             "validation"
           ]
@@ -69359,7 +69517,8 @@
           "kind": "source",
           "matchedTerms": [
             "byte",
-            "digital"
+            "digital",
+            "signatures"
           ]
         },
         {
@@ -69416,25 +69575,9 @@
             "byte",
             "dictionaries"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "dictionaries"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Content/Operators/MarkedContentShadingOperatorTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "dictionaries"
-          ]
         }
       ],
-      "candidateReferenceCount": 190
+      "candidateReferenceCount": 200
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -70220,7 +70363,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 694
+      "candidateReferenceCount": 696
     },
     {
       "id": "pdf.20.extension.developer",
@@ -70385,6 +70528,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SigningCertificateFactory.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/TextExtractor.cs",
           "kind": "source",
           "matchedTerms": [
@@ -70448,14 +70599,6 @@
         },
         {
           "path": "Excise.App/Services/AvaloniaUserDialogService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/BatesNumberingService.cs",
           "kind": "source",
           "matchedTerms": [
             "extension",
@@ -70648,34 +70791,7 @@
           ]
         },
         {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "extension",
-            "extensions",
-            "version",
-            "pdfa"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureVerificationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "extension",
-            "extensions",
-            "pdfa"
-          ]
-        },
-        {
           "path": "Excise.App/Services/SignatureVerificationWorkflowService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SigningCertificateFactory.cs",
           "kind": "source",
           "matchedTerms": [
             "extension",
@@ -70925,9 +71041,33 @@
             "extension",
             "version"
           ]
+        },
+        {
+          "path": "Excise.App/Workspace/DocumentSession.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
+          "path": "Excise.App/Workspace/DocumentSessionFactory.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
+          "path": "Excise.App/Workspace/DocumentWorkspace.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
         }
       ],
-      "candidateReferenceCount": 163
+      "candidateReferenceCount": 156
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -73277,7 +73417,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 144
+      "candidateReferenceCount": 145
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -75865,6 +76005,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "save",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs",
           "kind": "test",
           "matchedTerms": [
@@ -75989,20 +76138,9 @@
             "save",
             "security"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "pdfe",
-            "save",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 139
+      "candidateReferenceCount": 140
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -76218,6 +76356,34 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Signatures/SignatureTrustEvaluatorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "signature",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "signature",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/TestSupport/TestCertificateFactory.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "override",
+            "pdfe",
+            "signature",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -76357,24 +76523,6 @@
           ]
         },
         {
-          "path": "Excise.App.Tests/Unit/SignatureTrustEvaluatorTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "pdfe",
-            "signature",
-            "security"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "pdfe",
-            "signature",
-            "security"
-          ]
-        },
-        {
           "path": "Excise.App.Tests/Unit/UnicodeDisplayBoundaryTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -76390,16 +76538,6 @@
             "override",
             "signature",
             "redaction"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/Utilities/TestCertificateFactory.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "override",
-            "pdfe",
-            "signature",
-            "security"
           ]
         },
         {
@@ -76556,6 +76694,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Editing/BatesNumberingService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "documents",
+            "ocr",
+            "ocr"
+          ]
+        },
+        {
           "path": "Excise.Core/Filters/LzwFilterDecoder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -76668,15 +76815,6 @@
           "matchedTerms": [
             "documents",
             "scanned"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/BatesNumberingService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "documents",
-            "ocr",
-            "ocr"
           ]
         },
         {
@@ -76848,6 +76986,15 @@
             "documents",
             "pdfe",
             "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "documents",
+            "pdfe",
             "security"
           ]
         },
@@ -77153,15 +77300,6 @@
             "ocr",
             "privacy",
             "redaction"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "documents",
-            "pdfe",
-            "security"
           ]
         },
         {
@@ -77567,6 +77705,25 @@
           ]
         },
         {
+          "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "exportable",
+            "local",
+            "log",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.Core/Signatures/SigningCertificateFactory.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "exportable",
+            "local",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/TextExtractor.cs",
           "kind": "source",
           "matchedTerms": [
@@ -77731,25 +77888,6 @@
             "log",
             "pdfe",
             "redaction",
-            "security"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "exportable",
-            "local",
-            "log",
-            "security"
-          ]
-        },
-        {
-          "path": "Excise.App/Services/SigningCertificateFactory.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "exportable",
-            "local",
             "security"
           ]
         },
@@ -77985,6 +78123,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "log",
+            "pdfe",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/TestSupport/TestRepoLayoutTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -78037,17 +78184,9 @@
             "log",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/LowContrastHiddenTextTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "audit",
-            "log"
-          ]
         }
       ],
-      "candidateReferenceCount": 158
+      "candidateReferenceCount": 157
     },
     {
       "id": "pdfe.product.platform.printing",

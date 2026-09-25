@@ -22,7 +22,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | operators | 287 | 100.0% | 73.5% | 0 | 0.0% | 81.5% | 63.2% | 49.1% | 146 |
 | optional-profiles | 0 | — | — | 0 | — | — | — | — | 0 |
 | product-capabilities | 21 | 81.0% | 4.8% | 4 | 0.0% | 63.1% | 17.9% | 100.0% | 0 |
-| renderer-requirements | 259 | 100.0% | 81.9% | 0 | 0.0% | 80.5% | 10.0% | 100.0% | 0 |
+| renderer-requirements | 259 | 100.0% | 81.9% | 0 | 0.0% | 80.4% | 10.0% | 100.0% | 0 |
 | rendering | 10 | 90.0% | 10.0% | 1 | 0.0% | 65.5% | 10.0% | 100.0% | 0 |
 | syntax | 14 | 100.0% | 100.0% | 0 | 0.0% | 86.1% | 10.0% | 100.0% | 0 |
 | transparency | 1 | 100.0% | 100.0% | 0 | 0.0% | 95.0% | 90.0% | 100.0% | 0 |
@@ -54,4 +54,4 @@ All 282 capability leaves have a collection record: {'candidate-evidence': 22, '
 
 ## Test and benchmark attribution
 
-Explicit test contracts: 882/899; passing recorded contracts: 875/899; candidate test coverage: 647/899. Benchmark harnesses: 6/6.
+Explicit test contracts: 882/899; passing recorded contracts: 875/899; candidate test coverage: 642/899. Benchmark harnesses: 6/6.

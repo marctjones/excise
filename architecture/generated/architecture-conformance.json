@@ -2,16 +2,16 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "966615eb93995a2b665a20c80e5425c7e8c915dd",
+  "sourceRevision": "f8d192a9eccdd279bb8deab5748b84632441f979",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
-    "analyzedProjects": 12,
-    "retainedSymbols": 8249,
-    "observedComponentDependencies": 73,
-    "declaredDependencies": 69,
+    "analyzedProjects": 13,
+    "retainedSymbols": 8246,
+    "observedComponentDependencies": 78,
+    "declaredDependencies": 74,
     "acceptedExceptions": 1,
     "undeclaredDependencies": 3,
     "forbiddenDependencies": 0,
@@ -38,8 +38,8 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 764,
-      "typeDependencyCount": 81,
+      "references": 758,
+      "typeDependencyCount": 78,
       "classification": "declared",
       "evidence": [
         {
@@ -276,8 +276,8 @@
     {
       "source": "core",
       "target": "core-document",
-      "references": 180,
-      "typeDependencyCount": 31,
+      "references": 211,
+      "typeDependencyCount": 40,
       "classification": "declared",
       "evidence": [
         {
@@ -304,8 +304,8 @@
     {
       "source": "core",
       "target": "core-primitives",
-      "references": 250,
-      "typeDependencyCount": 51,
+      "references": 297,
+      "typeDependencyCount": 69,
       "classification": "declared",
       "evidence": [
         {
@@ -402,8 +402,8 @@
     {
       "source": "core-document",
       "target": "core",
-      "references": 78,
-      "typeDependencyCount": 20,
+      "references": 96,
+      "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [
         {
@@ -854,6 +854,76 @@
           "source": "Excise.Core.Writing.PdfDocumentOptimizer",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 29
+        }
+      ]
+    },
+    {
+      "source": "native-abi",
+      "target": "core-document",
+      "references": 23,
+      "typeDependencyCount": 7,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Native.NativeExports",
+          "target": "Excise.Core.Document.PdfDocument",
+          "references": 11
+        }
+      ]
+    },
+    {
+      "source": "native-abi",
+      "target": "core-encryption",
+      "references": 7,
+      "typeDependencyCount": 2,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Native.NativeExports",
+          "target": "Excise.Core.Security.PdfEncryptionOptions",
+          "references": 5
+        }
+      ]
+    },
+    {
+      "source": "native-abi",
+      "target": "core-parsing",
+      "references": 2,
+      "typeDependencyCount": 2,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Native.LastError",
+          "target": "Excise.Core.Parsing.PdfEncryptionNotSupportedException",
+          "references": 1
+        }
+      ]
+    },
+    {
+      "source": "native-abi",
+      "target": "core-redaction",
+      "references": 18,
+      "typeDependencyCount": 8,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Native.NativeExports",
+          "target": "Excise.Core.Text.Segmentation.RedactionOptions",
+          "references": 5
+        }
+      ]
+    },
+    {
+      "source": "native-abi",
+      "target": "core-text",
+      "references": 3,
+      "typeDependencyCount": 1,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Native.NativeExports",
+          "target": "Excise.Core.Text.TextExtractor",
+          "references": 3
         }
       ]
     },
