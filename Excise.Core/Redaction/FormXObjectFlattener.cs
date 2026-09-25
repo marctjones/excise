@@ -82,8 +82,7 @@ internal static class FormXObjectFlattener
         // The top level resolves names against the page's own resources;
         // merging that into itself yields an identity rename map.
         var pageResources = ctx.PageResources;
-        output = Flatten(ctx, operations, pageResources, ContentTransform.Identity, redactionArea,
-                         applyOverlapGate: true, depth: 0);
+        output = Flatten(ctx, operations, pageResources, redactionArea, applyOverlapGate: true, depth: 0);
         inlinedFormObjects = ctx.InlinedFormObjects;
         return ctx.Changed;
     }
@@ -163,15 +162,14 @@ internal static class FormXObjectFlattener
     /// Flatten one operator list. <paramref name="sourceResources"/> is the
     /// resource dict the list's names resolve against; the returned operators
     /// are fully in page space (names merged + renamed into the page's
-    /// resources). <paramref name="ctm"/> and <paramref name="applyOverlapGate"/>
-    /// are only meaningful at the top level, where they decide whether a form
-    /// is far enough from the redaction area to leave as a <c>Do</c>.
+    /// resources). <paramref name="applyOverlapGate"/> is only meaningful at the
+    /// top level, where it decides whether a form is far enough from the
+    /// redaction area to leave as a <c>Do</c>.
     /// </summary>
     private static List<ContentOperator> Flatten(
         Context ctx,
         IReadOnlyList<ContentOperator> ops,
         PdfDictionary sourceResources,
-        ContentTransform ctm,
         PdfRectangle redactionArea,
         bool applyOverlapGate,
         int depth)
@@ -180,33 +178,12 @@ internal static class FormXObjectFlattener
         var rename = ctx.MergeResources(sourceResources);
 
         var output = new List<ContentOperator>(ops.Count);
-        var ctmStack = new Stack<ContentTransform>();
-
         foreach (var op in ops)
         {
-            switch (op.Name)
-            {
-                case "q":
-                    ctmStack.Push(ctm);
-                    output.Add(op);
-                    continue;
-                case "Q":
-                    if (ctmStack.Count > 0) ctm = ctmStack.Pop();
-                    output.Add(op);
-                    continue;
-                case "cm":
-                    if (op.Operands.Count >= 6)
-                        ctm = ContentTransform.FromOperands(op).Multiply(ctm);
-                    output.Add(op);
-                    continue;
-                case "Do":
-                    HandleDo(ctx, op, sourceResources, rename, ctm, redactionArea,
-                             applyOverlapGate, depth, output);
-                    continue;
-                default:
-                    output.Add(Rewrite(op, rename));
-                    continue;
-            }
+            if (op.Name == "Do")
+                HandleDo(ctx, op, sourceResources, rename, redactionArea, applyOverlapGate, depth, output);
+            else
+                output.Add(Rewrite(op, rename));
         }
 
         return output;
@@ -217,7 +194,6 @@ internal static class FormXObjectFlattener
         ContentOperator op,
         PdfDictionary sourceResources,
         RenameMap rename,
-        ContentTransform ctm,
         PdfRectangle redactionArea,
         bool applyOverlapGate,
         int depth,
@@ -244,8 +220,10 @@ internal static class FormXObjectFlattener
         var formMatrix = ContentTransform.FromArray(form.ResolveArray(ctx.Doc, "Matrix"));
 
         // Overlap gate (top level only): skip inlining a form whose page-space
-        // BBox provably misses the redaction area. Indeterminate → inline.
-        if (applyOverlapGate && !FormMayOverlap(form, ctx.Doc, formMatrix.Multiply(ctm), redactionArea))
+        // BBox provably misses the redaction area. Indeterminate, including a
+        // Do with no stamped CTM (#1830) → inline.
+        if (applyOverlapGate && op.GraphicsTransform is { } ctm
+            && !FormMayOverlap(form, ctx.Doc, formMatrix.Multiply(ctm), redactionArea))
         {
             output.Add(Rewrite(op, rename));
             return;
@@ -277,7 +255,7 @@ internal static class FormXObjectFlattener
 
         // Recurse: nested forms are always inlined (no overlap gate below the
         // top level). The result is already fully in page space.
-        var inlined = Flatten(ctx, formOps, formResources, ContentTransform.Identity, redactionArea,
+        var inlined = Flatten(ctx, formOps, formResources, redactionArea,
                               applyOverlapGate: false, depth: depth + 1);
 
         output.Add(ContentOperator.SaveState());

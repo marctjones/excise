@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Excise.Core.Content;
 using Excise.Core.Document;
 using Excise.Core.Operations;
 using Excise.Core.Primitives;
@@ -484,53 +483,18 @@ public static class RedactedCopySafetyPolicy
         }
     }
 
-    private static int CountRasterOverlaps(PdfPage page, PdfRectangle redactionArea)
-    {
-        var count = 0;
-        var ctm = ContentTransform.Identity;
-        var ctmStack = new Stack<ContentTransform>();
-
-        foreach (var op in page.GetContentStream().Operators)
+    // The operators come from this fresh parse, so every one carries the stamp;
+    // a missing one throws and the audit reports it could not be completed.
+    private static int CountRasterOverlaps(PdfPage page, PdfRectangle redactionArea) =>
+        page.GetContentStream().Operators.Count(op => op.Name switch
         {
-            switch (op.Name)
-            {
-                case "q":
-                    ctmStack.Push(ctm);
-                    break;
-                case "Q":
-                    if (ctmStack.Count > 0)
-                        ctm = ctmStack.Pop();
-                    break;
-                case "cm":
-                    if (op.Operands.Count >= 6)
-                    {
-                        ctm = ContentTransform.FromOperands(op).Multiply(ctm);
-                    }
-                    break;
-                case "Do":
-                    if (op.Operands.Count == 0)
-                        break;
-
-                    var name = op.GetName(0);
-                    if (string.IsNullOrEmpty(name))
-                        break;
-
-                    if (page.GetXObject(name) is PdfStream stream &&
-                        string.Equals(stream.GetNameOrNull("Subtype"), "Image", StringComparison.Ordinal) &&
-                        ctm.UnitSquareBounds().IntersectsWith(redactionArea))
-                    {
-                        count++;
-                    }
-                    break;
-                case "BI":
-                    if (ctm.UnitSquareBounds().IntersectsWith(redactionArea))
-                        count++;
-                    break;
-            }
-        }
-
-        return count;
-    }
+            "Do" => op.GetName(0) is { Length: > 0 } name
+                    && page.GetXObject(name) is PdfStream stream
+                    && string.Equals(stream.GetNameOrNull("Subtype"), "Image", StringComparison.Ordinal)
+                    && op.GraphicsTransform!.Value.UnitSquareBounds().IntersectsWith(redactionArea),
+            "BI" => op.BoundingBox!.Value.IntersectsWith(redactionArea),
+            _ => false,
+        });
 
     private static int CountScrubbableInfoFields(PdfDocument document) =>
         document.Info == null

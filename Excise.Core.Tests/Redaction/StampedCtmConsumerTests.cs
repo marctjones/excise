@@ -1,6 +1,9 @@
+using System.Collections.Generic;
 using System.Linq;
 using AwesomeAssertions;
+using Excise.Core.Content;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Excise.TestSupport;
 using Xunit;
@@ -100,6 +103,28 @@ public class StampedCtmConsumerTests
         removed.Should().Be(0);
         edited.Should().Be(0);
         output.Should().Equal(ops);
+    }
+
+    [Fact]
+    public void ImageRedactor_DropsAndCountsAnImageWithNoStampedPlacement()
+    {
+        using var doc = PdfDocument.Open(Fixture());
+        var page = doc.GetPage(1);
+        var bi = page.GetContentStream().Operators.Single(o => o.Name == "BI");
+        var unstamped = new List<ContentOperator>
+        {
+            new("Do", new PdfObject[] { new PdfName("Im0") }),
+            new("BI", bi.Operands) { InlineImageData = bi.InlineImageData },
+        };
+        var touched = new List<PdfStream>();
+
+        var output = ImageRedactor.ProcessOperations(unstamped, page, new PdfRectangle(500, 700, 510, 710),
+            GlyphRemovalStrategy.AnyOverlap, out var removed, out var edited, touched);
+
+        output.Should().BeEmpty("an image that cannot be placed may lie inside the area, so it is not kept");
+        removed.Should().Be(2, "the drop is reported through the removal count");
+        edited.Should().Be(0);
+        touched.Should().ContainSingle();
     }
 
     [Fact]
@@ -204,6 +229,18 @@ public class StampedCtmConsumerTests
         FormXObjectFlattener.FlattenOverlapping(page, page.GetContentStream().Operators,
             new PdfRectangle(10, 10, 50, 50), out _, out var inlined).Should().BeFalse();
         inlined.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void FormXObjectFlattener_InlinesAFormWithNoStampedPlacement()
+    {
+        using var doc = PdfDocument.Open(Fixture());
+        var page = doc.GetPage(1);
+
+        FormXObjectFlattener.FlattenOverlapping(page,
+            new[] { new ContentOperator("Do", new PdfObject[] { new PdfName("Fm0") }) },
+            new PdfRectangle(500, 700, 510, 710), out _, out var inlined).Should().BeTrue();
+        inlined.Should().Equal(7);
     }
 
     // ---- PdfFormAutoDetector ----

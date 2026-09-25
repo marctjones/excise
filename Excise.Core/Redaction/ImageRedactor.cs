@@ -16,17 +16,15 @@ namespace Excise.Core.Text.Segmentation;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Algorithm: walk the content stream while tracking the current
-/// transformation matrix (CTM) through <c>q</c>/<c>Q</c>/<c>cm</c>. When
-/// a <c>Do</c> op is hit, resolve the named XObject in the page's
-/// <c>/Resources /XObject</c> dictionary; if the subtype is
-/// <c>/Image</c>, use the CTM-transformed unit square as the image's
-/// page-space quad, AABB that, and test the chosen overlap strategy
-/// against the redaction area. If it hits, drop the <c>Do</c> op. A
-/// <c>BI</c> op is treated the same way — it always fills the unit square
-/// mapped by the CTM — and dropping it removes the embedded pixel bytes
-/// the parser captured on <see cref="ContentOperator.InlineImageData"/>
-/// (#354).
+/// Algorithm: for a <c>Do</c> naming an <c>/Image</c> XObject, map the unit
+/// square through the CTM the parser stamped on the operator
+/// (<see cref="ContentOperator.GraphicsTransform"/>) and test the chosen
+/// overlap strategy against the redaction area. If it hits, drop the
+/// <c>Do</c> op. A <c>BI</c> op is treated the same way through its stamped
+/// <see cref="ContentOperator.BoundingBox"/>, and dropping it removes the
+/// embedded pixel bytes the parser captured on
+/// <see cref="ContentOperator.InlineImageData"/> (#354). An image with no
+/// stamp cannot be placed, so it is dropped and counted (#1830).
 /// </para>
 /// <para>
 /// Form XObjects (non-image Do targets) pass through unchanged; redacting
@@ -91,66 +89,46 @@ internal static class ImageRedactor
         regionEditedCount = 0;
         var output = new List<ContentOperator>(operations.Count);
 
-        var ctm = ContentTransform.Identity;
-        var ctmStack = new Stack<ContentTransform>();
-
         foreach (var op in operations)
         {
             switch (op.Name)
             {
-                case "q":
-                    ctmStack.Push(ctm);
-                    output.Add(op);
-                    continue;
-                case "Q":
-                    if (ctmStack.Count > 0) ctm = ctmStack.Pop();
-                    output.Add(op);
-                    continue;
-                case "cm":
-                    if (op.Operands.Count >= 6)
-                    {
-                        // Concat: new-CTM = local × old-CTM (PDF spec 8.3.4).
-                        ctm = ContentTransform.FromOperands(op).Multiply(ctm);
-                    }
-                    output.Add(op);
-                    continue;
                 case "Do":
-                    if (ShouldRemoveImageDo(op, page, ctm, redactionArea, strategy))
+                    var image = ResolveImageStream(op, page);
+                    if (image == null
+                        || (op.GraphicsTransform is { } ctm && !strategy.Selects(ctm.UnitSquareBounds(), redactionArea)))
                     {
-                        // #1493: region-edited or dropped, the image is replaced
-                        // on this page only. Record it so the pages still drawing
-                        // the original can be reported.
-                        var image = ResolveImageStream(op, page);
-                        if (image != null)
-                            touchedImages?.Add(image);
-
-                        // #1195: if the redaction area only PARTIALLY covers the
-                        // image, try to destroy just the covered samples instead
-                        // of dropping the whole image. Fail-secure: any decline
-                        // falls through to whole-Do removal below.
-                        if (!redactionArea.Contains(ctm.UnitSquareBounds())
-                            && image != null
-                            && ImageRegionRedactor.TryRegionRedact(
-                                   page, image, ctm.A, ctm.B, ctm.C, ctm.D, ctm.E, ctm.F,
-                                   redactionArea, out var newName))
-                        {
-                            output.Add(new ContentOperator(
-                                "Do", new PdfObject[] { new PdfName(newName) }));
-                            regionEditedCount++;
-                            continue;
-                        }
-
-                        removedCount++;
-                        continue; // drop it
+                        output.Add(op);
+                        continue;
                     }
-                    output.Add(op);
-                    continue;
+
+                    // #1493: region-edited or dropped, the image is replaced on
+                    // this page only. Record it so the pages still drawing the
+                    // original can be reported.
+                    touchedImages?.Add(image);
+
+                    // #1195: if the redaction area only PARTIALLY covers the
+                    // image, try to destroy just the covered samples instead
+                    // of dropping the whole image. Fail-secure: any decline
+                    // falls through to whole-Do removal below.
+                    if (op.GraphicsTransform is { } placed
+                        && !redactionArea.Contains(placed.UnitSquareBounds())
+                        && ImageRegionRedactor.TryRegionRedact(
+                               page, image, placed.A, placed.B, placed.C, placed.D, placed.E, placed.F,
+                               redactionArea, out var newName))
+                    {
+                        output.Add(new ContentOperator("Do", new PdfObject[] { new PdfName(newName) })
+                        {
+                            GraphicsTransform = placed,
+                        });
+                        regionEditedCount++;
+                        continue;
+                    }
+
+                    removedCount++;
+                    continue; // drop it
                 case "BI":
-                    // Inline image (#354): it fills the unit square mapped by
-                    // the current CTM, exactly like a named image XObject. Drop
-                    // the whole BI…ID…EI operator (and its embedded bytes) when
-                    // that quad overlaps the redaction area.
-                    if (strategy.Selects(ctm.UnitSquareBounds(), redactionArea))
+                    if (op.BoundingBox is not { } quad || strategy.Selects(quad, redactionArea))
                     {
                         removedCount++;
                         continue; // drop it — embedded pixel data goes with it
@@ -249,28 +227,5 @@ internal static class ImageRedactor
         if (page.GetXObject(name) is not PdfStream stream) return null;
         return string.Equals(stream.GetNameOrNull("Subtype"), "Image", StringComparison.Ordinal)
             ? stream : null;
-    }
-
-    private static bool ShouldRemoveImageDo(
-        ContentOperator op,
-        PdfPage page,
-        ContentTransform ctm,
-        PdfRectangle redactionArea,
-        GlyphRemovalStrategy strategy)
-    {
-        if (op.Operands.Count == 0) return false;
-        string? name = op.GetName(0);
-        if (string.IsNullOrEmpty(name)) return false;
-
-        var xobject = page.GetXObject(name);
-        if (xobject is not PdfStream stream) return false;
-
-        var subtype = stream.GetNameOrNull("Subtype");
-        if (!string.Equals(subtype, "Image", StringComparison.Ordinal))
-            return false;
-
-        // The image occupies the unit square in its own object space. The
-        // CTM at the Do site maps that square into page space.
-        return strategy.Selects(ctm.UnitSquareBounds(), redactionArea);
     }
 }

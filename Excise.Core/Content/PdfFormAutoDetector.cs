@@ -53,8 +53,6 @@ public static class PdfFormAutoDetector
         int checkCounter = 1;
 
         // Path state (we only need a tiny subset for the heuristic).
-        var ctm = ContentTransform.Identity;
-        var ctmStack = new Stack<ContentTransform>();
         double curX = 0, curY = 0;
         double startX = 0, startY = 0;
         bool isSimpleLine = false;
@@ -72,19 +70,6 @@ public static class PdfFormAutoDetector
         {
             switch (op.Name)
             {
-                case "q":
-                    ctmStack.Push(ctm);
-                    break;
-                case "Q":
-                    if (ctmStack.Count > 0) ctm = ctmStack.Pop();
-                    break;
-                case "cm":
-                    if (op.Operands.Count >= 6)
-                    {
-                        ctm = ContentTransform.FromOperands(op).Multiply(ctm);
-                    }
-                    break;
-
                 case "m":
                     if (op.Operands.Count >= 2)
                     {
@@ -133,7 +118,7 @@ public static class PdfFormAutoDetector
                         suggestions, pageNumber,
                         isSimpleLine, hasNonLineOp,
                         startX, startY, curX, curY,
-                        rectPath, ctm,
+                        rectPath, op.GraphicsTransform!.Value,
                         ref textCounter, ref checkCounter);
                     ResetPath();
                     break;
