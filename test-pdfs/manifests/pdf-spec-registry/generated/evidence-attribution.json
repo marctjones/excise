@@ -81054,6 +81054,34 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/AppearanceTextEncodingOracleTests.cs::AppearanceTextEncodingOracleTests.FreeTextAppearance_WritesWinAnsiBytes_AndMutoolReadsTheText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AppearanceTextEncodingOracleTests.cs::AppearanceTextEncodingOracleTests.SignatureAppearance_WritesWinAnsiBytes_AndMutoolReadsTheText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AppearanceTextEncodingOracleTests.cs::AppearanceTextEncodingOracleTests.FlattenedFormField_WritesWinAnsiBytes_AndMutoolReadsTheText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AppearanceTextEncodingOracleTests.cs::AppearanceTextEncodingOracleTests.FlattenedFormField_OnPageWhoseHelveticaDeclaresNoEncoding_StillReadsAsWinAnsi",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/AreaRedactionDegenerateWidthTests.cs::AreaRedactionDegenerateWidthTests.TopHalfArea_OverUnitTfGlyphs_RemovesThemForAnIndependentExtractor",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81623,42 +81651,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.OcgCount_SurvivesAnOpenSaveRoundTrip",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.StructElementCount_MatchesQpdf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.StructElementCount_SurvivesAnOpenSaveRoundTrip",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.AcroFormFieldCount_MatchesQpdf_FlatFormNoInheritance",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112850,8 +112842,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7826,
-    "testMethodsWithCapabilityCandidate": 4976,
+    "testMethods": 7838,
+    "testMethodsWithCapabilityCandidate": 4982,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
