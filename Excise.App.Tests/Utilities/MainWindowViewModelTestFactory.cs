@@ -61,7 +61,6 @@ internal static class MainWindowViewModelTestFactory
             NullLogger<PdfTextExtractionService>.Instance);
         redactionWorkflowService ??= new RedactionWorkflowService(
             redactionService,
-            textExtractionService,
             NullLogger<RedactionWorkflowService>.Instance);
         searchService ??= new PdfSearchService(NullLogger<PdfSearchService>.Instance);
         var searchSession = new DocumentSearchSession(searchService);

@@ -550,7 +550,7 @@ public class WindowsDocumentPrinterTests : IDisposable
         var redactionService = new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory);
         var extraction = new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance);
         var redactionWorkflow = new RedactionWorkflowService(
-            redactionService, extraction, NullLogger<RedactionWorkflowService>.Instance);
+            redactionService, NullLogger<RedactionWorkflowService>.Instance);
         var messages = new List<string>();
         var vm = MainWindowViewModelTestFactory.Create(
             documentService: documentService,

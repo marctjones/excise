@@ -1,4 +1,5 @@
 using Excise.Core.Document;
+using Excise.Core.Text.Segmentation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -1261,6 +1262,21 @@ public static class TextSelectionEngine
         var visualRange = ColumnAwareRange(readingOrdered, anchor, focus, columnGapThreshold);
         var logical = ToLogicalOrder(visualRange, logicalPageLetters);
         return new SelectionResult(visualRange, JoinText(logical, whitespaceMode));
+    }
+
+    /// <summary>
+    /// The letters of <paramref name="pageLetters"/> that <paramref name="strategy"/>
+    /// removes from <paramref name="area"/>, in the logical reading order a drag
+    /// selection copies them in (#1834). A redaction mark's preview is this text,
+    /// and the preview is the term list the carrier scrub removes.
+    /// </summary>
+    internal static List<Letter> SelectInRectangle(
+        IReadOnlyList<Letter> pageLetters, PdfRectangle area, GlyphRemovalStrategy strategy)
+    {
+        var selected = SortReadingOrder(pageLetters)
+            .Where(l => strategy.Selects(l.GlyphRectangle, area))
+            .ToList();
+        return ToLogicalOrder(selected, pageLetters);
     }
 
     /// <summary>

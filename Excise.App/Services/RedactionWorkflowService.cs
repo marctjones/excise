@@ -2,6 +2,7 @@ using Excise.App.Models;
 using Excise.Core.Document;
 using Excise.Core.Editing;
 using Excise.Core.Security;
+using Excise.Core.Text;
 using Excise.Core.Text.Segmentation;
 using Microsoft.Extensions.Logging;
 
@@ -15,16 +16,13 @@ namespace Excise.App.Services;
 internal sealed class RedactionWorkflowService
 {
     private readonly RedactionService _redactionService;
-    private readonly PdfTextExtractionService _textExtractionService;
     private readonly ILogger<RedactionWorkflowService> _logger;
 
     public RedactionWorkflowService(
         RedactionService redactionService,
-        PdfTextExtractionService textExtractionService,
         ILogger<RedactionWorkflowService> logger)
     {
         _redactionService = redactionService ?? throw new ArgumentNullException(nameof(redactionService));
-        _textExtractionService = textExtractionService ?? throw new ArgumentNullException(nameof(textExtractionService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -40,10 +38,14 @@ internal sealed class RedactionWorkflowService
                 // the user had navigated since drawing, the mapper threw on the
                 // page mismatch and the preview was silently empty for an area
                 // that Apply (which uses PageArea.PageNumber) still redacts.
-                previewText = _textExtractionService.ExtractTextFromArea(
-                    request.SourcePath,
-                    request.PageArea.PageNumber - 1,
-                    request.PageArea);
+                using var document = PdfDocument.Open(request.SourcePath);
+                var page = document.GetPage(request.PageArea.PageNumber);
+                var area = PdfCoordinateMapper.ToContentPoints(page, request.PageArea).ToPdfRectangle();
+                // #1834: this text is the carrier-scrub term list, so it takes
+                // the letters RedactionService.RedactArea removes (AnyOverlap)
+                // in the viewer selection's reading order and word spacing.
+                previewText = TextSelectionEngine.JoinText(
+                    TextSelectionEngine.SelectInRectangle(page.Letters, area, GlyphRemovalStrategy.AnyOverlap));
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {

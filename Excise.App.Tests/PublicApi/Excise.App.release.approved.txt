@@ -368,10 +368,6 @@ namespace Excise.App.Services
     {
         public PdfTextExtractionService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PdfTextExtractionService> logger) { }
         public string ExtractAllText(string pdfPath) { }
-        public string ExtractTextFromArea(string pdfPath, int pageIndex, Excise.Core.Document.PdfPageRect area) { }
-        public string ExtractTextFromArea(System.IO.Stream pdfStream, int pageIndex, Excise.Core.Document.PdfPageRect area, string sourceName = "PDF") { }
-        public string ExtractTextFromArea(string pdfPath, int pageIndex, Avalonia.Rect area, int renderDpi = 150) { }
-        public string ExtractTextFromArea(System.IO.Stream pdfStream, int pageIndex, Avalonia.Rect area, int renderDpi = 150, string sourceName = "PDF") { }
         public string ExtractTextFromPage(string pdfPath, int pageIndex) { }
         public string ExtractTextFromPage(System.IO.Stream pdfStream, int pageIndex, string sourceName = "PDF") { }
     }

@@ -81,7 +81,7 @@ public class DocumentPrintingTests : IDisposable
         var redactionService = new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory);
         var extraction = new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance);
         var redactionWorkflow = new RedactionWorkflowService(
-            redactionService, extraction, NullLogger<RedactionWorkflowService>.Instance);
+            redactionService, NullLogger<RedactionWorkflowService>.Instance);
         var toastService = new ToastService();
         var toasts = new List<ToastService.ToastEventArgs>();
         toastService.ToastRequested += (_, args) => toasts.Add(args);
@@ -274,7 +274,6 @@ public class DocumentPrintingTests : IDisposable
         var workflow = new DocumentPrintWorkflowService(
             new RedactionWorkflowService(
                 redactionService,
-                new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
                 NullLogger<RedactionWorkflowService>.Instance),
             new RecordingDocumentPrinter(),
             NullLogger<DocumentPrintWorkflowService>.Instance,
@@ -293,7 +292,6 @@ public class DocumentPrintingTests : IDisposable
         var workflow = new DocumentPrintWorkflowService(
             new RedactionWorkflowService(
                 redactionService,
-                new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
                 NullLogger<RedactionWorkflowService>.Instance),
             new RecordingDocumentPrinter(),
             NullLogger<DocumentPrintWorkflowService>.Instance);
