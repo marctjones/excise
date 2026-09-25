@@ -22,6 +22,11 @@ namespace Excise.Core.Tests.Redaction.Recovery;
 /// <see cref="RedactionMarkDetector"/> counts it as a mark; <b>V</b>
 /// <see cref="CoveredContentRecovery"/> counts it as covering the vector path
 /// under it.</para>
+///
+/// <para>The columns differ only by threshold: one <see cref="FillColour"/>
+/// supplies the colour, its luminance and its CMYK conversion. CMYK rows follow
+/// what mutool paints, not <c>(1-c)(1-k)</c>: 60% K renders at luminance 0.51,
+/// so it is not a mark.</para>
 /// </summary>
 public class FillColourVerdictTests
 {
@@ -60,19 +65,19 @@ public class FillColourVerdictTests
             "0 1 1 rg                     | Y - - - -",
             "1 1 0 rg                     | Y - - - -",
             "0 0.5 0 rg                   | Y Y - Y Y",
-            "0 0.7 0 rg                   | Y - - - -",
+            "0 0.7 0 rg                   | Y - - Y Y",
             "0 0 0 1 k                    | Y Y Y Y Y",
             "0.6 0.4 0.4 1 k              | Y Y Y Y Y",
             "0 0 0 0.5 k                  | Y - - - -",
-            "0 0 0 0.6 k                  | Y - - Y Y",
-            "0 0 0 0.7 k                  | Y Y - Y Y",
-            "0 0 0 0.85 k                 | Y Y Y Y Y",
+            "0 0 0 0.6 k                  | Y - - - -",
+            "0 0 0 0.7 k                  | Y - - Y Y",
+            "0 0 0 0.85 k                 | Y Y - Y Y",
             "1 0 0 0 k                    | Y - - - -",
-            "0 1 0 0 k                    | Y - - Y Y",
+            "0 1 0 0 k                    | Y Y - Y Y",
             "0 0 1 0 k                    | Y - - - -",
             "0 0 0 0 k                    | - - - - -",
             "0 0 0 0.03 k                 | - - - - -",
-            "/DeviceCMYK cs 0 0 0 0.6 scn | Y - - Y Y",
+            "/DeviceCMYK cs 0 0 0 0.6 scn | Y - - - -",
         });
 
         var actual = new StringBuilder("                             | A C D M V");
@@ -81,6 +86,13 @@ public class FillColourVerdictTests
 
         actual.ToString().Should().Be(expected);
     }
+
+    // Every "black filled rectangle" pin downstream uses 0 g or 0 0 0 rg; this holds the name for CMYK black.
+    [Theory]
+    [InlineData(0, 0, 0, 1)]         // pure K previews as (0.14, 0.12, 0.13)
+    [InlineData(0.6, 0.4, 0.4, 1)]   // rich black
+    public void CmykBlack_IsDescribedAsBlack(double c, double m, double y, double k)
+        => FillColour.FromCmyk(c, m, y, k).Describe().Should().Be("black");
 
     private static string Verdicts(string fill)
     {

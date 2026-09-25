@@ -45,7 +45,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// </summary>
 internal sealed class FillColourState
 {
-    private readonly Stack<(double R, double G, double B)> _stack = new();
+    private readonly Stack<FillColour> _stack = new();
 
     /// <param name="r">
     /// §8.6.8: the initial colour is BLACK. Two detectors start there; one
@@ -54,10 +54,10 @@ internal sealed class FillColourState
     /// ⚠️ Do not "simplify" this to always-black: #1617 is the record of what
     /// assuming a default costs, in both directions.
     /// </param>
-    public FillColourState(double r, double g, double b) => Current = (r, g, b);
+    public FillColourState(double r, double g, double b) => Current = new FillColour(r, g, b);
 
     /// <summary>The fill colour in force.</summary>
-    public (double R, double G, double B) Current { get; private set; }
+    public FillColour Current { get; private set; }
 
     /// <summary>True once a colour operator has been seen at this nesting or an enclosing one.</summary>
     public bool Set { get; private set; }
@@ -84,26 +84,20 @@ internal sealed class FillColourState
             case "g" when op.Operands.Count >= 1:
             {
                 var v = op.GetNumber(0);
-                Current = (v, v, v);
+                Current = new FillColour(v, v, v);
                 Set = true;
                 return true;
             }
 
             case "rg" when op.Operands.Count >= 3:
-                Current = (op.GetNumber(0), op.GetNumber(1), op.GetNumber(2));
+                Current = new FillColour(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2));
                 Set = true;
                 return true;
 
             case "k" when op.Operands.Count >= 4:
-            {
-                var c = op.GetNumber(0);
-                var m = op.GetNumber(1);
-                var y = op.GetNumber(2);
-                var kk = op.GetNumber(3);
-                Current = ((1 - c) * (1 - kk), (1 - m) * (1 - kk), (1 - y) * (1 - kk));
+                Current = FillColour.FromCmyk(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2), op.GetNumber(3));
                 Set = true;
                 return true;
-            }
 
             case "sc":
             case "scn":
@@ -124,32 +118,15 @@ internal sealed class FillColourState
     /// detectors do not track. Read by component count; a pattern name (the
     /// <c>/P1 scn</c> form) leaves the colour alone rather than guessing.
     /// </summary>
-    private static bool TryReadComponents(ContentOperator op, out (double R, double G, double B) rgb)
+    private static bool TryReadComponents(ContentOperator op, out FillColour colour)
     {
-        rgb = default;
-        var n = op.Operands.Count;
-        switch (n)
+        colour = op.Operands.Count switch
         {
-            case 1:
-            {
-                var v = op.GetNumber(0);
-                rgb = (v, v, v);
-                return true;
-            }
-            case 3:
-                rgb = (op.GetNumber(0), op.GetNumber(1), op.GetNumber(2));
-                return true;
-            case 4:
-            {
-                var c = op.GetNumber(0);
-                var m = op.GetNumber(1);
-                var y = op.GetNumber(2);
-                var kk = op.GetNumber(3);
-                rgb = ((1 - c) * (1 - kk), (1 - m) * (1 - kk), (1 - y) * (1 - kk));
-                return true;
-            }
-            default:
-                return false;
-        }
+            1 => new FillColour(op.GetNumber(0), op.GetNumber(0), op.GetNumber(0)),
+            3 => new FillColour(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2)),
+            4 => FillColour.FromCmyk(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2), op.GetNumber(3)),
+            _ => default,
+        };
+        return op.Operands.Count is 1 or 3 or 4;
     }
 }

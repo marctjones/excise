@@ -72,7 +72,7 @@ public static class ObstructionStripper
                 case "B*":
                 case "b":
                 case "b*":
-                    if (!IsNearlyWhite(fill.Current) && pendingPath.Count > 0)
+                    if (!fill.Current.IsNearlyWhite && pendingPath.Count > 0)
                     {
                         // Drop the buffered path ops + this paint op.
                         for (int k = pendingPath.Count - 1; k >= 0; k--)
@@ -108,7 +108,4 @@ public static class ObstructionStripper
 
         page.SetContentStream(new ContentStream(newOps) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
     }
-
-    private static bool IsNearlyWhite((double R, double G, double B) c)
-        => c.R >= 0.95 && c.G >= 0.95 && c.B >= 0.95;
 }

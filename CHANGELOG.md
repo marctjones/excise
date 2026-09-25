@@ -7,6 +7,11 @@ semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- **The redaction audit judges a CMYK fill by the colour the page shows.** `unredact` and the hidden-text
+  scan converted DeviceCMYK with `(1-c)(1-k)`, which paints 60% K as gray 0.40 where mutool and excise's
+  renderer paint about 0.5, so a mid-gray bar counted as a redaction mark. The three detectors now share
+  one colour conversion, one luminance (ISO 32000-2 §10.4.2.2) and one colour name (checked with mutool)
+  (#1830).
 - **Whole-word search and whole-word redaction now use one rule.** Search compared whole tokens, so a
   two-word term never matched and `Smith` did not match `Smith's`, while page annotations used a regex and
   redaction used a third rule: a user who saw no whole-word hits could still lose occurrences on redaction.
