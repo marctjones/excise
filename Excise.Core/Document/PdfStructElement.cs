@@ -1,5 +1,6 @@
 using Excise.Core.Primitives;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Excise.Core.Document;
 
@@ -41,8 +42,16 @@ public sealed class PdfStructElement
     public string? Language { get; }
 
     /// <summary>
-    /// The page number (1-based) that this element is associated with, if known.
-    /// May be null if the structure element spans multiple pages or has no clear page association.
+    /// The type the <c>/RoleMap</c> chain from <see cref="Type"/> ends on: the
+    /// first standard structure type it reaches, else where it ends or repeats
+    /// (ISO 32000-2 §14.7.3). <see cref="Type"/> when the role map does not name it.
+    /// </summary>
+    public string RoleMappedType { get; }
+
+    /// <summary>
+    /// The 1-based page the element is associated with: its own <c>/Pg</c>, else
+    /// the <c>/Pg</c> of its first marked-content or object reference that names
+    /// one, else its parent's. Null when none of those names a page.
     /// </summary>
     public int? PageNumber { get; }
 
@@ -53,11 +62,10 @@ public sealed class PdfStructElement
     public IReadOnlyList<PdfStructElement> Children { get; }
 
     /// <summary>
-    /// List of Marked Content IDs (/MCID) that this element references.
-    /// MCIDs are integers that tag content streams with semantic meaning.
-    /// For example, /MCID 5 in the content stream links that content to this structure element.
+    /// The marked-content sequences this element's <c>/K</c> references, in
+    /// <c>/K</c> order: integer MCIDs and <c>/MCR</c> dictionaries alike.
     /// </summary>
-    public IReadOnlyList<int> MarkedContentIds { get; }
+    public IReadOnlyList<PdfMarkedContentReference> MarkedContent { get; }
 
     /// <summary>
     /// Reference to the raw structure dictionary, for advanced use cases.
@@ -71,16 +79,18 @@ public sealed class PdfStructElement
         string? language = null,
         int? pageNumber = null,
         IReadOnlyList<PdfStructElement>? children = null,
-        IReadOnlyList<int>? markedContentIds = null,
-        PdfDictionary? rawDictionary = null)
+        IReadOnlyList<PdfMarkedContentReference>? markedContent = null,
+        PdfDictionary? rawDictionary = null,
+        string? roleMappedType = null)
     {
         Type = type;
+        RoleMappedType = roleMappedType ?? type;
         AltText = altText;
         ActualText = actualText;
         Language = language;
         PageNumber = pageNumber;
         Children = children ?? System.Array.Empty<PdfStructElement>();
-        MarkedContentIds = markedContentIds ?? System.Array.Empty<int>();
+        MarkedContent = markedContent ?? System.Array.Empty<PdfMarkedContentReference>();
         RawDictionary = rawDictionary ?? new PdfDictionary();
     }
 
@@ -89,8 +99,18 @@ public sealed class PdfStructElement
         var parts = new List<string> { $"Type={Type}" };
         if (!string.IsNullOrEmpty(AltText)) parts.Add($"Alt={AltText}");
         if (!string.IsNullOrEmpty(ActualText)) parts.Add($"ActualText={ActualText}");
-        if (MarkedContentIds.Count > 0) parts.Add($"MCIDs=[{string.Join(",", MarkedContentIds)}]");
+        if (MarkedContent.Count > 0) parts.Add($"MCIDs=[{string.Join(",", MarkedContent.Select(r => r.Mcid))}]");
         if (Children.Count > 0) parts.Add($"Children={Children.Count}");
         return $"StructElement({string.Join(", ", parts)})";
     }
 }
+
+/// <summary>
+/// One marked-content sequence a structure element references (ISO 32000-2
+/// §14.7.5.2): an integer in its <c>/K</c>, or an <c>/MCR</c> dictionary.
+/// </summary>
+/// <param name="Mcid">The sequence's <c>/MCID</c>.</param>
+/// <param name="PageNumber">The 1-based page the reference's own <c>/Pg</c>
+/// names, else the page its element's <c>/Pg</c> names (Tables 355 and 357);
+/// null when neither names a page.</param>
+public readonly record struct PdfMarkedContentReference(int Mcid, int? PageNumber);

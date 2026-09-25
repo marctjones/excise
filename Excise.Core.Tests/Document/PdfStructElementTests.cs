@@ -26,8 +26,9 @@ public class PdfStructElementTests
             language: "en",
             pageNumber: 3,
             children: new[] { child },
-            markedContentIds: new[] { 4, 5 },
-            rawDictionary: raw);
+            markedContent: new PdfMarkedContentReference[] { new(4, 3), new(5, null) },
+            rawDictionary: raw,
+            roleMappedType: "/Figure");
 
         el.Type.Should().Be("/Figure");
         el.AltText.Should().Be("a cat");
@@ -35,7 +36,8 @@ public class PdfStructElementTests
         el.Language.Should().Be("en");
         el.PageNumber.Should().Be(3);
         el.Children.Should().ContainSingle();
-        el.MarkedContentIds.Should().Equal(4, 5);
+        el.MarkedContent.Should().Equal(new PdfMarkedContentReference(4, 3), new PdfMarkedContentReference(5, null));
+        el.RoleMappedType.Should().Be("/Figure");
         el.RawDictionary.Should().BeSameAs(raw);
 
         var s = el.ToString();
@@ -56,7 +58,8 @@ public class PdfStructElementTests
         el.Language.Should().BeNull();
         el.PageNumber.Should().BeNull();
         el.Children.Should().BeEmpty();
-        el.MarkedContentIds.Should().BeEmpty();
+        el.MarkedContent.Should().BeEmpty();
+        el.RoleMappedType.Should().Be("/P", "a type the role map does not name maps to itself");
         el.RawDictionary.Should().NotBeNull();
 
         // ToString with no optional parts present.

@@ -63,13 +63,10 @@ public partial class PdfDocument
 
     /// <summary>
     /// Resolve the real body text of a tagged-PDF structure element from its
-    /// marked-content references (#776 — the accessibility MCID→letter bridge).
-    /// Gathers the extracted <see cref="Excise.Core.Text.Letter"/>s whose /MCID
-    /// (and page) match the element's references — both /MCID integers directly
-    /// in the element's /K (which belong to the element's own /Pg, or the supplied
-    /// <paramref name="inheritedPageNumber"/> when the element has none) and
-    /// marked-content-reference (/MCR) child dictionaries (which carry their own
-    /// /Pg) — and concatenates them in reference (reading) order.
+    /// marked-content references (#776 — the accessibility MCID→letter bridge):
+    /// the text of each <see cref="PdfStructElement.MarkedContent"/> reference,
+    /// on its page or else the element's <see cref="PdfStructElement.PageNumber"/>,
+    /// concatenated in reference (reading) order.
     ///
     /// <para>
     /// This is how a heading or paragraph with no /ActualText carrier can still
@@ -80,25 +77,9 @@ public partial class PdfDocument
     /// element whose page cannot be determined).
     /// </para>
     /// </summary>
-    public string ResolveStructElementText(
-        PdfStructElement element,
-        int? inheritedPageNumber = null)
+    public string ResolveStructElementText(PdfStructElement element)
     {
         if (element == null)
-            return string.Empty;
-
-        int? elementPage = PageNumberFromPg(element.RawDictionary) ?? inheritedPageNumber;
-
-        // Ordered (page, mcid) references this element points at directly. Child
-        // struct elements (/K dicts with their own /S) are NOT descended into —
-        // each resolves its own text.
-        var refs = new List<(int Page, int Mcid)>();
-        CollectMarkedContentRefs(
-            element.RawDictionary.GetOptional("K"),
-            elementPage,
-            refs,
-            depth: 0);
-        if (refs.Count == 0)
             return string.Empty;
 
         // #1485: each referenced page's per-MCID text, not its letters. The
@@ -107,10 +88,8 @@ public partial class PdfDocument
         // letters no longer do (see PdfPage.GetMarkedContentText).
         var textByPage = new Dictionary<int, IReadOnlyDictionary<int, string>>();
         var sb = new StringBuilder();
-        foreach (var (page, mcid) in refs)
+        foreach (var (page, mcid) in PagedMarkedContent(element))
         {
-            if (page < 1 || page > PageCount)
-                continue;
             if (!textByPage.TryGetValue(page, out var byMcid))
                 textByPage[page] = byMcid = GetPage(page).GetMarkedContentText();
             if (byMcid.TryGetValue(mcid, out var text))
@@ -124,25 +103,15 @@ public partial class PdfDocument
     /// each referenced page's letters per reference. Kept only so tests can
     /// hold the per-MCID map to the letter-derived text it replaced.
     /// </summary>
-    internal string ResolveStructElementTextFromLetters(
-        PdfStructElement element,
-        int? inheritedPageNumber = null)
+    internal string ResolveStructElementTextFromLetters(PdfStructElement element)
     {
         if (element == null)
             return string.Empty;
 
-        int? elementPage = PageNumberFromPg(element.RawDictionary) ?? inheritedPageNumber;
-        var refs = new List<(int Page, int Mcid)>();
-        CollectMarkedContentRefs(element.RawDictionary.GetOptional("K"), elementPage, refs, depth: 0);
-        if (refs.Count == 0)
-            return string.Empty;
-
         var lettersByPage = new Dictionary<int, IReadOnlyList<Excise.Core.Text.Letter>>();
         var sb = new StringBuilder();
-        foreach (var (page, mcid) in refs)
+        foreach (var (page, mcid) in PagedMarkedContent(element))
         {
-            if (page < 1 || page > PageCount)
-                continue;
             if (!lettersByPage.TryGetValue(page, out var letters))
                 lettersByPage[page] = letters = GetPage(page).Letters;
             foreach (var letter in letters)
@@ -154,45 +123,12 @@ public partial class PdfDocument
         return sb.ToString();
     }
 
-    private void CollectMarkedContentRefs(
-        PdfObject? kObj,
-        int? elementPage,
-        List<(int Page, int Mcid)> refs,
-        int depth)
+    private IEnumerable<(int Page, int Mcid)> PagedMarkedContent(PdfStructElement element)
     {
-        if (kObj == null || depth > 64)
-            return;
-
-        var resolved = Resolve(kObj);
-        switch (resolved)
+        foreach (var reference in element.MarkedContent)
         {
-            case PdfInteger mcidInt when elementPage.HasValue:
-                refs.Add((elementPage.Value, (int)mcidInt.Value));
-                break;
-
-            case PdfArray arr:
-                foreach (var item in arr)
-                    CollectMarkedContentRefs(item, elementPage, refs, depth + 1);
-                break;
-
-            case PdfDictionary dict:
-                // A child struct element (has /S) is a separate element; skip it.
-                // A marked-content-reference dict (/MCR, or any /S-less dict with
-                // an /MCID) carries the mcid and optionally its own /Pg.
-                if (dict.GetOptional("S") != null)
-                    break;
-                var mcidObj = dict.GetOptional("MCID");
-                if (mcidObj != null && Resolve(mcidObj) is PdfInteger mcrMcid)
-                {
-                    int? refPage = PageNumberFromPg(dict) ?? elementPage;
-                    if (refPage.HasValue)
-                        refs.Add((refPage.Value, (int)mcrMcid.Value));
-                }
-                break;
+            if ((reference.PageNumber ?? element.PageNumber) is int page && page >= 1 && page <= PageCount)
+                yield return (page, reference.Mcid);
         }
     }
-
-    // Map a dictionary's /Pg entry (a page reference) to its 1-based page number.
-    private int? PageNumberFromPg(PdfDictionary dict)
-        => TryGetPageNumber(dict.GetOptional("Pg"), out var n) ? n : null;
 }
