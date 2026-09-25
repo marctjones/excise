@@ -28,8 +28,6 @@ Excise.App	nowhere	SetKeepToolTip	triage:attached-property accessor; the XAML at
 Excise.App	nowhere	SetShowToolTip	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	TypeIndicator	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	tests-only	AddPagesFromPdf	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	ApplyBatesNumbersToSet	triage:#1306 wired the SINGLE-document Bates path (ApplyBatesNumbers) to the GUI; this multi-file batch entry point stays deliberately unwired - it stamps a continuing sequence across files on disk and writes new ones, which is a CLI/batch shape, and Excise.Cli cannot reference Excise.App
-Excise.App	tests-only	CalculateNextNumber	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	CurrentPageText	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ExecuteFileAsync	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	GetCurrentDocumentAsStream	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
@@ -53,9 +51,11 @@ Excise.Core	nowhere	SetCreator	triage:public library surface with no in-repo cal
 Excise.Core	tests-only	AddChildOutlineItem	triage:public library AUTHORING API, same shape as #1413's embedded-file/AcroForm authoring rows - no GUI surface creates outline entries yet
 Excise.Core	tests-only	AddEmbeddedFile	triage:public library AUTHORING API (#1413). #1414 shipped the attachments panel, but it only lists, saves and strips - excise has no UI that ADDS an attachment, so this stays tests-only by design
 Excise.Core	tests-only	AddOutlineItem	triage:public library AUTHORING API, same shape as #1413's embedded-file/AcroForm authoring rows - no GUI surface creates outline entries yet
+Excise.Core	tests-only	ApplyBatesNumbersToSet	triage:moved from Excise.App to Excise.Core so the CLI/FFI can use it; #1306 wired the single-document path (ApplyBatesNumbers) to the GUI, this multi-file batch entry point stays deliberately unwired until a CLI verb exists
 Excise.Core	tests-only	AsItalic	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BeginPath	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BulletList	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	CalculateNextNumber	triage:moved from Excise.App with ApplyBatesNumbersToSet; test-covered library surface for the batch Bates path
 Excise.Core	tests-only	CloseAndStroke	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ContainsFoldable	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ContainsLigatures	triage:public library/domain API; tests exercise contract; external callers may use it
