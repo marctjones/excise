@@ -1210,6 +1210,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ExtGStateFontTests.cs::ExtGStateFontTests.Parser_StampsWhichExtGStateSelectedTheFont",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs::ColorOperatorTests.Parse_rg_SetFillRgb",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -1389,15 +1396,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_IgnoresComments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -2635,6 +2633,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ExtGStateFontTests.cs::ExtGStateFontTests.Parser_StampsWhichExtGStateSelectedTheFont",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs::ColorOperatorTests.Parse_rg_SetFillRgb",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -2814,15 +2819,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_IgnoresComments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -4060,6 +4056,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ExtGStateFontTests.cs::ExtGStateFontTests.Parser_StampsWhichExtGStateSelectedTheFont",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs::ColorOperatorTests.Parse_rg_SetFillRgb",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -4239,15 +4242,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_IgnoresComments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -5485,6 +5479,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ExtGStateFontTests.cs::ExtGStateFontTests.Parser_StampsWhichExtGStateSelectedTheFont",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs::ColorOperatorTests.Parse_rg_SetFillRgb",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -5664,15 +5665,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_IgnoresComments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -17037,6 +17029,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ExtGStateFontTests.cs::ExtGStateFontTests.Parser_StampsWhichExtGStateSelectedTheFont",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs::ColorOperatorTests.Parse_rg_SetFillRgb",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -17216,15 +17215,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_IgnoresComments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -18462,6 +18452,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ExtGStateFontTests.cs::ExtGStateFontTests.Parser_StampsWhichExtGStateSelectedTheFont",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs::ColorOperatorTests.Parse_rg_SetFillRgb",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -18641,15 +18638,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_IgnoresComments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -19939,6 +19927,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ExtGStateFontTests.cs::ExtGStateFontTests.Parser_StampsWhichExtGStateSelectedTheFont",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs::ColorOperatorTests.Parse_rg_SetFillRgb",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -20118,15 +20113,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_IgnoresComments",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_QWithoutMatchingQ",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -43642,6 +43628,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ExtGStateFontTests.cs::ExtGStateFontTests.Parser_StampsWhichExtGStateSelectedTheFont",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs::GraphicsStateTextParameterOracleTests.AfterQ_FontSizeAndAdvances_AgreeWithMutool",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -44892,13 +44885,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.BuilderDocument_TwoPagesWithOneEmbeddedFont_WritesTheFontProgramOnce",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.ThreePages_OneTypefaceAtTwoSizes_ShareOneFontObject_AndEveryPageKeepsItsText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -45119,6 +45105,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ExtGStateFontTests.cs::ExtGStateFontTests.Parser_StampsWhichExtGStateSelectedTheFont",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs::GraphicsStateTextParameterOracleTests.AfterQ_FontSizeAndAdvances_AgreeWithMutool",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46369,13 +46362,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.BuilderDocument_TwoPagesWithOneEmbeddedFont_WritesTheFontProgramOnce",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.ThreePages_OneTypefaceAtTwoSizes_ShareOneFontObject_AndEveryPageKeepsItsText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -46578,6 +46564,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ExtGStateFontTests.cs::ExtGStateFontTests.Parser_StampsWhichExtGStateSelectedTheFont",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs::GraphicsStateTextParameterOracleTests.AfterQ_FontSizeAndAdvances_AgreeWithMutool",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -47828,13 +47821,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.BuilderDocument_TwoPagesWithOneEmbeddedFont_WritesTheFontProgramOnce",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.ThreePages_OneTypefaceAtTwoSizes_ShareOneFontObject_AndEveryPageKeepsItsText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112906,8 +112892,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7779,
-    "testMethodsWithCapabilityCandidate": 4949,
+    "testMethods": 7785,
+    "testMethodsWithCapabilityCandidate": 4955,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

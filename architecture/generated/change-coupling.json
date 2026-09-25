@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "f1fe35faa8c95e4ec25e7b2d52f40fc840095435",
+  "sourceRevision": "bf5e761723d4360ed6696f5780cea94dd98bcee0",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 198,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "3275ba08f1323d8c7adbec52d70ad4373b02e6bf",
-    "oldestProductionCommit": "b545dc9a958a974b71f70770a4a4d4632eb2b4e1"
+    "newestProductionCommit": "b91e34d82564eb62062ef771c65865509dde37af",
+    "oldestProductionCommit": "2fa5972b9c58c00b76fb606d18aa81767e43b7da"
   },
   "files": [
     {
@@ -235,10 +235,6 @@
       "commits": 5
     },
     {
-      "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
-      "commits": 5
-    },
-    {
       "path": "Excise.App/Excise.App.csproj",
       "commits": 4
     },
@@ -284,6 +280,10 @@
     },
     {
       "path": "Excise.Core/Xfa/PdfXfaLayout.cs",
+      "commits": 4
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
       "commits": 4
     },
     {
@@ -388,10 +388,6 @@
     },
     {
       "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
-      "commits": 3
-    },
-    {
-      "path": "Excise.Rendering/SkiaRenderer.cs",
       "commits": 3
     },
     {
@@ -527,6 +523,14 @@
       "commits": 2
     },
     {
+      "path": "Excise.Core/Content/ContentOperator.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Core/Content/ContentStreamWalker.cs",
+      "commits": 2
+    },
+    {
       "path": "Excise.Core/Content/PdfPageContentFacade.cs",
       "commits": 2
     },
@@ -564,6 +568,10 @@
     },
     {
       "path": "Excise.Core/Redaction/CarrierTextRecovery.Xfa.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Core/Redaction/GlyphRemover.cs",
       "commits": 2
     },
     {
@@ -628,6 +636,10 @@
     },
     {
       "path": "Excise.Rendering/SkiaRenderer.Patterns.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.cs",
       "commits": 2
     },
     {
@@ -943,11 +955,7 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Content/ContentOperator.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Core/Content/ContentStreamWalker.cs",
+      "path": "Excise.Core/Content/ContentStreamParser.cs",
       "commits": 1
     },
     {
@@ -1059,11 +1067,11 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Redaction/GlyphRemover.cs",
+      "path": "Excise.Core/Redaction/ObstructionStripper.cs",
       "commits": 1
     },
     {
-      "path": "Excise.Core/Redaction/ObstructionStripper.cs",
+      "path": "Excise.Core/Redaction/OperationReconstructor.cs",
       "commits": 1
     },
     {
@@ -2973,6 +2981,12 @@
       "jaccard": 0.5
     },
     {
+      "source": "Excise.Rendering/SkiaRenderer.Patterns.cs",
+      "target": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+      "cochanges": 2,
+      "jaccard": 0.5
+    },
+    {
       "source": "Excise.App/Composition/ApplicationComposition.cs",
       "target": "Excise.App/Services/Printing/DocumentPrintWorkflowService.cs",
       "cochanges": 2,
@@ -3101,12 +3115,6 @@
     {
       "source": "Excise.Rendering/RawSampleImageDecoder.cs",
       "target": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "cochanges": 2,
-      "jaccard": 0.4
-    },
-    {
-      "source": "Excise.Rendering/SkiaRenderer.Patterns.cs",
-      "target": "Excise.Rendering/SkiaRenderer.XObjects.cs",
       "cochanges": 2,
       "jaccard": 0.4
     },
@@ -3353,12 +3361,6 @@
     {
       "source": "Excise.Core/Redaction/RedactionOptions.cs",
       "target": "Excise.Core/Redaction/RedactionReport.cs",
-      "cochanges": 2,
-      "jaccard": 0.3333
-    },
-    {
-      "source": "Excise.Rendering/SkiaRenderer.XObjects.cs",
-      "target": "Excise.Rendering/SkiaRenderer.cs",
       "cochanges": 2,
       "jaccard": 0.3333
     },

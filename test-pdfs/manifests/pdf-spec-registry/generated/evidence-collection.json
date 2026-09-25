@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1400,
-  "indexedContentSha256": "14abaa17a7f9bcf8f6f70ec82b60bad4b53d46d2a29c8f59eb27523274e1f334",
+  "indexedFileCount": 1401,
+  "indexedContentSha256": "37061757dadefcf0752e192f2c07052fb07a5703e1e868d3aeac368420fb89d3",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1935,15 +1935,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Redaction/GlyphRemover.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "decode",
-            "parameters",
-            "pdfobject"
-          ]
-        },
-        {
           "path": "Excise.Core/Redaction/ImageRegionRedactor.cs",
           "kind": "source",
           "matchedTerms": [
@@ -2274,9 +2265,19 @@
             "filters",
             "xref"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Parsing/HostileStructureTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "decode",
+            "filters",
+            "pdfparser",
+            "xref"
+          ]
         }
       ],
-      "candidateReferenceCount": 120
+      "candidateReferenceCount": 119
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -8048,7 +8049,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 641
+      "candidateReferenceCount": 642
     },
     {
       "id": "pdf.17.graphics.color",
@@ -11971,7 +11972,8 @@
             "form",
             "streams",
             "contentoperator",
-            "contentstream"
+            "contentstream",
+            "textstate"
           ]
         },
         {
@@ -11981,6 +11983,7 @@
             "form",
             "streams",
             "xobjects",
+            "contentoperator",
             "contentstream",
             "textextractor",
             "textstate"
@@ -12793,7 +12796,8 @@
             "iso",
             "operators",
             "contentoperator",
-            "contentstream"
+            "contentstream",
+            "textstate"
           ]
         },
         {
@@ -12803,6 +12807,7 @@
             "content-stream",
             "iso",
             "operators",
+            "contentoperator",
             "contentstream",
             "textextractor",
             "textstate"
@@ -13244,7 +13249,8 @@
             "iso",
             "operators",
             "contentstream",
-            "textextractor"
+            "textextractor",
+            "textstate"
           ]
         },
         {
@@ -13507,7 +13513,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 126
+      "candidateReferenceCount": 127
     },
     {
       "id": "pdf.17.content.text-state",
@@ -13664,6 +13670,7 @@
             "positioning",
             "showing",
             "text-state",
+            "contentoperator",
             "contentstream",
             "textextractor",
             "textstate"
@@ -13815,6 +13822,17 @@
             "positioning",
             "showing",
             "contentoperator",
+            "contentstream",
+            "textextractor",
+            "textstate"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Content/ExtGStateFontTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "character",
+            "showing",
             "contentstream",
             "textextractor",
             "textstate"
@@ -14034,7 +14052,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 40
+      "candidateReferenceCount": 41
     },
     {
       "id": "pdf.17.content.marked",
@@ -17742,6 +17760,7 @@
           "matchedTerms": [
             "content-stream",
             "scn",
+            "contentoperator",
             "contentstreamparser"
           ]
         },
@@ -17977,6 +17996,7 @@
           "matchedTerms": [
             "content-stream",
             "scn",
+            "contentoperator",
             "contentstreamparser"
           ]
         },
@@ -20755,6 +20775,7 @@
           "matchedTerms": [
             "bmc",
             "content-stream",
+            "contentoperator",
             "contentstreamparser"
           ]
         },
@@ -20932,6 +20953,7 @@
           "matchedTerms": [
             "bdc",
             "content-stream",
+            "contentoperator",
             "contentstreamparser"
           ]
         },
@@ -21191,6 +21213,7 @@
           "matchedTerms": [
             "content-stream",
             "emc",
+            "contentoperator",
             "contentstreamparser"
           ]
         },
@@ -54322,6 +54345,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Content/ContentStreamWalker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Document/AcroFormFlattener.cs",
           "kind": "source",
           "matchedTerms": [
@@ -54995,7 +55028,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 69
+      "candidateReferenceCount": 70
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -58852,14 +58885,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Redaction/GlyphRemover.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "output",
-            "parameters"
-          ]
-        },
-        {
           "path": "Excise.Core/Redaction/HiddenTextDetector.cs",
           "kind": "source",
           "matchedTerms": [
@@ -59471,9 +59496,17 @@
             "output",
             "preview"
           ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/GuiLatencyBenchmarkTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "preview"
+          ]
         }
       ],
-      "candidateReferenceCount": 100
+      "candidateReferenceCount": 99
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -62788,6 +62821,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/OperationReconstructor.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -63479,20 +63522,9 @@
             "action",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AnnotationDisplayControlTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "applied",
-            "redaction",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 95
+      "candidateReferenceCount": 96
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -65453,7 +65485,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 187
+      "candidateReferenceCount": 188
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -70339,7 +70371,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 697
+      "candidateReferenceCount": 699
     },
     {
       "id": "pdf.20.extension.developer",
