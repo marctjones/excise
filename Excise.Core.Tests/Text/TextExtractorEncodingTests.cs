@@ -13,7 +13,7 @@ namespace Excise.Core.Tests.Text;
 ///
 /// Coverage targets:
 /// - Lines 970-1005: DecodeWinAnsi special-character switch for codes 128-159
-/// - Lines 1008-1051: DecodeMacRoman special-character switch for codes 128-159
+/// - MacRomanEncoding, every high code against ISO 32000-2 Annex D (#1831)
 /// - Lines 930-938: LoadToUnicodeMap exception branch (malformed CMap)
 /// </summary>
 public class TextExtractorEncodingTests
@@ -312,10 +312,10 @@ public class TextExtractorEncodingTests
     }
 
     [Fact]
-    public void ExtractText_MacRomanEncoding_UnmappedCode_DefaultCase_PassThrough()
+    public void ExtractText_MacRomanEncoding_Code200_IsGuillemotRight()
     {
-        // Hit line 1049: _ => ((char)charCode) for unmapped codes above 159
-        // Code 200 is above the switch range
+        // Annex D, Table D.2: guillemotright is MAC 310 (0xC8). The Latin-1
+        // reading (U+00C8, È) was the pre-#1831 fallback for every code > 159.
         var pdfData = CreatePdfWithMacRomanEncoding("BT /F1 12 Tf 100 700 Td <C8> Tj ET");
         using var doc = PdfDocument.Open(pdfData);
         var page = doc.GetPage(1);
@@ -324,7 +324,169 @@ public class TextExtractorEncodingTests
         var letters = extractor.ExtractLetters();
 
         letters.Should().HaveCount(1);
-        letters[0].Value.Should().Be(((char)0xC8).ToString()); // Fallback to character as-is
+        letters[0].Value.Should().Be("»");
+    }
+
+    /// <summary>
+    /// #1831: every high code ISO 32000-2 Annex D, Table D.2 assigns in the MAC
+    /// column, as (octal code, glyph name, AGL code point). Transcribed from the
+    /// spec by name; mutool extracts the same code point for each (it splits
+    /// fi/fl into two letters). 312 is note 6's non-breaking space and is
+    /// pinned separately.
+    /// </summary>
+    private const string AnnexDMacRomanHigh = """
+        200 Adieresis 00C4
+        201 Aring 00C5
+        202 Ccedilla 00C7
+        203 Eacute 00C9
+        204 Ntilde 00D1
+        205 Odieresis 00D6
+        206 Udieresis 00DC
+        207 aacute 00E1
+        210 agrave 00E0
+        211 acircumflex 00E2
+        212 adieresis 00E4
+        213 atilde 00E3
+        214 aring 00E5
+        215 ccedilla 00E7
+        216 eacute 00E9
+        217 egrave 00E8
+        220 ecircumflex 00EA
+        221 edieresis 00EB
+        222 iacute 00ED
+        223 igrave 00EC
+        224 icircumflex 00EE
+        225 idieresis 00EF
+        226 ntilde 00F1
+        227 oacute 00F3
+        230 ograve 00F2
+        231 ocircumflex 00F4
+        232 odieresis 00F6
+        233 otilde 00F5
+        234 uacute 00FA
+        235 ugrave 00F9
+        236 ucircumflex 00FB
+        237 udieresis 00FC
+        240 dagger 2020
+        241 degree 00B0
+        242 cent 00A2
+        243 sterling 00A3
+        244 section 00A7
+        245 bullet 2022
+        246 paragraph 00B6
+        247 germandbls 00DF
+        250 registered 00AE
+        251 copyright 00A9
+        252 trademark 2122
+        253 acute 00B4
+        254 dieresis 00A8
+        256 AE 00C6
+        257 Oslash 00D8
+        261 plusminus 00B1
+        264 yen 00A5
+        265 mu 00B5
+        273 ordfeminine 00AA
+        274 ordmasculine 00BA
+        276 ae 00E6
+        277 oslash 00F8
+        300 questiondown 00BF
+        301 exclamdown 00A1
+        302 logicalnot 00AC
+        304 florin 0192
+        307 guillemotleft 00AB
+        310 guillemotright 00BB
+        311 ellipsis 2026
+        313 Agrave 00C0
+        314 Atilde 00C3
+        315 Otilde 00D5
+        316 OE 0152
+        317 oe 0153
+        320 endash 2013
+        321 emdash 2014
+        322 quotedblleft 201C
+        323 quotedblright 201D
+        324 quoteleft 2018
+        325 quoteright 2019
+        326 divide 00F7
+        330 ydieresis 00FF
+        331 Ydieresis 0178
+        332 fraction 2044
+        333 currency 00A4
+        334 guilsinglleft 2039
+        335 guilsinglright 203A
+        336 fi FB01
+        337 fl FB02
+        340 daggerdbl 2021
+        341 periodcentered 00B7
+        342 quotesinglbase 201A
+        343 quotedblbase 201E
+        344 perthousand 2030
+        345 Acircumflex 00C2
+        346 Ecircumflex 00CA
+        347 Aacute 00C1
+        350 Edieresis 00CB
+        351 Egrave 00C8
+        352 Iacute 00CD
+        353 Icircumflex 00CE
+        354 Idieresis 00CF
+        355 Igrave 00CC
+        356 Oacute 00D3
+        357 Ocircumflex 00D4
+        361 Ograve 00D2
+        362 Uacute 00DA
+        363 Ucircumflex 00DB
+        364 Ugrave 00D9
+        365 dotlessi 0131
+        366 circumflex 02C6
+        367 tilde 02DC
+        370 macron 00AF
+        371 breve 02D8
+        372 dotaccent 02D9
+        373 ring 02DA
+        374 cedilla 00B8
+        375 hungarumlaut 02DD
+        376 ogonek 02DB
+        377 caron 02C7
+        """;
+
+    public static TheoryData<int, string, int> AnnexDMacRomanHighCodes()
+    {
+        var data = new TheoryData<int, string, int>();
+        foreach (var line in AnnexDMacRomanHigh.Split('\n'))
+        {
+            var f = line.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            data.Add(System.Convert.ToInt32(f[0], 8), f[1], System.Convert.ToInt32(f[2], 16));
+        }
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(AnnexDMacRomanHighCodes))]
+    public void ExtractText_MacRomanEncoding_HighCode_DecodesPerAnnexD(int code, string glyphName, int codePoint)
+    {
+        var pdfData = CreatePdfWithMacRomanEncoding($"BT /F1 12 Tf 100 700 Td <{code:X2}> Tj ET");
+        using var doc = PdfDocument.Open(pdfData);
+
+        var letters = new TextExtractor(doc.GetPage(1)).ExtractLetters();
+
+        letters.Should().HaveCount(1);
+        letters[0].Value.Should().Be(char.ConvertFromUtf32(codePoint),
+            $"Annex D assigns MacRomanEncoding code {code:X2} to /{glyphName}");
+    }
+
+    [Theory]
+    [InlineData(0xDB, 0x00A4)] // note 1: Apple moved 333 to the euro; PDF's MacRomanEncoding did not
+    [InlineData(0xCA, 0x00A0)] // note 6: 312 is a second space that signifies a non-breaking space
+    [InlineData(0xAD, 0x2260)] // unassigned in Annex D: Mac OS Roman's notequal, as poppler decodes it
+    [InlineData(0xC6, 0x2206)] // unassigned in Annex D: Mac OS Roman's increment (AGL Delta)
+    public void ExtractText_MacRomanEncoding_CodesOutsideTableD2Body(int code, int codePoint)
+    {
+        var pdfData = CreatePdfWithMacRomanEncoding($"BT /F1 12 Tf 100 700 Td <{code:X2}> Tj ET");
+        using var doc = PdfDocument.Open(pdfData);
+
+        var letters = new TextExtractor(doc.GetPage(1)).ExtractLetters();
+
+        letters.Should().ContainSingle().Which.Value.Should().Be(char.ConvertFromUtf32(codePoint));
     }
 
     #endregion

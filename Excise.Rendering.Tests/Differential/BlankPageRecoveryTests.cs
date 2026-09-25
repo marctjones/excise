@@ -115,14 +115,15 @@ public class BlankPageRecoveryTests
 
     /// <summary>
     /// The glyph-name half of the fix, pinned directly rather than only through
-    /// a raster: a <c>/Differences</c> name outside the renderer's own AGL
-    /// subset must still resolve, or the glyph is silently dropped.
+    /// a raster: a <c>/Differences</c> name must resolve through Core's glyph
+    /// table (the renderer has no table of its own since #1831), or the glyph
+    /// is silently dropped.
     /// </summary>
     [Theory]
     [InlineData("Alpha", 'Α')]     // Greek — 363015187.pdf's actual name
     [InlineData("Omega", 'Ω')]
     [InlineData("beta", 'β')]
-    [InlineData("one", '1')]       // still served by the local subset
+    [InlineData("one", '1')]
     [InlineData("uni0142", 'ł')]   // algorithmic convention, unchanged
     public void GlyphNamesOutsideTheRendererSubset_ResolveThroughCore(
         string glyphName, char expected)
