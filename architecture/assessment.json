@@ -271,7 +271,6 @@
         "Excise.Cli/Commands/UnredactCommandHandler.cs",
         "Excise.Cli/Commands/UnredactCommandModels.cs",
         "Excise.Cli/Commands/UnredactCommandOutput.cs",
-        "Excise.Cli/Commands/CliRedactedCopySafetyAdapter.cs",
         "Excise.Cli/Commands/InfoCommandHandler.cs",
         "Excise.Cli/Commands/TextInspectionHandler.cs",
         "Excise.Cli/Commands/RenderPageHandler.cs",

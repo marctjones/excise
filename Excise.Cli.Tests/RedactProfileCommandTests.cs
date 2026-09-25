@@ -116,7 +116,7 @@ public class RedactProfileCommandTests
     /// already REMOVED.
     /// </summary>
     /// <remarks>
-    /// <para><c>CliRedactedCopySafetyAdapter.AuditTermRedaction</c> runs
+    /// <para><c>RedactCommandHandler</c> runs
     /// <c>RedactedCopySafetyPolicy.Evaluate</c> over the finished document to
     /// collect what the surgical term policy could not examine (#916/#905). Now
     /// that Standard REMOVES all JavaScript, a note saying it could not be

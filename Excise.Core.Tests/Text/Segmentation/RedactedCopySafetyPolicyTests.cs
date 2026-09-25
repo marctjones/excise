@@ -2,6 +2,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -19,7 +20,7 @@ public sealed class RedactedCopySafetyPolicyTests
         var report = RedactedCopySafetyPolicy.Evaluate(
             document,
             RedactedCopySafetyRequest.ForAreas(
-                Array.Empty<RedactedCopySafetyArea>()));
+                Array.Empty<RedactedCopySafetyArea>(), RedactionOptions.Default));
 
         report.MetadataScrubbed.Should().BeTrue();
         report.InfoFieldsScrubbed.Should().Be(1);
@@ -40,7 +41,6 @@ public sealed class RedactedCopySafetyPolicyTests
         var auditOnly = new RedactedCopySafetyOptions
         {
             ScrubMetadata = false,
-            ScrubAttachments = false,
             ScrubRequestedTerms = false,
             RunCarrierAudit = true,
             VerifyRequestedTerms = false,
@@ -52,7 +52,8 @@ public sealed class RedactedCopySafetyPolicyTests
 
         var report = RedactedCopySafetyPolicy.Evaluate(
             document,
-            RedactedCopySafetyRequest.ForTerms(new[] { "Ng" }, auditOnly));
+            RedactedCopySafetyRequest.ForTerms(
+                new[] { "Ng" }, RedactionOptions.Default with { KeepAttachments = true }, auditOnly));
 
         report.MetadataScrubbed.Should().BeFalse();
         report.AttachmentsScrubbed.Should().BeFalse();
@@ -74,7 +75,6 @@ public sealed class RedactedCopySafetyPolicyTests
         var attachmentOnly = RedactedCopySafetyOptions.Default with
         {
             ScrubMetadata = false,
-            ScrubAttachments = true,
             ScrubRequestedTerms = false,
             RunCarrierAudit = false,
             VerifyRequestedTerms = false,
@@ -84,7 +84,7 @@ public sealed class RedactedCopySafetyPolicyTests
 
         var report = RedactedCopySafetyPolicy.Evaluate(
             document,
-            RedactedCopySafetyRequest.ForTerms(Array.Empty<string>(), attachmentOnly));
+            RedactedCopySafetyRequest.ForTerms(Array.Empty<string>(), RedactionOptions.Default, attachmentOnly));
 
         report.MetadataScrubbed.Should().BeFalse();
         report.AttachmentsScrubbed.Should().BeTrue();
@@ -105,7 +105,6 @@ public sealed class RedactedCopySafetyPolicyTests
         var rasterOnly = RedactedCopySafetyOptions.Default with
         {
             ScrubMetadata = false,
-            ScrubAttachments = false,
             ScrubRequestedTerms = false,
             RunCarrierAudit = false,
             VerifyRequestedTerms = false,
@@ -117,6 +116,7 @@ public sealed class RedactedCopySafetyPolicyTests
             document,
             RedactedCopySafetyRequest.ForAreas(
                 new[] { new RedactedCopySafetyArea(1, mismatchedPageArea) },
+                RedactionOptions.Default with { KeepAttachments = true },
                 options: rasterOnly));
 
         report.RasterRedactionAuditStatus.Should().Be(
@@ -127,6 +127,113 @@ public sealed class RedactedCopySafetyPolicyTests
         report.Warnings.Should().ContainSingle(warning =>
             warning.Contains("could not be completed", StringComparison.Ordinal));
     }
+
+    // ── #1830 item 4: the pass runs the caller's FLAGS, never its Profile label ──
+    //
+    // Evaluate runs on an UNREDACTED document with no area and no term, so the
+    // term scrub cannot reach the carrier: only RedactionFeatureStripper, under
+    // the options the request carries, can remove it.
+
+    [Theory]
+    [InlineData("outline-title", nameof(RedactionOptions.RemoveBookmarks), "document outline (bookmarks)")]
+    [InlineData("link-uri", nameof(RedactionOptions.RemoveLinkAnnotations), "link annotation(s)")]
+    [InlineData("annotation-author", nameof(RedactionOptions.RemoveMarkupAnnotations), "comment/markup annotation(s)")]
+    [InlineData("acroform-tu", nameof(RedactionOptions.RemoveFieldNames), "form field name(s) and tooltip(s)")]
+    public void Evaluate_AppliesAMaximumOnlyFlag_UnderTheStandardLabel(string trapId, string flag, string feature)
+    {
+        var trap = CarrierTrapFixtures.Get(trapId);
+        using (var untouched = PdfDocument.Open(trap.Build(false)))
+        {
+            EvaluateUnredacted(untouched, RedactionOptions.Default);
+            SavedPdfLeakScanner.FindTerm(untouched.SaveToBytes(), trap.Token).Should().NotBeEmpty(
+                "the planted failure: Standard keeps this carrier");
+        }
+
+        var flagged = flag switch
+        {
+            nameof(RedactionOptions.RemoveBookmarks) => RedactionOptions.Default with { RemoveBookmarks = true },
+            nameof(RedactionOptions.RemoveLinkAnnotations) => RedactionOptions.Default with { RemoveLinkAnnotations = true },
+            nameof(RedactionOptions.RemoveMarkupAnnotations) => RedactionOptions.Default with { RemoveMarkupAnnotations = true },
+            _ => RedactionOptions.Default with { RemoveFieldNames = true },
+        };
+        using var document = PdfDocument.Open(trap.Build(false));
+
+        var report = EvaluateUnredacted(document, flagged);
+
+        report.Profile.Should().Be(RedactionProfile.Standard, "the label is only a label");
+        report.Removals.Should().Contain(r => r.Feature == feature, $"{flag} is set, whatever the label says");
+        report.AccessibilityAndInteractivityRemoved.Should().BeTrue();
+        SavedPdfLeakScanner.FindTerm(document.SaveToBytes(), trap.Token).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Evaluate_FlattensTheForm_UnderTheStandardLabel()
+    {
+        var trap = CarrierTrapFixtures.Get("acroform-tu");
+        using var untouched = PdfDocument.Open(trap.Build(false));
+        using var document = PdfDocument.Open(trap.Build(false));
+
+        EvaluateUnredacted(untouched, RedactionOptions.Default);
+        var report = EvaluateUnredacted(document, RedactionOptions.Default with { FlattenInteractiveContent = true });
+
+        untouched.GetPage(1).GetAnnotations().Should().NotBeEmpty("the planted failure: Standard keeps the widget");
+        report.Removals.Should().Contain(r => r.Feature == "interactive object(s) flattened into the page");
+        report.AccessibilityAndInteractivityRemoved.Should().BeTrue();
+        document.GetPage(1).GetAnnotations().Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Evaluate_KeepsWhatTheFlagsKeep_UnderTheMaximumLabel()
+    {
+        var trap = CarrierTrapFixtures.Get("outline-title");
+        using var document = PdfDocument.Open(trap.Build(false));
+
+        var report = EvaluateUnredacted(document, RedactionOptions.Maximum with { RemoveBookmarks = false });
+
+        report.Profile.Should().Be(RedactionProfile.Maximum);
+        report.Removals.Should().NotContain(r => r.Feature == "document outline (bookmarks)",
+            "rebuilding the options from the Maximum label would remove the outline the caller kept");
+        SavedPdfLeakScanner.FindTerm(document.SaveToBytes(), trap.Token).Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void Evaluate_AMaximumRequest_ReachesTheStripperWhole()
+    {
+        var trap = CarrierTrapFixtures.Get("outline-title");
+        using var document = PdfDocument.Open(trap.Build(false));
+
+        var report = EvaluateUnredacted(document, RedactionOptions.Maximum);
+
+        report.Profile.Should().Be(RedactionProfile.Maximum);
+        report.Removals.Should().Contain(r => r.Feature == "document outline (bookmarks)");
+        report.Warnings.Should().Contain(w => w.Contains("NO LONGER accessible", StringComparison.Ordinal));
+        SavedPdfLeakScanner.FindTerm(document.SaveToBytes(), trap.Token).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Evaluate_TermScrub_UsesTheCallersCarrierPolicy()
+    {
+        var trap = CarrierTrapFixtures.Get("outline-title");
+        using var document = PdfDocument.Open(trap.Build(false));
+        var removeWholeOutlines = RedactionOptions.Default with
+        {
+            CarrierPolicy = Excise.Core.Operations.CarrierScrubPolicy.Default.With(
+                Excise.Core.Operations.RedactionCarriers.Outlines,
+                Excise.Core.Operations.CarrierScrubMode.RemoveWhole),
+        };
+
+        RedactedCopySafetyPolicy.Evaluate(document,
+            RedactedCopySafetyRequest.ForTerms(new[] { trap.Token }, removeWholeOutlines));
+
+        var saved = document.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(saved, trap.Token).Should().BeEmpty();
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("Chapter on",
+            "RemoveWhole drops the whole title; Strip would leave the #1169 residue");
+    }
+
+    private static RedactedCopySafetyReport EvaluateUnredacted(PdfDocument document, RedactionOptions redaction) =>
+        RedactedCopySafetyPolicy.Evaluate(document,
+            RedactedCopySafetyRequest.ForAreas(Array.Empty<RedactedCopySafetyArea>(), redaction));
 
     // ── #1430: refuse a safe-redacted copy over unresolved /Redact marks ─────
 
@@ -140,7 +247,7 @@ public sealed class RedactedCopySafetyPolicyTests
         var refusal = Assert.Throws<UnresolvedRedactAnnotationsException>(() =>
             RedactedCopySafetyPolicy.Evaluate(
                 document,
-                RedactedCopySafetyRequest.ForAreas(Array.Empty<RedactedCopySafetyArea>())));
+                RedactedCopySafetyRequest.ForAreas(Array.Empty<RedactedCopySafetyArea>(), RedactionOptions.Default)));
 
         refusal.AnnotationCount.Should().Be(1);
         refusal.Message.Should().Contain("has NOT been removed",
@@ -163,7 +270,7 @@ public sealed class RedactedCopySafetyPolicyTests
         Assert.Throws<UnresolvedRedactAnnotationsException>(() =>
             RedactedCopySafetyPolicy.Evaluate(
                 document,
-                RedactedCopySafetyRequest.ForAreas(Array.Empty<RedactedCopySafetyArea>())));
+                RedactedCopySafetyRequest.ForAreas(Array.Empty<RedactedCopySafetyArea>(), RedactionOptions.Default)));
 
         document.Title.Should().Be("Private title",
             "a refused evaluation must not have scrubbed anything — refusing and " +
@@ -204,7 +311,7 @@ public sealed class RedactedCopySafetyPolicyTests
 
         var report = RedactedCopySafetyPolicy.Evaluate(
             document,
-            RedactedCopySafetyRequest.ForAreas(Array.Empty<RedactedCopySafetyArea>()));
+            RedactedCopySafetyRequest.ForAreas(Array.Empty<RedactedCopySafetyArea>(), RedactionOptions.Default));
 
         report.UnresolvedRedactAnnotationCount.Should().Be(0);
         report.FailedStages.Should().NotContain(
@@ -225,6 +332,7 @@ public sealed class RedactedCopySafetyPolicyTests
             document,
             RedactedCopySafetyRequest.ForAreas(
                 Array.Empty<RedactedCopySafetyArea>(),
+                RedactionOptions.Default,
                 options: new RedactedCopySafetyOptions
                 {
                     RefuseOnUnresolvedRedactAnnotations = false,

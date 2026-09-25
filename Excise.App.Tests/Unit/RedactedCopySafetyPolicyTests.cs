@@ -44,7 +44,7 @@ public class RedactedCopySafetyPolicyTests : IDisposable
         using var document = PdfDocument.Open(File.ReadAllBytes(inputPath));
         var page = document.GetPage(1);
         _redactionService.RedactArea(
-            page, PdfPageRect.FromContentPoints(1, new PdfRectangle(40, 675, 560, 750)));
+            page, PdfPageRect.FromContentPoints(1, new PdfRectangle(40, 675, 560, 750)), RedactionOptions.Default);
 
         var report = PrepareRedactedCopy(document, Array.Empty<PendingRedaction>());
         var dialog = _formatter.Format(Path.Combine(_tempDir, "out.pdf"), report);
@@ -73,7 +73,7 @@ public class RedactedCopySafetyPolicyTests : IDisposable
         using var document = PdfDocument.Open(File.ReadAllBytes(inputPath));
         var page = document.GetPage(1);
         _redactionService.RedactArea(
-            page, PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, page.Width, page.Height)));
+            page, PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, page.Width, page.Height)), RedactionOptions.Default);
 
         var dialog = _formatter.Format(
             Path.Combine(_tempDir, "out.pdf"),
@@ -96,7 +96,7 @@ public class RedactedCopySafetyPolicyTests : IDisposable
 
         var area = new PdfRectangle(40, 675, 560, 750);
         _redactionService.RedactArea(
-            document.GetPage(1), PdfPageRect.FromContentPoints(1, area));
+            document.GetPage(1), PdfPageRect.FromContentPoints(1, area), RedactionOptions.Default);
         var pending = new[]
         {
             new PendingRedaction
@@ -141,7 +141,7 @@ public class RedactedCopySafetyPolicyTests : IDisposable
         AddXfa(document, "<template><text>CARRIERSECRET</template>");
         var page = document.GetPage(1);
         var area = new PdfRectangle(0, 0, page.Width, page.Height);
-        _redactionService.RedactArea(page, PdfPageRect.FromContentPoints(1, area));
+        _redactionService.RedactArea(page, PdfPageRect.FromContentPoints(1, area), RedactionOptions.Default);
 
         var report = PrepareRedactedCopy(document, new[]
         {
@@ -235,7 +235,8 @@ public class RedactedCopySafetyPolicyTests : IDisposable
         var page = document.GetPage(1);
         _redactionService.RedactArea(
             page,
-            PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, page.Width, page.Height)));
+            PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, page.Width, page.Height)),
+            RedactionOptions.Default);
 
         var pending = new[]
         {
@@ -466,9 +467,7 @@ public class RedactedCopySafetyPolicyTests : IDisposable
 
     private static RedactedCopySafetyReport PrepareRedactedCopy(
         PdfDocument document,
-        IReadOnlyCollection<PendingRedaction> redactions,
-        int skippedRedactionAreaCount = 0,
-        RedactedCopySafetyOptions? options = null) =>
+        IReadOnlyCollection<PendingRedaction> redactions) =>
         RedactedCopySafetyPolicy.Evaluate(
             document,
             RedactedCopySafetyRequest.ForAreas(
@@ -478,8 +477,7 @@ public class RedactedCopySafetyPolicyTests : IDisposable
                         redaction.PageArea,
                         redaction.PreviewText))
                     .ToArray(),
-                skippedRedactionAreaCount,
-                options));
+                RedactionOptions.Default));
 
     private static byte[] BuildPdfWithMetadataXmpAndEmbeddedFile(
         string title,

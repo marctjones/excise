@@ -54,7 +54,7 @@ public class RedactionCarrierPolicyPreferenceTests
     }
 
     [Fact]
-    public void BuildRedactedCopySafetyOptions_CarriesTheUserChoiceToTheEngine()
+    public void BuildRedactionOptions_CarriesTheUserChoiceToTheEngine()
     {
         // The wiring test that matters: a preference that never reaches
         // PdfDocumentSanitizer is a setting the user believes in and does not
@@ -63,7 +63,7 @@ public class RedactionCarrierPolicyPreferenceTests
         main.LinkUriCarrierPolicy = CarrierScrubMode.RemoveWhole;
         main.MetadataCarrierPolicy = CarrierScrubMode.ReportOnly;
 
-        var options = main.BuildRedactedCopySafetyOptions();
+        var options = main.BuildRedactionOptions();
 
         options.CarrierPolicy.ModeFor(RedactionCarriers.ActionUris)
             .Should().Be(CarrierScrubMode.RemoveWhole);
@@ -78,11 +78,11 @@ public class RedactionCarrierPolicyPreferenceTests
     }
 
     [Fact]
-    public void BuildRedactedCopySafetyOptions_UntouchedPreferences_AreTheDefaultPolicy()
+    public void BuildRedactionOptions_UntouchedPreferences_AreTheDefaultPolicy()
     {
         var main = MainWindowViewModelTestFactory.Create();
 
-        main.BuildRedactedCopySafetyOptions().CarrierPolicy
+        main.BuildRedactionOptions().CarrierPolicy
             .Should().Be(CarrierScrubPolicy.Default,
                 "an unconfigured app redacts exactly as it did before #1188/#1169");
     }
@@ -94,7 +94,7 @@ public class RedactionCarrierPolicyPreferenceTests
         // behaviour, and reaches the engine's carrier scrub.
         var main = MainWindowViewModelTestFactory.Create();
         main.RedactionWholeWord.Should().BeFalse("#1000 kept substring as the default");
-        main.BuildRedactedCopySafetyOptions().WholeWord.Should().BeFalse();
+        main.BuildRedactionOptions().WholeWord.Should().BeFalse();
 
         var prefs = new PreferencesViewModel();
         prefs.LoadFromMainViewModel(main);
@@ -104,7 +104,7 @@ public class RedactionCarrierPolicyPreferenceTests
         prefs.SaveToMainViewModel(main);
 
         main.RedactionWholeWord.Should().BeTrue();
-        main.BuildRedactedCopySafetyOptions().WholeWord.Should().BeTrue(
+        main.BuildRedactionOptions().WholeWord.Should().BeTrue(
             "a toggle that does not reach PdfDocumentSanitizer is a setting the " +
             "user believes in and does not have");
     }
@@ -116,7 +116,7 @@ public class RedactionCarrierPolicyPreferenceTests
         // unless the user keeps them, and the choice reaches the engine.
         var main = MainWindowViewModelTestFactory.Create();
         main.RedactionKeepAttachments.Should().BeFalse();
-        main.BuildRedactedCopySafetyOptions().ScrubAttachments.Should().BeTrue();
+        main.BuildRedactionOptions().KeepAttachments.Should().BeFalse();
         new Excise.App.Models.WindowSettings().RedactionKeepAttachments.Should().BeFalse();
 
         var prefs = new PreferencesViewModel();
@@ -125,7 +125,7 @@ public class RedactionCarrierPolicyPreferenceTests
         prefs.SaveToMainViewModel(main);
 
         main.RedactionKeepAttachments.Should().BeTrue();
-        main.BuildRedactedCopySafetyOptions().ScrubAttachments.Should().BeFalse(
+        main.BuildRedactionOptions().KeepAttachments.Should().BeTrue(
             "keeping attachments must turn the safe-copy strip off, or the toggle does nothing");
 
         var settings = new Excise.App.Models.WindowSettings();

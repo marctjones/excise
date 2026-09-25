@@ -2609,19 +2609,14 @@ namespace Excise.Core.Text.Segmentation
     public sealed class RedactedCopySafetyOptions : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyOptions>
     {
         public RedactedCopySafetyOptions() { }
-        public Excise.Core.Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
-        public Excise.Core.Operations.RedactionCarriers Carriers { get; init; }
         public bool InspectKeptAttachments { get; init; }
-        public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; init; }
         public bool RefuseOnUnresolvedRedactAnnotations { get; init; }
         public bool RunCarrierAudit { get; init; }
         public bool RunHiddenTextAudit { get; init; }
         public bool RunRasterRedactionAudit { get; init; }
-        public bool ScrubAttachments { get; init; }
         public bool ScrubMetadata { get; init; }
         public bool ScrubRequestedTerms { get; init; }
         public bool VerifyRequestedTerms { get; init; }
-        public bool WholeWord { get; init; }
         public static Excise.Core.Text.Segmentation.RedactedCopySafetyOptions Default { get; }
     }
     public static class RedactedCopySafetyPolicy
@@ -2687,13 +2682,14 @@ namespace Excise.Core.Text.Segmentation
     }
     public sealed class RedactedCopySafetyRequest : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyRequest>
     {
-        public RedactedCopySafetyRequest(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyArea> RedactionAreas, System.Collections.Generic.IReadOnlyList<string> RequestedTerms, int SkippedRedactionAreaCount, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions Options) { }
+        public RedactedCopySafetyRequest(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyArea> RedactionAreas, System.Collections.Generic.IReadOnlyList<string> RequestedTerms, int SkippedRedactionAreaCount, Excise.Core.Text.Segmentation.RedactionOptions Redaction, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions Options) { }
         public Excise.Core.Text.Segmentation.RedactedCopySafetyOptions Options { get; init; }
+        public Excise.Core.Text.Segmentation.RedactionOptions Redaction { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyArea> RedactionAreas { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> RequestedTerms { get; init; }
         public int SkippedRedactionAreaCount { get; init; }
-        public static Excise.Core.Text.Segmentation.RedactedCopySafetyRequest ForAreas(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyArea> areas, int skippedRedactionAreaCount = 0, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions? options = null) { }
-        public static Excise.Core.Text.Segmentation.RedactedCopySafetyRequest ForTerms(System.Collections.Generic.IReadOnlyList<string> terms, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions? options = null) { }
+        public static Excise.Core.Text.Segmentation.RedactedCopySafetyRequest ForAreas(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyArea> areas, Excise.Core.Text.Segmentation.RedactionOptions redaction, int skippedRedactionAreaCount = 0, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions? options = null) { }
+        public static Excise.Core.Text.Segmentation.RedactedCopySafetyRequest ForTerms(System.Collections.Generic.IReadOnlyList<string> terms, Excise.Core.Text.Segmentation.RedactionOptions redaction, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions? options = null) { }
     }
     public sealed class RedactedFeatureRemoval : System.IEquatable<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>
     {

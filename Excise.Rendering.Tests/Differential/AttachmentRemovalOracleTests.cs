@@ -124,7 +124,8 @@ public sealed class AttachmentRemovalOracleTests : IDisposable
                 // shared safety policy with its defaults.
                 document.GetPage(1).RedactArea(box);
                 RedactedCopySafetyPolicy.Evaluate(document, RedactedCopySafetyRequest.ForAreas(
-                    new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, box), "Visible") }))
+                    new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, box), "Visible") },
+                    RedactionOptions.Default))
                     .AttachmentResults.Should().HaveCount(3, "the report names every removed file");
                 break;
             case "RedactText (CLI, batch, scripting)":

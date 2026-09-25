@@ -113,7 +113,7 @@ owning *unit*.
 | `RenderVersion` | `:422` | `RequestViewerRenderRefresh :1726` from Annotations, Bates | XAML `PdfViewerControl.RenderVersion` |
 | `OutlineNodes`, `HasOutline`, `SelectedOutlineNode` | `:174-206` | DocumentOpen (`LoadDocumentOutline`), failure path | XAML TreeView, code-behind `OnOutlineTreePointerPressed` |
 | Sidebar/visibility flags `:96-102` | cs | toggle commands | XAML, `MacNativeMenuBuilder` |
-| Preferences: reading order, whitespace, carrier policies, whole word, width policy `:64-74` | cs | code-behind `OnDataContextChanged` applies persisted values (`:288-299`), `PreferencesViewModel.SaveToMainViewModel` | `BuildRedactedCopySafetyOptions :367` (Redaction, Scripting), `WritePreferencesTo` (`Performance.cs:69`), XAML two-way to the viewer |
+| Preferences: reading order, whitespace, carrier policies, whole word, width policy `:64-74` | cs | code-behind `OnDataContextChanged` applies persisted values (`:288-299`), `PreferencesViewModel.SaveToMainViewModel` | `BuildRedactionOptions :367` (Redaction, Scripting), `WritePreferencesTo` (`Performance.cs:69`), XAML two-way to the viewer |
 | Test seams: `MainWindowResolver :2794`, `StorageProviderOverride :2814`, `Pick*Override :2831-2833`, `KeyboardShortcutsDialogRequested :2713`, `DocumentationOpener :2759` | cs | tests | pickers (`:2840-2933`), dialogs; more seams in Annotations (`:321`), Attachments (`:63`, `:166`), Bates (`:42`), Redaction (`:187`) |
 
 ### 1.3 `MainWindowViewModel.cs` members by responsibility
@@ -168,7 +168,7 @@ code-behind, **T** = tests, **S** = scripting-reachable (public), **M** =
 | `LoadZoomPreference` (3074–3101), `SaveZoomPreference` (3103–3116) | zoom persisted as text | viewport | `AppPaths.ZoomSettingsPath`, `File.*` | ctor, `ApplyZoomTransition` |
 | `ReadingOrderStrategy` (248–252), `ApplyReadingOrderStrategyPreference` (255–258), `WhitespaceMode` (265–269), `ApplyWhitespaceModePreference` (272–275) | copy/selection preferences, two-way to the viewer | `_readingOrderStrategy`, `_whitespaceMode` | — | X (two-way), V (`:289-294`), P |
 | `LinkUriCarrierPolicy` (290–294), `MetadataCarrierPolicy` (301–305), `RedactionWholeWord` (319–323), `RedactionWidthPolicy` (337–341), `ApplyRedactionPolicyPreferences` (349–360) | redaction safety policy (#1052/#1169/#1189) | `:68-74` | — | V (`:295-299`), P, `Performance.cs:69` |
-| `BuildRedactedCopySafetyOptions` (367–381) | policy → `RedactedCopySafetyOptions` | reads the four above | Core | Redaction (`:133`), Scripting (`:395`) |
+| `BuildRedactionOptions` (367–381) | policy → `RedactionOptions` | reads the four above | Core | Redaction (`:133`), Scripting (`:395`) |
 | `ContinuousScrollPreference` (383), `ApplyContinuousScrollPreference` (385–395) | persisted view-mode preference | viewport | — | V (`:288`, `:220`), `ToggleContinuousView` |
 | `ShowPreferences` (3128–3157) | builds `PreferencesViewModel`, `LoadFromMainViewModel(this)`, shows `Views.PreferencesWindow` modally (not awaited) | — | `GetMainWindow()`, view construction | `ShowPreferencesCommand` |
 
@@ -399,7 +399,7 @@ instead.
 | `ToggleRedactionMode` (13–18) | private | flip, turn off text selection | cs modes | — | command |
 | `MarkRedactionArea` (23–50), `MarkCurrentRedactionAsync` (171–177), `TryGetCurrentRedactionPageArea` (208–230) | private | capture preview text, `RedactionWorkflow.MarkArea`, `PendingRedactionsCount++`, clear the rect | cs rect, `FileState` | `_redactionWorkflowService.CaptureMark` | `ApplyRedactionCommand`, V (`:961`) |
 | `RemovePendingRedaction` (55–69, raises `SaveButtonText` **but not `StatusBarText`**), `ClearAllRedactions` (74–84) | private | pending list edits | `RedactionWorkflow`, `FileState` | — | commands |
-| `ApplyAllRedactionsAsync` (89–142) | private | save-path, `RedactedCopyRequest` with `BuildRedactedCopySafetyOptions()`, `CreateRedactedCopy`, publish | typewriter ops, path | `_redactionWorkflowService`, `_filenameSuggestionService`, doc service, dialog | command, `SaveFileAsync` |
+| `ApplyAllRedactionsAsync` (89–142) | private | save-path, `RedactedCopyRequest` with `BuildRedactionOptions()`, `CreateRedactedCopy`, publish | typewriter ops, path | `_redactionWorkflowService`, `_filenameSuggestionService`, doc service, dialog | command, `SaveFileAsync` |
 | `PublishRedactedCopySuccessAsync` (144–164) | private | move to applied, clear typewriter + history, exit mode, **`LoadDocumentAsync` of the output**, formatted dialog | many | `_redactedCopyDialogFormatter`, dialog | above |
 | `_redactedSavePathProviderForTests` (187), `SetRedactedSavePathProviderForTests` (189), `ResolveRedactedSavePathAsync` (192–206) | seam/private | picker via `ShowSaveRedactedFileDialog(Window, …)` (cs:2935) | — | `GetMainWindow()` | above, T |
 
@@ -632,11 +632,7 @@ changed only under its own issue.
 
 - Scripting harness (**#1501**, confirmed in code): temp-file leak for ≥ 2
   terms (`Scripting.cs:375`); the load timeout's token only gates `Task.Run`
-  start (`:137-148`); `ApplyRedactionsViaScriptAsync` (`:263`) and the area
-  branch of `SaveDocumentViaScriptAsync` (`:425`) omit
-  `BuildRedactedCopySafetyOptions()` — the default still scrubs attachments,
-  but the user's per-carrier policy (link URIs, metadata) and whole-word
-  choice are ignored; `ApplyRedactionsViaScriptAsync` mutates the document
+  start (`:137-148`); `ApplyRedactionsViaScriptAsync` mutates the document
   and zeroes `PendingRedactionsCount`, so `HasUnsavedChanges` can read false.
 - Path-annotation mode is never cleared by sibling setters, `ViewMode`, or
   `PrepareDocumentOpen` (`Forms.cs:29-64`).
@@ -1069,7 +1065,7 @@ Task SetSelectedTextAndCopyAsync(string text);   void ClearCurrentTextSelection(
 Owns `RedactionWorkflowManager` (injected), the drag rectangle in its three
 representations (`CurrentRedactionArea`, `CurrentRedactionPageArea`,
 `CurrentRedactionRenderDpi`), the four policy properties and
-`BuildRedactedCopySafetyOptions`, the five commands, `ApplyAllRedactionsAsync`,
+`BuildRedactionOptions`, the five commands, `ApplyAllRedactionsAsync`,
 `RedactAnnotationNotice`, and a new `void OnAreaDrawn(PdfPageRect area)` that
 absorbs the 5×5 auto-mark rule from `OnRedactionDrawn`. Exposes
 `IObservable<Unit> OverlaysChanged` and `GetPendingForPage`/`GetAppliedForPage`
@@ -1083,7 +1079,7 @@ RedactionWorkflowManager Workflow { get; }                 // today RedactionWor
 PdfPageRect? CurrentRedactionPageArea { get; set; }   int CurrentRedactionRenderDpi { get; set; }
 bool RedactionWholeWord { get; set; }   WidthPolicy RedactionWidthPolicy { get; set; }
 CarrierScrubMode LinkUriCarrierPolicy { get; set; }   CarrierScrubMode MetadataCarrierPolicy { get; set; }
-RedactedCopySafetyOptions BuildRedactedCopySafetyOptions();
+RedactionOptions BuildRedactionOptions();
 int RedactAnnotationCount { get; }   string? RedactAnnotationNotice { get; }
 RC<Unit> ToggleRedactionModeCommand, ApplyRedactionCommand, ClearAllRedactionsCommand, ApplyAllRedactionsCommand;
 RC<Guid> RemovePendingRedactionCommand;
@@ -1347,7 +1343,7 @@ Data flow for the three workflows the registry names for this component:
   `Redaction.OnAreaDrawn` → `RedactionWorkflowManager.MarkArea` →
   `OverlaysChanged` → `ViewerOverlayBinder`; `ApplyAllRedactionsCommand` →
   `IFilePicker` → `RedactionWorkflowService.CreateRedactedCopy` (with
-  `BuildRedactedCopySafetyOptions()`) → `Session.ReplaceWithSavedFileAsync`.
+  `BuildRedactionOptions()`) → `Session.ReplaceWithSavedFileAsync`.
 - **edit-save**: viewer form/typewriter/path events → feature VM → `History.Push`
   → `FileState` counters (self-notifying) → `StatusBarText`/`SaveButtonText`;
   `SaveFileCommand` → `Session.SaveAsync` → `Forms.SyncAll…`,
@@ -1451,7 +1447,7 @@ Sizes: S ≤ half a day, M ≤ two days, L ≤ a week.
 | 7 | `EditHistoryViewModel` (inject `EditHistoryService`) and `PageOrganizationViewModel` (the fourteen commands + the undo primitives from `History.cs:112–179`) | `History.cs`, cs:1273–1656, 2029–2173, composition, factory | undo and page organisation each have one owner | `UndoRedoWorkflowTests`, `UndoRedoContinuousKeyboardTests`, `PageOrganizationCommandTests`, `PageOrganizationWorkflowTests`, `ContinuousRotateReadingAnchorTests`, `MacApplicationMenuTests` (`CanUndo`/`UndoMenuHeader` refresh) | `ReinsertPagesAsync` bypasses `PdfDocumentService` (`History.cs:137–151`); keep it and file it | M |
 | 8 | `SearchViewModel`: move `Search.cs` and `CurrentPageSearchHighlights`; inject `IScheduler`; capture document state on the UI thread before `Task.Run` | `Search.cs`, cs:90, 1067–1071, `Commands.cs:147` | search has one owner; off-thread reads gone | `SearchViewModelTests`, `SearchDebounceTests`, `SearchHighlightIndexTests`, `SearchHighlightOverlayTests`, `SearchOptionInteractionTests`, `RedactionAndSearchCommandTests`, `RealWorldSearchTests`, `MultiColumnSearchTests` | the timing seams (`LastSearch*ElapsedMs`) are benchmark inputs; keep them internal on the shell as forwards | M |
 | 9 | `TextSelectionViewModel` + `IClipboard` (from step 1); `SetSelection` absorbs `OnTextSelected`'s `ViewerDips` construction; `ClearCurrentTextSelection` moves out of `Annotations.cs` | cs:86–88, 207, 921–972, 1748–1848; `Annotations.cs:597–602`; `MainWindow.axaml.cs:1010–1039` (calls the new method) | selection + clipboard have one owner | `TextSelectionDragTests`, `TextSelectionAlignmentTests`, `CopyReadingOrderTests`, `CopyWhitespaceModeTests`, `ClipboardEntryUnicodeSafetyTests`, `KeyboardShortcutTests` (Ctrl+C) | none | S |
-| 10 | `RedactionViewModel`: `Redaction.cs`, the drag rectangle, the four policies, `BuildRedactedCopySafetyOptions`, `RedactAnnotationNotice`; `OnAreaDrawn` absorbs the 5×5 rule; annotations receive the rect through the coordinator instead of reading `CurrentRedactionPageArea` | `Redaction.cs`, cs:64–76, 290–381, 481–525, 815–895, `Annotations.cs:127–390` (rect source), `MainWindow.axaml.cs:949–963` | redaction workflow has one owner; the shared drag rectangle coupling is gone | `RedactionInteractionTests`, `RedactionWorkflowManagerTests`, `RedactionWorkflowServiceTests`, `RedactionMouseWorkflowTests`, `RedactionMouseDragBroadeningTests`, `RedactionCopyRecoveryTests`, `SecondRedactionSaveScrubTests`, `RedactionCarrierPolicyPreferenceTests`, `UserFlowAutomationTests`, `redaction-suites`, `redaction-architecture`, `redaction-oracles` | security-critical path: the `RedactedCopyRequest` construction (`Redaction.cs:89–142`) moves verbatim; verify with the independent oracles in `Excise.Rendering.Tests/Differential`, not with excise's own extraction | M |
+| 10 | `RedactionViewModel`: `Redaction.cs`, the drag rectangle, the four policies, `BuildRedactionOptions`, `RedactAnnotationNotice`; `OnAreaDrawn` absorbs the 5×5 rule; annotations receive the rect through the coordinator instead of reading `CurrentRedactionPageArea` | `Redaction.cs`, cs:64–76, 290–381, 481–525, 815–895, `Annotations.cs:127–390` (rect source), `MainWindow.axaml.cs:949–963` | redaction workflow has one owner; the shared drag rectangle coupling is gone | `RedactionInteractionTests`, `RedactionWorkflowManagerTests`, `RedactionWorkflowServiceTests`, `RedactionMouseWorkflowTests`, `RedactionMouseDragBroadeningTests`, `RedactionCopyRecoveryTests`, `SecondRedactionSaveScrubTests`, `RedactionCarrierPolicyPreferenceTests`, `UserFlowAutomationTests`, `redaction-suites`, `redaction-architecture`, `redaction-oracles` | security-critical path: the `RedactedCopyRequest` construction (`Redaction.cs:89–142`) moves verbatim; verify with the independent oracles in `Excise.Rendering.Tests/Differential`, not with excise's own extraction | M |
 | 11 | `AnnotationsViewModel` (+ `IImageDecoder`), `FormsViewModel`, `TypewriterViewModel` (+ colour converter), `HiddenTextViewModel` (+ `IHiddenTextScanner`) — one step each, any order | the four partial pairs, `Commands.cs` groups, composition, factory, `MainWindow.axaml` converter for `TypewriterColorBrush` | each feature has one owner; inline OCR/Skia construction leaves the VM | `AnnotationAuthoringWorkflowTests`, `TextMarkupAnnotationCommandTests`, `AnnotationDisplayControlTests`, `AnnotationHoverReadingTests`, `FormAuthoringTests`, `FormFieldsOverlayTests`, `FormWorkflowTests`, `TypewriterWorkflowTests`, `RevealHiddenTextTests`, `redaction-suites` for annotations (structure-tree carriers) | `TypewriterColor`'s public type changes only in Phase B; Phase A keeps the Avalonia `Color` forward on the shell | 4 × M |
 | 12 | Tools: `AttachmentsViewModel` becomes the Attachments pane's DataContext (`x:DataType` change on `AttachmentsPanel` only), Bates/Security/Signing/MakeSearchable/export/links/help through `IWindowHost` with their services injected | `Attachments.cs`, `Bates.cs`, `Security.cs`, `Signing.cs`, `Searchable.cs`, cs:2380–2777, 3122–3157, `MainWindow.axaml` (`AttachmentsPanel`), composition, factory | dialog opening has one mechanism; inline services leave the VM | `AttachmentsPanelTests`, `BatesNumberingWorkflowTests`, `SecurityDialogUiTests`, `MakeSearchableDialogUiTests`, `MakeSearchableWiringTests`, `SignatureApplicationServiceTests`, `HiddenDialogCoverageTests`, `AboutDialogTests`, `DialogInputInteractionTests` | `ShowAttachmentsPaneOverride`/`BatesOptionsOverride` seams become `IWindowHost` fakes; tests that inspect owned windows keep working because the production adapter still calls `ShowDialog(owner)` | M |
 | 13 | View-side binders: `ViewerOverlayBinder`, `ViewerLayoutSignals`, `ViewerPerformanceBinder`, `ViewerEventsBinder`, `ToastHost`, `DropToOpenBehavior`, thumbnail/outline behaviours; delete the corresponding code-behind; `PerformanceSettingsApplied` and `ViewerTileCacheResidentBytesProvider` retire | `MainWindow.axaml.cs`, `MainWindow.axaml` (attached properties on existing controls — no control moves, no `x:Name` changes), `Behaviors/*`, `Performance.cs` | code-behind holds only settings/closing/native menu/cache-trim | `SearchHighlightOverlayTests`, `PointerInteractionTests`, `MouseInputTests`, `InPageLinkClickTests`, `DragDropOpenTests`, `PerformancePreferencesLiveApplyTests`, `ToastServiceTests`, `StatusMessageAuditTests`, `IdleAnimationQuiescenceTests`, `GuiClickSafetySweepTests`, `CommandBindingSweepTests`, `gui-interaction-registry` (attached properties are not parsed, so the JSON is unchanged) | headless tests that wait on the old `DispatcherTimer` toast (`KeyboardShortcutTests` history, comment at `MainWindow.axaml.cs:35–42`) must see the same dismiss timing through the scheduler | L |

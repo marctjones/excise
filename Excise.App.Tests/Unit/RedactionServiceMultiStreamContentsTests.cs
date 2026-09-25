@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.Core.Text.Segmentation;
 using Excise.TestSupport;
 using Xunit;
 
@@ -109,7 +110,7 @@ public class RedactionServiceMultiStreamContentsTests
         // origin) coordinates directly — a rect over ONLY the first (y=720)
         // line's text, well clear of the second (y=500).
         service.RedactArea(page, PdfPageRect.FromContentPoints(
-            page.PageNumber, new PdfRectangle(60, 710, 180, 740)));
+            page.PageNumber, new PdfRectangle(60, 710, 180, 740)), RedactionOptions.Default);
 
         var array = doc.Resolve(page.Dictionary["Contents"]) as PdfArray;
         array.Should().NotBeNull();

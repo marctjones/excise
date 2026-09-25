@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.Core.Document;
+using Excise.Core.Text.Segmentation;
 using Excise.Ocr;
 using Excise.TestSupport;
 using Xunit;
@@ -79,7 +80,7 @@ public class RedactionServiceTests : IDisposable
 
         using var doc = PdfDocument.Open(sourceBytes);
         var page = doc.GetPage(1);
-        _service.RedactArea(page, TargetLineArea(page));
+        _service.RedactArea(page, TargetLineArea(page), RedactionOptions.Default);
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.FindTerm(saved, TargetLine).Should().BeEmpty(
@@ -105,7 +106,7 @@ public class RedactionServiceTests : IDisposable
         var area = VisualArea(page, 0, 0, page.Width, page.Height);
 
         // Act
-        _service.RedactArea(page, area);
+        _service.RedactArea(page, area, RedactionOptions.Default);
 
         // Assert — on the SAVED BYTES. This previously asserted that a list of
         // harvested words was non-empty (true of a build that removes nothing,
@@ -134,7 +135,7 @@ public class RedactionServiceTests : IDisposable
         doc.SetTitle("SecretWord in the title");
         var page = doc.GetPage(1);
 
-        _service.RedactArea(page, VisualArea(page, 0, 0, page.Width, page.Height));
+        _service.RedactArea(page, VisualArea(page, 0, 0, page.Width, page.Height), RedactionOptions.Default);
 
         var outputPath = Path.Combine(_tempDir, "carriers.pdf");
         doc.Save(outputPath);
@@ -158,7 +159,7 @@ public class RedactionServiceTests : IDisposable
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
         var page = doc.GetPage(1);
-        _service.RedactArea(page, VisualArea(page, 480, 600, 10, 10));
+        _service.RedactArea(page, VisualArea(page, 480, 600, 10, 10), RedactionOptions.Default);
 
         var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
         saved.Should().Contain(TargetLine, "nothing was inside the rectangle");
@@ -179,7 +180,7 @@ public class RedactionServiceTests : IDisposable
         var area = VisualArea(page, 10000, 10000, 100, 100);
 
         // Act & Assert
-        var action = () => _service.RedactArea(page, area);
+        var action = () => _service.RedactArea(page, area, RedactionOptions.Default);
         action.Should().NotThrow();
     }
 
@@ -198,8 +199,8 @@ public class RedactionServiceTests : IDisposable
         var page = doc.GetPage(1);
 
         // Act - Redact twice, covering both lines between them
-        _service.RedactArea(page, VisualArea(page, 0, 0, 300, 100));
-        _service.RedactArea(page, VisualArea(page, 0, 100, 300, 100));
+        _service.RedactArea(page, VisualArea(page, 0, 0, 300, 100), RedactionOptions.Default);
+        _service.RedactArea(page, VisualArea(page, 0, 100, 300, 100), RedactionOptions.Default);
 
         // Assert - both regions lost their glyphs, read from the SAVED BYTES.
         // The original version compared two counts of a harvested-word list
@@ -452,7 +453,7 @@ public class RedactionServiceTests : IDisposable
         using var doc = PdfDocument.Open(File.ReadAllBytes(inputPath));
         var page = doc.GetPage(1);
 
-        _service.RedactArea(page, TargetLineArea(page));
+        _service.RedactArea(page, TargetLineArea(page), RedactionOptions.Default);
         doc.Save(outputPath);
 
         // Assert
@@ -481,7 +482,7 @@ public class RedactionServiceTests : IDisposable
         for (int i = 1; i <= 3; i++)
         {
             var page = doc.GetPage(i);
-            _service.RedactArea(page, TargetLineArea(page));
+            _service.RedactArea(page, TargetLineArea(page), RedactionOptions.Default);
         }
 
         // Assert — #1769: this asserted only that the page count was unchanged,
@@ -518,7 +519,7 @@ public class RedactionServiceTests : IDisposable
         // Then do area redaction on the result
         using var doc = PdfDocument.Open(File.ReadAllBytes(intermediatePath));
         var page = doc.GetPage(1);
-        _service.RedactArea(page, VisualArea(page, 0, 60, 612, 80));
+        _service.RedactArea(page, VisualArea(page, 0, 60, 612, 80), RedactionOptions.Default);
         doc.Save(finalPath);
 
         // Assert — #1769: the page count was the only thing checked, so a build
