@@ -80,6 +80,24 @@ public class ContentOperator
     internal ContentStreamWalker.TextStateSnapshot? TextState { get; set; }
 
     /// <summary>
+    /// The <c>BDC</c>/<c>BMC</c> operators whose marked-content sequences
+    /// (§14.6) were open when this operator executed, outermost first; empty at
+    /// top level. Stamped by <see cref="ContentStreamParser"/> with operator
+    /// metadata on, so they are operators of the same parse. Reading it off an
+    /// operator the parser did not stamp throws: an absent stamp is not "inside
+    /// no span", and a carrier scrubber that read it that way would skip the
+    /// carrier (#1830).
+    /// </summary>
+    internal IReadOnlyList<ContentOperator> EnclosingSpans
+    {
+        get => _enclosingSpans ?? throw new InvalidOperationException(
+            $"'{Name}' carries no marked-content stamp; only ContentStreamParser's operators do (#1830).");
+        set => _enclosingSpans = value;
+    }
+
+    private IReadOnlyList<ContentOperator>? _enclosingSpans;
+
+    /// <summary>
     /// For inline-image operators (<c>BI</c>), the raw binary image data
     /// that appeared between <c>ID</c> and <c>EI</c> in the source content
     /// stream. The single <see cref="Operands"/> entry holds the image

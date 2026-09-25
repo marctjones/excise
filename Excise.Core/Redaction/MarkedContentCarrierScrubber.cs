@@ -32,10 +32,11 @@ namespace Excise.Core.Text.Segmentation;
 /// nesting-aware. Content-matching stays as a second signal for a carrier that
 /// does restate a removed word without enclosing it.</para>
 ///
-/// <para>Runs on the FINAL operator list, after glyph/image removal and after
-/// Form XObject flattening — so inline carriers inlined from a flattened form are
-/// covered too. Mutates the inline property dictionaries in place; they are not
-/// shared objects (an inline <c>BDC</c> dict belongs to the one operator).</para>
+/// <para>Runs on the page re-parsed after Form XObject flattening and before
+/// glyph removal — so inline carriers inlined from a flattened form are covered
+/// too, and every operator carries the parser's span stamp. Mutates the inline
+/// property dictionaries in place; they are not shared objects (an inline
+/// <c>BDC</c> dict belongs to the one operator).</para>
 ///
 /// <para><b>The NAMED property-list form</b> (<c>/Span /P1 BDC</c> resolving
 /// through <c>/Resources /Properties</c>, #1599) IS covered, with the sharing
@@ -160,41 +161,21 @@ internal static class MarkedContentCarrierScrubber
 
     /// <summary>
     /// The set of carrier-bearing BDC operators (by reference) whose enclosed
-    /// glyphs intersect <paramref name="area"/>. Walks the marked-content nesting
-    /// so a carrier span with no MCID of its own is still caught when an enclosing
-    /// or nested glyph falls in the redaction region.
+    /// glyphs intersect <paramref name="area"/>. Every span enclosing such a
+    /// glyph counts, so a carrier span with no MCID of its own is still caught
+    /// when a nested glyph falls in the redaction region.
     /// </summary>
     private static HashSet<ContentOperator> CollectAffectedCarrierSpans(
-        IReadOnlyList<ContentOperator> ops, PdfRectangle area, PdfPage? page = null)
+        IReadOnlyList<ContentOperator> ops, PdfRectangle area, PdfPage page)
     {
         var affected = new HashSet<ContentOperator>();
-        var stack = new Stack<ContentOperator?>();   // the BDC op opening each span (null for BMC)
-
         foreach (var op in ops)
-        {
-            switch (op.Name)
-            {
-                case "BMC":
-                    stack.Push(null);
-                    break;
+            if (op.BoundingBox is { } box && box.IntersectsWith(area))
+                affected.UnionWith(op.EnclosingSpans);
 
-                case "BDC":
-                    stack.Push(HasTextCarrier(op, page) ? op : null);
-                    break;
-
-                case "EMC":
-                    if (stack.Count > 0) stack.Pop();
-                    break;
-
-                default:
-                    if (op.BoundingBox is not { } box || !box.IntersectsWith(area)) continue;
-                    // Every enclosing carrier span covers glyphs being removed here.
-                    foreach (var span in stack)
-                        if (span != null) affected.Add(span);
-                    break;
-            }
-        }
-
+        // Only a span that carries text is a carrier: one without would be
+        // reported as a shared carrier the scrub refused (#1599).
+        affected.RemoveWhere(span => !HasTextCarrier(span, page));
         return affected;
     }
 
@@ -232,10 +213,10 @@ internal static class MarkedContentCarrierScrubber
         return true;
     }
 
-    private static bool HasTextCarrier(ContentOperator bdc, PdfPage? page)
+    private static bool HasTextCarrier(ContentOperator bdc, PdfPage page)
     {
         var props = bdc.Operands.OfType<PdfDictionary>().FirstOrDefault();
-        if (props == null && page != null && NamedPropertyList(bdc) is { } name)
+        if (props == null && NamedPropertyList(bdc) is { } name)
         {
             // #1599: a named span carries the same text carriers as an inline
             // one, so enclosure tracking has to see it too — otherwise the span

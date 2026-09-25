@@ -121,6 +121,23 @@ public class MarkedContentSpanConsumerTests
         AssertOnlyRemoved(Save(doc), ContentCarriers, expected);
     }
 
+    [Fact]
+    public void CarrierScrubber_RefusesAnOperatorWithNoSpanStamp()
+    {
+        using var doc = PdfDocument.Open(Fixture());
+        var page = doc.GetPage(1);
+        var ops = page.GetContentStream().Operators.ToList();
+        var i = ops.FindIndex(o => o.TextContent == "NESTED");
+        // The shape of the flattener's renamed copy: geometry, but no stamp.
+        ops[i] = new ContentOperator(ops[i].Name, ops[i].Operands) { BoundingBox = ops[i].BoundingBox };
+
+        var scrub = () => MarkedContentCarrierScrubber.Scrub(ops, page, LeftHalfOf(ops, "NESTED"), out _);
+
+        scrub.Should().Throw<InvalidOperationException>(
+            "an operator with no stamp is not inside no span; reading it that way would leave "
+            + "OUTERCARRIER and INNERCARRIER in the file");
+    }
+
     // ---- StructureTreeRedactionScrubber ----
 
     [Theory]
