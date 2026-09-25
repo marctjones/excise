@@ -195,6 +195,7 @@ public static class PdfDocumentSanitizer
         Stage(RedactionCarriers.JavaScript, s => ScrubJavaScript(document, s), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1151
         Stage(RedactionCarriers.EmbeddedFiles, s => ScrubEmbeddedFiles(document, s), PdfDocumentDerivedStateScope.Attachments); // #1151
         Stage(RedactionCarriers.ActionUris, s => ScrubActionUris(document, s), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1168
+        Stage(RedactionCarriers.PageLabels, s => ScrubPageLabels(document, s), PdfDocumentDerivedStateScope.PageLabels); // #1853
 
         if (invalidation != PdfDocumentDerivedStateScope.None)
             document.InvalidateDerivedState(invalidation);
@@ -707,6 +708,29 @@ public static class PdfDocumentSanitizer
         }
 
         Walk(outlines.GetOptional("First"));
+        return changed;
+    }
+
+    /// <summary>
+    /// #1853 — a page-label prefix (§12.4.2 <c>/P</c>) is shown in a viewer's
+    /// page-number box. It carries its own separator ("Appendix " + "1"), so the
+    /// cut does not trim; a prefix left empty or blank is removed, and the page
+    /// keeps its numbering style.
+    /// </summary>
+    private static bool ScrubPageLabels(PdfDocument document, CarrierScrub scrub)
+    {
+        var changed = false;
+        foreach (var (_, value) in PdfNumberTree.Enumerate(document, document.Catalog.GetOptional("PageLabels")))
+        {
+            if (document.Resolve(value) is not PdfDictionary label
+                || !scrub.TryApply(ResolveStringOrNull(document, label, "P"), out var scrubbed, trim: false))
+                continue;
+            if (string.IsNullOrWhiteSpace(scrubbed))
+                label.Remove("P");
+            else
+                label["P"] = new PdfString(scrubbed);
+            changed = true;
+        }
         return changed;
     }
 

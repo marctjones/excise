@@ -1422,7 +1422,8 @@ namespace Excise.Core.Operations
         JavaScript = 128,
         EmbeddedFiles = 256,
         ActionUris = 512,
-        All = 1023,
+        PageLabels = 1024,
+        All = 2047,
     }
     public enum SplitDocumentMode
     {
@@ -2570,7 +2571,7 @@ namespace Excise.Core.Text.Segmentation
         public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true, bool closeWidth = false, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
                 "R",
                 "G",
-                "B"})] System.ValueTuple<double, double, double>? boxColor = default, Excise.Core.Operations.RedactionCarriers carriers = 1023, System.Action<int, int>? progress = null, Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy = null, bool wholeWord = false, bool overshootBox = false) { }
+                "B"})] System.ValueTuple<double, double, double>? boxColor = default, Excise.Core.Operations.RedactionCarriers carriers = 2047, System.Action<int, int>? progress = null, Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy = null, bool wholeWord = false, bool overshootBox = false) { }
     }
     public static class PdfPageRedactionExtensions
     {
@@ -2702,10 +2703,11 @@ namespace Excise.Core.Text.Segmentation
     public sealed class RedactionCarrierAudit : System.IEquatable<Excise.Core.Text.Segmentation.RedactionCarrierAudit>
     {
         public const int ScrubFloor = 3;
-        public RedactionCarrierAudit(int OutlineTitleCount, int AnnotationsWithTextCount, int UnexaminedXfaPacketCount, System.Collections.Generic.IReadOnlyList<string> TermsBelowScrubFloor) { }
+        public RedactionCarrierAudit(int OutlineTitleCount, int AnnotationsWithTextCount, int UnexaminedXfaPacketCount, int PageLabelPrefixCount, System.Collections.Generic.IReadOnlyList<string> TermsBelowScrubFloor) { }
         public int AnnotationsWithTextCount { get; init; }
         public bool HasUnexaminedCarriers { get; }
         public int OutlineTitleCount { get; init; }
+        public int PageLabelPrefixCount { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> TermsBelowScrubFloor { get; init; }
         public int UnexaminedXfaPacketCount { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> Describe() { }

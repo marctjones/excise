@@ -51,7 +51,10 @@ public enum RedactionCarriers
     /// <summary>Link/action <c>/URI</c> targets.</summary>
     ActionUris = 1 << 9,
 
+    /// <summary>Page-label prefixes (<c>/PageLabels</c> <c>/P</c>), shown in a viewer's page-number box.</summary>
+    PageLabels = 1 << 10,
+
     /// <summary>Every carrier — the default and the safe choice.</summary>
     All = Info | Xmp | Xfa | Outlines | Annotations | FormFields
-        | StructTree | JavaScript | EmbeddedFiles | ActionUris,
+        | StructTree | JavaScript | EmbeddedFiles | ActionUris | PageLabels,
 }

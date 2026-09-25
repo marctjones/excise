@@ -147,6 +147,18 @@ public static partial class CarrierTextRecovery
         }
     }
 
+    // ── Page labels (§12.4.2) ─────────────────────────────────────────────
+
+    private static void ScanPageLabels(PdfDocument doc, Collector c)
+    {
+        foreach (var (key, value) in PdfNumberTree.Enumerate(doc, doc.Catalog?.GetOptional("PageLabels")))
+        {
+            if (Deref(doc, value, out var objNum) is not PdfDictionary label) continue;
+            var firstPage = key is PdfInteger index && index.Value >= 0 && index.Value < doc.PageCount ? (int)index.Value + 1 : 0;
+            c.Text("page label /P", ReadText(doc, label, "P"), firstPage, objNum);
+        }
+    }
+
     // ── Hidden optional content (§8.11) ───────────────────────────────────
 
     /// <summary>

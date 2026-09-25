@@ -130,6 +130,7 @@ public sealed class CarrierScrubPolicy : IEquatable<CarrierScrubPolicy>
         RedactionCarriers.JavaScript,
         RedactionCarriers.EmbeddedFiles,
         RedactionCarriers.ActionUris,
+        RedactionCarriers.PageLabels,
     };
 
     private readonly CarrierScrubMode[] _modes;

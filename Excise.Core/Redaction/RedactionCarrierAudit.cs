@@ -38,12 +38,13 @@ public sealed record RedactionCarrierAudit(
     int OutlineTitleCount,
     int AnnotationsWithTextCount,
     int UnexaminedXfaPacketCount,
+    int PageLabelPrefixCount,
     IReadOnlyList<string> TermsBelowScrubFloor)
 {
     /// <summary>True when anything at all was left unexamined.</summary>
     public bool HasUnexaminedCarriers =>
         OutlineTitleCount > 0 || AnnotationsWithTextCount > 0 ||
-        UnexaminedXfaPacketCount > 0 || TermsBelowScrubFloor.Count > 0;
+        UnexaminedXfaPacketCount > 0 || PageLabelPrefixCount > 0 || TermsBelowScrubFloor.Count > 0;
 
     /// <summary>
     /// Shortest term <c>PdfDocumentSanitizer</c> will act on. Mirrored here
@@ -89,6 +90,7 @@ public sealed record RedactionCarrierAudit(
             CountOutlineTitles(document, termsToFind),
             CountAnnotationsWithText(document, termsToFind),
             CountUnexaminedXfaPackets(document, termsToFind),
+            CountPageLabelPrefixes(document, termsToFind),
             shortTerms);
     }
 
@@ -124,6 +126,13 @@ public sealed record RedactionCarrierAudit(
             lines.Add(
                 $"{UnexaminedXfaPacketCount} XFA form XML packet(s) were not examined — the " +
                 "packet was malformed, unsafe to parse, or no captured redaction text was available.");
+        }
+
+        if (PageLabelPrefixCount > 0)
+        {
+            lines.Add(
+                $"{PageLabelPrefixCount} page-label prefix(es) were not examined — a viewer shows them " +
+                "in its page-number box, and they carry no position.");
         }
 
         foreach (var term in TermsBelowScrubFloor)
@@ -196,6 +205,21 @@ public sealed record RedactionCarrierAudit(
             }
         }
         return n;
+    }
+
+    private static int CountPageLabelPrefixes(PdfDocument document, IReadOnlyList<string>? terms)
+    {
+        try
+        {
+            return PdfNumberTree.Enumerate(document, document.Catalog.GetOptional("PageLabels"))
+                .Count(pair => document.Resolve(pair.Value) is PdfDictionary label
+                               && document.Resolve(label.GetOptional("P") ?? PdfNull.Instance) is PdfString prefix
+                               && !string.IsNullOrWhiteSpace(prefix.Value) && Matches(prefix.Value, terms));
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return 1;
+        }
     }
 
     private static int CountUnexaminedXfaPackets(

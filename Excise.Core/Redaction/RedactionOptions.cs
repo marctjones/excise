@@ -410,7 +410,8 @@ public sealed record RedactionOptions
             | Operations.RedactionCarriers.Annotations
             | Operations.RedactionCarriers.FormFields
             | Operations.RedactionCarriers.StructTree
-            | Operations.RedactionCarriers.ActionUris,
+            | Operations.RedactionCarriers.ActionUris
+            | Operations.RedactionCarriers.PageLabels,
             Operations.CarrierScrubMode.RemoveWhole),
     };
 

@@ -669,6 +669,7 @@ public static class PdfDocumentRedactionExtensions
         ("/Outlines titles", Excise.Core.Operations.RedactionCarriers.Outlines),
         ("annotation /Contents", Excise.Core.Operations.RedactionCarriers.Annotations),
         ("link /A /URI", Excise.Core.Operations.RedactionCarriers.ActionUris),
+        ("/PageLabels /P", Excise.Core.Operations.RedactionCarriers.PageLabels),
     };
 
     /// <summary>
