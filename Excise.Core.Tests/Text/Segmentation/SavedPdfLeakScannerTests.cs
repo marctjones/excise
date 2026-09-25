@@ -364,13 +364,17 @@ public class SavedPdfLeakScannerTests
         "%PDF-1.7\n4 0 obj\n<< /Length " + content.Length + " >>\nstream\n" + content +
         "\nendstream\nendobj\n%%EOF\n");
 
-    private static byte[] BytesWithCompressedContent(string content)
+    private static byte[] Deflate(byte[] body)
     {
-        var body = Encoding.Latin1.GetBytes(content);
         using var compressed = new MemoryStream();
         using (var z = new ZLibStream(compressed, CompressionLevel.Optimal, leaveOpen: true))
             z.Write(body, 0, body.Length);
-        var deflated = compressed.ToArray();
+        return compressed.ToArray();
+    }
+
+    private static byte[] BytesWithCompressedContent(string content)
+    {
+        var deflated = Deflate(Encoding.Latin1.GetBytes(content));
 
         using var file = new MemoryStream();
         void Ascii(string s) { var b = Encoding.Latin1.GetBytes(s); file.Write(b, 0, b.Length); }
@@ -450,5 +454,139 @@ public class SavedPdfLeakScannerTests
 
         SavedPdfLeakScanner.FindTerm(saved, TitleTerm).Should().BeEmpty();
         SavedPdfLeakScanner.FindTerm(saved, LatinInUtf16).Should().BeEmpty();
+    }
+
+    // ── #1855: the word "stream" is not always the stream keyword ────────────
+    //
+    // Stream bodies were found by a byte search for "stream". The word in a
+    // string, comment or name before the real keyword opened a body there that
+    // ran to the real stream's endstream, so the real body was never inflated
+    // or tokenized and a term in it was invisible.
+
+    private const string Hidden = "SECRETNAME";
+    private const string ByteSearchFallback = "byte search";
+
+    /// <summary>
+    /// <paramref name="before"/>, then a content stream showing <see cref="Hidden"/>:
+    /// a literal string, Flate-compressed, or a hex string left uncompressed,
+    /// which only the decoded-string search of that stream's body can read.
+    /// </summary>
+    private static byte[] StreamAfter(string before, bool compressed, string keyword = "stream\n", int? length = null)
+    {
+        var body = Encoding.Latin1.GetBytes(compressed
+            ? $"BT /F1 12 Tf 20 700 Td (Louise {Hidden}) Tj ET\n"
+            : $"BT /F1 12 Tf 20 700 Td <{Convert.ToHexString(Encoding.Latin1.GetBytes("Louise " + Hidden))}> Tj ET\n");
+        if (compressed) body = Deflate(body);
+
+        using var file = new MemoryStream();
+        void Ascii(string s) { var b = Encoding.Latin1.GetBytes(s); file.Write(b, 0, b.Length); }
+        Ascii($"%PDF-1.7\n{before}\n2 0 obj\n<< /Length {length ?? body.Length}{(compressed ? " /Filter /FlateDecode" : "")} >>\n{keyword}");
+        file.Write(body, 0, body.Length);
+        Ascii("\nendstream\nendobj\n%%EOF\n");
+        return file.ToArray();
+    }
+
+    public static TheoryData<string, bool> TheWordStreamBeforeTheKeyword()
+    {
+        var data = new TheoryData<string, bool>();
+        foreach (var before in new[]
+                 {
+                     "1 0 obj\n<< /Title (Quarterly report) >>\nendobj",
+                     "1 0 obj\n<< /Title (Live stream notes) /Parent 3 0 R >>\nendobj",
+                     "1 0 obj\n<< /Producer (upstream writer) >>\nendobj",
+                     "1 0 obj\n<< /Type /Annot /Subtype /Text /Rect [0 0 9 9] /Contents (see the stream) >>\nendobj",
+                     "1 0 obj\n<< /Title (a (nested stream) b) >>\nendobj",
+                     @"1 0 obj << /Title (a \( stream \) b) >> endobj",
+                     @"1 0 obj << /Title (a \) stream) >> endobj",
+                     $"1 0 obj\n<< /Title {Utf16Hex("Live stream")} >>\nendobj",
+                     "% Live stream notes\n1 0 obj\n<< >>\nendobj",
+                     "1 0 obj\n<< /stream true >>\nendobj",
+                 })
+        {
+            data.Add(before, true);
+            data.Add(before, false);
+        }
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(TheWordStreamBeforeTheKeyword))]
+    public void TheWordStreamBeforeTheKeyword_DoesNotHideTheStream(string before, bool compressed)
+    {
+        var saved = StreamAfter(before, compressed);
+
+        var hits = SavedPdfLeakScanner.FindTerm(saved, Hidden);
+        hits.Should().Contain(h => h.StartsWith(compressed ? "inflated stream #0:" : "stream #0:"),
+            "the content stream shows the term; a string, comment or name holding the word " +
+            "\"stream\" must not move where its body starts");
+        hits.Should().NotContain(h => h.Contains(ByteSearchFallback),
+            "a well-formed file is read by the syntax walk, not by the fallback");
+
+        SavedPdfLeakScanner.StreamBodies(saved).Should().ContainSingle(
+            "one stream in the file is one body: a second one would be counted twice by the benchmark")
+            .Which.Should().StartWith("BT ", "the body starts after the keyword, not after the word in a string");
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().Contain("Louise " + Hidden);
+    }
+
+    [Theory]
+    [InlineData(5)]
+    [InlineData(99999)]
+    public void AStreamWhoseLengthLies_IsReadToItsEndstream(int length)
+    {
+        // /Length is the file describing itself; the scanner checks the file,
+        // so it reads to endstream whatever /Length claims.
+        var saved = StreamAfter("1 0 obj\n<< /Title (Live stream notes) >>\nendobj", compressed: true, length: length);
+
+        SavedPdfLeakScanner.FindTerm(saved, Hidden).Should().Contain(h => h.StartsWith("inflated stream #0:"));
+    }
+
+    [Theory]
+    [InlineData("stream")]
+    [InlineData("stream\r")]
+    public void ANonConformingStreamKeyword_IsStillTheKeyword(string keyword)
+    {
+        // §7.3.8.1 wants an end-of-line after "stream". Without one the keyword
+        // runs straight into the zlib header ('x'), or ends in a bare CR.
+        var saved = StreamAfter("1 0 obj\n<< /Title (Live stream notes) >>\nendobj", compressed: true, keyword: keyword);
+
+        SavedPdfLeakScanner.FindTerm(saved, Hidden).Should().Contain(h => h.StartsWith("inflated stream #0:"));
+    }
+
+    [Fact]
+    public void AStreamWhoseBodyHoldsTheWord_IsReadWhole()
+    {
+        var saved = BytesWithContent($"BT (Live stream) Tj <{Convert.ToHexString(Encoding.Latin1.GetBytes(Hidden))}> Tj ET");
+
+        SavedPdfLeakScanner.StreamBodies(saved).Should().ContainSingle()
+            .Which.Should().StartWith("BT (Live stream) Tj", "the word inside a body does not start another one");
+        SavedPdfLeakScanner.FindTerm(saved, Hidden).Should().Contain(h => h.StartsWith("stream #0:"));
+    }
+
+    [Fact]
+    public void AnUnbalancedParenthesis_FallsBackToTheByteSearch_AndSaysSo()
+    {
+        // The string never closes, so it swallows the stream keyword: the walk
+        // cannot read the rest of the file. The byte search can.
+        var saved = StreamAfter("1 0 obj\n<< /Title (unbalanced live stream notes >>\nendobj", compressed: true);
+
+        SavedPdfLeakScanner.FindTerm(saved, Hidden).Should().Contain(
+            h => h.StartsWith("inflated stream #0") && h.Contains(ByteSearchFallback),
+            "a stream the walk lost is found by the byte search, and the hit says the scanner fell back");
+        SavedPdfLeakScanner.StreamBodies(saved).Should().ContainSingle().Which.Should().StartWith("BT ");
+    }
+
+    [Fact]
+    public void AnEndstreamTheWalkNeverOpened_FallsBackToTheByteSearch_AndSaysSo()
+    {
+        // The unbalanced string swallows the keyword and closes at the stray
+        // ')' in the body, so the walk reaches endstream without a stream.
+        var hex = Convert.ToHexString(Encoding.Latin1.GetBytes(Hidden));
+        var saved = Encoding.Latin1.GetBytes(
+            "%PDF-1.7\n1 0 obj\n<< /Title (unbalanced >>\nendobj\n" +
+            $"2 0 obj\n<< /Length 30 >>\nstream\n) BT <{hex}> Tj ET\nendstream\nendobj\n%%EOF\n");
+
+        SavedPdfLeakScanner.FindTerm(saved, Hidden).Should().Contain(
+            h => h.StartsWith("stream #0") && h.Contains(ByteSearchFallback));
+        SavedPdfLeakScanner.StreamBodies(saved).Should().ContainSingle().Which.Should().StartWith(") BT ");
     }
 }
