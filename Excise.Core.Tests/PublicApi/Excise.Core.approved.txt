@@ -2379,19 +2379,11 @@ namespace Excise.Core.Text
     public class ToUnicodeCMapParser
     {
         public ToUnicodeCMapParser() { }
-        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.ToUnicodeCMapParser.CodespaceRange> CodespaceRanges { get; }
         public System.Collections.Generic.IReadOnlyDictionary<int, string> Mapping { get; }
         public int MaxCodeBytes { get; }
         public static System.Collections.Generic.Dictionary<int, string> Parse(byte[] cmapData) { }
         public static System.Collections.Generic.Dictionary<int, string> Parse(string cmapContent) { }
         public static Excise.Core.Text.ToUnicodeCMapParser ParseDetailed(byte[] cmapData) { }
-        public readonly struct CodespaceRange : System.IEquatable<Excise.Core.Text.ToUnicodeCMapParser.CodespaceRange>
-        {
-            public CodespaceRange(int Low, int High, int Bytes) { }
-            public int Bytes { get; init; }
-            public int High { get; init; }
-            public int Low { get; init; }
-        }
     }
     public static class UnicodeTextSafety
     {
