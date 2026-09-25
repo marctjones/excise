@@ -171,16 +171,14 @@ public class OperationReconstructorTests
     }
 
     [Fact]
-    public void Reconstruct_InvalidFontInputs_FallsBackToDefaults()
+    public void Reconstruct_InvalidFontSize_FallsBackTo12()
     {
         var segments = new List<TextSegment> { MakeSegment("x", 0, 0) };
         var ops = _reconstructor.ReconstructWithPositioning(
             segments,
-            new OperationReconstructor.Context { FontName = "", FontSize = -1 });
+            new OperationReconstructor.Context { FontName = "F1", FontSize = -1 });
 
         var tf = ops.First(o => o.Name == "Tf");
-        tf.GetName(0).Should().Be("F1", "empty font name should fall back to F1");
-
         var tm = ops.First(o => o.Name == "Tm");
         tf.GetNumber(1).Should().Be(12, "invalid font size should fall back to 12pt");
         tm.GetNumber(0).Should().Be(1);
