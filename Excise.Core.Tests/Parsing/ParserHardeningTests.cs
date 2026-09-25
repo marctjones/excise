@@ -280,14 +280,14 @@ public class ParserHardeningTests
     }
 
     [Fact]
-    public void PdfDocument_Open_MalformedIndirectEncryptObject_IgnoresBrokenEncryptForReadableContent()
+    public void PdfDocument_Open_MalformedIndirectEncryptObject_RefusesAndDisposesOwnedStream()
     {
-        var pdf = BuildPdfWithMalformedIndirectEncryptObject();
+        var stream = new MemoryStream(BuildPdfWithMalformedIndirectEncryptObject());
 
-        using var doc = PdfDocument.Open(pdf);
+        var open = () => PdfDocument.Open(stream, ownsStream: true);
 
-        doc.IsEncrypted.Should().BeTrue();
-        doc.PageCount.Should().Be(0);
+        open.Should().Throw<PdfEncryptionNotSupportedException>();
+        stream.CanRead.Should().BeFalse("the object store owns the stream once /Encrypt is resolved through it");
     }
 
     [Fact]

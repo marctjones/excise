@@ -28,7 +28,6 @@ internal sealed class PdfDocumentObjectStore : IDisposable
     // for indirect lengths, object streams, and JBIG2 globals. See #376.
     private readonly object _parseLock = new();
     private readonly StreamDecompressor _decompressor = new();
-    private readonly PdfStandardSecurityHandler? _securityHandler;
     private readonly Dictionary<int, ObjectStreamCacheEntry> _objectStreamCache = new();
     private readonly HashSet<int> _jbig2GlobalsResolutionsInFlight = new();
     private readonly HashSet<int> _lengthResolutionsInFlight = new();
@@ -36,13 +35,11 @@ internal sealed class PdfDocumentObjectStore : IDisposable
     internal PdfDocumentObjectStore(
         Stream stream,
         bool ownsStream,
-        Dictionary<int, XRefEntry> xref,
-        PdfStandardSecurityHandler? securityHandler)
+        Dictionary<int, XRefEntry> xref)
     {
         _stream = stream;
         _ownsStream = ownsStream;
         _xref = xref;
-        _securityHandler = securityHandler;
         _parser = new PdfParser(new PdfLexer(stream, ownsStream: false));
 
         // LibreOffice and other producers may write an indirect /Length.
@@ -50,9 +47,10 @@ internal sealed class PdfDocumentObjectStore : IDisposable
         _parser.IndirectObjectResolver = ResolveLengthReference;
     }
 
-    internal PdfStandardSecurityHandler? SecurityHandler => _securityHandler;
+    /// <summary>Set once by the open pipeline after it reads /Encrypt, whose strings are never encrypted (ISO 32000-2 §7.6.2).</summary>
+    internal PdfStandardSecurityHandler? SecurityHandler { get; set; }
 
-    internal bool IsDecrypting => _securityHandler != null;
+    internal bool IsDecrypting => SecurityHandler != null;
 
     internal int NextFreeObjectNumber => _xref.Count == 0 ? 1 : _xref.Keys.Max() + 1;
 
@@ -260,14 +258,14 @@ internal sealed class PdfDocumentObjectStore : IDisposable
                 }
 
                 obj = indirectObject.Value;
-                if (_securityHandler != null && !IsExemptFromEncryption(obj))
+                if (SecurityHandler != null && !IsExemptFromEncryption(obj))
                 {
                     var parsedObjectNumber = indirectObject.ObjectNumber;
                     var generation = indirectObject.Generation;
 
                     if (obj is PdfStream stream && !RemoveIdentityCryptFilter(stream))
                     {
-                        var decrypted = _securityHandler.DecryptStream(
+                        var decrypted = SecurityHandler.DecryptStream(
                             parsedObjectNumber,
                             generation,
                             stream.EncodedData);
@@ -639,7 +637,7 @@ internal sealed class PdfDocumentObjectStore : IDisposable
 
         var type = stream.GetNameOrNull("Type");
         return type == "XRef"
-            || type == "Metadata" && _securityHandler is { EncryptMetadata: false };
+            || type == "Metadata" && SecurityHandler is { EncryptMetadata: false };
     }
 
     private static bool RemoveIdentityCryptFilter(PdfStream stream)
@@ -694,7 +692,7 @@ internal sealed class PdfDocumentObjectStore : IDisposable
 
     private void DecryptStringsInPlace(PdfObject root, int objectNumber, int generation)
     {
-        if (_securityHandler == null)
+        if (SecurityHandler == null)
             return;
 
         var stack = new Stack<PdfObject>();
@@ -705,7 +703,7 @@ internal sealed class PdfDocumentObjectStore : IDisposable
             switch (node)
             {
                 case PdfString text:
-                    text.ReplaceBytes(_securityHandler.DecryptString(
+                    text.ReplaceBytes(SecurityHandler.DecryptString(
                         objectNumber,
                         generation,
                         text.Bytes));

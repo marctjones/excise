@@ -6,6 +6,7 @@ using Excise.Core.Parsing;
 using Excise.Core.Primitives;
 using Excise.Core.Security;
 using Excise.Core.Writing;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Security;
@@ -128,6 +129,30 @@ public class SecurityHandlerEdgeTests
             "the RC4 V1/R2 decrypt path (Algorithm 2 without the 50-round re-hash, Algorithm 6 R=2 " +
             "verification, per-object Algorithm 1 keys without the AES salt) must round-trip real ciphertext");
         doc.Title.Should().Be("Rc4Title", "string decryption must use the string's own object key");
+    }
+
+    /// <summary>
+    /// #1828: an /Encrypt excise cannot read must refuse to open. Opening with no
+    /// handler hands RC4 ciphertext to extraction and redaction, which then find
+    /// nothing and report success.
+    /// </summary>
+    [Theory]
+    [InlineData("/Encrypt 6 0 R", "/Encrypt 9 0 R")]
+    [InlineData("6 0 obj\n<< /Filter", "6 0 xxx\n<< /Filter")]
+    public void Open_UnreadableEncryptObject_RefusesInsteadOfReadingCiphertext(string intact, string broken)
+    {
+        var pdf = Encoding.Latin1.GetBytes(
+            Encoding.Latin1.GetString(BuildRc4EncryptedPdf("RC4SECRET", "T")).Replace(intact, broken));
+        SavedPdfLeakScanner.FindTerm(pdf, "RC4SECRET").Should().BeEmpty(
+            "the fixture's content stream is genuinely RC4 ciphertext");
+
+        var open = () => PdfDocument.Open(pdf);
+        open.Should().Throw<PdfEncryptionNotSupportedException>().WithMessage("*/Encrypt*");
+
+        using var inspected = PdfDocument.Open(pdf, allowEncrypted: true);
+        inspected.IsEncrypted.Should().BeTrue();
+        inspected.IsDecrypting.Should().BeFalse("the caller asked for ciphertext and must be able to tell");
+        inspected.GetPage(1).Text.Should().NotContain("RC4SECRET");
     }
 
     [Fact]

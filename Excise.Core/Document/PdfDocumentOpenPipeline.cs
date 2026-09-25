@@ -43,13 +43,10 @@ internal static class PdfDocumentOpenPipeline
         {
             var version = ReadVersion(stream);
             var (trailer, xref) = AssembleCrossReferences(stream);
-            var encryption = NegotiateEncryption(
-                stream, trailer, xref, allowEncrypted, userPassword);
-
-            objectStore = new PdfDocumentObjectStore(
-                stream, ownsStream, xref, encryption.Handler);
-            var result = CompleteResult(
-                objectStore, trailer, version, encryption.Permissions);
+            objectStore = new PdfDocumentObjectStore(stream, ownsStream, xref);
+            var permissions = NegotiateEncryption(
+                objectStore, trailer, allowEncrypted, userPassword);
+            var result = CompleteResult(objectStore, trailer, version, permissions);
             return new PdfDocument(result);
         }
         catch
@@ -223,36 +220,27 @@ internal static class PdfDocumentOpenPipeline
         return xref.TryGetValue(rootRef.ObjectNum, out var entry) && entry.InUse;
     }
 
-    private static EncryptionState NegotiateEncryption(
-        Stream stream,
+    private static PdfPermissions NegotiateEncryption(
+        PdfDocumentObjectStore objectStore,
         PdfDictionary trailer,
-        Dictionary<int, XRefEntry> xref,
         bool allowEncrypted,
         string? userPassword)
     {
-        PdfStandardSecurityHandler? handler = null;
         var permissions = PdfPermissions.AllAllowed;
         if (!trailer.ContainsKey("Encrypt"))
-            return new EncryptionState(handler, permissions);
+            return permissions;
 
         try
         {
             var encryptObj = trailer.GetOptional("Encrypt");
             if (encryptObj is PdfReference encryptRef)
-            {
-                try
-                {
-                    encryptObj = ReadIndirectObjectAt(
-                        stream, xref[encryptRef.ObjectNum].Offset);
-                }
-                catch (Exception ex) when (IsRecoverableMalformedEncryptObjectException(ex))
-                {
-                    encryptObj = null;
-                }
-            }
+                encryptObj = objectStore.GetObject(encryptRef);
 
-            if (encryptObj == null)
-                return new EncryptionState(null, permissions);
+            // A missing or unparseable object resolves to null. Opening without
+            // a handler would hand ciphertext to every reader (#1828).
+            if (encryptObj is PdfNull)
+                throw new PdfEncryptionNotSupportedException(
+                    "The /Encrypt dictionary is missing or unreadable, so this document cannot be decrypted.");
             if (encryptObj is not PdfDictionary encryptDict)
                 throw new PdfParseException("/Encrypt is not a dictionary");
 
@@ -274,20 +262,16 @@ internal static class PdfDocumentOpenPipeline
                     throw new PdfParseException("/ID array missing or empty");
                 }
 
-                handler = PdfStandardSecurityHandler.Build(
+                objectStore.SecurityHandler = PdfStandardSecurityHandler.Build(
                     encryptDict, firstId.Bytes, userPassword);
             }
         }
-        catch (PdfEncryptionNotSupportedException)
+        catch (PdfEncryptionNotSupportedException) when (allowEncrypted)
         {
-            if (!allowEncrypted)
-                throw;
-
-            // Inspection-only fallback: callers explicitly accept ciphertext.
-            handler = null;
+            // Inspection-only: callers explicitly accept ciphertext.
         }
 
-        return new EncryptionState(handler, permissions);
+        return permissions;
     }
 
     private static PdfDocumentOpenResult CompleteResult(
@@ -384,26 +368,6 @@ internal static class PdfDocumentOpenPipeline
     private static bool IsRecoverableIncrementalXRefException(Exception ex)
         => ex is PdfParseException or FormatException or OverflowException or KeyNotFoundException;
 
-    private static bool IsRecoverableMalformedEncryptObjectException(Exception ex)
-        => ex is PdfParseException { Message: var message }
-           && (message.Contains("Unexpected keyword", StringComparison.Ordinal)
-               || message.Contains("Expected object number", StringComparison.Ordinal)
-               || message.Contains("Expected generation number", StringComparison.Ordinal)
-               || message.Contains("Expected 'obj'", StringComparison.Ordinal)
-               || message.Contains("Unterminated dictionary", StringComparison.Ordinal));
-
-    /// <summary>
-    /// Resolve an indirect encryption dictionary before the document object
-    /// store exists. The ordinary <see cref="PdfParser"/> remains the reader.
-    /// </summary>
-    private static PdfObject ReadIndirectObjectAt(Stream stream, long offset)
-    {
-        var lexer = new PdfLexer(stream, ownsStream: false);
-        lexer.Seek(offset);
-        var parser = new PdfParser(lexer);
-        return parser.ParseIndirectObject().Value;
-    }
-
     private static string ReadVersion(Stream stream)
     {
         stream.Position = 0;
@@ -428,8 +392,4 @@ internal static class PdfDocumentOpenPipeline
            && version[1] == '.'
            && char.IsDigit(version[0])
            && char.IsDigit(version[2]);
-
-    private readonly record struct EncryptionState(
-        PdfStandardSecurityHandler? Handler,
-        PdfPermissions Permissions);
 }
