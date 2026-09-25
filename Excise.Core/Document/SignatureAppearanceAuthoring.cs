@@ -103,7 +103,7 @@ public static class SignatureAppearanceAuthoring
 
             var line = TruncateToWidth(rawLine, font, availableWidth);
             sb.Append($"{Num(pad - prevX)} {Num(baseline - prevY)} Td\n");
-            sb.Append('(').Append(EscapePdfTextString(line)).Append(") Tj\n");
+            sb.Append(font.EncodeString(line)).Append(" Tj\n");
             prevX = pad;
             prevY = baseline;
             baseline -= leading;
@@ -150,29 +150,6 @@ public static class SignatureAppearanceAuthoring
         }
 
         return kept.Length > 0 ? kept.Append(ellipsis).ToString() : text;
-    }
-
-    /// <summary>
-    /// Escape a line for a PDF literal string. Printable-ASCII MVP: anything
-    /// outside 0x20-0x7E draws as '?' (mirrors
-    /// <c>PdfAnnotationAuthoring.EscapePdfTextString</c>).
-    /// </summary>
-    private static string EscapePdfTextString(string value)
-    {
-        var sb = new StringBuilder(value.Length + 8);
-        foreach (var ch in value)
-        {
-            switch (ch)
-            {
-                case '\\': sb.Append("\\\\"); break;
-                case '(': sb.Append("\\("); break;
-                case ')': sb.Append("\\)"); break;
-                default:
-                    sb.Append(ch is < ' ' or > '~' ? '?' : ch);
-                    break;
-            }
-        }
-        return sb.ToString();
     }
 
     private static string Num(double value) => PdfNumberFormatter.Format(value);

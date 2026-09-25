@@ -472,6 +472,10 @@ public partial class PdfPage
             sharedFont = cachedFont;
         }
 
+        // A standard font is reused only under the same /Encoding: EncodeString writes WinAnsi bytes,
+        // which a same-named page font with another encoding would draw as different glyphs.
+        var wantedEncoding = font.IsStandard14 ? font.CreateFontDictionary().GetNameOrNull("Encoding") : null;
+
         // Check if this font is already registered by base font name
         foreach (var kvp in fontDict)
         {
@@ -486,7 +490,8 @@ public partial class PdfPage
             if (existingFont != null)
             {
                 var existingBaseFont = existingFont.GetNameOrNull("BaseFont");
-                if (existingBaseFont == font.BaseFont)
+                if (existingBaseFont == font.BaseFont
+                    && (!font.IsStandard14 || existingFont.GetNameOrNull("Encoding") == wantedEncoding))
                 {
                     return kvp.Key.Value; // Return existing name
                 }
