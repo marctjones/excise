@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "cd6311f77cc85571156bc3aa5d9b77c92f017d88",
+  "sourceRevision": "5c34779187e1bf55f676fb2fc8ee7adbad044019",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8119,
+    "retainedSymbols": 8139,
     "observedComponentDependencies": 79,
     "declaredDependencies": 74,
     "acceptedExceptions": 1,
@@ -192,7 +192,7 @@
     {
       "source": "cli",
       "target": "core-redaction",
-      "references": 266,
+      "references": 267,
       "typeDependencyCount": 59,
       "classification": "declared",
       "evidence": [
@@ -444,8 +444,8 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1473,
-      "typeDependencyCount": 224,
+      "references": 1482,
+      "typeDependencyCount": 225,
       "classification": "declared",
       "evidence": [
         {
@@ -580,8 +580,8 @@
     {
       "source": "core-redaction",
       "target": "core-content",
-      "references": 293,
-      "typeDependencyCount": 50,
+      "references": 312,
+      "typeDependencyCount": 54,
       "classification": "declared",
       "evidence": [
         {
@@ -594,14 +594,14 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1140,
-      "typeDependencyCount": 148,
+      "references": 1209,
+      "typeDependencyCount": 150,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.CarrierTextRecovery",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 114
+          "references": 120
         }
       ]
     },
@@ -636,14 +636,14 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 864,
-      "typeDependencyCount": 142,
+      "references": 963,
+      "typeDependencyCount": 149,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.CarrierTextRecovery",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 74
+          "references": 79
         }
       ]
     },
