@@ -157,7 +157,13 @@ public sealed class OcgMembershipExtractionTests
         // OCMD-hidden layer and the secret is gone from every carrier.
         using (var included = PdfDocument.Open(Fixture()))
         {
-            included.RedactText("SECRETA").VerifiedRemovals.Should().Be(1);
+            // The OCMD layer is the last thing on the page, so its span is removed as a hidden
+            // optional-content span before the text search runs; this used to read
+            // VerifiedRemovals == 1 only because the writer copied the removed tail back.
+            var report = included.RedactText("SECRETA");
+            report.Removals.Should().ContainSingle(r =>
+                r.Feature == "hidden optional-content span(s)" && r.Count == 1);
+            report.Survived.Should().Be(0);
             var saved = included.SaveToBytes();
             SavedPdfLeakScanner.FindTerm(saved, "SECRETA").Should().BeEmpty(
                 "security redaction must remove text hidden in OCMD-governed optional content");
