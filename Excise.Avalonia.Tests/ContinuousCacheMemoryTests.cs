@@ -72,7 +72,8 @@ public class ContinuousCacheMemoryTests
         // A page comfortably larger than a quantum + overscan in both dimensions,
         // so an interior full-quantum cell exists. Large-format D-size scan.
         const double widthPt = 2592, heightPt = 3456;
-        var contentBox = new Excise.Core.Document.PdfRectangle(0, 0, widthPt, heightPt);
+        using var doc = Excise.Core.Document.PdfDocument.CreateNew();
+        var page = doc.Pages.AddBlank(widthPt, heightPt);
         int q = PdfViewerControl.ContinuousTileQuantumDip;
 
         var rows = new List<(double Zoom, double Dpr, int WidthPx, int HeightPx, long Bytes)>();
@@ -99,7 +100,7 @@ public class ContinuousCacheMemoryTests
                     .OrderByDescending(c => c.WidthDip * c.HeightDip)
                     .First();
 
-                var request = PdfViewerControl.CellToRequest(cell, zoom, rotation: 0, contentBox);
+                var request = PdfViewerControl.CellToRequest(cell, zoom, page);
 
                 double scale = dpi / 72.0;
                 int pixelWidth = (int)Math.Ceiling(request.ClipRect.Width * scale);

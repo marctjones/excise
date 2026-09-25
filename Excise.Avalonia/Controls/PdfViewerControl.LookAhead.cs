@@ -428,9 +428,8 @@ public partial class PdfViewerControl
     private SinglePageRenderSpec ComputeSinglePageRenderSpec(Excise.Core.Document.PdfPage page)
     {
         var logicalDpi = EffectiveSinglePageRenderDpi(page);
-        var box = page.EffectiveCropBox;
-        var widthPt = page.Rotation is 90 or 270 ? box.Height : box.Width;
-        var heightPt = page.Rotation is 90 or 270 ? box.Width : box.Height;
+        var widthPt = page.VisualWidth;
+        var heightPt = page.VisualHeight;
         double scale = ZoomLevel * EffectiveRenderScaling;
         double maxScale = MaxSinglePageRenderScale(widthPt, heightPt, logicalDpi);
         var (renderDpi, bitmapDpi) = SinglePageRenderPlan(logicalDpi, scale, maxScale);

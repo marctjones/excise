@@ -2056,10 +2056,8 @@ public partial class PdfViewerControl : UserControl
 
     internal static int EffectiveSinglePageRenderDpi(PdfPage page)
     {
-        var box = page.EffectiveCropBox;
-        var rotation = page.Rotation;   // already canonical {0,90,180,270}
-        var widthPt = rotation is 90 or 270 ? box.Height : box.Width;
-        var heightPt = rotation is 90 or 270 ? box.Width : box.Height;
+        var widthPt = page.VisualWidth;
+        var heightPt = page.VisualHeight;
         if (widthPt <= 0 || heightPt <= 0)
             return DefaultRenderDpi;
 

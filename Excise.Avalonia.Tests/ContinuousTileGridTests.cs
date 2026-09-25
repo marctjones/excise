@@ -183,8 +183,8 @@ public class ContinuousTileGridTests
     [InlineData(270, 0.87)]
     public void CellToRequest_ClipRect_MatchesCellDipRect(int rotation, double zoom)
     {
-        const double widthPt = 612, heightPt = 792;
-        var contentBox = new Excise.Core.Document.PdfRectangle(0, 0, widthPt, heightPt);
+        using var doc = OpenOnePage(rotation, "[0 0 612 792]");
+        var page = doc.GetPage(1);
         double dipPerPoint = PdfViewerControl.PointsToDip * zoom;
 
         // An interior cell positioned so it stays inside the content box under
@@ -193,7 +193,7 @@ public class ContinuousTileGridTests
         // legitimate edge clamp, not a mismatch, would trip the assertion.
         var cell = new PdfViewerControl.GridCell(1, 1, Q, Q, Q, Q);
 
-        var request = PdfViewerControl.CellToRequest(cell, zoom, rotation, contentBox);
+        var request = PdfViewerControl.CellToRequest(cell, zoom, page);
 
         request.XDip.Should().Be((int)Math.Floor(cell.XDip));
         request.YDip.Should().Be((int)Math.Floor(cell.YDip));
@@ -243,7 +243,7 @@ public class ContinuousTileGridTests
             bandWidthPt * PdfViewerControl.PointsToDip,
             bandHeightPt * PdfViewerControl.PointsToDip);
 
-        var clip = PdfViewerControl.CellToRequest(cell, 1.0, page.Rotation, page.EffectiveCropBox).ClipRect;
+        var clip = PdfViewerControl.CellToRequest(cell, 1.0, page).ClipRect;
 
         ((double)clip.Left).Should().BeApproximately(left, 0.05);
         ((double)clip.Top).Should().BeApproximately(bottom, 0.05);     // SKRect Top is the content Y-min
@@ -267,7 +267,7 @@ public class ContinuousTileGridTests
         var page = doc.GetPage(1);
         var cell = new PdfViewerControl.GridCell(0, 0, 0, 0, 5000, 5000);
 
-        var clip = PdfViewerControl.CellToRequest(cell, 1.0, page.Rotation, page.EffectiveCropBox).ClipRect;
+        var clip = PdfViewerControl.CellToRequest(cell, 1.0, page).ClipRect;
 
         ((double)clip.Left).Should().BeApproximately(50, 0.05);
         ((double)clip.Top).Should().BeApproximately(100, 0.05);

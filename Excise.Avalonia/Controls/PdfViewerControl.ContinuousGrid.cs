@@ -131,20 +131,25 @@ public partial class PdfViewerControl
 
     /// <summary>
     /// Convert a grid cell to the renderer request: the page-local DIP rect the
-    /// tile occupies plus the CONTENT-space clip rect (rotation-mapped via
-    /// <see cref="ContinuousTileClip"/>, #846) that <see cref="SkiaRenderer"/>
-    /// clips to.
+    /// tile occupies plus the CONTENT-space clip rect (rotation-mapped through
+    /// <see cref="PdfCoordinateMapper"/>, #846, and clamped to the page's visible
+    /// box) that <see cref="SkiaRenderer"/> clips to.
     /// </summary>
-    internal static ContinuousTileRequest CellToRequest(
-        GridCell cell, double zoom, int rotation, PdfRectangle contentBox)
+    internal static ContinuousTileRequest CellToRequest(GridCell cell, double zoom, PdfPage page)
     {
         double dipPerPoint = PointsToDip * zoom;
-        var clip = ContinuousTileClip.VisualBandToContentClip(
-            rotation, contentBox,
+        var band = PdfCoordinateMapper.ToContentPoints(page, PdfPageRect.VisualPoints(
+            page.PageNumber,
             cell.XDip / dipPerPoint,
             cell.YDip / dipPerPoint,
             cell.WidthDip / dipPerPoint,
-            cell.HeightDip / dipPerPoint);
+            cell.HeightDip / dipPerPoint));
+        var visible = page.EffectiveCropBox;
+        var clip = new SKRect(
+            (float)Math.Max(band.X, visible.Left),
+            (float)Math.Max(band.Y, visible.Bottom),
+            (float)Math.Min(band.Right, visible.Right),
+            (float)Math.Min(band.Y2, visible.Top));
 
         return new ContinuousTileRequest(
             clip,

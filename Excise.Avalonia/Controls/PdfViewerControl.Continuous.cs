@@ -1386,15 +1386,13 @@ public partial class PdfViewerControl
             }
 
             page = doc.GetPage(pageNumber);
-            int rotation = page.Rotation;
-            var contentBox = page.EffectiveCropBox;
             // The band is mapped to a content-space clip by the same
             // (rotation-aware) helper a single cell uses — a batch of one is
             // byte-for-byte the render the per-cell path used to issue.
             var bandCell = new GridCell(
                 claimed[0].Cell.Col, claimed[0].Cell.Row,
                 bandXDip, bandYDip, bandRight - bandXDip, bandBottom - bandYDip);
-            clip = CellToRequest(bandCell, zoom, rotation, contentBox).ClipRect;
+            clip = CellToRequest(bandCell, zoom, page).ClipRect;
         }
         catch
         {
