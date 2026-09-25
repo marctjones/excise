@@ -333,14 +333,8 @@ internal static class AttachmentCarrierScrubber
         var names = ResolveDict(document, document.Catalog.GetOptional("Names"));
         if (ResolveDict(document, names?.GetOptional("EmbeddedFiles")) is not { } root) return;
 
-        var stack = new Stack<PdfDictionary>();
-        var seen = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
-        stack.Push(root);
-        while (stack.Count > 0)
+        foreach (var node in PdfNameTree.Nodes(document, root))
         {
-            var node = stack.Pop();
-            if (!seen.Add(node)) continue;
-
             if (document.Resolve(node.GetOptional("Names") ?? PdfNull.Instance) is PdfArray pairs)
             {
                 for (var i = pairs.Count - 2; i >= 0; i -= 2)
@@ -365,11 +359,6 @@ internal static class AttachmentCarrierScrubber
                         limits[i] = new PdfString(cut);
                 }
             }
-
-            if (document.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
-                foreach (var kid in kids)
-                    if (document.Resolve(kid) is PdfDictionary child)
-                        stack.Push(child);
         }
 
         RemoveKey(fileSpec, "EF", null);

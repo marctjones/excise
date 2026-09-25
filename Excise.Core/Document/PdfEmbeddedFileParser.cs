@@ -20,17 +20,15 @@ internal static class PdfEmbeddedFileParser
         var result = new List<PdfEmbeddedFile>();
 
         // Try modern PDF 2.0: /Catalog/Names/EmbeddedFiles name tree
-        var namesObj = doc.Catalog.GetOptional("Names");
-        var foundCatalogLevel = false;
-        if (namesObj != null && doc.Resolve(namesObj) is PdfDictionary namesDictRoot)
+        var names = doc.Resolve(doc.Catalog.GetOptional("Names") ?? PdfNull.Instance) as PdfDictionary;
+        foreach (var (key, value) in PdfNameTree.Enumerate(doc, names?.GetOptional("EmbeddedFiles")))
         {
-            var embeddedFilesObj = namesDictRoot.GetOptional("EmbeddedFiles");
-            if (embeddedFilesObj != null && doc.Resolve(embeddedFilesObj) is PdfDictionary embeddedFilesRoot)
-            {
-                WalkNameTree(doc, embeddedFilesRoot, result);
-                foundCatalogLevel = result.Count > 0;
-            }
+            if (key is PdfString name
+                && doc.Resolve(value) is PdfDictionary fsDict
+                && ParseFileSpecification(doc, fsDict, name.Value) is { } file)
+                result.Add(file);
         }
+        var foundCatalogLevel = result.Count > 0;
 
         // Fall back to legacy PDF 1.7: /Catalog/Names/AF array or /Catalog/AF array
         // These are less common but still valid per PDF 2.0 §7.7.4. Only tried when
@@ -39,10 +37,7 @@ internal static class PdfEmbeddedFileParser
         // walking it too would double-count them.
         if (!foundCatalogLevel)
         {
-            var afObj = namesObj != null && doc.Resolve(namesObj) is PdfDictionary namesDict
-                            ? namesDict.GetOptional("AF")
-                            : null;
-            afObj ??= doc.Catalog.GetOptional("AF");
+            var afObj = names?.GetOptional("AF") ?? doc.Catalog.GetOptional("AF");
 
             if (afObj != null && doc.Resolve(afObj) is PdfArray afArray)
             {
@@ -94,54 +89,6 @@ internal static class PdfEmbeddedFileParser
                 var file = ParseFileSpecification(doc, fsDict, name);
                 if (file != null)
                     result.Add(file with { PageNumber = pageIndex });
-            }
-        }
-    }
-
-    /// <summary>
-    /// Walk a PDF name tree recursively (§7.9.6).
-    /// Leaves have /Names array: [name value name value ...]
-    /// Branches have /Kids array pointing to subtrees.
-    /// </summary>
-    private static void WalkNameTree(
-        PdfDocument doc,
-        PdfDictionary node,
-        List<PdfEmbeddedFile> result)
-    {
-        // Leaf: /Names array
-        var namesObj = node.GetOptional("Names");
-        if (namesObj != null && doc.Resolve(namesObj) is PdfArray namesArr)
-        {
-            for (int i = 0; i + 1 < namesArr.Count; i += 2)
-            {
-                // First element is the key (file name as string)
-                var nameObj = namesArr[i];
-                string? name = nameObj switch
-                {
-                    PdfString s => s.Value,
-                    _ => null
-                };
-                if (name == null) continue;
-
-                // Second element is the value (file specification dictionary)
-                if (doc.Resolve(namesArr[i + 1]) is PdfDictionary fsDict)
-                {
-                    var file = ParseFileSpecification(doc, fsDict, name);
-                    if (file != null)
-                        result.Add(file);
-                }
-            }
-        }
-
-        // Branch: /Kids array of subtrees
-        var kidsObj = node.GetOptional("Kids");
-        if (kidsObj != null && doc.Resolve(kidsObj) is PdfArray kidsArr)
-        {
-            foreach (var kidObj in kidsArr)
-            {
-                var kidDict = doc.Resolve(kidObj) as PdfDictionary;
-                if (kidDict != null)
-                    WalkNameTree(doc, kidDict, result);
             }
         }
     }

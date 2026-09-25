@@ -194,8 +194,11 @@ public static partial class CarrierTextRecovery
 
         // Document-level JavaScript name tree (§12.6.4.17 / §7.7.4).
         if (doc.Resolve(catalog?.GetOptional("Names") ?? PdfNull.Instance) is PdfDictionary names)
-            WalkNameTree(doc, names.GetOptional("JavaScript"), c,
-                (key, value) => walker.Walk(value, "document JavaScript", 0, key, 0));
+            foreach (var (key, value) in PdfNameTree.Enumerate(doc, names.GetOptional("JavaScript")))
+            {
+                c.Token.ThrowIfCancellationRequested();
+                walker.Walk(value, "document JavaScript", 0, ObjectText(doc, key) ?? "", 0);
+            }
 
         walker.Walk(catalog?.GetOptional("OpenAction"), "/OpenAction", 0, null, 0);
         walker.WalkAdditional(catalog?.GetOptional("AA"), "document /AA", 0, null, 0);
@@ -308,29 +311,4 @@ public static partial class CarrierTextRecovery
             PdfDictionary d => ReadText(doc, d, "UF") ?? ReadText(doc, d, "F"),
             _ => null,
         };
-
-    /// <summary>
-    /// Walk a name tree (§7.9.6), calling <paramref name="visit"/> for each
-    /// (key, unresolved value) pair.
-    /// </summary>
-    private static void WalkNameTree(PdfDocument doc, PdfObject? root, Collector c, Action<string, PdfObject> visit)
-    {
-        if (root == null) return;
-        var stack = new Stack<PdfObject>();
-        stack.Push(root);
-        var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
-        var guard = 0;
-        while (stack.Count > 0 && guard++ < WalkGuard)
-        {
-            c.Token.ThrowIfCancellationRequested();
-            if (doc.Resolve(stack.Pop()) is not PdfDictionary node || !visited.Add(node)) continue;
-            if (doc.Resolve(node.GetOptional("Names") ?? PdfNull.Instance) is PdfArray pairs)
-            {
-                for (var i = 0; i + 1 < pairs.Count; i += 2)
-                    visit(ObjectText(doc, pairs[i]) ?? "", pairs[i + 1]);
-            }
-            if (doc.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
-                foreach (var k in kids) stack.Push(k);
-        }
-    }
 }
