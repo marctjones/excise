@@ -218,7 +218,7 @@ namespace Excise.App.Services
     public sealed class AnnotationWorkflowService
     {
         public AnnotationWorkflowService(Excise.App.Services.PdfDocumentService documentService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.AnnotationWorkflowService> logger) { }
-        public Excise.Core.Document.PdfAnnotation AddImageStamp(int pageNumber, Excise.Core.Document.PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight, string? contents = null, Excise.Core.Document.PdfDocument? viewerDocument = null) { }
+        public Excise.Core.Document.PdfAnnotation AddImageStamp(int pageNumber, Excise.Core.Document.PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight, string? contents = null, Excise.Core.Document.PdfDocument? viewerDocument = null, byte[]? alphaPixels = null) { }
     }
     public static class AppPaths
     {
