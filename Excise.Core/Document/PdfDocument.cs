@@ -384,58 +384,25 @@ public partial class PdfDocument : IDisposable
     /// append pages.
     /// </summary>
     /// <remarks>
-    /// Implementation goes through a <c>Open(bytes)</c> round-trip so the
-    /// new document is fully initialized with parser / xref / object
-    /// cache in the same shape as a document loaded from disk — mutation
-    /// paths then work identically on freshly-created and loaded docs.
+    /// The catalog and page-tree root are registered in the one object store
+    /// over an empty stream, exactly as every authoring mutation registers its
+    /// objects; the writer is the only thing that ever serializes them.
     /// </remarks>
     public static PdfDocument CreateNew(string version = "1.7")
     {
-        return Open(BuildMinimalEmptyPdfBytes(version));
-    }
-
-    /// <summary>
-    /// Raw-bytes writer that produces a minimal valid empty PDF: header,
-    /// catalog object, empty pages object, xref, trailer. Just enough
-    /// for the parser to accept and for AddBlank to latch onto.
-    /// </summary>
-    private static byte[] BuildMinimalEmptyPdfBytes(string version)
-    {
-        using var ms = new MemoryStream();
-        using var w = new StreamWriter(ms, new System.Text.UTF8Encoding(false), leaveOpen: true) { NewLine = "\n" };
-
-        w.WriteLine($"%PDF-{version}");
-        w.Flush();
-
-        var offsets = new long[3];
-
-        offsets[1] = ms.Position;
-        w.WriteLine("1 0 obj");
-        w.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
-        w.WriteLine("endobj");
-        w.Flush();
-
-        offsets[2] = ms.Position;
-        w.WriteLine("2 0 obj");
-        w.WriteLine("<< /Type /Pages /Kids [] /Count 0 >>");
-        w.WriteLine("endobj");
-        w.Flush();
-
-        long xrefPos = ms.Position;
-        w.WriteLine("xref");
-        w.WriteLine("0 3");
-        w.WriteLine("0000000000 65535 f ");
-        for (int i = 1; i <= 2; i++)
-            w.WriteLine($"{offsets[i]:D10} 00000 n ");
-        w.Flush();
-        w.WriteLine("trailer");
-        w.WriteLine("<< /Root 1 0 R /Size 3 >>");
-        w.WriteLine("startxref");
-        w.WriteLine(xrefPos.ToString());
-        w.WriteLine("%%EOF");
-        w.Flush();
-
-        return ms.ToArray();
+        var store = new PdfDocumentObjectStore(
+            new MemoryStream(), ownsStream: true, new Dictionary<int, XRefEntry>());
+        var catalog = new PdfDictionary { ["Type"] = new PdfName("Catalog") };
+        var catalogReference = store.AddIndirectObject(catalog);
+        catalog["Pages"] = store.AddIndirectObject(new PdfDictionary
+        {
+            ["Type"] = new PdfName("Pages"),
+            ["Kids"] = new PdfArray(),
+            ["Count"] = new PdfInteger(0),
+        });
+        var trailer = new PdfDictionary { ["Root"] = catalogReference };
+        return new PdfDocument(new PdfDocumentOpenResult(
+            store, trailer, catalog, Info: null, version, Excise.Core.Security.PdfPermissions.AllAllowed));
     }
 
     /// <summary>
