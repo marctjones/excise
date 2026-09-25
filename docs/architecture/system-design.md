@@ -50,7 +50,7 @@ delivery surfaces. Stable IDs are shown in parentheses.
 | Rendering engine | Renderer (`rendering`) | Interpret pages into raster output behind a stable API and one explicit render context. |
 | Optional integration | Native OCR (`ocr-native`), OCR coordination (`ocr`) | Isolate native lifetime and add searchable-PDF behavior only when requested. |
 | Presentation | Reusable Avalonia viewer (`avalonia`) | Own viewport layout, scheduling, input, selection, and accessibility presentation. |
-| Delivery | CLI (`cli`), desktop app (`app`), main-window orchestration (`app-main-window`) | Compose workflows, translate user intent, and own transient delivery state. |
+| Delivery | CLI (`cli`), native C-ABI library (`native-abi`), desktop app (`app`), main-window orchestration (`app-main-window`) | Compose workflows, translate user intent, and own transient delivery state. |
 | Assurance | Verification (`verification`), architecture tooling (`architecture-tooling`) | Judge properties independently and detect architecture drift. |
 
 `Excise.Core` is the domain boundary. `Excise.Rendering` may depend on it.

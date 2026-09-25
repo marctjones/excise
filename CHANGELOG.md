@@ -6,6 +6,14 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **`Excise.Native`: a NativeAOT shared library with a stable C ABI over `Excise.Core`.**
+  Open (bytes or path, with password), page count and size, text extraction, glyph-level
+  text and area redaction, save, encrypt and decrypt, from C, Python, Swift or Rust through
+  `include/excise.h`. Handle-based, no exception crosses the boundary (status codes plus
+  `excise_last_error`), redaction that is not clean returns an error instead of success.
+  Rendering is not included. Build with `scripts/build-native-lib.sh`; see `docs/native-api.md`.
+
 ## [3.11.0] - 2026-09-24
 
 ### Added

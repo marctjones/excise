@@ -319,6 +319,27 @@
       ]
     },
     {
+      "id": "native-abi",
+      "name": "Excise.Native project",
+      "kind": "project",
+      "layer": "delivery",
+      "pathRole": "container",
+      "sourceRoots": [
+        "Excise.Native"
+      ],
+      "targetState": "Expose Excise.Core to other languages through a NativeAOT shared library with a stable, versioned C ABI (include/excise.h): no exception crosses the boundary, every failure is a status code, and nothing here owns PDF or redaction logic.",
+      "workflows": [
+        "redact-save"
+      ],
+      "dependsOn": [
+        "core"
+      ],
+      "projectFile": "Excise.Native/Excise.Native.csproj",
+      "allowedProjectDependencies": [
+        "core"
+      ]
+    },
+    {
       "id": "avalonia",
       "name": "Excise.Avalonia project",
       "kind": "project",

@@ -222,6 +222,16 @@
       "issueIds": []
     },
     {
+      "component": "native-abi",
+      "implementationStatus": "implemented",
+      "evidence": [
+        "Excise.Native/tests/api_test.c",
+        "Excise.Native/tests/test_ctypes.py"
+      ],
+      "gaps": [],
+      "issueIds": []
+    },
+    {
       "component": "ocr",
       "implementationStatus": "implemented",
       "evidence": [
