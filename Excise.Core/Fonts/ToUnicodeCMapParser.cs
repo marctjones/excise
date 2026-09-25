@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using static Excise.Core.Text.CMapTokenizer;
 
 namespace Excise.Core.Text;
 
@@ -32,9 +33,6 @@ public class ToUnicodeCMapParser
     private readonly List<CodespaceRange> _codespaces = new();
     private int _maxCodeBytes = 1;
 
-    /// <summary>One entry from a /codespacerange/ block.</summary>
-    public readonly record struct CodespaceRange(int Low, int High, int Bytes);
-
     /// <summary>Parse a CMap byte stream. Returns code → Unicode string.</summary>
     public static Dictionary<int, string> Parse(byte[] cmapData)
     {
@@ -63,7 +61,7 @@ public class ToUnicodeCMapParser
     public IReadOnlyDictionary<int, string> Mapping => _mapping;
 
     /// <summary>Declared codespace ranges (informs how many bytes per source code).</summary>
-    public IReadOnlyList<CodespaceRange> CodespaceRanges => _codespaces;
+    internal IReadOnlyList<CodespaceRange> CodespaceRanges => _codespaces;
 
     /// <summary>Maximum source-code length declared by codespacerange (1, 2, 3, or 4).</summary>
     public int MaxCodeBytes => _maxCodeBytes;
@@ -231,129 +229,6 @@ public class ToUnicodeCMapParser
             i++;
         return i + 1;
     }
-
-    // ── Tokenizer ─────────────────────────────────────────────────────────────
-
-    private enum TokenType { Keyword, Number, HexString, Name, ArrayStart, ArrayEnd }
-
-    private readonly record struct Token(TokenType Type, string Text);
-
-    private static List<Token> Tokenize(string s)
-    {
-        var tokens = new List<Token>();
-        int i = 0;
-        while (i < s.Length)
-        {
-            char c = s[i];
-
-            // Whitespace + line endings
-            if (c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f') { i++; continue; }
-
-            // Comment to end of line
-            if (c == '%') { while (i < s.Length && s[i] != '\n' && s[i] != '\r') i++; continue; }
-
-            // Hex string <...>
-            if (c == '<')
-            {
-                int start = ++i;
-                var sb = new StringBuilder();
-                while (i < s.Length && s[i] != '>')
-                {
-                    char ch = s[i];
-                    if (IsHex(ch)) sb.Append(ch);
-                    i++;
-                }
-                if (i < s.Length) i++; // skip '>'
-                tokens.Add(new Token(TokenType.HexString, sb.ToString()));
-                continue;
-            }
-
-            // Array delimiters
-            if (c == '[') { tokens.Add(new Token(TokenType.ArrayStart, "[")); i++; continue; }
-            if (c == ']') { tokens.Add(new Token(TokenType.ArrayEnd,   "]")); i++; continue; }
-
-            // /Name
-            if (c == '/')
-            {
-                int start = ++i;
-                while (i < s.Length && !IsDelim(s[i])) i++;
-                tokens.Add(new Token(TokenType.Name, s.Substring(start, i - start)));
-                continue;
-            }
-
-            // Numbers (may be negative or decimal — used by usefont, codespacerange counts)
-            if ((c >= '0' && c <= '9') || c == '-' || c == '+')
-            {
-                int start = i++;
-                while (i < s.Length && !IsDelim(s[i])) i++;
-                tokens.Add(new Token(TokenType.Number, s.Substring(start, i - start)));
-                continue;
-            }
-
-            // String literal (rare in CMaps but valid PDF)
-            if (c == '(')
-            {
-                int depth = 1; i++;
-                var sb = new StringBuilder();
-                while (i < s.Length && depth > 0)
-                {
-                    if (s[i] == '\\' && i + 1 < s.Length) { sb.Append(s[i]); sb.Append(s[i + 1]); i += 2; continue; }
-                    if (s[i] == '(') depth++;
-                    else if (s[i] == ')') { depth--; if (depth == 0) break; }
-                    sb.Append(s[i]);
-                    i++;
-                }
-                if (i < s.Length) i++;
-                continue; // CMap doesn't use string literals semantically
-            }
-
-            // Otherwise a keyword (begin*, end*, def, dict, etc.)
-            {
-                int start = i;
-                while (i < s.Length && !IsDelim(s[i])) i++;
-                if (i > start)
-                    tokens.Add(new Token(TokenType.Keyword, s.Substring(start, i - start)));
-                else
-                    i++; // never advance zero
-            }
-        }
-        return tokens;
-    }
-
-    private static bool IsHex(char c) =>
-        (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
-
-    private static bool IsDelim(char c) =>
-        c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' ||
-        c == '<' || c == '>' || c == '[' || c == ']' || c == '/' || c == '(' || c == ')' || c == '%';
-
-    private static int HexToInt(string hex)
-    {
-        if (hex.Length == 0) return 0;
-        if ((hex.Length & 1) != 0) hex = "0" + hex; // odd-length → left-pad
-
-        // Codes are at most 4 bytes (8 hex digits) per the CMap spec — a
-        // malformed longer string must not keep shifting bytes out: keep the
-        // leading 4 bytes only. The raw 32-bit bit pattern is preserved
-        // (4-byte codes can wrap negative as ints), matching how decoded
-        // source codes are assembled elsewhere. #515
-        int digits = Math.Min(hex.Length, 8);
-        int v = 0;
-        for (int i = 0; i < digits; i++)
-        {
-            v = (v << 4) | HexDigit(hex[i]);
-        }
-        return v;
-    }
-
-    private static int HexDigit(char c) =>
-        c switch
-        {
-            >= '0' and <= '9' => c - '0',
-            >= 'A' and <= 'F' => c - 'A' + 10,
-            >= 'a' and <= 'f' => c - 'a' + 10,
-            _ => 0
-        };
 
     private static string HexToUnicodeString(string hex)
     {
