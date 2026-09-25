@@ -72,7 +72,16 @@ public class GlyphRemover
     /// mechanism depends on ambient configuration is a tool whose output you
     /// cannot reason about from the file alone.</para>
     /// </summary>
-    internal static bool BlankInPlace { get; set; }
+    internal static bool BlankInPlace
+    {
+        get => _blankInPlace.Value;
+        set => _blankInPlace.Value = value;
+    }
+
+    // Per async context, not process-wide: the #1044 spike tests switch this on, and a process-wide
+    // flag leaked into every redaction test that happened to run in parallel with them (t1 chunk 21).
+    // AsyncLocal still reaches the worker tasks a redaction spawns.
+    private static readonly AsyncLocal<bool> _blankInPlace = new();
 
     /// <summary>
     /// #1091 A/B TESTING ONLY — force the old restructuring path by skipping the
