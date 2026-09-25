@@ -451,11 +451,9 @@ public class LinuxPrintPermissionGatingTests : IDisposable
 
         var redactionService = new Excise.App.Services.RedactionService(
             NullLogger<Excise.App.Services.RedactionService>.Instance, NullLoggerFactory.Instance);
-        var extraction = new Excise.App.Services.PdfTextExtractionService(
-            NullLogger<Excise.App.Services.PdfTextExtractionService>.Instance);
         var workflow = new DocumentPrintWorkflowService(
             new Excise.App.Services.RedactionWorkflowService(
-                redactionService, extraction, NullLogger<Excise.App.Services.RedactionWorkflowService>.Instance),
+                redactionService, NullLogger<Excise.App.Services.RedactionWorkflowService>.Instance),
             printer,
             NullLogger<DocumentPrintWorkflowService>.Instance,
             () => Path.Combine(_dir, "print-copies"));

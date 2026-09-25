@@ -7,6 +7,13 @@ semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- **An area redaction's preview text now names what the redaction removes, and the bookmark and comment
+  scrub uses that text.** The app assembled the preview with its own rules: a glyph counted only when half
+  of it lay inside the box (the engine removes any glyph the box touches), right-to-left text read
+  backwards, and letter-spaced words came out as single letters. The preview is the term list removed from
+  bookmark titles, comments, form fields and the structure tree, so the real term could survive in a
+  bookmark. The preview now comes from the viewer's selection engine under the engine's overlap rule
+  (checked with qpdf, mutool and the saved-file scanner) (#1834).
 - **A page merged, split or inserted from a nested page tree keeps its inherited size, rotation and fonts.**
   When `/MediaBox`, `/Rotate`, `/CropBox` or `/Resources` sat on a `/Pages` node above the page (ISO 32000-2
   §7.7.3.4), the copy landed as 612x792, unrotated and without its fonts. The page copy now takes those

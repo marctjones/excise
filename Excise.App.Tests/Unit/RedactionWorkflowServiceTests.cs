@@ -3,6 +3,8 @@ using Excise.App.Models;
 using Excise.App.Services;
 using Excise.Core.Document;
 using Excise.Core.Editing;
+using Excise.Core.Text;
+using Excise.Rendering.Differential;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -51,6 +53,151 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
         result.PageArea.Should().Be(pageTwo);
         result.PreviewText.Should().Contain("Secret on Page 2");
         result.PreviewText.Should().NotContain("Page 1");
+    }
+
+    /// <summary>
+    /// #1834: the preview is the carrier-scrub term list, so it must be the
+    /// text the viewer's selection engine reads for the same area, under the
+    /// overlap rule the engine removes by. The area clips under half of the
+    /// rightmost glyph; the Arabic line is painted in visual order; the Latin
+    /// line is letter-spaced (4 pt Tc at 24 pt). Each term also sits in an
+    /// outline title and an off-box comment, which only the term scrub reaches.
+    /// </summary>
+    [Theory]
+    [InlineData("سلام", 700)]
+    [InlineData("KESTREL", 600)]
+    public void CaptureMark_PreviewIsTheViewerSelection_AndItsTermLeavesEveryCarrier(string term, int baseline)
+    {
+        var sourcePath = Path.Combine(_tempDir, "carriers.pdf");
+        File.WriteAllBytes(sourcePath, RtlAndLetterSpacedFixture());
+
+        PdfRectangle area;
+        string viewerText;
+        using (var source = PdfDocument.Open(sourcePath))
+        {
+            var letters = source.GetPage(1).Letters;
+            var line = letters
+                .Where(l => l.GlyphRectangle.Bottom < baseline + 12 && l.GlyphRectangle.Top > baseline)
+                .OrderBy(l => l.GlyphRectangle.Left)
+                .ToList();
+            line.Should().HaveCount(term.Length, "sanity: the line holds the term and nothing else");
+            var last = line[^1].GlyphRectangle;
+            area = new PdfRectangle(
+                line[0].GlyphRectangle.Left - 1,
+                line.Min(l => l.GlyphRectangle.Bottom) - 1,
+                last.Left + 0.3 * (last.Right - last.Left),
+                line.Max(l => l.GlyphRectangle.Top) + 1);
+
+            var reading = TextSelectionEngine.SortReadingOrder(letters);
+            var midY = (area.Bottom + area.Top) / 2;
+            viewerText = TextSelectionEngine.BuildSelection(
+                reading,
+                letters,
+                TextSelectionEngine.HitTest(letters, area.Left, midY)!,
+                TextSelectionEngine.HitTest(letters, area.Right, midY)!,
+                TextSelectionEngine.EstimateColumnGap(reading)).Text;
+
+        }
+        viewerText.Should().Be(term, "sanity: a drag across the area selects the whole term");
+        var before = RemoteCarriers(sourcePath);
+        before.Comment.Should().Contain(term, "input-side control: qpdf reads the term in the comment");
+        before.Titles.Should().Contain(term, "input-side control: the outline title carries the term");
+
+        var pageArea = PdfPageRect.FromContentPoints(1, area);
+        var mark = CreateWorkflow().CaptureMark(new RedactionMarkRequest(sourcePath, pageArea));
+
+        mark.PreviewText.Should().Be(viewerText,
+            "the preview must read the area the way the viewer's selection engine reads it");
+
+        var outputPath = Path.Combine(_tempDir, "carriers-redacted.pdf");
+        using (var document = PdfDocument.Open(sourcePath))
+        {
+            CreateWorkflow().CreateRedactedCopy(new RedactedCopyRequest(
+                new RedactionApplicationRequest(
+                    document,
+                    new[] { new RedactionAreaTransaction(1, pageArea, mark.PreviewText) },
+                    Array.Empty<PdfTypewriterTextOperation>()),
+                outputPath,
+                EncryptionOptions: null));
+        }
+
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), term).Should().BeEmpty(
+            "no raw or inflated carrier keeps the term");
+        var pageText = MutoolTextExtractor.ExtractPage(outputPath, 1);
+        pageText.Should().NotBeNull("mutool is the independent reader of the redacted page");
+        pageText!.Should().NotContainAny(term.Select(c => c.ToString()),
+            "no glyph of the term survives on the page; letters, not the word, because mutool's RTL order differs by platform");
+        var after = RemoteCarriers(outputPath);
+        after.Comment.Should().NotContain(term, "the comment is scrubbed with the preview text")
+            .And.Contain("and", "the scrub is surgical, so the term's absence is the preview's doing");
+        after.Titles.Should().NotContain(term, "the outline title is scrubbed with the preview text")
+            .And.Contain("chapter").And.Contain("briefing");
+    }
+
+    /// <summary>
+    /// The comment as qpdf decodes it, and the outline titles. The scanner
+    /// cannot see these: excise writes a UTF-16BE text string as hex or with
+    /// octal escapes, and FindTerm matches raw bytes (#1846).
+    /// </summary>
+    private static (string Comment, string Titles) RemoteCarriers(string path)
+    {
+        var annotations = QpdfReferenceTool.ListAnnotations(path);
+        annotations.Should().NotBeNull("qpdf is the independent reader of the comment");
+        using var document = PdfDocument.Open(path);
+        return (
+            annotations!.Single(a => a.Subtype == "Text").Contents ?? string.Empty,
+            string.Join(" | ", PdfOutlineParser.Parse(document).Select(o => o.Title)));
+    }
+
+    /// <summary>
+    /// One page: سلام through a /ToUnicode font, painted left to right in
+    /// visual order (codes DCBA), and KESTREL with 4 pt letter spacing. The
+    /// outline and a comment away from both lines carry both terms.
+    /// </summary>
+    private static byte[] RtlAndLetterSpacedFixture()
+    {
+        const string content =
+            "BT /F1 24 Tf 100 700 Td (DCBA) Tj ET\n" +
+            "BT /F2 24 Tf 4 Tc 100 600 Td (KESTREL) Tj ET";
+        const string cmap =
+            "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n" +
+            "/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n" +
+            "/CMapName /Adobe-Identity-UCS def\n/CMapType 2 def\n" +
+            "1 begincodespacerange\n<00> <FF>\nendcodespacerange\n" +
+            "4 beginbfchar\n<41> <0633>\n<42> <0644>\n<43> <0627>\n<44> <0645>\nendbfchar\n" +
+            "endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend";
+        static string Utf16(string s) =>
+            "<FEFF" + Convert.ToHexString(System.Text.Encoding.BigEndianUnicode.GetBytes(s)) + ">";
+
+        var objects = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R /Outlines 7 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 612 792] >>",
+            "<< /Type /Page /Parent 2 0 R /Contents 4 0 R /Annots [10 0 R] " +
+                "/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>",
+            $"<< /Length {content.Length} >>\nstream\n{content}\nendstream",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /ToUnicode 11 0 R >>",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+            "<< /Type /Outlines /First 8 0 R /Last 9 0 R /Count 2 >>",
+            $"<< /Title {Utf16("سلام chapter")} /Parent 7 0 R /Next 9 0 R >>",
+            "<< /Title (KESTREL briefing) /Parent 7 0 R /Prev 8 0 R >>",
+            $"<< /Type /Annot /Subtype /Text /Rect [100 100 120 120] /Contents {Utf16("KESTREL and سلام")} >>",
+            $"<< /Length {cmap.Length} >>\nstream\n{cmap}\nendstream",
+        };
+
+        var sb = new System.Text.StringBuilder("%PDF-1.7\n");
+        var offsets = new List<int>();
+        for (var i = 0; i < objects.Length; i++)
+        {
+            offsets.Add(sb.Length);
+            sb.Append(i + 1).Append(" 0 obj\n").Append(objects[i]).Append("\nendobj\n");
+        }
+        var xref = sb.Length;
+        sb.Append("xref\n0 ").Append(objects.Length + 1).Append("\n0000000000 65535 f \n");
+        foreach (var offset in offsets) sb.Append(offset.ToString("D10")).Append(" 00000 n \n");
+        sb.Append("trailer\n<< /Size ").Append(objects.Length + 1)
+          .Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF");
+        return System.Text.Encoding.Latin1.GetBytes(sb.ToString());
     }
 
     [Fact]
@@ -155,7 +302,6 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
         var loggerFactory = NullLoggerFactory.Instance;
         return new RedactionWorkflowService(
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
-            new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             NullLogger<RedactionWorkflowService>.Instance);
     }
 }

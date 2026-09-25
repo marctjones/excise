@@ -2,6 +2,7 @@ using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text;
+using Excise.Core.Text.Segmentation;
 using Xunit;
 
 namespace Excise.Core.Tests.Text;
@@ -127,4 +128,34 @@ public class TextSelectionEngineTests
         var text = TextSelectionEngine.JoinText(ordered);
         text.Should().Be("hello world\nnext");
     }
+
+    /// <summary>
+    /// #1834: an area reads like a drag across it (logical order for a line
+    /// painted right to left), and takes its letters by the removal strategy:
+    /// the area overlaps 1 pt of the leftmost glyph and stops short of "x".
+    /// </summary>
+    [Fact]
+    public void SelectInRectangle_ReadsLikeADragAcrossTheArea_ByTheRemovalStrategy()
+    {
+        var letters = new[]
+        {
+            L("س", 40, 100, 8, 12), L("ل", 30, 100, 8, 12),
+            L("ا", 20, 100, 8, 12), L("م", 10, 100, 8, 12),
+            L("x", 60, 100, 8, 12),
+        };
+        var area = new PdfRectangle(17, 95, 50, 115);
+        var reading = TextSelectionEngine.SortReadingOrder(letters);
+        var drag = TextSelectionEngine.ToLogicalOrder(
+            TextSelectionEngine.ColumnAwareRange(
+                reading, reading[0], reading[3], TextSelectionEngine.EstimateColumnGap(reading)),
+            letters);
+
+        Text(TextSelectionEngine.SelectInRectangle(letters, area, GlyphRemovalStrategy.AnyOverlap))
+            .Should().Be(Text(drag)).And.Be("سلام");
+        Text(TextSelectionEngine.SelectInRectangle(letters, area, GlyphRemovalStrategy.FullyContained))
+            .Should().Be("سلا");
+    }
+
+    private static string Text(System.Collections.Generic.IEnumerable<Letter> letters) =>
+        string.Concat(letters.Select(l => l.Value));
 }
