@@ -5,6 +5,7 @@ using Excise.Core.Document;
 using Excise.Core.Operations;
 using Excise.Core.Primitives;
 using Xunit;
+using PdfDateTests = Excise.Core.Tests.Primitives.PdfDateTests;
 
 namespace Excise.Core.Tests.Document;
 
@@ -463,14 +464,26 @@ public class PdfEmbeddedFileTests
         files[0].CreationDate!.Value.Offset.Should().Be(TimeSpan.Zero);
     }
 
-    [Fact]
-    public void GetEmbeddedFiles_DateTooShort_ReturnsNull()
+    [Theory]
+    [MemberData(nameof(PdfDateTests.Cases), MemberType = typeof(PdfDateTests))]
+    public void GetEmbeddedFiles_Date_ReadsEveryFormAllowedBySection794(string raw, string expectedIso)
     {
-        // Date string shorter than YYYYMMDDHHMMSS should return null
+        var pdf = BuildPdfWithEmbeddedFileAndDates("document.txt", "content", raw, raw);
+
+        using var doc = PdfDocument.Open(pdf);
+
+        var file = doc.GetEmbeddedFiles().Single();
+        PdfDateTests.AssertSame(file.CreationDate, expectedIso);
+        PdfDateTests.AssertSame(file.ModDate, expectedIso);
+    }
+
+    [Fact]
+    public void GetEmbeddedFiles_DateNotADate_ReturnsNull()
+    {
         var pdf = BuildPdfWithEmbeddedFileAndDates(
             "document.txt",
             "content",
-            "D:202401",  // Too short
+            "InvalidDateString",
             "D:20240120140000");
 
         using var doc = PdfDocument.Open(pdf);

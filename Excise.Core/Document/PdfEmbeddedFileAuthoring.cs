@@ -28,7 +28,7 @@ public static class PdfEmbeddedFileAuthoring
             fileDict.SetName("Subtype", mimeType);
         fileDict.SetInt("Length", data.Length);
 
-        var now = PdfDate(DateTimeOffset.UtcNow);
+        var now = PdfDate.Format(DateTimeOffset.UtcNow);
         var paramsDict = new PdfDictionary();
         paramsDict.SetInt("Size", data.Length);
         paramsDict.SetString("CreationDate", now);
@@ -116,6 +116,4 @@ public static class PdfEmbeddedFileAuthoring
         names.Insert(insertAt, new PdfString(name));
         names.Insert(insertAt + 1, fileSpecRef);
     }
-
-    private static string PdfDate(DateTimeOffset date) => $"D:{date.UtcDateTime:yyyyMMddHHmmss}+00'00'";
 }

@@ -74,6 +74,18 @@ public class XfaLayoutTests
     }
 
     [Fact]
+    public void LaidOutPage_IsStampedWithAPdfDateThatReadsBackAsNow()
+    {
+        using var document = Open(XfaTestForms.BuildPdf(XfaTestForms.PositionedTemplate()));
+
+        document.ApplyXfaLayout(cancellationToken: TestContext.Current.CancellationToken)
+            .Status.Should().Be(XfaLayoutStatus.LaidOut);
+
+        PdfDate.Parse(document.Pages[0].Dictionary.GetStringOrNull("LastModified"))
+            .Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
+    }
+
+    [Fact]
     public void SavedLayout_IsNotLaidOutAgainOnReopen()
     {
         byte[] saved;

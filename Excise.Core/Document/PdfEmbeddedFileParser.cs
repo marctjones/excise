@@ -130,8 +130,8 @@ internal static class PdfEmbeddedFileParser
                 // Extract creation/mod dates from /Params
                 if (stream.GetOptional("Params") is { } paramsObj && doc.Resolve(paramsObj) is PdfDictionary paramsDict)
                 {
-                    creationDate = ParseDate(paramsDict.GetStringOrNull("CreationDate"));
-                    modDate = ParseDate(paramsDict.GetStringOrNull("ModDate"));
+                    creationDate = PdfDate.Parse(paramsDict.GetStringOrNull("CreationDate"));
+                    modDate = PdfDate.Parse(paramsDict.GetStringOrNull("ModDate"));
                 }
             }
         }
@@ -145,58 +145,5 @@ internal static class PdfEmbeddedFileParser
             creationDate: creationDate,
             modDate: modDate,
             rawDictionary: fsDict);
-    }
-
-    /// <summary>
-    /// Parse a PDF date string (D:YYYYMMDDHHmmSSOHH'mm' format) into a DateTimeOffset.
-    /// Returns null if the string is null or cannot be parsed.
-    /// </summary>
-    private static DateTimeOffset? ParseDate(string? dateStr)
-    {
-        if (dateStr == null || dateStr.Length < 4)
-            return null;
-
-        // Remove leading 'D:' if present
-        if (dateStr.StartsWith("D:"))
-            dateStr = dateStr.Substring(2);
-
-        // Try to parse YYYYMMDDHHMMSS format
-        if (dateStr.Length < 14)
-            return null;
-
-        try
-        {
-            int year = int.Parse(dateStr.Substring(0, 4));
-            int month = int.Parse(dateStr.Substring(4, 2));
-            int day = int.Parse(dateStr.Substring(6, 2));
-            int hour = int.Parse(dateStr.Substring(8, 2));
-            int minute = int.Parse(dateStr.Substring(10, 2));
-            int second = int.Parse(dateStr.Substring(12, 2));
-
-            // Parse timezone if present (±HH'mm' format after position 14)
-            TimeSpan offset = TimeSpan.Zero;
-            if (dateStr.Length > 14)
-            {
-                char offsetSign = dateStr[14];
-                if (offsetSign == '+' || offsetSign == '-')
-                {
-                    if (dateStr.Length >= 21) // ±HH'mm'
-                    {
-                        int offsetHour = int.Parse(dateStr.Substring(15, 2));
-                        int offsetMinute = int.Parse(dateStr.Substring(18, 2));
-                        offset = new TimeSpan(offsetHour, offsetMinute, 0);
-                        if (offsetSign == '-')
-                            offset = offset.Negate();
-                    }
-                }
-            }
-
-            var dt = new DateTime(year, month, day, hour, minute, second);
-            return new DateTimeOffset(dt, offset);
-        }
-        catch (Exception __ex) when (__ex is not OutOfMemoryException)
-        {
-            return null;
-        }
     }
 }

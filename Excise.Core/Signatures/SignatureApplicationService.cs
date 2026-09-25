@@ -309,7 +309,7 @@ public class SignatureApplicationService
             signature.SetString("ContactInfo", options.ContactInfo);
         }
 
-        signature.SetString("M", FormatPdfDate(signingTime));
+        signature.SetString("M", PdfDate.Format(signingTime));
         return signature;
     }
 
@@ -356,16 +356,6 @@ public class SignatureApplicationService
         {
             acroForm.SetInt("SigFlags", 3);
         }
-    }
-
-    /// <summary>PDF date string (spec §7.9.4), e.g. <c>D:20260725093000+00'00'</c>.</summary>
-    private static string FormatPdfDate(DateTimeOffset time)
-    {
-        var offset = time.Offset;
-        var sign = offset < TimeSpan.Zero ? '-' : '+';
-        var magnitude = offset.Duration();
-        return string.Create(CultureInfo.InvariantCulture,
-            $"D:{time:yyyyMMddHHmmss}{sign}{magnitude.Hours:D2}'{magnitude.Minutes:D2}'");
     }
 
     // ── two-pass byte patching ──────────────────────────────────────────────
