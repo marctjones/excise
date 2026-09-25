@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -133,9 +134,9 @@ internal static class SavedPdfLeakScanner
     public static IReadOnlyList<string> StreamBodies(byte[] saved)
     {
         var bodies = new List<string>();
-        foreach (var (start, end) in StreamSpans(saved))
+        foreach (var span in StreamSpans(saved))
         {
-            var raw = saved[start..end];
+            var raw = saved[span.Start..span.End];
             var decoded = TryInflate(raw) ?? raw;
             // Decoding a >1GB body to a string overflows Latin1 GetString. A
             // stream that large is a ballooned-output pathology, not real text
@@ -148,28 +149,12 @@ internal static class SavedPdfLeakScanner
     }
 
     /// <summary>
-    /// The byte range of every stream body: from after the <c>stream</c>
-    /// keyword's end-of-line to the next <c>endstream</c>.
+    /// Every stream body in the file: from after the <c>stream</c> keyword's
+    /// end-of-line to the next <c>endstream</c>, never by <c>/Length</c>, which
+    /// is the file describing itself.
     /// </summary>
-    private static IEnumerable<(int Start, int End)> StreamSpans(byte[] saved)
-    {
-        var i = 0;
-        while (true)
-        {
-            var start = IndexOf(saved, "stream", i);
-            if (start < 0) yield break;
-
-            var body = start + "stream".Length;
-            if (body < saved.Length && saved[body] == (byte)'\r') body++;
-            if (body < saved.Length && saved[body] == (byte)'\n') body++;
-
-            var end = IndexOf(saved, "endstream", body);
-            if (end < 0) yield break;
-
-            yield return (body, end);
-            i = end + "endstream".Length;
-        }
-    }
+    private static IEnumerable<Syntax> StreamSpans(byte[] saved) =>
+        Walk(saved, 0, saved.Length).Where(s => s.String == null);
 
     /// <param name="ScanBytes">False for a stored stream body: the raw-file
     /// byte search has already covered its bytes.</param>
@@ -180,12 +165,13 @@ internal static class SavedPdfLeakScanner
     {
         yield return new Region("raw file", saved, 0, saved.Length, ScanBytes: true);
         var streamIndex = 0;
-        foreach (var (start, end) in StreamSpans(saved))
+        foreach (var span in StreamSpans(saved))
         {
-            var inflated = TryInflate(saved[start..end]);
+            var where = $"stream #{streamIndex}" + (span.ByteSearch ? " (byte search: the syntax walk lost sync)" : "");
+            var inflated = TryInflate(saved[span.Start..span.End]);
             yield return inflated != null
-                ? new Region($"inflated stream #{streamIndex}", inflated, 0, inflated.Length, ScanBytes: true)
-                : new Region($"stream #{streamIndex}", saved, start, end, ScanBytes: false);
+                ? new Region($"inflated {where}", inflated, 0, inflated.Length, ScanBytes: true)
+                : new Region(where, saved, span.Start, span.End, ScanBytes: false);
             streamIndex++;
         }
     }
@@ -193,8 +179,16 @@ internal static class SavedPdfLeakScanner
     /// <summary>A string longer than this is binary data a stray delimiter opened, not text.</summary>
     private const int MaxStringBytes = 1 << 20;
 
+    /// <summary>The value of every literal and hex string (§7.3.4) in <paramref name="data"/>[<paramref name="from"/>..<paramref name="to"/>).</summary>
+    private static IEnumerable<byte[]> StringObjects(byte[] data, int from, int to) =>
+        Walk(data, from, to).Where(s => s.String != null).Select(s => s.String!);
+
+    /// <summary>A string object's value, or, when <see cref="String"/> is null, a stream body's byte range.</summary>
+    /// <param name="ByteSearch">The body was found by <see cref="ByteSearchSpans"/>, not by the walk.</param>
+    private readonly record struct Syntax(byte[]? String, int Start, int End, bool ByteSearch = false);
+
     /// <summary>
-    /// The value of every literal and hex string (§7.3.4) in
+    /// Every string (§7.3.4) and stream body (§7.3.8) in
     /// <paramref name="data"/>[<paramref name="from"/>..<paramref name="to"/>).
     /// Self-contained on purpose: a scanner built on excise's own lexer would
     /// share every blind spot it exists to catch.
@@ -203,10 +197,18 @@ internal static class SavedPdfLeakScanner
     /// syntax, and a stray <c>(</c> in it would open a literal that swallows
     /// every real string up to some later <c>)</c>. Each body is tokenized as
     /// its own region instead, so such a desync stays inside that body.</para>
+    ///
+    /// <para>Only a token is the <c>stream</c> keyword: the word in a string,
+    /// comment or name before it would start the body there and hide the real
+    /// one (#1855). Where the walk loses sync, at a literal that never closes or
+    /// an <c>endstream</c> no keyword opened, the bodies after the last one it
+    /// found come from the byte search instead.</para>
     /// </summary>
-    private static IEnumerable<byte[]> StringObjects(byte[] data, int from, int to)
+    private static IEnumerable<Syntax> Walk(byte[] data, int from, int to)
     {
         var i = from;
+        var found = from; // every body before this was found
+        var lost = false;
         while (i < to)
         {
             var c = data[i];
@@ -216,9 +218,14 @@ internal static class SavedPdfLeakScanner
             }
             else if (c == '(')
             {
-                var (value, next) = LiteralString(data, i + 1, to);
+                var (value, next, closed) = LiteralString(data, i + 1, to);
                 i = next;
-                yield return value;
+                yield return new Syntax(value, 0, 0);
+                if (!closed && !lost)
+                {
+                    lost = true;
+                    foreach (var span in ByteSearchSpans(data, found, to)) yield return span;
+                }
             }
             else if (c == '<' && i + 1 < to && data[i + 1] == '<')
             {
@@ -228,7 +235,7 @@ internal static class SavedPdfLeakScanner
             {
                 var (value, next) = HexString(data, i + 1, to);
                 i = next;
-                if (value != null) yield return value;
+                if (value != null) yield return new Syntax(value, 0, 0);
             }
             else if (c == '/')
             {
@@ -240,10 +247,19 @@ internal static class SavedPdfLeakScanner
             {
                 var start = i;
                 while (i < to && IsRegularCharacter(data[i])) i++;
-                if (data.AsSpan(start, i - start).SequenceEqual("stream"u8))
+                // A writer that leaves out the end-of-line runs the keyword into its data.
+                if (data.AsSpan(start, i - start).StartsWith("stream"u8))
                 {
-                    var end = data.AsSpan(i, to - i).IndexOf("endstream"u8);
-                    i = end < 0 ? to : i + end + "endstream".Length;
+                    var body = BodyStart(data, start + "stream".Length, to);
+                    var end = data.AsSpan(body, to - body).IndexOf("endstream"u8);
+                    if (end < 0) { i = to; continue; }
+                    i = found = body + end + "endstream".Length;
+                    if (!lost) yield return new Syntax(null, body, body + end);
+                }
+                else if (!lost && data.AsSpan(start, i - start).SequenceEqual("endstream"u8))
+                {
+                    foreach (var span in ByteSearchSpans(data, found, i)) yield return span;
+                    found = i;
                 }
             }
             else
@@ -253,8 +269,37 @@ internal static class SavedPdfLeakScanner
         }
     }
 
-    /// <summary>§7.3.4.2, from just after the opening parenthesis.</summary>
-    private static (byte[] Value, int Next) LiteralString(byte[] data, int i, int to)
+    /// <summary>
+    /// The byte search the walk falls back on: each <c>endstream</c> in
+    /// <paramref name="data"/>[<paramref name="from"/>..<paramref name="to"/>)
+    /// ends a body that starts after the NEAREST <c>stream</c> before it, since
+    /// a string ahead of the keyword can hold the word. A body that holds the
+    /// word itself loses its head here; only the walk reads that whole.
+    /// </summary>
+    private static IEnumerable<Syntax> ByteSearchSpans(byte[] data, int from, int to)
+    {
+        while (true)
+        {
+            var end = data.AsSpan(from, to - from).IndexOf("endstream"u8);
+            if (end < 0) yield break;
+            end += from;
+            var keyword = data.AsSpan(from, end - from).LastIndexOf("stream"u8);
+            if (keyword >= 0)
+                yield return new Syntax(null, BodyStart(data, from + keyword + "stream".Length, end), end, ByteSearch: true);
+            from = end + "endstream".Length;
+        }
+    }
+
+    /// <summary>After the keyword's end-of-line: CR LF, LF, or a bare CR.</summary>
+    private static int BodyStart(byte[] data, int body, int to)
+    {
+        if (body < to && data[body] == '\r') body++;
+        if (body < to && data[body] == '\n') body++;
+        return body;
+    }
+
+    /// <summary>§7.3.4.2, from just after the opening parenthesis; <c>Closed</c> is false when the string ran out first.</summary>
+    private static (byte[] Value, int Next, bool Closed) LiteralString(byte[] data, int i, int to)
     {
         var value = new List<byte>();
         var depth = 1;
@@ -299,11 +344,11 @@ internal static class SavedPdfLeakScanner
             else
             {
                 if (c == '(') depth++;
-                else if (c == ')' && --depth == 0) break;
+                else if (c == ')' && --depth == 0) return (value.ToArray(), i, true);
                 value.Add(c);
             }
         }
-        return (value.ToArray(), i);
+        return (value.ToArray(), i, false);
     }
 
     /// <summary>
