@@ -1155,46 +1155,13 @@ public partial class PdfDocument : IDisposable
     private Dictionary<string, PdfAction> BuildDocumentJavaScriptActions()
     {
         var result = new Dictionary<string, PdfAction>();
-
-        var namesObj = Catalog.GetOptional("Names");
-        if (namesObj == null || Resolve(namesObj) is not PdfDictionary namesDict)
-            return result;
-
-        var jsObj = namesDict.GetOptional("JavaScript");
-        if (jsObj == null || Resolve(jsObj) is not PdfDictionary jsRoot)
-            return result;
-
-        WalkJavaScriptNameTree(jsRoot, result);
+        var names = Resolve(Catalog.GetOptional("Names") ?? PdfNull.Instance) as PdfDictionary;
+        foreach (var (key, value) in PdfNameTree.Enumerate(this, names?.GetOptional("JavaScript")))
+        {
+            if (key is PdfString name && PdfActionParser.Parse(this, value) is { } action)
+                result[name.Value] = action;
+        }
         return result;
-    }
-
-    /// <summary>
-    /// Walk a PDF name tree (§7.9.6) of JavaScript actions. Leaves have a /Names
-    /// array of [name action name action ...] pairs; branches have /Kids subtrees.
-    /// </summary>
-    private void WalkJavaScriptNameTree(PdfDictionary node, Dictionary<string, PdfAction> result)
-    {
-        var namesArrObj = node.GetOptional("Names");
-        if (namesArrObj != null && Resolve(namesArrObj) is PdfArray namesArr)
-        {
-            for (int i = 0; i + 1 < namesArr.Count; i += 2)
-            {
-                if (namesArr[i] is not PdfString nameStr) continue;
-                var action = PdfActionParser.Parse(this, namesArr[i + 1]);
-                if (action != null)
-                    result[nameStr.Value] = action;
-            }
-        }
-
-        var kidsObj = node.GetOptional("Kids");
-        if (kidsObj != null && Resolve(kidsObj) is PdfArray kidsArr)
-        {
-            foreach (var kidObj in kidsArr)
-            {
-                if (Resolve(kidObj) is PdfDictionary kidDict)
-                    WalkJavaScriptNameTree(kidDict, result);
-            }
-        }
     }
 
     /// <inheritdoc />

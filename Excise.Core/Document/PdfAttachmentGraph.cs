@@ -87,11 +87,11 @@ internal static class PdfAttachmentGraph
         }
 
         var names = ResolveDict(document, document.Catalog.GetOptional("Names"));
-        if (ResolveDict(document, names?.GetOptional("EmbeddedFiles")) is { } tree)
-            WalkNameTree(document, tree, (key, value) =>
-            {
-                if (document.Resolve(value) is PdfDictionary fs) AddSpec(fs, key, "document");
-            }, new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance));
+        foreach (var (key, value) in PdfNameTree.Enumerate(document, names?.GetOptional("EmbeddedFiles")))
+        {
+            if (document.Resolve(value) is PdfDictionary fs)
+                AddSpec(fs, (document.Resolve(key) as PdfString)?.Value, "document");
+        }
         AddSpecArray(names?.GetOptional("AF"), "document (associated file)");
         AddSpecArray(document.Catalog.GetOptional("AF"), "document (associated file)");
 
@@ -290,23 +290,6 @@ internal static class PdfAttachmentGraph
         if (dictionary.GetOptional(key) is not { } value) return;
         dictionary.Remove(key);
         undo?.Add(() => dictionary.Set(key, value));
-    }
-
-    private static void WalkNameTree(
-        PdfDocument document, PdfDictionary node, Action<string?, PdfObject> visit, HashSet<PdfDictionary> seen)
-    {
-        if (!seen.Add(node)) return;
-        if (document.Resolve(node.GetOptional("Names") ?? PdfNull.Instance) is PdfArray pairs)
-        {
-            for (var i = 0; i + 1 < pairs.Count; i += 2)
-                visit((document.Resolve(pairs[i]) as PdfString)?.Value, pairs[i + 1]);
-        }
-        if (document.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
-        {
-            foreach (var kid in kids)
-                if (document.Resolve(kid) is PdfDictionary child)
-                    WalkNameTree(document, child, visit, seen);
-        }
     }
 
     /// <summary>File specifications with <c>/EF</c> reachable from an annotation without leaving it.</summary>

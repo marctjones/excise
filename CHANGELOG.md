@@ -6,6 +6,12 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+- **A `/Kids` cycle in a name or number tree no longer kills the process.** A malformed `/EmbeddedFiles`,
+  `/Dests`, `/JavaScript` or `/PageLabels` tree whose `/Kids` pointed back at itself was a stack overflow
+  (uncatchable in .NET) in four readers and in the attachment scrub. One guarded walk now serves all
+  eight readers and scrubbers of these trees (#1833).
+
 ## [3.12.0] - 2026-09-25
 
 ### Added

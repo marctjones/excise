@@ -264,7 +264,7 @@ public class PdfPageLabelTests
 
     /// <summary>
     /// Number tree with /Kids array spanning multiple subtrees.
-    /// Covers WalkNumberTree recursion: /Kids branch (lines ~62-70).
+    /// Covers the number tree /Kids branch.
     /// </summary>
     [Fact]
     public void GetPageLabel_NumberTreeWithKidsSubtrees_WalksAllSubtrees()
@@ -375,7 +375,7 @@ public class PdfPageLabelTests
 
     /// <summary>
     /// Build a 4-page PDF with /PageLabels number tree using /Kids subtrees.
-    /// Tests the WalkNumberTree recursion branch (lines ~62-70).
+    /// Tests the number tree /Kids branch.
     /// Subtree 1 (obj 6): pages 0-1 with lowercase roman.
     /// Subtree 2 (obj 7): pages 2-3 with decimal.
     /// </summary>

@@ -613,29 +613,28 @@ public static class PdfDocumentSanitizer
     }
 
     // Remove (name, filespec) pairs whose resolved filespec is in `remove` from a
-    // /Names/EmbeddedFiles name-tree node, recursing through /Kids.
-    private static bool FilterEmbeddedFileTree(PdfDocument document, PdfDictionary node, HashSet<PdfDictionary> remove)
+    // /Names/EmbeddedFiles name tree.
+    private static bool FilterEmbeddedFileTree(PdfDocument document, PdfDictionary root, HashSet<PdfDictionary> remove)
     {
         var changed = false;
-        if (document.Resolve(node.GetOptional("Names") ?? PdfNull.Instance) is PdfArray pairs)
+        foreach (var node in PdfNameTree.Nodes(document, root))
         {
+            if (document.Resolve(node.GetOptional("Names") ?? PdfNull.Instance) is not PdfArray pairs) continue;
             var kept = new PdfArray();
+            var dropped = false;
             for (var i = 0; i + 1 < pairs.Count; i += 2)
             {
                 if (document.Resolve(pairs[i + 1]) is PdfDictionary fs && remove.Contains(fs))
                 {
-                    changed = true;   // drop this (name, filespec) pair
+                    dropped = true;   // drop this (name, filespec) pair
                     continue;
                 }
                 kept.Add(pairs[i]);
                 kept.Add(pairs[i + 1]);
             }
-            if (changed) node.Set("Names", kept);
+            if (dropped) node.Set("Names", kept);
+            changed |= dropped;
         }
-        if (document.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
-            foreach (var k in kids)
-                if (document.Resolve(k) is PdfDictionary kd)
-                    changed |= FilterEmbeddedFileTree(document, kd, remove);
         return changed;
     }
 

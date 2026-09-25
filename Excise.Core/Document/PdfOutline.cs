@@ -211,64 +211,28 @@ public static class PdfOutlineParser
         var map = new Dictionary<string, PdfObject>();
 
         // /Catalog/Dests — older form, dictionary of name → destination.
-        var destsObj = doc.Catalog.GetOptional("Dests");
-        if (destsObj != null && doc.Resolve(destsObj) is PdfDictionary destsDict)
+        if (doc.Resolve(doc.Catalog.GetOptional("Dests") ?? PdfNull.Instance) is PdfDictionary destsDict)
         {
             foreach (var kvp in destsDict)
-            {
-                var v = doc.Resolve(kvp.Value);
-                // Each entry can be a destination array directly, or a dict with /D.
-                if (v is PdfDictionary d)
-                {
-                    var dArr = d.GetOptional("D");
-                    if (dArr != null) v = doc.Resolve(dArr);
-                }
-                map[kvp.Key.Value] = v;
-            }
+                map[kvp.Key.Value] = Destination(doc, kvp.Value);
         }
 
         // /Catalog/Names/Dests — PDF 1.2+ name tree.
-        var namesObj = doc.Catalog.GetOptional("Names");
-        if (namesObj != null && doc.Resolve(namesObj) is PdfDictionary namesDict)
+        var names = doc.Resolve(doc.Catalog.GetOptional("Names") ?? PdfNull.Instance) as PdfDictionary;
+        foreach (var (key, value) in PdfNameTree.Enumerate(doc, names?.GetOptional("Dests")))
         {
-            var dests = namesDict.GetOptional("Dests");
-            if (dests != null && doc.Resolve(dests) is PdfDictionary destsRoot)
-            {
-                WalkNameTree(doc, destsRoot, map);
-            }
+            if (key is PdfString name)
+                map[name.Value] = Destination(doc, value);
         }
 
         return map.Count > 0 ? map : null;
     }
 
-    /// <summary>Walk a PDF name tree (§7.9.6). Tree leaves have /Names; branches have /Kids.</summary>
-    private static void WalkNameTree(PdfDocument doc, PdfDictionary node, Dictionary<string, PdfObject> map)
+    /// <summary>A named destination is a destination array directly, or a dictionary whose /D holds it.</summary>
+    private static PdfObject Destination(PdfDocument doc, PdfObject value)
     {
-        var names = node.GetOptional("Names");
-        if (names != null && doc.Resolve(names) is PdfArray namesArr)
-        {
-            for (int i = 0; i + 1 < namesArr.Count; i += 2)
-            {
-                if (namesArr[i] is PdfString key)
-                {
-                    var v = doc.Resolve(namesArr[i + 1]);
-                    if (v is PdfDictionary d)
-                    {
-                        var dArr = d.GetOptional("D");
-                        if (dArr != null) v = doc.Resolve(dArr);
-                    }
-                    map[key.Value] = v;
-                }
-            }
-        }
-        var kids = node.GetOptional("Kids");
-        if (kids != null && doc.Resolve(kids) is PdfArray kidsArr)
-        {
-            foreach (var kidObj in kidsArr)
-            {
-                if (doc.Resolve(kidObj) is PdfDictionary kidDict)
-                    WalkNameTree(doc, kidDict, map);
-            }
-        }
+        var v = doc.Resolve(value);
+        if (v is PdfDictionary d && d.GetOptional("D") is { } dArr) v = doc.Resolve(dArr);
+        return v;
     }
 }
