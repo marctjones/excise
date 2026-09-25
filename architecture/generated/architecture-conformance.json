@@ -2,18 +2,18 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "33fea7bb6b3a84dbf0d30ac9d0962459197ea68d",
+  "sourceRevision": "a9cf96225816f2de2a087a1258924ae6dcef3758",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8172,
-    "observedComponentDependencies": 78,
+    "retainedSymbols": 8130,
+    "observedComponentDependencies": 79,
     "declaredDependencies": 74,
     "acceptedExceptions": 1,
-    "undeclaredDependencies": 3,
+    "undeclaredDependencies": 4,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
     "unownedShippingSymbols": 0,
@@ -38,8 +38,8 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 754,
-      "typeDependencyCount": 76,
+      "references": 752,
+      "typeDependencyCount": 75,
       "classification": "declared",
       "evidence": [
         {
@@ -66,22 +66,22 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 480,
+      "references": 478,
       "typeDependencyCount": 29,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 91
+          "references": 85
         }
       ]
     },
     {
       "source": "avalonia",
       "target": "core-primitives",
-      "references": 19,
-      "typeDependencyCount": 6,
+      "references": 11,
+      "typeDependencyCount": 3,
       "classification": "declared",
       "evidence": [
         {
@@ -108,8 +108,8 @@
     {
       "source": "avalonia",
       "target": "rendering",
-      "references": 28,
-      "typeDependencyCount": 3,
+      "references": 26,
+      "typeDependencyCount": 2,
       "classification": "declared",
       "evidence": [
         {
@@ -290,8 +290,8 @@
     {
       "source": "core",
       "target": "core-fonts",
-      "references": 43,
-      "typeDependencyCount": 5,
+      "references": 46,
+      "typeDependencyCount": 6,
       "classification": "declared",
       "evidence": [
         {
@@ -304,8 +304,8 @@
     {
       "source": "core",
       "target": "core-primitives",
-      "references": 297,
-      "typeDependencyCount": 69,
+      "references": 301,
+      "typeDependencyCount": 71,
       "classification": "declared",
       "evidence": [
         {
@@ -402,7 +402,7 @@
     {
       "source": "core-document",
       "target": "core",
-      "references": 96,
+      "references": 104,
       "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [
@@ -444,8 +444,8 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1421,
-      "typeDependencyCount": 219,
+      "references": 1464,
+      "typeDependencyCount": 224,
       "classification": "declared",
       "evidence": [
         {
@@ -580,7 +580,7 @@
     {
       "source": "core-redaction",
       "target": "core-content",
-      "references": 311,
+      "references": 292,
       "typeDependencyCount": 50,
       "classification": "declared",
       "evidence": [
@@ -594,7 +594,7 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1145,
+      "references": 1142,
       "typeDependencyCount": 149,
       "classification": "declared",
       "evidence": [
@@ -636,7 +636,7 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 868,
+      "references": 865,
       "typeDependencyCount": 143,
       "classification": "declared",
       "evidence": [
@@ -692,28 +692,28 @@
     {
       "source": "core-security",
       "target": "core-document",
-      "references": 39,
-      "typeDependencyCount": 5,
+      "references": 55,
+      "typeDependencyCount": 7,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Validation.PdfUaValidator",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 17
+          "references": 20
         }
       ]
     },
     {
       "source": "core-security",
       "target": "core-primitives",
-      "references": 81,
-      "typeDependencyCount": 21,
+      "references": 44,
+      "typeDependencyCount": 15,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Validation.StructTreeAnalysis",
+          "source": "Excise.Core.Validation.PdfUaValidator",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 15
+          "references": 9
         }
       ]
     },
@@ -748,14 +748,14 @@
     {
       "source": "core-text",
       "target": "core-document",
-      "references": 148,
-      "typeDependencyCount": 18,
+      "references": 153,
+      "typeDependencyCount": 19,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.TextSelectionEngine",
           "target": "Excise.Core.Document.PdfRectangle",
-          "references": 51
+          "references": 52
         }
       ]
     },
@@ -776,14 +776,33 @@
     {
       "source": "core-text",
       "target": "core-primitives",
-      "references": 52,
-      "typeDependencyCount": 13,
+      "references": 42,
+      "typeDependencyCount": 9,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.TextExtractor",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 15
+        }
+      ]
+    },
+    {
+      "source": "core-text",
+      "target": "core-redaction",
+      "references": 2,
+      "typeDependencyCount": 2,
+      "classification": "undeclared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Text.TextSelectionEngine",
+          "target": "Excise.Core.Text.Segmentation.GlyphRemovalStrategy",
+          "references": 1
+        },
+        {
+          "source": "Excise.Core.Text.TextSelectionEngine",
+          "target": "Excise.Core.Text.Segmentation.GlyphRemovalStrategyExtensions",
+          "references": 1
         }
       ]
     },
@@ -1062,8 +1081,8 @@
     {
       "source": "rendering",
       "target": "core-document",
-      "references": 301,
-      "typeDependencyCount": 24,
+      "references": 296,
+      "typeDependencyCount": 23,
       "classification": "declared",
       "evidence": [
         {

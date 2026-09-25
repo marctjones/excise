@@ -82522,6 +82522,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_Date_ReadsEveryFormAllowedBySection794",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_InvalidDate_NoDate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -83086,13 +83093,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -83962,6 +83962,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_Date_ReadsEveryFormAllowedBySection794",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_InvalidDate_NoDate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -84526,13 +84533,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -85402,6 +85402,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_Date_ReadsEveryFormAllowedBySection794",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_InvalidDate_NoDate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -85966,13 +85973,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -86858,6 +86858,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_Date_ReadsEveryFormAllowedBySection794",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_InvalidDate_NoDate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -87422,13 +87429,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -88433,6 +88433,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_Date_ReadsEveryFormAllowedBySection794",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_InvalidDate_NoDate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -88997,13 +89004,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -89866,6 +89866,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_Date_ReadsEveryFormAllowedBySection794",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_InvalidDate_NoDate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -90430,13 +90437,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -91292,6 +91292,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_Date_ReadsEveryFormAllowedBySection794",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_InvalidDate_NoDate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -91856,13 +91863,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -92718,6 +92718,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_Date_ReadsEveryFormAllowedBySection794",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_InvalidDate_NoDate",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -93282,13 +93289,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/UnencodableTextRefusalTests.cs::UnencodableTextRefusalTests.AnEmbeddedAppearanceFont_DrawsCharactersWinAnsiCannot",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112842,8 +112842,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7827,
-    "testMethodsWithCapabilityCandidate": 4981,
+    "testMethods": 7836,
+    "testMethodsWithCapabilityCandidate": 4986,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

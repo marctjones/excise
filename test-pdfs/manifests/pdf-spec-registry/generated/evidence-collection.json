@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1410,
-  "indexedContentSha256": "ebc34cb092206973b61ec1c70631a034a63e9fc91d5f0797d86672ae435f78df",
+  "indexedFileCount": 1412,
+  "indexedContentSha256": "4a4fba23fc5d9c15f52db1e27e4d98aee4f5809b13ded6adbeea1a1bbf81ea68",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -49240,6 +49240,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Primitives/PdfDateTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -49779,7 +49788,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 76
+      "candidateReferenceCount": 77
     },
     {
       "id": "pdf.20.annotation.subtype-010",
@@ -51337,7 +51346,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 213
+      "candidateReferenceCount": 214
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -54711,6 +54720,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Primitives/PdfDateTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -55059,7 +55077,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 71
+      "candidateReferenceCount": 72
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -63539,7 +63557,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 96
+      "candidateReferenceCount": 97
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -74241,7 +74259,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 158
+      "candidateReferenceCount": 159
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
