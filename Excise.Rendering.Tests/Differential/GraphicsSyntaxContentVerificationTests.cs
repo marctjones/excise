@@ -210,12 +210,16 @@ public class GraphicsSyntaxContentVerificationTests : IDisposable
     private static readonly PdfRectangle ObstructionBlock = new(100, 600, 300, 680);
     private static readonly PdfRectangle KeptTextBlock = new(100, 380, 300, 420);
 
-    [Fact]
-    public void PathFillObstruction_IsGoneFromAnIndependentRender_TextElsewhereSurvives()
+    // The bar sets no colour, so §8.4.1 Table 52's initial black is what paints it. The second
+    // prelude sets white inside q...Q: after the Q the default is back, and the bar is still black.
+    [Theory]
+    [InlineData("")]
+    [InlineData("q 1 1 1 rg Q ")]
+    public void PathFillObstruction_IsGoneFromAnIndependentRender_TextElsewhereSurvives(string prelude)
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
-        var pdf = PdfDocument.Open(ObstructedPagePdf());
+        var pdf = PdfDocument.Open(ObstructedPagePdf(prelude));
         var page = pdf.GetPage(1);
 
         var beforePath = SaveTemp(pdf);
@@ -271,15 +275,10 @@ public class GraphicsSyntaxContentVerificationTests : IDisposable
     /// paint, no color operator needed -- DeviceGray fill defaults to black) plus
     /// separate, non-overlapping visible text that must survive stripping.
     /// </summary>
-    private static byte[] ObstructedPagePdf()
+    private static byte[] ObstructedPagePdf(string prelude)
     {
-        // ObstructionStripper only treats a fill as "obstructive" when it can
-        // see an explicit rg/g/k color-setting operator immediately before
-        // the paint (it does not assume PDF's own DeviceGray-0 default) --
-        // matching ObstructionStripperTests.StripObstructions_BlackFillRectangle_RemovesPathAndFill,
-        // which likewise emits an explicit black rg before the rectangle.
         var content =
-            "0 0 0 rg " +
+            prelude +
             $"{ObstructionBlock.Left} {ObstructionBlock.Bottom} {ObstructionBlock.Width} {ObstructionBlock.Height} re f " +
             $"BT /F1 24 Tf {KeptTextBlock.Left} {KeptTextBlock.Bottom} Td (KEEP TEXT VISIBLE) Tj ET";
 

@@ -93,6 +93,26 @@ public class ContentStreamBytePreservationTests
             "comments ride along with the operator that followed them");
     }
 
+    /// <summary>
+    /// The surviving prefix still tiles the source from offset 0, so a writer that
+    /// only checks tiling treats the stream as unmodified and copies the WHOLE source
+    /// back, removed operators included. Only a removal at the very end of the stream
+    /// can trigger it.
+    /// </summary>
+    [Fact]
+    public void RemovingTrailingOperators_DoesNotCopyThemBackFromTheSource()
+    {
+        var source = Encoding.Latin1.GetBytes("BT (KEEP) Tj ET\n10 10 100 100 re f\n% trailing comment");
+        var content = ParseTracked(source);
+
+        var kept = content.Operators.TakeWhile(o => o.Name != "re").ToList();
+        var written = new ContentStreamWriter().Write(new ContentStream(kept), source);
+        var text = Encoding.Latin1.GetString(written);
+
+        text.Should().Contain("KEEP");
+        text.Should().NotContain("100 100 re", "a removed trailing operator must not come back from the source bytes");
+    }
+
     [Fact]
     public void ARewrittenOperator_IsSerialized_AndStillParsesBackCleanly()
     {

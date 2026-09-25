@@ -518,7 +518,13 @@ public sealed class AdversarialRedactionRegressionTests
 
         using (var included = PdfDocument.Open(pdf))
         {
-            included.RedactText("HIDDENSECRET").VerifiedRemovals.Should().Be(1);
+            // The hidden layer is the last thing on the page. Its span is removed as a hidden
+            // optional-content span before the text search runs, so nothing is left to locate;
+            // this used to read 1 only because the writer copied the removed tail back.
+            var report = included.RedactText("HIDDENSECRET");
+            report.Removals.Should().ContainSingle(r =>
+                r.Feature == "hidden optional-content span(s)" && r.Count == 1);
+            report.Survived.Should().Be(0);
             // #1549: saved streams are Flate-encoded; scan through the inflating scanner.
             var saved = included.SaveToBytes();
             SavedPdfLeakScanner.FindTerm(saved, "HIDDENSECRET").Should().BeEmpty(

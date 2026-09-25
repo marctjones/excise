@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Excise.Core.Content;
 using Excise.Core.Document;
+using Excise.Core.Redaction.Recovery;
 
 namespace Excise.Core.Text.Segmentation;
 
@@ -16,8 +17,8 @@ namespace Excise.Core.Text.Segmentation;
 /// the rendered view.</para>
 /// <para>What "opaque overlay" means here: a filled-path painting op
 /// (<c>f</c>/<c>F</c>/<c>f*</c>/<c>B</c>/<c>B*</c>/<c>b</c>/<c>b*</c>)
-/// preceded by a non-white fill color, plus the path-construction ops
-/// that built its path. Image <c>Do</c> invocations also count when
+/// painted in a non-white fill colour (black until a colour operator says
+/// otherwise), plus the path-construction ops that built its path. Image <c>Do</c> invocations also count when
 /// the XObject's <c>/Subtype</c> is <c>/Image</c>.</para>
 /// </remarks>
 public static class ObstructionStripper
@@ -36,43 +37,20 @@ public static class ObstructionStripper
 
         var newOps = new List<ContentOperator>(content.Operators.Count);
         var pendingPath = new List<int>(); // indices into the input stream
-        bool fillIsObstructive = false;
+        // §8.4.1 Table 52: the initial fill colour is black; §8.4.2: Q restores it.
+        var fill = new FillColourState(0, 0, 0);
 
         for (int i = 0; i < content.Operators.Count; i++)
         {
             var op = content.Operators[i];
+            if (fill.Apply(op))
+            {
+                newOps.Add(op);
+                continue;
+            }
+
             switch (op.Name)
             {
-                // Fill color setters — track whether the next fill is dark
-                // enough to count as obstructive. White / near-white skipped.
-                case "rg":
-                    if (op.Operands.Count >= 3)
-                        fillIsObstructive = !IsNearlyWhite(
-                            op.GetNumber(0), op.GetNumber(1), op.GetNumber(2));
-                    newOps.Add(op);
-                    break;
-                case "g":
-                    if (op.Operands.Count >= 1)
-                    {
-                        var v = op.GetNumber(0);
-                        fillIsObstructive = !IsNearlyWhite(v, v, v);
-                    }
-                    newOps.Add(op);
-                    break;
-                case "k":
-                    if (op.Operands.Count >= 4)
-                    {
-                        double c = op.GetNumber(0), mg = op.GetNumber(1),
-                               y = op.GetNumber(2), kk = op.GetNumber(3);
-                        // Quick CMYK→RGB approx for the screening test only.
-                        double r = (1 - c) * (1 - kk);
-                        double gn = (1 - mg) * (1 - kk);
-                        double b = (1 - y) * (1 - kk);
-                        fillIsObstructive = !IsNearlyWhite(r, gn, b);
-                    }
-                    newOps.Add(op);
-                    break;
-
                 // Path construction — buffer until we see a paint op.
                 case "m":
                 case "l":
@@ -94,7 +72,7 @@ public static class ObstructionStripper
                 case "B*":
                 case "b":
                 case "b*":
-                    if (fillIsObstructive && pendingPath.Count > 0)
+                    if (!IsNearlyWhite(fill.Current) && pendingPath.Count > 0)
                     {
                         // Drop the buffered path ops + this paint op.
                         for (int k = pendingPath.Count - 1; k >= 0; k--)
@@ -131,6 +109,6 @@ public static class ObstructionStripper
         page.SetContentStream(new ContentStream(newOps) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
     }
 
-    private static bool IsNearlyWhite(double r, double g, double b)
-        => r >= 0.95 && g >= 0.95 && b >= 0.95;
+    private static bool IsNearlyWhite((double R, double G, double B) c)
+        => c.R >= 0.95 && c.G >= 0.95 && c.B >= 0.95;
 }
