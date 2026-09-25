@@ -1,771 +1,100 @@
 <p align="center">
-  <img src="Excise.App/Assets/excise_logo.svg" alt="EXCISE Logo" width="128" height="128">
+  <img src="Excise.App/Assets/excise_logo.svg" alt="excise logo" width="128" height="128">
 </p>
 
 # excise
 
-A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 10 + Avalonia UI** and shipped with **true content-level redaction**, **page organization**, **flat typewriter text editing**, **AcroForm editing/authoring**, **15-type annotation authoring**, and **PDF 2.0 conformance**.
+A cross-platform PDF editor for macOS, Windows and Linux, written in C# on .NET 10 with Avalonia. It removes redacted content from the PDF itself instead of drawing a black box over it. The parser, writer, renderer and redaction engine are all in this repository, with no third-party PDF library.
 
 [![Release](https://img.shields.io/github/v/release/marctjones/excise)](https://github.com/marctjones/excise/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-7000%2B%20passing-brightgreen)](Excise.Core.Tests)
-[![Build](https://img.shields.io/badge/build-0%20warnings-brightgreen)](Excise.Core)
 
-> The current release line has completed the two blocking tracks — **redaction
-> trust** (glyph-level removal plus metadata and structure-tree scrubbing,
-> verified against independent extractors and ink differentials, never excise
-> itself) and **document security** (read + write of AES-256/AES-128 encryption,
-> preserved across every mutating save) — and the everyday PDF workbench gate:
-> renderer and GUI display evidence are issue-linked, PDF 2.0 renderer
-> coverage is tracked by contract, and remaining advanced renderer/font work is
-> explicitly deferred rather than implied as shipped. The PDF stack is
-> implemented in this repository — `Excise.Core` (parser/writer),
-> `Excise.Rendering` (Skia), and `Excise.Ocr` — with no PdfPig, PDFsharp, or
-> PDFtoImage package dependency in the current stack. The source-provenance
-> review is not currently scheduled ([#1240](https://github.com/marctjones/excise/issues/1240)
-> was closed as not planned on 2026-09-21).
-> See [CHANGELOG.md](CHANGELOG.md) for full release notes.
+## What it does
 
-## What's in the box
+- **Redaction that removes content.** Text, images and vector graphics are cut out of the PDF's content streams. Metadata, attachments, JavaScript, thumbnails and hidden layers are scrubbed by default, and every removal is reported. Results are checked with independent tools (mutool, pdftotext), never with excise itself.
+- **Read and navigate.** Skia rendering, search, text selection and copy, thumbnails, outlines, and several documents at once.
+- **Fill forms.** Fill and flatten AcroForm fields, create new fields, and view dynamic XFA forms. FormCalc calculations run in excise's own interpreter; JavaScript never runs.
+- **Annotate.** Highlight, underline, strike-out and squiggly markup, sticky notes, shapes, stamps (including image stamps for signatures), ink, lines and polygons. Typewriter text can be placed on flat PDFs.
+- **Organize.** Reorder, rotate, extract, remove and merge pages; reduce file size; Bates numbering.
+- **Security.** Read and write AES-128 and AES-256 encryption; inspect digital signatures against the OS trust store.
+- **Audit.** `excise unredact` tests whether a PDF that claims to be redacted still leaks its text, and `excise audit` finds text hidden under opaque overlays.
+- **Automate.** A command-line tool with stable JSON output and batch workflows.
 
-```
-Excise.Core/             Pure-.NET PDF parser, writer, content-stream library
-Excise.Rendering/        SkiaSharp-based renderer (text, images, paths, transparency)
-Excise.Avalonia/         Reusable Avalonia PDF viewer control (PdfViewerControl)
-Excise.Avalonia.Sample/  Minimal "open and view" sample app for the control
-Excise.Ocr/              OCR via the system `tesseract` CLI + differential-OCR auditor
-Excise.Cli/              `excise` command-line tool
-Excise.App/             Cross-platform Avalonia desktop app (reference consumer)
-```
+See [docs/FEATURES.md](docs/FEATURES.md) for the full list and [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) for what excise does not do.
 
-The libraries are usable independently — embed `Excise.Core` if you only need parsing and redaction, `Excise.Rendering` if you need page rasterization, or `Excise.Avalonia` to drop a PDF viewer into any Avalonia app.
+## Install
 
-### Reusable libraries (NuGet-packable)
-
-`Excise.Core`, `Excise.Rendering`, and `Excise.Avalonia` are packable as a dependency-light,
-MIT-licensed stack — a niche the .NET/Avalonia ecosystem largely lacks (the alternatives
-embed PDFium or are commercial SDKs). `Excise.Core` is managed code with no native
-dependency; `Excise.Rendering` and `Excise.Avalonia` are managed code over the SkiaSharp
-and HarfBuzz native libraries (both MIT, restored by NuGet), and embed no PDF engine:
-
-- **`Excise.Avalonia`** — `<pdf:PdfViewerControl Document="…" CurrentPage="…" ZoomLevel="…" />`.
-  Depends only on `Excise.Core` + `Excise.Rendering` + Avalonia + SkiaSharp. See
-  [`Excise.Avalonia/README.md`](Excise.Avalonia/README.md) and `Excise.Avalonia.Sample`.
-- **`Excise.Rendering`** — framework-neutral render API: `RenderPage(page, options[, ct]) → SKBitmap`
-  and `RenderPageToPng(…)`. Pair with any UI (WPF/MAUI/Blazor/Uno) or a headless service. See
-  [`Excise.Rendering/README.md`](Excise.Rendering/README.md).
-- **`Excise.Core`** — parser/model/redaction. See [`Excise.Core/README.md`](Excise.Core/README.md).
-
-Build the packages locally with `dotnet pack -c Release` (they are also attached to releases).
-
-## Features
-
-### Desktop app
-- Open, view, navigate PDFs with smooth Skia rendering
-- Page organization (add/insert, extract, remove, reorder, rotate; current page or selected pages; 90°/180°/270°)
-- Text selection and copy with letter-level positions
-- Find with highlights and navigation
-- Zoom modes: fit width, fit page, actual size, free zoom
-- Page thumbnails sidebar
-- **Typewriter text** — place editable text boxes on flat PDFs, then save them as normal page content instead of annotations
-- **AcroForm editing** — click text, checkbox, radio, or dropdown widgets and edit inline; save filled forms as interactive copies or create a flattened form copy
-- **AcroForm authoring** — drag-rect on a page to create new fields (Text / Checkbox / Choice / Signature); auto-detect underline placeholders and empty squares as fields
-- **Annotation authoring** — 15 annotation types from the Annotate menu, all written as real PDF annotations: highlight selected text or mark it up with Underline, StrikeOut and Squiggly, sticky notes, shapes from a drag (Square, Circle, FreeText), rubber stamps (all 15 standard names, plus an image stamp from a picked file for signatures and letterheads), and drawn paths (freehand Ink, Line, Arrow, Polygon, PolyLine). Drawn paths use one capture mode: drag for ink and lines, click-per-vertex for polygons with double-click or Enter to finish, Escape to abandon, Backspace to take back a point
-- Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
-- Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, validates the signer certificate chain against the OS trust store (distinguishing valid-and-trusted from valid-but-untrusted, modified, and unverifiable signatures), and clearly reports remaining OS trust-chain validation limitations (revocation is not checked)
-- **Attachments pane** — a sidebar pane, shown by default, lists files embedded in the PDF (name, size, description, modified date, and the page for files attached to a page annotation); save one or all of them to a location you choose, or strip them (undoable). A warning banner appears on open when a document carries attachments, because they are invisible on the page and can hold a full copy of the document's data (ZUGFeRD/Factur-X); it stays until you close it or open another document, rather than disappearing on a timer (#1619). Hide the pane with View ▸ Show Attachments. excise never opens or runs an attachment
-- Open a PDF by dragging it onto the window
-- **Several documents at once** — each opens in its own window, with its own undo history and unsaved-changes state; on macOS the windows use native tabs when System Settings asks for them. Preferences ▸ Documents can instead open documents as tabs inside one window (close, reorder by dragging, move a tab to its own window, overflow list) or replace the current document as before
-- Prompts before closing, quitting, or opening another file with unsaved changes — and saves a **copy**, never overwriting your original
-- Bates numbering
-- **Reduce File Size** — Document ▸ Reduce File Size… writes a smaller copy to a location you choose and shows the size before and after. *Lossless* recompresses and deduplicates data and drops page thumbnails and other applications' private data, so pages look exactly the same; *High* (300 dpi), *Standard* (150 dpi) and *Screen* (96 dpi) also downsample images well above that resolution. The original file is never changed, and a redacted document stays redacted
-- CLI-first automation with stable JSON, batch workflows, progress NDJSON, and
-  AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME examples
-- Roslyn-based GUI scripting for developer/test automation in Debug builds; Release builds exclude it by default unless `-p:EnableScripting=true` is set
-
-### Glyph-level redaction
-**Text is removed from the PDF structure, not just visually covered.**
-
-- Glyph-level removal — individual glyphs are excised from content streams
-- Image XObject redaction — image overlays that intersect a redaction area are removed, not just blacked out
-- External tools (`pdftotext`, mutool, Acrobat copy-paste) cannot recover redacted content
-- Mark-then-apply workflow with red dashed previews and a Clipboard History sidebar showing what was removed
-- Original protection — defaults the save dialog to `filename_REDACTED.pdf`
-- Safe-to-share save path — `RedactedCopySafetyService` scrubs Info metadata, XMP metadata, and embedded files/attachments by default, then reports content-removal, metadata, attachment, and hidden-text audit status without repeating removed text
-- Archival documents stay archival — a redaction of a PDF/A file keeps the `pdfaid` identification PDF/A requires (and nothing else from the XMP packet), so the output still validates with veraPDF instead of silently ceasing to be PDF/A
-- `PdfDocument.ScrubMetadata(scrubAttachments: true)` strips Info dict, XMP, and embedded files in one call — important when redacted documents may carry the data they were redacted of in attachments (ZUGFeRD, Factur-X)
-- **Two redaction output profiles, Standard by default** — every redaction (GUI, `excise redact`, batch `redaction.apply`, scripting, and the `RedactText`/`RedactArea` library calls) also removes the hidden machinery that cutting a word out cannot make safe, and lists each removal in the report: all JavaScript; actions that open files, submit data or import data (page links and bookmarks still work); the producer's private `/PieceInfo` data; page thumbnails (a picture of the page *before* the redaction); the appearance of hidden fields and annotations; content on optional-content layers that are switched off; and the document properties and XMP metadata (a PDF/A or PDF/UA marker is kept, so a tagged, accessible PDF stays accessible — verified with veraPDF). Tooltips, alternate text, structure titles, field names, bookmark titles and link targets are **kept**, with the redacted word cut out. `--profile maximum` / Preferences ▸ Redaction ▸ Output Profile adds: the whole value of every kept item is dropped, and bookmarks, links, comments and field names are stripped and forms and annotations flattened — **the result is no longer accessible or interactive**, and the report says so
-- **No attachments in redacted output, by default** — every redaction (GUI, `excise redact`, batch `redaction.apply`, scripting, and the `RedactText`/`RedactArea` library calls) removes every embedded file, including files attached to page annotations and embedded media, and lists each removed file with its size. To keep them, use `--keep-attachments`, batch `keepAttachments: true`, `RedactionOptions.KeepAttachments`, or Preferences ▸ Redaction: kept text attachments (txt, csv, xml, html, json, md) have the term cut out, attached PDFs are redacted too, and any other attachment is reported as not checked. A PDF portfolio is refused unless attachments are kept
-- **XFA forms** — redacting a document with an XFA form removes the XFA packet (the AcroForm fields stay), because its form data repeats the field values and Acrobat would put them back on the page
-- OCG-aware — `RedactText` defaults to `includeHiddenLayers=true` so hidden optional content groups don't slip past
-- Verified against real-world fixtures (CT birth certificate, government forms) at the pixel and content-stream level
-
-### AcroForm editing & authoring
-- **Dynamic XFA forms are displayed** — a dynamic XFA form (other readers show only a "Please wait…" placeholder, Preview included) is laid out from its XFA template and data when it opens, and the app says so in a banner. Its FormCalc `initialize` and `calculate` scripts run in excise's own interpreter (no JavaScript engine, no file or network functions, bounded in steps, depth and time; a failing script is undone and reported); JavaScript, `validate` and click scripts never run. Display only: these fields cannot be filled yet, and images, barcodes and some styling are not drawn (#1547, #1824, #1825). Static XFA forms, like the IRS forms, fill through their ordinary AcroForm fields.
-- `PdfField.SetValue(string?)` mutates `/V`, sets `/NeedAppearances`, updates `/AS` for buttons, and throws on read-only and signature fields
-- `PdfField` exposes effective `/Ff` flags plus widget metadata/export values so callers can distinguish checkboxes, radio groups, combo boxes, and push buttons
-- `PdfDocument.FlattenAcroForm()` bakes values into static page content, clips/wraps text to widget bounds, draws only the selected radio widget, and strips widget annotations
-- `AcroFormAuthoring` extension methods: `AddTextField`, `AddCheckBox`, `AddChoiceField`, `AddSignatureField` — auto-create the AcroForm dict and `/DR/Font/Helv` on first call
-- `PdfFormAutoDetector` heuristically suggests fields where the page has horizontal underlines or empty checkbox-sized outlines (Acrobat-style "Prepare Form")
-
-### Page and annotation authoring
-- Page organization is supported in the desktop app and service layer: append/insert pages from another PDF, extract the current page or selected pages, remove current or selected pages, move current or selected pages earlier/later, and rotate pages. Page-owned streams/resources/annotations are cloned into copied pages; the app warns when document-level structures such as outlines, named destinations, or AcroForm metadata may need review.
-- The desktop app authors 15 annotation types from the Annotate menu (see the feature list above). `PdfAnnotationAuthoring` extension methods expose the same workflows in code: `AddHighlightAnnotation` / `AddUnderlineAnnotation` / `AddStrikeOutAnnotation` / `AddSquigglyAnnotation` for text markup, `AddTextAnnotation` for sticky notes, `AddSquareAnnotation` / `AddCircleAnnotation` / `AddFreeTextAnnotation` for shapes, `AddStampAnnotation` / `AddImageStampAnnotation` for stamps, and `AddInkAnnotation` / `AddLineAnnotation` / `AddArrowAnnotation` / `AddPolygonAnnotation` / `AddPolyLineAnnotation` for drawn paths.
-- Two of those 15 are not distinct PDF subtypes, which matters if you are inspecting output: an **Arrow** is a `/Line` carrying `/LE [None ClosedArrow]`, and an **ImageStamp** is a `/Stamp` whose appearance stream is an embedded image. `PdfAnnotation.LineEndings` exposes the former so the difference is readable, not just writable.
-
-### CLI (`excise`)
-```bash
-excise info              <file>           [--json] [--password P]
-excise text              <file>           [--json] [--password P]
-excise letters           <file>
-excise render            <file>           -o out.png  [--page N] [--dpi N] [--password P] [--json]
-excise commands          [id]             [--json]
-excise batch             <workflow.json>  [--json] [--progress] [--output report.json]
-excise draw              <file>                                 # graphics-API demo
-excise redact            <input> <output> <text>  [--case-sensitive]
-excise optimize          <input> <output> [--preset lossless|high|standard|screen] [--password P] [--json]
-excise fill-form         <input> <output> --field Name=Value [...] [--flatten]
-excise add-field         <input> <output> --type T --name N --page P --rect "l,b,r,t" [--value v] [--option o]...
-excise autodetect-fields <input> [output] [--apply]
-excise audit             <file>           [--deep] [--json]
-excise unredact          <file>           [--mode certain|residue|both] [--dictionary w.txt]
-                                          [--ocr] [--include-deferred] [--restore out.pdf] [--json]
-excise ocr               <file>
-excise demo
-```
-
-`audit --deep` runs differential OCR — renders the page twice (once with overlays stripped) and diffs the OCR text — to catch words hidden inside rasterized images by an opaque overlay (the rasterized analogue of a black-box redaction).
-
-See [`docs/AUTOMATION_API.md`](docs/AUTOMATION_API.md) for the supported
-automation contract, exit codes, batch workflow schema, security boundary, and
-platform examples. The public automation path is CLI-first; Release builds do
-not enable a background GUI automation listener.
-
-### De-redaction audit (`excise unredact`)
-
-Points the redaction engine backwards: given a PDF somebody says is redacted, it
-finds the redaction **marks** (black boxes, `/Redact` annotations, emptied
-regions) and reports, per mark, how much of what they cover came back.
-
-The marks are the denominator, and that is the point. "12 findings" says nothing
-about whether a document is safe; "3 of 11 marks recovered, 8 held" does.
-
-```bash
-excise unredact purportedly-redacted.pdf                # what survived, per mark
-excise unredact filing.pdf --json                       # machine-readable
-excise unredact filing.pdf --mode residue --dictionary names.txt
-excise unredact filing.pdf --restore reconstructed.pdf  # draw it back in place
-```
-
-Exit status is scriptable, and keys on **what kind of evidence** turned up
-**under a mark** — not on whether it happened to be text:
-
-| code | meaning |
-|---:|---|
-| **0** | nothing survives under any redaction mark |
-| **3** | verbatim text was recovered |
-| **4** | the value under a mark is constrained (width-residue candidates, OCR) |
-| **5** | material survives under a mark and nothing decoded it — image pixels, a vector drawing, an opaque attachment |
-| **6** | *reserved* — page text held by a carrier with no mark breached (not yet emitted; see #1703) |
-| 1 / 2 | the run failed: 1 I/O or unhandled error, 2 usage or a missing dependency |
-
-`--fail-on any|text|constrained|present` picks the threshold: `any` is the
-default, and `--fail-on text` restores the older, narrower behaviour of failing
-only on a recovered string.
-
-⚠️ Present-only material that **no mark covers** — a leftover page thumbnail, an
-attachment elsewhere in the file — stays **0**. It is reported, but it is
-furniture, not a breach, and failing a pipeline over it would make the status
-useless. Before #1707 that reasoning was applied to *every* present-only
-finding, so an intact image under an opaque black box — the commonest
-viewer-based "redaction" — was reported on screen and then graded clean with
-exit 0.
-
-⚠️ **The reconstruction `--restore` writes CONTAINS the recovered text by
-design.** It is watermarked, and it refuses to overwrite the input. Handle it as
-you would the unredacted original.
-
-**It focuses on TEXT recovery** (#1690). A recovered string either matches or it
-does not, and mutool and pdftotext can confirm it independently; nothing else
-here can be graded that honestly. Two channels are therefore **deferred — still
-implemented, still tested, opt-in, and not counted in the score**:
-
-| deferred channel | flag | why |
-|---|---|---|
-| raster content under a mark, and orphaned or fully masked image originals | `--include-deferred` | reported present-only, never as a value — there is no exact answer to grade a recovery against |
-| the OCR differential | `--ocr` | an OCR reading carries its own error rate, so no independent extractor can confirm it the way one confirms a string read from the file |
-
-⚠️ **What a default run does not cover, stated narrowly:** a page whose redaction
-box covers **pixels, with no surviving text layer beneath them**. That document
-class is not in the score, and a run that skipped a deferred channel prints so
-next to its own result rather than in a footnote. It is *not* "blind to scanned
-documents" — a scanned page whose invisible OCR text layer survives under the box
-**is** recovered, by the ordinary hidden-text channel.
-
-### Renderer coverage
-The Skia renderer has been smoke-tested against a real-world corpus and is validated with a MuPDF-first differential harness. When MuPDF disagrees, the test suite escalates to Poppler and Ghostscript for second and third opinions. Known divergences are issue-linked allowlist entries; new unclassified divergences fail the differential slice.
-
-For release-quality rendering work, excise also has an exploratory all-pages
-corpus scanner for the pdf.js corpus. The report separates visual fidelity
-results (`PASS`, `PASS_ONE`, `DIFF`) from semantic release-gate results
-(`resultStatus`, `resultCategory`, and `resultReason`) and bounded non-fidelity
-classifications such as malformed PDFs, unsupported encryption/compression,
-decode failures, invalid page geometry, render resource limits, oracle refusal,
-and timeouts. Expectation manifests keep raw scanner status stable while
-allowing reviewed page-box, color-management, reference-refusal, and degenerate
-fixture cases to be counted separately from real content-loss bugs. This keeps
-quick-win rendering work focused on shared root causes rather than per-file
-exceptions.
-
-| PDF type | Notes |
-|---|---|
-| State-issued government forms (CT birth-cert, DS-82) | TJ kerning, Tw column alignment, raster backgrounds |
-| SCOTUS opinions | Non-uniform Tm, Type1 PostScript subsets |
-| IRS Form 1040 + Instructions | Type0/Identity-H, Acrobat-distilled, 180° footers |
-| CDC VIS | Embedded TrueType, Wingdings dingbats |
-| Pragmatic Bookshelf books (XEP) | 455-page multi-font CFF subsets, ZapfDingbats |
-| Multilingual CJK | zh-Hans, zh-Hant, ja, ko via Noto Serif CJK |
-
-See [`Excise.Rendering.Tests/Visual/`](Excise.Rendering.Tests/Visual) and [`Excise.App.Tests/UI/baselines/`](Excise.App.Tests/UI/baselines) for the regression baselines.
-
-### Release scope and known limitations
-
-excise targets an everyday PDF workbench: open, read, search/copy, annotate,
-organize pages, fill/flatten forms, add flat typewriter text, audit hidden
-content, and perform true content-level redaction. It is not an Acrobat Pro
-replacement for prepress, color-managed print production, JavaScript workflows,
-portfolio workflows, or certificate-authority trust decisions.
-
-Current release-quality limitations are tracked in GitHub Issues and surfaced in
-release notes:
-
-- **Printing — macOS, Windows and Linux** (#1545, superseding #621; #1546; #1710).
-  File → Print… (⌘P / Ctrl+P) prints the document **as currently edited**:
-  unsaved page changes, filled form fields, pending type-over text, and
-  pending redactions, which are *removed* from the printed copy rather than
-  covered. Page scaling (shrink oversized / fit to page / actual size) is in
-  Preferences → Printing, and each page is turned to the paper orientation
-  that fits it. Print… is disabled when the document's permissions deny
-  printing (`/P` bit 3), and also when they allow only degraded printing
-  (bit 12 clear), because excise cannot produce degraded output. To print,
-  excise writes a temporary plaintext copy (owner-only, under the app's cache
-  folder) and deletes it when the print operation ends.
-  - **macOS** opens the standard print sheet — printer, copies, page range,
-    paper, orientation, scale, duplex where the driver supports it, preview,
-    and the PDF menu (Save as PDF). Pages are drawn by macOS's own PDF
-    renderer, not excise's, so small visual differences from the viewer are
-    possible.
-  - **Windows** opens the standard Windows print dialog (printer, page ranges,
-    copies and collation, and the printer's own Preferences for paper,
-    orientation and duplex). There is no print preview. Pages are rasterised by
-    excise's own renderer at the printer's resolution, capped at 600 DPI, and
-    sent through the Windows print spooler, so the printout matches the viewer
-    and no Acrobat or other PDF handler is needed. "Print to file" is hidden;
-    choose *Microsoft Print to PDF* instead, or use Save As. Each annotation's
-    *print* flag decides whether it reaches paper (#1573, ISO 32000-2 §12.5.3),
-    as in Acrobat and macOS: review markup without that flag is not printed
-    even though the viewer shows it, and a print-only stamp or watermark
-    (*NoView* + *Print*) is printed even though the viewer does not show it.
-    ⚠️ The Windows path was built and unit-tested on macOS and
-    has not yet been checked on a Windows machine.
-  - **Linux** prints through CUPS (#1710). Linux gives excise no system print
-    dialog — Avalonia has no printing support, and GTK's and Qt's dialogs
-    belong to their own toolkits — so excise shows its own small chooser:
-    the CUPS queues, with your system default preselected, copies with
-    collation, and a page range. The PDF is handed to `lp` unchanged, which is
-    CUPS's native spool format, so the printout is your document as the
-    printer's own filters render it. Paper, orientation and duplex come from
-    the queue's defaults (set them in your desktop's printer settings, or with
-    `lpoptions`); *Fit to page* is passed through as CUPS's `fit-to-page` and
-    the other two scaling modes leave placement to the queue, because CUPS has
-    no shrink-only mode. When CUPS is not installed, the scheduler is not
-    running, there are no queues, or `lp` refuses the job, Print… says so and
-    quotes CUPS's own message — it never reports a job it did not submit.
-    **What is tested:** the queue parsing, the `lp` command line, permission
-    gating and every failure path run on every platform in the normal test
-    suite; `scripts/run-linux-print-test.sh` prints a real multi-page PDF to a
-    real `cupsd` in a container and checks the page count with qpdf/mutool, not
-    with excise. Printing to physical hardware has not been checked, and there
-    is no print preview.
-- **Digital signatures** — excise checks ByteRange structure, verifies the
-  detached CMS signature/digest over the signed bytes, and evaluates the signer
-  certificate chain against the OS trust store, reporting a consolidated state
-  (valid+trusted / valid-but-untrusted / invalid / indeterminate). Certificate
-  revocation (CRL/OCSP) is deliberately not checked — it would require network
-  access — and timestamp/LTV (long-term validation) material is not evaluated
-  (#466).
-- **Rendering fidelity** — the current release dashboard classifies every
-  contracted page as release `PASS`. Remaining non-exact rows are issue-linked
-  accepted-reference matches, malformed-input/refusal classifications, or named
-  accepted limitations rather than unclassified `DIFF` blockers (#491).
-  Niche color/shading residuals and deeper font-model work remain tracked for
-  future releases (#512, #513, #514, #515, #532).
-- **Color-managed print preview** — excise renders DeviceCMYK through a
-  deterministic screen-preview conversion, resolves `/DefaultCMYK` and ICCBased
-  CMYK through managed ICC preview support, and uses document output-intent data
-  in the CMYK transparency-preview paths covered by the release corpus. It is
-  still not a prepress proofing engine; shade/tone-only differences are tracked
-  below missing content, geometry, and unreadable-output defects.
-- **Encrypted and malformed PDFs** — PDFs requiring a non-empty user password,
-  some owner-password-only flows, unsupported compression filters, invalid
-  geometry, and intentionally malformed xref/stream structures are classified by
-  the corpus scanner rather than treated as everyday-release blockers.
-- **Text-extraction parity** — redaction completeness is bounded by extraction
-  coverage: `RedactText` cannot remove what excise cannot read, and reports
-  success anyway (#637). This is a dated measurement, not a standing property.
-  Measured against `mutool` (1.27.2) on 2026-09-08 across 332 pages / 13
-  fixtures (real-world government PDFs plus checked-in edge-case fixtures
-  covering CJK/Type0 text and scrambled glyph order), excise extracted **100.0%**
-  of mutool's Unicode letter/digit count in aggregate, counted per-script and
-  not ASCII-folded so CJK/accented-text loss cannot cancel out on both sides.
-  The worst per-page coverage was 0.946 and the worst per-page content
-  similarity 0.923; no page fell below 0.92. The earlier 102.6% over-extraction
-  figure and the marked-content `/Artifact` leak it was attributed to (#649,
-  closed) no longer reproduce. A green gate means "no worse than the checked-in
-  floors", not "no blindness": the floors were set at whatever the behaviour was.
-  The per-page floors are checked in at `tests/extraction-parity/baseline.json`
-  and ratchet; regenerate with `scripts/check-extraction-parity.sh --update`
-  (requires `mutool`), and see #645/#513. Re-run the gate before restating any
-  of these numbers.
-
-### PDF 2.0 conformance
-All 15 conformance phases shipped:
-
-| Phase | Feature |
-|---|---|
-| 3 | Standard 14 fonts via embedded core metrics |
-| 4 | Image XObjects (DCT/Flate/CCITTFax) |
-| 5 | Composite (Type0/CID) fonts with Identity-H/V |
-| 6 | Inline images (BI/ID/EI) |
-| 7 | Color spaces (DeviceRGB/CMYK/Gray, ICCBased, Indexed, CalRGB) |
-| 8 | Embedded TrueType + raw-CFF/Type1C |
-| 9 | CFF parser + MVP subsetter |
-| 10 | Annotations (Text, Link, Highlight, Underline, StrikeOut, Squiggly, Stamp, Ink, Widget) |
-| 11 | AcroForms — read, fill, flatten, author, auto-detect |
-| 12 | Optional Content Groups (OCGs) + structure tree (read-only, redaction-aware) |
-| 13 | Document-level embedded files / portfolios — read + scrub |
-| 14 | Page labels (`/PageLabels`) and named destinations |
-| 15 | Conformance harness — corpus parse + render + round-trip + redaction regression |
-
-## Installation
-
-### From releases
-
-Download from [GitHub Releases](https://github.com/marctjones/excise/releases). A release's packages are built by [`release.yml`](.github/workflows/release.yml) when a version tag is pushed; releases v3.9.2 through v3.10.0 attached only the macOS zip (releases up to v3.9.1 also carried Windows and Linux x64 packages, and there was no Linux arm64 build before now).
+Download a package from [GitHub Releases](https://github.com/marctjones/excise/releases). Packages are self-contained and need no .NET install.
 
 | Platform | Asset | Install |
 |---|---|---|
 | macOS (Apple Silicon) | `excise-<version>-macos-arm64.zip` | Unzip and move `excise.app` to Applications. There is no Intel build. |
 | Windows 10/11 (x64) | `excise-<version>-win-x64-setup.exe`, or the portable `excise-<version>-win-x64.zip` | Run the installer, or unzip and run `Excise.App.exe`. |
-| Ubuntu / Debian (x64) | `excise_<version>_amd64.deb` | `sudo apt install ./excise_<version>_amd64.deb` |
-| Ubuntu / Debian (arm64) | `excise_<version>_arm64.deb` | `sudo apt install ./excise_<version>_arm64.deb` |
+| Ubuntu / Debian | `excise_<version>_amd64.deb`, `excise_<version>_arm64.deb` | `sudo apt install ./excise_<version>_<arch>.deb` |
 | Any Linux | `excise-<version>-linux-x64.tar.gz`, `excise-<version>-linux-arm64.tar.gz` | Extract and run `Excise.App` (GUI) or `excise` (CLI). |
 
-The packages are self-contained: no .NET runtime is needed. The `.deb` recommends `tesseract-ocr` for OCR.
+The builds are not signed or notarized, and there is no auto-update. On macOS the first launch is refused: right-click the app and choose Open, or run `xattr -dr com.apple.quarantine /Applications/excise.app`. On Windows, SmartScreen warns: choose More info, then Run anyway. Every asset has a `.sha256` file; verify it with `shasum -a 256 -c <asset>.sha256` (macOS) or `sha256sum -c <asset>.sha256` (Linux).
 
-**The builds are unsigned and not notarized, by choice, and there is no auto-update.** On macOS, Gatekeeper refuses the first launch: right-click the app and choose Open, or run `xattr -dr com.apple.quarantine /Applications/excise.app`. On Windows, SmartScreen shows a "Windows protected your PC" warning: choose More info, then Run anyway. Because nothing is signed, check what you downloaded: every asset has a `.sha256` file (and each release attaches a `SHA256SUMS`), and `shasum -a 256 -c <asset>.sha256` (macOS) or `sha256sum -c <asset>.sha256` (Linux) verifies it.
+Printing works on macOS and Windows; there is no Linux printing yet. OCR uses the system `tesseract` (the `.deb` recommends it).
 
-Printing is implemented on macOS and Windows; there is no Linux printer yet (#1710).
+To use excise as your default PDF reader, see [docs/DEFAULT_PDF_READER.md](docs/DEFAULT_PDF_READER.md).
 
-### From source
+## Command line
+
+```bash
+excise info       form.pdf
+excise text       report.pdf
+excise render     report.pdf -o page1.png --page 1 --dpi 150
+excise redact     input.pdf redacted.pdf "Jane Doe"
+excise unredact   suspicious.pdf
+excise fill-form  form.pdf filled.pdf --field Name="Jane Doe" --flatten
+```
+
+All commands, options and exit codes: [docs/CLI.md](docs/CLI.md). Automation contract: [docs/AUTOMATION_API.md](docs/AUTOMATION_API.md).
+
+## Libraries
+
+| Package | What it is |
+|---|---|
+| `Excise.Core` | PDF parser, writer, encryption, fonts and the redaction engine. Managed code, no native dependency. |
+| `Excise.Rendering` | Page rasterization to `SKBitmap` or PNG with SkiaSharp and HarfBuzz. |
+| `Excise.Avalonia` | `PdfViewerControl`, a PDF viewer for Avalonia apps. |
+| `Excise.Native` | A C ABI over `Excise.Core` for other languages. See [docs/native-api.md](docs/native-api.md). |
+
+```csharp
+using Excise.Core.Document;
+using Excise.Core.Text.Segmentation;
+
+using var doc = PdfDocument.Open("input.pdf");
+doc.RedactText("Jane Doe");
+doc.Save("redacted.pdf");
+```
+
+The published libraries follow semantic versioning ([docs/API_STABILITY.md](docs/API_STABILITY.md)).
+
+## Build from source
 
 ```bash
 git clone https://github.com/marctjones/excise.git
 cd excise
-dotnet restore
 dotnet run --project Excise.App
 ```
 
-`dotnet 10.0` SDK required. Nothing extra to install — the renderer's native libraries (SkiaSharp and HarfBuzz, both MIT) come down with `dotnet restore`, and the OCR auditor shells out to the system `tesseract` binary if installed (skipped gracefully if not).
-
-## Usage
-
-### Desktop redaction (mark-then-apply)
-
-1. **Enable redaction mode** — toolbar button or press `R`
-2. **Mark areas** — click and drag (red dashed outline = pending)
-3. **Review pending marks** — sidebar shows preview text
-4. **Apply** — toolbar button or `Enter` (permanent removal)
-5. **Verify** — Clipboard History panel shows exactly what came out
-6. **Save** — defaults to `filename_REDACTED.pdf`
-
-Multiple areas across multiple pages can be marked and applied as a single batch.
-
-### Typewriter text on flat PDFs
-
-1. Click **✎ Type** in the toolbar.
-2. Click or drag on the page to place a text box.
-3. Type, move, resize, or delete the pending box before saving.
-4. Save to flatten the text into the PDF page content. When the open file is still the original, excise routes the save through **Save a Copy** so the original is preserved.
-
-### Form fill (existing AcroForm)
-
-1. Open a PDF with form fields. Each field becomes an inline editor on the page: text fields use text boxes, choice/radio fields use selectors, and checkboxes use checkboxes.
-2. Edit a value. Single-line text commits on Enter or focus loss; multiline text commits on Ctrl+Enter or focus loss; Escape restores the last committed value.
-3. Use **Save Filled Copy** / **Save As** to preserve interactive form fields and values.
-4. Use **Flatten Form** to create a copy where form values are baked into static page content and widget annotations are removed.
-
-### Form authoring (create new fields)
-
-1. Click **📋 Add Field** in the toolbar (or call `doc.AddTextField(...)` etc. from code).
-2. Pick a field type from the combo (Text / Checkbox / Choice / Signature).
-3. Drag a rect on the page — the new field appears immediately and is editable.
-4. **🪄 Auto-detect** scans the current document for likely field positions — long horizontal strokes (text-field underlines) and small square outlines (checkboxes) — and creates them in one click.
-
-### Authoring PDFs from scratch (high-level)
-
-`Excise.Core.Authoring.PdfDocumentBuilder` is a friendly, flow-layout writer that
-handles word-wrap, pagination, and field placement so you never touch raw
-coordinates. It sits on top of the low-level `PdfGraphics` / `AcroFormAuthoring`
-API (drop down to those any time via `.Custom(...)` or `.Build()`).
-
-```csharp
-using Excise.Core.Authoring;
-
-byte[] pdf = PdfDocumentBuilder.Create()           // US Letter, 1-inch margins
-    .Heading("Membership Application")
-    .Paragraph("Please complete all required fields.")
-    .HorizontalRule()
-    .KeyValue("Date", "2026-06-05")
-    .TextField("Full name", "fullName", required: true)
-    .CheckBox("I agree to the terms", "agree")
-    .Dropdown("Tier", new[] { "Basic", "Standard", "Premium" }, "tier", "Standard")
-    .TextField("Comments", "comments", multiline: true, lines: 4)
-    .Table(new[]
-    {
-        new[] { "Item", "Qty", "Price" },
-        new[] { "Widget", "3", "$9.00" },
-    }, columnWeights: new[] { 2.0, 1.0, 1.0 }, headerRow: true)
-    .SaveToBytes();                                 // or .Save("form.pdf")
-```
-
-The result is a real, fillable AcroForm PDF: text is extractable, content
-flows onto new pages automatically, and the form fields are live in any viewer.
-Styling is via the immutable `TextStyle` record (family/size/bold/italic/color/
-alignment); page size/margins via `PageSize` and `PageMargins`. See issue #383.
-
-### Reveal Hidden Text
-
-`Tools → Reveal Hidden Text` finds text that's been visually hidden by overlays:
-
-- **Yellow boxes** — structural detections from `Excise.Core.Text.Segmentation.HiddenTextDetector` (text covered by later filled rectangles, the classic bad-redaction pattern)
-- **Orange boxes** — differential-OCR recoveries (`Excise.Ocr.DifferentialOcrAuditor`) for text hidden inside rasterized images by an opaque overlay
-
-Useful for auditing third-party redactions before relying on them.
-
-### Keyboard shortcuts
-
-Press **F1** to view all in-app.
-
-| Category | Action | Shortcut |
-|---|---|---|
-| File | Open / Save / Save As / Close | `Ctrl+O` / `Ctrl+S` / `Ctrl+Shift+S` / `Ctrl+W` |
-| Edit | Find / Find Next / Find Previous | `Ctrl+F` / `F3` / `Shift+F3` |
-| View | Zoom In / Out / Actual / Fit Width / Fit Page | `Ctrl+Plus/Minus/0/1/2` |
-| Navigation | Next/Previous/First/Last Page | `Page Down/Up`, `Home`, `End` |
-| Modes | Redaction / Text Selection / Apply | `R` / `T` / `Enter` |
-| Pages | Rotate Left / Right | `Ctrl+L` / `Ctrl+R` |
-| Tabs | Next / Previous document tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` (or `Ctrl+PgDn` / `Ctrl+PgUp`; on macOS also Window ▸ Show Next/Previous Tab) |
-
-### CLI examples
-
-```bash
-# Render page 1 of a PDF at 200 DPI
-excise render report.pdf -o report-p1.png --page 1 --dpi 200
-
-# Glyph-level redact a phrase
-excise redact report.pdf report-redacted.pdf "ACCOUNT 9876"
-
-# Write a smaller copy for email: downsample images above 188 dpi to 150 dpi
-excise optimize scan.pdf scan-small.pdf --preset standard
-
-# Audit a "redacted" PDF for hidden text leftovers — both structural and rasterized
-excise audit purportedly-redacted.pdf --deep --json
-
-# Fill an AcroForm and flatten so the result is no longer interactive
-excise fill-form blank-w9.pdf w9-filled.pdf --field Name=Acme --field EIN=12-3456789 --flatten
-
-# Add a text field to an existing PDF
-excise add-field invoice.pdf invoice-with-form.pdf \
-  --type Text --name CustomerNote --page 1 --rect "72,200,540,260"
-
-# Auto-detect form fields on a Word-exported PDF and apply them
-excise autodetect-fields exported-from-word.pdf form-ready.pdf --apply
-
-# Audit somebody else's redaction: what did each black box actually keep hidden?
-excise unredact purportedly-redacted.pdf --json
-
-# ...including the deferred image channels and the OCR differential
-excise unredact purportedly-redacted.pdf --include-deferred --ocr
-
-# Extract text from a scanned PDF (requires system tesseract)
-excise ocr scan.pdf
-```
-
-## Technology stack
-
-### Framework & UI
-- **.NET 10.0** — Cross-platform runtime
-- **Avalonia UI 12.x** (MIT) — Cross-platform XAML UI
-- **ReactiveUI** (MIT) — MVVM framework
-
-### Excise libraries (this repo)
-- **Excise.Core** — Pure-.NET PDF parser, writer, content streams, glyph-level redaction, text extraction with letter positions, hidden-text detection, AcroForm read/fill/flatten/author, OCG + structure tree (read-only), embedded files (read + scrub), page labels, named destinations, document authoring
-- **Excise.Rendering** — SkiaSharp renderer with embedded TrueType + raw-CFF/Type1C support, Type0/CID composite fonts, /Differences-aware encoding, image XObjects (DCT/Flate/JPX/CCITTFax/JBIG2), inline images, transparency, clipping paths, color spaces (DeviceRGB/CMYK/Gray, ICCBased, Indexed, CalRGB, Lab)
-- **Excise.Ocr** — Wrapper around the system `tesseract` CLI + a differential-OCR auditor
-
-### Permissive third-party deps
-- **SkiaSharp 3.119.x** (MIT) — 2D graphics
-- **CSJ2K 3.x** (BSD-2-Clause) — managed JPEG 2000 / JPX image decoding
-- **BouncyCastle.Cryptography** (MIT) — CMS cryptography for digital-signature inspection
-- **Microsoft.CodeAnalysis.CSharp.Scripting** (MIT) — optional Roslyn scripting for GUI automation; enabled in Debug/test builds and opt-in for Release builds with `-p:EnableScripting=true`
-
-No copyleft obligations. No PDFium / PDFsharp / PdfPig / Tesseract.NET — all dropped in v2.0.
-
-## Project structure
-
-```
-excise/
-├── Excise.Core/                       # PDF parser, writer, content streams, redaction, AcroForm
-│   ├── Parsing/                     # Lexer, parser, xref
-│   ├── Document/                    # PdfDocument, PdfPage, AcroForm (parse/edit/flatten/author/autodetect),
-│   │                                # OCG, structure tree, embedded files, page labels
-│   ├── Content/                     # ContentStreamReader/Writer
-│   ├── Text/                        # TextExtraction, letter positions
-│   │   └── Segmentation/            # GlyphRemover, ImageRedactor, HiddenTextDetector
-│   ├── Fonts/                       # CffParser, CffSubsetter
-│   ├── Graphics/                    # PdfGraphics API (paths, text, images)
-│   └── Writing/                     # Save, incremental update
-│
-├── Excise.Rendering/                  # Skia-based renderer
-│   ├── SkiaRenderer.cs              # Content-stream → SKBitmap
-│   ├── Fonts/                       # OpenType wrapper, AGL
-│   └── ColorSpaces/                 # DeviceRGB/CMYK/Gray, ICCBased, Indexed, CalRGB
-│
-├── Excise.Ocr/                        # OCR shim
-│   ├── PdfOcrService.cs             # tesseract CLI invocation
-│   └── DifferentialOcrAuditor.cs    # render-twice-and-diff hidden-text finder
-│
-├── Excise.Cli/                        # `excise` CLI
-│   └── Program.cs                   # 12 subcommands
-│
-├── Excise.App/                       # Desktop GUI
-│   ├── Controls/PdfViewerControl    # Reusable Avalonia PDF viewer (annotations, links, form/typewriter overlays)
-│   ├── Models/                      # HiddenTextHighlight, etc.
-│   ├── Services/                    # App services on Excise.Core / Excise.Rendering
-│   ├── ViewModels/
-│   └── Views/
-│
-├── Excise.Core.Tests/                 # ~2880 tests
-├── Excise.Rendering.Tests/            # ~287 tests, including visual baselines + corpus
-├── Excise.Avalonia.Tests/             # public API and viewer utility tests
-├── Excise.Cli.Tests/                  # 22 tests
-├── Excise.Ocr.Tests/                  # 41 tests (some require tesseract)
-├── Excise.App.Tests/                 # ~775 tests, including headless GUI
-└── test-pdfs/                       # Smoke corpus + sample PDFs
-```
-
-## Testing
-
-```bash
-# Full suite
-dotnet test
-
-# Single project
-dotnet test Excise.Rendering.Tests
-dotnet test Excise.Core.Tests --filter "Redaction"
-
-# With detailed output
-dotnet test --logger "console;verbosity=detailed"
-```
-
-Test categories:
-- Unit tests — primitives, parser, content streams, segmentation, coordinate math
-- Integration tests — real-world PDFs (birth certificates, government forms, books)
-- Visual regression — MuPDF-first bitmap diffs with Poppler/Ghostscript escalation for disputed renders
-- Headless GUI — `[AvaloniaFact]` tests render `PdfViewerControl` against fixtures
-- Security — content-stream verification that redacted text is structurally absent
-- Conformance — smoke corpus parse/render, Isartor round-trip, and optional veraPDF corpus parse/render
-
-The PDF Association corpora are downloaded on demand with `scripts/download-test-pdfs.sh`. The full veraPDF corpus is intentionally treated as a slower conformance lane, not as a required inner-loop test.
-
-**The gates are local, and one command selects them: `scripts/test-tier.sh {t0|t1|full}`.** Every gate is a row in `tests/gates.tsv`; see [`LOCAL_GATES.md`](LOCAL_GATES.md). Two GitHub workflows (`.github/workflows/windows.yml`, `.github/workflows/linux.yml`) build excise on Windows and Linux and run a small set of tests that can only mean something there — printing, the single-instance handoff, "open with" arguments, base-14 font fallback with no Microsoft fonts. They are **advisory**: they never block a merge, they carry no coverage floors, corpus scans or reference-renderer oracles, and a green run is not a substitute for running a local tier. What they do and do not prove is in `LOCAL_GATES.md`, "The advisory platform runners".
-
-## Building
-
-### Plain self-contained binaries
-
-```bash
-# Linux
-dotnet publish Excise.App -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true
-
-# Windows
-dotnet publish Excise.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
-
-# macOS Intel / Apple Silicon
-dotnet publish Excise.App -c Release -r osx-x64    --self-contained true -p:PublishSingleFile=true
-dotnet publish Excise.App -c Release -r osx-arm64  --self-contained true -p:PublishSingleFile=true
-```
-
-Published binaries land in `bin/Release/net10.0/<runtime>/publish/`.
-
-Release builds exclude the Roslyn scripting engine by default to keep shipped
-packages lean and AOT/trim-friendlier. To produce a developer build with the
-GUI scripting service included, add `-p:EnableScripting=true` to the publish
-command.
-
-Repo-local `tessdata/*.traineddata` files are also excluded from app packages by
-default; excise uses the system `tesseract` installation when differential OCR is
-requested. To bundle local language data for an offline/developer package, add
-`-p:IncludeTessdataInApp=true`.
-
-### Installers
-
-```bash
-# Ubuntu / Debian .deb (requires dpkg-deb; preinstalled on Ubuntu)
-scripts/build-deb.sh                          # → dist/excise_<version>_amd64.deb
-scripts/build-deb.sh --arch arm64             # arm64 variant
-scripts/build-deb.sh --version 2.1.0-rc8      # explicit version
-
-# Windows .exe (requires Inno Setup 6: choco install innosetup)
-pwsh scripts/build-windows-installer.ps1      # → dist/excise-<version>-win-x64-setup.exe
-
-# macOS .app bundle (Apple Silicon by default; Intel via --rid osx-x64)
-scripts/build-macos-app.sh --version <version>            # → dist/excise-<version>-macos-arm64.zip
-scripts/build-macos-app.sh --version <version> --rid osx-x64
-```
-
-### Native AOT release lane
-
-Native AOT is the macOS/Linux release package lane. The macOS GUI is
-**validated on `osx-arm64`**: it AOT-compiles with a zero warning budget
-(first-party `Excise.*` code is AOT-clean — source-generated JSON, no
-reflection-based ReactiveUI `WhenAnyValue`; the residual IL2104/IL3053 roll-ups
-are from third-party GUI frameworks, suppressed and tracked in #593), and it
-passes the packaged GUI smoke. A CI job (**Native AOT (macOS)**) keeps the
-macOS AOT publish from regressing. The Linux release workflow builds the AOT
-`.deb` and smokes the CLI `version`/`info`/`text`/`render` paths to cover native
-asset loading on a headless runner. Other RIDs await per-platform probes (#595).
-The local gate publishes/packages the AOT app, captures IL/AOT warning output,
-asserts that the payload has `0` managed `.dll` sidecars, separates debug
-symbols from the user-facing artifact, and writes JSON/markdown evidence:
-
-```bash
-scripts/release-smoke.sh --quick --only=aot
-scripts/run-aot-smoke.sh --version <version> --rid osx-arm64
-scripts/build-macos-app.sh --version <version> --rid osx-arm64 --aot
-```
-
-Use `scripts/run-aot-smoke.sh --gui-smoke` on an interactive macOS runner when
-validating the AOT app against packaged GUI launch/open/render evidence.
-
-### Using excise as a PDF reader on macOS
-
-The `.app` bundle declares itself a handler for PDF files (`CFBundleDocumentTypes`)
-and opens documents passed by Finder, the Dock, or `open -a` — so it can be used
-as a regular reader, not just launched empty.
-
-```bash
-# First launch: builds are deliberately not notarized (#629 — excise targets an
-# audience of one, so a one-time manual accept beats maintaining an Apple
-# Developer cert). Either right-click → Open once, or clear the quarantine:
-xattr -dr com.apple.quarantine /Applications/excise.app
-
-# Open a PDF in excise:
-open -a excise ~/Documents/example.pdf
-```
-
-To make excise the **default** PDF app: select any `.pdf` in Finder → **⌘I** (Get
-Info) → **Open with** → choose *excise* → **Change All…**. Double-clicking PDFs
-then opens them in excise.
-
-### Using excise as a PDF reader on Windows
-
-The Windows installer registers excise as a PDF-capable app in the per-user
-`Default apps` / `Open with` registry metadata. During install, select
-**Associate excise with .pdf files** to add the `excise.pdf` ProgID. Windows 10/11
-still require the user to choose the default handler: Settings → Apps →
-Default apps → choose defaults by file type → `.pdf` → **excise**.
-
-The portable `.zip` does not write registry entries. For portable installs, use
-Explorer → right-click a PDF → **Open with** → **Choose another app** → browse to
-`Excise.App.exe`; selected PDFs are passed to excise and opened on launch.
-
-### Release automation
-
-`.github/workflows/release.yml` builds installers/app bundles and attaches them
-to a **draft** GitHub Release whenever a `v*` tag is pushed (publishing stays a
-manual click; a manual `workflow_dispatch` is a dry run that uploads run
-artifacts and never touches a release):
-
-1. `preflight` job: the version matches the tree, the changelog has notes for it, doc claims and the license manifest are current
-2. `linux` job (ubuntu-latest and ubuntu-24.04-arm) → `excise_<version>_{amd64,arm64}.deb` + portable `.tar.gz`
-3. `windows` job (windows-latest) → `excise-<version>-win-x64-setup.exe` + portable `.zip`
-4. `macos` job (macos-latest) → arm64 `.app` bundle `.zip`
-5. `release` job checks every asset against its `.sha256` and creates the draft; tags containing `-rc`/`-beta`/`-alpha` are flagged as pre-releases.
-
-All four packages are Native AOT, and each job unpacks what it ships and fails
-if it is not (`scripts/check-aot-payload.py`: no managed assemblies, no runtime,
-no single-file bundle marker).
-
-Before tagging, run the release checklist in
-[`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md). The repeatable local
-gate is:
-
-```bash
-scripts/release-smoke.sh --visual --package --packaged-gui --aot --version <version>
-```
-
-The release-smoke script does not create tags or upload artifacts. It runs the
-documentation, build, redaction, signature-verification, UI workflow,
-benchmark, Native AOT, full-test, local visual-regression, packaging,
-packaged-GUI evidence, packaged first-page responsiveness timing, and diff-cleanliness gates
-and writes logs under `logs/release-smoke_*`. Passing `--package` implies AOT
-unless `--no-aot` is used for a package-only investigation.
-
-```bash
-# Cut a new release
-git tag -a v2.27.1 -m "excise v2.27.1"
-git push origin v2.27.1          # workflow runs, attaches release artifacts
-# Or via the GitHub UI: Releases → Draft a new release → choose tag
-```
-
-## Versioning & API stability
-
-The publishable libraries — **`Excise.Core`**, **`Excise.Rendering`**, **`Excise.Avalonia`** — follow [Semantic Versioning](https://semver.org/) on their **public** API:
-
-- **MAJOR** — a breaking change to a public type/member.
-- **MINOR** — backward-compatible additions (new types/members/overloads).
-- **PATCH** — backward-compatible fixes with no public-API change.
-
-What counts as the supported public contract:
-
-- Public types and members of the three libraries are the contract. Anything marked `internal` (or excluded from the public surface) may change in any release.
-- The high-level authoring surface — `Excise.Core.Authoring.*` (`PdfDocumentBuilder`, `TextStyle`, `PageSize`, `PageMargins`, `FontFamily`, `LayoutContext`) — is the recommended, stable entry point for *writing* PDFs. The low-level `PdfGraphics` / `AcroFormAuthoring` API remains available as an escape hatch.
-- The public API is **gated in CI**: `PublicApiApprovalTests` snapshots the full public surface of `Excise.Core` against a committed baseline (`Excise.Core.Tests/PublicApi/Excise.Core.approved.txt`). Any addition, removal, or signature change fails the build until the baseline is intentionally regenerated (`APPROVE_PUBLIC_API=1`) and committed — so every public-API change is a deliberate, reviewable SemVer decision.
-
-**Distribution:** packages ship as `.nupkg` + `.snupkg` (symbols) with [SourceLink](https://github.com/dotnet/sourcelink) for step-into debugging, attached to each [GitHub Release](https://github.com/marctjones/excise/releases). They are **not published to nuget.org** — consume them via a local/private feed or a project reference. See issues #383 (writer DX) and #384 (viewer/render DX).
+You need the .NET 10 SDK from Microsoft's installer (not Homebrew's `dotnet`, which produces different output and breaks NativeAOT). Packaging, installers and the release process are in [docs/BUILDING.md](docs/BUILDING.md); tests and gates are in [LOCAL_GATES.md](LOCAL_GATES.md).
 
 ## Documentation
 
-- **[CHANGELOG.md](CHANGELOG.md)** — release notes
-- **[Architecture](docs/architecture/README.md)** — canonical system design,
-  decisions, registry authority, and generated views
-- **[GitHub Wiki](https://github.com/marctjones/excise/wiki)** — Architecture, redaction engine internals, PDF spec reference
-- **[CLAUDE.md](CLAUDE.md)** — Development guidelines (also for AI-assisted contributions)
-- **[REDACTION_AI_GUIDELINES.md](REDACTION_AI_GUIDELINES.md)** — Critical safety rules for redaction-code changes
-
-## License
-
-MIT License. See [LICENSES.md](LICENSES.md) for the complete dependency-license inventory. All dependencies are permissive (MIT / BSD-2-Clause / BSD-3-Clause); no copyleft. Licence policy — permitted vs banned SPDX ids, enforced on every push — is in `tests/license-policy.tsv`.
+- [CHANGELOG.md](CHANGELOG.md): release notes
+- [docs/USAGE.md](docs/USAGE.md): desktop workflows and keyboard shortcuts
+- [docs/RENDERER_COVERAGE.md](docs/RENDERER_COVERAGE.md): rendering validation and PDF 2.0 conformance
+- [docs/architecture/README.md](docs/architecture/README.md): system design and decisions
+- [GitHub Wiki](https://github.com/marctjones/excise/wiki): redaction internals and PDF specification notes
+- [CLAUDE.md](CLAUDE.md) and [REDACTION_AI_GUIDELINES.md](REDACTION_AI_GUIDELINES.md): contributor guidelines, including for AI-assisted changes
 
 ## Contributing
 
-Contributions are tracked in GitHub Issues and milestones rather than a second
-roadmap in this file. The roadmap is the [D1 to D11
-milestones](https://github.com/marctjones/excise/milestones), ordered by what
-matters most to a daily-driver reader: redaction trust, data-loss bugs and
-Mac-style GUI behaviour come first, then performance, rendering, text and
-forms, and PDF 2.0 conformance measurement last.
-Start with an issue whose acceptance criteria name the relevant behavior,
-security, performance, and compatibility gates.
+Work is tracked in [GitHub Issues](https://github.com/marctjones/excise/issues) and [milestones](https://github.com/marctjones/excise/milestones), not in this file. Start from an issue whose acceptance criteria name the behavior and the checks that prove it.
+
+## License
+
+MIT. See [LICENSE](LICENSE); the dependency inventory is in [LICENSES.md](LICENSES.md).
