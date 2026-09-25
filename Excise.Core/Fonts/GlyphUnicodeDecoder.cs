@@ -729,92 +729,9 @@ internal sealed class GlyphUnicodeDecoder
         return true;
     }
 
-    private static string DecodeWinAnsi(int charCode)
-    {
-        // WinAnsiEncoding (Windows Code Page 1252)
-        // Most chars map directly, special handling for 128-159
-        if (charCode < 128 || charCode >= 160)
-            return CharToString((char)charCode);
+    private static string DecodeWinAnsi(int charCode) => CharToString(WinAnsiEncoding.Decode(charCode));
 
-        // Special mappings for 128-159
-        return charCode switch
-        {
-            128 => "\u20AC", // Euro sign
-            130 => "\u201A", // Single low-9 quotation mark
-            131 => "\u0192", // Latin small letter f with hook
-            132 => "\u201E", // Double low-9 quotation mark
-            133 => "\u2026", // Horizontal ellipsis
-            134 => "\u2020", // Dagger
-            135 => "\u2021", // Double dagger
-            136 => "\u02C6", // Modifier letter circumflex accent
-            137 => "\u2030", // Per mille sign
-            138 => "\u0160", // Latin capital letter S with caron
-            139 => "\u2039", // Single left-pointing angle quotation mark
-            140 => "\u0152", // Latin capital ligature OE
-            142 => "\u017D", // Latin capital letter Z with caron
-            145 => "\u2018", // Left single quotation mark
-            146 => "\u2019", // Right single quotation mark
-            147 => "\u201C", // Left double quotation mark
-            148 => "\u201D", // Right double quotation mark
-            149 => "\u2022", // Bullet
-            150 => "\u2013", // En dash
-            151 => "\u2014", // Em dash
-            152 => "\u02DC", // Small tilde
-            153 => "\u2122", // Trade mark sign
-            154 => "\u0161", // Latin small letter s with caron
-            155 => "\u203A", // Single right-pointing angle quotation mark
-            156 => "\u0153", // Latin small ligature oe
-            158 => "\u017E", // Latin small letter z with caron
-            159 => "\u0178", // Latin capital letter Y with diaeresis
-            _ => CharToString((char)charCode)
-        };
-    }
-
-    private static string DecodeMacRoman(int charCode)
-    {
-        // MacRomanEncoding - simplified, handle special chars 128-255
-        if (charCode < 128)
-            return CharToString((char)charCode);
-
-        // Mac Roman special characters (subset)
-        return charCode switch
-        {
-            128 => "\u00C4", // Ä
-            129 => "\u00C5", // Å
-            130 => "\u00C7", // Ç
-            131 => "\u00C9", // É
-            132 => "\u00D1", // Ñ
-            133 => "\u00D6", // Ö
-            134 => "\u00DC", // Ü
-            135 => "\u00E1", // á
-            136 => "\u00E0", // à
-            137 => "\u00E2", // â
-            138 => "\u00E4", // ä
-            139 => "\u00E3", // ã
-            140 => "\u00E5", // å
-            141 => "\u00E7", // ç
-            142 => "\u00E9", // é
-            143 => "\u00E8", // è
-            144 => "\u00EA", // ê
-            145 => "\u00EB", // ë
-            146 => "\u00ED", // í
-            147 => "\u00EC", // ì
-            148 => "\u00EE", // î
-            149 => "\u00EF", // ï
-            150 => "\u00F1", // ñ
-            151 => "\u00F3", // ó
-            152 => "\u00F2", // ò
-            153 => "\u00F4", // ô
-            154 => "\u00F6", // ö
-            155 => "\u00F5", // õ
-            156 => "\u00FA", // ú
-            157 => "\u00F9", // ù
-            158 => "\u00FB", // û
-            159 => "\u00FC", // ü
-            _ => CharToString((char)charCode)
-        };
-    }
-
+    private static string DecodeMacRoman(int charCode) => CharToString(MacRomanEncoding.Decode(charCode));
 
     // Single-character string cache (#600, widened to the BMP by #1485): the
     // decode fallbacks (DecodeWinAnsi/DecodeMacRoman/identity) allocated a
