@@ -190,7 +190,7 @@ public class PdfOcrServiceTests
     public void PdfOcrService_RecognizeBitmap_WithNullBitmap_ThrowsArgumentNullException()
     {
         var service = new PdfOcrService();
-        var action = () => service.RecognizeBitmap(null!, 792);
+        var action = () => service.RecognizeBitmap(null!, null!);
         action.Should().Throw<ArgumentNullException>();
     }
 

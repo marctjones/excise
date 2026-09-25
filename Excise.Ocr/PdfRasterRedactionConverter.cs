@@ -36,12 +36,12 @@ public sealed class PdfRasterRedactionConverter
         {
             var page = source.GetPage(p);
             using var bitmap = renderer.RenderPage(page, new RenderOptions { Dpi = _dpi });
-            var matches = FindMatches(_ocr.RecognizeBitmap(bitmap, page.Height).Words, term, caseSensitive);
+            var matches = FindMatches(_ocr.RecognizeBitmap(bitmap, page).Words, term, caseSensitive);
             foreach (var match in matches)
                 foreach (var word in match)
-                    Paint(bitmap, word.BoundingBox, page.Height);
+                    Paint(bitmap, PdfCoordinateMapper.ToViewerDips(page, PdfPageRect.FromContentPoints(p, word.BoundingBox), _dpi));
             PdfRasterPageAuthoring.AddRgbRasterPage(
-                output, ToRgb(bitmap), bitmap.Width, bitmap.Height, page.Width, page.Height);
+                output, ToRgb(bitmap), bitmap.Width, bitmap.Height, page.VisualWidth, page.VisualHeight);
             total += matches.Count;
             progress?.Invoke(p, source.PageCount);
         }
@@ -81,12 +81,11 @@ public sealed class PdfRasterRedactionConverter
         return result;
     }
 
-    private void Paint(SKBitmap bitmap, PdfRectangle rect, double pageHeight)
+    private static void Paint(SKBitmap bitmap, PdfPageRect pixels)
     {
-        double s = _dpi / 72.0; var r = rect.Normalize();
-        int l = Math.Max(0, (int)Math.Floor(r.Left * s) - 2), rr = Math.Min(bitmap.Width, (int)Math.Ceiling(r.Right * s) + 2);
-        int t = Math.Max(0, (int)Math.Floor((pageHeight - r.Top) * s) - 2), b = Math.Min(bitmap.Height, (int)Math.Ceiling((pageHeight - r.Bottom) * s) + 2);
-        using var canvas = new SKCanvas(bitmap); canvas.DrawRect(l, t, rr - l, b - t, new SKPaint { Color = SKColors.Black });
+        int l = Math.Max(0, (int)Math.Floor(pixels.X) - 2), r = Math.Min(bitmap.Width, (int)Math.Ceiling(pixels.Right) + 2);
+        int t = Math.Max(0, (int)Math.Floor(pixels.Y) - 2), b = Math.Min(bitmap.Height, (int)Math.Ceiling(pixels.Y2) + 2);
+        using var canvas = new SKCanvas(bitmap); canvas.DrawRect(l, t, r - l, b - t, new SKPaint { Color = SKColors.Black });
     }
 
     private static byte[] ToRgb(SKBitmap bitmap)
