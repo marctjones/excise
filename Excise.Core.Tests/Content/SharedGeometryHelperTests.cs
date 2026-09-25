@@ -79,8 +79,8 @@ public class SharedGeometryHelperTests
         // oracle for the product every consumer used to hand-roll.
         var ops = new ContentStreamParser(
             "2 0 0 3 10 20 cm 0 1 -1 0 5 6 cm 0 0 m"u8.ToArray(), null).Parse().Operators;
-        var first = ContentTransform.FromOperands(ops[0]);
-        var second = ContentTransform.FromOperands(ops[1]);
+        var first = new ContentTransform(2, 0, 0, 3, 10, 20);
+        var second = new ContentTransform(0, 1, -1, 0, 5, 6);
 
         ops[2].GraphicsTransform.Should().Be(second.Multiply(first));
     }

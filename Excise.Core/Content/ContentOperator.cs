@@ -562,11 +562,6 @@ public readonly record struct ContentTransform(
     /// <summary>The identity matrix. <c>default</c> is the ZERO matrix.</summary>
     internal static ContentTransform Identity => new(1, 0, 0, 1, 0, 0);
 
-    /// <summary>The matrix of a <c>cm</c> operator's six operands.</summary>
-    internal static ContentTransform FromOperands(ContentOperator op) => new(
-        op.GetNumber(0), op.GetNumber(1), op.GetNumber(2),
-        op.GetNumber(3), op.GetNumber(4), op.GetNumber(5));
-
     /// <summary>A six-number <c>/Matrix</c> array; identity when absent or short. A non-number reads as 0.</summary>
     internal static ContentTransform FromArray(PdfArray? array)
     {
