@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "1459aa7920e9d651574cf2a6254977ad50e0509465148adb129e3fa20401756f",
+  "sourceFingerprint": "fa2f33e32ce7720d8b3fae0e4b159c60dafbe4d0ee294897805c197ef998ee18",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -4031,7 +4031,7 @@
       "path": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs",
       "class": "BlankPageRecoveryTests",
       "method": "GlyphNamesOutsideTheRendererSubset_ResolveThroughCore",
-      "line": 127,
+      "line": 128,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4073,7 +4073,7 @@
       "path": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs",
       "class": "BlankPageRecoveryTests",
       "method": "TextOperatorsOutsideATextObject_DrawWhatTheOraclesDraw",
-      "line": 153,
+      "line": 154,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -12583,6 +12583,48 @@
           "capability": "pdf.17.transparency.model",
           "modes": [
             "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/InheritedPageAttributeCloneOracleTests.cs::InheritedPageAttributeCloneOracleTests.ClonedPage_KeepsInheritedGeometryAndFont_PerMutool",
+      "path": "Excise.Rendering.Tests/Differential/InheritedPageAttributeCloneOracleTests.cs",
+      "class": "InheritedPageAttributeCloneOracleTests",
+      "method": "ClonedPage_KeepsInheritedGeometryAndFont_PerMutool",
+      "line": 26,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
             "render"
           ]
         }
@@ -28500,6 +28542,106 @@
       "class": "FontRenderingMatrixTests",
       "method": "Type0IdentityH_EmbeddedCidFontType2_RendersInk",
       "line": 227,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs::GlyphNameAndMacRomanEncodingOracleTests.Differences_GlyphNames_ExtractorMatchesMutoolAndTheRenderer",
+      "path": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs",
+      "class": "GlyphNameAndMacRomanEncodingOracleTests",
+      "method": "Differences_GlyphNames_ExtractorMatchesMutoolAndTheRenderer",
+      "line": 56,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs::GlyphNameAndMacRomanEncodingOracleTests.Differences_ZapfDingbatsNames_ExtractorMatchesPdftotextAndTheRenderer",
+      "path": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs",
+      "class": "GlyphNameAndMacRomanEncodingOracleTests",
+      "method": "Differences_ZapfDingbatsNames_ExtractorMatchesPdftotextAndTheRenderer",
+      "line": 79,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "content-streams",
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs::GlyphNameAndMacRomanEncodingOracleTests.MacRomanEncoding_AnnexDHighCodes_ExtractorMatchesMutool",
+      "path": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs",
+      "class": "GlyphNameAndMacRomanEncodingOracleTests",
+      "method": "MacRomanEncoding_AnnexDHighCodes_ExtractorMatchesMutool",
+      "line": 103,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs::GlyphNameAndMacRomanEncodingOracleTests.Renderer_MacRomanCode333_DrawsTheCurrencySignExtractionReads",
+      "path": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs",
+      "class": "GlyphNameAndMacRomanEncodingOracleTests",
+      "method": "Renderer_MacRomanCode333_DrawsTheCurrencySignExtractionReads",
+      "line": 127,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -47436,12 +47578,12 @@
     }
   ],
   "summary": {
-    "testMethods": 1311,
+    "testMethods": 1316,
     "facets": {
-      "content-streams": 369,
+      "content-streams": 370,
       "content-strings-and-text": 7,
-      "differential-rendering": 733,
-      "fonts": 213,
+      "differential-rendering": 734,
+      "fonts": 218,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 320,
       "images": 232,
@@ -47452,19 +47594,19 @@
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 7,
-      "pdf.17.content.streams:parse": 376,
-      "pdf.17.content.streams:render": 882,
+      "pdf.17.content.streams:parse": 377,
+      "pdf.17.content.streams:render": 884,
       "pdf.17.content.text-state:extract": 7,
       "pdf.17.content.text-state:parse": 7,
       "pdf.17.content.text-state:render": 7,
       "pdf.17.graphics.color:parse": 53,
       "pdf.17.graphics.color:render": 53,
-      "pdf.17.graphics.fonts:extract": 213,
-      "pdf.17.graphics.fonts:parse": 213,
-      "pdf.17.graphics.fonts:render": 875,
+      "pdf.17.graphics.fonts:extract": 218,
+      "pdf.17.graphics.fonts:parse": 218,
+      "pdf.17.graphics.fonts:render": 880,
       "pdf.17.graphics.images:extract": 232,
       "pdf.17.graphics.images:parse": 232,
-      "pdf.17.graphics.images:render": 880,
+      "pdf.17.graphics.images:render": 881,
       "pdf.17.graphics.paths-painting:parse": 320,
       "pdf.17.graphics.paths-painting:render": 320,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -47472,7 +47614,7 @@
       "pdf.17.graphics.state:parse": 320,
       "pdf.17.graphics.state:render": 320,
       "pdf.17.transparency.model:parse": 84,
-      "pdf.17.transparency.model:render": 767
+      "pdf.17.transparency.model:render": 768
     },
     "unclassified": 38,
     "allTestsMapped": true

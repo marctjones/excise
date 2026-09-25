@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "861e091932d564c265f9aa3437522319a1a1e2cb",
+  "sourceRevision": "3f95142f0f965b9ac15c55681fc7ce9dd2ab78e8",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 198,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "44fb6d77bc23dbfff17385fe74da8aa74f6b66f5",
-    "oldestProductionCommit": "23acd7f43398b02086dd1d0c63bb563d2e2a3961"
+    "newestProductionCommit": "7baf5a7216def160131a32383da399815e1acdc2",
+    "oldestProductionCommit": "4e7e8d8d80d2c884f973a76a40e91f49f3960236"
   },
   "files": [
     {
@@ -239,10 +239,6 @@
       "commits": 5
     },
     {
-      "path": "Excise.App/Excise.App.csproj",
-      "commits": 4
-    },
-    {
       "path": "Excise.App/Services/RedactionService.cs",
       "commits": 4
     },
@@ -267,6 +263,10 @@
       "commits": 4
     },
     {
+      "path": "Excise.Core/Document/PdfPage.cs",
+      "commits": 4
+    },
+    {
       "path": "Excise.Core/Redaction/CarrierTextRecovery.Forms.cs",
       "commits": 4
     },
@@ -288,6 +288,10 @@
     },
     {
       "path": "Excise.App/Automation/PerfScenarioRunner.cs",
+      "commits": 3
+    },
+    {
+      "path": "Excise.App/Excise.App.csproj",
       "commits": 3
     },
     {
@@ -339,10 +343,6 @@
       "commits": 3
     },
     {
-      "path": "Excise.Core/Document/PdfPage.cs",
-      "commits": 3
-    },
-    {
       "path": "Excise.Core/Graphics/PdfFont.cs",
       "commits": 3
     },
@@ -391,7 +391,7 @@
       "commits": 3
     },
     {
-      "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+      "path": "Excise.Rendering/SkiaRenderer.cs",
       "commits": 3
     },
     {
@@ -452,18 +452,6 @@
     },
     {
       "path": "Excise.App/Services/ReleasedMemoryReclaimer.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.App/Services/SignatureApplicationService.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.App/Services/SignatureVerificationService.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.App/Services/SignatureVerificationSummaryFormatter.cs",
       "commits": 2
     },
     {
@@ -543,6 +531,10 @@
       "commits": 2
     },
     {
+      "path": "Excise.Core/Document/PageCollection.cs",
+      "commits": 2
+    },
+    {
       "path": "Excise.Core/Document/PdfAnnotationParser.cs",
       "commits": 2
     },
@@ -572,6 +564,10 @@
     },
     {
       "path": "Excise.Core/Filters/FlateFilterDecoder.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Core/Fonts/WinAnsiEncoding.cs",
       "commits": 2
     },
     {
@@ -635,6 +631,10 @@
       "commits": 2
     },
     {
+      "path": "Excise.Rendering/AdobeGlyphList.cs",
+      "commits": 2
+    },
+    {
       "path": "Excise.Rendering/EncodedImageDecoder.cs",
       "commits": 2
     },
@@ -655,7 +655,11 @@
       "commits": 2
     },
     {
-      "path": "Excise.Rendering/SkiaRenderer.cs",
+      "path": "Excise.Rendering/SkiaRenderer.Text.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
       "commits": 2
     },
     {
@@ -731,7 +735,15 @@
       "commits": 1
     },
     {
-      "path": "Excise.App/Services/SignatureContentsReader.cs",
+      "path": "Excise.App/Services/SignatureApplicationService.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.App/Services/SignatureVerificationService.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.App/Services/SignatureVerificationSummaryFormatter.cs",
       "commits": 1
     },
     {
@@ -991,10 +1003,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Document/PageCollection.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Core/Document/PdfAcroFormParser.cs",
       "commits": 1
     },
@@ -1028,6 +1036,10 @@
     },
     {
       "path": "Excise.Core/Document/PdfNumberTree.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Document/PdfObjectCloner.cs",
       "commits": 1
     },
     {
@@ -1067,6 +1079,10 @@
       "commits": 1
     },
     {
+      "path": "Excise.Core/Fonts/AdobeGlyphList.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.Core/Fonts/CMapTokenizer.cs",
       "commits": 1
     },
@@ -1075,11 +1091,15 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Fonts/ToUnicodeCMapParser.cs",
+      "path": "Excise.Core/Fonts/GlyphUnicodeDecoder.cs",
       "commits": 1
     },
     {
-      "path": "Excise.Core/Fonts/WinAnsiEncoding.cs",
+      "path": "Excise.Core/Fonts/MacRomanEncoding.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Fonts/ToUnicodeCMapParser.cs",
       "commits": 1
     },
     {
@@ -1303,10 +1323,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Rendering/AdobeGlyphList.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
       "commits": 1
     },
@@ -1348,10 +1364,6 @@
     },
     {
       "path": "Excise.Rendering/RenderResourceScope.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Rendering/SkiaRenderer.Text.cs",
       "commits": 1
     }
   ],
@@ -2791,24 +2803,6 @@
       "jaccard": 1.0
     },
     {
-      "source": "Excise.App/Services/SignatureApplicationService.cs",
-      "target": "Excise.App/Services/SignatureVerificationService.cs",
-      "cochanges": 2,
-      "jaccard": 1.0
-    },
-    {
-      "source": "Excise.App/Services/SignatureApplicationService.cs",
-      "target": "Excise.App/Services/SignatureVerificationSummaryFormatter.cs",
-      "cochanges": 2,
-      "jaccard": 1.0
-    },
-    {
-      "source": "Excise.App/Services/SignatureVerificationService.cs",
-      "target": "Excise.App/Services/SignatureVerificationSummaryFormatter.cs",
-      "cochanges": 2,
-      "jaccard": 1.0
-    },
-    {
       "source": "Excise.App/Views/StickyNotePopupView.axaml",
       "target": "Excise.App/Views/StickyNotePopupView.axaml.cs",
       "cochanges": 2,
@@ -2835,6 +2829,12 @@
     {
       "source": "Excise.Core/Xfa/XfaMerge.cs",
       "target": "Excise.Core/Xfa/XfaReport.cs",
+      "cochanges": 2,
+      "jaccard": 1.0
+    },
+    {
+      "source": "Excise.Rendering/SkiaRenderer.Patterns.cs",
+      "target": "Excise.Rendering/SkiaRenderer.XObjects.cs",
       "cochanges": 2,
       "jaccard": 1.0
     },
@@ -2947,12 +2947,6 @@
       "jaccard": 0.6667
     },
     {
-      "source": "Excise.Rendering/SkiaRenderer.Patterns.cs",
-      "target": "Excise.Rendering/SkiaRenderer.XObjects.cs",
-      "cochanges": 2,
-      "jaccard": 0.6667
-    },
-    {
       "source": "Excise.App/Services/AppMetrics.cs",
       "target": "Excise.App/Services/ViewerCacheTrimCoordinator.cs",
       "cochanges": 2,
@@ -2991,6 +2985,12 @@
     {
       "source": "Excise.Core/Document/AcroFormAuthoring.cs",
       "target": "Excise.Core/Document/PdfField.cs",
+      "cochanges": 2,
+      "jaccard": 0.5
+    },
+    {
+      "source": "Excise.Core/Document/PageCollection.cs",
+      "target": "Excise.Core/Document/PdfPage.cs",
       "cochanges": 2,
       "jaccard": 0.5
     },

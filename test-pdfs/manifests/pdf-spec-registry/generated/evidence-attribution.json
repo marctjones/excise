@@ -44082,6 +44082,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_NamesTheRendererAlsoDraws_DecodeToTheAglCodePoint",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToGlyphName_GreekCapitalDelta_HasNoAglNameOnceDeltaIsIncrement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -44873,22 +44887,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_MultiplePages_AllEmbedWithCIDFontType0",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.BuilderDocument_TwoPagesWithOneEmbeddedFont_WritesTheFontProgramOnce",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -45559,6 +45557,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_NamesTheRendererAlsoDraws_DecodeToTheAglCodePoint",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToGlyphName_GreekCapitalDelta_HasNoAglNameOnceDeltaIsIncrement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46350,22 +46362,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_MultiplePages_AllEmbedWithCIDFontType0",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.BuilderDocument_TwoPagesWithOneEmbeddedFont_WritesTheFontProgramOnce",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -47018,6 +47014,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_NamesTheRendererAlsoDraws_DecodeToTheAglCodePoint",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToGlyphName_GreekCapitalDelta_HasNoAglNameOnceDeltaIsIncrement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -47809,22 +47819,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_MultiplePages_AllEmbedWithCIDFontType0",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/DocumentFontSharingTests.cs::DocumentFontSharingTests.BuilderDocument_TwoPagesWithOneEmbeddedFont_WritesTheFontProgramOnce",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -112868,8 +112862,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7797,
-    "testMethodsWithCapabilityCandidate": 4963,
+    "testMethods": 7809,
+    "testMethodsWithCapabilityCandidate": 4972,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

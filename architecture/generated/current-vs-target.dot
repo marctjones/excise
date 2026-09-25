@@ -83,7 +83,7 @@ digraph excise_architecture {
   "core-document" -> "core" [label="observed via parent boundary\n96 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-document" -> "core-encryption" [label="target + observed\n24 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core-parsing" [label="target + observed\n81 refs", color="#15803d", style="solid", penwidth=2];
-  "core-document" -> "core-primitives" [label="target + observed\n1425 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-primitives" [label="target + observed\n1421 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core-text" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-writing" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];
   "core-encryption" -> "core-parsing" [label="target + observed\n11 refs", color="#15803d", style="solid", penwidth=2];
@@ -123,7 +123,7 @@ digraph excise_architecture {
   "rendering" -> "core" [label="target + observed\n165 refs", color="#15803d", style="solid", penwidth=2];
   "rendering" -> "core-content" [label="accepted exception\n59 refs", color="#7e22ce", style="dotted", penwidth=2];
   "rendering" -> "core-document" [label="observed via parent boundary\n301 refs", color="#2563eb", style="dashed", penwidth=1];
-  "rendering" -> "core-fonts" [label="observed via parent boundary\n58 refs", color="#2563eb", style="dashed", penwidth=1];
+  "rendering" -> "core-fonts" [label="observed via parent boundary\n64 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-parsing" [label="observed via parent boundary\n35 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-primitives" [label="observed via parent boundary\n634 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-text" [label="observed via parent boundary\n9 refs", color="#2563eb", style="dashed", penwidth=1];

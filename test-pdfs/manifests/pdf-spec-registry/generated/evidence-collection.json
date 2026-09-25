@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1404,
-  "indexedContentSha256": "dca17b21eddcd61cbc0477fb63ef28249b560b619307cd88ab856f354e1229b5",
+  "indexedFileCount": 1407,
+  "indexedContentSha256": "229362be0ee0113b40880ad905de3a9173166a87f95c4bfcf78a881a07c5709c",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1331,6 +1331,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "indirect",
+            "trailer",
+            "xref"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -1505,18 +1514,9 @@
             "update",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Parsing/MalformedXRefFixtures.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "cross-reference",
-            "trailer",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 197
+      "candidateReferenceCount": 198
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -3420,7 +3420,6 @@
             "geometry",
             "inheritance",
             "tree",
-            "pagetree",
             "pdfdocument"
           ]
         },
@@ -4078,7 +4077,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 176
+      "candidateReferenceCount": 177
     },
     {
       "id": "pdf.17.document.navigation",
@@ -4377,7 +4376,6 @@
             "labels",
             "named",
             "viewer",
-            "pagetree",
             "pdfdocument"
           ]
         },
@@ -6310,14 +6308,6 @@
           ]
         },
         {
-          "path": "Excise.Rendering/AdobeGlyphList.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "collections",
-            "embedded"
-          ]
-        },
-        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -6749,6 +6739,16 @@
         },
         {
           "path": "Excise.Rendering.Tests/Fonts/FontRenderingMatrixTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "catalog",
+            "pdfdocument"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs",
           "kind": "test",
           "matchedTerms": [
             "collections",
@@ -8045,7 +8045,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 641
+      "candidateReferenceCount": 642
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8857,7 +8857,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 320
+      "candidateReferenceCount": 322
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -10313,14 +10313,6 @@
           ]
         },
         {
-          "path": "Excise.Rendering/AdobeGlyphList.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "fonts",
-            "glyph"
-          ]
-        },
-        {
           "path": "Excise.Rendering/Differential/DifferentialMetrics.cs",
           "kind": "source",
           "matchedTerms": [
@@ -10668,6 +10660,14 @@
             "fonts",
             "glyph",
             "metrics"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "fonts",
+            "glyph"
           ]
         }
       ],
@@ -12862,12 +12862,29 @@
           ]
         },
         {
+          "path": "Excise.Core/Fonts/AdobeGlyphList.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annex",
+            "iso",
+            "textextractor"
+          ]
+        },
+        {
           "path": "Excise.Core/Fonts/CffParser.cs",
           "kind": "source",
           "matchedTerms": [
             "iso",
             "operators",
             "textextractor"
+          ]
+        },
+        {
+          "path": "Excise.Core/Fonts/MacRomanEncoding.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annex",
+            "iso"
           ]
         },
         {
@@ -13490,26 +13507,9 @@
             "contentoperator",
             "contentstream"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/HiddenTextDetectorTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "iso",
-            "operators",
-            "contentstream"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/NonPageCarrierRedactionLeakTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "content-stream",
-            "iso"
-          ]
         }
       ],
-      "candidateReferenceCount": 127
+      "candidateReferenceCount": 130
     },
     {
       "id": "pdf.17.content.text-state",
@@ -58839,6 +58839,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Document/PdfPage.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "flattening",
+            "preview"
+          ]
+        },
+        {
           "path": "Excise.Core/Filters/PdfPredictor.cs",
           "kind": "source",
           "matchedTerms": [
@@ -59168,6 +59176,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flattening",
+            "output"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -59466,25 +59482,9 @@
             "output",
             "preview"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/GuiFullResponsivenessCoverageTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "preview"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/GuiLatencyBenchmarkTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "preview"
-          ]
         }
       ],
-      "candidateReferenceCount": 99
+      "candidateReferenceCount": 101
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -66459,7 +66459,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 134
+      "candidateReferenceCount": 135
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -67494,6 +67494,7 @@
           "path": "Excise.Core/Document/PdfObjectCloner.cs",
           "kind": "source",
           "matchedTerms": [
+            "attributes",
             "class",
             "maps",
             "structure"
@@ -67513,6 +67514,14 @@
           "matchedTerms": [
             "class",
             "structure"
+          ]
+        },
+        {
+          "path": "Excise.Core/Document/PdfPage.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attributes",
+            "class"
           ]
         },
         {
@@ -68030,19 +68039,9 @@
             "metadata",
             "tagged"
           ]
-        },
-        {
-          "path": "Excise.Core/Text/TextExtractor.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "class",
-            "logical",
-            "structure",
-            "tagged"
-          ]
         }
       ],
-      "candidateReferenceCount": 398
+      "candidateReferenceCount": 399
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -70343,7 +70342,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 700
+      "candidateReferenceCount": 701
     },
     {
       "id": "pdf.20.extension.developer",
@@ -77809,14 +77808,6 @@
           ]
         },
         {
-          "path": "Excise.Rendering/AdobeGlyphList.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log"
-          ]
-        },
-        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -78196,9 +78187,18 @@
             "redaction",
             "security"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/CarrierTextRecoveryTrapTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "audit",
+            "local",
+            "redaction"
+          ]
         }
       ],
-      "candidateReferenceCount": 161
+      "candidateReferenceCount": 159
     },
     {
       "id": "pdfe.product.platform.printing",
