@@ -63,14 +63,11 @@ public class StructElementMcidTextMapTests
 
                 for (int i = 0; i < elements.Count; i++)
                 {
-                    foreach (int? inherited in new int?[] { null, 1 })
-                    {
-                        var expected = reference.ResolveStructElementTextFromLetters(referenceElements[i], inherited);
-                        var actual = doc.ResolveStructElementText(elements[i], inherited);
-                        actual.Should().Be(expected, $"{name} element {i} ({elements[i].Type}), inherited page {inherited}");
-                        comparedElements++;
-                        if (expected.Length > 0) nonEmpty++;
-                    }
+                    var expected = reference.ResolveStructElementTextFromLetters(referenceElements[i]);
+                    var actual = doc.ResolveStructElementText(elements[i]);
+                    actual.Should().Be(expected, $"{name} element {i} ({elements[i].Type})");
+                    comparedElements++;
+                    if (expected.Length > 0) nonEmpty++;
                 }
             }
         }

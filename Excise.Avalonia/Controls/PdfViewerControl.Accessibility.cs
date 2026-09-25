@@ -1,5 +1,4 @@
 using Excise.Core.Document;
-using Excise.Core.Primitives;
 using System;
 using System.Collections.Generic;
 
@@ -17,8 +16,7 @@ namespace Excise.Avalonia.Controls;
 ///
 /// <para>
 /// This is deliberately read-only over Excise.Core's public surface
-/// (<see cref="PdfDocument.GetStructureTree"/> plus raw-dictionary
-/// resolution). Splicing <c>/ActualText</c> into the page text stream
+/// (<see cref="PdfDocument.GetStructureTree"/>). Splicing <c>/ActualText</c> into the page text stream
 /// in-place (true glyph substitution) and full struct-tree reading order
 /// both require mapping marked-content IDs to extracted letters, which the
 /// extraction pipeline does not surface yet — those remain follow-up slices
@@ -171,39 +169,23 @@ public partial class PdfViewerControl
         if (root == null)
             return (Array.Empty<string>(), Array.Empty<string>());
 
-        // Page dictionaries resolve through the document's object cache, so
-        // reference identity maps a resolved /Pg target back to its number.
-        var pagesByDict = new Dictionary<PdfDictionary, int>();
-        for (int i = 1; i <= doc.PageCount; i++)
-            pagesByDict[doc.GetPage(i).Dictionary] = i;
-
         var alts = new List<string>();
         var actuals = new List<string>();
-        Walk(doc, root, inheritedPage: null, pagesByDict, pageNumber, alts, actuals, depth: 0);
+        Walk(doc, root, pageNumber, alts, actuals);
         return (alts.Count == 0 ? Array.Empty<string>() : alts,
                 actuals.Count == 0 ? Array.Empty<string>() : actuals);
     }
 
-    private const int MaxStructWalkDepth = 64; // mirrors PdfStructTreeParser.MaxDepth
-
     private static void Walk(
         PdfDocument doc,
         PdfStructElement element,
-        int? inheritedPage,
-        Dictionary<PdfDictionary, int> pagesByDict,
         int targetPage,
         List<string> alts,
-        List<string> actuals,
-        int depth)
+        List<string> actuals)
     {
-        if (depth > MaxStructWalkDepth)
-            return;
-
-        int? page = ResolveElementPage(doc, element, pagesByDict) ?? inheritedPage;
-
         // An element with no determinable page can still be safely announced
         // when there is only one page it could belong to.
-        int? effectivePage = page ?? (doc.PageCount == 1 ? 1 : (int?)null);
+        int? effectivePage = element.PageNumber ?? (doc.PageCount == 1 ? 1 : (int?)null);
         if (effectivePage == targetPage)
         {
             if (!string.IsNullOrWhiteSpace(element.AltText))
@@ -213,59 +195,7 @@ public partial class PdfViewerControl
         }
 
         foreach (var child in element.Children)
-            Walk(doc, child, page, pagesByDict, targetPage, alts, actuals, depth + 1);
-    }
-
-    /// <summary>
-    /// Determine which page a structure element belongs to: its own
-    /// <c>/Pg</c>, else the <c>/Pg</c> of a marked-content-reference or
-    /// object-reference kid (<c>/MCR</c>/<c>/OBJR</c> dictionaries, which
-    /// <c>PdfStructTreeParser</c> does not surface), else null so the caller
-    /// falls back to the ancestor's page.
-    /// </summary>
-    private static int? ResolveElementPage(
-        PdfDocument doc,
-        PdfStructElement element,
-        Dictionary<PdfDictionary, int> pagesByDict)
-    {
-        int? FromPg(PdfDictionary dict)
-        {
-            var pgObj = dict.GetOptional("Pg");
-            if (pgObj == null)
-                return null;
-            return doc.Resolve(pgObj) is PdfDictionary pageDict
-                && pagesByDict.TryGetValue(pageDict, out int n) ? n : null;
-        }
-
-        var own = FromPg(element.RawDictionary);
-        if (own != null)
-            return own;
-
-        // Reference-kid dictionaries (no /S of their own) carry the /Pg for
-        // content the element marks on a page.
-        var k = element.RawDictionary.GetOptional("K");
-        if (k == null)
-            return null;
-
-        var resolvedK = doc.Resolve(k);
-        if (resolvedK is PdfDictionary kidDict && kidDict.GetOptional("S") == null)
-            return FromPg(kidDict);
-
-        if (resolvedK is PdfArray kids)
-        {
-            foreach (var item in kids)
-            {
-                if (doc.Resolve(item) is PdfDictionary refDict
-                    && refDict.GetOptional("S") == null)
-                {
-                    var page = FromPg(refDict);
-                    if (page != null)
-                        return page;
-                }
-            }
-        }
-
-        return null;
+            Walk(doc, child, targetPage, alts, actuals);
     }
 
     // ── struct-tree reading order + role model (#631) ────────────────────
@@ -413,13 +343,9 @@ public partial class PdfViewerControl
         if (root == null)
             return (Array.Empty<(int, string)>(), Array.Empty<AccessibleStructNode>());
 
-        var pagesByDict = new Dictionary<PdfDictionary, int>();
-        for (int i = 1; i <= doc.PageCount; i++)
-            pagesByDict[doc.GetPage(i).Dictionary] = i;
-
         var reading = new List<(int, string)>();
         var nodes = new List<AccessibleStructNode>();
-        WalkModel(doc, root, inheritedPage: null, pagesByDict, reading, nodes, depth: 0);
+        WalkModel(doc, root, reading, nodes);
         return (reading.Count == 0 ? Array.Empty<(int, string)>() : reading,
                 nodes.Count == 0 ? Array.Empty<AccessibleStructNode>() : nodes);
     }
@@ -427,17 +353,10 @@ public partial class PdfViewerControl
     private static void WalkModel(
         PdfDocument doc,
         PdfStructElement element,
-        int? inheritedPage,
-        Dictionary<PdfDictionary, int> pagesByDict,
         List<(int, string)> reading,
-        List<AccessibleStructNode> nodes,
-        int depth)
+        List<AccessibleStructNode> nodes)
     {
-        if (depth > MaxStructWalkDepth)
-            return;
-
-        int? page = ResolveElementPage(doc, element, pagesByDict) ?? inheritedPage;
-        int effectivePage = page ?? (doc.PageCount == 1 ? 1 : 0);
+        int effectivePage = element.PageNumber ?? (doc.PageCount == 1 ? 1 : 0);
 
         if (effectivePage >= 1)
         {
@@ -460,13 +379,13 @@ public partial class PdfViewerControl
                     ? element.ActualText!.Trim()
                     : (!string.IsNullOrWhiteSpace(element.AltText)
                         ? element.AltText!.Trim()
-                        : ResolveMcidText(doc, element, page));
+                        : ResolveMcidText(doc, element));
                 nodes.Add(new AccessibleStructNode(role, headingLevel, text, effectivePage));
             }
         }
 
         foreach (var child in element.Children)
-            WalkModel(doc, child, page, pagesByDict, reading, nodes, depth + 1);
+            WalkModel(doc, child, reading, nodes);
     }
 
     /// <summary>
@@ -476,11 +395,11 @@ public partial class PdfViewerControl
     /// accessibility walk, so this is defensive: any failure degrades the node to
     /// role-only, exactly as before the bridge existed.
     /// </summary>
-    private static string ResolveMcidText(PdfDocument doc, PdfStructElement element, int? inheritedPage)
+    private static string ResolveMcidText(PdfDocument doc, PdfStructElement element)
     {
         try
         {
-            return doc.ResolveStructElementText(element, inheritedPage).Trim();
+            return doc.ResolveStructElementText(element).Trim();
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {

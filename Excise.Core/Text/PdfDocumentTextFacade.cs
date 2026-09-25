@@ -65,9 +65,8 @@ public partial class PdfDocument
     /// Resolve the real body text of a tagged-PDF structure element from its
     /// marked-content references (#776 — the accessibility MCID→letter bridge):
     /// the text of each <see cref="PdfStructElement.MarkedContent"/> reference,
-    /// on its page or else the element's <see cref="PdfStructElement.PageNumber"/>
-    /// or <paramref name="inheritedPageNumber"/>, concatenated in reference
-    /// (reading) order.
+    /// on its page or else the element's <see cref="PdfStructElement.PageNumber"/>,
+    /// concatenated in reference (reading) order.
     ///
     /// <para>
     /// This is how a heading or paragraph with no /ActualText carrier can still
@@ -78,9 +77,7 @@ public partial class PdfDocument
     /// element whose page cannot be determined).
     /// </para>
     /// </summary>
-    public string ResolveStructElementText(
-        PdfStructElement element,
-        int? inheritedPageNumber = null)
+    public string ResolveStructElementText(PdfStructElement element)
     {
         if (element == null)
             return string.Empty;
@@ -91,7 +88,7 @@ public partial class PdfDocument
         // letters no longer do (see PdfPage.GetMarkedContentText).
         var textByPage = new Dictionary<int, IReadOnlyDictionary<int, string>>();
         var sb = new StringBuilder();
-        foreach (var (page, mcid) in PagedMarkedContent(element, inheritedPageNumber))
+        foreach (var (page, mcid) in PagedMarkedContent(element))
         {
             if (!textByPage.TryGetValue(page, out var byMcid))
                 textByPage[page] = byMcid = GetPage(page).GetMarkedContentText();
@@ -106,16 +103,14 @@ public partial class PdfDocument
     /// each referenced page's letters per reference. Kept only so tests can
     /// hold the per-MCID map to the letter-derived text it replaced.
     /// </summary>
-    internal string ResolveStructElementTextFromLetters(
-        PdfStructElement element,
-        int? inheritedPageNumber = null)
+    internal string ResolveStructElementTextFromLetters(PdfStructElement element)
     {
         if (element == null)
             return string.Empty;
 
         var lettersByPage = new Dictionary<int, IReadOnlyList<Excise.Core.Text.Letter>>();
         var sb = new StringBuilder();
-        foreach (var (page, mcid) in PagedMarkedContent(element, inheritedPageNumber))
+        foreach (var (page, mcid) in PagedMarkedContent(element))
         {
             if (!lettersByPage.TryGetValue(page, out var letters))
                 lettersByPage[page] = letters = GetPage(page).Letters;
@@ -128,11 +123,11 @@ public partial class PdfDocument
         return sb.ToString();
     }
 
-    private IEnumerable<(int Page, int Mcid)> PagedMarkedContent(PdfStructElement element, int? inheritedPageNumber)
+    private IEnumerable<(int Page, int Mcid)> PagedMarkedContent(PdfStructElement element)
     {
         foreach (var reference in element.MarkedContent)
         {
-            if ((reference.PageNumber ?? element.PageNumber ?? inheritedPageNumber) is int page && page >= 1 && page <= PageCount)
+            if ((reference.PageNumber ?? element.PageNumber) is int page && page >= 1 && page <= PageCount)
                 yield return (page, reference.Mcid);
         }
     }
