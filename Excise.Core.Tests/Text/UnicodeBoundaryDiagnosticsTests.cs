@@ -36,6 +36,8 @@ public class UnicodeBoundaryDiagnosticsTests
             OutlineTitleCount: 0,
             AnnotationsWithTextCount: 0,
             UnexaminedXfaPacketCount: 0,
+            PageLabelPrefixCount: 0,
+            NameTreeKeyCount: 0,
             TermsBelowScrubFloor: new[] { "a" + Rlo + "b" });
 
         var described = string.Join("\n", audit.Describe());

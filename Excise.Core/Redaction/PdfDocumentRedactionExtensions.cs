@@ -670,6 +670,8 @@ public static class PdfDocumentRedactionExtensions
         ("annotation /Contents", Excise.Core.Operations.RedactionCarriers.Annotations),
         ("link /A /URI", Excise.Core.Operations.RedactionCarriers.ActionUris),
         ("marked-content /ActualText, /Alt, /E", Excise.Core.Operations.RedactionCarriers.MarkedContent),
+        ("/PageLabels /P", Excise.Core.Operations.RedactionCarriers.PageLabels),
+        ("/Names and /Dests keys", Excise.Core.Operations.RedactionCarriers.NameTreeKeys),
     };
 
     /// <summary>

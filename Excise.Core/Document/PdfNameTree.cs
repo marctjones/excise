@@ -31,6 +31,28 @@ internal static class PdfNameTree
         }
     }
 
+    /// <summary>
+    /// Replace the tree under <paramref name="root"/> with one leaf holding
+    /// <paramref name="pairs"/>, sorted by key bytes as §7.9.6 requires. A root holds
+    /// /Names or /Kids and no /Limits, so the old nodes, and every /Limits that
+    /// repeated a key, are no longer reachable and are not saved.
+    /// </summary>
+    internal static void Rewrite(PdfDocument doc, PdfDictionary root, IEnumerable<(PdfObject Key, PdfObject Value)> pairs)
+    {
+        var leaf = new PdfArray();
+        foreach (var (key, value) in pairs.OrderBy(p => (doc.Resolve(p.Key) as PdfString)?.Bytes ?? [], KeyOrder))
+        {
+            leaf.Add(key);
+            leaf.Add(value);
+        }
+        root.Remove("Kids");
+        root.Remove("Limits");
+        root.Set("Names", leaf);
+    }
+
+    private static readonly Comparer<byte[]> KeyOrder =
+        Comparer<byte[]>.Create((a, b) => a.AsSpan().SequenceCompareTo(b));
+
     /// <summary>Every node of the tree, root first, /Kids in order; for callers that edit a node.</summary>
     internal static IEnumerable<PdfDictionary> Nodes(PdfDocument doc, PdfObject? root)
     {

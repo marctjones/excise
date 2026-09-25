@@ -231,6 +231,19 @@ internal static class CarrierTrapFixtures
                 "<< /Type /Outlines /First 7 0 R /Last 7 0 R /Count 1 >>",
                 $"<< /Title (Chapter on {t}) /Parent 6 0 R /Dest [3 0 R /Fit] >>",
             }), expectVisible: true);
+        // #1853: a viewer shows the prefix in its page-number box.
+        Add("page-label-prefix", "PAGELABELTRAP", "page label /P", Oracle.QpdfDump,
+            (t, v) => Doc(V(t, v), catalog: $"/PageLabels << /Nums [0 << /S /D /P (Annex {t}-) >>] >>"));
+        // #1852: a producer that names a destination after its heading; a bookmark goes there by name.
+        Add("named-destination-key", "DESTKEYTRAP", "name-tree key /Dests", Oracle.QpdfDump,
+            (t, v) => Doc(V(t, v), catalog: $"/Names << /Dests 6 0 R >> /Outlines 7 0 R", extra: new[]
+            {
+                $"<< /Names [(Chapter on {t}) [3 0 R /Fit]] >>",
+                "<< /Type /Outlines /First 8 0 R /Last 8 0 R /Count 1 >>",
+                $"<< /Title (Chapter) /Parent 7 0 R /Dest (Chapter on {t}) >>",
+            }));
+        Add("legacy-dests-key", "LEGACYDESTTRAP", "name-tree key (catalog /Dests)", Oracle.QpdfDump,
+            (t, v) => Doc(V(t, v), catalog: $"/Dests 6 0 R", extra: new[] { $"<< /{t} [3 0 R /Fit] >>" }));
         Add("ocg-hidden", "HIDDENLAYERTRAP", "optional content (hidden by default)", Oracle.QpdfDump,
             (t, v) => Doc(V(t, v), extraContent: $"/OC /MC0 BDC BT /F1 12 Tf 72 500 Td ({t}) Tj ET EMC",
                 resources: "/Properties << /MC0 6 0 R >>",
@@ -358,6 +371,14 @@ internal static class CarrierTrapFixtures
 
     /// <summary>A plain document whose trailer /Info is <paramref name="infoDictionary"/>.</summary>
     public static byte[] WithInfo(string infoDictionary) => Doc(null, info: infoDictionary);
+
+    /// <summary>
+    /// A plain document with <paramref name="catalog"/> entries in its catalog,
+    /// <paramref name="page"/> entries in its page (object 3) and <paramref name="extra"/>
+    /// as objects 6, 7, …
+    /// </summary>
+    public static byte[] WithCatalog(string catalog, string page = "", params string[] extra) =>
+        Doc(null, page: page, catalog: catalog, extra: extra);
 
     // ── Builders ────────────────────────────────────────────────────────
 

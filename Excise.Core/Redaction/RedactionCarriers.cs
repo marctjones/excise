@@ -57,7 +57,17 @@ public enum RedactionCarriers
     /// </summary>
     MarkedContent = 1 << 10,
 
+    /// <summary>Page-label prefixes (<c>/PageLabels</c> <c>/P</c>), shown in a viewer's page-number box.</summary>
+    PageLabels = 1 << 11,
+
+    /// <summary>
+    /// Keys of the catalog's name trees (named destinations, scripts, templates, …)
+    /// and of the legacy <c>/Dests</c> dictionary. A renamed destination is renamed
+    /// wherever it is referenced. <c>/EmbeddedFiles</c> keys belong to <see cref="EmbeddedFiles"/>.
+    /// </summary>
+    NameTreeKeys = 1 << 12,
+
     /// <summary>Every carrier — the default and the safe choice.</summary>
     All = Info | Xmp | Xfa | Outlines | Annotations | FormFields
-        | StructTree | JavaScript | EmbeddedFiles | ActionUris | MarkedContent,
+        | StructTree | JavaScript | EmbeddedFiles | ActionUris | MarkedContent | PageLabels | NameTreeKeys,
 }

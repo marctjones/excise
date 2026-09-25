@@ -35,7 +35,8 @@ namespace Excise.Core.Text.Segmentation;
 ///     annotations, <c>/FileAttachment</c> annotations): name, <c>/F</c>, <c>/UF</c>,
 ///     <c>/Desc</c>, text-like payloads, and nested PDFs recursively;</item>
 ///   <item><c>/Info</c> (content keys only), XMP (content properties only), outline
-///     titles, <c>/PieceInfo</c> private data, text in hidden optional content;</item>
+///     titles, page-label prefixes, <c>/PieceInfo</c> private data, text in hidden
+///     optional content, and the keys of the catalog's name trees and <c>/Dests</c>;</item>
 ///   <item>unreferenced (orphan) objects, and text an incremental update superseded
 ///     but left in an earlier revision.</item>
 /// </list>
@@ -167,12 +168,16 @@ public static partial class CarrierTextRecovery
         Guarded(c, "/Info", () => ScanInfo(doc, c));
         Guarded(c, "XMP", () => ScanXmp(doc, c));
         Guarded(c, "outlines", () => ScanOutlines(doc, c));
+        Guarded(c, "page labels", () => ScanPageLabels(doc, c));
         Guarded(c, "optional content", () => ScanHiddenOptionalContent(doc, c));
         Guarded(c, "page thumbnails", () => ScanThumbnails(doc, c));
         Guarded(c, "/PieceInfo", () => ScanPieceInfo(doc, c));
-        if (!includeHistory) return;
-        Guarded(c, "orphan objects", () => ScanOrphans(doc, c));
-        Guarded(c, "prior revisions", () => ScanPriorRevisions(doc, c));
+        if (includeHistory)
+        {
+            Guarded(c, "orphan objects", () => ScanOrphans(doc, c));
+            Guarded(c, "prior revisions", () => ScanPriorRevisions(doc, c));
+        }
+        Guarded(c, "name-tree keys", () => ScanNameTreeKeys(doc, c));
     }
 
     /// <summary>

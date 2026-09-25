@@ -196,6 +196,8 @@ public static class PdfDocumentSanitizer
         Stage(RedactionCarriers.EmbeddedFiles, s => ScrubEmbeddedFiles(document, s), PdfDocumentDerivedStateScope.Attachments); // #1151
         Stage(RedactionCarriers.ActionUris, s => ScrubActionUris(document, s), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1168
         Stage(RedactionCarriers.MarkedContent, s => ScrubMarkedContent(document, s)); // #1854
+        Stage(RedactionCarriers.PageLabels, s => ScrubPageLabels(document, s), PdfDocumentDerivedStateScope.PageLabels); // #1853
+        Stage(RedactionCarriers.NameTreeKeys, s => ScrubNameTreeKeys(document, s), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1852
 
         if (invalidation != PdfDocumentDerivedStateScope.None)
             document.InvalidateDerivedState(invalidation);
@@ -560,6 +562,9 @@ public static class PdfDocumentSanitizer
     {
         var files = document.GetEmbeddedFiles();
         if (files.Count == 0) return false;
+        var tree = document.Resolve(document.Catalog?.GetOptional("Names") ?? PdfNull.Instance) is PdfDictionary names
+            ? document.Resolve(names.GetOptional("EmbeddedFiles") ?? PdfNull.Instance) as PdfDictionary
+            : null;
 
         var remove = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         foreach (var f in files)
@@ -582,12 +587,15 @@ public static class PdfDocumentSanitizer
             if (hit)
                 remove.Add(f.RawDictionary);
         }
+        // #1852: the /EmbeddedFiles key names the attachment as much as /UF does.
+        foreach (var (key, value) in PdfNameTree.Enumerate(document, tree))
+            if (document.Resolve(value) is PdfDictionary fs && document.Resolve(key) is PdfString name && scrub.Hits(name.Value))
+                remove.Add(fs);
         if (remove.Count == 0) return false;
         if (scrub.Mode == CarrierScrubMode.ReportOnly) return false;   // hit recorded, file kept
 
         var changed = false;
-        if (document.Resolve(document.Catalog?.GetOptional("Names") ?? PdfNull.Instance) is PdfDictionary names
-            && document.Resolve(names.GetOptional("EmbeddedFiles") ?? PdfNull.Instance) is PdfDictionary tree)
+        if (tree != null)
             changed |= FilterEmbeddedFileTree(document, tree, remove);
 
         changed |= FilterAssociatedFiles(document, document.Catalog, remove);
@@ -632,29 +640,15 @@ public static class PdfDocumentSanitizer
     }
 
     // Remove (name, filespec) pairs whose resolved filespec is in `remove` from a
-    // /Names/EmbeddedFiles name tree.
+    // /Names/EmbeddedFiles name tree. The rewrite also drops each /Limits, which
+    // repeated the removed key (#1852).
     private static bool FilterEmbeddedFileTree(PdfDocument document, PdfDictionary root, HashSet<PdfDictionary> remove)
     {
-        var changed = false;
-        foreach (var node in PdfNameTree.Nodes(document, root))
-        {
-            if (document.Resolve(node.GetOptional("Names") ?? PdfNull.Instance) is not PdfArray pairs) continue;
-            var kept = new PdfArray();
-            var dropped = false;
-            for (var i = 0; i + 1 < pairs.Count; i += 2)
-            {
-                if (document.Resolve(pairs[i + 1]) is PdfDictionary fs && remove.Contains(fs))
-                {
-                    dropped = true;   // drop this (name, filespec) pair
-                    continue;
-                }
-                kept.Add(pairs[i]);
-                kept.Add(pairs[i + 1]);
-            }
-            if (dropped) node.Set("Names", kept);
-            changed |= dropped;
-        }
-        return changed;
+        var pairs = PdfNameTree.Enumerate(document, root).ToList();
+        var kept = pairs.Where(p => !(document.Resolve(p.Value) is PdfDictionary fs && remove.Contains(fs))).ToList();
+        if (kept.Count == pairs.Count) return false;
+        PdfNameTree.Rewrite(document, root, kept);
+        return true;
     }
 
     // Remove matching filespecs from an /AF (associated files) array (§7.7.4).
@@ -727,6 +721,139 @@ public static class PdfDocumentSanitizer
         Walk(outlines.GetOptional("First"));
         return changed;
     }
+
+    /// <summary>
+    /// #1853 — a page-label prefix (§12.4.2 <c>/P</c>) is shown in a viewer's
+    /// page-number box. It carries its own separator ("Appendix " + "1"), so the
+    /// cut does not trim; a prefix left empty or blank is removed, and the page
+    /// keeps its numbering style.
+    /// </summary>
+    private static bool ScrubPageLabels(PdfDocument document, CarrierScrub scrub)
+    {
+        var changed = false;
+        foreach (var (_, value) in PdfNumberTree.Enumerate(document, document.Catalog.GetOptional("PageLabels")))
+        {
+            if (document.Resolve(value) is not PdfDictionary label
+                || !scrub.TryApply(ResolveStringOrNull(document, label, "P"), out var scrubbed, trim: false))
+                continue;
+            if (string.IsNullOrWhiteSpace(scrubbed))
+                label.Remove("P");
+            else
+                label["P"] = new PdfString(scrubbed);
+            changed = true;
+        }
+        return changed;
+    }
+
+    /// <summary>
+    /// #1852 — a name-tree key (§7.9.6) is text, and some producers name a
+    /// destination after its heading. Every tree under the catalog's /Names is
+    /// walked, and the legacy /Dests dictionary, whose keys are names;
+    /// /EmbeddedFiles keys belong to <see cref="ScrubEmbeddedFiles"/>, which
+    /// removes the attachment. A key is masked as an outline title is and made
+    /// unique again, and the tree is rewritten as one sorted leaf, so no key is
+    /// out of order and no /Limits repeats the old key. Renaming keeps every
+    /// value: a script, template or named page is not lost with its key.
+    /// </summary>
+    /// <remarks>
+    /// A destination is found by name, so each /Dest, /OpenAction and GoTo /D in
+    /// the object graph that names a renamed one is renamed with it (never a
+    /// GoToR or GoToE /D, which names a destination in another file). What the
+    /// graph does not hold cannot be rewritten: another file's GoToR, a URL's
+    /// #nameddest= fragment, a script that names the destination. Both profiles
+    /// remove scripts and GoToR actions.
+    /// </remarks>
+    private static bool ScrubNameTreeKeys(PdfDocument document, CarrierScrub scrub)
+    {
+        var names = document.Resolve(document.Catalog.GetOptional("Names") ?? PdfNull.Instance) as PdfDictionary;
+        var legacy = document.Resolve(document.Catalog.GetOptional("Dests") ?? PdfNull.Instance) as PdfDictionary;
+        var destTree = document.Resolve(names?.GetOptional("Dests") ?? PdfNull.Instance) as PdfDictionary;
+
+        // One map for both destination stores: a /Dest name is resolved against either.
+        var destTaken = KeyTexts(document, destTree);
+        destTaken.UnionWith(legacy?.Keys.Select(k => k.Value) ?? []);
+        var destRenames = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        var changed = false;
+        foreach (var (tree, value) in names ?? new PdfDictionary())
+        {
+            if (tree.Value == "EmbeddedFiles" || document.Resolve(value) is not PdfDictionary root) continue;
+            var isDests = tree.Value == "Dests";
+            changed |= RenameTreeKeys(document, root, scrub,
+                isDests ? destTaken : KeyTexts(document, root),
+                isDests ? destRenames : new Dictionary<string, string>(StringComparer.Ordinal));
+        }
+
+        foreach (var key in legacy?.Keys ?? [])
+        {
+            if (MaskKey(scrub, key.Value, destTaken, destRenames) is not { } masked) continue;
+            var target = legacy!.GetOptional(key.Value)!;
+            legacy.Remove(key.Value);
+            legacy.Set(masked, target);
+            changed = true;
+        }
+
+        if (destRenames.Count > 0)
+            RenameDestinationReferences(document, destRenames);
+        return changed;
+    }
+
+    private static HashSet<string> KeyTexts(PdfDocument document, PdfDictionary? root) =>
+        PdfNameTree.Enumerate(document, root).Select(p => document.Resolve(p.Key)).OfType<PdfString>()
+            .Select(k => k.Value).ToHashSet(StringComparer.Ordinal);
+
+    private static bool RenameTreeKeys(
+        PdfDocument document, PdfDictionary root, CarrierScrub scrub, HashSet<string> taken, Dictionary<string, string> renames)
+    {
+        var pairs = new List<(PdfObject Key, PdfObject Value)>();
+        var renamed = false;
+        foreach (var (key, value) in PdfNameTree.Enumerate(document, root))
+        {
+            var masked = document.Resolve(key) is PdfString text ? MaskKey(scrub, text.Value, taken, renames) : null;
+            pairs.Add((masked is null ? key : new PdfString(masked), value));
+            renamed |= masked != null;
+        }
+        // A /Limits bound repeats a key; a stale one can hold a key that is gone.
+        var staleBound = PdfNameTree.Nodes(document, root).Any(node =>
+            document.Resolve(node.GetOptional("Limits") ?? PdfNull.Instance) is PdfArray limits
+            && limits.Any(bound => document.Resolve(bound) is PdfString b && scrub.TryApply(b.Value, out _)));
+        if (!renamed && !staleBound) return false;
+        PdfNameTree.Rewrite(document, root, pairs);
+        return true;
+    }
+
+    /// <summary>The masked, still unique replacement for a key that holds a term; null when it holds none.</summary>
+    private static string? MaskKey(
+        CarrierScrub scrub, string key, HashSet<string> taken, Dictionary<string, string> renames)
+    {
+        if (renames.TryGetValue(key, out var done)) return done;
+        if (!scrub.TryApply(key, out var masked)) return null;
+        // A cut can re-form the term ("KESKESTRELTREL" less "KESTREL"); a key must not.
+        var stem = masked.Length == 0 || scrub.Hits(masked) ? "[redacted]" : masked;
+        var unique = stem;
+        for (var n = 2; !taken.Add(unique); n++) unique = $"{stem} {n}";
+        return renames[key] = unique;
+    }
+
+    private static void RenameDestinationReferences(PdfDocument document, Dictionary<string, string> renames)
+    {
+        foreach (var dict in Excise.Core.Text.Segmentation.RedactionFeatureStripper.ReachableDictionaries(document))
+            foreach (var slot in dict.GetNameOrNull("S") == "GoTo" ? GoToSlots : DestinationSlots)
+            {
+                switch (document.Resolve(dict.GetOptional(slot) ?? PdfNull.Instance))
+                {
+                    case PdfString name when renames.TryGetValue(name.Value, out var renamed):
+                        dict.Set(slot, new PdfString(renamed));
+                        break;
+                    case PdfName name when renames.TryGetValue(name.Value, out var renamed):
+                        dict.Set(slot, new PdfName(renamed));
+                        break;
+                }
+            }
+    }
+
+    private static readonly string[] DestinationSlots = { "Dest", "OpenAction" };
+    private static readonly string[] GoToSlots = { "Dest", "OpenAction", "D" };
 
     private static bool ScrubAnnotationContents(PdfDocument document, CarrierScrub scrub)
     {

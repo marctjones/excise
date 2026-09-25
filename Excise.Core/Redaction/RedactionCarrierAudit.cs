@@ -38,12 +38,15 @@ public sealed record RedactionCarrierAudit(
     int OutlineTitleCount,
     int AnnotationsWithTextCount,
     int UnexaminedXfaPacketCount,
+    int PageLabelPrefixCount,
+    int NameTreeKeyCount,
     IReadOnlyList<string> TermsBelowScrubFloor)
 {
     /// <summary>True when anything at all was left unexamined.</summary>
     public bool HasUnexaminedCarriers =>
         OutlineTitleCount > 0 || AnnotationsWithTextCount > 0 ||
-        UnexaminedXfaPacketCount > 0 || TermsBelowScrubFloor.Count > 0;
+        UnexaminedXfaPacketCount > 0 || PageLabelPrefixCount > 0 || NameTreeKeyCount > 0 ||
+        TermsBelowScrubFloor.Count > 0;
 
     /// <summary>
     /// Shortest term <c>PdfDocumentSanitizer</c> will act on. Mirrored here
@@ -89,6 +92,8 @@ public sealed record RedactionCarrierAudit(
             CountOutlineTitles(document, termsToFind),
             CountAnnotationsWithText(document, termsToFind),
             CountUnexaminedXfaPackets(document, termsToFind),
+            CountPageLabelPrefixes(document, termsToFind),
+            CountNameTreeKeys(document, termsToFind),
             shortTerms);
     }
 
@@ -124,6 +129,20 @@ public sealed record RedactionCarrierAudit(
             lines.Add(
                 $"{UnexaminedXfaPacketCount} XFA form XML packet(s) were not examined — the " +
                 "packet was malformed, unsafe to parse, or no captured redaction text was available.");
+        }
+
+        if (PageLabelPrefixCount > 0)
+        {
+            lines.Add(
+                $"{PageLabelPrefixCount} page-label prefix(es) were not examined — a viewer shows them " +
+                "in its page-number box, and they carry no position.");
+        }
+
+        if (NameTreeKeyCount > 0)
+        {
+            lines.Add(
+                $"{NameTreeKeyCount} name-tree key(s) (named destinations, scripts, templates) were not " +
+                "examined — a key is not drawn on any page.");
         }
 
         foreach (var term in TermsBelowScrubFloor)
@@ -196,6 +215,45 @@ public sealed record RedactionCarrierAudit(
             }
         }
         return n;
+    }
+
+    private static int CountPageLabelPrefixes(PdfDocument document, IReadOnlyList<string>? terms)
+    {
+        try
+        {
+            return PdfNumberTree.Enumerate(document, document.Catalog.GetOptional("PageLabels"))
+                .Count(pair => document.Resolve(pair.Value) is PdfDictionary label
+                               && document.Resolve(label.GetOptional("P") ?? PdfNull.Instance) is PdfString prefix
+                               && !string.IsNullOrWhiteSpace(prefix.Value) && Matches(prefix.Value, terms));
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return 1;
+        }
+    }
+
+    /// <summary>
+    /// Keys are identifiers ("page.3", "section.2.1") more often than prose, so
+    /// they are counted against a term only: with none there is nothing to find.
+    /// </summary>
+    private static int CountNameTreeKeys(PdfDocument document, IReadOnlyList<string>? terms)
+    {
+        if (terms == null) return 0;
+        try
+        {
+            var keys = new List<string>();
+            if (document.Resolve(document.Catalog.GetOptional("Names") ?? PdfNull.Instance) is PdfDictionary names)
+                foreach (var (_, tree) in names)
+                    keys.AddRange(PdfNameTree.Enumerate(document, tree)
+                        .Select(pair => document.Resolve(pair.Key)).OfType<PdfString>().Select(key => key.Value));
+            if (document.Resolve(document.Catalog.GetOptional("Dests") ?? PdfNull.Instance) is PdfDictionary legacy)
+                keys.AddRange(legacy.Keys.Select(key => key.Value));
+            return keys.Count(key => Matches(key, terms));
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return 1;
+        }
     }
 
     private static int CountUnexaminedXfaPackets(

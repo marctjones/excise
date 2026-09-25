@@ -411,7 +411,9 @@ public sealed record RedactionOptions
             | Operations.RedactionCarriers.FormFields
             | Operations.RedactionCarriers.StructTree
             | Operations.RedactionCarriers.ActionUris
-            | Operations.RedactionCarriers.MarkedContent,
+            | Operations.RedactionCarriers.MarkedContent
+            | Operations.RedactionCarriers.PageLabels
+            | Operations.RedactionCarriers.NameTreeKeys,
             Operations.CarrierScrubMode.RemoveWhole),
     };
 
