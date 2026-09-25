@@ -259,7 +259,7 @@ public class PermissionEnforcementTests : IDisposable
 
         var written = DocumentAssemblyTestDriver.RunSplitToSinglePages(pdf, outDir,
             ignorePermissions: true);
-        written.Should().NotBeEmpty();
+        written.WrittenPaths.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -269,11 +269,9 @@ public class PermissionEnforcementTests : IDisposable
         var second = RestrictedFixture(AllAllowedMask, "SECOND");
         var output = TempPath(".pdf");
 
-        var result = DocumentAssemblyHandler.Merge(new MergeDocumentsRequest(
-            [first, second], output, IgnorePermissions: false),
-            TestContext.Current.CancellationToken);
+        var result = DocumentAssemblyTestDriver.RunMerge([first, second], output);
 
-        result.OutputEncryptionPolicy.Should().Be(DocumentAssemblyEncryptionPolicy.Preserved);
+        result.EncryptionPreserved.Should().BeTrue();
         using var merged = PdfDocument.Open(output);
         merged.IsEncrypted.Should().BeTrue("encrypted inputs with a common policy must not leak plaintext");
         merged.Permissions.RawValue.Should().Be((int)AllAllowedMask);
@@ -289,16 +287,9 @@ public class PermissionEnforcementTests : IDisposable
         DocumentAssemblyTestDriver.RunMerge([first, second], input);
         var outputFolder = TempPath("");
 
-        var result = DocumentAssemblyHandler.Split(new SplitDocumentRequest(
-            input,
-            outputFolder,
-            SplitDocumentMode.Single,
-            Every: null,
-            Boundaries: [],
-            IgnorePermissions: false),
-            TestContext.Current.CancellationToken);
+        var result = DocumentAssemblyTestDriver.RunSplitToSinglePages(input, outputFolder);
 
-        result.OutputEncryptionPolicy.Should().Be(DocumentAssemblyEncryptionPolicy.Preserved);
+        result.EncryptionPreserved.Should().BeTrue();
         result.WrittenPaths.Should().HaveCount(2);
         foreach (var path in result.WrittenPaths)
         {

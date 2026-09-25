@@ -1,3 +1,4 @@
+using Excise.Core.Document;
 using Excise.Core.Writing;
 using Excise.Rendering;
 

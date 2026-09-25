@@ -2,6 +2,7 @@ using Excise.Core.Signatures;
 using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
 using Excise.Core.Operations;
+using Excise.Core.Security;
 using Excise.Core.Xfa;
 using System;
 using System.Collections.Generic;
@@ -388,9 +389,10 @@ public class PdfDocumentService
 
     /// <summary>
     /// Save selected pages to a new PDF. Page indices are 0-based and emitted
-    /// in the caller-provided order.
+    /// in the caller-provided order. An encrypted source's copy stays encrypted
+    /// (#1829), and /P bit 11 gates it as it gates merge and split.
     /// </summary>
-    public void ExtractPagesToPdf(string outputPath, IEnumerable<int> pageIndices)
+    public void ExtractPagesToPdf(string outputPath, IEnumerable<int> pageIndices, bool ignorePermissions = false)
     {
         if (_currentDocument == null)
             throw new InvalidOperationException("No document loaded");
@@ -405,143 +407,69 @@ public class PdfDocumentService
         if (indices.Count == 0)
             throw new ArgumentException("At least one valid page index is required", nameof(pageIndices));
 
+        AssembleGate(ignorePermissions)(_currentDocument, "extracting pages");
         using var extracted = PdfDocument.CreateNew(_currentDocument.Version);
         foreach (var index in indices)
             extracted.Pages.Add(_currentDocument.GetPage(index + 1));
 
-        extracted.Save(outputPath);
+        extracted.Save(outputPath, GetReEncryptionOptions());
         _logger.LogInformation(
             "Extracted {Count} page(s) to {OutputPath}", indices.Count, outputPath);
     }
 
     /// <summary>
-    /// Merge every page of each source PDF (opened fresh, in the given
-    /// order) into a brand-new document and save it to
-    /// <paramref name="outputPath"/>. Does not touch or replace the
-    /// currently-loaded document. Preserves per-source internal links,
-    /// splices each source's outline (bookmarks), and merges AcroForm
-    /// fields with collision-safe renaming — see
-    /// <see cref="PdfDocumentMerger"/>.
+    /// Merge every page of each source PDF, in order, into a new file (see
+    /// <see cref="PdfDocumentAssembly.Merge"/>). Does not touch the currently-loaded document.
     /// </summary>
-    public void MergeDocumentsToPdf(IReadOnlyList<string> sourcePaths, string outputPath)
+    public MergeDocumentsResult MergeDocumentsToPdf(
+        IReadOnlyList<string> sourcePaths, string outputPath, bool ignorePermissions = false)
     {
-        if (sourcePaths == null || sourcePaths.Count == 0)
-            throw new ArgumentException("At least one source PDF is required.", nameof(sourcePaths));
-        if (string.IsNullOrWhiteSpace(outputPath))
-            throw new ArgumentException("Output path is required", nameof(outputPath));
-
-        var opened = new List<PdfDocument>();
-        try
-        {
-            var sources = new List<(PdfDocument Document, IReadOnlyList<int> PageIndices)>();
-            foreach (var path in sourcePaths)
-            {
-                // #918: merge sources are never written in place — #917's
-            // keep-the-file-writable constraint covers the CURRENT document,
-            // not these. Stream them; N resident copies scaled linearly.
-            var doc = PdfDocument.Open(path);
-                opened.Add(doc);
-                sources.Add((doc, Enumerable.Range(0, doc.PageCount).ToList()));
-            }
-
-            using var merged = PdfDocumentMerger.Merge(sources);
-            merged.Save(outputPath);
-        }
-        finally
-        {
-            foreach (var doc in opened)
-                doc.Dispose();
-        }
-
-        _logger.LogInformation("Merged {Count} source document(s) into {OutputPath}", sourcePaths.Count, outputPath);
+        var result = PdfDocumentAssembly.Merge(sourcePaths, outputPath, AssembleGate(ignorePermissions));
+        _logger.LogInformation(
+            "Merged {Count} source document(s) into {OutputPath}; catalog entries not conserved: [{Dropped}]",
+            sourcePaths.Count, result.OutputPath, string.Join(", ", result.DroppedCatalogEntries));
+        return result;
     }
 
     /// <summary>
-    /// Split the currently-loaded document into multiple files under
-    /// <paramref name="outputFolder"/> per <paramref name="mode"/>, and
-    /// return the written file paths in order. Does not modify the
-    /// currently-loaded document. See <see cref="PdfDocumentSplitter"/>.
+    /// Split the currently-loaded document, as it is in memory, into files under
+    /// <paramref name="outputFolder"/> (see <see cref="PdfDocumentAssembly.Split"/>).
     /// </summary>
-    public IReadOnlyList<string> SplitDocument(
-        string outputFolder,
-        SplitMode mode,
-        int pagesPerChunk = 1,
-        IReadOnlyList<int>? boundaries = null)
+    public SplitDocumentResult SplitDocument(
+        string outputFolder, SplitDocumentSpecification specification, bool ignorePermissions = false)
     {
         if (_currentDocument == null)
             throw new InvalidOperationException("No document loaded");
-        if (string.IsNullOrWhiteSpace(outputFolder))
-            throw new ArgumentException("Output folder is required", nameof(outputFolder));
-
-        Directory.CreateDirectory(outputFolder);
-
-        IReadOnlyList<PdfDocument> fragments = mode switch
-        {
-            SplitMode.EveryNPages => PdfDocumentSplitter.SplitEveryNPages(_currentDocument, pagesPerChunk),
-            SplitMode.PageBoundaries => PdfDocumentSplitter.SplitAtPageBoundaries(
-                _currentDocument,
-                boundaries ?? throw new ArgumentException("Boundaries are required for this split mode.", nameof(boundaries))),
-            SplitMode.SinglePages => PdfDocumentSplitter.SplitToSinglePages(_currentDocument),
-            SplitMode.Bookmarks => PdfDocumentSplitter.SplitAtBookmarks(_currentDocument),
-            _ => throw new ArgumentOutOfRangeException(nameof(mode)),
-        };
 
         var baseName = _currentFilePath != null ? Path.GetFileNameWithoutExtension(_currentFilePath) : "document";
-        var digits = fragments.Count.ToString().Length;
-        var paths = new List<string>();
-        try
-        {
-            for (int i = 0; i < fragments.Count; i++)
-            {
-                var path = Path.Combine(outputFolder, $"{baseName}_{(i + 1).ToString().PadLeft(digits, '0')}.pdf");
-                fragments[i].Save(path);
-                paths.Add(path);
-            }
-        }
-        finally
-        {
-            foreach (var fragment in fragments)
-                fragment.Dispose();
-        }
-
-        _logger.LogInformation("Split document into {Count} file(s) in {OutputFolder}", paths.Count, outputFolder);
-        return paths;
+        var result = PdfDocumentAssembly.Split(
+            _currentDocument, _currentUserPassword, specification, outputFolder, baseName,
+            AssembleGate(ignorePermissions));
+        _logger.LogInformation(
+            "Split document into {Count} file(s) in {OutputFolder}; catalog entries not conserved: [{Dropped}]",
+            result.WrittenPaths.Count, outputFolder, string.Join(", ", result.DroppedCatalogEntries));
+        return result;
     }
 
     /// <summary>
-    /// Report document structures that page operations may not preserve perfectly
-    /// with the current page-copy implementation.
+    /// The /P page-assembly gate (bit 11) for extract, merge and split. <paramref name="ignorePermissions"/>
+    /// is <c>MainWindowViewModel.IgnoreDocumentPermissions</c>; an override is logged.
     /// </summary>
-    public PageOperationDiagnostics AnalyzePageOperationPreservation(IEnumerable<int>? pageIndices = null)
+    private Action<PdfDocument, string> AssembleGate(bool ignorePermissions) => (document, operation) =>
     {
-        if (_currentDocument == null)
-            throw new InvalidOperationException("No document loaded");
-
-        var indices = pageIndices?.Distinct().ToList()
-            ?? Enumerable.Range(0, PageCount).ToList();
-        var warnings = new List<string>();
-
-        if (_currentDocument.Catalog.GetOptional("Outlines") != null)
-            warnings.Add("Document outlines/bookmarks may still point to their original page destinations after page organization changes.");
-
-        if (_currentDocument.Catalog.GetOptional("AcroForm") != null)
-            warnings.Add("AcroForm field order and document-level form metadata may not be fully preserved by page insert/extract operations.");
-
-        if (_currentDocument.Catalog.GetOptional("Names") != null)
-            warnings.Add("Named destinations or embedded-file name trees may not be fully remapped during page organization changes.");
-
-        foreach (var index in indices.Where(i => i >= 0 && i < PageCount))
+        var permissions = document.EffectivePermissions;
+        if (permissions.Allows(DocumentAction.AssembleDocument))
+            return;
+        if (!ignorePermissions)
         {
-            var page = _currentDocument.GetPage(index + 1);
-            if (page.GetAnnotations().Any(a => a.Subtype is PdfAnnotationSubtype.Link or PdfAnnotationSubtype.Widget))
-            {
-                warnings.Add("Links and form widgets on affected pages are copied at page level, but related document-level destinations or field metadata may need review.");
-                break;
-            }
+            throw new InvalidOperationException(
+                $"Blocked by document permissions: {operation} requires " +
+                $"{DocumentAction.AssembleDocument.Requirement()}, which this document denies ({permissions}).");
         }
-
-        return new PageOperationDiagnostics(warnings.Distinct().ToList());
-    }
+        _logger.LogWarning(
+            "Overriding document permissions ({Permissions}): {Action} proceeds because " +
+            "IgnoreDocumentPermissions is set", permissions, operation);
+    };
 
     /// <summary>
     /// Whether <paramref name="candidate"/> matches the password that
@@ -629,25 +557,4 @@ internal enum DocumentReleaseReason
 
     /// <summary>A save reopened the document from the bytes it just wrote.</summary>
     SaveReload,
-}
-
-public sealed record PageOperationDiagnostics(IReadOnlyList<string> Warnings)
-{
-    public bool HasWarnings => Warnings.Count > 0;
-}
-
-/// <summary>How <see cref="PdfDocumentService.SplitDocument"/> groups pages into output files.</summary>
-public enum SplitMode
-{
-    /// <summary>Fixed-size chunks of N pages each; the last chunk may be smaller.</summary>
-    EveryNPages,
-
-    /// <summary>Explicit 0-based start indices; each begins a new fragment.</summary>
-    PageBoundaries,
-
-    /// <summary>One output file per page.</summary>
-    SinglePages,
-
-    /// <summary>Split at each root-level outline (bookmark) destination.</summary>
-    Bookmarks,
 }

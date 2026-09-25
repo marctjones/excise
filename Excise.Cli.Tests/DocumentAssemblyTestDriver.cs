@@ -1,27 +1,37 @@
-using Excise.Cli.Commands;
+using Excise.Core.Document;
+using Excise.Core.Operations;
+using Excise.Core.Security;
+using Xunit;
 
 namespace Excise.Cli.Tests;
 
+/// <summary><c>excise merge</c> and <c>excise split --single</c> as the commands run them, typed.</summary>
 internal static class DocumentAssemblyTestDriver
 {
-    internal static int RunMerge(
+    internal static MergeDocumentsResult RunMerge(
         string[] inputPaths,
         string outputPath,
         bool ignorePermissions = false)
-        => DocumentAssemblyHandler.Merge(new MergeDocumentsRequest(
-            inputPaths,
-            outputPath,
-            ignorePermissions)).PageCount;
+        => PdfDocumentAssembly.Merge(
+            inputPaths, outputPath, Gate(ignorePermissions), TestContext.Current.CancellationToken);
 
-    internal static IReadOnlyList<string> RunSplitToSinglePages(
+    internal static SplitDocumentResult RunSplitToSinglePages(
         string inputPath,
         string outputFolder,
         bool ignorePermissions = false)
-        => DocumentAssemblyHandler.Split(new SplitDocumentRequest(
-            inputPath,
+    {
+        using var document = PdfDocument.Open(inputPath);
+        return PdfDocumentAssembly.Split(
+            document,
+            userPassword: null,
+            new SplitDocumentSpecification(SplitDocumentMode.Single),
             outputFolder,
-            SplitDocumentMode.Single,
-            Every: null,
-            Boundaries: [],
-            ignorePermissions)).WrittenPaths;
+            Path.GetFileNameWithoutExtension(inputPath),
+            Gate(ignorePermissions),
+            TestContext.Current.CancellationToken);
+    }
+
+    internal static Action<PdfDocument, string> Gate(bool ignorePermissions)
+        => (document, operation) => DocumentPermissionGuard.Require(
+            document, DocumentAction.AssembleDocument, operation, ignorePermissions);
 }

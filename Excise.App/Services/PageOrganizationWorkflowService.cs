@@ -1,3 +1,4 @@
+using Excise.Core.Operations;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -32,7 +33,6 @@ public sealed class PageOrganizationWorkflowService
             return PageOrganizationResult.NoChange(pageIndex);
 
 
-        LogOperationDiagnostics(new[] { pageIndex });
         _documentService.RemovePage(pageIndex);
         var newPageIndex = Math.Min(pageIndex, Math.Max(0, _documentService.PageCount - 1));
         _logger.LogInformation("Removed page {PageIndex}; current page should become {NewPageIndex}", pageIndex, newPageIndex);
@@ -50,7 +50,6 @@ public sealed class PageOrganizationWorkflowService
             return PageOrganizationResult.NoChange(currentPageIndex);
 
 
-        LogOperationDiagnostics(indices);
         var newPageIndex = RemapCurrentPageAfterRemoval(currentPageIndex, indices, _documentService.PageCount);
         _documentService.RemovePages(indices);
         newPageIndex = Math.Min(newPageIndex, Math.Max(0, _documentService.PageCount - 1));
@@ -64,21 +63,19 @@ public sealed class PageOrganizationWorkflowService
         if (!_documentService.IsDocumentLoaded)
             return PageOrganizationResult.NoChange();
 
-        LogOperationDiagnostics();
         _documentService.InsertPagesFromPdf(sourcePdfPath, insertAtIndex);
 
         _logger.LogInformation("Inserted pages from {SourcePdfPath} at {InsertAtIndex}", sourcePdfPath, insertAtIndex);
         return PageOrganizationResult.Changed();
     }
 
-    public async Task ExtractPagesToFileAsync(string outputPath, IEnumerable<int> pageIndices)
+    public async Task ExtractPagesToFileAsync(string outputPath, IEnumerable<int> pageIndices, bool ignorePermissions)
     {
         if (!_documentService.IsDocumentLoaded)
             return;
 
         var materialized = pageIndices.Distinct().ToArray();
-        LogOperationDiagnostics(materialized);
-        _documentService.ExtractPagesToPdf(outputPath, materialized);
+        _documentService.ExtractPagesToPdf(outputPath, materialized, ignorePermissions);
 
         _logger.LogInformation("Extracted {PageCount} page(s) to {OutputPath}", materialized.Length, outputPath);
     }
@@ -88,7 +85,6 @@ public sealed class PageOrganizationWorkflowService
         if (!_documentService.IsDocumentLoaded || fromIndex == toIndex)
             return PageOrganizationResult.NoChange(fromIndex);
 
-        LogOperationDiagnostics(new[] { fromIndex, toIndex });
         _documentService.MovePage(fromIndex, toIndex);
 
         _logger.LogInformation("Moved page from {FromIndex} to {ToIndex}", fromIndex, toIndex);
@@ -114,7 +110,6 @@ public sealed class PageOrganizationWorkflowService
             return PageOrganizationResult.NoChange(currentPageIndex, indices);
 
 
-        LogOperationDiagnostics(indices);
         var newCurrentPageIndex = RemapCurrentPageAfterMove(currentPageIndex, indices, delta, _documentService.PageCount);
         var newSelectedPageIndices = _documentService.MovePages(indices, delta);
 
@@ -128,37 +123,19 @@ public sealed class PageOrganizationWorkflowService
     /// document, so it does not report a <see cref="PageOrganizationResult"/>
     /// change (there is nothing on screen to refresh).
     /// </summary>
-    public Task MergeDocumentsAsync(IReadOnlyList<string> sourcePaths, string outputPath)
+    public Task MergeDocumentsAsync(IReadOnlyList<string> sourcePaths, string outputPath, bool ignorePermissions)
     {
-        _documentService.MergeDocumentsToPdf(sourcePaths, outputPath);
-        _logger.LogInformation("Combined {Count} document(s) into {OutputPath}", sourcePaths.Count, outputPath);
+        _documentService.MergeDocumentsToPdf(sourcePaths, outputPath, ignorePermissions);
         return Task.CompletedTask;
     }
 
     /// <summary>
     /// Split the currently-loaded document into multiple files under
-    /// <paramref name="outputFolder"/> and return the written paths.
-    /// Does not modify the currently-loaded document.
+    /// <paramref name="outputFolder"/>. Does not modify the currently-loaded document.
     /// </summary>
-    public Task<IReadOnlyList<string>> SplitDocumentAsync(
-        string outputFolder,
-        SplitMode mode,
-        int pagesPerChunk = 1,
-        IReadOnlyList<int>? boundaries = null)
-    {
-        if (!_documentService.IsDocumentLoaded)
-            return Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>());
-
-        var paths = _documentService.SplitDocument(outputFolder, mode, pagesPerChunk, boundaries);
-        _logger.LogInformation("Split document into {Count} file(s) in {OutputFolder}", paths.Count, outputFolder);
-        return Task.FromResult(paths);
-    }
-
-    internal Task<SplitDocumentResult> SplitDocumentAsync(SplitDocumentRequest request)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.OutputFolder);
-        return SplitDocumentCoreAsync(request);
-    }
+    public Task<SplitDocumentResult> SplitDocumentAsync(
+        string outputFolder, SplitDocumentSpecification specification, bool ignorePermissions)
+        => Task.FromResult(_documentService.SplitDocument(outputFolder, specification, ignorePermissions));
 
     internal static SplitSpecificationParseResult ParseSplitSpecification(string? specification)
     {
@@ -167,10 +144,10 @@ public sealed class PageOrganizationWorkflowService
 
         var normalized = specification.Trim();
         if (string.Equals(normalized, "single", StringComparison.OrdinalIgnoreCase))
-            return SplitSpecificationParseResult.Valid(new(SplitMode.SinglePages, 1, null));
+            return SplitSpecificationParseResult.Valid(new(SplitDocumentMode.Single));
 
         if (string.Equals(normalized, "bookmarks", StringComparison.OrdinalIgnoreCase))
-            return SplitSpecificationParseResult.Valid(new(SplitMode.Bookmarks, 1, null));
+            return SplitSpecificationParseResult.Valid(new(SplitDocumentMode.Bookmarks));
 
         if (normalized.Contains(','))
         {
@@ -185,50 +162,14 @@ public sealed class PageOrganizationWorkflowService
                 ? SplitSpecificationParseResult.Invalid(
                     $"Could not parse page numbers from \"{normalized}\".")
                 : SplitSpecificationParseResult.Valid(
-                    new(SplitMode.PageBoundaries, 1, boundaries));
+                    new(SplitDocumentMode.Boundaries, Boundaries: boundaries));
         }
 
         return int.TryParse(normalized, out var pagesPerChunk) && pagesPerChunk > 0
             ? SplitSpecificationParseResult.Valid(
-                new(SplitMode.EveryNPages, pagesPerChunk, null))
+                new(SplitDocumentMode.Every, pagesPerChunk))
             : SplitSpecificationParseResult.Invalid(
                 $"Could not understand \"{normalized}\".");
-    }
-
-    private async Task<SplitDocumentResult> SplitDocumentCoreAsync(SplitDocumentRequest request)
-    {
-        var paths = await SplitDocumentAsync(
-            request.OutputFolder,
-            request.Specification.Mode,
-            request.Specification.PagesPerChunk,
-            request.Specification.Boundaries);
-        return new SplitDocumentResult(paths);
-    }
-
-    /// <summary>
-    /// #1652: the page-organization diagnostics, LOGGED — they used to open a
-    /// modal dialog after every page operation saying the result "may require
-    /// manual review after saving".
-    ///
-    /// <para>They are not a measurement. Each one fires on the mere PRESENCE of
-    /// a document-level structure — an <c>/Outlines</c> tree, an
-    /// <c>/AcroForm</c>, a <c>/Names</c> tree, a link or widget annotation on
-    /// an affected page — whether or not the operation broke anything. On any
-    /// real document at least one of them is always true, so the dialog fired
-    /// every time and carried no information; it only taught people to click
-    /// through dialogs.</para>
-    ///
-    /// <para>The confidence has to come from #1653 instead — GUI coverage of
-    /// every Document-menu command that saves, reloads and verifies with a tool
-    /// that is not excise. Until a check here can say a destination ACTUALLY
-    /// dangles, this stays a log line.</para>
-    /// </summary>
-    private void LogOperationDiagnostics(IEnumerable<int>? pageIndices = null)
-    {
-        var diagnostics = _documentService.AnalyzePageOperationPreservation(pageIndices);
-        if (diagnostics.HasWarnings)
-            _logger.LogDebug("Page organization structural notes: {Notes}",
-                string.Join(" | ", diagnostics.Warnings));
     }
 
     private IEnumerable<int> ValidPageIndices(IEnumerable<int> pageIndices) =>
@@ -299,26 +240,15 @@ public sealed record PageOrganizationResult(
         new(false, currentPageIndex, selectedPageIndices ?? Array.Empty<int>());
 }
 
-internal sealed record SplitSpecification(
-    SplitMode Mode,
-    int PagesPerChunk,
-    IReadOnlyList<int>? Boundaries);
-
 internal sealed record SplitSpecificationParseResult(
-    SplitSpecification? Specification,
+    SplitDocumentSpecification? Specification,
     string? ErrorMessage)
 {
     public bool IsValid => Specification is not null;
 
-    public static SplitSpecificationParseResult Valid(SplitSpecification specification) =>
+    public static SplitSpecificationParseResult Valid(SplitDocumentSpecification specification) =>
         new(specification, null);
 
     public static SplitSpecificationParseResult Invalid(string errorMessage) =>
         new(null, errorMessage);
 }
-
-internal readonly record struct SplitDocumentRequest(
-    string OutputFolder,
-    SplitSpecification Specification);
-
-internal sealed record SplitDocumentResult(IReadOnlyList<string> WrittenPaths);

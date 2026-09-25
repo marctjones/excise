@@ -118,10 +118,7 @@ public class PageAssemblyCorrectnessTests : IDisposable
     {
         var path = PageWithText("SAMEPATH");
 
-        var result = DocumentAssemblyHandler.Merge(new MergeDocumentsRequest(
-            [path],
-            path,
-            IgnorePermissions: false), TestContext.Current.CancellationToken);
+        var result = DocumentAssemblyTestDriver.RunMerge([path], path);
 
         result.OutputPath.Should().Be(Path.GetFullPath(path));
         result.PageCount.Should().Be(1);
@@ -131,16 +128,14 @@ public class PageAssemblyCorrectnessTests : IDisposable
     }
 
     [Fact]
-    public void DocumentAssemblyHandler_CancelledMerge_DoesNotOpenOrWriteOutput()
+    public void PdfDocumentAssembly_CancelledMerge_DoesNotOpenOrWriteOutput()
     {
         var output = TempPath(".pdf");
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
-        var act = () => DocumentAssemblyHandler.Merge(new MergeDocumentsRequest(
-            [PageWithText("CANCELLED")],
-            output,
-            IgnorePermissions: false), cancellation.Token);
+        var act = () => PdfDocumentAssembly.Merge(
+            [PageWithText("CANCELLED")], output, DocumentAssemblyTestDriver.Gate(false), cancellation.Token);
 
         act.Should().Throw<OperationCanceledException>();
         File.Exists(output).Should().BeFalse(
@@ -187,7 +182,7 @@ public class PageAssemblyCorrectnessTests : IDisposable
             merged);
 
         var outDir = TempDir();
-        var written = DocumentAssemblyTestDriver.RunSplitToSinglePages(merged, outDir);
+        var written = DocumentAssemblyTestDriver.RunSplitToSinglePages(merged, outDir).WrittenPaths;
 
         written.Should().HaveCount(3, "a single-page burst of a 3-page document must write 3 files");
 
@@ -217,7 +212,7 @@ public class PageAssemblyCorrectnessTests : IDisposable
         DocumentAssemblyTestDriver.RunMerge([PageWithText("FRAGONE"), PageWithText("FRAGTWO")], merged);
 
         var outDir = TempDir();
-        var written = DocumentAssemblyTestDriver.RunSplitToSinglePages(merged, outDir);
+        var written = DocumentAssemblyTestDriver.RunSplitToSinglePages(merged, outDir).WrittenPaths;
 
         foreach (var fragment in written)
         {

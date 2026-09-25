@@ -6,7 +6,11 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.Core.Document;
+using Excise.Core.Operations;
+using Excise.Core.Parsing;
+using Excise.Core.Security;
 using Excise.Core.Text;
+using Excise.Rendering.Differential;
 using Xunit;
 
 namespace Excise.App.Tests.Unit;
@@ -719,24 +723,6 @@ public class PdfDocumentServiceTests : IDisposable
         ExtractPageText(extracted, 2).Should().Contain("Page 1 Content");
     }
 
-    [Fact]
-    public void AnalyzePageOperationPreservation_ReportsDocumentLevelStructures()
-    {
-        var filePath = CreateTestFile("warnings.pdf", path =>
-        {
-            using var doc = PdfDocument.CreateNew();
-            doc.Pages.AddBlank();
-            doc.Catalog["Outlines"] = new Excise.Core.Primitives.PdfDictionary();
-            doc.Save(path);
-        });
-        _service.LoadDocument(filePath);
-
-        var diagnostics = _service.AnalyzePageOperationPreservation();
-
-        diagnostics.HasWarnings.Should().BeTrue();
-        diagnostics.Warnings.Should().Contain(w => w.Contains("outlines", StringComparison.OrdinalIgnoreCase));
-    }
-
     private static string ExtractPageText(PdfDocument document, int pageNumber)
         => new TextExtractor(document.GetPage(pageNumber)).ExtractText();
 
@@ -753,6 +739,144 @@ public class PdfDocumentServiceTests : IDisposable
             ExtractPageText(document, i + 1).Should().Contain(expectedTextPerPage[i],
                 $"page {i + 1} of the edited document");
         }
+    }
+
+    #endregion
+
+    #region Encrypted page assembly (#1829)
+
+    private const string AssemblyUserPassword = "user-1829";
+
+    private string EncryptedMultiPagePdf(string name, int pageCount, string userPassword, long permissions = -4)
+    {
+        var plain = CreateTestFile($"{name}-plain.pdf", path => TestPdfGenerator.CreateMultiPagePdf(path, pageCount));
+        var encrypted = Path.Combine(_tempDir, $"{name}.pdf");
+        using var document = PdfDocument.Open(File.ReadAllBytes(plain));
+        document.Save(encrypted, new PdfEncryptionOptions
+        {
+            UserPassword = userPassword,
+            OwnerPassword = "owner-1829",
+            Permissions = permissions,
+            Algorithm = PdfEncryptionAlgorithm.Aes128,
+        });
+        return encrypted;
+    }
+
+    /// <summary>
+    /// An encrypted-source copy must need the source's password. Excise reading its own output
+    /// cannot tell that from an empty-password downgrade, so qpdf decides.
+    /// </summary>
+    private static void AssertRequiresPassword(string path, string password)
+    {
+        var openWithoutPassword = () => PdfDocument.Open(path);
+        openWithoutPassword.Should().Throw<PdfEncryptionNotSupportedException>(
+            $"{Path.GetFileName(path)} is a copy of a password-protected document");
+        using (var reopened = PdfDocument.Open(path, password))
+            reopened.IsEncrypted.Should().BeTrue();
+
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        QpdfReferenceTool.RequiresPassword(path).Should().Be(QpdfPasswordStatus.PasswordRequired,
+            $"qpdf must refuse {Path.GetFileName(path)} without the source's password");
+        QpdfReferenceTool.RequiresPassword(path, password).Should().Be(QpdfPasswordStatus.PasswordCorrect);
+    }
+
+    [Fact]
+    public void ExtractPagesToPdf_EncryptedSource_WritesAPasswordProtectedCopy()
+    {
+        var source = EncryptedMultiPagePdf("extract-encrypted", 3, AssemblyUserPassword);
+        var output = Path.Combine(_tempDir, "extract-encrypted-out.pdf");
+        _service.LoadDocument(source, AssemblyUserPassword);
+
+        _service.ExtractPagesToPdf(output, new[] { 1 });
+
+        AssertRequiresPassword(output, AssemblyUserPassword);
+    }
+
+    [Fact]
+    public void SplitDocument_EncryptedSource_WritesPasswordProtectedFragments()
+    {
+        var source = EncryptedMultiPagePdf("split-encrypted", 2, AssemblyUserPassword);
+        var folder = Path.Combine(_tempDir, "split-encrypted-out");
+        _service.LoadDocument(source, AssemblyUserPassword);
+
+        var result = _service.SplitDocument(folder, new SplitDocumentSpecification(SplitDocumentMode.Single));
+
+        result.EncryptionPreserved.Should().BeTrue();
+        result.WrittenPaths.Should().HaveCount(2);
+        foreach (var path in result.WrittenPaths)
+            AssertRequiresPassword(path, AssemblyUserPassword);
+    }
+
+    /// <summary>
+    /// Merge opens its sources without a password (the GUI does not prompt for one), so the
+    /// sources carry an empty user password and an owner password: the copy must stay encrypted.
+    /// </summary>
+    [Fact]
+    public void MergeDocumentsToPdf_EncryptedSources_WritesAnEncryptedCopy()
+    {
+        var first = EncryptedMultiPagePdf("merge-a", 1, userPassword: "");
+        var second = EncryptedMultiPagePdf("merge-b", 1, userPassword: "");
+        var output = Path.Combine(_tempDir, "merge-encrypted-out.pdf");
+
+        _service.MergeDocumentsToPdf(new[] { first, second }, output).EncryptionPreserved.Should().BeTrue();
+
+        using (var merged = PdfDocument.Open(output))
+        {
+            merged.IsEncrypted.Should().BeTrue("encrypted sources must not merge into a plaintext copy");
+            merged.PageCount.Should().Be(2);
+        }
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        QpdfReferenceTool.RequiresPassword(output).Should().Be(QpdfPasswordStatus.PasswordCorrect,
+            "qpdf must see an encrypted file that opens with the sources' empty user password");
+    }
+
+    private string AssembleDeniedPdf(string name) =>
+        EncryptedMultiPagePdf(name, 2, userPassword: "", permissions: -4 & ~1024L); // bit 11 cleared
+
+    [Fact]
+    public void ExtractPagesToPdf_AssembleDenied_IsRefused()
+    {
+        _service.LoadDocument(AssembleDeniedPdf("extract-denied"));
+        var output = Path.Combine(_tempDir, "extract-denied-out.pdf");
+
+        var act = () => _service.ExtractPagesToPdf(output, new[] { 0 });
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*bit 11*");
+        File.Exists(output).Should().BeFalse("a refused extract must not write a file");
+
+        _service.ExtractPagesToPdf(output, new[] { 0 }, ignorePermissions: true);
+        File.Exists(output).Should().BeTrue("IgnoreDocumentPermissions overrides the gate");
+    }
+
+    [Fact]
+    public void SplitDocument_AssembleDenied_IsRefused()
+    {
+        _service.LoadDocument(AssembleDeniedPdf("split-denied"));
+        var folder = Path.Combine(_tempDir, "split-denied-out");
+
+        var single = new SplitDocumentSpecification(SplitDocumentMode.Single);
+
+        var act = () => _service.SplitDocument(folder, single);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*bit 11*");
+        Directory.Exists(folder).Should().BeFalse("a refused split must not write fragments");
+
+        _service.SplitDocument(folder, single, ignorePermissions: true).WrittenPaths.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void MergeDocumentsToPdf_AssembleDeniedSource_IsRefused()
+    {
+        var output = Path.Combine(_tempDir, "merge-denied-out.pdf");
+
+        var sources = new[] { AssembleDeniedPdf("merge-denied") };
+
+        var act = () => _service.MergeDocumentsToPdf(sources, output);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*bit 11*");
+        File.Exists(output).Should().BeFalse("a refused merge must not write a file");
+
+        _service.MergeDocumentsToPdf(sources, output, ignorePermissions: true).PageCount.Should().Be(2);
     }
 
     #endregion

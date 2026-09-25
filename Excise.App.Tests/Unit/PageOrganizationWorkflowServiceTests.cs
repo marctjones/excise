@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.Core.Document;
+using Excise.Core.Operations;
 using Excise.Core.Text;
 using System.Collections.Generic;
 using Xunit;
@@ -119,19 +120,18 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
         // because the document HAS an /AcroForm — not because anything broke.
         // Every real document trips at least one of those structural checks, so
         // the dialog fired on every page operation and carried no information.
-        // The diagnostics are still computed and logged; the confidence comes
-        // from #1653 instead (save, reload, verify with a tool that is not
-        // excise).
+        // The confidence comes from #1653 instead (save, reload, verify with a
+        // tool that is not excise).
         dialog.Messages.Should().BeEmpty("a successful page operation reports nothing");
     }
 
     [Theory]
-    [InlineData("single", SplitMode.SinglePages, 1)]
-    [InlineData("bookmarks", SplitMode.Bookmarks, 1)]
-    [InlineData("5", SplitMode.EveryNPages, 5)]
+    [InlineData("single", SplitDocumentMode.Single, 1)]
+    [InlineData("bookmarks", SplitDocumentMode.Bookmarks, 1)]
+    [InlineData("5", SplitDocumentMode.Every, 5)]
     public void ParseSplitSpecification_RecognizesNamedAndChunkModes(
         string input,
-        SplitMode expectedMode,
+        SplitDocumentMode expectedMode,
         int expectedPagesPerChunk)
     {
         var result = PageOrganizationWorkflowService.ParseSplitSpecification(input);
@@ -148,7 +148,7 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
         var result = PageOrganizationWorkflowService.ParseSplitSpecification("10, 1, 5, 5");
 
         result.IsValid.Should().BeTrue();
-        result.Specification!.Mode.Should().Be(SplitMode.PageBoundaries);
+        result.Specification!.Mode.Should().Be(SplitDocumentMode.Boundaries);
         result.Specification.Boundaries.Should().Equal(0, 4, 9);
     }
 

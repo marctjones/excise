@@ -1376,6 +1376,19 @@ namespace Excise.Core.Operations
         public string? RefusedReason { get; init; }
         public bool TermFound { get; init; }
     }
+    public sealed class MergeDocumentsResult : System.IEquatable<Excise.Core.Operations.MergeDocumentsResult>
+    {
+        public MergeDocumentsResult(string OutputPath, int PageCount, System.Collections.Generic.IReadOnlyList<string> DroppedCatalogEntries, bool EncryptionPreserved) { }
+        public System.Collections.Generic.IReadOnlyList<string> DroppedCatalogEntries { get; init; }
+        public bool EncryptionPreserved { get; init; }
+        public string OutputPath { get; init; }
+        public int PageCount { get; init; }
+    }
+    public static class PdfDocumentAssembly
+    {
+        public static Excise.Core.Operations.MergeDocumentsResult Merge(System.Collections.Generic.IReadOnlyList<string> inputPaths, string outputPath, System.Action<Excise.Core.Document.PdfDocument, string> requireAssemble, System.Threading.CancellationToken cancellationToken = default) { }
+        public static Excise.Core.Operations.SplitDocumentResult Split(Excise.Core.Document.PdfDocument source, string? userPassword, Excise.Core.Operations.SplitDocumentSpecification specification, string outputFolder, string baseName, System.Action<Excise.Core.Document.PdfDocument, string> requireAssemble, System.Threading.CancellationToken cancellationToken = default) { }
+    }
     public static class PdfDocumentMerger
     {
         public static System.Collections.Generic.IReadOnlyList<string> CatalogEntriesNotConserved(Excise.Core.Document.PdfDocument source) { }
@@ -1411,6 +1424,27 @@ namespace Excise.Core.Operations
         EmbeddedFiles = 256,
         ActionUris = 512,
         All = 1023,
+    }
+    public enum SplitDocumentMode
+    {
+        Every = 0,
+        Single = 1,
+        Bookmarks = 2,
+        Boundaries = 3,
+    }
+    public sealed class SplitDocumentResult : System.IEquatable<Excise.Core.Operations.SplitDocumentResult>
+    {
+        public SplitDocumentResult(System.Collections.Generic.IReadOnlyList<string> WrittenPaths, System.Collections.Generic.IReadOnlyList<string> DroppedCatalogEntries, bool EncryptionPreserved) { }
+        public System.Collections.Generic.IReadOnlyList<string> DroppedCatalogEntries { get; init; }
+        public bool EncryptionPreserved { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> WrittenPaths { get; init; }
+    }
+    public sealed class SplitDocumentSpecification : System.IEquatable<Excise.Core.Operations.SplitDocumentSpecification>
+    {
+        public SplitDocumentSpecification(Excise.Core.Operations.SplitDocumentMode Mode, int PagesPerChunk = 1, System.Collections.Generic.IReadOnlyList<int>? Boundaries = null) { }
+        public System.Collections.Generic.IReadOnlyList<int>? Boundaries { get; init; }
+        public Excise.Core.Operations.SplitDocumentMode Mode { get; init; }
+        public int PagesPerChunk { get; init; }
     }
 }
 namespace Excise.Core.Parsing
