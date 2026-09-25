@@ -13,7 +13,7 @@ digraph excise_architecture {
     label="engine";
     color="#cbd5e1";
     "core-content" [label="Content-stream walker and sinks\nimplemented\n283 retained symbols", fillcolor="#d8f3dc"];
-    "core-document" [label="Document model and mutation boundary\nimplemented\n587 retained symbols", fillcolor="#d8f3dc"];
+    "core-document" [label="Document model and mutation boundary\nimplemented\n585 retained symbols", fillcolor="#d8f3dc"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n192 retained symbols", fillcolor="#fff3bf"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n593 retained symbols", fillcolor="#fff3bf"];
     "core-security" [label="Document conformance and structural validation\npartial\n39 retained symbols", fillcolor="#fff3bf"];
@@ -98,7 +98,7 @@ digraph excise_architecture {
   "core-security" -> "core-primitives" [label="44 refs / 15 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core" [label="4 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-content" [label="37 refs / 5 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-text" -> "core-document" [label="153 refs / 19 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-text" -> "core-document" [label="149 refs / 18 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-fonts" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-primitives" [label="42 refs / 9 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-redaction" [label="2 refs / 2 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
