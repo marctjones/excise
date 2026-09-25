@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.11.0] - 2026-09-24
+
 ### Added
 - **FormCalc in dynamic XFA forms** (#1570). `initialize` and `calculate` scripts now run
   when a dynamic XFA form is opened, so computed fields show their values and scripts that
