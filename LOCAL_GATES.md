@@ -362,6 +362,13 @@ that variable from `runner_gate_asymmetry_base <tier>`, in this order:
    `scripts/test-tier.sh --install-hook` once in every clone.** After that the
    installed hook is a stub that execs `scripts/pre-push-hook.sh`, so later
    fixes land without re-installing.
+   **The hook reuses one t0 pass for one tree (#1845).** A stepped push runs t0 once per step
+   over the same working tree, so the hook runs `test-tier.sh t0 --resume` against a state
+   directory keyed on the exact tree (HEAD, the tracked diff and the content of every untracked
+   file), dropped after 60 minutes. A row that already passed for that tree is skipped; a
+   different tree starts empty. Always re-run: the build, every `checkpoint=never` row (the
+   redaction family), `Excise.Core.Tests` (it holds the Redaction suites) and `gate-asymmetry`
+   (`RUNNER_ALWAYS_RUN` pins the last two). The gate-asymmetry range is still judged per push.
 2. **A manual tier run** uses the last commit at which this tier finished with
    no NEW failure: `logs/runner-state/tier-pass/<tier>.rec`, written on a
    report exit 0 (a `full` pass also records `t1` and `t0`; a `t1` pass records
