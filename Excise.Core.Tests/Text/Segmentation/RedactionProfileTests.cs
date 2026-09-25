@@ -479,6 +479,10 @@ public class RedactionProfileTests
         reopened.GetPage(1).Text.Should().Contain(trap.Token + "VALUE",
             "flattening makes the value page content, which is what the reader saw; mutool corroborates this " +
             "in RedactionProfileFormFlattenOracleTests");
+
+        // A scan of the saved bytes does not depend on excise's reader: the painted value is in a content stream.
+        SavedPdfLeakScanner.FindTerm(max.Saved, trap.Token + "VALUE").Should().NotBeEmpty(
+            "the flattened value is painted into the page content, found by the saved-bytes scanner");
     }
 
     /// <summary>
