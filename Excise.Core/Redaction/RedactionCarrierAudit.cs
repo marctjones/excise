@@ -271,5 +271,5 @@ internal sealed record RedactionCarrierAudit(
     }
 
     private static bool Matches(string value, IReadOnlyList<string>? terms) =>
-        terms == null || terms.Any(term => value.Contains(term, StringComparison.OrdinalIgnoreCase));
+        terms == null || TermMatch.Holds(value, terms, caseSensitive: false, wholeWord: false);
 }
