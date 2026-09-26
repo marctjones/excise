@@ -890,7 +890,7 @@ public class RedactionProfileTests
         report.IsCleanSuccess.Should().BeTrue();
         // The area path's flattener inlines and frees the form before this pass runs.
         if (entry != "area")
-            report.Removals.Should().ContainSingle(r => r.Feature == "form XObject(s) drawn only in hidden optional content")
+            report.Removals.Should().ContainSingle(r => r.Feature == "XObject(s) drawn only in hidden optional content")
                 .Which.Count.Should().Be(1, "every removal is reported");
     }
 
@@ -997,6 +997,107 @@ public class RedactionProfileTests
                 report.IsCleanSuccess.Should().BeFalse();
                 break;
         }
+    }
+
+    private const string HiddenImageToken = "IMAGEPIXELTRAPXX";
+
+    /// <summary>
+    /// #1872: an image drawn only inside an OFF layer. The hidden-layer pass
+    /// drops its <c>Do</c>; the image stayed in the page's <c>/XObject</c>,
+    /// pixels and all, unless the page had a match for the image pass to prune,
+    /// and the run reported clean. Two-sided: with the layer kept, so is the image.
+    /// </summary>
+    [Theory]
+    [InlineData("NOMATCHXYZ", false)]
+    [InlineData("VISIBLE", false)]
+    [InlineData("area", false)]
+    [InlineData("NOMATCHXYZ", true)]
+    [InlineData("VISIBLE", true)]
+    [InlineData("area", true)]
+    public void AnImageDrawnOnlyInAHiddenLayer_LeavesTheFileWithIt(string entry, bool maximum)
+    {
+        var options = maximum ? RedactionOptions.Maximum : RedactionOptions.Default;
+        RedactionReport Redact(PdfDocument doc, RedactionOptions with) => entry == "area"
+            ? doc.GetPage(1).RedactAreaWithReport(new PdfRectangle(60, 690, 200, 720), with)
+            : doc.RedactText(entry, with);
+
+        using (var doc = PdfDocument.Open(RecoveryFixtureBuilder.ImageInHiddenLayer(HiddenImageToken)))
+        {
+            var report = Redact(doc, options);
+            SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), HiddenImageToken).Should().BeEmpty(
+                "the image's only Do was in the removed span, so the image goes with it");
+            report.IsCleanSuccess.Should().BeTrue();
+            report.Removals.Should().ContainSingle(r => r.Feature == "XObject(s) drawn only in hidden optional content")
+                .Which.Count.Should().Be(1, "every removal is reported");
+        }
+
+        using (var doc = PdfDocument.Open(RecoveryFixtureBuilder.ImageInHiddenLayer(HiddenImageToken)))
+        {
+            Redact(doc, options with { RemoveHiddenLayerContent = false });
+            SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), HiddenImageToken).Should().NotBeEmpty(
+                "the layer is kept, so the image it draws is too: the fixture carries the pixels");
+        }
+    }
+
+    /// <summary>
+    /// #1872, the other side: an image whose <c>Do</c> the hidden-layer pass
+    /// dropped goes only when no page and no form draws it any more.
+    /// </summary>
+    [Theory]
+    [InlineData("the page also draws it", "kept")]
+    [InlineData("a visible form draws it", "kept")]
+    [InlineData("page 2 draws it", "kept")]
+    [InlineData("page 2 draws it in a hidden layer too", "removed")]
+    public void WhetherAHiddenLayerImageIsRemoved_IsDecidedOverEveryPageAndForm(string shape, string outcome)
+    {
+        var content = "BT /F1 12 Tf 72 700 Td (VISIBLE) Tj ET\n/OC /MC0 BDC q 100 0 0 100 72 400 cm /Im0 Do Q EMC\n";
+        var extras = new List<RecoveryFixtureBuilder.Obj>
+        {
+            new("<< /Type /OCG /Name (Draft) >>"),
+            RecoveryFixtureBuilder.SampleImage(HiddenImageToken),
+        };
+        string xobjects = "/Im0 8 0 R";
+        int[]? pages = null;
+        void Page2(string draws)
+        {
+            extras.Add(new("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 10 0 R " +
+                "/Resources << /Properties << /MC0 7 0 R >> /XObject << /Im0 8 0 R >> >> >>"));
+            extras.Add(new($"<< /Length {draws.Length} >>", System.Text.Encoding.ASCII.GetBytes(draws)));
+            pages = new[] { 9 };
+        }
+        switch (shape)
+        {
+            case "the page also draws it":
+                content += "q 10 0 0 10 300 300 cm /Im0 Do Q\n";
+                break;
+            case "a visible form draws it":
+                var form = "q 10 0 0 10 0 0 cm /Im0 Do Q";
+                extras.Add(new("<< /Type /XObject /Subtype /Form /BBox [0 0 612 792] " +
+                    $"/Resources << /XObject << /Im0 8 0 R >> >> /Length {form.Length} >>",
+                    System.Text.Encoding.ASCII.GetBytes(form)));
+                content += "q /Fx0 Do Q\n";
+                xobjects += " /Fx0 9 0 R";
+                break;
+            case "page 2 draws it":
+                Page2("q 10 0 0 10 72 400 cm /Im0 Do Q");
+                break;
+            default:
+                Page2("/OC /MC0 BDC q 10 0 0 10 72 400 cm /Im0 Do Q EMC");
+                break;
+        }
+        using var doc = PdfDocument.Open(RecoveryFixtureBuilder.Build(content, extras,
+            catalogExtra: "/OCProperties << /OCGs [7 0 R] /D << /OFF [7 0 R] >> >>",
+            resourcesExtra: $"/Properties << /MC0 7 0 R >> /XObject << {xobjects} >>", extraPages: pages));
+
+        var report = doc.RedactText("VISIBLE", RedactionOptions.Default);
+
+        var found = SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), HiddenImageToken);
+        if (outcome == "kept")
+            found.Should().NotBeEmpty($"{shape}: removing the image would delete visible content");
+        else
+            found.Should().BeEmpty($"{shape}: nothing draws the image any more");
+        report.Carriers.Should().NotContain(c => c.Carrier.StartsWith("image XObject"));
+        report.IsCleanSuccess.Should().BeTrue();
     }
 
     /// <summary>
