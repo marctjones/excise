@@ -502,7 +502,7 @@ public partial class PdfViewerControl
         for (int i = 1; i <= doc.PageCount; i++)
         {
             var page = doc.GetPage(i);
-            slots.Add(new PdfPageSlot(i, page.VisualWidth, page.VisualHeight, ZoomLevel));
+            slots.Add(new PdfPageSlot(i, page.VisualWidth, page.VisualHeight, ZoomLevel) { Rotation = page.Rotation });
         }
         ApplyContinuousSlotLayout(slots);
         // #1466: a return to this view replaces the slots without going through
@@ -581,15 +581,29 @@ public partial class PdfViewerControl
         CancelContinuousLookAhead();
     }
 
-    private void InvalidateContinuousCache()
+    private void InvalidateContinuousCache(bool keepComposites = false)
     {
         CancelContinuousCellRenders();
         _continuousRenderPassScheduled = false;
         _pendingContinuousPage = null;
         // Clear each slot's composite (released once its binding has moved,
         // #1466) and dispose every cached tile (#1467). The slots themselves are
-        // rebuilt by RebuildContinuous.
-        ReleaseSlotComposites(_continuousSlots);
+        // rebuilt by RebuildContinuous. A reload that keeps its slots (#1876)
+        // leaves each composite on screen until the new cells replace it, and
+        // drops what a rebuilt slot would have started without.
+        if (keepComposites && _continuousSlots != null)
+        {
+            foreach (var slot in _continuousSlots)
+            {
+                slot.MarkCompositeStale();
+                slot.SelectionRects.Clear();
+                ClearContinuousFormFields(slot);
+            }
+        }
+        else
+        {
+            ReleaseSlotComposites(_continuousSlots);
+        }
         foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
         _continuousLookAheadTiles.Clear();
@@ -822,6 +836,46 @@ public partial class PdfViewerControl
         InvalidateContinuousCache();
         RebuildContinuous();
         RenderVisibleContinuousTiles();
+    }
+
+    private Excise.Core.Document.PdfDocument? _keepPagesOnScreenFor;
+
+    /// <summary>
+    /// #1876: <paramref name="reloaded"/> is about to become the Document and is
+    /// the document on screen, reopened from the bytes a save just wrote. Keep the
+    /// continuous view's pages on screen until it has rendered them.
+    /// </summary>
+    public void KeepPagesOnScreenUntilRendered(Excise.Core.Document.PdfDocument reloaded) =>
+        _keepPagesOnScreenFor = reloaded;
+
+    /// <summary>
+    /// Whether this Document change may keep the slots and their composites
+    /// (#1876). Consumes the request, so it never outlives one change.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ A stale frame shown for different content is a worse bug than a
+    /// blank one. So every other change clears at once: opening another
+    /// document, reopening a file changed on disk, and any page whose count,
+    /// size or rotation differs from its slot. Pages of one size swapped in
+    /// order look the same here; only a save of the document on screen asks.
+    /// </remarks>
+    private bool TakeKeepPagesOnScreenRequest()
+    {
+        var requested = _keepPagesOnScreenFor;
+        _keepPagesOnScreenFor = null;
+        var doc = Document;
+        var slots = _continuousSlots;
+        if (doc == null || !ReferenceEquals(requested, doc) || ViewMode != PdfViewMode.Continuous
+            || slots == null || slots.Count != doc.PageCount)
+            return false;
+        for (int i = 0; i < slots.Count; i++)
+        {
+            var page = doc.GetPage(i + 1);
+            if (slots[i].WidthPt != page.VisualWidth || slots[i].HeightPt != page.VisualHeight
+                || slots[i].Rotation != page.Rotation)
+                return false;
+        }
+        return true;
     }
 
     public void PreserveContinuousReadingPositionOnNextRebuild()
@@ -2193,6 +2247,9 @@ internal sealed class PdfPageSlot : INotifyPropertyChanged
     public double WidthPt { get; }
     public double HeightPt { get; }
 
+    /// <summary>The page's /Rotate when laid out; a 180° turn keeps the size (#1876).</summary>
+    internal int Rotation { get; init; }
+
     /// <summary>
     /// Text-selection highlight rectangles for this page, in page-local DIPs
     /// (the Border's own coordinate space), bound by the continuous-view
@@ -2261,6 +2318,9 @@ internal sealed class PdfPageSlot : INotifyPropertyChanged
         Bitmap = bitmap;
         ReleaseAfterBindingMoves(previous, bitmap);
     }
+
+    /// <summary>Keep showing the composite, but let the next recompose replace it even for the same band (#1876).</summary>
+    internal void MarkCompositeStale() => CompositeKey = default;
 
     /// <summary>Stop showing a composite and release it once the binding has moved off it (#1466).</summary>
     internal void ClearComposite()

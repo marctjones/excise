@@ -1735,14 +1735,19 @@ public partial class PdfViewerControl : UserControl
         _linksPageNumber = -1;
         ClearSelectionHighlight();
 
-        InvalidateContinuousCache();
+        var keepPagesOnScreen = TakeKeepPagesOnScreenRequest();
+        InvalidateContinuousCache(keepPagesOnScreen);
         if (Document != null)
         {
             RefreshPageAnnotations();
             RedrawTypewriterLayer();
             if (ViewMode == PdfViewMode.Continuous)
             {
-                RebuildContinuous();
+                // #1876: a save's reload renders into the slots it kept.
+                if (keepPagesOnScreen)
+                    RenderVisibleContinuousTiles();
+                else
+                    RebuildContinuous();
                 // #1473: the single-page Image is hidden in continuous view, so
                 // rendering it here was a full page render nobody saw, plus a
                 // bitmap held in the single-page cache. OnViewModeChanged renders

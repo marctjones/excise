@@ -195,6 +195,7 @@ namespace Excise.Avalonia.Controls
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public void InitializeComponent(bool loadXaml = true) { }
         public void InvalidatePageCache() { }
+        public void KeepPagesOnScreenUntilRendered(Excise.Core.Document.PdfDocument reloaded) { }
         public void NextPage() { }
         protected override Avalonia.Automation.Peers.AutomationPeer OnCreateAutomationPeer() { }
         protected override void OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs change) { }

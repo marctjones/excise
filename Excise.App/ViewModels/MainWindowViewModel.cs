@@ -1263,7 +1263,7 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 ClearPendingTypewriterText();
                 if (!string.IsNullOrWhiteSpace(_currentFilePath))
-                    await ReloadPdfCoreDocumentAfterSaveAsync(_currentFilePath);
+                    await ReloadPdfCoreDocumentAfterSaveAsync(_currentFilePath, keepPagesOnScreen: false);
             }
             // Saved edits are committed to the file; nothing before this point
             // remains reversible in-session (#782).
@@ -2088,6 +2088,12 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectAllTextRequested?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// A save wrote the document on screen unchanged and reopened it: the viewer
+    /// keeps its pages up until the reopened document renders them (#1876).
+    /// </summary>
+    internal event EventHandler<PdfCoreDocument>? KeepPagesOnScreenRequested;
+
     private void RequestPreserveReadingPosition() =>
         PreserveReadingPositionRequested?.Invoke(this, EventArgs.Empty);
 
@@ -2225,7 +2231,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         // #1788: see SaveFileAsync's identical call for why.
-        FlushOpenStickyNotePopupBeforeSave();
+        var flushedStickyNote = FlushOpenStickyNotePopupBeforeSave();
 
         try
         {
@@ -2242,7 +2248,9 @@ public partial class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(DocumentName));
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));
-            await ReloadPdfCoreDocumentAfterSaveAsync(filePath);
+            // #1876: a flush changed the document after its pages were drawn.
+            await ReloadPdfCoreDocumentAfterSaveAsync(filePath,
+                keepPagesOnScreen: !flattenedTypewriter && !flushedStickyNote);
             _logger.LogInformation("Document saved successfully to: {FilePath}", filePath);
         }
         catch (Exception ex)

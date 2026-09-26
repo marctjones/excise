@@ -259,7 +259,7 @@ public class AnnotationToolPlacementSweepTests
             await Settle(window, viewer);
 
             // What changed on screen is read BEFORE the save: a save reloads the
-            // document, and the viewer shows a blank page until it re-renders (#1826).
+            // document and re-renders the page (#1826, #1876).
             using var after = AnnotationPlacementAccuracyTests.Capture(window, viewer);
             var changed = AnnotationPlacementAccuracyTests.ChangedBounds(before, after);
 

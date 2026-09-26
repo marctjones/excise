@@ -652,6 +652,12 @@ public partial class MainWindow : Window
         viewModel.PreserveReadingPositionRequested += preserveReadingPosition;
         _viewModelUnsubscribers.Add(() => viewModel.PreserveReadingPositionRequested -= preserveReadingPosition);
 
+        // #1876: a save's reload keeps the pages on screen until they re-render.
+        EventHandler<PdfDocument> keepPagesOnScreen = (_, reopened) =>
+            _pdfViewerControl?.KeepPagesOnScreenUntilRendered(reopened);
+        viewModel.KeepPagesOnScreenRequested += keepPagesOnScreen;
+        _viewModelUnsubscribers.Add(() => viewModel.KeepPagesOnScreenRequested -= keepPagesOnScreen);
+
         // #917: one document means the viewer's Document reference no
         // longer changes on a structural mutation, so nothing tells the
         // continuous view to re-lay-out. This does.

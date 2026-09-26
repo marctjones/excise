@@ -266,9 +266,10 @@ public class AnnotationPlacementAccuracyTests
     /// <summary>
     /// Waits until the continuous view has published <paramref name="pageNumber"/>'s
     /// composite and has no cell render in flight. Every invalidation (an
-    /// annotation added, a document reloaded) clears the composites first, and a
+    /// annotation added, another document opened) clears the composites first, and a
     /// composite is published only once every cell of its band is cached, so a
-    /// non-null composite with nothing in flight is a finished page.
+    /// non-null composite with nothing in flight is a finished page. A save's
+    /// reload instead keeps the page's pixels up while it re-renders them (#1876).
     /// </summary>
     internal static async Task WaitForContinuousPageRendered(Window window, PdfViewerControl viewer, int pageNumber)
     {
