@@ -41,6 +41,12 @@ namespace Excise.Rendering.Tests.Differential;
 /// element and attribute serialisations and an Info-only title, which are not a
 /// Lang Alt in XMP; <c>UA-Title</c> used to accept all three and now fails them
 /// (#1774).</para>
+///
+/// <para><b>What veraPDF requires of an <c>rdf:li</c> (#1875).</b> Only that at
+/// least one entry carries an <c>xml:lang</c> attribute, whatever its value: an
+/// Alt of untagged entries fails (7.1 test 9), while an untagged entry beside a
+/// tagged one, or <c>xml:lang=""</c>, passes. So <c>UA-Title</c> ignores untagged
+/// entries and requires nothing more.</para>
 /// </remarks>
 public class PdfUaDocumentTitleVeraPdfTests
 {
@@ -169,6 +175,9 @@ public class PdfUaDocumentTitleVeraPdfTests
     // Not a Lang Alt, so not a title for either tool (#1774).
     [InlineData("   <dc:title>" + Title + "</dc:title>\n", "")]
     [InlineData("", " dc:title=\"" + Title + "\"")]
+    // A Lang Alt entry with no xml:lang is not an entry veraPDF can read (#1875).
+    [InlineData("   <dc:title><rdf:Alt><rdf:li>" + Title + "</rdf:li></rdf:Alt></dc:title>\n", "")]
+    [InlineData("   <dc:title><rdf:Bag><rdf:li>" + Title + "</rdf:li></rdf:Bag></dc:title>\n", "")]
     // The property NAME occurring outside a title: a comment, another property's value.
     [InlineData("   <!-- dc:title is intentionally absent -->\n", "")]
     [InlineData("   <dc:description><rdf:Alt><rdf:li xml:lang=\"x-default\">see dc:title elsewhere</rdf:li></rdf:Alt></dc:description>\n", "")]
@@ -184,6 +193,22 @@ public class PdfUaDocumentTitleVeraPdfTests
         vera.Compliant.Should().BeFalse("there is no usable dc:title (ISO 14289-1 §7.1)");
         VeraFailsOnTheTitleRule(vera);
         ExciseTitleRule(pdf).Should().Be(RuleStatus.Fail, "excise must reach the same verdict as veraPDF");
+    }
+
+    [Theory]
+    // One tagged entry is enough, wherever the untagged one sits; and the attribute's value is not checked.
+    [InlineData("<rdf:li>Untagged</rdf:li><rdf:li xml:lang=\"de-DE\">" + Title + "</rdf:li>")]
+    [InlineData("<rdf:li xml:lang=\"de-DE\">" + Title + "</rdf:li><rdf:li>Untagged</rdf:li>")]
+    [InlineData("<rdf:li xml:lang=\"\">" + Title + "</rdf:li>")]
+    public void AnUntaggedEntryBesideATaggedOne_PassesBoth(string entries)
+    {
+        var fontPath = RequireFont();
+        var pdf = Fixture(fontPath, Xmp($"   <dc:title><rdf:Alt>{entries}</rdf:Alt></dc:title>\n"));
+
+        var vera = VeraUa1(pdf);
+        vera.Compliant.Should().BeTrue(
+            $"veraPDF asks for an xml:lang on one entry, not on all. Failed: {string.Join(", ", vera.FailedRules)}");
+        ExciseTitleRule(pdf).Should().Be(RuleStatus.Pass, "excise must reach the same verdict as veraPDF");
     }
 
     [Theory]
