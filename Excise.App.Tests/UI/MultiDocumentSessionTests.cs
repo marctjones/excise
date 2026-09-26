@@ -338,18 +338,18 @@ public sealed class MultiDocumentSessionTests : IDisposable
         using var harness = new Harness();
         var a = harness.OpenWindow();
         var b = harness.OpenWindow();
-        b.ViewModel.LinkUriCarrierPolicy.Should().Be(Excise.Core.Operations.CarrierScrubMode.Strip);
+        b.ViewModel.RedactionPreferences.LinkUriPolicy.Should().Be(Excise.Core.Operations.CarrierScrubMode.Strip);
 
         var preferences = new PreferencesViewModel();
         preferences.LoadFromMainViewModel(a.ViewModel);
-        preferences.SelectedLinkUriCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.RemoveWhole;
-        preferences.RedactionWholeWord = true;
+        preferences.RedactionPreferences.LinkUriPolicy = Excise.Core.Operations.CarrierScrubMode.RemoveWhole;
+        preferences.RedactionPreferences.WholeWord = true;
         a.ViewModel.ApplySavedPreferences(preferences);
 
-        b.ViewModel.LinkUriCarrierPolicy.Should().Be(Excise.Core.Operations.CarrierScrubMode.RemoveWhole,
+        b.ViewModel.RedactionPreferences.LinkUriPolicy.Should().Be(Excise.Core.Operations.CarrierScrubMode.RemoveWhole,
             "a redaction policy must never differ between two open windows");
-        b.ViewModel.RedactionWholeWord.Should().BeTrue();
-        harness.Settings.Current.LinkUriCarrierPolicy.Should().Be("RemoveWhole");
+        b.ViewModel.RedactionPreferences.WholeWord.Should().BeTrue();
+        harness.Settings.Current.Redaction.LinkUriPolicy.Should().Be(Excise.Core.Operations.CarrierScrubMode.RemoveWhole);
         await Task.CompletedTask;
     }
 

@@ -78,16 +78,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
     private Excise.Core.Text.WhitespaceMode _whitespaceMode =
         Excise.Core.Text.WhitespaceMode.Smart;
-    private Excise.Core.Operations.CarrierScrubMode _linkUriCarrierPolicy =
-        Excise.Core.Operations.CarrierScrubMode.Strip;
-    private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
-        Excise.Core.Operations.CarrierScrubMode.Strip;
-    private bool _redactionWholeWord;
-    private bool _redactionKeepAttachments;
-    private Excise.Core.Text.Segmentation.RedactionProfile _redactionProfile =
-        Excise.Core.Text.Segmentation.RedactionProfile.Standard;
-    private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
-        Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
+    private RedactionPreferences _redactionPreferences = new();
     private bool _isRedactionMode;
     private PdfPageRect? _currentRedactionPageArea;
     // Whether the user has already confirmed editing a signed document this
@@ -312,169 +303,15 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// How a link's <c>/A /URI</c> that contains the redacted text is handled
-    /// (#1169). Default <see cref="Excise.Core.Operations.CarrierScrubMode.Strip"/>,
-    /// which is the pre-option behaviour.
+    /// The user's redaction preferences (#1840): committed by replacing the
+    /// record, never by editing one in place (the Preferences dialog edits its
+    /// own copy). <see cref="RedactionPreferences.ToOptions"/> turns them into
+    /// the engine's options.
     /// </summary>
-    /// <remarks>
-    /// ⚠️ This is a SECURITY choice, not a tidiness one. Cutting the term out of
-    /// a URL whose shape is public knowledge can hand it straight back:
-    /// <c>https://www.irs.gov/your-account</c> minus <c>your</c> is
-    /// <c>https://www.irs.gov/-account</c>. RemoveWhole drops the whole link
-    /// target; ReportOnly changes nothing and puts the carrier in the
-    /// redacted-copy report for the user to judge.
-    /// </remarks>
-    public Excise.Core.Operations.CarrierScrubMode LinkUriCarrierPolicy
+    public RedactionPreferences RedactionPreferences
     {
-        get => _linkUriCarrierPolicy;
-        set => this.RaiseAndSetIfChanged(ref _linkUriCarrierPolicy, value);
-    }
-
-    /// <summary>
-    /// The same choice for document metadata (<c>/Info</c> and the XMP packet),
-    /// where a templated field's surrounding structure narrows the removed value
-    /// the same way a known URL does (#1169).
-    /// </summary>
-    public Excise.Core.Operations.CarrierScrubMode MetadataCarrierPolicy
-    {
-        get => _metadataCarrierPolicy;
-        set => this.RaiseAndSetIfChanged(ref _metadataCarrierPolicy, value);
-    }
-
-    /// <summary>
-    /// Match whole words only when redacting text (#1052). Default false —
-    /// substring matching, the #1000 decision.
-    /// </summary>
-    /// <remarks>
-    /// #1000 decided substring stays the default because no single rule is
-    /// right: it is correct for a case number inside a longer citation and
-    /// wrong for <c>Lee</c> inside <c>Sleeman</c>. This is the explicit
-    /// alternative that makes that default safe. It reaches the scripted
-    /// text-redaction path AND the document-carrier scrub together — a rule
-    /// honoured in one path and not another is #896.
-    /// </remarks>
-    public bool RedactionWholeWord
-    {
-        get => _redactionWholeWord;
-        set => this.RaiseAndSetIfChanged(ref _redactionWholeWord, value);
-    }
-
-    /// <summary>
-    /// Keep the document's attachments in a redacted copy (#1572). Default
-    /// false: since 2026-09-17 every redacted copy is written without them.
-    /// </summary>
-    /// <remarks>
-    /// When on, kept text attachments have the redacted text cut out, nested
-    /// PDFs are redacted too, and anything else is listed in the redacted-copy
-    /// report as not checked. A PDF portfolio is refused when this is off.
-    /// </remarks>
-    public bool RedactionKeepAttachments
-    {
-        get => _redactionKeepAttachments;
-        set => this.RaiseAndSetIfChanged(ref _redactionKeepAttachments, value);
-    }
-
-    /// <summary>
-    /// Which output profile a redaction uses (#1586). Default
-    /// <see cref="Excise.Core.Text.Segmentation.RedactionProfile.Standard"/>.
-    /// </summary>
-    /// <remarks>
-    /// ⚠️ <see cref="Excise.Core.Text.Segmentation.RedactionProfile.Maximum"/>
-    /// produces output that is no longer accessible or interactive — forms and
-    /// annotations flattened, bookmarks, links, comments, field names and
-    /// alternate text gone. Every surface that offers it must SAY so; the
-    /// redacted-copy report carries the line.
-    /// </remarks>
-    public Excise.Core.Text.Segmentation.RedactionProfile RedactionProfile
-    {
-        get => _redactionProfile;
-        set => this.RaiseAndSetIfChanged(ref _redactionProfile, value);
-    }
-
-    /// <summary>
-    /// How the removed run's WIDTH is handled (#1189). Default
-    /// <see cref="Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout"/>.
-    /// </summary>
-    /// <remarks>
-    /// A layout choice and a SECURITY choice at once. The default box is drawn
-    /// to the exact extent of the removed run, which makes it a ruler for the
-    /// removed string's length (#1140). Overshoot rounds the box width up so
-    /// similar-length candidates stop being separable by measuring it; CloseGap
-    /// removes the advance entirely — the only option that also closes the
-    /// content-stream channel — and reflows the line.
-    /// </remarks>
-    public Excise.Core.Text.Segmentation.WidthPolicy RedactionWidthPolicy
-    {
-        get => _redactionWidthPolicy;
-        set => this.RaiseAndSetIfChanged(ref _redactionWidthPolicy, value);
-    }
-
-    /// <summary>
-    /// Apply the persisted redaction-policy preferences on startup
-    /// (#1052/#1169/#1189). Unparseable values fall back to the defaults, which
-    /// are the pre-option behaviour — never to a stricter or looser policy the
-    /// user did not choose.
-    /// </summary>
-    public void ApplyRedactionPolicyPreferences(
-        bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy,
-        bool keepAttachments = false,
-        string? profile = null)
-    {
-        RedactionWholeWord = wholeWord;
-        RedactionKeepAttachments = keepAttachments;   // #1572
-
-        // #1586: an unparseable value stays Standard. Falling back to Maximum
-        // would apply an irreversible, accessibility-destroying profile the
-        // user never chose — the fallback has to fail toward the weaker
-        // DESTRUCTION, not the weaker protection, and Standard is already the
-        // safe default for protection.
-        if (Enum.TryParse<Excise.Core.Text.Segmentation.RedactionProfile>(profile, out var parsed))
-            RedactionProfile = parsed;
-
-        if (Enum.TryParse<Excise.Core.Text.Segmentation.WidthPolicy>(widthPolicy, out var width))
-            RedactionWidthPolicy = width;
-        if (Enum.TryParse<Excise.Core.Operations.CarrierScrubMode>(linkUriPolicy, out var uri))
-            LinkUriCarrierPolicy = uri;
-        if (Enum.TryParse<Excise.Core.Operations.CarrierScrubMode>(metadataPolicy, out var meta))
-            MetadataCarrierPolicy = meta;
-    }
-
-    /// <summary>
-    /// The redaction options the user's preferences describe, for the engine
-    /// pass and the redacted-copy safety pass alike (#1830). All-default unless a
-    /// preference was changed.
-    /// </summary>
-    internal Excise.Core.Text.Segmentation.RedactionOptions BuildRedactionOptions()
-    {
-        // #1586: start from the PROFILE's policy, not the all-Strip default.
-        // Maximum's whole point is RemoveWhole on every kept carrier, and
-        // rebuilding from Default here would have silently thrown that away.
-        var options = Excise.Core.Text.Segmentation.RedactionOptions.ForProfile(RedactionProfile);
-        var policy = options.CarrierPolicy;
-
-        // ⚠️ A per-carrier preference overrides the profile only when the user
-        // MOVED it off Strip. Applying it unconditionally would have undone
-        // most of Maximum: both preferences default to Strip, so a Maximum
-        // redaction would have started from RemoveWhole on every kept carrier
-        // and then put link targets and metadata straight back to Strip. The
-        // enum has no "follow the profile" value, so "still at the default"
-        // means exactly that.
-        if (LinkUriCarrierPolicy != Excise.Core.Operations.CarrierScrubMode.Strip)
-            policy = policy.With(
-                Excise.Core.Operations.RedactionCarriers.ActionUris, LinkUriCarrierPolicy);
-        if (MetadataCarrierPolicy != Excise.Core.Operations.CarrierScrubMode.Strip)
-            policy = policy.With(
-                Excise.Core.Operations.RedactionCarriers.Info
-                    | Excise.Core.Operations.RedactionCarriers.Xmp,
-                MetadataCarrierPolicy);
-
-        return options with
-        {
-            CarrierPolicy = policy,
-            WholeWord = RedactionWholeWord,   // #1052
-            KeepAttachments = RedactionKeepAttachments,   // #1572
-            Width = RedactionWidthPolicy,   // #1189
-        };
+        get => _redactionPreferences;
+        set => this.RaiseAndSetIfChanged(ref _redactionPreferences, value);
     }
 
     public bool ContinuousScrollPreference => _viewportSession.ContinuousScrollPreference;

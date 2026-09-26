@@ -48,43 +48,10 @@ public class WindowSettings
     public string WhitespaceMode { get; set; } = "Smart";
 
     /// <summary>
-    /// Whole-word matching for text redaction (#1052). Default false — the
-    /// substring behaviour #1000 decided on.
+    /// The redaction preferences (#1840). Nested; a window.json that predates
+    /// this holds them as six flat keys, which <see cref="Load"/> still reads.
     /// </summary>
-    public bool RedactionWholeWord { get; set; }
-
-    /// <summary>
-    /// Keep attachments in redacted copies (#1572). Default false — since
-    /// 2026-09-17 redacted output carries no attachments.
-    /// </summary>
-    public bool RedactionKeepAttachments { get; set; }
-
-    /// <summary>
-    /// Redaction width / covering-box policy (#1189). Persisted as a string;
-    /// parsed back to <see cref="Excise.Core.Text.Segmentation.WidthPolicy"/>.
-    /// "FixedMarker" (#1755) exists and closes the #1715 width channel while
-    /// always drawing a visible mark (#1725), but is not the default yet — see
-    /// the remark on <see cref="Excise.Core.Text.Segmentation.RedactionOptions.Width"/>
-    /// for the measured reason (the marker overlaps the reflowed neighbour in
-    /// the common case until the shift arithmetic accounts for its width).
-    /// </summary>
-    public string RedactionWidthPolicy { get; set; } = "CollapsePreserveLayout";
-
-    /// <summary>
-    /// The redaction output profile (#1586): "Standard" or "Maximum".
-    /// Persisted as the enum NAME, so an unrecognised value falls back to
-    /// Standard — never to the destructive profile a user did not pick.
-    /// </summary>
-    public string RedactionProfile { get; set; } = "Standard";
-
-    /// <summary>
-    /// How a link's <c>/A /URI</c> holding the redacted term is handled (#1169).
-    /// Parsed back to <see cref="Excise.Core.Operations.CarrierScrubMode"/>.
-    /// </summary>
-    public string LinkUriCarrierPolicy { get; set; } = "Strip";
-
-    /// <summary>The same for /Info and the XMP packet (#1169).</summary>
-    public string MetadataCarrierPolicy { get; set; } = "Strip";
+    public RedactionPreferences Redaction { get; set; } = new();
 
     /// <summary>
     /// Print page scaling (#1545). Persisted as a string; parsed back to
@@ -227,6 +194,10 @@ public class WindowSettings
                 var settings = JsonSerializer.Deserialize(json, ExciseJsonContext.Default.WindowSettings);
                 if (settings != null)
                 {
+                    using var document = JsonDocument.Parse(json);
+                    if (!document.RootElement.TryGetProperty(nameof(Redaction), out _))
+                        settings.Redaction = ReadFlatRedactionKeys(document.RootElement);
+
                     // Drop document states whose file is gone. A stale entry
                     // pointing at a deleted /tmp/... fixture from an earlier
                     // test run could otherwise drive the GUI's
@@ -248,6 +219,33 @@ public class WindowSettings
         }
 
         return new WindowSettings();
+    }
+
+    /// <summary>
+    /// A window.json written before the redaction preferences became one nested
+    /// object holds them as six top-level keys with the enum NAME as a string.
+    /// Read those, so an upgrade keeps a saved Maximum profile, FixedMarker
+    /// width, carrier policy or attachment choice instead of quietly loosening
+    /// it. A missing or unrecognised value keeps that field's default, never a
+    /// different policy. The next save writes the nested form.
+    /// </summary>
+    private static RedactionPreferences ReadFlatRedactionKeys(JsonElement root)
+    {
+        bool Flag(string key) => root.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.True;
+        T Name<T>(string key, T fallback) where T : struct, Enum =>
+            root.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.String
+            && Enum.TryParse(v.GetString(), out T parsed) ? parsed : fallback;
+
+        var defaults = new RedactionPreferences();
+        return new RedactionPreferences
+        {
+            WholeWord = Flag("RedactionWholeWord"),
+            KeepAttachments = Flag("RedactionKeepAttachments"),
+            Width = Name("RedactionWidthPolicy", defaults.Width),
+            Profile = Name("RedactionProfile", defaults.Profile),
+            LinkUriPolicy = Name("LinkUriCarrierPolicy", defaults.LinkUriPolicy),
+            MetadataPolicy = Name("MetadataCarrierPolicy", defaults.MetadataPolicy),
+        };
     }
 
     /// <summary>

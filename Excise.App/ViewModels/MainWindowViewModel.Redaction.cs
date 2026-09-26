@@ -138,7 +138,7 @@ public partial class MainWindowViewModel
                 TypewriterTextOperations,
                 saveFilePath,
                 _documentService.GetReEncryptionOptions(),
-                BuildRedactionOptions());
+                RedactionPreferences.ToOptions());
             var result = _redactionWorkflowService.CreateRedactedCopy(request);
             await PublishRedactedCopySuccessAsync(result);
         }

@@ -297,7 +297,7 @@ public partial class MainWindowViewModel
                     document,
                     RedactionWorkflow.PendingRedactions,
                     Array.Empty<Excise.Core.Editing.PdfTypewriterTextOperation>(),
-                    BuildRedactionOptions()));
+                    RedactionPreferences.ToOptions()));
 
             RedactionWorkflow.MoveToApplied();
             FileState.PendingRedactionsCount = 0;
@@ -388,7 +388,7 @@ public partial class MainWindowViewModel
 
                     var result = _redactionService.RedactText(
                         currentInput, currentOutput, text,
-                        BuildRedactionOptions() with { CaseSensitive = false });
+                        RedactionPreferences.ToOptions() with { CaseSensitive = false });
 
                     if (!result.Success)
                     {
@@ -423,7 +423,7 @@ public partial class MainWindowViewModel
                                     redaction.PageArea,
                                     redaction.PreviewText))
                                 .ToArray(),
-                            BuildRedactionOptions()));
+                            RedactionPreferences.ToOptions()));
                     // #643: keep an encrypted source's protection on the final
                     // scripted output (the intermediate files carried it too —
                     // see RedactionService.RedactText).
@@ -460,7 +460,7 @@ public partial class MainWindowViewModel
                             Array.Empty<Excise.Core.Editing.PdfTypewriterTextOperation>(),
                             filePath,
                             _documentService.GetReEncryptionOptions(),
-                            BuildRedactionOptions()));
+                            RedactionPreferences.ToOptions()));
                     RedactionWorkflow.MoveToApplied();
                     FileState.PendingRedactionsCount = 0;
 

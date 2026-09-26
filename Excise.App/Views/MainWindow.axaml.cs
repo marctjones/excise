@@ -591,13 +591,7 @@ public partial class MainWindow : Window
         if (Enum.TryParse<Excise.Core.Text.WhitespaceMode>(
                 settings.WhitespaceMode, out var whitespaceMode))
             viewModel.ApplyWhitespaceModePreference(whitespaceMode);
-        viewModel.ApplyRedactionPolicyPreferences(
-            settings.RedactionWholeWord,
-            settings.RedactionWidthPolicy,
-            settings.LinkUriCarrierPolicy,
-            settings.MetadataCarrierPolicy,
-            settings.RedactionKeepAttachments,
-            settings.RedactionProfile);   // #1586
+        viewModel.RedactionPreferences = settings.Redaction;
         viewModel.ApplyPrintScalingPreference(settings.PrintScaling);
         viewModel.ApplyDocumentOpenModePreference(settings.DocumentOpenMode);
         viewModel.ApplyAnnotationToolbarPreference(settings.AnnotationToolbarVisible);
