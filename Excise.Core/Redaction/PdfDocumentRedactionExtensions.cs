@@ -586,6 +586,7 @@ public static class PdfDocumentRedactionExtensions
         ("marked-content /ActualText, /Alt, /E", Excise.Core.Operations.RedactionCarriers.MarkedContent),
         ("/PageLabels /P", Excise.Core.Operations.RedactionCarriers.PageLabels),
         ("/Names and /Dests keys", Excise.Core.Operations.RedactionCarriers.NameTreeKeys),
+        ("signature dictionaries and certificates", Excise.Core.Operations.RedactionCarriers.Signatures),
     };
 
     /// <summary>

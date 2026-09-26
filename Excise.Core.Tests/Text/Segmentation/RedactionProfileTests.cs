@@ -395,7 +395,7 @@ public class RedactionProfileTests
     /// in it: Maximum's flatten is a promise about every form, not about the
     /// fields that happen to hold the term.
     /// </summary>
-    private static (byte[] Saved, IReadOnlyList<RedactedFeatureRemoval> Removals, IReadOnlyList<string> Refusals)
+    internal static (byte[] Saved, IReadOnlyList<RedactedFeatureRemoval> Removals, IReadOnlyList<string> Refusals)
         RunProfile(byte[] input, EntryPoint entry, RedactionOptions options)
     {
         using var doc = PdfDocument.Open(input);

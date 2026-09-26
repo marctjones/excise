@@ -182,6 +182,19 @@ public static partial class CarrierTextRecovery
                 c.Text("name-tree key (catalog /Dests)", key.Value, 0, destsObj);
     }
 
+    // ── Signatures (§12.8) ────────────────────────────────────────────────
+
+    private static void ScanSignatures(PdfDocument doc, Collector c)
+    {
+        var signatures = RedactionFeatureStripper.SignatureDictionaries(doc);
+        foreach (var sig in signatures)
+            foreach (var key in RedactionFeatureStripper.SignerKeys)
+                c.Text($"signature /{key}", ReadText(doc, sig, key), 0, doc.GetReferenceTo(sig)?.ObjectNum ?? 0);
+        var bytes = RedactionFeatureStripper.CertificateData(doc, signatures).Sum(data => (long)data.Length);
+        if (bytes > 0)
+            c.Presence("signature certificates", $"{bytes} bytes of certificate data (/Contents, /Cert, /DSS), not decoded; they name the signer", 0);
+    }
+
     // ── Hidden optional content (§8.11) ───────────────────────────────────
 
     /// <summary>
