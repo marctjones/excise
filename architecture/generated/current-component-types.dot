@@ -39,7 +39,7 @@ digraph excise_architecture {
     label="presentation";
     color="#cbd5e1";
     "app-main-window" [label="Main-window orchestration and feature state\npartial\n640 retained symbols", fillcolor="#fff3bf"];
-    "avalonia" [label="Excise.Avalonia project\npartial\n585 retained symbols", fillcolor="#fff3bf"];
+    "avalonia" [label="Excise.Avalonia project\npartial\n588 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_verification {
     label="verification";
@@ -47,10 +47,10 @@ digraph excise_architecture {
     "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial\n149 retained symbols", fillcolor="#fff3bf"];
     "verification" [label="Repository verification system\npartial\n0 retained symbols", fillcolor="#fff3bf"];
   }
-  "app" -> "app-main-window" [label="452 refs / 29 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app" -> "app-main-window" [label="453 refs / 29 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "app" [label="745 refs / 76 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core" [label="7 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "avalonia" -> "core-document" [label="466 refs / 30 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "avalonia" -> "core-document" [label="475 refs / 30 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core-primitives" [label="11 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core-text" [label="52 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "rendering" [label="26 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

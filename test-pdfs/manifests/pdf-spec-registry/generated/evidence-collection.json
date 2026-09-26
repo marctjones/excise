@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1437,
-  "indexedContentSha256": "dfef31c12f5ec4932384e5a6c9fde515ddcd3e4cb596ea192c4120f3f427f5ed",
+  "indexedFileCount": 1439,
+  "indexedContentSha256": "c9620c1538b14921973849a90771e6d4602225c018b2e700142a2633cb9f36c6",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -3765,7 +3765,8 @@
           "kind": "source",
           "matchedTerms": [
             "geometry",
-            "tree"
+            "tree",
+            "pdfdocument"
           ]
         },
         {
@@ -4863,7 +4864,8 @@
             "named",
             "navigation",
             "preferences",
-            "viewer"
+            "viewer",
+            "pdfdocument"
           ]
         },
         {
@@ -5018,7 +5020,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 161
+      "candidateReferenceCount": 162
     },
     {
       "id": "pdf.17.document.metadata",
@@ -5748,7 +5750,8 @@
           "kind": "source",
           "matchedTerms": [
             "dates",
-            "information"
+            "information",
+            "pdfdocument"
           ]
         },
         {
@@ -8070,7 +8073,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 659
+      "candidateReferenceCount": 661
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8885,7 +8888,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 323
+      "candidateReferenceCount": 324
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -42568,26 +42571,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image",
-            "jbig2"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Filters/Jbig2/Jbig2PatternAndHalftoneDecoderTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image",
-            "jbig2"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Filters/Jbig2JpxFilterIntegrationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42627,15 +42610,6 @@
             "image",
             "jbig2",
             "jpx"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Parsing/XRefRecoveryRegressionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
           ]
         },
         {
@@ -42852,9 +42826,38 @@
             "lab",
             "image"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/MisleadingImageFallbackTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.PaintingAndText.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "lab",
+            "requirement-031"
+          ]
         }
       ],
-      "candidateReferenceCount": 138
+      "candidateReferenceCount": 135
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -51496,7 +51499,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 223
+      "candidateReferenceCount": 224
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -57196,6 +57199,16 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Typewriter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -57443,6 +57456,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/SaveReloadKeepsPagesOnScreenTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/StickyNotePopupWorkflowTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -57494,7 +57516,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 58
+      "candidateReferenceCount": 60
     },
     {
       "id": "pdf.20.annotation.subtype-023",
@@ -66669,7 +66691,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 140
+      "candidateReferenceCount": 141
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -70553,7 +70575,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 724
+      "candidateReferenceCount": 726
     },
     {
       "id": "pdf.20.extension.developer",
@@ -71682,16 +71704,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Document/RealPdfTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "conformance",
-            "pdfa",
-            "conformance",
-            "pdfa"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -72033,7 +72045,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 74
+      "candidateReferenceCount": 73
     },
     {
       "id": "pdf.20.profile.pdfua",

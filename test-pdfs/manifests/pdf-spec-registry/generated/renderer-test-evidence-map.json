@@ -601,7 +601,7 @@
       "path": "Excise.Rendering.Tests/Corpus/RecoverablePdfRenderingTests.cs",
       "class": "RecoverablePdfRenderingTests",
       "method": "Render_AcrobatCompatibleV4R4ShortKeyPadding_RendersFirstPage",
-      "line": 15,
+      "line": 16,
       "xunitKind": "theory",
       "evidenceKind": "corpus-candidate",
       "facets": [
@@ -45836,7 +45836,7 @@
       "path": "Excise.Rendering.Tests/Visual/BirthCertFormLayoutTests.cs",
       "class": "BirthCertFormLayoutTests",
       "method": "BirthCertPage1_PleasePrintRow_KeepsDoNotMailCashTogether",
-      "line": 32,
+      "line": 33,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -45875,7 +45875,7 @@
       "path": "Excise.Rendering.Tests/Visual/CjkRenderingTests.cs",
       "class": "CjkRenderingTests",
       "method": "Multilingual_Page1_AllRowsHaveInk",
-      "line": 37,
+      "line": 45,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -45914,7 +45914,7 @@
       "path": "Excise.Rendering.Tests/Visual/CjkRenderingTests.cs",
       "class": "CjkRenderingTests",
       "method": "Multilingual_Page1_GlyphsAreNotUpsideDown",
-      "line": 67,
+      "line": 72,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
