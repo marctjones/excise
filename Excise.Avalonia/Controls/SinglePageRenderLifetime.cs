@@ -140,14 +140,17 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
             }
 
             _cache.AddFirst(new CacheEntry(pageNumber, dpi, bitmap, dipSize));
-            TrimToCapacityNoLock(keep);
+            // The entry being added is never evicted by its own insert.
+            TrimToCapacityNoLock(b => ReferenceEquals(b, bitmap) || keep?.Invoke(b) == true);
         }
     }
 
     /// <summary>
     /// Change the LRU capacity. Lowering it disposes least-recently-used
     /// entries until the cache fits, skipping any entry <paramref name="keep"/>
-    /// accepts (the bitmap on screen). Returns how many entries were disposed.
+    /// accepts (the bitmap on screen) and nothing else: no insert is being
+    /// protected, so a render-ahead result at the head goes too. Returns how
+    /// many entries were disposed.
     /// </summary>
     internal int SetCapacity(int capacity, Func<TBitmap, bool>? keep)
     {
@@ -169,8 +172,7 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
         while (node != null && _cache.Count > _cacheCapacity)
         {
             var previous = node.Previous;
-            // The newest entry is never evicted by its own insert.
-            if (node != _cache.First && (keep == null || !keep(node.Value.Bitmap)))
+            if (keep == null || !keep(node.Value.Bitmap))
             {
                 _cache.Remove(node);
                 node.Value.Bitmap.Dispose();

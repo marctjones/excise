@@ -165,6 +165,27 @@ public sealed class SinglePageRenderLifetimeTests
     }
 
     [Fact]
+    public void SetCapacity_ToOne_LeavesOnlyTheBitmapOnScreen_EvenWhenANeighbourWasCachedLast()
+    {
+        using var lifetime = new SinglePageRenderLifetime<TrackedBitmap>(cacheCapacity: 3);
+        var shown = new TrackedBitmap();
+        var older = new TrackedBitmap();
+        var prefetched = new TrackedBitmap();
+        lifetime.Add(pageNumber: 6, dpi: 96, older, new Size(10, 10));
+        lifetime.Add(pageNumber: 7, dpi: 96, shown, new Size(10, 10));
+        // A render-ahead result lands after the visible page and heads the LRU list.
+        lifetime.Add(pageNumber: 8, dpi: 96, prefetched, new Size(10, 10), keep: bitmap => ReferenceEquals(bitmap, shown));
+
+        int disposed = lifetime.SetCapacity(1, bitmap => ReferenceEquals(bitmap, shown));
+
+        disposed.Should().Be(2);
+        shown.IsDisposed.Should().BeFalse();
+        older.IsDisposed.Should().BeTrue();
+        prefetched.IsDisposed.Should().BeTrue("no insert is being protected: a lowered capacity spares only the bitmap on screen");
+        lifetime.GetCacheDiagnostics().EntryCount.Should().Be(1);
+    }
+
+    [Fact]
     public void Add_WithKeep_DoesNotEvictTheBitmapStillOnScreen_AndCatchesUpOnTheNextInsert()
     {
         using var lifetime = new SinglePageRenderLifetime<TrackedBitmap>(cacheCapacity: 1);
