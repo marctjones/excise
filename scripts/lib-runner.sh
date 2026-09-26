@@ -1331,54 +1331,15 @@ runner_step_status() {
 }
 
 # ---------------------------------------------------------------------------
-# Tier-pass records — the base a manual gate-asymmetry run compares against
-# (LOCAL_GATES.md "Base selection"). Content-validated: the recorded sha must
-# be a commit that is an ancestor of HEAD, and the manifest must be the same.
+# The gate-asymmetry base (LOCAL_GATES.md "Base selection", #1844)
 # ---------------------------------------------------------------------------
-runner_tier_pass_path() { echo "${RUNNER_STATE_ROOT:-$RUNNER_ROOT/logs/runner-state}/tier-pass/$1.rec"; }
-
-runner_tier_base_read() {   # <tier> — prints the sha, or returns 1
-    local rec sha mf
-    rec="$(runner_tier_pass_path "$1")"
-    [ -s "$rec" ] && [ "$(tail -n 1 "$rec" 2>/dev/null)" = "$RUNNER_SENTINEL" ] || return 1
-    sha="$(sed -n 's/^sha=//p' "$rec" | head -1)"
-    mf="$(sed -n 's/^manifest=//p' "$rec" | head -1)"
-    [ -n "$sha" ] && git cat-file -e "$sha^{commit}" 2>/dev/null && git merge-base --is-ancestor "$sha" HEAD 2>/dev/null || return 1
-    [ "$mf" = "$(runner_manifest_fingerprint)" ] || return 1
-    printf '%s\n' "$sha"
-}
-
-runner_tier_base_record() {   # <tier> — HEAD is the pass point; marker discipline
-    local rec tmp
-    rec="$(runner_tier_pass_path "$1")"; tmp="$rec.tmp.$$"
-    mkdir -p "$(dirname "$rec")"
-    {
-        echo "tier=$1"
-        echo "sha=$(git rev-parse HEAD)"
-        echo "manifest=$(runner_manifest_fingerprint)"
-        echo "treeDirty=${RUNNER_TREE_DIRTY:-unknown}"
-        echo "finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-        echo "$RUNNER_SENTINEL"
-    } > "$tmp"
-    sync; mv -f "$tmp" "$rec"; sync
-}
-
-# A pass of a wider tier is a pass of every narrower tier it contains.
-runner_tier_base_record_chain() {
-    case "$1" in
-        full) runner_tier_base_record full; runner_tier_base_record t1; runner_tier_base_record t0 ;;
-        t1)   runner_tier_base_record t1; runner_tier_base_record t0 ;;
-        *)    runner_tier_base_record "$1" ;;
-    esac
-}
-
-# runner_gate_asymmetry_base <tier>: 1. an explicit GATE_ASYMMETRY_BASE (the
-# pre-push hook sets it from the push range on stdin); 2. the last sha this
-# tier passed at; 3. merge-base with origin/develop (first run on a machine).
+# runner_gate_asymmetry_base: 1. an explicit GATE_ASYMMETRY_BASE (the pre-push
+# hook sets it from the push range on stdin; a hand-set value is the override);
+# 2. merge-base with origin/develop. git moves origin/develop only when a push
+# (so a hook run) succeeded: it is the last head the hook gated, and
+# origin/develop..HEAD is the range the NEXT push will be judged over (#1844).
 runner_gate_asymmetry_base() {
     if [ -n "${GATE_ASYMMETRY_BASE:-}" ]; then printf '%s\n' "$GATE_ASYMMETRY_BASE"; return 0; fi
-    local r
-    if r="$(runner_tier_base_read "$1")" && [ -n "$r" ]; then printf '%s\n' "$r"; return 0; fi
     git merge-base origin/develop HEAD 2>/dev/null || echo origin/develop
 }
 

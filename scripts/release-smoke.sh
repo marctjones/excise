@@ -193,7 +193,7 @@ if [ "$RUN_AOT_GUI_SMOKE" = "1" ]; then
     AOT_EXTRA_ARGS="--gui-smoke --gui-mode $PACKAGED_GUI_MODE"
 fi
 runner_export_release_env "$VERSION"
-GATE_ASYMMETRY_BASE="$(runner_gate_asymmetry_base t2)"
+GATE_ASYMMETRY_BASE="$(runner_gate_asymmetry_base)"
 export GATE_ASYMMETRY_BASE
 
 # ---------------------------------------------------------------------------
@@ -541,7 +541,4 @@ rc=$?
 # Checkpoint any row report-gates.sh just classified KNOWN so a later --resume
 # skips an accepted failure instead of re-running it (#1371).
 runner_checkpoint_known_failures "$LOG_DIR"
-if [ "$rc" = 0 ] && [ "$PLANNED" = "$OF" ]; then
-    runner_tier_base_record t2
-fi
 exit $rc

@@ -210,7 +210,7 @@ RUNNER_OPTS="aot"                 # opt:aot rows run in full
 export CONFIG LOG_DIR RUNNER_BUILD_ARGS RUNNER_OPTS BLAME_HANG_TIMEOUT
 runner_export_oracle_env
 runner_export_release_env
-GATE_ASYMMETRY_BASE="$(runner_gate_asymmetry_base full)"
+GATE_ASYMMETRY_BASE="$(runner_gate_asymmetry_base)"
 export GATE_ASYMMETRY_BASE
 
 # The chunker lives in lib-runner.sh (#1774) and derives its own directory
@@ -633,16 +633,11 @@ fi
 
 # The report is the verdict, and its exit code is this script's: 0 clean
 # (possibly with SKIPPED rows), 1 a NEW red or a STALE acceptance, 3 a row
-# that never ran, 2 nothing to report. A full pass of the whole plan records
-# the tier-pass base for full, t1 and t0 (LOCAL_GATES.md "Base selection");
-# a --only run is partial and records nothing.
+# that never ran, 2 nothing to report.
 say ""
 scripts/report-gates.sh "$LOG_DIR"
 rc=$?
 # Checkpoint any row report-gates.sh just classified KNOWN so a later --resume
 # skips an accepted failure instead of re-running it (#1371).
 runner_checkpoint_known_failures "$LOG_DIR"
-if [ "$rc" = 0 ] && [ "$PLANNED" = "$OF" ]; then
-    runner_tier_base_record_chain full
-fi
 exit $rc

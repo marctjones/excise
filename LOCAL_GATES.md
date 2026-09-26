@@ -350,7 +350,7 @@ omitting them.
 `gate-asymmetry` (#618: a perf-path change may not rewrite a correctness
 expectation in the same range) compares a head against a base. Its row is
 `scripts/check-gate-asymmetry.sh $GATE_ASYMMETRY_BASE`; every runner exports
-that variable from `runner_gate_asymmetry_base <tier>`, in this order:
+that variable from `runner_gate_asymmetry_base`, in this order:
 
 1. **The pre-push hook.** git feeds `<local ref> <local sha> <remote ref>
    <remote sha>` per pushed ref on stdin; the hook exports the remote sha as
@@ -369,15 +369,15 @@ that variable from `runner_gate_asymmetry_base <tier>`, in this order:
    different tree starts empty. Always re-run: the build, every `checkpoint=never` row (the
    redaction family), `Excise.Core.Tests` (it holds the Redaction suites) and `gate-asymmetry`
    (`RUNNER_ALWAYS_RUN` pins the last two). The gate-asymmetry range is still judged per push.
-2. **A manual tier run** uses the last commit at which this tier finished with
-   no NEW failure: `logs/runner-state/tier-pass/<tier>.rec`, written on a
-   report exit 0 (a `full` pass also records `t1` and `t0`; a `t1` pass records
-   `t0`). Keyed on content, never existence: the record counts only if its
-   `--CKPT-OK--` sentinel is the last line, the sha is a commit that is an
-   ancestor of HEAD, and its manifest fingerprint equals the current
-   `tests/gates.tsv`; otherwise it is ignored. Branch is deliberately not in
-   the key — ancestry is the real relation.
-3. **Fallback**, the first run on a machine: `git merge-base origin/develop HEAD`.
+2. **A manual tier run** (`t0`, `t1`, `t2`, `full`) uses `git merge-base origin/develop HEAD`
+   (#1844): the range the next push will be judged over. git moves `origin/develop` only when a
+   push, and so a hook run, succeeded, so it is the last head the hook gated; a batch pushed in
+   reviewable steps has already passed one range per step, and judging the batch again as a
+   whole fails for good as soon as one step holds a perf-path change and another an expectation
+   edit. Work not yet pushed is one range: a perf-path change and a rewritten expectation in it
+   fail, and go out as separate pushes. A clone that has not fetched judges a wider range:
+   `git fetch origin` first. A hand-set `GATE_ASYMMETRY_BASE=<sha>` overrides. A push made with
+   `--no-verify` was judged by nobody, and no later tier run goes back to it.
 
 ### Head selection (#1600)
 
@@ -398,15 +398,10 @@ refused outright (`scripts/pre-push-hook.sh`), since neither the range nor the
 tests would describe it; the refusal prints the worktree route.
 
 The gate prints `base=<sha> head=<sha>` so an acceptance can be **scoped** to one range —
-the worked example for "Accepting a red". As of 2026-09-05 the
-`gate-asymmetry` row carries `#1358/base=a87dc32aa8c2`: KNOWN only for the
-backlog range starting at `origin/develop` = `a87dc32a` (the acceptance is
-base-scoped, not count-scoped; `git rev-list --count a87dc32a..HEAD` says how
-long it is today). Against any other base the same red reads NEW, and the
-acceptance retires itself when #1358 closes (STALE) or `origin/develop` moves
-(different token). Bootstrap on day one: no record → base `a87dc32a` → the gate
-fires on the backlog → KNOWN → exit 0 → record written at HEAD → every later
-manual run diffs a real range, where a failure is NEW.
+the worked example for "Accepting a red": `#1358/base=a87dc32aa8c2` is KNOWN only for the
+range starting at `origin/develop` = `a87dc32a` (the acceptance is base-scoped, not
+count-scoped). Against any other base the same red reads NEW, and the acceptance retires
+itself when #1358 closes (STALE) or `origin/develop` moves (different token).
 
 ## --resume
 
