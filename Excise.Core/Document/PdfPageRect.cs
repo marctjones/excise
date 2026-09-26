@@ -223,39 +223,12 @@ public static class PdfCoordinateMapper
 
     private static PdfPageRect ContentToVisualPoints(PdfPage page, PdfPageRect rect)
     {
-        var content = rect.ToPdfRectangle().Normalize();
-        var visibleBox = page.EffectiveCropBox;
-        var l = visibleBox.Left;
-        var b = visibleBox.Bottom;
-        var w = visibleBox.Width;
-        var h = visibleBox.Height;
-        var rotation = page.Rotation;   // already canonical {0,90,180,270}
+        // A /Rotate map is a quarter turn and a flip (determinant -1), so its inverse is exact.
+        if (!page.VisualToContent.TryInvert(out var contentToVisual))
+            throw new InvalidOperationException("A page rotation map is always invertible.");
 
-        (double x, double y) Map(double cx, double cy) => rotation switch
-        {
-            90 => (cy - b, cx - l),
-            180 => (l + w - cx, cy - b),
-            270 => (b + h - cy, l + w - cx),
-            _ => (cx - l, b + h - cy),
-        };
-
-        var p1 = Map(content.Left, content.Bottom);
-        var p2 = Map(content.Left, content.Top);
-        var p3 = Map(content.Right, content.Bottom);
-        var p4 = Map(content.Right, content.Top);
-
-        var minX = Math.Min(Math.Min(p1.x, p2.x), Math.Min(p3.x, p4.x));
-        var maxX = Math.Max(Math.Max(p1.x, p2.x), Math.Max(p3.x, p4.x));
-        var minY = Math.Min(Math.Min(p1.y, p2.y), Math.Min(p3.y, p4.y));
-        var maxY = Math.Max(Math.Max(p1.y, p2.y), Math.Max(p3.y, p4.y));
-
-        return new PdfPageRect(
-            page.PageNumber,
-            minX,
-            minY,
-            maxX - minX,
-            maxY - minY,
-            PdfCoordinateSpace.VisualPoints);
+        var visual = contentToVisual.TransformBounds(rect.ToPdfRectangle().Normalize());
+        return PdfPageRect.FromPdfRectangle(page.PageNumber, visual, PdfCoordinateSpace.VisualPoints);
     }
 
     private static void EnsurePage(PdfPage page, PdfPageRect rect)
