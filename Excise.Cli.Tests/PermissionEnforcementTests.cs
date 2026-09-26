@@ -378,7 +378,7 @@ public class PermissionEnforcementTests : IDisposable
                 schemaVersion = 1,
                 steps = new object[]
                 {
-                    new { id = "text", command = Excise.Core.Automation.PdfCommandIds.ExtractText, input = pdf },
+                    new { id = "text", command = "text.extract", input = pdf },
                 },
             }));
             var blocked = await RunCliCaptureAsync(["batch", workflow, "--json"]);
@@ -394,7 +394,7 @@ public class PermissionEnforcementTests : IDisposable
                     new
                     {
                         id = "text",
-                        command = Excise.Core.Automation.PdfCommandIds.ExtractText,
+                        command = "text.extract",
                         input = pdf,
                         forAccessibility = true,
                     },
@@ -412,7 +412,7 @@ public class PermissionEnforcementTests : IDisposable
                     new
                     {
                         id = "text",
-                        command = Excise.Core.Automation.PdfCommandIds.ExtractText,
+                        command = "text.extract",
                         input = pdf,
                         ignorePermissions = true,
                     },

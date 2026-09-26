@@ -4,7 +4,7 @@ namespace Excise.Core.Automation;
 /// Stable semantic command identifiers shared by GUI, CLI, automation, and
 /// accessibility layers.
 /// </summary>
-public static class PdfCommandIds
+internal static class PdfCommandIds
 {
     public const string Open = "app.open";
     public const string Save = "app.save";

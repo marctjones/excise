@@ -4,7 +4,7 @@ namespace Excise.Core.Automation;
 /// Stable semantic metadata for a excise command used by GUI accessibility,
 /// automation adapters, CLI metadata, and regression tests.
 /// </summary>
-public sealed class PdfCommandMetadata
+internal sealed class PdfCommandMetadata
 {
     public PdfCommandMetadata(
         string id,
