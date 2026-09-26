@@ -172,15 +172,15 @@ internal static class RedactCommandHandler
                 "It is still readable in the output by tools that rejoin hyphenated words.");
         }
 
-        // #1750: the same structural blind spot for a multi-word term split by
-        // an ORDINARY line wrap (no hyphen) — generalizes #1372's reporting so
-        // this also does not print a bare "0 occurrence(s)" success.
+        // #1750/#1791: a multi-word term continued somewhere other than the
+        // next line of its block (another column) is not joined, so this also
+        // does not print a bare "0 occurrence(s)" success.
         foreach (var candidate in redaction.WordWrapCandidates)
         {
             carrierNotes.Add(
                 $"NOT REMOVED (line-wrapped): page {candidate.PageNumber} reads {candidate} — " +
-                $"'{request.Text}' wraps across a line break, so excise could not match it. " +
-                "It is still fully readable in the output.");
+                $"'{request.Text}' continues across a line break that is not the next line of " +
+                "its block, so excise did not match it. It is still fully readable in the output.");
         }
 
         foreach (var carrier in redaction.Carriers)

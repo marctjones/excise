@@ -67,7 +67,9 @@ internal static class AppearanceStreamRedactor
         var matches = PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive, wholeWord);
         if (matches.Count == 0) return false;
 
-        var areas = matches.Select(PdfDocumentRedactionExtensions.BoundingBoxOf).ToList();
+        // One box per line of a match that wraps (#1791).
+        var areas = matches.SelectMany(PdfDocumentRedactionExtensions.LinesOf)
+            .Select(PdfDocumentRedactionExtensions.BoundingBoxOf).ToList();
 
         byte[] newBytes;
         try

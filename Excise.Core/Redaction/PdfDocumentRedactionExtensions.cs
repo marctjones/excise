@@ -245,30 +245,39 @@ public static class PdfDocumentRedactionExtensions
                             }
                         }
 
-                        if (IsInteractiveOnlyMatch(matchLetters))
+                        var interactiveOnly = IsInteractiveOnlyMatch(matchLetters);
+                        if (interactiveOnly)
                             // TERM-aware (#1038). The area-only form deletes the
                             // whole field value; on issue18036.pdf that was 545
                             // of 568 characters to remove one word.
                             InteractiveRedactionScrubber.ScrubTerm(
                                 page, bbox, text, options.CaseSensitive, options.WholeWord);
-                        else
+
+                        // #1791: one set of boxes per LINE of the match. A match
+                        // that wraps spans two lines, and one box around it covers
+                        // everything between them (#942).
+                        foreach (var line in LinesOf(matchLetters))
                         {
-                            contentAreas.Add(options.Strategy == GlyphRemovalStrategy.FullyContained
-                                ? bbox
-                                : CenterlineBoxOf(matchLetters));
-                            imageAreas.Add(bbox); // full height for the image pass (#1195)
+                            var lineBox = BoundingBoxOf(line);
+                            if (!interactiveOnly)
+                            {
+                                contentAreas.Add(options.Strategy == GlyphRemovalStrategy.FullyContained
+                                    ? lineBox
+                                    : CenterlineBoxOf(line));
+                                imageAreas.Add(lineBox); // full height for the image pass (#1195)
+                            }
+                            // #1189: under the overshoot policy the covering box is
+                            // widened out toward the surviving neighbours, so its
+                            // width stops being a ruler for the removed string.
+                            // #1755: under FixedMarker the box is a FIXED size —
+                            // never derived from bbox's own width at all, unlike
+                            // overshoot which still rounds UP from it.
+                            markerAreas.Add(options.FixedMarker
+                                ? FixedMarkerBoxFor(lineBox, line)
+                                : options.Width == WidthPolicy.OvershootPreserveLayout
+                                    ? OvershootBoxFor(lineBox, line, searchLetters, cropWindow)
+                                    : lineBox);
                         }
-                        // #1189: under the overshoot policy the covering box is
-                        // widened out toward the surviving neighbours, so its
-                        // width stops being a ruler for the removed string.
-                        // #1755: under FixedMarker the box is a FIXED size —
-                        // never derived from bbox's own width at all, unlike
-                        // overshoot which still rounds UP from it.
-                        markerAreas.Add(options.FixedMarker
-                            ? FixedMarkerBoxFor(bbox, matchLetters)
-                            : options.Width == WidthPolicy.OvershootPreserveLayout
-                                ? OvershootBoxFor(bbox, matchLetters, searchLetters, cropWindow)
-                                : bbox);
                     }
 
                     if (contentAreas.Count > 0)
@@ -307,17 +316,12 @@ public static class PdfDocumentRedactionExtensions
             // findable. This is the difference between "excise tried" and
             // "excise checked", and the whole reason the old int return was a
             // lie: it reported attempts.
-            // #1372: an occurrence the matcher structurally CANNOT see —
-            // split across a line by a hyphen. Detected after removal so it
-            // describes what is still in the output, and reported rather than
-            // joined (joining is #942; see HyphenatedTermCandidate).
-            hyphenCandidates.AddRange(
-                FindHyphenWrappedCandidates(page.Letters, text, options.CaseSensitive, pageNum));
-            // #1750: the same structural blind spot for a multi-word term
-            // split by an ORDINARY line wrap (no hyphen) — generalizes the
-            // #1372 detector rather than silently reporting "0 occurrences".
-            wordWrapCandidates.AddRange(
-                FindWordWrapCandidates(page.Letters, text, options.CaseSensitive, pageNum));
+            // #1372/#1750/#1791: an occurrence split across a line break the
+            // matcher does not join — a line-end hyphen, or a continuation that
+            // is not the next line of the same block. Detected after removal so
+            // it describes what is still in the output, and reported.
+            FindWrappedCandidates(page.Letters, text, options.CaseSensitive, options.WholeWord, pageNum,
+                hyphenCandidates, wordWrapCandidates);
 
             var remaining = CountOccurrences(page, text, options.CaseSensitive, options.IncludeHiddenLayers, options.WholeWord);
             undecodableForms.AddRange(page.UndecodableForms.Select(form => (form, pageNum)));
@@ -712,198 +716,78 @@ public static class PdfDocumentRedactionExtensions
     }
 
     /// <summary>
-    /// Find occurrences of <paramref name="searchText"/> that a LINE-END HYPHEN
-    /// splits across two lines, which <see cref="FindTextMatches"/> therefore
-    /// never matches and redaction never removes (#1372).
+    /// Report every occurrence of <paramref name="searchText"/> still on the
+    /// page that a line break splits where <see cref="FindTextMatches"/> does
+    /// not join it, so redaction cannot remove it: a line-end HYPHEN (#1372),
+    /// or a continuation that is not the next line of the same block — the
+    /// next column's first line, text to the right (#1750, #1791).
     /// </summary>
     /// <remarks>
-    /// <para>Detection only — nothing is removed and no match geometry is
-    /// produced. See <see cref="HyphenatedTermCandidate"/>: joining across the
-    /// break makes a match span two lines, and its removal box then covers
-    /// everything between them, which is #942.</para>
+    /// <para>The same search over the same text as <see cref="FindTextMatches"/>,
+    /// with EVERY line change joined: an ordinary one by a space, a line-end
+    /// hyphen by nothing. An occurrence that crosses a break the matcher does
+    /// not bridge is a candidate; one whose every break it bridges was a match,
+    /// removed or counted as surviving. So a phrase of any length, kerned or
+    /// not, is seen here exactly as the matcher would see it.</para>
     ///
-    /// <para>A hyphen only counts as a WRAP when the next letter is on a
-    /// different line, using the same baseline test the inferred-word-gap logic
-    /// above uses (half the larger font size). A hyphen inside a line is
-    /// content: <c>well-known</c> must never be reported as <c>wellknown</c>.
-    /// </para>
+    /// <para>A hyphen is reported, never joined: it splits a word, not a phrase,
+    /// and <c>well-</c> / <c>known</c> may be one hyphenated word. A hyphen
+    /// INSIDE a line is content and never a break.</para>
     /// </remarks>
-    internal static List<HyphenatedTermCandidate> FindHyphenWrappedCandidates(
-        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, int pageNumber)
+    internal static void FindWrappedCandidates(
+        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, bool wholeWord, int pageNumber,
+        List<HyphenatedTermCandidate> hyphenated, List<WordWrapTermCandidate> wordWrapped)
     {
-        var found = new List<HyphenatedTermCandidate>();
-        var needle = MatchingNormalization.Fold(searchText).Trim();
-        if (needle.Length < 2 || letters.Count == 0) return found;
-
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        var (view, _, _) = CollapseOverprintedGlyphs(letters);
-
-        for (var h = 0; h < view.Count; h++)
+        var text = BuildSearchText(letters, joinEveryLineChange: true);
+        foreach (var (_, from, to) in Locate(letters, text, searchText, caseSensitive, wholeWord, accept: _ => true))
         {
-            if (!IsHyphen(view[h].Value)) continue;
+            for (var v = text.CharToLetter[from] + 1; v <= text.CharToLetter[to]; v++)
+            {
+                // A blank glyph between the two lines bridges the break for the
+                // matcher as it bridges any gap.
+                var last = text.View[v - 1];
+                var next = text.View[v];
+                if (string.IsNullOrWhiteSpace(last.Value) || string.IsNullOrWhiteSpace(next.Value)
+                    || SameLine(last, next))
+                    continue;
+                var hyphen = IsHyphen(last.Value);
+                if (!hyphen && IsLineWrap(last, next)) continue;
 
-            // The continuation is the next non-blank letter; it must be on a
-            // DIFFERENT line for this to be a wrap rather than content.
-            var next = h + 1;
-            while (next < view.Count && string.IsNullOrWhiteSpace(view[next].Value)) next++;
-            if (next >= view.Count || !OnDifferentLines(view[h], view[next])) continue;
-
-            // Take up to needle-length of same-line context on each side. More
-            // than that cannot participate in a match that CROSSES the break.
-            var before = SameLineRun(view, h - 1, needle.Length, forward: false, out var beforeText);
-            var after = SameLineRun(view, next, needle.Length, forward: true, out var afterText);
-            if (before == 0 || after == 0) continue;
-
-            // The join must produce the needle AND the needle must actually
-            // straddle the break — a term wholly inside one line is already
-            // matched by FindTextMatches and is not a candidate.
-            var joined = MatchingNormalization.Fold(beforeText + afterText);
-            var idx = joined.IndexOf(needle, comparison);
-            if (idx < 0) continue;
-            if (idx + needle.Length <= beforeText.Length) continue;   // ends before the break
-            if (idx >= beforeText.Length) continue;                   // starts after the break
-
-            found.Add(new HyphenatedTermCandidate(
-                pageNumber,
-                beforeText.Substring(idx),
-                afterText.Substring(0, Math.Min(afterText.Length, idx + needle.Length - beforeText.Length))));
+                var at = text.CharToLetter.IndexOf(v, from);
+                if (at < 0 || at > to) break;
+                var before = text.Text[from..at].TrimEnd();
+                var after = text.Text[at..(to + 1)];
+                if (hyphen) hyphenated.Add(new HyphenatedTermCandidate(pageNumber, before, after));
+                else wordWrapped.Add(new WordWrapTermCandidate(pageNumber, before, after));
+                break;
+            }
         }
-
-        return found;
-    }
-
-    /// <summary>
-    /// Find occurrences of <paramref name="searchText"/> that an ORDINARY
-    /// (non-hyphenated) line wrap splits across two lines — a multi-word term
-    /// where the break falls between words, e.g. "…signed by Betty" /
-    /// "Mary on behalf of…" for the term "Betty Mary" (#1750).
-    /// </summary>
-    /// <remarks>
-    /// <para>Generalizes <see cref="FindHyphenWrappedCandidates"/> to the case a
-    /// hyphen does not mark: <see cref="FindTextMatches"/> never inserts a space
-    /// at a line wrap (<see cref="IsInferredWordGap"/> is same-line only, so a
-    /// hyphen-continued word is not corrupted by an invented space), so the
-    /// concatenated text at an ordinary wrap reads "…BettyMary…" with nothing
-    /// between the words and a multi-word needle with a space in it can never
-    /// match. Before this, that produced "Redacted 0 occurrence(s)" and exit 0
-    /// — a silent false success, not a miss anyone could see.</para>
-    ///
-    /// <para><b>Detection only, same reason as the hyphen case.</b> Actually
-    /// removing a wrapped match needs a removal box PER LINE, which is a change
-    /// to how a match's geometry is built (#942's lesson: one box spanning both
-    /// lines destroys everything between them). Until that exists, this reports
-    /// the occurrence rather than silently calling the redaction clean.</para>
-    ///
-    /// <para>The join here inserts a SPACE at the break (<c>beforeText + " " +
-    /// afterText</c>) — the opposite of the hyphen case, which joins with
-    /// nothing and drops the hyphen. That is the actual difference between the
-    /// two wrap kinds: a hyphen marks "this is one word, continued"; an ordinary
-    /// wrap is a word boundary the line break stands in for.</para>
-    ///
-    /// <para>Break points already reported by <see cref="FindHyphenWrappedCandidates"/>
-    /// are skipped here (<see cref="IsHyphen"/> on the last same-line letter) so
-    /// one break point does not produce two different, disagreeing notes.</para>
-    ///
-    /// <para>⚠️ <b>Known limit: catches a TWO-word straddle, not a longer
-    /// phrase wrapping mid-name.</b> <see cref="SameLineRun"/> stops at the
-    /// first blank on each side (inherited from the hyphen detector, where
-    /// that is correct — a hyphenated WORD has no internal blank to stop at).
-    /// For a phrase, that means <c>beforeText</c> is only the LAST word of the
-    /// first line and <c>afterText</c> only the FIRST word of the second. Two
-    /// words straddling the break ("Betty Mary") are found. A name that wraps
-    /// mid-phrase with a word fully on the near side of the break on EITHER
-    /// line — "Mary Jane Smith" breaking after "Jane", so <c>beforeText</c> is
-    /// "Jane" and <c>afterText</c> is "Smith" — is not: the 3-word needle
-    /// cannot be found in "Jane Smith", and this silently reports nothing for
-    /// that occurrence. Extending <see cref="SameLineRun"/> to walk multiple
-    /// words per side needs care with the raw-index/joined-index bookkeeping
-    /// this method already does (the <c>beforeText.Length</c> straddle math),
-    /// so it is left as a follow-up rather than done here. See issue #1791.</para>
-    /// </remarks>
-    internal static List<WordWrapTermCandidate> FindWordWrapCandidates(
-        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, int pageNumber)
-    {
-        var found = new List<WordWrapTermCandidate>();
-        var needle = MatchingNormalization.Fold(searchText).Trim();
-        // A single-word needle cannot straddle a plain (non-hyphenated) wrap:
-        // with no hyphen consumed, whitespace normalization means the needle
-        // itself would need an internal space to span two words.
-        if (!needle.Contains(' ') || letters.Count == 0) return found;
-
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        var (view, _, _) = CollapseOverprintedGlyphs(letters);
-
-        for (var h = 0; h < view.Count; h++)
-        {
-            if (string.IsNullOrWhiteSpace(view[h].Value)) continue;
-            if (IsHyphen(view[h].Value)) continue;   // the hyphen detector owns this break
-
-            // The continuation is the next non-blank letter; it must be on a
-            // DIFFERENT line and this must be the LAST non-blank letter on its
-            // own line (otherwise h is mid-line, not a wrap point).
-            var next = h + 1;
-            while (next < view.Count && string.IsNullOrWhiteSpace(view[next].Value)) next++;
-            if (next >= view.Count || !OnDifferentLines(view[h], view[next])) continue;
-
-            var before = SameLineRun(view, h, needle.Length, forward: false, out var beforeText);
-            var after = SameLineRun(view, next, needle.Length, forward: true, out var afterText);
-            if (before == 0 || after == 0) continue;
-
-            // Join WITH a space — the wrap stands in for the word boundary a
-            // producer would otherwise have drawn as a literal space glyph.
-            var joined = MatchingNormalization.Fold(beforeText + " " + afterText);
-            var idx = joined.IndexOf(needle, comparison);
-            if (idx < 0) continue;
-            // The break sits right after beforeText in the joined string (one
-            // inserted space); the needle must actually straddle it.
-            if (idx + needle.Length <= beforeText.Length) continue;   // ends before the break
-            if (idx > beforeText.Length) continue;                   // starts after the break
-
-            found.Add(new WordWrapTermCandidate(
-                pageNumber,
-                beforeText.Substring(Math.Min(idx, beforeText.Length)),
-                afterText.Substring(0, Math.Min(afterText.Length,
-                    Math.Max(0, idx + needle.Length - beforeText.Length - 1)))));
-        }
-
-        return found;
     }
 
     private static bool IsHyphen(string value) =>
         value == "-" || value == "‐" || value == "­";
 
-    /// <summary>Baseline separation test — the same rule the word-gap logic uses.</summary>
-    private static bool OnDifferentLines(Letter a, Letter b)
-    {
-        var ra = a.GlyphRectangle.Normalize();
-        var rb = b.GlyphRectangle.Normalize();
-        return Math.Abs((ra.Bottom + ra.Top) / 2 - (rb.Bottom + rb.Top) / 2)
-            > 0.5 * Math.Max(a.FontSize, b.FontSize);
-    }
-
     /// <summary>
-    /// Up to <paramref name="max"/> letters from <paramref name="start"/>, all
-    /// on the same line as it, stopping at a blank. Returns the count and the
-    /// text in reading order.
+    /// #1791: whether <paramref name="next"/> starts the line after the one
+    /// <paramref name="last"/> ends, in the same block — the one line change a
+    /// phrase is matched across.
     /// </summary>
-    private static int SameLineRun(
-        IReadOnlyList<Letter> view, int start, int max, bool forward, out string text)
+    /// <remarks>
+    /// The next line of a block starts back at its left edge, one line pitch
+    /// down: its first glyph lies wholly left of the previous line's last glyph,
+    /// and no more than 2.5 sizes lower (double spacing). A continuation that
+    /// jumps up (the next column), to the right (another column or cell) or
+    /// straight down (a glyph stacked under the last: vertical or rotated text)
+    /// is not a wrap. The size is the larger of the font size and the glyph
+    /// height, because a unit font scaled by <c>Tm</c> reports a size of 1.
+    /// </remarks>
+    private static bool IsLineWrap(Letter last, Letter next)
     {
-        text = "";
-        if (start < 0 || start >= view.Count) return 0;
-
-        var anchor = view[start];
-        var taken = new List<string>();
-        var step = forward ? 1 : -1;
-        for (var i = start; i >= 0 && i < view.Count && taken.Count < max; i += step)
-        {
-            if (string.IsNullOrWhiteSpace(view[i].Value)) break;
-            if (OnDifferentLines(anchor, view[i])) break;
-            taken.Add(view[i].Value);
-        }
-        if (!forward) taken.Reverse();
-        text = string.Concat(taken);
-        return taken.Count;
+        var a = last.GlyphRectangle.Normalize();
+        var b = next.GlyphRectangle.Normalize();
+        var size = Math.Max(Math.Max(last.FontSize, next.FontSize), Math.Max(a.Height, b.Height));
+        var drop = (a.Bottom + a.Top) / 2 - (b.Bottom + b.Top) / 2;
+        return drop > 0.5 * size && drop <= 2.5 * size && b.Right <= a.Left;
     }
 
     /// <summary>
@@ -916,35 +800,65 @@ public static class PdfDocumentRedactionExtensions
     /// <c>TextExtractor</c>). Text is normalized (curly→straight quotes,
     /// en/em dash→hyphen, whitespace collapse) before comparison so
     /// typographic variation doesn't block a match. Matches are
-    /// non-overlapping — greedy left-to-right.
+    /// non-overlapping — greedy left-to-right. A match may wrap onto the next
+    /// line of its block (#1791); <see cref="LinesOf"/> splits it for removal.
     /// </remarks>
     internal static List<List<Letter>> FindTextMatches(
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive,
         bool wholeWord = false)   // #1052
     {
-        var matches = new List<List<Letter>>();
         if (string.IsNullOrEmpty(searchText) || letters.Count == 0)
-            return matches;
+            return new List<List<Letter>>();
+        var text = BuildSearchText(letters, joinEveryLineChange: false);
+        return Locate(letters, text, searchText, caseSensitive, wholeWord, IsSpatiallyCoherent)
+            .Select(m => m.Letters).ToList();
+    }
 
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+    /// <summary>A page's letters as one searchable string (<see cref="BuildSearchText"/>).</summary>
+    /// <param name="View">The letters with overprinted copies collapsed (#1047).</param>
+    /// <param name="SpanStart">Per view letter, the first original letter it stands for.</param>
+    /// <param name="SpanEnd">Per view letter, the last original letter it stands for.</param>
+    /// <param name="Text">The string searched.</param>
+    /// <param name="CharToLetter">Per character of <paramref name="Text"/>, its view letter.</param>
+    private sealed record SearchText(
+        List<Letter> View, List<int> SpanStart, List<int> SpanEnd, string Text, List<int> CharToLetter);
 
-        // #1047: match against a view with OVERPRINTED duplicates collapsed.
-        // Faux-bold is drawn by stamping the same run several times at
-        // sub-point offsets; excise's letter model faithfully records every
-        // copy, so a 4x-stamped "Test test" reads as "TTTTeeeesssstttt" and a
-        // search for "test" matches NOTHING. The term then survives and
-        // RedactText reports success — Limitations #1, exactly.
+    /// <summary>
+    /// The page's letters as the one string both the matcher and the wrap net
+    /// search, each character mapped back to its letter.
+    /// </summary>
+    /// <remarks>
+    /// <para>#1047: overprinted duplicates are collapsed. Faux-bold is drawn by
+    /// stamping the same run several times at sub-point offsets; excise's letter
+    /// model faithfully records every copy, so a 4x-stamped "Test test" reads as
+    /// "TTTTeeeesssstttt" and a search for "test" matches NOTHING. The term then
+    /// survives and RedactText reports success — Limitations #1, exactly.</para>
+    ///
+    /// <para>#1177: a space is INFERRED where a horizontal gap separates two
+    /// same-line glyphs, exactly as JoinText does. Without it the search runs over
+    /// the SPACELESS glyph concatenation, so "your software" reads as
+    /// "yoursoftware" and a search for "yours" matches across the word boundary —
+    /// foss-primer reported 29 "yours" (your+software/server/self) where the page
+    /// shows 7.</para>
+    ///
+    /// <para>#1791: a space is also inferred at a line WRAP
+    /// (<see cref="IsLineWrap"/>), which stands in for the space a producer does
+    /// not draw at the end of a line, so a phrase of any length matches across
+    /// it. A line-end hyphen joins nothing there: it stays, as it reads. Any
+    /// other line change joins nothing either: text continuing anywhere but the
+    /// next line of its block is not read as the same phrase. With
+    /// <paramref name="joinEveryLineChange"/> (the net,
+    /// <see cref="FindWrappedCandidates"/>) every line change is joined, a
+    /// line-end hyphen by dropping it.</para>
+    ///
+    /// <para>An inferred space maps to the PREVIOUS letter (it adds no real
+    /// letter), so a match's removed slice is unchanged; a needle without that
+    /// space simply cannot span the gap.</para>
+    /// </remarks>
+    private static SearchText BuildSearchText(IReadOnlyList<Letter> letters, bool joinEveryLineChange)
+    {
         var (view, spanStart, spanEnd) = CollapseOverprintedGlyphs(letters);
 
-        // #1177: insert an INFERRED word space where a horizontal gap separates
-        // two same-line glyphs, exactly as JoinText does. Without it the search
-        // runs over the SPACELESS glyph concatenation, so "your software" reads as
-        // "yoursoftware" and a search for "yours" matches across the word boundary
-        // — foss-primer reported 29 "yours" (your+software/server/self) where the
-        // page shows 7. The inferred space maps to the PREVIOUS letter (it adds no
-        // real letter), so a match's removed slice is unchanged; a needle without
-        // that space simply cannot span the gap, and a multi-word needle now CAN
-        // match a space-glyph-less PDF.
         // #1177: median left-to-right advance over SAME-LINE adjacent glyphs, so a
         // word gap is judged RELATIVE to the document's own spacing (JoinText's
         // WordGapAdvanceFactor rule). An absolute font-size fraction misfires on
@@ -965,17 +879,48 @@ public static class PdfDocumentRedactionExtensions
         var characterToLetter = new List<int>(view.Count);
         for (var letterIndex = 0; letterIndex < view.Count; letterIndex++)
         {
-            if (letterIndex > 0 && IsInferredWordGap(view[letterIndex - 1], view[letterIndex], medianAdvance))
+            if (letterIndex > 0)
             {
-                sb.Append(' ');
-                characterToLetter.Add(letterIndex - 1);
+                var previous = view[letterIndex - 1];
+                var current = view[letterIndex];
+                var lineChange = !string.IsNullOrWhiteSpace(previous.Value)
+                    && !string.IsNullOrWhiteSpace(current.Value)
+                    && (joinEveryLineChange ? !SameLine(previous, current) : IsLineWrap(previous, current));
+                if (lineChange && IsHyphen(previous.Value))
+                {
+                    if (joinEveryLineChange)
+                    {
+                        sb.Length -= previous.Value.Length;
+                        characterToLetter.RemoveRange(characterToLetter.Count - previous.Value.Length, previous.Value.Length);
+                    }
+                }
+                else if (lineChange || IsInferredWordGap(previous, current, medianAdvance))
+                {
+                    sb.Append(' ');
+                    characterToLetter.Add(letterIndex - 1);
+                }
             }
             var value = view[letterIndex].Value;
             sb.Append(value);
             for (var charIndex = 0; charIndex < value.Length; charIndex++)
                 characterToLetter.Add(letterIndex);
         }
-        var fullText = sb.ToString();
+
+        return new SearchText(view, spanStart, spanEnd, sb.ToString(), characterToLetter);
+    }
+
+    /// <summary>
+    /// Every occurrence of <paramref name="searchText"/> in <paramref name="text"/>
+    /// that <paramref name="accept"/> takes, as the original letters it covers
+    /// and its character span. Non-overlapping, greedy left-to-right.
+    /// </summary>
+    private static List<(List<Letter> Letters, int From, int To)> Locate(
+        IReadOnlyList<Letter> letters, SearchText text, string searchText, bool caseSensitive, bool wholeWord,
+        Func<List<Letter>, bool> accept)
+    {
+        var matches = new List<(List<Letter> Letters, int From, int To)>();
+        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        var (view, spanStart, spanEnd, fullText, characterToLetter) = text;
 
         // Trim only the caller's needle. Trimming each candidate source window
         // lets matching start on an unrelated whitespace glyph, whose geometry
@@ -1001,7 +946,7 @@ public static class PdfDocumentRedactionExtensions
                 // non-word character (or the start/end of the run) on BOTH sides,
                 // so redacting "Lee" no longer guts "Sleeman". #1834: a
                 // neighbour on another line bounds it too. fullText has no
-                // separator at a line change (a wrapped term must match), so
+                // separator at a line change that is not a wrap (#1791), so
                 // without this "Lee" ending one line reads as "Leetop".
                 bool BoundedBy(int neighbour, int inside) =>
                     neighbour < 0 || neighbour >= fullText.Length
@@ -1027,9 +972,9 @@ public static class PdfDocumentRedactionExtensions
                     var slice = new List<Letter>(to - from + 1);
                     for (var letterIndex = from; letterIndex <= to; letterIndex++)
                         slice.Add(letters[letterIndex]);
-                    if (IsSpatiallyCoherent(slice))
+                    if (accept(slice))
                     {
-                        matches.Add(slice);
+                        matches.Add((slice, i, endIndex));
                         i = endIndex + 1;
                         continue;
                     }
@@ -1270,18 +1215,10 @@ public static class PdfDocumentRedactionExtensions
     }
 
     /// <summary>
-    /// Reject text created only by concatenating distant reading-order runs.
-    /// Reconstruction can reorder runs in the extracted sequence, and an
-    /// iterative redaction pass must not combine "You" in one column with an
-    /// unrelated "r" on another line into a synthetic "your" (#942).
-    /// Whitespace boundaries are allowed to jump so wrapped phrase searches
-    /// retain their existing behavior.
-    /// </summary>
-    /// <summary>
     /// #1177: a horizontal word gap between two SAME-LINE glyphs — the boundary
     /// JoinText inserts a space at (§ ~0.25em, matching poppler). Neither glyph is
-    /// already whitespace (a real space glyph separates on its own). A vertical gap
-    /// (line wrap) is NOT a word gap: a term wrapped across a line must still match.
+    /// already whitespace (a real space glyph separates on its own). A line change
+    /// is NOT a word gap: a wrap is <see cref="IsLineWrap"/>'s (#1791).
     /// </summary>
     private static bool IsInferredWordGap(Letter prev, Letter cur, double medianAdvance)
     {
@@ -1289,7 +1226,7 @@ public static class PdfDocumentRedactionExtensions
             return false;
         var fontSize = Math.Max(prev.FontSize, cur.FontSize);
         if (fontSize <= 0) return false;
-        // Same line only — a line wrap is not a word gap (a wrapped term must match).
+        // Same line only — a line change is not a word gap.
         if (!SameLine(prev, cur)) return false;
         var a = prev.GlyphRectangle.Normalize();
         var b = cur.GlyphRectangle.Normalize();
@@ -1329,6 +1266,14 @@ public static class PdfDocumentRedactionExtensions
         return advances[advances.Count / 2];
     }
 
+    /// <summary>
+    /// Reject text created only by concatenating distant reading-order runs.
+    /// Reconstruction can reorder runs in the extracted sequence, and an
+    /// iterative redaction pass must not combine "You" in one column with an
+    /// unrelated "r" on another line into a synthetic "your" (#942).
+    /// Whitespace boundaries are allowed to jump, and so is a line wrap
+    /// (<see cref="IsLineWrap"/>, #1791): a phrase continues on the next line.
+    /// </summary>
     private static bool IsSpatiallyCoherent(IReadOnlyList<Letter> letters)
     {
         for (var i = 1; i < letters.Count; i++)
@@ -1337,18 +1282,44 @@ public static class PdfDocumentRedactionExtensions
                 string.IsNullOrWhiteSpace(letters[i].Value))
                 continue;
 
-            var a = letters[i - 1].GlyphRectangle.Normalize();
-            var b = letters[i].GlyphRectangle.Normalize();
-            var dx = Math.Max(0, Math.Max(a.Left - b.Right, b.Left - a.Right));
-            var dy = Math.Max(0, Math.Max(a.Bottom - b.Top, b.Bottom - a.Top));
-            var scale = Math.Max(1, Math.Max(
-                Math.Max(a.Width, a.Height),
-                Math.Max(b.Width, b.Height)));
-
-            if (Math.Sqrt(dx * dx + dy * dy) > scale * 2)
+            if (!Adjacent(letters[i - 1], letters[i]) && !IsLineWrap(letters[i - 1], letters[i]))
                 return false;
         }
 
         return true;
+    }
+
+    /// <summary>Whether two glyphs lie within two glyph sizes of each other.</summary>
+    private static bool Adjacent(Letter first, Letter second)
+    {
+        var a = first.GlyphRectangle.Normalize();
+        var b = second.GlyphRectangle.Normalize();
+        var dx = Math.Max(0, Math.Max(a.Left - b.Right, b.Left - a.Right));
+        var dy = Math.Max(0, Math.Max(a.Bottom - b.Top, b.Bottom - a.Top));
+        var scale = Math.Max(1, Math.Max(
+            Math.Max(a.Width, a.Height),
+            Math.Max(b.Width, b.Height)));
+        return Math.Sqrt(dx * dx + dy * dy) <= scale * 2;
+    }
+
+    /// <summary>
+    /// #1791: a match split into its runs of adjacent glyphs — one per line of
+    /// a match that wraps — so each gets its own removal box. One box around a
+    /// match on two lines covers everything between them, which is #942. A run
+    /// of whitespace alone is dropped: there is nothing in it to remove.
+    /// </summary>
+    internal static IEnumerable<List<Letter>> LinesOf(IReadOnlyList<Letter> match)
+    {
+        var run = new List<Letter>();
+        foreach (var letter in match)
+        {
+            if (run.Count > 0 && !Adjacent(run[^1], letter))
+            {
+                if (run.Exists(l => !string.IsNullOrWhiteSpace(l.Value))) yield return run;
+                run = new List<Letter>();
+            }
+            run.Add(letter);
+        }
+        if (run.Exists(l => !string.IsNullOrWhiteSpace(l.Value))) yield return run;
     }
 }

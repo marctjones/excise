@@ -65,23 +65,15 @@ public sealed record PageRedactionResult(
 /// match and never removes it (#1372).
 /// </summary>
 /// <remarks>
-/// <para><b>Reported, never silently removed.</b> Matching across the hyphen is
-/// easy and was tried; the removal geometry for a match spanning two lines then
-/// covers everything between the end of one line and the start of the next, and
-/// that regressed 7 <c>RedactionCollateralHarness</c> fixtures plus
-/// <c>RedactingATerm_DestroysNothingRemoteFromAnyMatch</c> — #942, the defect
-/// that destroyed 5–36% of a document per term. Trading a missed word for
-/// destroyed content is strictly worse, so the join was reverted. A real fix
-/// needs a wrapped match to produce TWO removal boxes, one per line, which is a
-/// change to how a match's geometry is built and is feature-sized.</para>
-///
-/// <para>Until then this is the project's "surface, don't guess" carrier policy
-/// applied to a matcher gap: the reviewer is TOLD the occurrence is there and
-/// still present, rather than excise reporting success over it. That silence is
-/// what let this class of leak sit undetected — excise and mutool both keep the
-/// real hyphen and never form the match, so a single-extractor check called the
-/// document clean while Poppler's de-hyphenating reflow read the term straight
-/// out of it.</para>
+/// <para><b>Reported, never silently removed.</b> A line-end hyphen splits a
+/// word, not a phrase, and <c>well-</c> / <c>known</c> may be one hyphenated
+/// word, so excise does not guess the join. This is the project's "surface,
+/// don't guess" carrier policy applied to a matcher gap: the reviewer is TOLD
+/// the occurrence is there and still present, rather than excise reporting
+/// success over it. That silence is what let this class of leak sit undetected
+/// — excise and mutool both keep the real hyphen and never form the match, so a
+/// single-extractor check called the document clean while Poppler's
+/// de-hyphenating reflow read the term straight out of it.</para>
 ///
 /// <para>A hyphen INSIDE a line is content, not a wrap: <c>well-known</c> must
 /// never be reported as <c>wellknown</c>.</para>
@@ -96,26 +88,21 @@ public sealed record HyphenatedTermCandidate(
 }
 
 /// <summary>
-/// An occurrence of a MULTI-WORD term that an ordinary (non-hyphenated) line
-/// wrap splits across two lines — the page really reads <c>…signed by Betty</c>
-/// / <c>Mary on behalf of…</c> for the term "Betty Mary" — so excise never
-/// forms a match and never removes it (#1750).
+/// An occurrence of a MULTI-WORD term split across a line break that is not
+/// the next line of the same block — the page reads <c>…signed by Betty</c>
+/// at the foot of one column and <c>Mary on behalf of…</c> at the head of the
+/// next — so excise does not form the match and does not remove it (#1750,
+/// #1791).
 /// </summary>
 /// <remarks>
-/// <para>The generalization of <see cref="HyphenatedTermCandidate"/> to a wrap
-/// with no hyphen: <see cref="PdfDocumentRedactionExtensions.FindTextMatches"/>
-/// never inserts a space at a line wrap (a hyphen-continued word must not gain
-/// an invented space), so a multi-word needle with a space in it cannot match
-/// text that wraps mid-phrase. Before this was reported, redacting such a term
-/// printed "Redacted 0 occurrence(s)" and exited 0 — a silent false success:
-/// the occurrence was still fully readable and nothing said so.</para>
-///
-/// <para><b>Reported, never silently removed</b> — same reasoning as the
-/// hyphen case: a match spanning two lines needs a removal box PER LINE, a
-/// change to match geometry that is feature-sized (#942 is the lesson for why
-/// one box covering both lines is not an acceptable substitute). Until that
-/// exists, the reviewer is TOLD the occurrence is there rather than handed a
-/// report that calls the redaction clean.</para>
+/// <para>A term that wraps onto the next line of its block is matched and
+/// removed from both lines; see
+/// <see cref="PdfDocumentRedactionExtensions.FindTextMatches"/>. A continuation
+/// that jumps up (the next column) or to the right (another column or cell) may
+/// be the same phrase in reading order or unrelated text, and redacting across
+/// columns is a defect too, so it is left in place and REPORTED: before #1750
+/// such a term printed "Redacted 0 occurrence(s)" and exited 0 while it was
+/// still fully readable.</para>
 /// </remarks>
 public sealed record WordWrapTermCandidate(
     int PageNumber,
@@ -171,8 +158,9 @@ public sealed class RedactionReport
         = Array.Empty<HyphenatedTermCandidate>();
 
     /// <summary>
-    /// Occurrences of a multi-word term split across an ORDINARY line wrap
-    /// (no hyphen), which excise did NOT match and did NOT remove (#1750).
+    /// Occurrences of a multi-word term split across a line break that is not
+    /// the next line of its block, which excise did NOT match and did NOT
+    /// remove (#1750, #1791).
     /// Surfaced for the same reason as <see cref="HyphenatedCandidates"/>: a
     /// reviewer must not be told the document is clean when a readable
     /// occurrence remains. See <see cref="WordWrapTermCandidate"/>.

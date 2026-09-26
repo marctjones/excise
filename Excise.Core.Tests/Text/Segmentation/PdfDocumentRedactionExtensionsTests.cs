@@ -204,14 +204,8 @@ public class PdfDocumentRedactionExtensionsTests
     [Fact]
     public void FindTextMatches_DoesNotJoinAHyphenWithinALine()
     {
-        // #1372: excise does NOT rejoin a word wrapped across a line by a
-        // hyphen, which is a known redaction gap — the wrapped occurrence
-        // survives and is readable by poppler. This test pins the half that
-        // must stay true whatever fixes that: a hyphen INSIDE a line is
-        // content, so "well-known" must never match "wellknown". A naive
-        // rejoin that ignores this, or that lets a match span two lines,
-        // reintroduces #942 — measured: it destroyed remote content on 7
-        // corpus fixtures and failed RedactingATerm_DestroysNothingRemote.
+        // #1372: a hyphen INSIDE a line is content, so "well-known" must
+        // never match "wellknown".
         var letters = new[]
         {
             new Letter("w", new PdfRectangle(100, 700, 107, 712), 12, "F1", 100, 700, 7, 'w'),
@@ -226,67 +220,66 @@ public class PdfDocumentRedactionExtensionsTests
         PdfDocumentRedactionExtensions.FindTextMatches(letters, "wellkn", caseSensitive: false)
             .Should().BeEmpty("a same-line hyphen is content and must keep its meaning");
 
-        // #1372's other half: it must not be REPORTED as a wrap either. The
-        // detector below exists to surface hyphen-WRAPPED occurrences, and a
-        // detector that also fires on ordinary hyphenated words would flood
-        // every report with noise until people stopped reading it.
-        PdfDocumentRedactionExtensions
-            .FindHyphenWrappedCandidates(letters, "wellkn", caseSensitive: false, pageNumber: 1)
+        // #1372's other half: it must not be REPORTED as a wrap either. A net
+        // that also fired on ordinary hyphenated words would flood every
+        // report with noise until people stopped reading it.
+        Wrapped(letters, "wellkn").Hyphenated
             .Should().BeEmpty("'well-known' is one line — there is no line break to rejoin across");
     }
 
-    /// <summary>Two lines: "Ander-" wrapping onto "son", 14pt apart.</summary>
-    private static Letter[] HyphenWrappedAnderson()
-    {
-        Letter L(string v, double x, double y, double w) =>
-            new(v, new PdfRectangle(x, y, x + w, y + 12), 12, "F1", x, y, w, v[0]);
+    private static Letter L(string v, double x, double y, double w) =>
+        new(v, new PdfRectangle(x, y, x + w, y + 12), 12, "F1", x, y, w, v.Length > 0 ? v[0] : ' ');
 
-        return
-        [
-            L("A", 100, 700, 8), L("n", 108, 700, 7), L("d", 115, 700, 7),
-            L("e", 122, 700, 7), L("r", 129, 700, 5), L("-", 134, 700, 4),
-            // next line, 14pt lower — more than 0.5 * fontSize, so a new line
-            L("s", 100, 686, 6), L("o", 106, 686, 7), L("n", 113, 686, 7),
-            L(" ", 120, 686, 4), L("v", 124, 686, 6),
-        ];
+    private static (List<HyphenatedTermCandidate> Hyphenated, List<WordWrapTermCandidate> WordWrapped)
+        Wrapped(IReadOnlyList<Letter> letters, string term, int page = 1)
+    {
+        var hyphenated = new List<HyphenatedTermCandidate>();
+        var wordWrapped = new List<WordWrapTermCandidate>();
+        PdfDocumentRedactionExtensions.FindWrappedCandidates(
+            letters, term, caseSensitive: false, wholeWord: false, page, hyphenated, wordWrapped);
+        return (hyphenated, wordWrapped);
     }
 
+    /// <summary>Two lines: "Ander-" wrapping onto "son", 14pt apart.</summary>
+    private static Letter[] HyphenWrappedAnderson() =>
+    [
+        L("A", 100, 700, 8), L("n", 108, 700, 7), L("d", 115, 700, 7),
+        L("e", 122, 700, 7), L("r", 129, 700, 5), L("-", 134, 700, 4),
+        // next line, 14pt lower — more than 0.5 * fontSize, so a new line
+        L("s", 100, 686, 6), L("o", 106, 686, 7), L("n", 113, 686, 7),
+        L(" ", 120, 686, 4), L("v", 124, 686, 6),
+    ];
+
     [Fact]
-    public void FindHyphenWrappedCandidates_ReportsAWordSplitAcrossALineBreak()
+    public void FindWrappedCandidates_ReportsAWordSplitAcrossALineBreakByAHyphen()
     {
-        // The occurrence FindTextMatches structurally cannot see: the page
-        // really reads "Ander-" / "son", so no contiguous letter run spells
-        // "Anderson" and the term is never removed. Reported, not joined —
-        // joining makes the match span two lines and its removal box cover
-        // everything between them, which is #942.
+        // A hyphen splits a word, not a phrase, and "well-" / "known" may be
+        // one hyphenated word: the occurrence is reported, not joined.
         var letters = HyphenWrappedAnderson();
 
         PdfDocumentRedactionExtensions.FindTextMatches(letters, "Anderson", caseSensitive: false)
             .Should().BeEmpty("sanity: this is precisely why the occurrence survives");
 
-        var candidates = PdfDocumentRedactionExtensions
-            .FindHyphenWrappedCandidates(letters, "Anderson", caseSensitive: false, pageNumber: 11);
+        var (hyphenated, wordWrapped) = Wrapped(letters, "Anderson", page: 11);
 
-        candidates.Should().ContainSingle();
-        candidates[0].PageNumber.Should().Be(11);
-        candidates[0].BeforeBreak.Should().Be("Ander");
-        candidates[0].AfterBreak.Should().Be("son");
-        candidates[0].ToString().Should().Be("\"Ander-\" / \"son\"",
+        hyphenated.Should().ContainSingle();
+        hyphenated[0].PageNumber.Should().Be(11);
+        hyphenated[0].BeforeBreak.Should().Be("Ander");
+        hyphenated[0].AfterBreak.Should().Be("son");
+        hyphenated[0].ToString().Should().Be("\"Ander-\" / \"son\"",
             "the reviewer needs to see how the page actually reads");
+        wordWrapped.Should().BeEmpty("one break point is one note, and a hyphen's is the hyphen note");
     }
 
     [Fact]
-    public void FindHyphenWrappedCandidates_IgnoresATermThatDoesNotStraddleTheBreak()
+    public void FindWrappedCandidates_IgnoresATermThatDoesNotStraddleTheBreak()
     {
-        // Anti-vacuity: the detector must key on the term crossing the break,
-        // not merely on a line-end hyphen being somewhere nearby. "son" lies
-        // wholly on the second line, so FindTextMatches already handles it and
-        // it is not an unmatched candidate.
-        var letters = HyphenWrappedAnderson();
-
-        PdfDocumentRedactionExtensions
-            .FindHyphenWrappedCandidates(letters, "son", caseSensitive: false, pageNumber: 1)
-            .Should().BeEmpty("a term contained in one line is matched normally, not a wrap candidate");
+        // Anti-vacuity: the net keys on the term crossing the break, not on a
+        // line-end hyphen being somewhere nearby. "son" lies wholly on the
+        // second line, so FindTextMatches handles it.
+        var (hyphenated, wordWrapped) = Wrapped(HyphenWrappedAnderson(), "son");
+        hyphenated.Should().BeEmpty("a term contained in one line is matched normally");
+        wordWrapped.Should().BeEmpty();
     }
 
     [Fact]
@@ -313,74 +306,75 @@ public class PdfDocumentRedactionExtensionsTests
         report.ToString().Should().Contain("hyphen-wrapped occurrence(s) NOT removed");
     }
 
-    /// <summary>Two lines, plain word wrap (no hyphen): "…signed by Betty" /
-    /// "Mary on behalf of…", 14pt apart.</summary>
-    private static Letter[] WordWrappedBettyMary()
-    {
-        Letter L(string v, double x, double y, double w) =>
-            new(v, new PdfRectangle(x, y, x + w, y + 12), 12, "F1", x, y, w, v.Length > 0 ? v[0] : ' ');
+    /// <summary>"…signed by Mary Jane" / "Smith on behalf…": a plain wrap, no
+    /// hyphen, the second line starting back at the first line's left edge,
+    /// 14pt lower. No space glyph at the break.</summary>
+    private static Letter[] WrappedMaryJaneSmith(double secondLineX = 60) =>
+    [
+        L("b", 60, 700, 6), L("y", 66, 700, 6), L(" ", 72, 700, 4),
+        L("M", 76, 700, 9), L("a", 85, 700, 7), L("r", 92, 700, 5), L("y", 97, 700, 6),
+        L(" ", 103, 700, 4),
+        L("J", 107, 700, 6), L("a", 113, 700, 7), L("n", 120, 700, 7), L("e", 127, 700, 7),
+        L("S", secondLineX, 686, 8), L("m", secondLineX + 8, 686, 10), L("i", secondLineX + 18, 686, 3),
+        L("t", secondLineX + 21, 686, 4), L("h", secondLineX + 25, 686, 7), L(" ", secondLineX + 32, 686, 4),
+        L("o", secondLineX + 36, 686, 7), L("n", secondLineX + 43, 686, 7),
+    ];
 
-        return
-        [
-            // line 1: "...by Betty"
-            L("b", 60, 700, 6), L("y", 66, 700, 6), L(" ", 72, 700, 4),
-            L("B", 76, 700, 8), L("e", 84, 700, 7), L("t", 91, 700, 4),
-            L("t", 95, 700, 4), L("y", 99, 700, 6),
-            // next line, 14pt lower — more than 0.5 * fontSize, so a new line
-            L("M", 100, 686, 9), L("a", 109, 686, 7), L("r", 116, 686, 5),
-            L("y", 121, 686, 6), L(" ", 127, 686, 4),
-            L("o", 131, 686, 7), L("n", 138, 686, 7),
-        ];
+    [Theory]
+    [InlineData("Jane Smith")]
+    [InlineData("Mary Jane Smith")]
+    [InlineData("by Mary Jane Smith on")]
+    public void FindTextMatches_MatchesAPhraseAcrossALineWrap_AndLinesOfSplitsItPerLine(string term)
+    {
+        // #1791: the wrap stands in for the space between two words, so a
+        // phrase of ANY length matches across it — "Mary Jane Smith" wrapping
+        // after "Jane" was neither matched nor reported before. Removal needs
+        // one box per line: one box around both lines covers everything
+        // between them (#942).
+        var letters = WrappedMaryJaneSmith();
+
+        var match = PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive: false)
+            .Should().ContainSingle().Subject;
+
+        var lines = PdfDocumentRedactionExtensions.LinesOf(match).ToList();
+        lines.Should().HaveCount(2, "the match is on two lines and gets one box on each");
+        lines[0].Should().OnlyContain(l => l.StartY == 700);
+        lines[1].Should().OnlyContain(l => l.StartY == 686);
+        Wrapped(letters, term).WordWrapped.Should().BeEmpty("a match the matcher makes is not a candidate");
     }
 
     [Fact]
-    public void FindWordWrapCandidates_ReportsAMultiWordTermSplitAcrossALineBreak()
+    public void FindTextMatches_DoesNotJoinAContinuationToTheRight_AndTheNetReportsIt()
     {
-        // #1750: "Betty Mary" wraps at the end of a line with no hyphen — the
-        // page really reads "…Betty" / "Mary…". FindTextMatches never inserts
-        // a space at a line wrap (a hyphen-continued word must not gain an
-        // invented one), so the concatenated text reads "...BettyMary..." and
-        // a needle with a space in it can never match.
-        var letters = WordWrappedBettyMary();
+        // The same two lines, but the second starts to the RIGHT of where the
+        // first ends: another column or table cell, not the next line of this
+        // block. Joining it would redact across columns; leaving it silent
+        // would call a readable name clean.
+        var letters = WrappedMaryJaneSmith(secondLineX: 300);
 
-        PdfDocumentRedactionExtensions.FindTextMatches(letters, "Betty Mary", caseSensitive: false)
-            .Should().BeEmpty("sanity: this is precisely why the occurrence survives unmatched");
+        PdfDocumentRedactionExtensions.FindTextMatches(letters, "Mary Jane Smith", caseSensitive: false)
+            .Should().BeEmpty();
 
-        var candidates = PdfDocumentRedactionExtensions
-            .FindWordWrapCandidates(letters, "Betty Mary", caseSensitive: false, pageNumber: 3);
-
-        candidates.Should().ContainSingle();
-        candidates[0].PageNumber.Should().Be(3);
-        candidates[0].BeforeBreak.Should().Be("Betty");
-        candidates[0].AfterBreak.Should().Be("Mary");
-        candidates[0].ToString().Should().Be("\"Betty\" / \"Mary\"",
-            "no hyphen was invented — the page reads two plain, whole words");
+        var wordWrapped = Wrapped(letters, "Mary Jane Smith", page: 3).WordWrapped;
+        wordWrapped.Should().ContainSingle();
+        wordWrapped[0].PageNumber.Should().Be(3);
+        wordWrapped[0].BeforeBreak.Should().Be("Mary Jane");
+        wordWrapped[0].AfterBreak.Should().Be("Smith");
+        wordWrapped[0].ToString().Should().Be("\"Mary Jane\" / \"Smith\"");
     }
 
     [Fact]
-    public void FindWordWrapCandidates_IgnoresATermThatDoesNotStraddleTheBreak()
+    public void FindTextMatches_StillMatchesAVerticalRun()
     {
-        // Anti-vacuity, same shape as the hyphen sibling test: "Mary" lies
-        // wholly on the second line, so FindTextMatches already handles it.
-        var letters = WordWrappedBettyMary();
+        // A glyph stacked straight under the last (vertical writing, or text
+        // rotated by its matrix) is on a new "line" by the baseline test but
+        // is not a wrap: no space may be inferred there, or rotated text
+        // becomes unmatchable.
+        var letters = new[] { L("A", 100, 700, 8), L("B", 100, 688, 8), L("C", 100, 676, 8) };
 
-        PdfDocumentRedactionExtensions
-            .FindWordWrapCandidates(letters, "Mary", caseSensitive: false, pageNumber: 1)
-            .Should().BeEmpty("a single-word needle cannot straddle a wrap with no hyphen to " +
-                               "consume, and a term contained in one line is matched normally");
-    }
-
-    [Fact]
-    public void FindWordWrapCandidates_DoesNotFireOnAHyphenatedWrap()
-    {
-        // The hyphen detector owns a hyphen-marked break; the word-wrap
-        // detector must not ALSO report it, or one break point produces two
-        // disagreeing notes.
-        var letters = HyphenWrappedAnderson();
-
-        PdfDocumentRedactionExtensions
-            .FindWordWrapCandidates(letters, "Anderson", caseSensitive: false, pageNumber: 1)
-            .Should().BeEmpty("a hyphen-marked wrap is FindHyphenWrappedCandidates' case, not this one");
+        var match = PdfDocumentRedactionExtensions.FindTextMatches(letters, "ABC", caseSensitive: false)
+            .Should().ContainSingle().Subject;
+        PdfDocumentRedactionExtensions.LinesOf(match).Should().ContainSingle("the glyphs are adjacent");
     }
 
     [Fact]
