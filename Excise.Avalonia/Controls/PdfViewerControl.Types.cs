@@ -1,30 +1,18 @@
 using System;
 using System.Collections.Generic;
-using Avalonia;
 using Excise.Core.Document;
 
 namespace Excise.Avalonia.Controls;
 
 /// <summary>
-/// Event arguments for redaction drawn event.
+/// Event arguments for redaction drawn event. <see cref="PageArea"/> is bound
+/// to its page and coordinate space, so a listener never has to guess a scale.
 /// </summary>
 public class RedactionDrawnEventArgs : EventArgs
 {
-    public Rect Area { get; }
-    public int RenderDpi { get; }
     public PdfPageRect PageArea { get; }
 
-    public RedactionDrawnEventArgs(PdfPageRect pageArea)
-    {
-        PageArea = pageArea;
-        Area = new Rect(pageArea.X, pageArea.Y, pageArea.Width, pageArea.Height);
-        RenderDpi = (int)Math.Round(pageArea.Dpi);
-    }
-
-    public RedactionDrawnEventArgs(Rect area, int renderDpi)
-        : this(PdfPageRect.ViewerDips(1, area.X, area.Y, area.Width, area.Height, renderDpi)) { }
-
-    public RedactionDrawnEventArgs(Rect area) : this(area, 150) { }
+    public RedactionDrawnEventArgs(PdfPageRect pageArea) { PageArea = pageArea; }
 }
 
 /// <summary>
@@ -34,32 +22,20 @@ public class TextSelectedEventArgs : EventArgs
 {
     /// <summary>Joined text of the selected letter run, in reading order.</summary>
     public string Text { get; }
-    /// <summary>Per-letter bounding boxes in viewer-DIP coordinates.</summary>
-    public IReadOnlyList<Rect> LetterBoundsDips { get; }
-    /// <summary>Bounding box of the entire selection. Backwards-compat with the rect-only listeners.</summary>
-    public Rect Area { get; }
     /// <summary>
-    /// <see cref="Area"/> bound to its page and coordinate space — single-page
-    /// viewer DIPs or continuous page-local DIPs, each with its own scale. Null
-    /// when the selection spans pages or is empty. <see cref="Area"/> alone
-    /// cannot be converted: the same Rect means different points in the two
-    /// view modes, and a listener that guessed placed markup off the text (#1796).
+    /// Bounding box of the selection, bound to its page and coordinate space —
+    /// single-page viewer DIPs or continuous page-local DIPs, each with its own
+    /// scale. Null when the selection spans pages or is empty. A bare Rect could
+    /// not be converted: it means different points in the two view modes, and a
+    /// listener that guessed placed markup off the text (#1796).
     /// </summary>
     public PdfPageRect? PageArea { get; }
 
-    public TextSelectedEventArgs(Rect area, string text, IReadOnlyList<Rect> letterBoundsDips)
-        : this(area, text, letterBoundsDips, null) { }
-
-    public TextSelectedEventArgs(Rect area, string text, IReadOnlyList<Rect> letterBoundsDips, PdfPageRect? pageArea)
+    public TextSelectedEventArgs(string text, PdfPageRect? pageArea)
     {
-        Area = area;
         Text = text;
-        LetterBoundsDips = letterBoundsDips;
         PageArea = pageArea;
     }
-
-    /// <summary>Backwards-compat ctor — area only, empty text/bounds.</summary>
-    public TextSelectedEventArgs(Rect area) : this(area, string.Empty, Array.Empty<Rect>()) { }
 }
 
 /// <summary>
@@ -406,11 +382,6 @@ public enum InteractionMode
     /// Select text areas.
     /// </summary>
     TextSelection,
-
-    /// <summary>
-    /// Pan/scroll the document.
-    /// </summary>
-    Pan,
 
     /// <summary>
     /// Drag to define a new AcroForm field rect. The host listens for

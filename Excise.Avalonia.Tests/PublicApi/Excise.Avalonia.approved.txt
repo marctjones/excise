@@ -65,12 +65,11 @@ namespace Excise.Avalonia.Controls
         None = 0,
         Redaction = 1,
         TextSelection = 2,
-        Pan = 3,
-        FormAuthoring = 4,
-        Typewriter = 5,
-        PathAnnotation = 6,
-        StickyNote = 7,
-        ShapeAnnotation = 8,
+        FormAuthoring = 3,
+        Typewriter = 4,
+        PathAnnotation = 5,
+        StickyNote = 6,
+        ShapeAnnotation = 7,
     }
     public class LinkClickedEventArgs : System.EventArgs
     {
@@ -92,20 +91,6 @@ namespace Excise.Avalonia.Controls
         Freehand = 0,
         Segment = 1,
         Vertices = 2,
-    }
-    public sealed class PdfPageSlot : System.ComponentModel.INotifyPropertyChanged
-    {
-        public Avalonia.Media.Imaging.WriteableBitmap? Bitmap { get; }
-        public double DisplayHeight { get; }
-        public double DisplayWidth { get; }
-        public double HeightPt { get; }
-        public int PageNumber { get; }
-        public double TileDisplayHeight { get; }
-        public double TileDisplayWidth { get; }
-        public double TileDisplayX { get; }
-        public double TileDisplayY { get; }
-        public double WidthPt { get; }
-        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
     }
     public enum PdfViewMode
     {
@@ -196,11 +181,8 @@ namespace Excise.Avalonia.Controls
         public event System.EventHandler<Excise.Avalonia.Controls.TypewriterTextDeletedEventArgs>? TypewriterTextDeleted;
         public event System.EventHandler<Excise.Avalonia.Controls.TypewriterTextEditedEventArgs>? TypewriterTextEdited;
         public event System.EventHandler<Avalonia.Size>? VisibleViewportChanged;
-        public void AddAppliedRedaction(Avalonia.Rect area) { }
         public void AddAppliedRedaction(Excise.Core.Document.PdfPageRect area) { }
-        public void AddPendingRedaction(Avalonia.Rect area) { }
         public void AddPendingRedaction(Excise.Core.Document.PdfPageRect area) { }
-        public void AddSearchHighlight(Avalonia.Rect area) { }
         public void AddSearchHighlight(Excise.Core.Document.PdfPageRect area) { }
         public void ClearAppliedRedactions() { }
         public void ClearContinuousSelectionHighlight() { }
@@ -261,12 +243,8 @@ namespace Excise.Avalonia.Controls
     }
     public class RedactionDrawnEventArgs : System.EventArgs
     {
-        public RedactionDrawnEventArgs(Avalonia.Rect area) { }
         public RedactionDrawnEventArgs(Excise.Core.Document.PdfPageRect pageArea) { }
-        public RedactionDrawnEventArgs(Avalonia.Rect area, int renderDpi) { }
-        public Avalonia.Rect Area { get; }
         public Excise.Core.Document.PdfPageRect PageArea { get; }
-        public int RenderDpi { get; }
     }
     public class ShapeAnnotationRectDrawnEventArgs : System.EventArgs
     {
@@ -296,11 +274,7 @@ namespace Excise.Avalonia.Controls
     }
     public class TextSelectedEventArgs : System.EventArgs
     {
-        public TextSelectedEventArgs(Avalonia.Rect area) { }
-        public TextSelectedEventArgs(Avalonia.Rect area, string text, System.Collections.Generic.IReadOnlyList<Avalonia.Rect> letterBoundsDips) { }
-        public TextSelectedEventArgs(Avalonia.Rect area, string text, System.Collections.Generic.IReadOnlyList<Avalonia.Rect> letterBoundsDips, Excise.Core.Document.PdfPageRect? pageArea) { }
-        public Avalonia.Rect Area { get; }
-        public System.Collections.Generic.IReadOnlyList<Avalonia.Rect> LetterBoundsDips { get; }
+        public TextSelectedEventArgs(string text, Excise.Core.Document.PdfPageRect? pageArea) { }
         public Excise.Core.Document.PdfPageRect? PageArea { get; }
         public string Text { get; }
     }

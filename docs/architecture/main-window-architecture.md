@@ -106,7 +106,7 @@ owning *unit*.
 | `CurrentPageIndex` (via `_viewportSession`) | `:430` | navigation, DocumentOpen (`:198`), page organisation, History primitives, Search (`NavigateToSearchMatch`), Typewriter (`GoToNextPendingTypewriterEdit`), code-behind `OnPageChanged`/`OnLinkClicked` | everything; the setter fans out to thumbnails, search highlights, hidden-text scan and selection clear (`RefreshCurrentPageBindings :451-464`) |
 | `ZoomLevel`, `ViewMode`, `ViewportWidth/Height`, fit mode (via `_viewportSession`) | `:582`, `:215`, `:1025`, `:1038` | zoom commands, code-behind `VisibleViewportChanged` (`MainWindow.axaml.cs:352-356`), `ApplyContinuousScrollPreference` (from code-behind `:288`), mode setters force `SinglePage` | XAML (`ZoomLevel`, `ViewMode`, `IsContinuousView`), `RestoreViewModeFromPreference :414` |
 | Redaction selection: `_currentRedactionPageArea :76`, `CurrentRedactionArea :815`, `CurrentRedactionRenderDpi :831` | cs | code-behind `OnRedactionDrawn` (`:956`), Redaction (`MarkRedactionArea` clears it), close, DocumentOpen | Redaction, **Annotations** (Square/Circle/FreeText/Stamp/ImageStamp read it, `Annotations.cs:127-390`) |
-| Text selection: `_currentTextSelectionArea :86`, `_currentTextSelectionPageArea :87`, `_selectedText :88` | cs | code-behind `OnTextSelected` (`:1020-1038`), `SetSelectedTextAndCopyAsync :958`, `CopyTextAsync :1748`, `ClearCurrentTextSelection` (`Annotations.cs:597`) | Annotations (all "from selection" commands), `HasTextSelection :947`, XAML |
+| Text selection: `_currentTextSelectionPageArea :87`, `_selectedText :88` | cs | code-behind `OnTextSelected` (`:1020-1038`), `SetSelectedTextAndCopyAsync :958`, `CopyTextAsync :1748`, `ClearCurrentTextSelection` (`Annotations.cs:597`) | Annotations (all "from selection" commands), `HasTextSelection :947`, XAML |
 | `ClipboardHistory` | `:207` | `PublishToClipboardAndHistoryAsync :1810`, close, open | XAML right sidebar |
 | `OperationStatus` | `:974` | DocumentOpen, DragDrop, Search (background progress) | XAML status bar |
 | `CurrentPageSearchHighlights` | `:1067` | Search (`UpdateSearchHighlights`, `Search.cs:474-503`) | code-behind `OnSearchHighlightsChanged` → viewer `Add/ClearSearchHighlights` |
@@ -197,7 +197,7 @@ this file, `Forms.cs` and `Typewriter.cs`; see §1.7)
 | `IsRedactionMode` (781–813) | on entry: SinglePage, off text-selection/forms/typewriter; on exit: restore view mode, restore text selection if no editing mode; raises `CurrentModeText`, `InteractionMode`, `ShowPendingRedactionsPanel`, `ShowClipboardHistoryPanel` | `_isRedactionMode` + three foreign flags | — | X, M, Redaction, Forms, Typewriter, close, open |
 | `IsTextSelectionMode` (897–919) | on entry: off redaction/forms/typewriter (#815: does not change view mode) | `_isTextSelectionMode` | — | X, M, mode setters, `ToggleTextSelectionMode` (1731–1741) |
 | `CurrentRedactionArea` (815–829), `CurrentRedactionRenderDpi` (831–854), `CurrentRedactionPageArea` (856–860), `SetCurrentRedactionPageArea` (862–871), `ToViewerRedactionArea` (873–892), `ToAvaloniaRect` (894–895) | the drag rectangle in three representations (Avalonia `Rect`, page rect, DPI) | `_currentRedactionPageArea` | `PdfCoordinateMapper` | V (`OnRedactionDrawn :956`), Redaction, Annotations, close |
-| `CurrentTextSelectionArea` (921–925), `CurrentTextSelectionPageArea` (927–935), `SelectedText` (937–945), `HasTextSelection` (947–949) | text selection | `:86-88` | — | V (`OnTextSelected`), X, Annotations |
+| `CurrentTextSelectionPageArea` (927–935), `SelectedText` (937–945), `HasTextSelection` (947–949) | text selection | `:86-88` | — | V (`OnTextSelected`), X, Annotations |
 | `SetSelectedTextAndCopyAsync` (958–972) | publish selection; gate the OS copy on `/P` bit 5 | `SelectedText` | `EnsureDocumentPermission`, clipboard | V (`:1033`) |
 
 **Clipboard**
@@ -1042,15 +1042,14 @@ internal long LastSearchWorkerElapsedMs, LastSearchUiQueueElapsedMs,
 
 #### `TextSelectionViewModel`
 
-Owns `CurrentTextSelectionArea`, `CurrentTextSelectionPageArea`,
+Owns `CurrentTextSelectionPageArea`,
 `SelectedText`, `HasTextSelection`, `ClipboardHistory`, `CopyTextCommand`,
 `SetSelectedTextAndCopyAsync`, `ClearCurrentTextSelection`, and a new
 `void SetSelection(PdfPageRect? pageArea, string text)` that absorbs the
 `ViewerDips` construction from `OnTextSelected`. Depends on:
 `IClipboard` (*new*), `PdfTextExtractionService`, `DocumentPermissionGuard`,
 `IDocumentSession`, `ViewportViewModel.PageChanged` (clear on navigate).
-The unit holds the page-space rect only; the shell computes the Avalonia
-`Rect` forward (`CurrentTextSelectionArea`) that XAML binds today.
+The unit holds the page-space rect only.
 
 ```csharp
 PdfPageRect? CurrentTextSelectionPageArea { get; }   string SelectedText { get; }   bool HasTextSelection { get; }
