@@ -304,7 +304,7 @@ public partial class PdfViewerControl
         var nodes = new List<AccessibleStructNode>();
         foreach (var (page, element) in elements)
         {
-            var (role, headingLevel) = ClassifyStructRole(element.Type);
+            var (role, headingLevel) = ClassifyStructRole(element.RoleMappedType);
             if (role == AccessibleStructRole.Generic)
                 continue;
 
@@ -343,8 +343,9 @@ public partial class PdfViewerControl
     }
 
     /// <summary>
-    /// Map a structure element type (ISO 32000-2 §14.8.4 standard structure
-    /// types, with the leading <c>/</c> that <c>PdfStructTreeParser</c>
+    /// Map an element's <see cref="PdfStructElement.RoleMappedType"/> (the
+    /// ISO 32000-2 §14.8.4 standard structure type its <c>/RoleMap</c> chain
+    /// reaches, with the leading <c>/</c> that <c>PdfStructTreeParser</c>
     /// prepends) to an accessibility role. Bare <c>H</c> and numbered
     /// <c>H1</c>–<c>H6</c> both map to <see cref="AccessibleStructRole.Heading"/>.
     /// </summary>

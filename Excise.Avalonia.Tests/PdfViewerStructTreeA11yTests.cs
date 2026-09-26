@@ -101,6 +101,26 @@ public class PdfViewerStructTreeA11yTests
     }
 
     /// <summary>
+    /// A raw single-page tagged PDF whose structure elements are spelled as
+    /// custom tags that <c>/RoleMap</c> resolves to standard types (ISO 32000-2
+    /// §14.7.3): <c>/MyTitle</c> reaches <c>/H1</c> through a two-step chain,
+    /// <c>/MySubtitle</c> maps to <c>/H2</c>, and <c>/MyPara</c> maps to
+    /// <c>/P</c>. Nothing in the file is spelled <c>/H1</c> or <c>/H2</c> as an
+    /// element type, so only the role map makes these headings.
+    /// </summary>
+    private static byte[] RawRoleMappedPdf() => AssembleObjects(new[]
+    {
+        "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 4 0 R /MarkInfo << /Marked true >> >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> >>",
+        "<< /Type /StructTreeRoot /K [5 0 R 6 0 R 7 0 R] " +
+            "/RoleMap << /MyTitle /Heading1 /Heading1 /H1 /MySubtitle /H2 /MyPara /P >> >>",
+        "<< /Type /StructElem /S /MyTitle /ActualText (Mapped Title) /Pg 3 0 R >>",
+        "<< /Type /StructElem /S /MyPara /ActualText (Mapped Paragraph) /Pg 3 0 R >>",
+        "<< /Type /StructElem /S /MySubtitle /ActualText (Mapped Subtitle) /Pg 3 0 R >>",
+    });
+
+    /// <summary>
     /// A builder-authored tagged single page with a heading, a bullet list,
     /// and a table — real H1 / L / LI / Table / TR / TH / TD struct elements.
     /// Their body text lives in MCID marked content (not reachable read-only),
@@ -237,6 +257,52 @@ public class PdfViewerStructTreeA11yTests
                 .GetAutomationControlType().Should().Be(AutomationControlType.Table);
             roles.First(r => r.Role == AccessibleStructRole.TableRow)
                 .GetAutomationControlType().Should().Be(AutomationControlType.DataItem);
+            return true;
+        });
+    }
+
+    [Fact]
+    public async Task RoleMappedCustomTags_ExposeHeadingRolePeersAtTheMappedLevel()
+    {
+        await OnUiThread(() =>
+        {
+            var doc = PdfDocument.Open(RawRoleMappedPdf());
+            // The fixture spells every element as a custom tag.
+            doc.GetStructureTree()!.Children.Select(c => c.Type)
+                .Should().Equal("/MyTitle", "/MyPara", "/MySubtitle");
+
+            var (_, peer) = CreateViewerWithPeer(doc);
+            var roles = RolePeers(peer);
+
+            roles.Select(r => (r.Role, r.HeadingLevel)).Should().Equal(
+                new[] { (AccessibleStructRole.Heading, 1), (AccessibleStructRole.Heading, 2) },
+                "/RoleMap resolves the custom tags to /H1 and /H2; /MyPara maps to /P, which has no role peer");
+            roles.Select(r => Normalized(r.GetName())).Should().Equal("Mapped Title", "Mapped Subtitle");
+            roles[0].GetLocalizedControlType().Should().Be("heading level 1");
+            roles[1].GetLocalizedControlType().Should().Be("heading level 2");
+            return true;
+        });
+    }
+
+    [Fact]
+    public async Task NextHeading_ReachesHeadingsSpelledAsRoleMappedCustomTags()
+    {
+        await OnUiThread(() =>
+        {
+            var (viewer, _) = CreateViewerWithPeer(PdfDocument.Open(RawRoleMappedPdf()));
+
+            viewer.MoveToNextStructure(backward: false, headingsOnly: true).Should().BeTrue();
+            var first = viewer.CurrentStructureNavigationTarget!.Value;
+            (first.Role, first.HeadingLevel, first.Text)
+                .Should().Be((AccessibleStructRole.Heading, 1, "Mapped Title"));
+
+            viewer.MoveToNextStructure(backward: false, headingsOnly: true).Should().BeTrue();
+            var second = viewer.CurrentStructureNavigationTarget!.Value;
+            (second.Role, second.HeadingLevel, second.Text)
+                .Should().Be((AccessibleStructRole.Heading, 2, "Mapped Subtitle"));
+
+            viewer.MoveToNextStructure(backward: false, headingsOnly: true)
+                .Should().BeFalse("the mapped paragraph is not a heading");
             return true;
         });
     }
