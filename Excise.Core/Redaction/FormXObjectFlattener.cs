@@ -134,13 +134,23 @@ internal static class FormXObjectFlattener
             ownResources["XObject"] = local;
         }
 
-        // Mark-and-sweep from the trailer, but conservatively free ONLY the
-        // forms we inlined — never arbitrary unreachable objects, which guards
-        // against any blind spot in the reachability walk.
+        FreeUnreachable(doc, inlinedFormObjects);
+    }
+
+    /// <summary>
+    /// Mark-and-sweep from the trailer, but conservatively free ONLY
+    /// <paramref name="forms"/> — never arbitrary unreachable objects, which
+    /// guards against any blind spot in the reachability walk. Returns the
+    /// forms that are still reachable, and so were kept.
+    /// </summary>
+    internal static List<int> FreeUnreachable(PdfDocument doc, IEnumerable<int> forms)
+    {
         var reachable = doc.ComputeReachableObjects();
-        foreach (var objNum in inlinedFormObjects)
-            if (!reachable.Contains(objNum))
-                doc.RemoveObject(objNum);
+        var kept = new List<int>();
+        foreach (var objNum in forms)
+            if (reachable.Contains(objNum)) kept.Add(objNum);
+            else doc.RemoveObject(objNum);
+        return kept;
     }
 
     private static bool ReferencesAnyForm(PdfPage page, IReadOnlyList<ContentOperator> ops)
