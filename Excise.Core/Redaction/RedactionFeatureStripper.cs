@@ -176,8 +176,7 @@ internal static class RedactionFeatureStripper
             if (reanchoredFromAnnots > 0) invalidate |= PdfDocumentDerivedStateScope.Attachments;
         }
 
-        // Before the name strip: the form parser skips a field with no /T, so
-        // stripping names first left the flatten nothing to flatten (#1857).
+        // Before the name strip (#1857): the flatten removes /AcroForm, names and all.
         if (options.FlattenInteractiveContent)
         {
             var (flattened, signatures, unpainted, formRemains) = FlattenInteractive(document);
@@ -185,8 +184,7 @@ internal static class RedactionFeatureStripper
             Row("signature field(s) removed", signatures,
                 "a redacted copy cannot keep a valid signature; its appearance was not painted");
             Row("form widget(s) removed without being painted", unpainted,
-                "widgets the flattener could not paint, such as a field without a /T name or a widget "
-                + "outside /AcroForm");
+                "widgets the flattener could not paint, such as a widget outside /AcroForm");
             if (formRemains)
                 refusals.Add(new CarrierResult("/AcroForm", false,
                     "the form could not be flattened, so its field dictionaries and their values are still in the file"));

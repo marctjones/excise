@@ -486,9 +486,10 @@ public class RedactionProfileTests
     }
 
     /// <summary>
-    /// A field the form parser cannot read — a merged field/widget with no
-    /// <c>/T</c> — is not flattened. Once <c>/AcroForm</c> is gone the carrier
-    /// scrub cannot reach it either, so Maximum removes it and says so.
+    /// A widget the flattener cannot read — a merged field/widget on the page
+    /// that <c>/AcroForm /Fields</c> does not list — is not flattened. Once
+    /// <c>/AcroForm</c> is gone the carrier scrub cannot reach it either, so
+    /// Maximum removes it and says so.
     /// </summary>
     [Theory]
     [InlineData(EntryPoint.RedactText)]
@@ -496,8 +497,14 @@ public class RedactionProfileTests
     [InlineData(EntryPoint.SafetyPass)]
     public void Maximum_RemovesAWidgetTheFlattenCannotRead_AndReportsIt(EntryPoint entry)
     {
-        const string secret = "UNNAMEDFIELDTRAP";
-        var input = CarrierTrapFixtures.Field(null, $"/FT /Tx /V ({secret})");
+        const string secret = "UNLISTEDFIELDTRAP";
+        byte[] input;
+        using (var doc = PdfDocument.Open(CarrierTrapFixtures.Field(null, $"/FT /Tx /T (name) /V ({secret})")))
+        {
+            ((Excise.Core.Primitives.PdfDictionary)doc.Catalog.GetOptional("AcroForm")!)["Fields"] =
+                new Excise.Core.Primitives.PdfArray();
+            input = doc.SaveToBytes();
+        }
 
         SavedPdfLeakScanner.FindTerm(RunProfile(input, entry, RedactionOptions.Default).Saved, secret)
             .Should().NotBeEmpty("planted failure: Standard keeps the field");
@@ -508,6 +515,65 @@ public class RedactionProfileTests
         max.Removals.Should().Contain(r => r.Feature == "form widget(s) removed without being painted" && r.Count == 1,
             "CLAUDE.md rule 6: every removal is reported, and this one is not a flatten");
         max.Removals.Should().NotContain(r => r.Feature == Flattened, "nothing was flattened");
+    }
+
+    /// <summary>
+    /// #1864: a field with no <c>/T</c> (optional in ISO 32000-1) is a field.
+    /// The form parser skipped it, so text extraction never emitted it and the
+    /// term scrub never rewrote its appearance: under Standard the term that
+    /// appearance draws survived the redaction (measured). Maximum removed the
+    /// widget unpainted instead of flattening it like any other field.
+    /// </summary>
+    [Fact]
+    public void ANamelessField_IsReadByBothProfiles_AndItsTermLeavesTheFile()
+    {
+        const string secret = "NAMELESSFIELDTRAP";
+        var input = CarrierTrapFixtures.Field(null, $"/FT /Tx /V (Keep {secret} here) /AP << /N 7 0 R >>",
+            CarrierTrapFixtures.AppearanceStream($"BT /F1 10 Tf 2 4 Td (Keep {secret} here) Tj ET", compress: true));
+
+        foreach (var options in new[] { RedactionOptions.Default, RedactionOptions.Maximum })
+        {
+            using var doc = PdfDocument.Open(input);
+            var report = doc.RedactText(secret, options);
+            var saved = doc.SaveToBytes();
+
+            SavedPdfLeakScanner.FindTerm(saved, secret).Should().BeEmpty(
+                $"{options.Profile}: the term was only in a field with no /T, in its /V and its appearance");
+            if (options.Profile != RedactionProfile.Maximum) continue;
+
+            report.Removals.Should().Contain(r => r.Feature == Flattened && r.Count == 1,
+                "a nameless field is flattened like any other field");
+            report.Removals.Should().NotContain(r => r.Feature == "form widget(s) removed without being painted");
+            using var reopened = PdfDocument.Open(saved);
+            reopened.GetPage(1).Text.Should().Contain("Keep").And.Contain("here",
+                "the value around the term is painted into the page, as for a named field");
+        }
+    }
+
+    /// <summary>
+    /// #1864: the same nameless field on the page but missing from
+    /// <c>/AcroForm /Fields</c>. Only the orphaned-widget recovery reaches it,
+    /// and it too skipped a widget without <c>/T</c>.
+    /// </summary>
+    [Fact]
+    public void ANamelessWidgetMissingFromFields_IsRedactedUnderStandard()
+    {
+        const string secret = "NAMELESSORPHANTRAP";
+        byte[] input;
+        using (var doc = PdfDocument.Open(CarrierTrapFixtures.Field(null,
+            $"/FT /Tx /V (Keep {secret} here) /AP << /N 7 0 R >>",
+            CarrierTrapFixtures.AppearanceStream($"BT /F1 10 Tf 2 4 Td (Keep {secret} here) Tj ET", compress: true))))
+        {
+            ((Excise.Core.Primitives.PdfDictionary)doc.Catalog.GetOptional("AcroForm")!)["Fields"] =
+                new Excise.Core.Primitives.PdfArray();
+            input = doc.SaveToBytes();
+        }
+
+        using var redacted = PdfDocument.Open(input);
+        redacted.RedactText(secret, RedactionOptions.Default);
+
+        SavedPdfLeakScanner.FindTerm(redacted.SaveToBytes(), secret).Should().BeEmpty(
+            "the term was only in a widget no /Fields entry reaches, in its /V and its appearance");
     }
 
     /// <summary>

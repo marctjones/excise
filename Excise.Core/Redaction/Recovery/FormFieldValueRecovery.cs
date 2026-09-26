@@ -54,7 +54,7 @@ public static class FormFieldValueRecovery
             // it is reported page 0 and the report files it document-level.
             found.Add(new FieldValue(
                 field.PageNumber ?? 0,
-                string.IsNullOrEmpty(field.FullName) ? field.PartialName : field.FullName,
+                field.FullName,
                 value!,
                 field.Rect));
         }

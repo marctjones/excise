@@ -442,7 +442,7 @@ internal static class CarrierTrapFixtures
             extra: all.ToArray(), extraContent: extraContent);
     }
 
-    private static string AppearanceStream(string content, bool compress) =>
+    internal static string AppearanceStream(string content, bool compress) =>
         Stream("/Type /XObject /Subtype /Form /BBox [0 0 300 20] /Resources << /Font << /F1 5 0 R >> >>", content, compress);
 
     private static byte[] Xfa(string? visibleToken, string xdp, bool asArray)

@@ -842,74 +842,114 @@ public class PdfAcroFormParserTests
         result.Fields[0].FullName.Should().Be("Level1.Level2.Level3");
     }
 
-    [Fact]
-    public void Parse_FieldWithoutName_Skipped()
+    /// <summary>
+    /// Objects 1-3 are the catalog (with <c>/AcroForm /Fields</c> <paramref name="fields"/>),
+    /// the page tree and one page; <paramref name="objects"/> follow as 4, 5, ...
+    /// </summary>
+    private static byte[] FormPdf(string fields, params string[] objects)
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("%PDF-1.7");
+        var bodies = new List<string>
+        {
+            $"<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields {fields} >> >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
+        };
+        bodies.AddRange(objects);
 
-        long catalogPos = sb.Length;
-        sb.AppendLine("1 0 obj");
-        sb.AppendLine(@"<<
-            /Type /Catalog
-            /Pages 2 0 R
-            /AcroForm <<
-                /Fields [5 0 R]
-            >>
-        >>");
-        sb.AppendLine("endobj");
+        var sb = new StringBuilder("%PDF-1.7\n");
+        var offsets = new List<int>();
+        for (var i = 0; i < bodies.Count; i++)
+        {
+            offsets.Add(sb.Length);
+            sb.Append($"{i + 1} 0 obj\n{bodies[i]}\nendobj\n");
+        }
+        var xref = sb.Length;
+        sb.Append($"xref\n0 {bodies.Count + 1}\n0000000000 65535 f \n");
+        foreach (var offset in offsets) sb.Append($"{offset:D10} 00000 n \n");
+        sb.Append($"trailer << /Size {bodies.Count + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        return Encoding.Latin1.GetBytes(sb.ToString());
+    }
 
-        long pagesPos = sb.Length;
-        sb.AppendLine("2 0 obj");
-        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
-        sb.AppendLine("endobj");
-
-        long pagePos = sb.Length;
-        sb.AppendLine("3 0 obj");
-        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>");
-        sb.AppendLine("endobj");
-
-        long contentPos = sb.Length;
-        sb.AppendLine("4 0 obj");
-        sb.AppendLine("<< /Length 0 >>");
-        sb.AppendLine("stream");
-        sb.AppendLine("endstream");
-        sb.AppendLine("endobj");
-
-        long fieldPos = sb.Length;
-        sb.AppendLine("5 0 obj");
-        sb.AppendLine(@"<<
-            /Type /Annot
-            /Subtype /Widget
-            /FT /Tx
-            /Rect [72 700 300 720]
-            /P 3 0 R
-        >>");
-        sb.AppendLine("endobj");
-
-        long xrefPos = sb.Length;
-        sb.AppendLine("xref");
-        sb.AppendLine("0 6");
-        sb.AppendLine("0000000000 65535 f ");
-        sb.AppendLine($"{catalogPos:D10} 00000 n ");
-        sb.AppendLine($"{pagesPos:D10} 00000 n ");
-        sb.AppendLine($"{pagePos:D10} 00000 n ");
-        sb.AppendLine($"{contentPos:D10} 00000 n ");
-        sb.AppendLine($"{fieldPos:D10} 00000 n ");
-        sb.AppendLine("trailer");
-        sb.AppendLine("<< /Size 6 /Root 1 0 R >>");
-        sb.AppendLine("startxref");
-        sb.AppendLine(xrefPos.ToString());
-        sb.AppendLine("%%EOF");
-
-        var pdf = Encoding.Latin1.GetBytes(sb.ToString());
+    /// <summary>
+    /// ISO 32000-1 makes <c>/T</c> optional (Table 220), and the fully qualified name is
+    /// built from the partial names the field and its ancestors have (§12.7.3.2), so a
+    /// top-level field with no name is a field whose full name is empty. It used to be
+    /// skipped, which hid its value from flatten, fill, listing and redaction (#1864).
+    /// </summary>
+    [Fact]
+    public void Parse_FieldWithoutName_IsAFieldWithAnEmptyName()
+    {
+        var pdf = FormPdf("[4 0 R]",
+            "<< /Type /Annot /Subtype /Widget /FT /Tx /V (unnamed value) /Rect [72 700 300 720] /P 3 0 R >>");
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
-        var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
-            ?? throw new InvalidOperationException();
 
-        var result = PdfAcroFormParser.Parse(doc, acroFormDict);
+        var form = doc.GetAcroForm()!;
 
-        result.Fields.Should().BeEmpty();
+        var field = form.Fields.Should().ContainSingle().Subject;
+        field.FullName.Should().BeEmpty();
+        field.PartialName.Should().BeEmpty();
+        field.FieldType.Should().Be(PdfFieldType.Text);
+        field.Value.Should().Be("unnamed value");
+        field.PageNumber.Should().Be(1);
+        field.ToString().Should().Contain("Text");
+        form.FindField("").Should().BeNull("a field with no name anywhere cannot be addressed, so an empty lookup finds nothing");
+
+        field.SetValue("filled");
+        using var reopened = PdfDocument.Open(new MemoryStream(doc.SaveToBytes()), false);
+        reopened.GetAcroForm()!.Fields.Should().ContainSingle().Which.Value.Should().Be("filled");
+    }
+
+    /// <summary>
+    /// A nameless field under a named parent has the parent's fully qualified name and
+    /// inherits <c>/FT</c> and <c>/Ff</c> through <c>/Parent</c>; a named field under a
+    /// nameless root is named by its own partial name alone (§12.7.3.2, #1864).
+    /// </summary>
+    [Fact]
+    public void Parse_FieldWithoutName_TakesTheNameOfItsNamedAncestors()
+    {
+        var pdf = FormPdf("[4 0 R 7 0 R]",
+            "<< /T (parent) /FT /Tx /Ff 1 /Kids [5 0 R 6 0 R] >>",
+            "<< /Parent 4 0 R /V (unnamed kid) >>",
+            "<< /Parent 4 0 R /T (named) /V (named kid) >>",
+            "<< /Kids [8 0 R] >>",
+            "<< /Parent 7 0 R /T (child) /FT /Ch >>");
+        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+
+        var form = doc.GetAcroForm()!;
+
+        form.Fields.Select(f => f.FullName).Should().Equal("parent", "parent.named", "child");
+        var unnamed = form.FindField("parent")!;
+        unnamed.PartialName.Should().BeEmpty();
+        unnamed.Value.Should().Be("unnamed kid");
+        unnamed.FieldType.Should().Be(PdfFieldType.Text, "/FT is inherited through /Parent");
+        unnamed.IsReadOnly.Should().BeTrue("/Ff is inherited through /Parent");
+        form.FindField("child")!.FieldType.Should().Be(PdfFieldType.Choice);
+    }
+
+    // ─── Test: hostile field trees (#1864, the #1833 guard) ─────────────────
+    // Run these alone: before the guard, each overflowed the stack, which kills the test host.
+
+    [Fact(Timeout = 30_000)]
+    public void Parse_KidsSelfCycle_TerminatesWithTheFieldsParsedSoFar()
+    {
+        var pdf = FormPdf("[4 0 R]",
+            "<< /T (loop) /Kids [4 0 R 5 0 R] >>",
+            "<< /Parent 4 0 R /T (leaf) /FT /Tx /V (x) >>");
+        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+
+        doc.GetAcroForm()!.Fields.Select(f => f.FullName).Should().Equal("loop.leaf");
+    }
+
+    [Fact(Timeout = 30_000)]
+    public void Parse_KidsTwoNodeCycle_TerminatesWithTheFieldsParsedSoFar()
+    {
+        var pdf = FormPdf("[4 0 R]",
+            "<< /T (a) /Kids [5 0 R] >>",
+            "<< /Parent 4 0 R /T (b) /Kids [4 0 R 6 0 R] >>",
+            "<< /Parent 5 0 R /T (c) /FT /Tx >>");
+        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+
+        doc.GetAcroForm()!.Fields.Select(f => f.FullName).Should().Equal("a.b.c");
     }
 
     // ─── Test: widget kids ──────────────────────────────────────────────────

@@ -9,6 +9,10 @@ namespace Excise.Core.Document;
 /// </summary>
 internal static class PdfAcroFormParser
 {
+    // A node reached twice (a /Kids cycle) or deeper than this is skipped: recursing
+    // into one is an uncatchable stack overflow (#1864, the #1833 guard).
+    private const int MaxDepth = 64;
+
     /// <summary>
     /// Parse an AcroForm dictionary and return a structured PdfAcroForm object.
     /// </summary>
@@ -27,12 +31,13 @@ internal static class PdfAcroFormParser
 
         // Parse the /Fields array (top-level fields)
         var fields = new List<PdfField>();
+        var seen = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         var fieldsObj = acroFormDict.GetOptional("Fields");
         if (fieldsObj != null && doc.Resolve(fieldsObj) is PdfArray fieldsArray)
         {
             foreach (var fieldRef in fieldsArray)
             {
-                ParseFieldTree(doc, fieldRef, parentName: "", fields, widgetToPage);
+                ParseFieldTree(doc, fieldRef, parentName: "", depth: 0, seen, fields, widgetToPage);
             }
         }
 
@@ -47,20 +52,21 @@ internal static class PdfAcroFormParser
         PdfDocument doc,
         PdfObject? fieldObj,
         string parentName,
+        int depth,
+        HashSet<PdfDictionary> seen,
         List<PdfField> outputFields,
         Dictionary<PdfDictionary, int> widgetToPage)
     {
         // Resolve indirect reference
-        if (fieldObj == null || doc.Resolve(fieldObj) is not PdfDictionary fieldDict)
+        if (fieldObj == null || doc.Resolve(fieldObj) is not PdfDictionary fieldDict
+            || depth > MaxDepth || !seen.Add(fieldDict))
             return;
 
-        // Get the field's partial name (/T)
+        // /T is optional (ISO 32000-1 Table 220): a field without one takes its
+        // parent's full name, which is empty at the top (§12.7.3.2, #1864).
         string? partialName = fieldDict.GetStringOrNull("T");
-        if (partialName == null)
-            return; // Skip fields without a name
-
-        // Build the full name by appending to parent chain
-        string fullName = string.IsNullOrEmpty(parentName) ? partialName : $"{parentName}.{partialName}";
+        string fullName = partialName == null ? parentName
+            : string.IsNullOrEmpty(parentName) ? partialName : $"{parentName}.{partialName}";
 
         // Check if this field has kids (subsidiary fields)
         var kidsObj = fieldDict.GetOptional("Kids");
@@ -79,21 +85,21 @@ internal static class PdfAcroFormParser
 
                 if (allPureWidgets)
                 {
-                    var field = ExtractField(doc, fieldDict, fullName, partialName, widgetToPage);
+                    var field = ExtractField(doc, fieldDict, fullName, partialName ?? "", widgetToPage);
                     if (field != null)
                         outputFields.Add(field);
                 }
                 else
                 {
                     foreach (var kidRef in kidsArray)
-                        ParseFieldTree(doc, kidRef, fullName, outputFields, widgetToPage);
+                        ParseFieldTree(doc, kidRef, fullName, depth + 1, seen, outputFields, widgetToPage);
                 }
             }
         }
         else
         {
             // Terminal field (leaf). Extract its properties and create a PdfField.
-            var field = ExtractField(doc, fieldDict, fullName, partialName, widgetToPage);
+            var field = ExtractField(doc, fieldDict, fullName, partialName ?? "", widgetToPage);
             if (field != null)
                 outputFields.Add(field);
         }
@@ -287,8 +293,7 @@ internal static class PdfAcroFormParser
             if (alreadyLinked.Contains(widget)) continue;
             if (widget.GetNameOrNull("FT") == null) continue; // not a merged field/widget
 
-            var partialName = widget.GetStringOrNull("T");
-            if (partialName == null) continue; // fields require a name (same rule as ParseFieldTree)
+            var partialName = widget.GetStringOrNull("T") ?? "";
 
             // The widget's page is already known — it came from this page's
             // own /Annots — so a single-entry map is enough for ExtractField's
