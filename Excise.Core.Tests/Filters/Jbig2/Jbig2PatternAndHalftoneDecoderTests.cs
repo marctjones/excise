@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Excise.Core.Filters.Jbig2;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Filters.Jbig2;
@@ -185,10 +186,11 @@ public class Jbig2PatternAndHalftoneDecoderTests
         // 25x25 grid, 10 MMR gray planes. The side-by-side collective reading
         // decoded a fraction of plane 0 and rendered the page blank.
         // Independent oracle: mutool draw measures 0.0686 dark fraction.
-        const string fixture = "../../../../test-pdfs/pdfjs/bitmap-halftone-10bpp-mmr.pdf";
-        Assert.SkipWhen(!File.Exists(fixture), "pdf.js corpus fixture not available");
+        const string fixture = "test-pdfs/pdfjs/bitmap-halftone-10bpp-mmr.pdf";
+        var path = TestRepoLayout.FindFile(fixture);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("pdf.js corpus fixture", fixture));
 
-        using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(fixture));
+        using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(path!));
         var image = (Excise.Core.Primitives.PdfStream)doc.GetObject(5);
 
         // #1468: resolving an image XObject no longer decodes it; the decode

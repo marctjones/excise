@@ -2,6 +2,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.TestSupport;
 using Xunit;
 namespace Excise.Core.Tests.Document;
 
@@ -235,15 +236,16 @@ public class PdfAnnotationTests
 
     // ─── real PDF smoke test ─────────────────────────────────────────────────
 
-    private const string SmokePdf = "../../../../test-pdfs/smoke/irs-w9.pdf";
+    private const string SmokePdf = "test-pdfs/smoke/irs-w9.pdf";
 
     [Fact]
     public void GetAnnotations_IrsW9_HasWidgetAnnotations()
     {
         // IRS W-9 is a fillable form — every form field is a Widget annotation.
-        if (!File.Exists(SmokePdf)) return;
+        var path = TestRepoLayout.FindFile(SmokePdf);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("smoke corpus fixture", SmokePdf));
 
-        using var doc = PdfDocument.Open(SmokePdf);
+        using var doc = PdfDocument.Open(path!);
         var widgetCount = 0;
         for (int p = 1; p <= doc.PageCount; p++)
         {

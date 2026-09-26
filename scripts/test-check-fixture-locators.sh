@@ -352,10 +352,79 @@ run_gate "$EXEMPT" "$WORK/exempt.log"
 [[ "$RC" -eq 0 ]] || { echo "FAIL: gate over-reached on a TestRepoLayout-using walk, a visual-tree walk, a single '..', or an unenforced project"; cat "$WORK/exempt.log"; FAIL=1; }
 grep -qF "1 hand-rolled locator(s) counted but NOT yet enforced" "$WORK/exempt.log" || { echo "FAIL: the unenforced project's hit was not counted and printed"; cat "$WORK/exempt.log"; FAIL=1; }
 
+# ---------------------------------------------------------------------------
+# 11. (#1756) A string-literal '../' chain to a repository location fails and
+#     is named. Ten test files addressed the gitignored corpora as
+#     "../../../../test-pdfs/..." and skipped with a false "not available" in
+#     every git worktree; checks 2-3c saw nothing because the '..' segments are
+#     inside ONE literal. Planted in Excise.Core.Tests, which 3c does not
+#     enforce, so this proves the new check stands on its own. The spellings:
+#     a constant, an [InlineData], a chain to a sibling project's tracked
+#     resource, and the backslash spelling.
+# ---------------------------------------------------------------------------
+for shape in \
+  'private const string Bug = "../../../../test-pdfs/pdfjs/bug1978317.pdf";' \
+  '[InlineData("../../../../test-pdfs/smoke/irs-w9.pdf")]' \
+  'private const string Res = "../../../../Excise.App.Tests/Resources/x.pdf";' \
+  'private const string Win = "..\\..\\..\\..\\test-pdfs\\pdfjs\\x.pdf";'; do
+  LIT="$WORK/literal-$RANDOM"
+  make_repo "$LIT"
+  write_registered_gate "$LIT"
+  mkdir -p "$LIT/Excise.Core.Tests/Parsing"
+  {
+    echo 'namespace Excise.Core.Tests.Parsing;'
+    echo 'public class LiteralChainTests'
+    echo '{'
+    printf '    %s\n' "$shape"
+    echo '}'
+  } > "$LIT/Excise.Core.Tests/Parsing/LiteralChainTests.cs"
+  run_gate "$LIT" "$WORK/literal.log"
+  [[ "$RC" -ne 0 ]] || { echo "FAIL: gate accepted a string-literal '../' chain ($shape)"; cat "$WORK/literal.log"; FAIL=1; }
+  grep -qF "Parsing/LiteralChainTests.cs" "$WORK/literal.log" || { echo "FAIL: gate did not name the file with the literal chain ($shape)"; cat "$WORK/literal.log"; FAIL=1; }
+  grep -qF "string-literal '../' chain" "$WORK/literal.log" || { echo "FAIL: gate did not diagnose the literal chain ($shape)"; cat "$WORK/literal.log"; FAIL=1; }
+done
+
+# ---------------------------------------------------------------------------
+# 12. (#1756) What check 3d must NOT flag, none of it an allowlist:
+#       - the literal on a comment line (CorpusConformanceTests still tells the
+#         story of the chain it replaced);
+#       - a path-traversal INPUT that lands on nothing in the repository
+#         (AttachmentFileNamesTests: "../../.zshrc", "..\\..\\Windows\\evil.dll");
+#       - a single '../' (not a chain);
+#       - a line that CREATES the location (a synthetic-checkout builder);
+#       - a repo-relative path handed to the shared locator.
+# ---------------------------------------------------------------------------
+LITOK="$WORK/literal-ok"
+make_repo "$LITOK"
+write_registered_gate "$LITOK"
+mkdir -p "$LITOK/Excise.Core.Tests/Parsing"
+cat > "$LITOK/Excise.Core.Tests/Parsing/LiteralChainOkTests.cs" <<'CSEOF'
+using Excise.TestSupport;
+namespace Excise.Core.Tests.Parsing;
+public class LiteralChainOkTests
+{
+    // was "../../../../test-pdfs/pdfjs/bug1978317.pdf" before #1756
+    [InlineData("../../.zshrc", "zshrc")]
+    [InlineData("..\\..\\Windows\\evil.dll", "evil.dll")]
+    [InlineData("../../etc/passwd", "passwd")]
+    private const string Once = "../test-pdfs/x.pdf";
+    private static void Build(string root) => Directory.CreateDirectory(Path.Combine(root, "../../../../test-pdfs/smoke"));
+    private static string? Find() => TestRepoLayout.FindFile("test-pdfs/pdfjs/bug1978317.pdf");
+}
+CSEOF
+run_gate "$LITOK" "$WORK/literal-ok.log"
+[[ "$RC" -eq 0 ]] || { echo "FAIL: gate over-reached on a comment, a path-traversal input, a single '../', a directory builder or a TestRepoLayout path"; cat "$WORK/literal-ok.log"; FAIL=1; }
+if grep -qF "string-literal '../' chain" "$WORK/literal-ok.log"; then
+  echo "FAIL: gate reported a literal chain in the exempt cases"; cat "$WORK/literal-ok.log"; FAIL=1
+fi
+
 if [[ $FAIL -ne 0 ]]; then
   exit 1
 fi
 
+echo "PASS: check-fixture-locators.sh (#1756) fails on a string-literal '../' chain to test-pdfs or a"
+echo "      sibling project in every test project, and exempts comments, path-traversal"
+echo "      inputs, a single '../' and directory builders."
 echo "PASS: check-fixture-locators.sh (#1527, #1768) fails on an unbounded ancestor walk"
 echo "      to a gitignored corpus and on a Path.Combine('..','..') chain, and"
 echo "      exempts a TestRepoLayout-using walk, a visual-tree walk and a single '..'."

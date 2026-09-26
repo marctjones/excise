@@ -2,6 +2,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Filters.Jbig2;
@@ -16,8 +17,15 @@ namespace Excise.Core.Tests.Filters.Jbig2;
 /// </summary>
 public class Jbig2GlobalsResolutionTests
 {
-    private const string Bug631912 = "../../../../test-pdfs/pdfium/bug_631912.pdf";
-    private const string Bug1087 = "../../../../test-pdfs/pdfium/pixel/bug_1087.pdf";
+    private const string Bug631912 = "test-pdfs/pdfium/bug_631912.pdf";
+    private const string Bug1087 = "test-pdfs/pdfium/pixel/bug_1087.pdf";
+
+    private static string PdfiumFixture(string relativePath)
+    {
+        var path = TestRepoLayout.FindFile(relativePath);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("pdfium corpus fixture", relativePath));
+        return path!;
+    }
 
     [Fact]
     public void Open_IndirectJbig2Globals_ResolvesReferenceToStream()
@@ -44,13 +52,12 @@ public class Jbig2GlobalsResolutionTests
         image.GetOptional("DecodeParms").Should().BeOfType<PdfDictionary>();
     }
 
-    // ── Corpus regressions (gitignored fixtures; see skip-allowlist) ────────
+    // ── Corpus regressions (gitignored fixtures) ────────
 
     [Fact]
     public void Bug631912_JbigImageWithGlobals_DecodesFullImage()
     {
-        Assert.SkipWhen(!File.Exists(Bug631912), "pdfium corpus fixture not available");
-        AssertJbig2ImageDecodes(Bug631912, imageObjectNumber: 5, width: 1152, height: 720,
+        AssertJbig2ImageDecodes(PdfiumFixture(Bug631912), imageObjectNumber: 5, width: 1152, height: 720,
             // mutool draw measures 0.0007 dark on this page (thin handwritten
             // "Test"); before the fix the decode failed outright and — before
             // #878 — painted the page ~100% black. Both failure directions
@@ -61,8 +68,7 @@ public class Jbig2GlobalsResolutionTests
     [Fact]
     public void Bug1087_JbigImageWithGlobals_DecodesFullImage()
     {
-        Assert.SkipWhen(!File.Exists(Bug1087), "pdfium corpus fixture not available");
-        AssertJbig2ImageDecodes(Bug1087, imageObjectNumber: 5, width: 548, height: 238,
+        AssertJbig2ImageDecodes(PdfiumFixture(Bug1087), imageObjectNumber: 5, width: 548, height: 238,
             // mutool: 0.0016 dark.
             minDarkFraction: 0.0001, maxDarkFraction: 0.01);
     }
@@ -77,8 +83,7 @@ public class Jbig2GlobalsResolutionTests
         // object 9 until the base image started decoding, which made the
         // globals fix LOOK like the culprit. mutool warns "PDF stream Length
         // incorrect" on this same file and renders it.
-        Assert.SkipWhen(!File.Exists(Bug1087), "pdfium corpus fixture not available");
-        using var doc = PdfDocument.Open(File.ReadAllBytes(Bug1087));
+        using var doc = PdfDocument.Open(File.ReadAllBytes(PdfiumFixture(Bug1087)));
 
         var mask = doc.GetObject(9).Should().BeOfType<PdfStream>().Subject;
         mask.EncodedData.Length.Should().Be(94, "the wrong declared length must fall back to the endstream marker scan");

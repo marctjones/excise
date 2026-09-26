@@ -3,6 +3,7 @@ using System.IO;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Rendering;
+using Excise.TestSupport;
 using SkiaSharp;
 using Xunit;
 
@@ -26,15 +27,15 @@ namespace Excise.Rendering.Tests.Visual;
 public class BirthCertFormLayoutTests
 {
     private const string BirthCertPath =
-        "../../../../Excise.App.Tests/Resources/sample-pdfs/birth-certificate-request-scrambled.pdf";
+        "Excise.App.Tests/Resources/sample-pdfs/birth-certificate-request-scrambled.pdf";
 
     [Fact]
     public void BirthCertPage1_PleasePrintRow_KeepsDoNotMailCashTogether()
     {
-        if (!File.Exists(BirthCertPath))
-            return;
+        var path = TestRepoLayout.FindFile(BirthCertPath);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("birth certificate fixture", BirthCertPath));
 
-        using var doc = PdfDocument.Open(File.ReadAllBytes(BirthCertPath));
+        using var doc = PdfDocument.Open(File.ReadAllBytes(path!));
         var page = doc.GetPage(1);
         using var bmp = new SkiaRenderer().RenderPage(page, new RenderOptions { Dpi = 150 });
         VisualAssertions.SavePng(bmp, "/tmp/birth-cert-regression-render.png");
