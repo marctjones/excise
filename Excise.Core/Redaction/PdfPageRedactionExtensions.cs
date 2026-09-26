@@ -60,23 +60,19 @@ internal readonly record struct ImageRedactionCounts(
 
 public static class PdfPageRedactionExtensions
 {
-    /// <summary>
-    /// Redact all glyphs overlapping <paramref name="area"/>.
-    /// </summary>
     /// <param name="page">The page to mutate.</param>
     /// <param name="area">Area in content-stream coordinates. For rotated
     /// pages, callers should pre-transform visual coordinates into
     /// content-stream space before invoking.</param>
-    /// <param name="strategy">How to decide whether a given glyph counts as
-    /// inside the redaction area. Defaults to the most conservative option
-    /// (any-overlap) — appropriate for privacy work where a partial hit
-    /// still leaks information.</param>
-    /// <param name="scrubDocumentCarriers">Strip the document-level text
-    /// carriers that have no position — <c>/Info</c> and the XMP
-    /// <c>/Metadata</c> packet — on by default (#897). See the remarks for why
-    /// this is a WHOLESALE strip and not the term-based scrub
-    /// <see cref="PdfDocumentRedactionExtensions.RedactText"/> uses, and for the
-    /// one thing the strip puts back (a PDF/A file's <c>pdfaid</c>
+    /// <param name="options">How glyphs count as inside the area
+    /// (<see cref="RedactionOptions.Strategy"/>, default the most conservative
+    /// any-overlap, appropriate for privacy work where a partial hit still leaks
+    /// information) and whether the positionless document-level text carriers —
+    /// <c>/Info</c> and the XMP <c>/Metadata</c> packet — are stripped
+    /// (<see cref="RedactionOptions.ScrubDocumentCarriers"/>, on by default, #897).
+    /// See the remarks for why this is a WHOLESALE strip and not the term-based
+    /// scrub <see cref="PdfDocumentRedactionExtensions.RedactText"/> uses, and for
+    /// the one thing the strip puts back (a PDF/A file's <c>pdfaid</c>
     /// identification, #1507).</param>
     /// <remarks>
     /// Side-effect: the page's <c>/Contents</c> stream is rewritten.
@@ -137,8 +133,7 @@ public static class PdfPageRedactionExtensions
     /// then lists each kept file as not checked unless it has a term to check
     /// it with. A PDF portfolio is refused rather than stripped
     /// (<see cref="PdfPortfolioRedactionException"/>), before anything is
-    /// changed. With the bool overload, <paramref name="scrubDocumentCarriers"/>
-    /// also decides whether attachments are removed.
+    /// changed.
     /// </para>
     /// <para>
     /// <b>XFA.</b> A document with an XFA form loses the whole XFA packet
@@ -179,17 +174,6 @@ public static class PdfPageRedactionExtensions
     public static RedactionReport RedactAreaWithReport(
         this PdfPage page, PdfRectangle area, RedactionOptions options)
         => page.RedactAreasWithReport(new[] { area }, options);
-
-    public static void RedactArea(
-        this PdfPage page,
-        PdfRectangle area,
-        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
-        bool scrubDocumentCarriers = true,
-        bool closeWidth = false)   // #1145 — opt-in width-closing
-    {
-        page.RedactAreaInternal(area, area, strategy, scrubDocumentCarriers, closeWidth,
-            removeAttachments: scrubDocumentCarriers);
-    }
 
     /// <summary>
     /// Core single-area redaction. <paramref name="area"/> drives the text /
@@ -429,18 +413,6 @@ public static class PdfPageRedactionExtensions
             AccessibilityAndInteractivityRemoved =
                 RedactionFeatureStripper.DestroysAccessibility(options),
         };
-    }
-
-    public static void RedactAreas(
-        this PdfPage page,
-        System.Collections.Generic.IEnumerable<PdfRectangle> areas,
-        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
-        bool scrubDocumentCarriers = true,
-        bool closeWidth = false)   // #1145 — opt-in width-closing
-    {
-        var list = areas.Select(a => a.Normalize()).ToList();
-        page.RedactAreasInternal(list, list, strategy, scrubDocumentCarriers, closeWidth,
-            removeAttachments: scrubDocumentCarriers);
     }
 
     /// <summary>

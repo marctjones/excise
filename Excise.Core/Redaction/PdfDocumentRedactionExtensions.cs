@@ -19,7 +19,7 @@ namespace Excise.Core.Text.Segmentation;
 /// This is the single source of truth for text-search-based redaction:
 /// both the GUI (<c>Excise.App.Services.RedactionService.RedactText</c>)
 /// and the <c>excise</c> CLI <c>redact</c> command go through
-/// <see cref="RedactText(PdfDocument, string, bool, GlyphRemovalStrategy, bool)"/>.
+/// <see cref="RedactText(PdfDocument, string, RedactionOptions, Action{int, int})"/>.
 /// </para>
 /// <para>
 /// A black rectangle overlay is appended to each page's content stream
@@ -27,7 +27,7 @@ namespace Excise.Core.Text.Segmentation;
 /// <em>security</em> guarantee comes from the content-stream rewrite in
 /// <see cref="PdfPageRedactionExtensions.RedactArea"/>, which deletes
 /// the glyphs themselves. Callers that want pure structural removal with
-/// no visual marker can pass <c>drawBlackRect: false</c>.
+/// no visual marker can set <see cref="RedactionOptions.DrawBox"/> to false.
 /// </para>
 /// </remarks>
 public static class PdfDocumentRedactionExtensions
@@ -54,7 +54,7 @@ public static class PdfDocumentRedactionExtensions
     ///     but NOT from document-level carriers — excising 1-2 character
     ///     fragments from every metadata string corrupts unrelated values for
     ///     no security benefit.</item>
-    ///   <item><see cref="PdfPageRedactionExtensions.RedactArea(PdfPage, PdfRectangle, GlyphRemovalStrategy)"/>
+    ///   <item><see cref="PdfPageRedactionExtensions.RedactArea(PdfPage, PdfRectangle, RedactionOptions)"/>
     ///     has no term to scrub and therefore does none of this. An area
     ///     redaction still needs its removed text collected and scrubbed
     ///     separately.</item>
@@ -63,31 +63,10 @@ public static class PdfDocumentRedactionExtensions
     /// </remarks>
     /// <param name="document">The PDF document to redact.</param>
     /// <param name="text">The text to redact.</param>
-    /// <param name="caseSensitive">Whether matching is case-sensitive.</param>
-    /// <param name="strategy">Strategy for selecting glyphs to remove when bounding boxes overlap.</param>
-    /// <param name="drawBlackRect">Whether to append a visual covering rectangle overlay.</param>
-    /// <param name="boxColor">Fill color (RGB components 0..1) of the covering rectangle when
-    /// <paramref name="drawBlackRect"/> is true. Null (the default) draws black. The box is
-    /// cosmetic — glyph removal is unconditional (#1158).</param>
-    /// <param name="includeHiddenLayers">Whether to include text in Optional Content Groups
-    /// (OCGs) that are OFF by default. When true, this closes a security gap where content
-    /// on hidden layers is invisible in the default view but fully extractable via other tools.
-    /// Defaults to true for security (redact even hidden content).</param>
-    /// <param name="scrubDocumentCarriers">Whether to also remove the term from
-    /// <c>/Info</c>, the XMP <c>/Metadata</c> packet, outline titles and annotation
-    /// <c>/Contents</c> (#896). Defaults to true — those carriers restate page text
-    /// and are invisible to a content-stream check, which is how three separate
-    /// leaks shipped past a green suite. Pass false only when the caller performs
-    /// the scrub itself.</param>
-    /// <returns>
-    /// Total number of matches removed across all pages.
-    /// </returns>
-    /// <summary>
-    /// Redact <paramref name="text"/> under a unified <see cref="RedactionOptions"/>
-    /// surface (#1187). Equivalent to the parameter overload; this is the
-    /// recommended entry point. The per-parameter overload is kept for source
-    /// compatibility and delegates here in spirit (it constructs the same call).
-    /// </summary>
+    /// <param name="options">What to match and what to remove (#1187). Attachments are
+    /// removed unless <see cref="RedactionOptions.KeepAttachments"/> is set (#1572).</param>
+    /// <param name="progress">Called with (pages done, page count) as the pages are visited.</param>
+    /// <returns>What was located, removed and verified, per page and per carrier.</returns>
     public static RedactionReport RedactText(
         this PdfDocument document,
         string text,
@@ -95,96 +74,15 @@ public static class PdfDocumentRedactionExtensions
         Action<int, int>? progress = null)
     {
         if (options == null) throw new ArgumentNullException(nameof(options));
-        return RedactTextCore(
-            document,
-            text,
-            options.CaseSensitive,
-            options.Strategy,
-            options.DrawBox,
-            options.IncludeHiddenLayers,
-            options.ScrubDocumentCarriers,
-            options.CloseWidth,
-            options.BoxColor,
-            options.Carriers,
-            progress,
-            options.CarrierPolicy,
-            options.WholeWord,
-            options.Width == WidthPolicy.OvershootPreserveLayout,
-            options.KeepAttachments,
-            options,
-            depth: 0,
-            fixedMarker: options.FixedMarker);
+        return RedactTextCore(document, text, options, progress, depth: 0);
     }
-
-    /// <summary>
-    /// The per-parameter form of
-    /// <see cref="RedactText(PdfDocument, string, RedactionOptions, Action{int, int})"/>.
-    /// Attachments are removed (#1572); use the options overload to keep them.
-    /// </summary>
-    public static RedactionReport RedactText(
-        this PdfDocument document,
-        string text,
-        bool caseSensitive = false,
-        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
-        bool drawBlackRect = true,
-        bool includeHiddenLayers = true,
-        bool scrubDocumentCarriers = true,
-        bool closeWidth = false,   // #1145 — opt-in width-closing (destroys the residue channel)
-        (double R, double G, double B)? boxColor = null,   // #1158 — covering-box fill, RGB 0..1; null = black
-        Excise.Core.Operations.RedactionCarriers carriers
-            = Excise.Core.Operations.RedactionCarriers.All,  // #1188 — per-carrier scrub scope
-        Action<int, int>? progress = null,
-        Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy = null,  // #1188/#1169 — per-carrier MODE
-        bool wholeWord = false,   // #1052 — opt-in whole-word matching
-        bool overshootBox = false)   // #1189 — widen the box so it stops measuring the run
-        => RedactTextCore(document, text, caseSensitive, strategy, drawBlackRect, includeHiddenLayers,
-            scrubDocumentCarriers, closeWidth, boxColor, carriers, progress, carrierPolicy, wholeWord,
-            overshootBox, keepAttachments: false,
-            // #1586: this overload gets the Standard profile, like every other
-            // path. That CHANGES ITS BEHAVIOUR — scripts, /PieceInfo,
-            // thumbnails, hidden layers and the metadata packet now go — and
-            // that is the point: a redaction API whose safe form is opt-in is
-            // how #896 happened.
-            // ...with the two parameters that the profile flags also read, so a
-            // caller passing scrubDocumentCarriers: false still gets the
-            // "I will handle the carriers myself" contract rather than a
-            // wholesale metadata strip it did not ask for.
-            profileOptions: RedactionOptions.Default with
-            {
-                ScrubDocumentCarriers = scrubDocumentCarriers,
-                IncludeHiddenLayers = includeHiddenLayers,
-            },
-            depth: 0);
 
     private static RedactionReport RedactTextCore(
         PdfDocument document,
         string text,
-        bool caseSensitive,
-        GlyphRemovalStrategy strategy,
-        bool drawBlackRect,
-        bool includeHiddenLayers,
-        bool scrubDocumentCarriers,
-        bool closeWidth,
-        (double R, double G, double B)? boxColor,
-        Excise.Core.Operations.RedactionCarriers carriers,
+        RedactionOptions options,
         Action<int, int>? progress,
-        Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy,
-        bool wholeWord,
-        bool overshootBox,
-        bool keepAttachments,
-        // #1586: the OUTPUT PROFILE removals. Threaded as the whole record
-        // rather than another dozen bools because the stripper reads the flags
-        // directly, and because a caller that forgets one gets Standard — the
-        // safe value — instead of silently getting less.
-        RedactionOptions profileOptions,
-        int depth,
-        // #1755: FixedMarker's box is a FIXED size, never derived from the
-        // removed run's own width — the opposite of overshootBox, which is
-        // still rounded up FROM that width. Kept separate from closeWidth
-        // (both are true together for FixedMarker) so the drawing site below
-        // can tell "no box" (plain CloseGap) from "fixed box" (FixedMarker)
-        // apart.
-        bool fixedMarker = false)
+        int depth)
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
@@ -201,8 +99,8 @@ public static class PdfDocumentRedactionExtensions
                 Term = text ?? "",
                 Pages = pageResults,
                 Carriers = carrierResults,
-                WholeWord = wholeWord,
-                Profile = profileOptions.Profile,
+                WholeWord = options.WholeWord,
+                Profile = options.Profile,
             };
 
         int totalMatches = 0;
@@ -214,16 +112,13 @@ public static class PdfDocumentRedactionExtensions
         List<(Excise.Core.Document.PdfAttachmentGraph.Found File, Excise.Core.Document.AttachmentRedactionResult Result)>? keptAttachments = null;
         IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> removedAttachments =
             Array.Empty<Excise.Core.Document.AttachmentRedactionResult>();
-        if (keepAttachments)
+        if (options.KeepAttachments)
         {
             // A nested PDF is redacted with exactly these options, its own
             // attachments included.
             keptAttachments = AttachmentCarrierScrubber.RedactKept(
-                document, new[] { text }, caseSensitive, wholeWord, depth,
-                (nested, term) => RedactTextCore(nested, term, caseSensitive, strategy, drawBlackRect,
-                    includeHiddenLayers, scrubDocumentCarriers, closeWidth, boxColor, carriers, null,
-                    carrierPolicy, wholeWord, overshootBox, keepAttachments: true,
-                    profileOptions, depth + 1, fixedMarker));
+                document, new[] { text }, options.CaseSensitive, options.WholeWord, depth,
+                (nested, term) => RedactTextCore(nested, term, options, null, depth + 1));
         }
         else
         {
@@ -238,7 +133,7 @@ public static class PdfDocumentRedactionExtensions
         if (Excise.Core.Xfa.PdfXfaLayout.RemoveXfaFormForRedaction(document) is { } xfaRow)
             carrierResults.Add(new CarrierResult(xfaRow, true, null));
 
-        if (!keepAttachments)
+        if (!options.KeepAttachments)
         {
             // #1572, decided 2026-09-17: redacted output carries no attachments.
             removedAttachments = Excise.Core.Document.PdfAttachmentGraph.RemoveAll(document);
@@ -251,9 +146,9 @@ public static class PdfDocumentRedactionExtensions
         // removal, and before the carrier term-scrub below, so a carrier this
         // deletes outright is not reported as having been scrubbed by term.
         var profileRemovals = new List<RedactedFeatureRemoval>();
-        if (RedactionFeatureStripper.ApplyMetadataStrip(document, profileOptions) is { } metadataRow)
+        if (RedactionFeatureStripper.ApplyMetadataStrip(document, options) is { } metadataRow)
             profileRemovals.Add(metadataRow);
-        profileRemovals.AddRange(RedactionFeatureStripper.Apply(document, profileOptions, carrierResults));
+        profileRemovals.AddRange(RedactionFeatureStripper.Apply(document, options, carrierResults));
 
         var pageCount = document.PageCount;
         progress?.Invoke(0, pageCount);
@@ -280,14 +175,14 @@ public static class PdfDocumentRedactionExtensions
                 if (letters.Count == 0) break;
 
                 // Filter letters based on includeHiddenLayers setting
-                var searchLetters = includeHiddenLayers
+                var searchLetters = options.IncludeHiddenLayers
                     ? letters
                     : letters.Where(l => !l.IsInHiddenOptionalContent).ToList();
 
                 if (searchLetters.Count == 0) break;
 
                 var searchTextSnapshot = string.Concat(searchLetters.Select(l => l.Value));
-                var matches = FindTextMatches(searchLetters, text, caseSensitive, wholeWord);
+                var matches = FindTextMatches(searchLetters, text, options.CaseSensitive, options.WholeWord);
                 if (matches.Count == 0) break;
 
                 // #1090: a stalled page STOPS. It used to fall back to
@@ -356,10 +251,10 @@ public static class PdfDocumentRedactionExtensions
                             // whole field value; on issue18036.pdf that was 545
                             // of 568 characters to remove one word.
                             InteractiveRedactionScrubber.ScrubTerm(
-                                page, bbox, text, caseSensitive, wholeWord);
+                                page, bbox, text, options.CaseSensitive, options.WholeWord);
                         else
                         {
-                            contentAreas.Add(strategy == GlyphRemovalStrategy.FullyContained
+                            contentAreas.Add(options.Strategy == GlyphRemovalStrategy.FullyContained
                                 ? bbox
                                 : CenterlineBoxOf(matchLetters));
                             imageAreas.Add(bbox); // full height for the image pass (#1195)
@@ -370,9 +265,9 @@ public static class PdfDocumentRedactionExtensions
                         // #1755: under FixedMarker the box is a FIXED size —
                         // never derived from bbox's own width at all, unlike
                         // overshoot which still rounds UP from it.
-                        markerAreas.Add(fixedMarker
+                        markerAreas.Add(options.FixedMarker
                             ? FixedMarkerBoxFor(bbox, matchLetters)
-                            : overshootBox
+                            : options.Width == WidthPolicy.OvershootPreserveLayout
                                 ? OvershootBoxFor(bbox, matchLetters, searchLetters, cropWindow)
                                 : bbox);
                     }
@@ -388,7 +283,7 @@ public static class PdfDocumentRedactionExtensions
                         // every RedactText call — including the documented case
                         // where a term below the sanitizer's 3-character floor
                         // deliberately leaves carriers alone.
-                        imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, strategy, scrubDocumentCarriers: false, closeWidth: closeWidth, removeAttachments: false);
+                        imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, options.Strategy, scrubDocumentCarriers: false, closeWidth: options.CloseWidth, removeAttachments: false);
                     }
 
                     // A box whose width equals the removed run is itself a
@@ -399,8 +294,8 @@ public static class PdfDocumentRedactionExtensions
                     // exactly the property this guard exists to protect — so it
                     // draws unconditionally, answering both #1715 and #1725
                     // instead of trading one for the other (#1755).
-                    if (drawBlackRect && (fixedMarker || !closeWidth))
-                        foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox, boxColor);
+                    if (options.DrawBox && (options.FixedMarker || !options.CloseWidth))
+                        foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox, options.BoxColor);
 
                     // #1101: count what this page's window shows, not the full
                     // shared canvas. Removal above already took every match.
@@ -418,14 +313,14 @@ public static class PdfDocumentRedactionExtensions
             // describes what is still in the output, and reported rather than
             // joined (joining is #942; see HyphenatedTermCandidate).
             hyphenCandidates.AddRange(
-                FindHyphenWrappedCandidates(page.Letters, text, caseSensitive, pageNum));
+                FindHyphenWrappedCandidates(page.Letters, text, options.CaseSensitive, pageNum));
             // #1750: the same structural blind spot for a multi-word term
             // split by an ORDINARY line wrap (no hyphen) — generalizes the
             // #1372 detector rather than silently reporting "0 occurrences".
             wordWrapCandidates.AddRange(
-                FindWordWrapCandidates(page.Letters, text, caseSensitive, pageNum));
+                FindWordWrapCandidates(page.Letters, text, options.CaseSensitive, pageNum));
 
-            var remaining = CountOccurrences(page, text, caseSensitive, includeHiddenLayers, wholeWord);
+            var remaining = CountOccurrences(page, text, options.CaseSensitive, options.IncludeHiddenLayers, options.WholeWord);
             undecodableForms.AddRange(page.UndecodableForms.Select(form => (form, pageNum)));
             pageResults.Add(new PageRedactionResult(
                 pageNum,
@@ -460,7 +355,7 @@ public static class PdfDocumentRedactionExtensions
         // 1-2 character fragments from every metadata string would corrupt
         // unrelated values for no security benefit. Page content is still
         // redacted for such terms; their document-level carriers are not.
-        if (scrubDocumentCarriers)
+        if (options.ScrubDocumentCarriers)
         {
             // #999: the scrubber ignores terms shorter than 3 characters. That
             // is deliberate -- excising 1-2 character fragments from every
@@ -477,9 +372,8 @@ public static class PdfDocumentRedactionExtensions
             // that no carrier keeps the term, silently kept a 2-character one.
             // ScrubTerms itself reports the floor per carrier now.
             var anyRemoveWhole = Excise.Core.Operations.CarrierScrubPolicy.AllCarriers.Any(
-                c => (carriers & c) != 0
-                     && (carrierPolicy ?? Excise.Core.Operations.CarrierScrubPolicy.Default)
-                         .ModeFor(c) == Excise.Core.Operations.CarrierScrubMode.RemoveWhole);
+                c => (options.Carriers & c) != 0
+                     && options.CarrierPolicy.ModeFor(c) == Excise.Core.Operations.CarrierScrubMode.RemoveWhole);
             if (text.Length < minTermLength && !anyRemoveWhole)
             {
                 foreach (var (carrier, _) in DocumentCarriers)
@@ -488,9 +382,9 @@ public static class PdfDocumentRedactionExtensions
             }
             else
             {
-                var policy = carrierPolicy ?? Excise.Core.Operations.CarrierScrubPolicy.Default;
+                var policy = options.CarrierPolicy;
                 var outcome = Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
-                    document, new[] { text }, caseSensitive, carriers, policy, wholeWord);
+                    document, new[] { text }, options.CaseSensitive, options.Carriers, policy, options.WholeWord);
 
                 // #1188/#1169: the report says WHICH POLICY RAN on each carrier,
                 // not just "scrubbed". A ReportOnly carrier still holds the term
@@ -498,7 +392,7 @@ public static class PdfDocumentRedactionExtensions
                 // anyway" failure this report type exists to end.
                 foreach (var (carrier, flag) in DocumentCarriers)
                 {
-                    if ((carriers & flag) == 0)
+                    if ((options.Carriers & flag) == 0)
                     {
                         carrierResults.Add(new CarrierResult(carrier, false,
                             "carrier disabled via RedactionOptions.Carriers (#1188)"));
@@ -597,15 +491,15 @@ public static class PdfDocumentRedactionExtensions
             Term = text,
             Pages = pageResults,
             Carriers = carrierResults,
-            WholeWord = wholeWord,
+            WholeWord = options.WholeWord,
             ImageRegionsRedacted = imageCounts.RegionEdited,
             ImagesDroppedWhole = imageCounts.RemovedWhole,
             HyphenatedCandidates = hyphenCandidates,
             WordWrapCandidates = wordWrapCandidates,
-            Profile = profileOptions.Profile,
+            Profile = options.Profile,
             Removals = profileRemovals,
             AccessibilityAndInteractivityRemoved =
-                RedactionFeatureStripper.DestroysAccessibility(profileOptions),
+                RedactionFeatureStripper.DestroysAccessibility(options),
         };
     }
 

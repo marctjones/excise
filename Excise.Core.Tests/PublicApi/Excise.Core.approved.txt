@@ -2245,18 +2245,12 @@ namespace Excise.Core.Text.Segmentation
     public static class PdfDocumentRedactionExtensions
     {
         public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, Excise.Core.Text.Segmentation.RedactionOptions options, System.Action<int, int>? progress = null) { }
-        public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true, bool closeWidth = false, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "R",
-                "G",
-                "B"})] System.ValueTuple<double, double, double>? boxColor = default, Excise.Core.Operations.RedactionCarriers carriers = 8191, System.Action<int, int>? progress = null, Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy = null, bool wholeWord = false, bool overshootBox = false) { }
     }
     public static class PdfPageRedactionExtensions
     {
         public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.RedactionOptions options) { }
-        public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
         public static Excise.Core.Text.Segmentation.RedactionReport RedactAreaWithReport(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.RedactionOptions options) { }
         public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.RedactionOptions options) { }
-        public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
         public static Excise.Core.Text.Segmentation.RedactionReport RedactAreasWithReport(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.RedactionOptions options) { }
     }
     public enum RedactedContentVerificationStatus
