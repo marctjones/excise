@@ -327,37 +327,68 @@ run_dotnet_test_step() {
     return "$rc"
 }
 
+# The sweep is a 4-row theory: each row writes its own
+# gui-display-suite-*-shard-N-of-4.json (#1779). `dotnet test --filter` exits 0
+# when it matches nothing and when every row skips, so the reports are the
+# evidence the sweep ran: all shards present, every page checked, none failed.
+GUI_DISPLAY_REPORTS="gui-display-suite-renderer-contracts-representative-pages*.json"
+
+gui_display_report_files() {
+    find "$1" -maxdepth 1 -name "$GUI_DISPLAY_REPORTS" 2>/dev/null | sort
+}
+
+gui_display_progress() {
+    jq -rs 'map("shard \(.shardIndex + 1)/\(.shardCount): \(.checkedPages)/\(.total) page(s), failed \(.failed)") | join("; ")' "$@"
+}
+
+verify_gui_display_reports() {
+    local dir="$1" f
+    local -a files=()
+    while IFS= read -r f; do files+=("$f"); done < <(gui_display_report_files "$dir")
+    if [ "${#files[@]}" -eq 0 ]; then
+        say "     ${R}FAIL${N} no GUI display report in $dir: the filter matched nothing or every row skipped"
+        return 1
+    fi
+    if ! jq -e -s '
+            .[0].shardCount as $n
+            | length == $n
+              and ([.[].shardIndex] | sort) == [range(0; $n)]
+              and all(.[]; .total > 0 and .checkedPages == .total and .failed == 0 and .current == null)
+        ' "${files[@]}" >/dev/null 2>&1; then
+        say "     ${R}FAIL${N} GUI display reports are incomplete or failing: $(gui_display_progress "${files[@]}" 2>&1)"
+        return 1
+    fi
+}
+
 run_excise_gui_display_step() {
     local log="$1"
     local label="Excise.App.Tests GUI display sweep"
     local project="Excise.App.Tests/Excise.App.Tests.csproj"
     local filter="FullyQualifiedName~PdfViewerHeadlessRenderTests.PdfViewer_RenderingQualitySuite_DisplayBitmapsMatchRenderer"
-    local report="Excise.App.Tests/bin/$CONFIG/net10.0/UI/test-output/gui-display-suite-renderer-contracts-representative-pages.json"
+    local report_dir="Excise.App.Tests/bin/$CONFIG/net10.0/UI/test-output"
     local last_progress=""
 
     say "  -> $label"
+    if ! command -v jq >/dev/null 2>&1; then
+        say "     ${R}FAIL${N} jq is required to read the GUI display reports"
+        return 1
+    fi
     {
         echo "================================================="
         echo "$label"
         echo "================================================="
     } >> "$log"
-    rm -f "$report" 2>/dev/null || true
+    find "$report_dir" -maxdepth 1 -name "$GUI_DISPLAY_REPORTS" -delete 2>/dev/null
 
     dotnet test "$project" --no-build -c "$CONFIG" --filter "$filter" --logger "console;verbosity=minimal" >> "$log" 2>&1 &
     local pid=$!
     while kill -0 "$pid" 2>/dev/null; do
         sleep 30
-        if [ -f "$report" ] && command -v jq >/dev/null 2>&1; then
-            local progress
-            progress="$(jq -r '
-                def failures: ([.results[]? | select(.status == "FAIL")] | length);
-                def nonpass: ([.results[]? | select(.status != "PASS" and .status != "NON_RENDERABLE_ACCEPTED")] | length);
-                if .current then
-                    "\(.current.ordinal)/\(.current.total) \(.current.path) page \(.current.page), failures \(failures), non-pass \(nonpass)"
-                else
-                    "\(.results | length) result(s), failures \(failures), non-pass \(nonpass)"
-                end
-            ' "$report" 2>/dev/null || true)"
+        local -a files=()
+        local f progress
+        while IFS= read -r f; do files+=("$f"); done < <(gui_display_report_files "$report_dir")
+        if [ "${#files[@]}" -gt 0 ]; then
+            progress="$(gui_display_progress "${files[@]}" 2>/dev/null || true)"
             if [ -n "$progress" ] && [ "$progress" != "$last_progress" ]; then
                 say "     progress: $progress"
                 last_progress="$progress"
@@ -367,6 +398,9 @@ run_excise_gui_display_step() {
 
     local rc=0
     wait "$pid" || rc=$?
+    if [ "$rc" = "0" ]; then
+        verify_gui_display_reports "$report_dir" || rc=1
+    fi
     if [ "$rc" = "0" ]; then
         say "     PASS"
         return 0
