@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "f856dd88792a567d3b04866d6d95709c7fd8f1ef",
+  "sourceRevision": "9679d84a64942eaa3d96c42d0920a7e13e740096",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8069,
+    "retainedSymbols": 8082,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -641,14 +641,14 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1215,
+      "references": 1229,
       "typeDependencyCount": 151,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.CarrierTextRecovery",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 120
+          "references": 122
         }
       ]
     },
@@ -683,28 +683,28 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 1005,
-      "typeDependencyCount": 149,
+      "references": 1038,
+      "typeDependencyCount": 150,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Text.Segmentation.CarrierTextRecovery",
+          "source": "Excise.Core.Text.Segmentation.RedactionFeatureStripper",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 79
+          "references": 87
         }
       ]
     },
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 166,
-      "typeDependencyCount": 26,
+      "references": 173,
+      "typeDependencyCount": 28,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
           "target": "Excise.Core.Text.Letter",
-          "references": 44
+          "references": 45
         }
       ]
     },

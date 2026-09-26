@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1440,
-  "indexedContentSha256": "9630109d19346552fad660cdbae9b98f8d8694abe51ad73513daea258080e178",
+  "indexedFileCount": 1444,
+  "indexedContentSha256": "bc30238e4a6d31270082792a525012726fa5931ed494527942ddcecdda6d0630",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4091,7 +4091,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 189
+      "candidateReferenceCount": 191
     },
     {
       "id": "pdf.17.document.navigation",
@@ -5020,7 +5020,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 162
+      "candidateReferenceCount": 163
     },
     {
       "id": "pdf.17.document.metadata",
@@ -5936,7 +5936,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 125
+      "candidateReferenceCount": 126
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -6594,6 +6594,17 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/TypographicCarrierRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "catalog",
+            "metadata",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Type0SpacingAdvanceTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -6796,19 +6807,9 @@
             "catalog",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Fonts/Type0HorizontalSpacingRenderingTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "collections",
-            "embedded",
-            "catalog",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 90
+      "candidateReferenceCount": 91
     },
     {
       "id": "pdf.17.graphics.state",
@@ -7020,6 +7021,14 @@
         },
         {
           "path": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "dictionaries",
+            "resource"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
           "kind": "source",
           "matchedTerms": [
             "dictionaries",
@@ -7256,7 +7265,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 41
+      "candidateReferenceCount": 42
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -8073,7 +8082,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 661
+      "candidateReferenceCount": 663
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8888,7 +8897,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 324
+      "candidateReferenceCount": 325
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9860,7 +9869,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 253
+      "candidateReferenceCount": 254
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -10701,7 +10710,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 190
+      "candidateReferenceCount": 191
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -13544,7 +13553,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 134
+      "candidateReferenceCount": 133
     },
     {
       "id": "pdf.17.content.text-state",
@@ -36197,6 +36206,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "smask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -36312,6 +36330,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "smask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36399,7 +36426,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 27
+      "candidateReferenceCount": 29
     },
     {
       "id": "pdf.20.image.requirement-021",
@@ -36572,6 +36599,15 @@
         },
         {
           "path": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
           "kind": "source",
           "matchedTerms": [
             "image",
@@ -37200,18 +37236,9 @@
             "mask",
             "image"
           ]
-        },
-        {
-          "path": "docs/architecture/xfa-rendering.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "image",
-            "mask",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 81
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -37386,6 +37413,15 @@
         },
         {
           "path": "Excise.Core/Redaction/Recovery/RecoveryScanner.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
           "kind": "source",
           "matchedTerms": [
             "image",
@@ -38015,18 +38051,9 @@
             "mask",
             "image"
           ]
-        },
-        {
-          "path": "docs/architecture/xfa-rendering.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "image",
-            "mask",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 81
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -38836,7 +38863,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 189
+      "candidateReferenceCount": 190
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -40181,6 +40208,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/ScannedOcrRedactionRegressionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -40389,7 +40425,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 60
+      "candidateReferenceCount": 61
     },
     {
       "id": "pdf.20.image.requirement-027",
@@ -42857,7 +42893,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 135
+      "candidateReferenceCount": 136
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -42949,15 +42985,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "image",
-            "separation",
-            "image"
-          ]
-        },
-        {
           "path": "Excise.Core/Text/TextExtractor.cs",
           "kind": "source",
           "matchedTerms": [
@@ -43039,7 +43066,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 13
+      "candidateReferenceCount": 12
     },
     {
       "id": "pdf.20.image.requirement-033",
@@ -51499,7 +51526,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 224
+      "candidateReferenceCount": 225
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -56396,7 +56423,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 199
+      "candidateReferenceCount": 200
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -58362,6 +58389,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "groups",
+            "soft"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/Letter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -58965,19 +59000,9 @@
             "model",
             "soft"
           ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "groups",
-            "model",
-            "modes",
-            "soft"
-          ]
         }
       ],
-      "candidateReferenceCount": 219
+      "candidateReferenceCount": 221
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -59502,7 +59527,9 @@
           "kind": "test",
           "matchedTerms": [
             "flattening",
-            "output"
+            "output",
+            "transparency",
+            "transparency"
           ]
         },
         {
@@ -60408,16 +60435,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Redaction/RedactionReport.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "flags",
-            "geometry",
-            "action",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core/Signatures/SignatureApplicationService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -60822,9 +60839,18 @@
             "flags",
             "acroform"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "annotations",
+            "annotation"
+          ]
         }
       ],
-      "candidateReferenceCount": 224
+      "candidateReferenceCount": 223
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -61579,6 +61605,18 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/TypographicCarrierRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/UserUnitRedactionSafetyTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -61800,20 +61838,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AnnotationHoverReadingTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "redaction",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 107
+      "candidateReferenceCount": 108
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -62739,7 +62766,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 123
+      "candidateReferenceCount": 122
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -64751,7 +64778,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 212
+      "candidateReferenceCount": 214
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -65316,8 +65343,8 @@
             "javascript",
             "launch",
             "submit",
-            "acroform",
-            "action"
+            "uri",
+            "acroform"
           ]
         },
         {
@@ -66526,7 +66553,9 @@
           "kind": "test",
           "matchedTerms": [
             "annotations",
-            "screen"
+            "media",
+            "screen",
+            "media"
           ]
         },
         {
@@ -67133,7 +67162,9 @@
           "kind": "test",
           "matchedTerms": [
             "annotations",
-            "rich"
+            "media",
+            "rich",
+            "media"
           ]
         },
         {
@@ -68264,7 +68295,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 407
+      "candidateReferenceCount": 411
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -68544,6 +68575,7 @@
           "kind": "source",
           "matchedTerms": [
             "data",
+            "dictionaries",
             "measurement",
             "metadata",
             "tagged"
@@ -68619,6 +68651,15 @@
           "matchedTerms": [
             "coordinate",
             "data",
+            "metadata"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/RedactionCarrierAudit.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "data",
+            "dictionaries",
             "metadata"
           ]
         },
@@ -68999,17 +69040,9 @@
             "data",
             "dictionaries"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Filters/Jbig2/Jbig2SegmentBodyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "coordinate",
-            "data"
-          ]
         }
       ],
-      "candidateReferenceCount": 214
+      "candidateReferenceCount": 217
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -69371,7 +69404,18 @@
           "matchedTerms": [
             "byte",
             "dictionaries",
+            "signatures",
             "metadata"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/CarrierTextRecovery.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "signatures",
+            "metadata",
+            "structuretree"
           ]
         },
         {
@@ -69402,14 +69446,36 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "dictionaries",
+            "signatures",
+            "metadata",
+            "tagged"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
           "kind": "source",
           "matchedTerms": [
             "byte",
             "dictionaries",
+            "signatures",
             "validation",
             "metadata",
             "structuretree"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/RedactionCarrierAudit.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "dictionaries",
+            "signatures",
+            "metadata"
           ]
         },
         {
@@ -69746,37 +69812,9 @@
             "byte",
             "permissions"
           ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "byte",
-            "digital",
-            "signatures"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "byte",
-            "digital",
-            "permissions",
-            "signatures",
-            "validation"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/PreferencesViewModel.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "byte",
-            "ranges"
-          ]
         }
       ],
-      "candidateReferenceCount": 210
+      "candidateReferenceCount": 215
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -70565,7 +70603,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 726
+      "candidateReferenceCount": 732
     },
     {
       "id": "pdf.20.extension.developer",
@@ -71472,6 +71510,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/RedactionCarrierAudit.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "pdfa",
+            "profile",
+            "pdfa"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
           "kind": "source",
           "matchedTerms": [
@@ -72035,7 +72082,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 73
+      "candidateReferenceCount": 74
     },
     {
       "id": "pdf.20.profile.pdfua",
@@ -73151,7 +73198,8 @@
           "matchedTerms": [
             "redaction",
             "refusal",
-            "redaction"
+            "redaction",
+            "security"
           ]
         },
         {
@@ -73617,7 +73665,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 151
+      "candidateReferenceCount": 152
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -73842,7 +73890,8 @@
             "redaction",
             "review",
             "visibility",
-            "redaction"
+            "redaction",
+            "security"
           ]
         },
         {
@@ -74416,7 +74465,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 162
+      "candidateReferenceCount": 161
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -74912,7 +74961,8 @@
             "attachment",
             "copy",
             "metadata",
-            "redaction"
+            "redaction",
+            "security"
           ]
         },
         {
@@ -75231,7 +75281,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 166
+      "candidateReferenceCount": 167
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -75838,7 +75888,8 @@
             "attachment",
             "attachments",
             "save",
-            "redaction"
+            "redaction",
+            "security"
           ]
         },
         {
@@ -76346,7 +76397,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 147
+      "candidateReferenceCount": 148
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -76449,12 +76500,41 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/CarrierScrubPolicy.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "override",
+            "signature",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
           "kind": "source",
           "matchedTerms": [
             "override",
             "signature",
             "redaction"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "override",
+            "signature",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "invalidation",
+            "signature",
+            "redaction",
+            "security"
           ]
         },
         {
@@ -76573,12 +76653,31 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "override",
+            "signature",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/TestSupport/TestCertificateFactory.cs",
           "kind": "test",
           "matchedTerms": [
             "override",
             "pdfe",
             "signature",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/UnicodeBoundaryDiagnosticsTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "override",
+            "signature",
+            "redaction",
             "security"
           ]
         },
@@ -76842,7 +76941,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 45
+      "candidateReferenceCount": 50
     },
     {
       "id": "pdfe.product.ocr.scanned-documents",
@@ -77927,7 +78026,8 @@
           "matchedTerms": [
             "local",
             "log",
-            "redaction"
+            "redaction",
+            "security"
           ]
         },
         {
@@ -78405,7 +78505,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 163
+      "candidateReferenceCount": 164
     },
     {
       "id": "pdfe.product.platform.printing",
@@ -78887,7 +78987,8 @@
           "matchedTerms": [
             "forms",
             "javascript",
-            "redaction"
+            "redaction",
+            "security"
           ]
         },
         {
