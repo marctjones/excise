@@ -934,11 +934,12 @@ internal partial class MainWindowViewModel
     /// path already reloads the viewer, so there is nothing else to refresh
     /// here (see <c>SaveFileAsync</c>/<c>SaveFileAsAsync</c> callers).
     /// </summary>
-    internal void FlushOpenStickyNotePopupBeforeSave()
+    /// <returns>Whether a popup was open, so the document may differ from the pages drawn (#1876).</returns>
+    internal bool FlushOpenStickyNotePopupBeforeSave()
     {
         var popup = StickyNotePopup;
         if (popup == null)
-            return;
+            return false;
 
         try
         {
@@ -950,6 +951,7 @@ internal partial class MainWindowViewModel
         {
             _logger.LogError(ex, "Error flushing open sticky-note popup before save");
         }
+        return true;
     }
 
     /// <summary>Undo/redo of a sticky-note text edit. Goes straight to the workflow, never the recording path.</summary>

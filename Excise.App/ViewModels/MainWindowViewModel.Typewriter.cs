@@ -299,7 +299,7 @@ internal partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(HasPendingTypewriterEdits));
     }
 
-    private Task ReloadPdfCoreDocumentAfterSaveAsync(string filePath)
+    private Task ReloadPdfCoreDocumentAfterSaveAsync(string filePath, bool keepPagesOnScreen)
     {
         if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             return Task.CompletedTask;
@@ -314,7 +314,10 @@ internal partial class MainWindowViewModel
         // here is what made "redact twice into the same path" fail on Windows.
         // The service disposes its previous instance, so nothing is leaked.
         _documentService.LoadDocument(filePath, _documentService.CurrentUserPassword, Services.DocumentReleaseReason.SaveReload);
-        PdfCoreDocument = _documentService.GetCurrentDocument();
+        var reopened = _documentService.GetCurrentDocument();
+        if (keepPagesOnScreen && reopened != null)
+            KeepPagesOnScreenRequested?.Invoke(this, reopened);
+        PdfCoreDocument = reopened;
         CurrentPageIndex = pageIndex;
         StartThumbnailSession(filePath, PdfCoreDocument!);
 
