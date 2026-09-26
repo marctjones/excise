@@ -413,8 +413,10 @@ internal sealed class GlyphUnicodeDecoder
     /// gid→Unicode from the program's own Unicode cmap (non-PUA) or post glyph
     /// names. Skips codes whose only recovery is a Private-Use scalar — those are
     /// genuinely unrecoverable and must fall through rather than emit PUA garbage.
+    /// The <see cref="Segmentation.HiddenTextDetector"/> audit calls it for the
+    /// fonts this decoder skips, those WITH an <c>/Encoding</c> (#796).
     /// </summary>
-    private static Dictionary<int, string> BuildSymbolCodeToUnicode(TrueTypeFontFile ttf)
+    internal static Dictionary<int, string> BuildSymbolCodeToUnicode(TrueTypeFontFile ttf)
     {
         // gid → non-PUA Unicode from a Unicode cmap subtable, if the font has one.
         var gidToCp = ReverseCmap(ttf.Cmap);

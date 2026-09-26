@@ -172,7 +172,7 @@ internal sealed class CidCMap
                     switch (token.Text)
                     {
                         case "begincodespacerange":
-                            i = ParseCodespace(i + 1);
+                            i = ParseCodespace(_tokens, i + 1, Codespaces);
                             continue;
                         case "begincidchar":
                             i = ParseCharMappings(i + 1, "endcidchar");
@@ -209,29 +209,6 @@ internal sealed class CidCMap
             }
         }
 
-        private int ParseCodespace(int i)
-        {
-            while (i < _tokens.Count && _tokens[i].Type != TokenType.Keyword)
-            {
-                if (i + 1 >= _tokens.Count)
-                    break;
-
-                var low = _tokens[i];
-                var high = _tokens[i + 1];
-                if (low.Type != TokenType.HexString || high.Type != TokenType.HexString)
-                    break;
-
-                // Codes are at most 4 bytes per the CMap spec; clamp so a
-                // malformed over-long hex bound cannot declare a code width
-                // wider than the int the code is read into. #515
-                var bytes = Math.Min(4, Math.Max(1, (low.Text.Length + 1) / 2));
-                Codespaces.Add(new CodespaceRange(HexToInt(low.Text), HexToInt(high.Text), bytes));
-                i += 2;
-            }
-
-            return SkipPast(i, "endcodespacerange");
-        }
-
         private int ParseCharMappings(int i, string endKeyword)
         {
             while (i < _tokens.Count && _tokens[i].Type != TokenType.Keyword)
@@ -250,7 +227,7 @@ internal sealed class CidCMap
                 i += 2;
             }
 
-            return SkipPast(i, endKeyword);
+            return SkipPast(_tokens, i, endKeyword);
         }
 
         private int ParseCidRanges(int i)
@@ -272,7 +249,7 @@ internal sealed class CidCMap
                 i += 3;
             }
 
-            return SkipPast(i, "endcidrange");
+            return SkipPast(_tokens, i, "endcidrange");
         }
 
         private int ParseBfRanges(int i)
@@ -314,7 +291,7 @@ internal sealed class CidCMap
                 }
             }
 
-            return SkipPast(i, "endbfrange");
+            return SkipPast(_tokens, i, "endbfrange");
         }
 
         private void AddIncrementingRange(int lowCode, int highCode, int firstCid)
@@ -362,17 +339,6 @@ internal sealed class CidCMap
         {
             if (!Codespaces.Contains(range))
                 Codespaces.Add(range);
-        }
-
-        private int SkipPast(int i, string keyword)
-        {
-            while (i < _tokens.Count &&
-                   !(_tokens[i].Type == TokenType.Keyword && _tokens[i].Text == keyword))
-            {
-                i++;
-            }
-
-            return i < _tokens.Count ? i + 1 : i;
         }
 
         private static bool TryGetCid(Token token, out int cid)

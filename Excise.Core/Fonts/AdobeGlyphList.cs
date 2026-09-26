@@ -361,7 +361,7 @@ internal static class AdobeGlyphList
         ["Phi"] = "Φ",
         ["Chi"] = "Χ",
         ["Psi"] = "Ψ",
-        ["Omega"] = "Ω",
+        ["Omega"] = "\u2126", // AGL Omega;2126 (ohm). U+03A9 is Omegagreek.
         ["alpha"] = "α",
         ["beta"] = "β",
         ["gamma"] = "γ",
@@ -424,6 +424,7 @@ internal static class AdobeGlyphList
         ["lslash"] = "ł",
         ["Lcaron"] = "Ľ",
         ["lcaron"] = "ľ",
+        ["dotlessi"] = "ı",
 
         // ZapfDingbats names (Annex D.6), which PDFs use in /Differences
         ["a109"] = "♠",
