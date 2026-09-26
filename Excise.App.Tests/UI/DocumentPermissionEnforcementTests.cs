@@ -1,12 +1,20 @@
 using Excise.Core.Signatures;
 using System.Reactive.Linq;
 
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Input;
+using Avalonia.Threading;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
 using Excise.App.ViewModels;
+using Excise.App.Views;
+using Excise.Avalonia.Controls;
 using Excise.Core.Document;
 using Excise.Rendering;
+using Excise.Rendering.Differential;
 using Excise.TestSupport;
 using Xunit;
 
@@ -79,7 +87,11 @@ public class DocumentPermissionEnforcementTests : IDisposable
             }
             plain.Save(plainPath);
         }
+        return Encrypt(plainPath, permissions);
+    }
 
+    private string Encrypt(string plainPath, long permissions)
+    {
         var encryptedPath = Path.Combine(_tempDir, $"generated-{permissions}.pdf");
         using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(plainPath));
         doc.Save(encryptedPath, new Excise.Core.Security.PdfEncryptionOptions
@@ -311,6 +323,106 @@ public class DocumentPermissionEnforcementTests : IDisposable
         vm.CanUndo.Should().BeFalse("a refused rotation records no undo step");
         toasts.Should().ContainSingle(t => t.Details != null && t.Details.Contains("Blocked by document permissions"),
             "the rotate command used to log a failure and show nothing");
+    }
+
+    // ---- form fill (#1874) ----------------------------------------------
+
+    /// <summary>
+    /// A text field holding "Original", an unchecked checkbox and a choice set to "US", each
+    /// with the /TU qpdf reports it by; encrypted with <paramref name="permissions"/>, or left
+    /// plain when null.
+    /// </summary>
+    private string SaveFormWithPermissions(long? permissions)
+    {
+        var plainPath = Path.Combine(_tempDir, "plain-form.pdf");
+        using (var plain = PdfDocument.CreateNew())
+        {
+            plain.Pages.AddBlank();
+            plain.AddTextField(1, new PdfRectangle(72, 600, 300, 624), "name", defaultValue: "Original", tooltip: "name");
+            plain.AddCheckBox(1, new PdfRectangle(72, 560, 92, 580), "accept", tooltip: "accept");
+            plain.AddChoiceField(1, new PdfRectangle(72, 520, 200, 540), "country", new[] { "US", "UK" },
+                defaultValue: "US", tooltip: "country");
+            plain.Save(plainPath);
+        }
+        return permissions is { } p ? Encrypt(plainPath, p) : plainPath;
+    }
+
+    /// <summary>
+    /// #1874: the viewer stored a form edit BEFORE the form-fill check ran, so a refused edit
+    /// stayed in the field and the next save wrote it. Typed and toggled with real input in the
+    /// default (continuous) view (the choice is picked by setting its selection, as the overlay
+    /// tests do), saved through Save As, which no /P bit gates, and read back with qpdf, not excise.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(true, false)]   // /P clears bits 6 and 9: refused
+    [InlineData(false, false)]  // unencrypted control: lands
+    [InlineData(true, true)]    // IgnoreDocumentPermissions overrides: lands
+    public async Task FillingAForm_InTheContinuousView_FollowsTheFormFillPermission_InTheSavedFile(
+        bool fillForbidden, bool ignorePermissions)
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var path = SaveFormWithPermissions(fillForbidden ? -4 & ~(32L | 256L) : null);
+        var saved = Path.Combine(_tempDir, "filled.pdf");
+        var lands = !fillForbidden || ignorePermissions;
+        var (vm, toasts) = CreateViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        try
+        {
+            window.Show();
+            await Task.Delay(200);
+            await vm.LoadDocumentAsync(path);
+            vm.IgnoreDocumentPermissions = ignorePermissions;
+            vm.ViewMode.Should().Be(PdfViewMode.Continuous, "continuous scroll is the default view");
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+
+            var box = await ContinuousFormFillTests.WaitForFieldOnPageAsync<TextBox>(window, viewer, "name");
+            await ClickCentreAsync(window, box);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                box.SelectAll();
+                window.KeyTextInput("Typed");
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+            });
+            var checkBox = await ContinuousFormFillTests.WaitForFieldOnPageAsync<CheckBox>(window, viewer, "accept");
+            await ClickCentreAsync(window, checkBox);
+            var combo = await ContinuousFormFillTests.WaitForFieldOnPageAsync<ComboBox>(window, viewer, "country");
+            await Dispatcher.UIThread.InvokeAsync(() => combo.SelectedItem = "UK");
+            await Task.Delay(100);
+
+            box.Text.Should().Be(lands ? "Typed" : "Original", "a refused edit must not stay on screen as if stored");
+            checkBox.IsChecked.Should().Be(lands);
+            combo.SelectedItem.Should().Be(lands ? "UK" : "US");
+            vm.CanUndo.Should().Be(lands, "a refused edit records no undo step");
+            vm.FileState.HasUnsavedChanges.Should().Be(lands);
+            toasts.Where(t => t.Message.Contains("Blocked by document permissions")
+                    && t.Details != null && t.Details.Contains("/P bit 6 or 9"))
+                .Should().HaveCount(lands ? 0 : 3, "each refused edit is told to the user, once");
+
+            await vm.SaveFileAsAsync(saved);
+            ContinuousFormFillTests.QpdfFormFields(saved).ValueByTooltip.Should().Equal(
+                new Dictionary<string, string?>
+                {
+                    ["name"] = lands ? "Typed" : "Original",
+                    ["accept"] = lands ? "/Yes" : "/Off",
+                    ["country"] = lands ? "UK" : "US",
+                },
+                "a document whose /P forbids filling forms must save its fields unchanged, " +
+                "and the permission must not block an unrestricted document or the override");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    private static async Task ClickCentreAsync(MainWindow window, Control control)
+    {
+        var centre = control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            window.MouseDown(centre, MouseButton.Left);
+            window.MouseUp(centre, MouseButton.Left);
+        });
     }
 
     // ---- what must KEEP working -----------------------------------------

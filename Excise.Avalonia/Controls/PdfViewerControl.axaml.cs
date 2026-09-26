@@ -339,6 +339,21 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// Asked before an input's edit is stored in its field (#1874). False refuses the edit:
+    /// the field keeps its value and the input shows it again. The host enforces the
+    /// document's form-fill permission here and tells the user why; a refusal after the
+    /// store could not take the value back out of the field. Null admits every edit.
+    /// </summary>
+    public static readonly StyledProperty<Func<bool>?> FormFieldEditGateProperty =
+        AvaloniaProperty.Register<PdfViewerControl, Func<bool>?>(nameof(FormFieldEditGate));
+
+    public Func<bool>? FormFieldEditGate
+    {
+        get => GetValue(FormFieldEditGateProperty);
+        set => SetValue(FormFieldEditGateProperty, value);
+    }
+
+    /// <summary>
     /// Highlights for hidden-behind-overlay text to paint on top of the
     /// rendered page. Bound to a VM observable collection; whenever it
     /// changes, <see cref="RefreshHiddenTextOverlays"/> redraws them.
@@ -449,9 +464,9 @@ public partial class PdfViewerControl : UserControl
 
     /// <summary>
     /// Fired when the user edits an AcroForm field via the FormFieldsLayer
-    /// inputs. The control has already mutated the underlying PdfField; the
-    /// host typically reacts by re-rendering the page so any baked-in
-    /// appearance is refreshed.
+    /// inputs. <see cref="FormFieldEditGate"/> admitted the edit and the control
+    /// has already mutated the underlying PdfField; the host typically reacts
+    /// by re-rendering the page so any baked-in appearance is refreshed.
     /// </summary>
     public event EventHandler<FormFieldEditedEventArgs>? FormFieldEdited;
 
@@ -1065,8 +1080,8 @@ public partial class PdfViewerControl : UserControl
         };
         combo.SelectionChanged += (_, _) =>
         {
-            if (combo.SelectedItem is string s)
-                CommitFieldEdit(field, s);
+            if (combo.SelectedItem is string s && !CommitFieldEdit(field, s))
+                combo.SelectedItem = field.Value;
         };
         combo.KeyDown += (_, e) =>
         {
@@ -1094,8 +1109,8 @@ public partial class PdfViewerControl : UserControl
             };
             combo.SelectionChanged += (_, _) =>
             {
-                if (combo.SelectedItem is string s)
-                    CommitFieldEdit(field, s);
+                if (combo.SelectedItem is string s && !CommitFieldEdit(field, s))
+                    combo.SelectedItem = field.Value;
             };
             return combo;
         }
@@ -1104,17 +1119,20 @@ public partial class PdfViewerControl : UserControl
         // Acrobat stores radio-button states as the option's name (e.g.
         // "/Choice1"), so this works for both checkbox and the simplest
         // single-radio case.
+        bool FieldIsOn() => !string.IsNullOrEmpty(field.Value)
+            && !string.Equals(field.Value, "Off", StringComparison.OrdinalIgnoreCase);
         var checkBox = new CheckBox
         {
-            IsChecked = !string.IsNullOrEmpty(field.Value)
-                && !string.Equals(field.Value, "Off", StringComparison.OrdinalIgnoreCase),
+            IsChecked = FieldIsOn(),
             IsEnabled = !field.IsReadOnly,
             Background = new SolidColorBrush(Color.FromArgb(0x20, 0x00, 0xAA, 0x44)),
         };
         checkBox.IsCheckedChanged += (_, _) =>
         {
-            var newValue = checkBox.IsChecked == true ? "Yes" : "Off";
-            CommitFieldEdit(field, newValue);
+            // A refusal sets the box back, which raises this again with nothing to store.
+            if (checkBox.IsChecked == FieldIsOn()) return;
+            if (!CommitFieldEdit(field, checkBox.IsChecked == true ? "Yes" : "Off"))
+                checkBox.IsChecked = FieldIsOn();
         };
         return checkBox;
     }
@@ -1197,13 +1215,14 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <returns>
-    /// False when the field refused the value (the input should show the stored
-    /// value again); true when it was stored or was already the value.
+    /// False when the host or the field refused the value (the input should show
+    /// the stored value again); true when it was stored or was already the value.
     /// </returns>
     private bool CommitFieldEdit(Excise.Core.Document.PdfField field, string? newValue)
     {
         // Skip a no-op assignment so we don't fire spurious re-render events.
         if (string.Equals(field.Value, newValue, StringComparison.Ordinal)) return true;
+        if (FormFieldEditGate?.Invoke() == false) return false;
         var oldValue = field.Value;
         try
         {

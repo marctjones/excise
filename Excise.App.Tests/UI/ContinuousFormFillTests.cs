@@ -49,25 +49,25 @@ public class ContinuousFormFillTests
         return path;
     }
 
-    private static System.Collections.Generic.List<TextBox> ContinuousFieldInputs(PdfViewerControl viewer) =>
-        viewer.GetVisualDescendants().OfType<TextBox>()
+    private static System.Collections.Generic.List<T> ContinuousFieldInputs<T>(PdfViewerControl viewer) where T : Control =>
+        viewer.GetVisualDescendants().OfType<T>()
             .Where(t => t.Classes.Contains("continuous-form-field") && t.IsEffectivelyVisible)
             .ToList();
 
-    private static Task<TextBox> WaitForFieldOnPageAsync(
-        MainWindow window, PdfViewerControl viewer, string fieldName) =>
-        WaitForFieldInputAsync(window, viewer, fieldName,
+    internal static Task<T> WaitForFieldOnPageAsync<T>(
+        MainWindow window, PdfViewerControl viewer, string fieldName) where T : Control =>
+        WaitForFieldInputAsync<T>(window, viewer, fieldName,
             t => ToolTip.GetTip(t) is string tip && tip.Contains(fieldName, StringComparison.Ordinal));
 
-    private static async Task<TextBox> WaitForFieldInputAsync(
-        MainWindow window, PdfViewerControl viewer, string what, Func<TextBox, bool> match)
+    private static async Task<T> WaitForFieldInputAsync<T>(
+        MainWindow window, PdfViewerControl viewer, string what, Func<T, bool> match) where T : Control
     {
-        TextBox? found = null;
+        T? found = null;
         var deadline = DateTime.UtcNow.AddSeconds(15);
         while (DateTime.UtcNow < deadline && found == null)
         {
             window.UpdateLayout();
-            found = ContinuousFieldInputs(viewer).FirstOrDefault(t => match(t) && t.Bounds.Height > 0);
+            found = ContinuousFieldInputs<T>(viewer).FirstOrDefault(t => match(t) && t.Bounds.Height > 0);
             if (found == null) await Task.Delay(100);
         }
         found.Should().NotBeNull(
@@ -103,7 +103,7 @@ public class ContinuousFormFillTests
             foreach (var (name, typed, page) in new[] { ("name1", "Alpha1", 1), ("name2", "Bravo2", 2) })
             {
                 vm.CurrentPageIndex = page - 1;
-                var box = await WaitForFieldOnPageAsync(window, viewer, name);
+                var box = await WaitForFieldOnPageAsync<TextBox>(window, viewer, name);
 
                 var centre = box.TranslatePoint(new Point(box.Bounds.Width / 2, box.Bounds.Height / 2), window);
                 centre.Should().NotBeNull();
@@ -162,12 +162,12 @@ public class ContinuousFormFillTests
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
 
             vm.CurrentPageIndex = pages - 1;
-            await WaitForFieldOnPageAsync(window, viewer, $"name{pages}");
+            await WaitForFieldOnPageAsync<TextBox>(window, viewer, $"name{pages}");
 
-            ContinuousFieldInputs(viewer).Count.Should().BeLessThan(pages,
+            ContinuousFieldInputs<TextBox>(viewer).Count.Should().BeLessThan(pages,
                 "inputs belong to realized pages only, so a long form does not keep a text " +
                 "box for every page it was ever scrolled past");
-            ContinuousFieldInputs(viewer)
+            ContinuousFieldInputs<TextBox>(viewer)
                 .Select(t => ToolTip.GetTip(t) as string ?? string.Empty)
                 .Should().NotContain(tip => tip.EndsWith("name1", StringComparison.Ordinal),
                     "page 1 scrolled out of the realized window and must have released its input");
@@ -197,7 +197,7 @@ public class ContinuousFormFillTests
             await vm.LoadDocumentAsync(path);
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
 
-            var box = await WaitForFieldOnPageAsync(window, viewer, "name1");
+            var box = await WaitForFieldOnPageAsync<TextBox>(window, viewer, "name1");
             var centre = box.TranslatePoint(new Point(box.Bounds.Width / 2, box.Bounds.Height / 2), window)!.Value;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -216,7 +216,7 @@ public class ContinuousFormFillTests
                 "the undone value must not reach the saved file");
 
             // Save cleared the history, so redo is exercised on a fresh edit.
-            var box2 = await WaitForFieldOnPageAsync(window, viewer, "name1");
+            var box2 = await WaitForFieldOnPageAsync<TextBox>(window, viewer, "name1");
             var centre2 = box2.TranslatePoint(new Point(box2.Bounds.Width / 2, box2.Bounds.Height / 2), window)!.Value;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -284,7 +284,7 @@ public class ContinuousFormFillTests
     /// qpdf's own reading of the saved form: each widget's value keyed by its /TU, and
     /// /NeedAppearances. Not excise's parser, which would read its own write back.
     /// </summary>
-    private static (System.Collections.Generic.Dictionary<string, string?> ValueByTooltip, bool NeedAppearances)
+    internal static (System.Collections.Generic.Dictionary<string, string?> ValueByTooltip, bool NeedAppearances)
         QpdfFormFields(string pdf)
     {
         var psi = new System.Diagnostics.ProcessStartInfo("qpdf", $"--json=2 --json-key=acroform \"{pdf}\"")
@@ -319,7 +319,7 @@ public class ContinuousFormFillTests
 
     private static async Task FillAsync(MainWindow window, PdfViewerControl viewer, string shown, string typed)
     {
-        var box = await WaitForFieldInputAsync(window, viewer, shown, t => t.Text == shown);
+        var box = await WaitForFieldInputAsync<TextBox>(window, viewer, shown, t => t.Text == shown);
         var centre = box.TranslatePoint(new Point(box.Bounds.Width / 2, box.Bounds.Height / 2), window)!.Value;
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
