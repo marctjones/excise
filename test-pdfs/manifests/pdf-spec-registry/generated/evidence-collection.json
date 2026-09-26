@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1431,
-  "indexedContentSha256": "b06c5746bff5f751febe4b10c874d47b52560b20137fe90eca13168fdf3a6a28",
+  "indexedFileCount": 1430,
+  "indexedContentSha256": "d78d9e82c4207844c54c2f700d6d23b37851b351f3f23724e6f6c2f16a7fd4f8",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1968,7 +1968,6 @@
           "matchedTerms": [
             "decode",
             "filters",
-            "parameters",
             "pdfobject"
           ]
         },
@@ -7687,14 +7686,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Fonts/SymbolCmapDecoder.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "path",
-            "style"
-          ]
-        },
-        {
           "path": "Excise.Core/Fonts/TrueTypeFontFile.cs",
           "kind": "source",
           "matchedTerms": [
@@ -7875,8 +7866,7 @@
           "kind": "source",
           "matchedTerms": [
             "construction",
-            "line",
-            "path"
+            "line"
           ]
         },
         {
@@ -8058,9 +8048,17 @@
             "line",
             "path"
           ]
+        },
+        {
+          "path": "Excise.Core/Xfa/FormCalc/FormCalcLexer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "line",
+            "style"
+          ]
         }
       ],
-      "candidateReferenceCount": 658
+      "candidateReferenceCount": 657
     },
     {
       "id": "pdf.17.graphics.color",
@@ -10112,14 +10110,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Fonts/SymbolCmapDecoder.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "fonts",
-            "glyph"
-          ]
-        },
-        {
           "path": "Excise.Core/Fonts/ToUnicodeCMapParser.cs",
           "kind": "source",
           "matchedTerms": [
@@ -10683,9 +10673,17 @@
             "fonts",
             "glyph"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Graphics/EmbeddedFontSubsetTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "fonts",
+            "glyph"
+          ]
         }
       ],
-      "candidateReferenceCount": 191
+      "candidateReferenceCount": 190
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -13367,6 +13365,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annex",
+            "iso",
+            "contentstream"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -13517,18 +13524,9 @@
             "operators",
             "contentstream"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/NamedMarkedContentCarrierTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "content-stream",
-            "operators",
-            "contentstream"
-          ]
         }
       ],
-      "candidateReferenceCount": 133
+      "candidateReferenceCount": 134
     },
     {
       "id": "pdf.17.content.text-state",
@@ -58266,14 +58264,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Fonts/SymbolCmapDecoder.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "groups",
-            "soft"
-          ]
-        },
-        {
           "path": "Excise.Core/Fonts/TrueTypeFontFile.cs",
           "kind": "source",
           "matchedTerms": [
@@ -58320,7 +58310,6 @@
           "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
           "kind": "source",
           "matchedTerms": [
-            "groups",
             "model",
             "modes",
             "soft"
@@ -58938,9 +58927,19 @@
             "model",
             "soft"
           ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "groups",
+            "model",
+            "modes",
+            "soft"
+          ]
         }
       ],
-      "candidateReferenceCount": 219
+      "candidateReferenceCount": 218
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -59072,14 +59071,6 @@
             "output",
             "transparency",
             "transparency"
-          ]
-        },
-        {
-          "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "output",
-            "parameters"
           ]
         },
         {
@@ -59677,9 +59668,17 @@
             "output",
             "preview"
           ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/DialogMessageLayoutTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "preview"
+          ]
         }
       ],
-      "candidateReferenceCount": 103
+      "candidateReferenceCount": 102
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -60192,7 +60191,6 @@
           "matchedTerms": [
             "annotation",
             "annotations",
-            "flags",
             "geometry",
             "acroform",
             "action",
@@ -61941,7 +61939,6 @@
           "path": "Excise.Core/Redaction/PdfPageRedactionExtensions.cs",
           "kind": "source",
           "matchedTerms": [
-            "opt-in",
             "redaction",
             "review",
             "acroform",
@@ -65757,18 +65754,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "groups",
-            "optional-content",
-            "acroform",
-            "action",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
           "kind": "source",
           "matchedTerms": [
@@ -65873,7 +65858,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 14
+      "candidateReferenceCount": 13
     },
     {
       "id": "pdf.17.multimedia.media",
@@ -69268,6 +69253,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Fonts/CMapTokenizer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "ranges"
+          ]
+        },
+        {
           "path": "Excise.Core/Fonts/CffParser.cs",
           "kind": "source",
           "matchedTerms": [
@@ -69743,17 +69736,9 @@
             "dictionaries",
             "metadata"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "ranges"
-          ]
         }
       ],
-      "candidateReferenceCount": 206
+      "candidateReferenceCount": 207
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -77767,6 +77752,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Fonts/GlyphUnicodeDecoder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "audit",
+            "log",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core/Operations/PdfDocumentAssembly.cs",
           "kind": "source",
           "matchedTerms": [
@@ -78376,18 +78370,9 @@
             "log",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "audit",
-            "log",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 160
+      "candidateReferenceCount": 161
     },
     {
       "id": "pdfe.product.platform.printing",

@@ -692,7 +692,6 @@ public partial class MainWindowViewModel
 
     private void ClearCurrentTextSelection()
     {
-        CurrentTextSelectionArea = new global::Avalonia.Rect();
         CurrentTextSelectionPageArea = null;
         SelectedText = string.Empty;
     }

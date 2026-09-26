@@ -3120,62 +3120,6 @@ internal partial class RenderContext
                 GetCidWidthThousandths(cid) / 2.0,
                 Excise.Core.Fonts.CidFontWidths.SpecDefaultVerticalOriginY);
 
-    internal static byte[] UnescapePdfStringBytes(string s)
-    {
-        var unescaped = new List<byte>(s.Length);
-        var i = 0;
-        while (i < s.Length)
-        {
-            if (s[i] == '\\' && i + 1 < s.Length)
-            {
-                var next = s[i + 1];
-                switch (next)
-                {
-                    case 'n': unescaped.Add((byte)'\n'); i += 2; break;
-                    case 'r': unescaped.Add((byte)'\r'); i += 2; break;
-                    case 't': unescaped.Add((byte)'\t'); i += 2; break;
-                    case 'b': unescaped.Add((byte)'\b'); i += 2; break;
-                    case 'f': unescaped.Add((byte)'\f'); i += 2; break;
-                    case '(': unescaped.Add((byte)'('); i += 2; break;
-                    case ')': unescaped.Add((byte)')'); i += 2; break;
-                    case '\\': unescaped.Add((byte)'\\'); i += 2; break;
-                    case '\r':
-                    case '\n':
-                        // PDF spec 7.3.4.2: backslash followed by an EOL
-                        // marker — both shall be ignored. Treat CRLF as a
-                        // single EOL.
-                        i += 2;
-                        if (next == '\r' && i < s.Length && s[i] == '\n')
-                            i++;
-                        break;
-                    default:
-                        if (char.IsDigit(next))
-                        {
-                            var octal = "";
-                            i++;
-                            while (i < s.Length && octal.Length < 3 && char.IsDigit(s[i]) && s[i] < '8')
-                                octal += s[i++];
-                            unescaped.Add((byte)Convert.ToInt32(octal, 8));
-                        }
-                        else
-                        {
-                            // Backslash before unknown char — spec 7.3.4.2:
-                            // backslash is ignored; emit just `next`.
-                            unescaped.Add((byte)next);
-                            i += 2;
-                        }
-                        break;
-                }
-            }
-            else
-            {
-                // The content stream was decoded as Latin1, so char = byte.
-                unescaped.Add((byte)s[i++]);
-            }
-        }
-        return unescaped.ToArray();
-    }
-
     private string DecodeTextBytes(byte[] bytes)
     {
         // If the current font has an /Encoding dictionary, use the

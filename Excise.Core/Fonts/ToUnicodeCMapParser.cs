@@ -27,11 +27,10 @@ namespace Excise.Core.Text;
 /// (ligatures, ﬂag → "fl", emoji surrogate pairs, etc.) — we always store
 /// them as System.String UTF-16.
 /// </summary>
-public class ToUnicodeCMapParser
+internal class ToUnicodeCMapParser
 {
     private readonly Dictionary<int, string> _mapping = new();
     private readonly List<CodespaceRange> _codespaces = new();
-    private int _maxCodeBytes = 1;
 
     /// <summary>Parse a CMap byte stream. Returns code → Unicode string.</summary>
     public static Dictionary<int, string> Parse(byte[] cmapData)
@@ -64,7 +63,7 @@ public class ToUnicodeCMapParser
     internal IReadOnlyList<CodespaceRange> CodespaceRanges => _codespaces;
 
     /// <summary>Maximum source-code length declared by codespacerange (1, 2, 3, or 4).</summary>
-    public int MaxCodeBytes => _maxCodeBytes;
+    public int MaxCodeBytes => _codespaces.Count == 0 ? 1 : _codespaces.Max(r => r.Bytes);
 
     private void ParseInternal(string content)
     {
@@ -81,7 +80,7 @@ public class ToUnicodeCMapParser
                 switch (t.Text)
                 {
                     case "begincodespacerange":
-                        i = ParseCodespace(tokens, i + 1);
+                        i = ParseCodespace(tokens, i + 1, _codespaces);
                         continue;
                     case "beginbfchar":
                         i = ParseBfChar(tokens, i + 1);
@@ -94,32 +93,6 @@ public class ToUnicodeCMapParser
 
             i++;
         }
-    }
-
-    private int ParseCodespace(List<Token> tokens, int i)
-    {
-        while (i < tokens.Count && tokens[i].Type != TokenType.Keyword)
-        {
-            // Consume <lo> <hi> pairs.
-            if (i + 1 >= tokens.Count) break;
-            var loTok = tokens[i];
-            var hiTok = tokens[i + 1];
-            if (loTok.Type != TokenType.HexString || hiTok.Type != TokenType.HexString) break;
-
-            // Codes are at most 4 bytes per the CMap spec; clamp malformed
-            // over-long bounds so MaxCodeBytes stays meaningful. #515
-            int bytes = Math.Min(4, Math.Max(1, (loTok.Text.Length + 1) / 2));
-            if (bytes > _maxCodeBytes) _maxCodeBytes = bytes;
-            int lo = HexToInt(loTok.Text);
-            int hi = HexToInt(hiTok.Text);
-            _codespaces.Add(new CodespaceRange(lo, hi, bytes));
-            i += 2;
-        }
-
-        // Skip the closing `endcodespacerange` keyword.
-        while (i < tokens.Count && !(tokens[i].Type == TokenType.Keyword && tokens[i].Text == "endcodespacerange"))
-            i++;
-        return i + 1;
     }
 
     private int ParseBfChar(List<Token> tokens, int i)
@@ -138,9 +111,7 @@ public class ToUnicodeCMapParser
             }
             i += 2;
         }
-        while (i < tokens.Count && !(tokens[i].Type == TokenType.Keyword && tokens[i].Text == "endbfchar"))
-            i++;
-        return i + 1;
+        return SkipPast(tokens, i, "endbfchar");
     }
 
     private int ParseBfRange(List<Token> tokens, int i)
@@ -225,9 +196,7 @@ public class ToUnicodeCMapParser
                 break;
             }
         }
-        while (i < tokens.Count && !(tokens[i].Type == TokenType.Keyword && tokens[i].Text == "endbfrange"))
-            i++;
-        return i + 1;
+        return SkipPast(tokens, i, "endbfrange");
     }
 
     private static string HexToUnicodeString(string hex)

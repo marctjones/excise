@@ -49,7 +49,7 @@ Viewer.ZoomToActualSize();
 | `Document` | property (`PdfDocument?`) | the document to display |
 | `CurrentPage` | property (`int`, 1-based) | shown page |
 | `ZoomLevel` | property (`double`, 1.0 = 100%) | zoom factor |
-| `InteractionMode` | property (`InteractionMode`) | None / TextSelection / Pan / Redaction / FormAuthoring / Typewriter |
+| `InteractionMode` | property (`InteractionMode`) | None / TextSelection / Redaction / FormAuthoring / Typewriter |
 | `Annotations`, `FormFields`, `HiddenTextHighlights`, `TypewriterTextOperations` | properties | overlay inputs |
 | `IsLoading` / `HasError` / `ErrorMessage` | read-only properties | render state |
 | `NextPage()` / `PreviousPage()` | methods | navigation |

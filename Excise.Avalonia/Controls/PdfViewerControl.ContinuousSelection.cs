@@ -233,9 +233,9 @@ public partial class PdfViewerControl
                 lp.Reading, lp.Raw, from, to, lp.ColumnGap, WhitespaceMode);
             if (!string.IsNullOrEmpty(selection.Text)) parts.Add(selection.Text);
 
-            // The event's Area/rects are page-local, so they are only meaningful
-            // for a single-page selection (they drive CurrentTextSelectionPageArea,
-            // which is bound to one page). For a cross-page span leave them empty —
+            // The rects are page-local, so they are only meaningful for a
+            // single-page selection (they give the event's PageArea, which is
+            // bound to one page). For a cross-page span leave them empty —
             // the highlight lives in the per-slot overlay, and the copied Text is
             // what a multi-page selection is for.
             if (endpoints.Count == 1)
@@ -255,7 +255,7 @@ public partial class PdfViewerControl
             ? new PdfPageRect(singlePageNumber, b.X, b.Y, b.Width, b.Height,
                 PdfCoordinateSpace.ContinuousDips, PointsToDip * ZoomLevel)
             : (PdfPageRect?)null;
-        TextSelected?.Invoke(this, new TextSelectedEventArgs(bbox ?? new Rect(), text, singlePageRects, pageArea));
+        TextSelected?.Invoke(this, new TextSelectedEventArgs(text, pageArea));
     }
 
     /// <summary>Redraw the whole anchor→focus span, clearing every page first.</summary>

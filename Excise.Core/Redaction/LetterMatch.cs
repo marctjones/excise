@@ -4,7 +4,7 @@ namespace Excise.Core.Text.Segmentation;
 /// Represents a match between a letter from text extraction and a character in a text operation.
 /// Used for accurate glyph-level redaction with position information.
 /// </summary>
-public class LetterMatch
+internal class LetterMatch
 {
     /// <summary>
     /// The letter from PDF text extraction (with accurate position).

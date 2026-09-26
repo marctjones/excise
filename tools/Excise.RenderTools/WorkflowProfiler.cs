@@ -300,7 +300,7 @@ partial class Program
                 letters.Min(l => l.GlyphRectangle.Bottom) - 1,
                 letters.Max(l => l.GlyphRectangle.Right) + 1,
                 letters.Max(l => l.GlyphRectangle.Top) + 1);
-            page.RedactArea(area);
+            page.RedactArea(area, RedactionOptions.Default with { DrawBox = false });
             var bytes = redactDoc.SaveToBytes();
             return $"bytes={bytes.Length}";
         }, scope: "excise-owned-security-critical");

@@ -90,7 +90,6 @@ public partial class MainWindowViewModel : ViewModelBase
     // like every PDF reader, a drag selects text by default — no mode toggle
     // needed. Editing modes turn it off on entry and restore it on exit.
     private bool _isTextSelectionMode = true;
-    private Rect _currentTextSelectionArea;
     private PdfPageRect? _currentTextSelectionPageArea;
     private string _selectedText = string.Empty;
     private ObservableCollection<string> _recentFiles = new();
@@ -917,12 +916,6 @@ public partial class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));
         }
-    }
-
-    public Rect CurrentTextSelectionArea
-    {
-        get => _currentTextSelectionArea;
-        set => this.RaiseAndSetIfChanged(ref _currentTextSelectionArea, value);
     }
 
     public PdfPageRect? CurrentTextSelectionPageArea
@@ -1833,7 +1826,7 @@ public partial class MainWindowViewModel : ViewModelBase
             // Letter-walk selection (PdfViewerControl.OnInteractionLayerPointerReleased)
             // already populated SelectedText with the exact text the user
             // dragged over. Use it directly. The earlier rect-based path
-            // re-extracted from CurrentTextSelectionArea, which silently
+            // re-extracted from the selection's bounding box, which silently
             // grabbed extra glyphs from neighbouring lines/columns when
             // the bbox extended past the actual selection — the user's
             // "Ctrl+C copies wrong text" bug.
@@ -2356,7 +2349,6 @@ public partial class MainWindowViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(StatusBarText));
         this.RaisePropertyChanged(nameof(IsDocumentLoaded));
         this.RaisePropertyChanged(nameof(CurrentRedactionArea));
-        this.RaisePropertyChanged(nameof(CurrentTextSelectionArea));
         this.RaisePropertyChanged(nameof(CurrentTextSelectionPageArea));
         this.RaisePropertyChanged(nameof(IsRedactionMode));
         this.RaisePropertyChanged(nameof(IsTypewriterMode));

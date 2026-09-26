@@ -66,7 +66,7 @@ using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 
 using var doc = PdfDocument.Open("input.pdf");
-doc.RedactText("Jane Doe");
+doc.RedactText("Jane Doe", RedactionOptions.Default);
 doc.Save("redacted.pdf");
 ```
 

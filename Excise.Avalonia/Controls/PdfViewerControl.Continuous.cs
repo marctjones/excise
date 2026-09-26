@@ -2170,7 +2170,7 @@ public partial class PdfViewerControl
 /// this one bitmap for display, so there is exactly one Image per page and hence
 /// no inter-tile seams.
 /// </summary>
-public sealed class PdfPageSlot : INotifyPropertyChanged
+internal sealed class PdfPageSlot : INotifyPropertyChanged
 {
     private double _displayWidth;
     private double _displayHeight;

@@ -84,6 +84,36 @@ internal static class CMapTokenizer
         return tokens;
     }
 
+    /// <summary>
+    /// Reads the <c>&lt;lo&gt; &lt;hi&gt;</c> pairs of a <c>begincodespacerange</c>
+    /// block that starts at <paramref name="i"/> into <paramref name="ranges"/>
+    /// and returns the index past <c>endcodespacerange</c>.
+    /// </summary>
+    internal static int ParseCodespace(List<Token> tokens, int i, List<CodespaceRange> ranges)
+    {
+        while (i + 1 < tokens.Count
+               && tokens[i].Type == TokenType.HexString
+               && tokens[i + 1].Type == TokenType.HexString)
+        {
+            // Codes are at most 4 bytes per the CMap spec; clamp so a
+            // malformed over-long hex bound cannot declare a code width
+            // wider than the int the code is read into. #515
+            var bytes = Math.Min(4, Math.Max(1, (tokens[i].Text.Length + 1) / 2));
+            ranges.Add(new CodespaceRange(HexToInt(tokens[i].Text), HexToInt(tokens[i + 1].Text), bytes));
+            i += 2;
+        }
+
+        return SkipPast(tokens, i, "endcodespacerange");
+    }
+
+    /// <summary>The index just past the first <paramref name="keyword"/> at or after <paramref name="i"/>.</summary>
+    internal static int SkipPast(List<Token> tokens, int i, string keyword)
+    {
+        while (i < tokens.Count && !(tokens[i].Type == TokenType.Keyword && tokens[i].Text == keyword))
+            i++;
+        return i < tokens.Count ? i + 1 : i;
+    }
+
     internal static int HexToInt(string hex)
     {
         if (hex.Length == 0)

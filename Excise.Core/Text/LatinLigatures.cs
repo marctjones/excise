@@ -38,7 +38,7 @@ namespace Excise.Core.Text;
 /// "st" — the letters a user types.
 /// </para>
 /// </remarks>
-public static class LatinLigatures
+internal static class LatinLigatures
 {
     private const int BlockStart = 0xFB00;
     private const int BlockEnd = 0xFB06;

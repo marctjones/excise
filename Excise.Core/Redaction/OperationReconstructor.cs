@@ -16,7 +16,7 @@ namespace Excise.Core.Text.Segmentation;
 /// Source-aware callers provide the graphics and text matrices captured by the
 /// parser; public synthetic callers use normalized page-space placement.
 /// </remarks>
-public class OperationReconstructor
+internal class OperationReconstructor
 {
     /// <summary>
     /// Context needed to rebuild a text block: the font resource name and

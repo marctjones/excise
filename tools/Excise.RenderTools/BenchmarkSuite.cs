@@ -682,7 +682,7 @@ partial class Program
                 targetLetters.Max(l => l.GlyphRectangle.Right) + 1,
                 targetLetters.Max(l => l.GlyphRectangle.Top) + 1);
 
-            page.RedactArea(area);
+            page.RedactArea(area, RedactionOptions.Default with { DrawBox = false });
             var saved = doc.SaveToBytes();
             using var reopened = PdfDocument.Open(saved);
             var textAfter = reopened.GetPage(1).Text ?? "";

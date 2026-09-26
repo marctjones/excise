@@ -512,7 +512,7 @@ public static class HiddenTextDetector
                 var ttf = TrueTypeFontFile.Parse(ff2.DecodedData);
                 if (ttf.HasSymbolCmap)
                 {
-                    var built = SymbolCmapDecoder.BuildCodeToText(ttf);
+                    var built = GlyphUnicodeDecoder.BuildSymbolCodeToUnicode(ttf);
                     if (built.Count > 0) map = built;
                 }
             }

@@ -6,7 +6,7 @@ namespace Excise.Core.Text.Segmentation;
 /// Represents a segment of text that should be kept or removed during redaction.
 /// Enhanced for CJK support with raw byte preservation.
 /// </summary>
-public class TextSegment
+internal class TextSegment
 {
     /// <summary>
     /// Start index in the original text (inclusive).

@@ -61,7 +61,7 @@ namespace Excise.Core.Text.Segmentation;
 /// closed and were about CJK/CID font support, not this list.
 /// </para>
 /// </remarks>
-public class GlyphRemover
+internal class GlyphRemover
 {
     /// <summary>
     /// #1044 SPIKE FLAG. Off by default: this changes how redaction removes

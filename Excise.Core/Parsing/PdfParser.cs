@@ -7,7 +7,7 @@ namespace Excise.Core.Parsing;
 /// Parser for PDF objects.
 /// Uses PdfLexer to tokenize and builds PdfObject instances.
 /// </summary>
-public class PdfParser : IDisposable
+internal class PdfParser : IDisposable
 {
     private readonly PdfLexer _lexer;
     private readonly bool _ownsLexer;

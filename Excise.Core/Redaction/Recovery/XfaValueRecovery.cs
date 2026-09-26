@@ -32,7 +32,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// treated as clean. The scrub side counts the same thing as
 /// <c>UnexaminedPacketCount</c>.</para>
 /// </summary>
-public static class XfaValueRecovery
+internal static class XfaValueRecovery
 {
     /// <summary>
     /// Elements that structure an XDP document rather than hold user data.
