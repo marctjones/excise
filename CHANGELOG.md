@@ -6,6 +6,88 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.13.0] - 2026-09-26
+
+### Breaking changes (library consumers)
+
+`Excise.Core`, `Excise.Rendering` and `Excise.Avalonia` ship as NuGet packages, and this release closes their public
+surface (#1836). The `excise` CLI and the app are unaffected. Source that compiled against 3.12.0 may not.
+
+- **`PdfDocument.Open` takes one `PdfOpenOptions`** (`UserPassword`, `AllowEncrypted`, `OwnsStream`) in place of six
+  overloads with loose bool and string arguments. Defaults are unchanged.
+- **`RedactText`, `RedactArea` and `RedactAreas` take a `RedactionOptions`.** The overloads with loose flags
+  (`drawBlackRect`, `closeWidth`, `overshootBox`, `scrubDocumentCarriers`, ...) are removed. The area overloads used to
+  skip the Standard profile pass; they now run it.
+- **The redaction engine, parser and writer are internal** (35 Core types): `GlyphRemover`, `LetterFinder`,
+  `OperationReconstructor`, `TextSegmenter`, the recovery channel scanners, `PdfLexer`, `PdfParser`, `PdfObjectWriter`,
+  `ContentStreamWriter`, `ToUnicodeCMapParser`, `CffSubsetter` and others. `RecoveryScanner` and its result types,
+  `ObstructionStripper` and `CarrierTextRecovery` stay public.
+- **Parsed models are built only by the parser.** `PdfField`, `PdfEmbeddedFile`, `PdfStructElement`, `PdfOcgConfig` and
+  `PdfAcroForm` have internal constructors; `PdfAction`, `RedactedCopySafetyReport`, `RecoveredFinding` and `FitReport` are
+  property records (`required` + `init`); `PdfObject.ObjectNumber/GenerationNumber` and the signature and Bates result
+  types have internal setters; `VerifySignatures` returns a read-only list.
+- **The GUI command catalogue** (`PdfCommandIds`, `PdfCommandRegistry`, `PdfCommandMetadata`) **and Rendering's
+  reference-oracle wrappers** (`Excise.Rendering.Differential.*`) **are internal.** Rendering's public API is now the
+  renderer, `RenderOptions`, its two exceptions and `PdfImageCodecs`.
+- **The viewer control's coordinates cross only as `PdfPageRect`.** `RedactionDrawnEventArgs.Area/RenderDpi`,
+  `TextSelectedEventArgs.Area/LetterBoundsDips`, the three `Add*(Rect)` overloads and `InteractionMode.Pan` are removed and
+  `PdfPageSlot` is internal. New: `KeepPagesOnScreenUntilRendered` and `FormFieldEditGate`.
+- **Duplicates removed:** `PdfName.Decode/ToEncodedString`, `PdfString.ToLiteralString/ToHexString` (use the writer),
+  the parameterless `PdfEncryptionNotSupportedException()`, and `PdfRasterRedactionConverter`'s own `dpi` argument (it now
+  renders, OCRs and paints at the OCR service's DPI).
+- **`Excise.App` exports nothing** (every type is internal) and the Roslyn scripting host is no longer part of the product.
+
+### Security (redaction)
+
+- **One fold for page and carrier matching (#1871).** A carrier value (outline title, annotation, `/Info`, XMP, form value,
+  page label, `/ActualText`, name-tree key, text attachment) holding the term with a curly quote, a typographic dash or a
+  doubled space survived as "clean" because the page matcher folded those characters and the carrier matcher did not. They
+  now share `MatchingNormalization.Fold`; the app's search uses it too, so `O'Brien` finds `O’Brien`.
+- **The cut can no longer re-form the term (#1860).** Every carrier that cuts the term out of a string repeats the cut until
+  it is gone through one shared mask: `KESKESTRELTREL` no longer leaves `KESTREL`.
+- **A name that wraps across a line break is removed from both lines, whatever its length (#1791),** with one box per line.
+  Before, the 3+ word case was silently missed and a two-line box wiped out the neighbouring text on both lines. Hyphen breaks
+  are still reported, not removed.
+- **Maximum removes signature identity (#1861).** Every reference to a signature dictionary goes (`/Perms` DocMDP and UR3,
+  `/DSS` with its certificate chain), with a report row. Standard cuts a term in a signature's `/Name`, `/Reason`,
+  `/Location` and `/ContactInfo` and refuses (reports) a term inside a certificate.
+- **Objects that no content stream draws leave the file (#1868, #1872, #1873).** A form or image drawn only inside a removed
+  optional-content layer, and forms and images nothing ever draws, are freed; one that cannot be proven undrawn is kept and
+  reported.
+- **Maximum flattens forms and removes the field carriers (#1857); page-label prefixes and named-destination keys are redaction
+  carriers (#1852, #1853); marked-content `/ActualText`, `/Alt` and `/E` are scrubbed by term (#1854).**
+- **A form excise cannot decode is reported and kept instead of aborting the redaction (#1863, #1866);** fields without `/T`
+  are parsed, so a value in a nameless field no longer survives a Standard redaction (#1864); a save no longer throws on an
+  undecodable catalog XMP (#1867).
+- **`excise unredact`'s covered-content channel starts at the spec's black (#1856)**, like every other detector.
+- **The leak scanner used by the tests reads UTF-16BE strings and finds stream bodies after the word "stream" in a title
+  (#1846, #1855),** which is how the leaks above were found.
+- **Permissions:** GUI page operations honour `/P` bit 11, extract, merge and split keep an encrypted PDF encrypted, and a form
+  edit is checked against the document's fill-forms permission before the value is stored (#1874).
+
+### Changed
+
+- **Redaction preferences are stored once**, as one nested record in `window.json`. An existing file keeps its saved profile,
+  width policy, attachment and carrier choices (#1840).
+- **`Excise.Core` now contains one small native call**, six libc extended-attribute declarations on macOS and Linux
+  (`Writing/ExtendedAttributes.cs`), and sets `AllowUnsafeBlocks` for the source-generated stubs. Nothing else in Core is
+  native.
+- **Developer tooling:** the asymmetry gate's base is the last state a push gated, so a batched tier run can pass and one bad
+  range still fails (#1844); the release-smoke display step can no longer go green over zero pages (#1779); fixtures are found
+  through `TestRepoLayout` and the locator gate fails on a literal `../..` path (#1756).
+
+### Known issues
+
+- **Open redaction leaks** (all reproduced, all filed): #1862 (optional-content layer names, property-list keys, forms
+  without `/Subtype`, `GoToR`/`GoToE` strings, unmeasured), #1849 (an MCID through a named property list, a stray `EMC` in a
+  form), #1760 (a bench document where a word survives), #1879 to #1885 (a kerned gap after a narrow glyph, wraps in
+  matrix-rotated text or non-consecutive lines, a column-break continuation, the area path's `/Alt` and widget checks, a
+  form an `/OBJR` references), and the width residue (#1715, #1725, #1751 to #1754).
+- **`excise unredact` over-reports** on ordinary documents (#1669, #1703), so its exit code is not yet a reliable verdict.
+- **A second open while the first is still loading can lose the first document** on a cold macOS launch (#1629, not
+  reproduced).
+- **Unsigned builds** (#1597).
+
 ### Fixed
 - **Redacting a term now removes it from marked-content `/ActualText`, `/Alt` and `/E`, whatever glyphs the
   span paints.** A span whose `/ActualText` held the term over glyphs that did not spell it (a figure, a
@@ -53,6 +135,24 @@ semantic versioning.
   honour /P bit 11.** They wrote unprotected copies of a password-protected document and ignored a
   document that denied page assembly; the CLI was fixed for this in #1343. The CLI and the app now share
   one merge and split path in `Excise.Core` (#1829).
+- **A Save no longer blanks the visible pages or scrolls the reader back to the top (#1876).** Every Save in continuous
+  view used to clear the page composites for 235 to 598 ms on the documents measured and reset the scroll position; the old
+  pages now stay until the new ones are drawn (a different document, an external change or a save that changed content
+  still clears immediately).
+- **After a plain Save the viewer and the app keep one document instance (#1877).** The saved file was reopened into a new
+  instance but the viewer and view model stayed on the disposed one, so edits made afterwards went to a different instance
+  than the one saved. The saved file is also opened once, not twice.
+- **A form edit, its undo and its redo go to the field the edit came from (#1865).** Editing the second of two same-named
+  fields overwrote the first, the save wrote the last same-named field's value into the first, and undo of a nameless field's
+  edit did nothing.
+- **A save keeps the replaced file's Finder tags and comments, quarantine and `user.*` attributes (#1802).**
+- **Lowering the page-cache capacity evicts down to the capacity (#1887)**, and the accessibility tree uses each element's
+  `/RoleMap` role, so a custom tag mapped to `H1` is announced as a heading (#1870).
+- **Glyph names `Omega` and `dotlessi` decode as the Adobe Glyph List does (U+2126 and U+0131) in the renderer and the
+  extractor; OCR text on `/Rotate` 90, 180 and 270 pages follows the page; raster redaction uses one DPI for the render, the
+  OCR and the box.**
+- **The PDF/UA title check agrees with veraPDF on more shapes (#1774, #1532, #1875)**, and an `/Encrypt` that references a
+  literal `null` object opens as an unencrypted document (#1850).
 
 ## [3.12.0] - 2026-09-25
 
