@@ -58,8 +58,9 @@ public sealed class PdfAcroForm
         GetFields(PdfFieldType.Signature);
 
     /// <summary>
-    /// Finds a field by its full name.
+    /// Finds a field by its full name. A field with no name anywhere in its
+    /// chain has the empty full name and cannot be addressed, so "" finds nothing.
     /// </summary>
     public PdfField? FindField(string fullName) =>
-        Fields.FirstOrDefault(f => f.FullName == fullName);
+        fullName.Length == 0 ? null : Fields.FirstOrDefault(f => f.FullName == fullName);
 }
