@@ -52,11 +52,11 @@ digraph excise_architecture {
   "app" -> "core" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "app" -> "ocr" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "app" -> "rendering" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
-  "app-main-window" -> "app" [label="target + observed\n747 refs", color="#15803d", style="solid", penwidth=2];
+  "app-main-window" -> "app" [label="target + observed\n745 refs", color="#15803d", style="solid", penwidth=2];
   "app-main-window" -> "avalonia" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "architecture-tooling" -> "verification" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "avalonia" -> "core" [label="target + observed\n7 refs", color="#15803d", style="solid", penwidth=2];
-  "avalonia" -> "core-document" [label="observed via parent boundary\n464 refs", color="#2563eb", style="dashed", penwidth=1];
+  "avalonia" -> "core-document" [label="observed via parent boundary\n466 refs", color="#2563eb", style="dashed", penwidth=1];
   "avalonia" -> "core-primitives" [label="observed via parent boundary\n11 refs", color="#2563eb", style="dashed", penwidth=1];
   "avalonia" -> "core-text" [label="observed via parent boundary\n52 refs", color="#2563eb", style="dashed", penwidth=1];
   "avalonia" -> "rendering" [label="target + observed\n26 refs", color="#15803d", style="solid", penwidth=2];
@@ -84,8 +84,8 @@ digraph excise_architecture {
   "core-document" -> "core" [label="observed via parent boundary\n104 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-document" -> "core-content" [label="observed, undeclared\n7 refs", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-encryption" [label="target + observed\n26 refs", color="#15803d", style="solid", penwidth=2];
-  "core-document" -> "core-parsing" [label="target + observed\n82 refs", color="#15803d", style="solid", penwidth=2];
-  "core-document" -> "core-primitives" [label="target + observed\n1481 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-parsing" [label="target + observed\n85 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-primitives" [label="target + observed\n1485 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core-text" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-writing" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];
   "core-encryption" -> "core-parsing" [label="target + observed\n11 refs", color="#15803d", style="solid", penwidth=2];
@@ -105,7 +105,7 @@ digraph excise_architecture {
   "core-redaction" -> "core-writing" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "core-security" -> "core" [label="observed via parent boundary\n5 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-security" -> "core-content" [label="target + observed\n5 refs", color="#15803d", style="solid", penwidth=2];
-  "core-security" -> "core-document" [label="target + observed\n55 refs", color="#15803d", style="solid", penwidth=2];
+  "core-security" -> "core-document" [label="target + observed\n54 refs", color="#15803d", style="solid", penwidth=2];
   "core-security" -> "core-primitives" [label="target + observed\n44 refs", color="#15803d", style="solid", penwidth=2];
   "core-text" -> "core" [label="observed via parent boundary\n4 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-text" -> "core-content" [label="target + observed\n37 refs", color="#15803d", style="solid", penwidth=2];

@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "bbad8ab837c6a8454619f9e2d834352bd77c2d67905b7966d8cf5a764eae6df4",
+  "sourceFingerprint": "9e2f3be6515d99b7e2bc37d63267465a4605882d43c1d04cff0467a82c328ffc",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -16527,7 +16527,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfUaDocumentTitleVeraPdfTests.cs",
       "class": "PdfUaDocumentTitleVeraPdfTests",
       "method": "ARealTitle_PassesBoth",
-      "line": 153,
+      "line": 152,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -16566,7 +16566,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfUaDocumentTitleVeraPdfTests.cs",
       "class": "PdfUaDocumentTitleVeraPdfTests",
       "method": "NoUsableTitle_FailsBoth",
-      "line": 173,
+      "line": 175,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -16605,7 +16605,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfUaDocumentTitleVeraPdfTests.cs",
       "class": "PdfUaDocumentTitleVeraPdfTests",
       "method": "AnEmptyRdfAltEntry_ExciseFails_VeraPdfPasses_RegisteredDivergence",
-      "line": 190,
+      "line": 192,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -16640,50 +16640,11 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.Rendering.Tests/Differential/PdfUaDocumentTitleVeraPdfTests.cs::PdfUaDocumentTitleVeraPdfTests.ANonLangAltTitle_ExcisePasses_VeraPdfFails_RegisteredDivergence",
+      "id": "Excise.Rendering.Tests/Differential/PdfUaDocumentTitleVeraPdfTests.cs::PdfUaDocumentTitleVeraPdfTests.AnInfoOnlyTitle_FailsBoth",
       "path": "Excise.Rendering.Tests/Differential/PdfUaDocumentTitleVeraPdfTests.cs",
       "class": "PdfUaDocumentTitleVeraPdfTests",
-      "method": "ANonLangAltTitle_ExcisePasses_VeraPdfFails_RegisteredDivergence",
-      "line": 207,
-      "xunitKind": "theory",
-      "evidenceKind": "differential-candidate",
-      "facets": [
-        "differential-rendering"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.content.streams",
-          "modes": [
-            "render"
-          ]
-        },
-        {
-          "capability": "pdf.17.graphics.fonts",
-          "modes": [
-            "render"
-          ]
-        },
-        {
-          "capability": "pdf.17.graphics.images",
-          "modes": [
-            "render"
-          ]
-        },
-        {
-          "capability": "pdf.17.transparency.model",
-          "modes": [
-            "render"
-          ]
-        }
-      ],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.Rendering.Tests/Differential/PdfUaDocumentTitleVeraPdfTests.cs::PdfUaDocumentTitleVeraPdfTests.AnInfoOnlyTitle_ExcisePasses_VeraPdfFails_RegisteredDivergence",
-      "path": "Excise.Rendering.Tests/Differential/PdfUaDocumentTitleVeraPdfTests.cs",
-      "class": "PdfUaDocumentTitleVeraPdfTests",
-      "method": "AnInfoOnlyTitle_ExcisePasses_VeraPdfFails_RegisteredDivergence",
-      "line": 221,
+      "method": "AnInfoOnlyTitle_FailsBoth",
+      "line": 206,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -24165,6 +24126,162 @@
       "class": "ToolResistanceComparisonTests",
       "method": "ResistancePerBand_ExciseVsPyMuPdf",
       "line": 107,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/TrailerEncryptReferenceQpdfTests.cs::TrailerEncryptReferenceQpdfTests.AnEncryptReferenceToTheLiteralNull_IsAnUnencryptedDocument",
+      "path": "Excise.Rendering.Tests/Differential/TrailerEncryptReferenceQpdfTests.cs",
+      "class": "TrailerEncryptReferenceQpdfTests",
+      "method": "AnEncryptReferenceToTheLiteralNull_IsAnUnencryptedDocument",
+      "line": 80,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/TrailerEncryptReferenceQpdfTests.cs::TrailerEncryptReferenceQpdfTests.ARealEncryptDictionary_StillOpensEncrypted",
+      "path": "Excise.Rendering.Tests/Differential/TrailerEncryptReferenceQpdfTests.cs",
+      "class": "TrailerEncryptReferenceQpdfTests",
+      "method": "ARealEncryptDictionary_StillOpensEncrypted",
+      "line": 98,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/TrailerEncryptReferenceQpdfTests.cs::TrailerEncryptReferenceQpdfTests.AnEncryptObjectThatIsNotADictionary_ExciseRefuses_AsQpdfDoes",
+      "path": "Excise.Rendering.Tests/Differential/TrailerEncryptReferenceQpdfTests.cs",
+      "class": "TrailerEncryptReferenceQpdfTests",
+      "method": "AnEncryptObjectThatIsNotADictionary_ExciseRefuses_AsQpdfDoes",
+      "line": 119,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/TrailerEncryptReferenceQpdfTests.cs::TrailerEncryptReferenceQpdfTests.AMissingEncryptObject_ExciseRefuses_QpdfReadsItAsAbsent_RegisteredDivergence",
+      "path": "Excise.Rendering.Tests/Differential/TrailerEncryptReferenceQpdfTests.cs",
+      "class": "TrailerEncryptReferenceQpdfTests",
+      "method": "AMissingEncryptObject_ExciseRefuses_QpdfReadsItAsAbsent_RegisteredDivergence",
+      "line": 135,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -48671,11 +48788,11 @@
     }
   ],
   "summary": {
-    "testMethods": 1344,
+    "testMethods": 1347,
     "facets": {
       "content-streams": 385,
       "content-strings-and-text": 9,
-      "differential-rendering": 761,
+      "differential-rendering": 764,
       "fonts": 226,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 316,
@@ -48688,7 +48805,7 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
       "pdf.17.content.streams:parse": 392,
-      "pdf.17.content.streams:render": 912,
+      "pdf.17.content.streams:render": 915,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
@@ -48696,10 +48813,10 @@
       "pdf.17.graphics.color:render": 53,
       "pdf.17.graphics.fonts:extract": 226,
       "pdf.17.graphics.fonts:parse": 226,
-      "pdf.17.graphics.fonts:render": 908,
+      "pdf.17.graphics.fonts:render": 911,
       "pdf.17.graphics.images:extract": 232,
       "pdf.17.graphics.images:parse": 232,
-      "pdf.17.graphics.images:render": 908,
+      "pdf.17.graphics.images:render": 911,
       "pdf.17.graphics.paths-painting:parse": 316,
       "pdf.17.graphics.paths-painting:render": 316,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -48707,7 +48824,7 @@
       "pdf.17.graphics.state:parse": 316,
       "pdf.17.graphics.state:render": 316,
       "pdf.17.transparency.model:parse": 84,
-      "pdf.17.transparency.model:render": 795
+      "pdf.17.transparency.model:render": 798
     },
     "unclassified": 38,
     "allTestsMapped": true

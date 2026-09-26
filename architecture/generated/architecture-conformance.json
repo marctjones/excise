@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "ffad76dc5a7db04bab60682d7e28de54c326cf74",
+  "sourceRevision": "4789e1b08c5d6fc55f47d307026436a82b43af88",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8063,
+    "retainedSymbols": 8068,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -38,14 +38,14 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 747,
+      "references": 745,
       "typeDependencyCount": 76,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.App.Services.PdfDocumentService",
-          "references": 124
+          "references": 122
         }
       ]
     },
@@ -66,8 +66,8 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 464,
-      "typeDependencyCount": 29,
+      "references": 466,
+      "typeDependencyCount": 30,
       "classification": "declared",
       "evidence": [
         {
@@ -463,21 +463,21 @@
     {
       "source": "core-document",
       "target": "core-parsing",
-      "references": 82,
+      "references": 85,
       "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfDocumentObjectStore",
           "target": "Excise.Core.Parsing.XRefEntry",
-          "references": 17
+          "references": 20
         }
       ]
     },
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1481,
+      "references": 1485,
       "typeDependencyCount": 225,
       "classification": "declared",
       "evidence": [
@@ -739,14 +739,14 @@
     {
       "source": "core-security",
       "target": "core-document",
-      "references": 55,
+      "references": 54,
       "typeDependencyCount": 7,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Validation.PdfUaValidator",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 20
+          "references": 19
         }
       ]
     },

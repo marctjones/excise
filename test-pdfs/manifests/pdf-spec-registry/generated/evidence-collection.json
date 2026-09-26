@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1435,
-  "indexedContentSha256": "e0db03dd3153c337611e6e65fc986358285eb5058ba4460edcd649fedb24d933",
+  "indexedFileCount": 1437,
+  "indexedContentSha256": "8611b279e971c90b6fe9a7d340d4dddefc884869adbca1c3f288ee6320c1d6be",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1527,7 +1527,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 201
+      "candidateReferenceCount": 202
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -3162,7 +3162,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 119
+      "candidateReferenceCount": 120
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -4090,7 +4090,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 188
+      "candidateReferenceCount": 189
     },
     {
       "id": "pdf.17.document.navigation",
@@ -4787,14 +4787,6 @@
           ]
         },
         {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Printing.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "preferences",
-            "viewer"
-          ]
-        },
-        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Redaction.cs",
           "kind": "source",
           "matchedTerms": [
@@ -5013,9 +5005,20 @@
             "metadata",
             "pdfdocument"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "named",
+            "viewer",
+            "catalog",
+            "metadata",
+            "pdfdocument"
+          ]
         }
       ],
-      "candidateReferenceCount": 162
+      "candidateReferenceCount": 161
     },
     {
       "id": "pdf.17.document.metadata",
@@ -5930,7 +5933,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 123
+      "candidateReferenceCount": 124
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -64744,7 +64747,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 209
+      "candidateReferenceCount": 211
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -66674,7 +66677,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 139
+      "candidateReferenceCount": 140
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -68257,7 +68260,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 406
+      "candidateReferenceCount": 408
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -68857,6 +68860,14 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "coordinate",
+            "dictionaries"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Scripting.cs",
           "kind": "source",
           "matchedTerms": [
@@ -68992,17 +69003,9 @@
             "coordinate",
             "data"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "coordinate",
-            "data"
-          ]
         }
       ],
-      "candidateReferenceCount": 213
+      "candidateReferenceCount": 214
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -69509,6 +69512,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Writing/ExtendedAttributes.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "signatures"
+          ]
+        },
+        {
           "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -69717,6 +69728,14 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "dictionaries"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Scripting.cs",
           "kind": "source",
           "matchedTerms": [
@@ -69751,27 +69770,9 @@
             "byte",
             "ranges"
           ]
-        },
-        {
-          "path": "Excise.App/Views/MacNativeMenuBuilder.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "digital",
-            "signatures",
-            "validation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "dictionaries",
-            "metadata"
-          ]
         }
       ],
-      "candidateReferenceCount": 207
+      "candidateReferenceCount": 209
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -70560,7 +70561,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 722
+      "candidateReferenceCount": 723
     },
     {
       "id": "pdf.20.extension.developer",
@@ -78403,7 +78404,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 162
+      "candidateReferenceCount": 163
     },
     {
       "id": "pdfe.product.platform.printing",
