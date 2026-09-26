@@ -25,15 +25,11 @@ namespace Excise.Rendering.Tests.Differential;
 /// excise's blind spot. This test therefore uses the extractor that DISAGREES.
 /// </para>
 ///
-/// <para><b>What is asserted is the REPORT, not the removal.</b> Joining across
-/// the hyphen closes the leak and was tried and reverted: a match spanning two
-/// lines takes a removal box covering everything between them, which regressed
-/// 7 collateral fixtures and #942's
-/// <c>RedactingATerm_DestroysNothingRemoteFromAnyMatch</c>. The calibration for
-/// this issue is that a miss is an improvement to make, while making redaction
-/// WORSE is the one thing that must not happen. So until a wrapped match can
-/// produce two boxes (one per line), excise must SAY the occurrence is still
-/// there rather than report success over it.</para>
+/// <para><b>What is asserted is the REPORT, not the removal.</b> A line-end
+/// hyphen splits a word, not a phrase, and may be a real hyphen, so excise does
+/// not guess the join (a phrase wrapped between words IS joined, #1791). It
+/// must SAY the occurrence is still there rather than report success over
+/// it.</para>
 /// </summary>
 public class HyphenWrappedRedactionReportingTests
 {

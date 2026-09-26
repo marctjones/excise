@@ -278,24 +278,61 @@ public class RedactCommandTests : IDisposable
     }
 
     /// <summary>
+    /// #1791 — a term that wraps onto the next line of its block is removed
+    /// from both lines, and the run is clean: "…signed by Betty" / "Mary on
+    /// behalf…", the second line starting back at the left margin.
+    /// </summary>
+    [Fact]
+    public async Task RunAsync_RedactWordWrappedTerm_RemovesItFromBothLines()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage(
+            "This document was signed by Betty",
+            fontSize: 12, x: 72, y: 700,
+            contentSuffix: "BT /F1 12 Tf 72 686 Td (Mary on behalf of the company) Tj ET"));
+
+        var previousOut = Console.Out;
+        var captured = new StringWriter();
+        Console.SetOut(captured);
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[] { "redact", inputPath, outputPath, "Betty Mary" });
+        }
+        finally
+        {
+            Console.SetOut(previousOut);
+        }
+
+        exitCode.Should().Be(0, captured.ToString());
+        captured.ToString().Should().Contain("Redacted 1 occurrence(s)");
+        var saved = File.ReadAllBytes(outputPath);
+        SavedPdfLeakScanner.FindTerm(saved, "Betty").Should().BeEmpty("the first line's half is removed");
+        SavedPdfLeakScanner.FindTerm(saved, "Mary").Should().BeEmpty("the second line's half is removed");
+        SavedPdfLeakScanner.FindTerm(saved, "signed by").Should().NotBeEmpty("the rest of the first line stays");
+        SavedPdfLeakScanner.FindTerm(saved, "on behalf").Should().NotBeEmpty("the rest of the second line stays");
+    }
+
+    /// <summary>
     /// #1750 — the exit-code half of the fix, through the ACTUAL CLI surface
     /// (<see cref="Program.RunAsync"/>), not just the typed handler. A term
-    /// that wraps across a plain line break is structurally invisible to the
-    /// matcher (no space is inferred at a line wrap), so it survives fully
-    /// readable while excise located zero occurrences — the exit code must
-    /// say so, not just the printed note a script does not read.
+    /// whose second half continues somewhere other than the next line of its
+    /// block (here: another column, to the right) is not joined, so it
+    /// survives fully readable while excise located zero occurrences — the
+    /// exit code must say so, not just the printed note a script does not read.
     /// </summary>
     [Fact]
     public async Task RunAsync_RedactWordWrappedTerm_ExitsThree_AndPrintsTheNote()
     {
         var inputPath = TempPath(".pdf");
         var outputPath = TempPath(".pdf");
-        // Two lines, 14pt apart (more than half the 12pt font size, so a
-        // genuine line wrap): "...signed by Betty" / "Mary on behalf...".
+        // "...signed by Betty" then, 14pt lower but in a column to the right
+        // of where that line ends, "Mary on behalf...".
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage(
             "This document was signed by Betty",
             fontSize: 12, x: 72, y: 700,
-            contentSuffix: "BT /F1 12 Tf 72 686 Td (Mary on behalf of the company) Tj ET"));
+            contentSuffix: "BT /F1 12 Tf 320 686 Td (Mary on behalf of the company) Tj ET"));
 
         var previousOut = Console.Out;
         var captured = new StringWriter();
