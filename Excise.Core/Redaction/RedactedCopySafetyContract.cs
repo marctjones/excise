@@ -154,30 +154,31 @@ public sealed record RedactedCopySafetyRequest(
 }
 
 /// <summary>Structured evidence produced before a redacted copy is saved.</summary>
-public sealed record RedactedCopySafetyReport(
-    int RedactionAreaCount,
-    int SkippedRedactionAreaCount,
-    int RequestedTermCount,
-    int CheckedTermCount,
-    int RemainingTermCount,
-    int SkippedShortTermCount,
-    RedactedContentVerificationStatus ContentVerificationStatus,
-    bool MetadataScrubbed,
-    int InfoFieldsScrubbed,
-    bool HadXmpMetadata,
-    bool AttachmentsScrubbed,
+public sealed record RedactedCopySafetyReport
+{
+    public required int RedactionAreaCount { get; init; }
+    public required int SkippedRedactionAreaCount { get; init; }
+    public required int RequestedTermCount { get; init; }
+    public required int CheckedTermCount { get; init; }
+    public required int RemainingTermCount { get; init; }
+    public required int SkippedShortTermCount { get; init; }
+    public required RedactedContentVerificationStatus ContentVerificationStatus { get; init; }
+    public required bool MetadataScrubbed { get; init; }
+    public required int InfoFieldsScrubbed { get; init; }
+    public required bool HadXmpMetadata { get; init; }
+    public required bool AttachmentsScrubbed { get; init; }
     // Since #1572: the number of attachments this redaction REMOVED, including
     // those the area pass removed before this report ran. (The name predates
     // that; before, it counted what the scrub could see, which missed page
     // annotation attachments and anything the area pass had already taken.)
-    int EmbeddedFileCountBefore,
-    RedactedContentVerificationStatus HiddenTextAuditStatus,
-    int HiddenTextFindingCount,
-    RedactedContentVerificationStatus RasterRedactionAuditStatus,
-    int RemainingRasterOverlapCount,
-    IReadOnlyList<RedactedCopySafetyFailureStage> FailedStages,
-    IReadOnlyList<string> Warnings,
-    int UnresolvedRedactAnnotationCount = 0,
+    public required int EmbeddedFileCountBefore { get; init; }
+    public required RedactedContentVerificationStatus HiddenTextAuditStatus { get; init; }
+    public required int HiddenTextFindingCount { get; init; }
+    public required RedactedContentVerificationStatus RasterRedactionAuditStatus { get; init; }
+    public required int RemainingRasterOverlapCount { get; init; }
+    public required IReadOnlyList<RedactedCopySafetyFailureStage> FailedStages { get; init; }
+    public required IReadOnlyList<string> Warnings { get; init; }
+    public int UnresolvedRedactAnnotationCount { get; init; }
     // #1507 — the document arrived identifying itself as PDF/A and the metadata
     // scrub KEPT that identification (pdfaid part/conformance/rev) while
     // removing everything else in the XMP packet. Reported rather than left
@@ -185,18 +186,20 @@ public sealed record RedactedCopySafetyReport(
     // overstating what happened, since a small packet survives by design
     // because PDF/A conformance requires it. Overstating a scrub is the same
     // class of problem as a carrier that silently keeps a term.
-    bool PdfAIdentificationPreserved = false,
+    public bool PdfAIdentificationPreserved { get; init; }
     // #1572 — every attachment removed or kept, with name and size.
-    IReadOnlyList<AttachmentRedactionResult>? Attachments = null,
+    public IReadOnlyList<AttachmentRedactionResult>? Attachments { get; init; }
     // #1574 — the XFA form(s) the redaction removed whole, as carrier rows.
-    IReadOnlyList<string>? XfaRemovals = null,
+    public IReadOnlyList<string>? XfaRemovals { get; init; }
     // #1586 — the output profile that ran, what it removed WHOLE, and whether
     // the copy is still accessible and interactive. A dialog that calls a copy
     // safe has to be able to say what is no longer in it.
-    RedactionProfile Profile = RedactionProfile.Standard,
-    IReadOnlyList<RedactedFeatureRemoval>? ProfileRemovals = null,
-    bool AccessibilityAndInteractivityRemoved = false)
-{
+    public RedactionProfile Profile { get; init; } = RedactionProfile.Standard;
+    public IReadOnlyList<RedactedFeatureRemoval>? ProfileRemovals { get; init; }
+    public bool AccessibilityAndInteractivityRemoved { get; init; }
+
+    internal RedactedCopySafetyReport() { }
+
     /// <summary>Attachments removed or kept (#1572); never null.</summary>
     public IReadOnlyList<AttachmentRedactionResult> AttachmentResults =>
         Attachments ?? System.Array.Empty<AttachmentRedactionResult>();

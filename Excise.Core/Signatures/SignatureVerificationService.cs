@@ -35,17 +35,17 @@ public enum SignatureVerificationState
 
 public class SignatureVerificationResult
 {
-    public string SignatureName { get; set; } = string.Empty;
-    public bool IsValid { get; set; }
-    public string SignedBy { get; set; } = string.Empty;
-    public DateTime SigningTime { get; set; }
-    public string StatusMessage { get; set; } = string.Empty;
-    public bool CoversWholeDocument { get; set; }
-    public bool ByteRangeStructureChecked { get; set; }
-    public bool ByteRangeStructureValid { get; set; }
-    public string ByteRangeStructureMessage { get; set; } = string.Empty;
-    public bool ByteRangeIntegrityChecked { get; set; }
-    public bool ByteRangeIntegrityValid { get; set; }
+    public string SignatureName { get; internal set; } = string.Empty;
+    public bool IsValid { get; internal set; }
+    public string SignedBy { get; internal set; } = string.Empty;
+    public DateTime SigningTime { get; internal set; }
+    public string StatusMessage { get; internal set; } = string.Empty;
+    public bool CoversWholeDocument { get; internal set; }
+    public bool ByteRangeStructureChecked { get; internal set; }
+    public bool ByteRangeStructureValid { get; internal set; }
+    public string ByteRangeStructureMessage { get; internal set; } = string.Empty;
+    public bool ByteRangeIntegrityChecked { get; internal set; }
+    public bool ByteRangeIntegrityValid { get; internal set; }
 
     /// <summary>
     /// Bytes inside the signature's <c>/Contents</c> value that follow the CMS object and are not
@@ -53,11 +53,11 @@ public class SignatureVerificationResult
     /// by neither <c>/ByteRange</c> nor the CMS object, so they are reported rather than ignored.
     /// Zero for a conforming signature (#1494).
     /// </summary>
-    public int UnsignedTrailingContentBytes { get; set; }
+    public int UnsignedTrailingContentBytes { get; internal set; }
 
     /// <summary>Signer certificate chain trust. Independent of, and additional to, cryptographic validity (#466).</summary>
-    public SignatureTrustStatus TrustStatus { get; set; } = SignatureTrustStatus.NotEvaluated;
-    public string TrustDetails { get; set; } = string.Empty;
+    public SignatureTrustStatus TrustStatus { get; internal set; } = SignatureTrustStatus.NotEvaluated;
+    public string TrustDetails { get; internal set; } = string.Empty;
 
     /// <summary>
     /// Consolidated verdict. Computed from the check fields (never stored) so a
@@ -114,7 +114,7 @@ public class SignatureVerificationService
         _trustEvaluator = trustEvaluator ?? new SignatureTrustEvaluator();
     }
 
-    public List<SignatureVerificationResult> VerifySignatures(string pdfPath)
+    public IReadOnlyList<SignatureVerificationResult> VerifySignatures(string pdfPath)
     {
         var results = new List<SignatureVerificationResult>();
         _diagnostics?.Invoke($"Verifying signatures for {Path.GetFileName(pdfPath)}");

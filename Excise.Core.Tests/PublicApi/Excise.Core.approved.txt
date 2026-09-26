@@ -354,7 +354,6 @@ namespace Excise.Core.Document
     }
     public sealed class PdfAcroForm
     {
-        public PdfAcroForm(System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField> fields, bool needsAppearances) { }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField> Fields { get; }
         public bool NeedsAppearances { get; }
         public Excise.Core.Document.PdfField? FindField(string fullName) { }
@@ -366,14 +365,13 @@ namespace Excise.Core.Document
     }
     public sealed class PdfAction : System.IEquatable<Excise.Core.Document.PdfAction>
     {
-        public PdfAction(string Type, string? Uri = null, string? JavaScriptSource = null, string? NamedActionName = null, int? DestinationPage = default, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfAction>? Next = null) { }
         public int? DestinationPage { get; init; }
         public bool IsJavaScript { get; }
         public string? JavaScriptSource { get; init; }
         public string? NamedActionName { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfAction>? Next { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfAction> NextActions { get; }
-        public string Type { get; init; }
+        public required string Type { get; init; }
         public string? Uri { get; init; }
     }
     public sealed class PdfAnnotation
@@ -593,7 +591,6 @@ namespace Excise.Core.Document
     }
     public sealed class PdfEmbeddedFile : System.IEquatable<Excise.Core.Document.PdfEmbeddedFile>
     {
-        public PdfEmbeddedFile(string name, string? fileName, string? description, byte[]? bytes, string? mimeType, System.DateTimeOffset? creationDate, System.DateTimeOffset? modDate, Excise.Core.Primitives.PdfDictionary rawDictionary) { }
         public byte[]? Bytes { get; init; }
         public System.DateTimeOffset? CreationDate { get; init; }
         public string? Description { get; init; }
@@ -610,8 +607,6 @@ namespace Excise.Core.Document
     }
     public sealed class PdfField
     {
-        public PdfField(Excise.Core.Document.PdfDocument document, string fullName, string partialName, Excise.Core.Document.PdfFieldType fieldType, System.Collections.Generic.IReadOnlyList<string>? options, Excise.Core.Document.PdfRectangle? rect, int? pageNumber, bool isReadOnly, bool isRequired, bool isMultiline, Excise.Core.Primitives.PdfDictionary rawDictionary, System.Collections.Generic.IReadOnlyList<Excise.Core.Primitives.PdfDictionary> widgetDictionaries) { }
-        public PdfField(Excise.Core.Document.PdfDocument document, string fullName, string partialName, Excise.Core.Document.PdfFieldType fieldType, System.Collections.Generic.IReadOnlyList<string>? options, Excise.Core.Document.PdfRectangle? rect, int? pageNumber, bool isReadOnly, bool isRequired, bool isMultiline, Excise.Core.Primitives.PdfDictionary rawDictionary, System.Collections.Generic.IReadOnlyList<Excise.Core.Primitives.PdfDictionary> widgetDictionaries, int flags, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfFieldWidget> widgets) { }
         public System.Collections.Generic.IReadOnlyList<string> ButtonExportValues { get; }
         public string? DefaultValue { get; }
         public Excise.Core.Document.PdfFieldType FieldType { get; }
@@ -697,7 +692,6 @@ namespace Excise.Core.Document
     }
     public sealed class PdfOcgConfig
     {
-        public PdfOcgConfig(System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOcg> allOcgs, System.Collections.Generic.IReadOnlySet<string> offByDefault, string intent = "View", string baseState = "ON", Excise.Core.Primitives.PdfObject? layerOrder = null) { }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOcg> AllOcgs { get; }
         public string BaseState { get; }
         public string Intent { get; }
@@ -852,7 +846,6 @@ namespace Excise.Core.Document
     }
     public sealed class PdfStructElement
     {
-        public PdfStructElement(string type, string? altText = null, string? actualText = null, string? language = null, int? pageNumber = default, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfStructElement>? children = null, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfMarkedContentReference>? markedContent = null, Excise.Core.Primitives.PdfDictionary? rawDictionary = null, string? roleMappedType = null) { }
         public string? ActualText { get; }
         public string? AltText { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfStructElement> Children { get; }
@@ -908,14 +901,14 @@ namespace Excise.Core.Editing
     public class BatesDocumentResult
     {
         public BatesDocumentResult() { }
-        public string? ErrorMessage { get; set; }
-        public string FileName { get; set; }
-        public string FilePath { get; set; }
-        public string FirstBatesNumber { get; set; }
-        public string LastBatesNumber { get; set; }
-        public string OutputPath { get; set; }
-        public int PageCount { get; set; }
-        public bool Success { get; set; }
+        public string? ErrorMessage { get; }
+        public string FileName { get; }
+        public string FilePath { get; }
+        public string FirstBatesNumber { get; }
+        public string LastBatesNumber { get; }
+        public string OutputPath { get; }
+        public int PageCount { get; }
+        public bool Success { get; }
     }
     public class BatesNumberingService
     {
@@ -927,17 +920,17 @@ namespace Excise.Core.Editing
     public class BatesOptions
     {
         public BatesOptions() { }
-        public string FontName { get; set; }
-        public double FontSize { get; set; }
-        public double MarginX { get; set; }
-        public double MarginY { get; set; }
-        public int NumberOfDigits { get; set; }
-        public string? OutputDirectory { get; set; }
-        public string OutputSuffix { get; set; }
-        public Excise.Core.Editing.BatesPosition Position { get; set; }
-        public string Prefix { get; set; }
-        public int StartNumber { get; set; }
-        public string Suffix { get; set; }
+        public string FontName { get; init; }
+        public double FontSize { get; init; }
+        public double MarginX { get; init; }
+        public double MarginY { get; init; }
+        public int NumberOfDigits { get; init; }
+        public string? OutputDirectory { get; init; }
+        public string OutputSuffix { get; init; }
+        public Excise.Core.Editing.BatesPosition Position { get; init; }
+        public string Prefix { get; init; }
+        public int StartNumber { get; init; }
+        public string Suffix { get; init; }
     }
     public enum BatesPosition
     {
@@ -951,11 +944,11 @@ namespace Excise.Core.Editing
     public class BatesResult
     {
         public BatesResult() { }
-        public System.Collections.Generic.List<Excise.Core.Editing.BatesDocumentResult> Documents { get; set; }
-        public string FirstBatesNumber { get; set; }
-        public string LastBatesNumber { get; set; }
-        public int NextBatesNumber { get; set; }
-        public int TotalPages { get; set; }
+        public System.Collections.Generic.List<Excise.Core.Editing.BatesDocumentResult> Documents { get; }
+        public string FirstBatesNumber { get; }
+        public string LastBatesNumber { get; }
+        public int NextBatesNumber { get; }
+        public int TotalPages { get; }
     }
     public sealed class PdfEditOperation : System.IEquatable<Excise.Core.Editing.PdfEditOperation>
     {
@@ -1635,9 +1628,9 @@ namespace Excise.Core.Primitives
     public abstract class PdfObject
     {
         protected PdfObject() { }
-        public int? GenerationNumber { get; set; }
+        public int? GenerationNumber { get; }
         public bool IsIndirect { get; }
-        public int? ObjectNumber { get; set; }
+        public int? ObjectNumber { get; }
         public abstract Excise.Core.Primitives.PdfObjectType ObjectType { get; }
         public T? As<T>()
             where T : Excise.Core.Primitives.PdfObject { }
@@ -1824,20 +1817,16 @@ namespace Excise.Core.Redaction.Recovery
     }
     public sealed class RecoveredFinding : System.IEquatable<Excise.Core.Redaction.Recovery.RecoveredFinding>
     {
-        public RecoveredFinding(string Channel, string Carrier, Excise.Core.Redaction.Recovery.RecoveryConfidence Confidence, string? Text, System.Collections.Generic.IReadOnlyList<string> Candidates, double ResidualBits, Excise.Core.Redaction.Recovery.RecoveryLocation? Location, string? MarkId = null, double? Score = default) { }
-        public System.Collections.Generic.IReadOnlyList<string> Candidates { get; init; }
-        public string Carrier { get; init; }
-        public string Channel { get; init; }
-        public Excise.Core.Redaction.Recovery.RecoveryConfidence Confidence { get; init; }
+        public required System.Collections.Generic.IReadOnlyList<string> Candidates { get; init; }
+        public required string Carrier { get; init; }
+        public required string Channel { get; init; }
+        public required Excise.Core.Redaction.Recovery.RecoveryConfidence Confidence { get; init; }
         public Excise.Core.Redaction.Recovery.RecoveryLocation? Location { get; init; }
         public string? MarkId { get; init; }
-        public double ResidualBits { get; init; }
+        public required double ResidualBits { get; init; }
         public double? Score { get; init; }
         public string? Text { get; init; }
         public Excise.Core.Redaction.Recovery.RecoveredFinding LinkedTo(string markId) { }
-        public static Excise.Core.Redaction.Recovery.RecoveredFinding Candidate(string channel, string carrier, System.Collections.Generic.IReadOnlyList<string> candidates, double residualBits, Excise.Core.Redaction.Recovery.RecoveryLocation? location) { }
-        public static Excise.Core.Redaction.Recovery.RecoveredFinding Certain(string channel, string carrier, string text, Excise.Core.Redaction.Recovery.RecoveryLocation? location, double? score = default) { }
-        public static Excise.Core.Redaction.Recovery.RecoveredFinding PresentOnly(string channel, string carrier, Excise.Core.Redaction.Recovery.RecoveryLocation? location) { }
     }
     public static class RecoveryChannelTiers
     {
@@ -1949,19 +1938,18 @@ namespace Excise.Core.Redaction.Recovery
         }
         public sealed class FitReport : System.IEquatable<Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport>
         {
-            public FitReport(double WidthPt, string Font, double FontSizePt, int MinCharacters, int MaxCharacters, System.Collections.Generic.IReadOnlyList<string> PatternClasses, System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.Candidate> Candidates, int CandidatesConsidered, double BitsLeaked, string Confidence, string? MetricNote, string WidthBasis = "mark width") { }
-            public double BitsLeaked { get; init; }
-            public System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.Candidate> Candidates { get; init; }
-            public int CandidatesConsidered { get; init; }
-            public string Confidence { get; init; }
-            public string Font { get; init; }
-            public double FontSizePt { get; init; }
-            public int MaxCharacters { get; init; }
+            public required double BitsLeaked { get; init; }
+            public required System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.Candidate> Candidates { get; init; }
+            public required int CandidatesConsidered { get; init; }
+            public required string Confidence { get; init; }
+            public required string Font { get; init; }
+            public required double FontSizePt { get; init; }
+            public required int MaxCharacters { get; init; }
             public string? MetricNote { get; init; }
-            public int MinCharacters { get; init; }
-            public System.Collections.Generic.IReadOnlyList<string> PatternClasses { get; init; }
+            public required int MinCharacters { get; init; }
+            public required System.Collections.Generic.IReadOnlyList<string> PatternClasses { get; init; }
             public string WidthBasis { get; init; }
-            public double WidthPt { get; init; }
+            public required double WidthPt { get; init; }
         }
         public readonly struct WidthBudget : System.IEquatable<Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.WidthBudget>
         {
@@ -2137,26 +2125,26 @@ namespace Excise.Core.Signatures
     public class SignatureVerificationResult
     {
         public SignatureVerificationResult() { }
-        public bool ByteRangeIntegrityChecked { get; set; }
-        public bool ByteRangeIntegrityValid { get; set; }
-        public bool ByteRangeStructureChecked { get; set; }
-        public string ByteRangeStructureMessage { get; set; }
-        public bool ByteRangeStructureValid { get; set; }
-        public bool CoversWholeDocument { get; set; }
-        public bool IsValid { get; set; }
-        public string SignatureName { get; set; }
-        public string SignedBy { get; set; }
-        public System.DateTime SigningTime { get; set; }
+        public bool ByteRangeIntegrityChecked { get; }
+        public bool ByteRangeIntegrityValid { get; }
+        public bool ByteRangeStructureChecked { get; }
+        public string ByteRangeStructureMessage { get; }
+        public bool ByteRangeStructureValid { get; }
+        public bool CoversWholeDocument { get; }
+        public bool IsValid { get; }
+        public string SignatureName { get; }
+        public string SignedBy { get; }
+        public System.DateTime SigningTime { get; }
         public Excise.Core.Signatures.SignatureVerificationState State { get; }
-        public string StatusMessage { get; set; }
-        public string TrustDetails { get; set; }
-        public Excise.Core.Signatures.SignatureTrustStatus TrustStatus { get; set; }
-        public int UnsignedTrailingContentBytes { get; set; }
+        public string StatusMessage { get; }
+        public string TrustDetails { get; }
+        public Excise.Core.Signatures.SignatureTrustStatus TrustStatus { get; }
+        public int UnsignedTrailingContentBytes { get; }
     }
     public class SignatureVerificationService
     {
         public SignatureVerificationService(System.Action<string>? diagnostics = null, Excise.Core.Signatures.SignatureTrustEvaluator? trustEvaluator = null) { }
-        public System.Collections.Generic.List<Excise.Core.Signatures.SignatureVerificationResult> VerifySignatures(string pdfPath) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Signatures.SignatureVerificationResult> VerifySignatures(string pdfPath) { }
     }
     public enum SignatureVerificationState
     {
@@ -2461,59 +2449,33 @@ namespace Excise.Core.Text.Segmentation
     }
     public sealed class RedactedCopySafetyReport : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyReport>
     {
-        public RedactedCopySafetyReport(
-                    int RedactionAreaCount,
-                    int SkippedRedactionAreaCount,
-                    int RequestedTermCount,
-                    int CheckedTermCount,
-                    int RemainingTermCount,
-                    int SkippedShortTermCount,
-                    Excise.Core.Text.Segmentation.RedactedContentVerificationStatus ContentVerificationStatus,
-                    bool MetadataScrubbed,
-                    int InfoFieldsScrubbed,
-                    bool HadXmpMetadata,
-                    bool AttachmentsScrubbed,
-                    int EmbeddedFileCountBefore,
-                    Excise.Core.Text.Segmentation.RedactedContentVerificationStatus HiddenTextAuditStatus,
-                    int HiddenTextFindingCount,
-                    Excise.Core.Text.Segmentation.RedactedContentVerificationStatus RasterRedactionAuditStatus,
-                    int RemainingRasterOverlapCount,
-                    System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyFailureStage> FailedStages,
-                    System.Collections.Generic.IReadOnlyList<string> Warnings,
-                    int UnresolvedRedactAnnotationCount = 0,
-                    bool PdfAIdentificationPreserved = false,
-                    System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? Attachments = null,
-                    System.Collections.Generic.IReadOnlyList<string>? XfaRemovals = null,
-                    Excise.Core.Text.Segmentation.RedactionProfile Profile = 0,
-                    System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals = null,
-                    bool AccessibilityAndInteractivityRemoved = false) { }
         public bool AccessibilityAndInteractivityRemoved { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> AttachmentResults { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? Attachments { get; init; }
-        public bool AttachmentsScrubbed { get; init; }
-        public int CheckedTermCount { get; init; }
-        public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus ContentVerificationStatus { get; init; }
-        public int EmbeddedFileCountBefore { get; init; }
-        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyFailureStage> FailedStages { get; init; }
-        public bool HadXmpMetadata { get; init; }
+        public required bool AttachmentsScrubbed { get; init; }
+        public required int CheckedTermCount { get; init; }
+        public required Excise.Core.Text.Segmentation.RedactedContentVerificationStatus ContentVerificationStatus { get; init; }
+        public required int EmbeddedFileCountBefore { get; init; }
+        public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyFailureStage> FailedStages { get; init; }
+        public required bool HadXmpMetadata { get; init; }
         public bool HasWarnings { get; }
-        public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus HiddenTextAuditStatus { get; init; }
-        public int HiddenTextFindingCount { get; init; }
-        public int InfoFieldsScrubbed { get; init; }
-        public bool MetadataScrubbed { get; init; }
+        public required Excise.Core.Text.Segmentation.RedactedContentVerificationStatus HiddenTextAuditStatus { get; init; }
+        public required int HiddenTextFindingCount { get; init; }
+        public required int InfoFieldsScrubbed { get; init; }
+        public required bool MetadataScrubbed { get; init; }
         public bool PdfAIdentificationPreserved { get; init; }
         public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals { get; init; }
-        public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus RasterRedactionAuditStatus { get; init; }
-        public int RedactionAreaCount { get; init; }
-        public int RemainingRasterOverlapCount { get; init; }
-        public int RemainingTermCount { get; init; }
+        public required Excise.Core.Text.Segmentation.RedactedContentVerificationStatus RasterRedactionAuditStatus { get; init; }
+        public required int RedactionAreaCount { get; init; }
+        public required int RemainingRasterOverlapCount { get; init; }
+        public required int RemainingTermCount { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval> Removals { get; }
-        public int RequestedTermCount { get; init; }
-        public int SkippedRedactionAreaCount { get; init; }
-        public int SkippedShortTermCount { get; init; }
+        public required int RequestedTermCount { get; init; }
+        public required int SkippedRedactionAreaCount { get; init; }
+        public required int SkippedShortTermCount { get; init; }
         public int UnresolvedRedactAnnotationCount { get; init; }
-        public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
+        public required System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
         public System.Collections.Generic.IReadOnlyList<string>? XfaRemovals { get; init; }
     }
     public sealed class RedactedCopySafetyRequest : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyRequest>

@@ -72,7 +72,7 @@ public sealed class PdfStructElement
     /// </summary>
     public PdfDictionary RawDictionary { get; }
 
-    public PdfStructElement(
+    internal PdfStructElement(
         string type,
         string? altText = null,
         string? actualText = null,

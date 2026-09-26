@@ -13,32 +13,35 @@ namespace Excise.Core.Document;
 /// dictionary in the document object graph; this record is a read-side view,
 /// not the thing that gets serialized back out.
 /// </remarks>
-public sealed record PdfAction(
+public sealed record PdfAction
+{
     /// <summary>The action type (/S), e.g. "GoTo", "URI", "JavaScript", "Named", "GoToR", "Launch", "SubmitForm".</summary>
-    string Type,
+    public required string Type { get; init; }
 
     /// <summary>Target URI for a URI action (/URI). Null for other action types.</summary>
-    string? Uri = null,
+    public string? Uri { get; init; }
 
     /// <summary>
     /// Decoded ECMAScript source for a JavaScript action (/JS, string or stream form).
     /// Never executed by excise. Null for non-JavaScript actions or if /JS could not be decoded.
     /// </summary>
-    string? JavaScriptSource = null,
+    public string? JavaScriptSource { get; init; }
 
     /// <summary>The named-action name (/N) for a Named action, e.g. "NextPage", "PrevPage", "FirstPage", "LastPage".</summary>
-    string? NamedActionName = null,
+    public string? NamedActionName { get; init; }
 
     /// <summary>
     /// 1-based destination page number for a GoTo action, resolved from /D
     /// (direct destination array or named destination). Null if the action
     /// is not a GoTo, or the destination could not be resolved.
     /// </summary>
-    int? DestinationPage = null,
+    public int? DestinationPage { get; init; }
 
     /// <summary>The additional-actions chain (/Next) to run after this one, in order. Empty if absent.</summary>
-    IReadOnlyList<PdfAction>? Next = null)
-{
+    public IReadOnlyList<PdfAction>? Next { get; init; }
+
+    internal PdfAction() { }
+
     /// <summary>True if this is a /JavaScript action (regardless of whether the source decoded successfully).</summary>
     public bool IsJavaScript => string.Equals(Type, "JavaScript", StringComparison.Ordinal);
 

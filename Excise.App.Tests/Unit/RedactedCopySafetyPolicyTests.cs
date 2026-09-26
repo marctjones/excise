@@ -291,25 +291,27 @@ public class RedactedCopySafetyPolicyTests : IDisposable
     [Fact]
     public void DialogFormatter_PartialMetadataFailure_IsNotReportedAsNotRequested()
     {
-        var report = new RedactedCopySafetyReport(
-            RedactionAreaCount: 1,
-            SkippedRedactionAreaCount: 0,
-            RequestedTermCount: 1,
-            CheckedTermCount: 0,
-            RemainingTermCount: 0,
-            SkippedShortTermCount: 0,
-            ContentVerificationStatus: RedactedContentVerificationStatus.Warning,
-            MetadataScrubbed: false,
-            InfoFieldsScrubbed: 0,
-            HadXmpMetadata: false,
-            AttachmentsScrubbed: false,
-            EmbeddedFileCountBefore: 0,
-            HiddenTextAuditStatus: RedactedContentVerificationStatus.NotChecked,
-            HiddenTextFindingCount: 0,
-            RasterRedactionAuditStatus: RedactedContentVerificationStatus.NotChecked,
-            RemainingRasterOverlapCount: 0,
-            FailedStages: new[] { RedactedCopySafetyFailureStage.MetadataScrub },
-            Warnings: new[] { "Metadata scrub could not be completed." });
+        var report = new RedactedCopySafetyReport
+{
+            RedactionAreaCount = 1,
+            SkippedRedactionAreaCount = 0,
+            RequestedTermCount = 1,
+            CheckedTermCount = 0,
+            RemainingTermCount = 0,
+            SkippedShortTermCount = 0,
+            ContentVerificationStatus = RedactedContentVerificationStatus.Warning,
+            MetadataScrubbed = false,
+            InfoFieldsScrubbed = 0,
+            HadXmpMetadata = false,
+            AttachmentsScrubbed = false,
+            EmbeddedFileCountBefore = 0,
+            HiddenTextAuditStatus = RedactedContentVerificationStatus.NotChecked,
+            HiddenTextFindingCount = 0,
+            RasterRedactionAuditStatus = RedactedContentVerificationStatus.NotChecked,
+            RemainingRasterOverlapCount = 0,
+            FailedStages = new[] { RedactedCopySafetyFailureStage.MetadataScrub },
+            Warnings = new[] { "Metadata scrub could not be completed." },
+};
 
         var dialog = _formatter.Format("out.pdf", report);
 

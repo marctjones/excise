@@ -67,7 +67,7 @@ public sealed class PdfOcgConfig
     /// </summary>
     public PdfObject? LayerOrder { get; }
 
-    public PdfOcgConfig(
+    internal PdfOcgConfig(
         IReadOnlyList<PdfOcg> allOcgs,
         IReadOnlySet<string> offByDefault,
         string intent = "View",

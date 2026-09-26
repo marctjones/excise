@@ -171,38 +171,7 @@ public sealed class PdfField
     /// </summary>
     public IReadOnlyList<PdfFieldWidget> Widgets { get; }
 
-    public PdfField(
-        PdfDocument document,
-        string fullName,
-        string partialName,
-        PdfFieldType fieldType,
-        IReadOnlyList<string>? options,
-        PdfRectangle? rect,
-        int? pageNumber,
-        bool isReadOnly,
-        bool isRequired,
-        bool isMultiline,
-        PdfDictionary rawDictionary,
-        IReadOnlyList<PdfDictionary> widgetDictionaries)
-        : this(
-            document,
-            fullName,
-            partialName,
-            fieldType,
-            options,
-            rect,
-            pageNumber,
-            isReadOnly,
-            isRequired,
-            isMultiline,
-            rawDictionary,
-            widgetDictionaries,
-            flags: 0,
-            widgets: Array.Empty<PdfFieldWidget>())
-    {
-    }
-
-    public PdfField(
+    internal PdfField(
         PdfDocument document,
         string fullName,
         string partialName,

@@ -108,58 +108,74 @@ public sealed record RecoveryLocation(int PageNumber, PdfRectangle Rect, string 
 /// channel. Every channel produces this type, so the report, the scorecard and
 /// <c>--restore</c> all read one model rather than five shapes.
 /// </summary>
-/// <param name="Channel">
-/// The evidence channel: "hidden-text", "carrier", "marked-content",
-/// "covered-image", "covered-vector", "form-field", "residue",
-/// "ocr-differential".
-/// </param>
-/// <param name="Carrier">
-/// The specific carrier within the channel — "structure-tree /ActualText",
-/// "annotation /Contents", "black filled rectangle". Free text, because the
-/// carrier vocabulary grows with every producer surveyed (#1592).
-/// </param>
-/// <param name="Text">
-/// The recovered text for a <see cref="RecoveryConfidence.Certain"/> finding.
-/// Null for candidate and present-only findings — a candidate's content lives
-/// in <paramref name="Candidates"/> so nothing downstream can mistake a guess
-/// for a reading.
-/// </param>
-/// <param name="Candidates">Ranked, best first. Empty unless Confidence is Candidate.</param>
-/// <param name="ResidualBits">
-/// log2 of the admissible set for a candidate finding: how much uncertainty is
-/// LEFT, so 0 bits means one candidate fits. Zero for certain findings, where
-/// there is no set to be uncertain about.
-/// </param>
-/// <param name="MarkId">The <see cref="RedactionMark.Id"/> this overlaps, or null.</param>
-public sealed record RecoveredFinding(
-    string Channel,
-    string Carrier,
-    RecoveryConfidence Confidence,
-    string? Text,
-    IReadOnlyList<string> Candidates,
-    double ResidualBits,
-    RecoveryLocation? Location,
-    string? MarkId = null,
-    double? Score = null)
+public sealed record RecoveredFinding
 {
+    /// <summary>
+    /// The evidence channel: "hidden-text", "carrier", "marked-content",
+    /// "covered-image", "covered-vector", "form-field", "residue",
+    /// "ocr-differential".
+    /// </summary>
+    public required string Channel { get; init; }
+
+    /// <summary>
+    /// The specific carrier within the channel — "structure-tree /ActualText",
+    /// "annotation /Contents", "black filled rectangle". Free text, because the
+    /// carrier vocabulary grows with every producer surveyed (#1592).
+    /// </summary>
+    public required string Carrier { get; init; }
+    public required RecoveryConfidence Confidence { get; init; }
+
+    /// <summary>
+    /// The recovered text for a <see cref="RecoveryConfidence.Certain"/> finding.
+    /// Null for candidate and present-only findings — a candidate's content lives
+    /// in <see cref="Candidates"/> so nothing downstream can mistake a guess
+    /// for a reading.
+    /// </summary>
+    public string? Text { get; init; }
+
+    /// <summary>Ranked, best first. Empty unless Confidence is Candidate.</summary>
+    public required IReadOnlyList<string> Candidates { get; init; }
+
+    /// <summary>
+    /// log2 of the admissible set for a candidate finding: how much uncertainty is
+    /// LEFT, so 0 bits means one candidate fits. Zero for certain findings, where
+    /// there is no set to be uncertain about.
+    /// </summary>
+    public required double ResidualBits { get; init; }
+    public RecoveryLocation? Location { get; init; }
+    /// <summary>The <see cref="RedactionMark.Id"/> this overlaps, or null.</summary>
+    public string? MarkId { get; init; }
+    public double? Score { get; init; }
+
+    internal RecoveredFinding() { }
+
     /// <summary>A certain reading: the bytes say this.</summary>
-    public static RecoveredFinding Certain(
+    internal static RecoveredFinding Certain(
         string channel, string carrier, string text, RecoveryLocation? location, double? score = null)
-        => new(channel, carrier, RecoveryConfidence.Certain, text,
-               System.Array.Empty<string>(), 0, location, null, score);
+        => new()
+        {
+            Channel = channel, Carrier = carrier, Confidence = RecoveryConfidence.Certain, Text = text,
+            Candidates = System.Array.Empty<string>(), ResidualBits = 0, Location = location, Score = score,
+        };
 
     /// <summary>A constrained guess: these fit, with this much uncertainty left.</summary>
-    public static RecoveredFinding Candidate(
+    internal static RecoveredFinding Candidate(
         string channel, string carrier, IReadOnlyList<string> candidates,
         double residualBits, RecoveryLocation? location)
-        => new(channel, carrier, RecoveryConfidence.Candidate, null,
-               candidates, residualBits, location);
+        => new()
+        {
+            Channel = channel, Carrier = carrier, Confidence = RecoveryConfidence.Candidate,
+            Candidates = candidates, ResidualBits = residualBits, Location = location,
+        };
 
     /// <summary>Material survives here; this channel does not turn it into text.</summary>
-    public static RecoveredFinding PresentOnly(
+    internal static RecoveredFinding PresentOnly(
         string channel, string carrier, RecoveryLocation? location)
-        => new(channel, carrier, RecoveryConfidence.PresentOnly, null,
-               System.Array.Empty<string>(), 0, location);
+        => new()
+        {
+            Channel = channel, Carrier = carrier, Confidence = RecoveryConfidence.PresentOnly,
+            Candidates = System.Array.Empty<string>(), ResidualBits = 0, Location = location,
+        };
 
     /// <summary>Same finding, attributed to a mark.</summary>
     public RecoveredFinding LinkedTo(string markId) => this with { MarkId = markId };

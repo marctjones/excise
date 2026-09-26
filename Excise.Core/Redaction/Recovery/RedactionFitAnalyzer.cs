@@ -41,23 +41,27 @@ public static class RedactionFitAnalyzer
         ("currency amount ($d,ddd.dd)", "$0,000.00"),
     };
 
-    /// <param name="MinCharacters">Using the font's WIDEST glyph — fewest that can fill the span.</param>
-    /// <param name="MaxCharacters">Using the font's NARROWEST glyph — most that can fit.</param>
-    /// <param name="Confidence">"fits exactly" | "narrowed" | "wide open".</param>
-    /// <param name="WidthBasis">Where the budget came from — see <see cref="WidthBudget"/>.</param>
-    public sealed record FitReport(
-        double WidthPt,
-        string Font,
-        double FontSizePt,
-        int MinCharacters,
-        int MaxCharacters,
-        IReadOnlyList<string> PatternClasses,
-        IReadOnlyList<Candidate> Candidates,
-        int CandidatesConsidered,
-        double BitsLeaked,
-        string Confidence,
-        string? MetricNote,
-        string WidthBasis = "mark width");
+    public sealed record FitReport
+    {
+        public required double WidthPt { get; init; }
+        public required string Font { get; init; }
+        public required double FontSizePt { get; init; }
+        /// <summary>Using the font's WIDEST glyph — fewest that can fill the span.</summary>
+        public required int MinCharacters { get; init; }
+        /// <summary>Using the font's NARROWEST glyph — most that can fit.</summary>
+        public required int MaxCharacters { get; init; }
+        public required IReadOnlyList<string> PatternClasses { get; init; }
+        public required IReadOnlyList<Candidate> Candidates { get; init; }
+        public required int CandidatesConsidered { get; init; }
+        public required double BitsLeaked { get; init; }
+        /// <summary>"fits exactly" | "narrowed" | "wide open".</summary>
+        public required string Confidence { get; init; }
+        public string? MetricNote { get; init; }
+        /// <summary>Where the budget came from — see <see cref="WidthBudget"/>.</summary>
+        public string WidthBasis { get; init; } = "mark width";
+
+        internal FitReport() { }
+    }
 
     /// <summary>
     /// The admissible interval for the removed text's rendered width:
@@ -228,14 +232,16 @@ public static class RedactionFitAnalyzer
         var fitCount = candidates.Count;
         var bits = fitCount > 0 ? Math.Log2(fitCount) : 0;
 
-        return new FitReport(
-            Math.Round(widthPt, 2), baseFont, fontSizePt,
-            minChars, maxChars, patterns,
-            candidates.Take(maxCandidates).ToList(),
-            considered,
-            Math.Round(bits, 2),
-            DescribeConfidence(fitCount, considered),
-            considered == 0 ? "no dictionary supplied; bits reflect the pattern analysis only" : null);
+        return new FitReport
+        {
+            WidthPt = Math.Round(widthPt, 2), Font = baseFont, FontSizePt = fontSizePt,
+            MinCharacters = minChars, MaxCharacters = maxChars, PatternClasses = patterns,
+            Candidates = candidates.Take(maxCandidates).ToList(),
+            CandidatesConsidered = considered,
+            BitsLeaked = Math.Round(bits, 2),
+            Confidence = DescribeConfidence(fitCount, considered),
+            MetricNote = considered == 0 ? "no dictionary supplied; bits reflect the pattern analysis only" : null,
+        };
     }
 
     /// <summary>
@@ -315,9 +321,12 @@ public static class RedactionFitAnalyzer
             _ => "wide open",
         };
 
-    private static FitReport Empty(double widthPt, string font, double size, string note) => new(
-        Math.Round(widthPt, 2), font, size, 0, 0,
-        Array.Empty<string>(), Array.Empty<Candidate>(), 0, 0, "not analysable", note);
+    private static FitReport Empty(double widthPt, string font, double size, string note) => new()
+    {
+        WidthPt = Math.Round(widthPt, 2), Font = font, FontSizePt = size, MinCharacters = 0, MaxCharacters = 0,
+        PatternClasses = Array.Empty<string>(), Candidates = Array.Empty<Candidate>(), CandidatesConsidered = 0,
+        BitsLeaked = 0, Confidence = "not analysable", MetricNote = note,
+    };
 
     /// <summary>One-line human summary, the shape #1589 asks the CLI to print.</summary>
     public static string Describe(FitReport report)
