@@ -113,6 +113,59 @@ public class RevealHiddenTextTests : IDisposable
         vm.HiddenTextHighlights.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// The OCR stack is a lazy dependency (#341, #1780): building the view model,
+    /// opening a document and the structural reveal must not load Excise.Ocr (or
+    /// Excise.Ocr.Native beneath it); asking for the rasterized scan must. The
+    /// last step is the detector's own positive control: a probe that could not
+    /// see Excise.Ocr load would make the two absence checks vacuous.
+    /// </summary>
+    /// <remarks>
+    /// "Not loaded" is process-wide state, so it can only be observed in a process
+    /// that no earlier test has touched OCR in (the tesseract probe above loads it).
+    /// The skip says so; scripts/verify-lazy-startup.sh runs this test alone and
+    /// treats a skip as red. Every scan is awaited to completion: a load watch
+    /// detached when the toggle returns misses the JIT on the scan's worker thread,
+    /// which is how the version this replaces passed with OCR planted in the scan.
+    /// </remarks>
+    [FixedAvaloniaFact]
+    public async Task OcrStack_IsNotLoadedByStartupOrStructuralReveal_ButIsByTheRasterizedScan()
+    {
+        Assert.SkipWhen(IsLoaded("Excise.Ocr"),
+            "Excise.Ocr is already loaded by an earlier test in this process, so its absence cannot be " +
+            "observed; scripts/verify-lazy-startup.sh runs this test alone in a fresh process and fails on a skip.");
+
+        var path = Path.Combine(Path.GetTempPath(), $"lazy-ocr-{Guid.NewGuid():N}.pdf");
+        _tempFiles.Add(path);
+        File.WriteAllBytes(path, BuildBadRedactionPdf("SECRET INFO 12345"));
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        AssertOcrNotLoaded("building the view model");
+
+        await vm.LoadDocumentHeadlessAsync(path);
+        vm.CurrentPageIndex = 0;
+        AssertOcrNotLoaded("opening a document");
+
+        vm.RevealHiddenText = true;
+        await WaitForHiddenTextScanAsync(vm, () => vm.HiddenTextHighlights.Count == 1);
+        AssertOcrNotLoaded("a completed structural hidden-text scan");
+
+        vm.RevealRasterizedHidden = true;
+        await WaitForHiddenTextScanAsync(vm, () => vm.HiddenTextHighlights.Count >= 1);
+        IsLoaded("Excise.Ocr").Should().BeTrue(
+            "the rasterized scan is the OCR entry point; if it does not load Excise.Ocr, " +
+            "the absence checks above cannot be trusted");
+    }
+
+    private static bool IsLoaded(string assemblyName)
+        => AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == assemblyName);
+
+    private static void AssertOcrNotLoaded(string after)
+    {
+        IsLoaded("Excise.Ocr").Should().BeFalse($"{after} must not load the OCR assembly (OCR shells out to tesseract)");
+        IsLoaded("Excise.Ocr.Native").Should().BeFalse($"{after} must not load the OCR native binding");
+    }
+
     private static async Task WaitForHiddenTextScanAsync(
         MainWindowViewModel vm,
         Func<bool> predicate)
