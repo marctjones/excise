@@ -285,7 +285,7 @@ public class ParserHardeningTests
     {
         var stream = new MemoryStream(BuildPdfWithMalformedIndirectEncryptObject());
 
-        var open = () => PdfDocument.Open(stream, ownsStream: true);
+        var open = () => PdfDocument.Open(stream, new PdfOpenOptions { OwnsStream = true });
 
         open.Should().Throw<PdfEncryptionNotSupportedException>();
         stream.CanRead.Should().BeFalse("the object store owns the stream once /Encrypt is resolved through it");

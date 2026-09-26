@@ -1812,7 +1812,7 @@ partial class Program
             progress?.Update("open", 0, "PdfDocument.Open");
             doc = userPassword is null
                 ? PdfDocument.Open(pdfPath)
-                : PdfDocument.Open(pdfPath, userPassword);
+                : PdfDocument.Open(pdfPath, new PdfOpenOptions { UserPassword = userPassword });
             pageCount = doc.PageCount;
             if (pageCount == 0)
             {

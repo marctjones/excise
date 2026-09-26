@@ -18,12 +18,12 @@ internal static class PdfDocumentLifetime
             var bytes = File.ReadAllBytes(inputPath);
             return userPassword is null
                 ? PdfDocument.Open(bytes)
-                : PdfDocument.Open(bytes, userPassword);
+                : PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = userPassword });
         }
 
         return userPassword is null
             ? PdfDocument.Open(inputPath)
-            : PdfDocument.Open(inputPath, userPassword);
+            : PdfDocument.Open(inputPath, new PdfOpenOptions { UserPassword = userPassword });
     }
 
     internal static bool PathsReferToSameFile(string left, string right)

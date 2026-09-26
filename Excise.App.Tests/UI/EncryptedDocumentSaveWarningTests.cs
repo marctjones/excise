@@ -133,7 +133,7 @@ public class EncryptedDocumentSaveWarningTests : IDisposable
             "preserving the source's protection is the good path (#643) — there is no loss to confirm");
         File.Exists(outputPath).Should().BeTrue();
 
-        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), password);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), new PdfOpenOptions { UserPassword = password });
         reopened.IsEncrypted.Should().BeTrue("saving an encrypted document must keep it encrypted (#643)");
     }
 
@@ -163,7 +163,7 @@ public class EncryptedDocumentSaveWarningTests : IDisposable
         withoutPassword.Should().Throw<Excise.Core.Parsing.PdfEncryptionNotSupportedException>(
             "the saved copy must still require the source's password");
 
-        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), EncryptedFixturePassword);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), new PdfOpenOptions { UserPassword = EncryptedFixturePassword });
         reopened.IsEncrypted.Should().BeTrue("saving an encrypted document must keep it encrypted (#643)");
 
         // The post-save reload must have reopened excise's own (now encrypted)
@@ -188,7 +188,7 @@ public class EncryptedDocumentSaveWarningTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "service-save.pdf");
         documentService.SaveDocument(outputPath);
 
-        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), EncryptedFixturePassword);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), new PdfOpenOptions { UserPassword = EncryptedFixturePassword });
         reopened.IsEncrypted.Should().BeTrue();
         reopened.Permissions.RawValue.Should().Be(sourcePermissions,
             "the source /P permission mask must survive the service-level save round-trip (#643)");

@@ -403,7 +403,7 @@ public class DocumentPrintingTests : IDisposable
         }
         AssertNoPrintCopiesLeft();
         File.Exists(encrypted).Should().BeTrue();
-        using var source = PdfDocument.Open(File.ReadAllBytes(encrypted), "user-1545");
+        using var source = PdfDocument.Open(File.ReadAllBytes(encrypted), new PdfOpenOptions { UserPassword = "user-1545" });
         source.IsEncrypted.Should().BeTrue("printing must not touch the encrypted source");
     }
 

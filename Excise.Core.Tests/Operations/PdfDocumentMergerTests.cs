@@ -143,7 +143,7 @@ public class PdfDocumentMergerTests
     public void Merge_SingleSource_InternalLinkResolvesToPageWithinMergedDocument()
     {
         var bytes = BuildDocument("Name", "Chapter 1", "Chapter 2");
-        using var source = PdfDocument.Open(new MemoryStream(bytes), false);
+        using var source = PdfDocument.Open(new MemoryStream(bytes));
 
         using var target = PdfDocumentMerger.Merge([(source, new[] { 0, 1 })]);
 
@@ -159,8 +159,8 @@ public class PdfDocumentMergerTests
     {
         var bytesA = BuildDocument("Name", "A Chapter 1", "A Chapter 2");
         var bytesB = BuildDocument("Name", "B Chapter 1", "B Chapter 2");
-        using var sourceA = PdfDocument.Open(new MemoryStream(bytesA), false);
-        using var sourceB = PdfDocument.Open(new MemoryStream(bytesB), false);
+        using var sourceA = PdfDocument.Open(new MemoryStream(bytesA));
+        using var sourceB = PdfDocument.Open(new MemoryStream(bytesB));
 
         using var target = PdfDocumentMerger.Merge(
         [
@@ -200,7 +200,7 @@ public class PdfDocumentMergerTests
     public void Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline()
     {
         var plainBytes = BuildPlainDocument();
-        using var source = PdfDocument.Open(new MemoryStream(plainBytes), false);
+        using var source = PdfDocument.Open(new MemoryStream(plainBytes));
 
         using var target = PdfDocumentMerger.Merge([(source, new[] { 0 })]);
 
@@ -214,8 +214,8 @@ public class PdfDocumentMergerTests
     {
         var plainBytes = BuildPlainDocument();
         var outlinedBytes = BuildDocument("Name", "Only Chapter", "Second Chapter");
-        using var plain = PdfDocument.Open(new MemoryStream(plainBytes), false);
-        using var outlined = PdfDocument.Open(new MemoryStream(outlinedBytes), false);
+        using var plain = PdfDocument.Open(new MemoryStream(plainBytes));
+        using var outlined = PdfDocument.Open(new MemoryStream(outlinedBytes));
 
         using var target = PdfDocumentMerger.Merge(
         [

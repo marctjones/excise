@@ -33,7 +33,7 @@ public class PdfTextExtractionService
 
         try
         {
-            using var document = PdfDocument.Open(pdfStream, ownsStream: false);
+            using var document = PdfDocument.Open(pdfStream);
 
             if (pageIndex < 0 || pageIndex >= document.PageCount)
             {

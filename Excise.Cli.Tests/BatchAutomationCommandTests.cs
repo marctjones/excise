@@ -213,7 +213,7 @@ public class BatchAutomationCommandTests : IDisposable
         result.ExitCode.Should().Be(0);
         File.Exists(output).Should().BeTrue();
 
-        using var reopened = PdfDocument.Open(File.ReadAllBytes(output), "pw123");
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(output), new PdfOpenOptions { UserPassword = "pw123" });
         reopened.IsEncrypted.Should().BeTrue("the output must stay protected by the same password (#643)");
     }
 

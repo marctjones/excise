@@ -146,7 +146,7 @@ public class EncryptedRedactionOutputIntegrityTests
             RedactionReport report;
             try
             {
-                using var doc = PdfDocument.Open(path, password);
+                using var doc = PdfDocument.Open(path, new PdfOpenOptions { UserPassword = password });
                 report = doc.RedactText(term);
                 doc.Save(output, doc.GetReEncryptionOptions(password));
             }

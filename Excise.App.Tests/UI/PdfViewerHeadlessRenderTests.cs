@@ -553,7 +553,7 @@ public class PdfViewerHeadlessRenderTests
 
         var doc = password == null
             ? Excise.Core.Document.PdfDocument.Open(pdfBytes)
-            : Excise.Core.Document.PdfDocument.Open(pdfBytes, password);
+            : Excise.Core.Document.PdfDocument.Open(pdfBytes, new Excise.Core.Document.PdfOpenOptions { UserPassword = password });
 
         var viewer = new PdfViewerControl { CurrentPage = pageNumber };
         var window = new Window
@@ -597,7 +597,7 @@ public class PdfViewerHeadlessRenderTests
     {
         var doc = password == null
             ? Excise.Core.Document.PdfDocument.Open(pdfBytes)
-            : Excise.Core.Document.PdfDocument.Open(pdfBytes, password);
+            : Excise.Core.Document.PdfDocument.Open(pdfBytes, new Excise.Core.Document.PdfOpenOptions { UserPassword = password });
 
         var viewer = new PdfViewerControl { CurrentPage = pageNumber };
         var window = new Window
@@ -696,7 +696,7 @@ public class PdfViewerHeadlessRenderTests
     {
         using var doc = password == null
             ? Excise.Core.Document.PdfDocument.Open(pdfBytes)
-            : Excise.Core.Document.PdfDocument.Open(pdfBytes, password);
+            : Excise.Core.Document.PdfDocument.Open(pdfBytes, new Excise.Core.Document.PdfOpenOptions { UserPassword = password });
         var page = doc.GetPage(pageNumber);
         var renderer = new Excise.Rendering.SkiaRenderer();
         return renderer.RenderPage(page, new Excise.Rendering.RenderOptions { Dpi = dpi });
@@ -706,7 +706,7 @@ public class PdfViewerHeadlessRenderTests
     {
         using var doc = password == null
             ? Excise.Core.Document.PdfDocument.Open(pdfBytes)
-            : Excise.Core.Document.PdfDocument.Open(pdfBytes, password);
+            : Excise.Core.Document.PdfDocument.Open(pdfBytes, new Excise.Core.Document.PdfOpenOptions { UserPassword = password });
         var page = doc.GetPage(pageNumber);
         // The DPI the viewer actually rasterizes at, from its own plan. The
         // headless host runs at zoom 1 × dpr 1, which is 96 DPI for a normal

@@ -52,7 +52,7 @@ public sealed class EncryptionPreservationTests
             Algorithm = PdfEncryptionAlgorithm.Aes256,
         });
 
-        using var doc = PdfDocument.Open(encrypted, "pw");
+        using var doc = PdfDocument.Open(encrypted, new PdfOpenOptions { UserPassword = "pw" });
         var options = doc.GetReEncryptionOptions("pw");
 
         options.Should().NotBeNull();
@@ -76,7 +76,7 @@ public sealed class EncryptionPreservationTests
             Algorithm = PdfEncryptionAlgorithm.Aes128,
         });
 
-        using var doc = PdfDocument.Open(encrypted, "pw");
+        using var doc = PdfDocument.Open(encrypted, new PdfOpenOptions { UserPassword = "pw" });
         var options = doc.GetReEncryptionOptions("pw");
 
         options.Should().NotBeNull();
@@ -95,7 +95,7 @@ public sealed class EncryptionPreservationTests
         // or silently decrypt.
         var path = ExistingFixturePath("test-pdfs/pdfjs/issue15893_reduced.pdf");
 
-        using var doc = PdfDocument.Open(path, "test");
+        using var doc = PdfDocument.Open(path, new PdfOpenOptions { UserPassword = "test" });
         var options = doc.GetReEncryptionOptions("test");
 
         options.Should().NotBeNull();
@@ -117,7 +117,7 @@ public sealed class EncryptionPreservationTests
         });
 
         byte[] resaved;
-        using (var doc = PdfDocument.Open(encrypted, "hunter2"))
+        using (var doc = PdfDocument.Open(encrypted, new PdfOpenOptions { UserPassword = "hunter2" }))
         {
             resaved = doc.SaveToBytes(doc.GetReEncryptionOptions("hunter2"));
         }
@@ -127,7 +127,7 @@ public sealed class EncryptionPreservationTests
         wrongPassword.Should().Throw<PdfEncryptionNotSupportedException>(
             "the re-saved file must still require the original password");
 
-        using var reopened = PdfDocument.Open(resaved, "hunter2");
+        using var reopened = PdfDocument.Open(resaved, new PdfOpenOptions { UserPassword = "hunter2" });
         reopened.IsEncrypted.Should().BeTrue("protection must survive the save round-trip (#643)");
         reopened.Permissions.RawValue.Should().Be(unchecked((int)RestrictivePermissions),
             "the /P mask must survive the round-trip");
@@ -147,7 +147,7 @@ public sealed class EncryptionPreservationTests
         });
 
         byte[] resaved;
-        using (var doc = PdfDocument.Open(encrypted, "pw"))
+        using (var doc = PdfDocument.Open(encrypted, new PdfOpenOptions { UserPassword = "pw" }))
         {
             resaved = doc.SaveToBytes();
         }
@@ -170,7 +170,7 @@ public sealed class EncryptionPreservationTests
         Encoding.Latin1.GetString(encrypted).Should().Contain("/XRef",
             "the reproduction needs a cross-reference STREAM (the exempt object), not a classic table");
 
-        using var doc = PdfDocument.Open(encrypted, "");
+        using var doc = PdfDocument.Open(encrypted, new PdfOpenOptions { UserPassword = "" });
         doc.RedactText("REDACTME");
 
         // #643: an encrypted source re-encrypts like the source. This Save — the
@@ -179,7 +179,7 @@ public sealed class EncryptionPreservationTests
         options.Should().NotBeNull("an encrypted source must produce re-encryption options");
         var outBytes = doc.SaveToBytes(options!);
 
-        using var reopened = PdfDocument.Open(outBytes, "");
+        using var reopened = PdfDocument.Open(outBytes, new PdfOpenOptions { UserPassword = "" });
         reopened.GetReEncryptionOptions("")!.Algorithm.Should().Be(
             PdfEncryptionAlgorithm.Aes128,
             "the output must stay encrypted and keep the source's V=4 AES-128 (#643)");
@@ -198,7 +198,7 @@ public sealed class EncryptionPreservationTests
         const string secret = "IDENTITY-CRYPT-SECRET";
         var encrypted = CreateAes128PdfWithPlaintextIdentityContent(secret);
 
-        using var doc = PdfDocument.Open(encrypted, "pw");
+        using var doc = PdfDocument.Open(encrypted, new PdfOpenOptions { UserPassword = "pw" });
         doc.IsEncrypted.Should().BeTrue();
         doc.GetPage(1).Text.Should().Contain(secret,
             "the per-stream Identity override must leave the content stream readable");
@@ -206,7 +206,7 @@ public sealed class EncryptionPreservationTests
         doc.RedactText(secret, drawBlackRect: false).VerifiedRemovals.Should().Be(1);
         var saved = doc.SaveToBytes(doc.GetReEncryptionOptions("pw"));
 
-        using var reopened = PdfDocument.Open(saved, "pw");
+        using var reopened = PdfDocument.Open(saved, new PdfOpenOptions { UserPassword = "pw" });
         reopened.IsEncrypted.Should().BeTrue("#643 must still preserve source protection");
         reopened.GetPage(1).Text.Should().NotContain(secret);
         SavedPdfLeakScanner.FindTerm(reopened.SaveToBytes(), secret).Should().BeEmpty(

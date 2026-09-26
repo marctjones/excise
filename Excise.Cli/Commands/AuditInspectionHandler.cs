@@ -20,7 +20,7 @@ internal static class AuditInspectionHandler
 
         using var document = string.IsNullOrEmpty(request.Password)
             ? PdfDocument.Open(file.FullName)
-            : PdfDocument.Open(file.FullName, request.Password);
+            : PdfDocument.Open(file.FullName, new PdfOpenOptions { UserPassword = request.Password });
         var structuralHits = HiddenTextDetector.Scan(
             document,
             includeVisibleFailedRedactions: true);

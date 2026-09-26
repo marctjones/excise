@@ -49,7 +49,7 @@ public class AnnotationVisibilityToggleTests
 
     private static long RenderAndCountInk(byte[] pdf, bool renderAnnotations)
     {
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: true);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf), new PdfOpenOptions { OwnsStream = true });
         var page = doc.GetPage(1);
         using var bitmap = new SkiaRenderer().RenderPage(page, new RenderOptions
         {

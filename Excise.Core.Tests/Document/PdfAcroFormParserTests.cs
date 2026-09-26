@@ -73,7 +73,7 @@ public class PdfAcroFormParserTests
     public void Parse_NullAcroForm_ReturnsEmptyFields()
     {
         var pdf = MakePdfWithAcroForm("");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var catalog = doc.Catalog;
 
         var result = PdfAcroFormParser.Parse(doc, catalog);
@@ -85,7 +85,7 @@ public class PdfAcroFormParserTests
     public void Parse_EmptyFieldsArray_ReturnsEmpty()
     {
         var pdf = MakePdfWithAcroForm("/AcroForm << /Fields [] >>");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -98,7 +98,7 @@ public class PdfAcroFormParserTests
     public void Parse_NeedsAppearancesTrue_Captured()
     {
         var pdf = MakePdfWithAcroForm("/AcroForm << /Fields [] /NeedsAppearances true >>");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -111,7 +111,7 @@ public class PdfAcroFormParserTests
     public void Parse_NeedsAppearancesFalse_Captured()
     {
         var pdf = MakePdfWithAcroForm("/AcroForm << /Fields [] /NeedsAppearances false >>");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -127,7 +127,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithSingleField("Tx", "TestField");
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -142,7 +142,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithSingleField("Btn", "ButtonField");
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -156,7 +156,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithSingleField("Ch", "ChoiceField");
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -170,7 +170,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithSingleField("Sig", "SignatureField");
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -184,7 +184,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithSingleField("Unknown", "UnknownField");
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -200,7 +200,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithSingleFieldAndValue("Tx", "Name", "Alice");
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -214,7 +214,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithNameValue("Btn", "RadioButton", "/Yes");
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -287,7 +287,7 @@ public class PdfAcroFormParserTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -363,7 +363,7 @@ public class PdfAcroFormParserTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -437,7 +437,7 @@ public class PdfAcroFormParserTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -511,7 +511,7 @@ public class PdfAcroFormParserTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -528,7 +528,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithFieldFlags("Tx", "Field", 0x1);
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -543,7 +543,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithFieldFlags("Tx", "Field", 0x2);
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -558,7 +558,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithFieldFlags("Tx", "Field", 0x1000);
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -572,7 +572,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithFieldFlags("Tx", "Field", 0x1 | 0x2 | 0x1000);
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -590,7 +590,7 @@ public class PdfAcroFormParserTests
     {
         var sb = BuildPdfWithSingleFieldAndValue("Tx", "Name", "Alice");
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -666,7 +666,7 @@ public class PdfAcroFormParserTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -749,7 +749,7 @@ public class PdfAcroFormParserTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -833,7 +833,7 @@ public class PdfAcroFormParserTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 
@@ -881,7 +881,7 @@ public class PdfAcroFormParserTests
     {
         var pdf = FormPdf("[4 0 R]",
             "<< /Type /Annot /Subtype /Widget /FT /Tx /V (unnamed value) /Rect [72 700 300 720] /P 3 0 R >>");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm()!;
 
@@ -895,7 +895,7 @@ public class PdfAcroFormParserTests
         form.FindField("").Should().BeNull("a field with no name anywhere cannot be addressed, so an empty lookup finds nothing");
 
         field.SetValue("filled");
-        using var reopened = PdfDocument.Open(new MemoryStream(doc.SaveToBytes()), false);
+        using var reopened = PdfDocument.Open(new MemoryStream(doc.SaveToBytes()));
         reopened.GetAcroForm()!.Fields.Should().ContainSingle().Which.Value.Should().Be("filled");
     }
 
@@ -913,7 +913,7 @@ public class PdfAcroFormParserTests
             "<< /Parent 4 0 R /T (named) /V (named kid) >>",
             "<< /Kids [8 0 R] >>",
             "<< /Parent 7 0 R /T (child) /FT /Ch >>");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm()!;
 
@@ -935,7 +935,7 @@ public class PdfAcroFormParserTests
         var pdf = FormPdf("[4 0 R]",
             "<< /T (loop) /Kids [4 0 R 5 0 R] >>",
             "<< /Parent 4 0 R /T (leaf) /FT /Tx /V (x) >>");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         doc.GetAcroForm()!.Fields.Select(f => f.FullName).Should().Equal("loop.leaf");
     }
@@ -947,7 +947,7 @@ public class PdfAcroFormParserTests
             "<< /T (a) /Kids [5 0 R] >>",
             "<< /Parent 4 0 R /T (b) /Kids [4 0 R 6 0 R] >>",
             "<< /Parent 5 0 R /T (c) /FT /Tx >>");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         doc.GetAcroForm()!.Fields.Select(f => f.FullName).Should().Equal("a.b.c");
     }
@@ -1024,7 +1024,7 @@ public class PdfAcroFormParserTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var acroFormDict = doc.Catalog.GetOptional("AcroForm") as PdfDictionary
             ?? throw new InvalidOperationException();
 

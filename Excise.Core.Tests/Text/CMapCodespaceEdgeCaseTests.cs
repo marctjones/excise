@@ -121,7 +121,7 @@ end
         // drift from the letters RedactText matched.
         var pdf = BuildPdf(ContentCodesHex);
 
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var page = doc.GetPage(1);
 
         var extracted = new TextExtractor(page).ExtractText();

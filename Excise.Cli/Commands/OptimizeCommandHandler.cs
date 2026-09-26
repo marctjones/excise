@@ -34,7 +34,7 @@ internal static class OptimizeCommandHandler
         Excise.Core.Security.PdfEncryptionOptions? reEncryption;
         using (var document = request.Password is null
                    ? Excise.Core.Document.PdfDocument.Open(input.FullName)
-                   : Excise.Core.Document.PdfDocument.Open(input.FullName, request.Password))
+                   : Excise.Core.Document.PdfDocument.Open(input.FullName, new Excise.Core.Document.PdfOpenOptions { UserPassword = request.Password }))
         {
             reEncryption = request.AllowDecrypt ? null : document.GetReEncryptionOptions(request.Password);
             if (document.IsEncrypted && request.AllowDecrypt)

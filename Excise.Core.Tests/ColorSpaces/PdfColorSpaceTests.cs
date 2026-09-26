@@ -28,7 +28,7 @@ public class PdfColorSpaceTests
         sb.Append("trailer\n<< /Size 4 /Root 1 0 R >>\n");
         sb.Append($"startxref\n{xrefPos}\n%%EOF\n");
         var bytes = Encoding.Latin1.GetBytes(sb.ToString());
-        return PdfDocument.Open(new MemoryStream(bytes), ownsStream: false);
+        return PdfDocument.Open(new MemoryStream(bytes));
     }
 
     [Fact]

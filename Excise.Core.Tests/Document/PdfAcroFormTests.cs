@@ -232,7 +232,7 @@ public class PdfAcroFormTests
         // #424: a consumer importing a radio group needs its selectable export
         // values (the widget /AP /N on-states), not a generic boolean.
         byte[] pdf = MakePdfWithRadioGroup();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var field = doc.GetAcroForm()!.Fields.Single(f => f.PartialName == "Gender");
         field.FieldType.Should().Be(PdfFieldType.Button);
@@ -243,7 +243,7 @@ public class PdfAcroFormTests
     public void ButtonExportValues_NonButtonField_IsEmpty()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var text = doc.GetAcroForm()!.Fields.First(f => f.FieldType == PdfFieldType.Text);
         text.ButtonExportValues.Should().BeEmpty();
@@ -254,7 +254,7 @@ public class PdfAcroFormTests
     {
         // PDF without /AcroForm in catalog
         byte[] pdf = MakePdfWithAcroForm("");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         doc.GetAcroForm().Should().BeNull();
     }
@@ -263,7 +263,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_WithTextAndButtonFields_ParsesBoth()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -279,7 +279,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_TextFieldValue_ParsedCorrectly()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -294,7 +294,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_WidgetRect_ParsedCorrectly()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -312,7 +312,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_NeedsAppearances_ParsedCorrectly()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -323,7 +323,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_ButtonFieldValue_ParsedAsName()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         var acceptField = form!.Fields.FirstOrDefault(f => f.PartialName == "Accept");
@@ -336,7 +336,7 @@ public class PdfAcroFormTests
     {
         // Test that multiple fields at the top level are all parsed
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -356,7 +356,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_GetFields_FiltersByType()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -371,7 +371,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_FindField_ByFullName()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -385,7 +385,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_FindField_ReturnsNull_WhenNotFound()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         var field = form!.FindField("NonExistent");
@@ -396,7 +396,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_ToString_FormatsCorrectly()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         var nameField = form!.Fields.First(f => f.PartialName == "Name");
@@ -411,7 +411,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_RawDictionary_Accessible()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         var nameField = form!.Fields.First(f => f.PartialName == "Name");
@@ -487,7 +487,7 @@ public class PdfAcroFormTests
         sb.AppendLine("%%EOF");
 
         byte[] pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -569,7 +569,7 @@ public class PdfAcroFormTests
         sb.AppendLine("%%EOF");
 
         byte[] pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         var field = form!.Fields.First();
@@ -641,7 +641,7 @@ public class PdfAcroFormTests
         sb.AppendLine("%%EOF");
 
         byte[] pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         var field = form!.Fields.First();
@@ -713,7 +713,7 @@ public class PdfAcroFormTests
         sb.AppendLine("%%EOF");
 
         byte[] pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         var field = form!.Fields.First();
@@ -784,7 +784,7 @@ public class PdfAcroFormTests
         sb.AppendLine("%%EOF");
 
         byte[] pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -870,7 +870,7 @@ public class PdfAcroFormTests
         sb.AppendLine("%%EOF");
 
         byte[] pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -955,7 +955,7 @@ public class PdfAcroFormTests
         sb.AppendLine("%%EOF");
 
         byte[] pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         var childField = form!.Fields.FirstOrDefault(f => f.FullName.Contains("ChildNoValue"));
@@ -1003,7 +1003,7 @@ public class PdfAcroFormTests
         sb.AppendLine("%%EOF");
 
         byte[] pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         doc.GetAcroForm().Should().BeNull();
     }
@@ -1012,7 +1012,7 @@ public class PdfAcroFormTests
     public void GetAcroForm_FindField_NonExistent_ReturnsNull()
     {
         byte[] pdf = MakePdfWithComplexAcroForm();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form.Should().NotBeNull();
@@ -1084,7 +1084,7 @@ public class PdfAcroFormTests
         sb.AppendLine("%%EOF");
 
         byte[] pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         form!.GetChoiceFields().Should().HaveCount(1);
@@ -1153,7 +1153,7 @@ public class PdfAcroFormTests
         sb.AppendLine("%%EOF");
 
         byte[] pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var form = doc.GetAcroForm();
         var field = form!.Fields.First();

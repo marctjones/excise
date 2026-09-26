@@ -30,7 +30,7 @@ internal static class RenderPageHandler
         var openWatch = Stopwatch.StartNew();
         using var document = string.IsNullOrEmpty(request.Password)
             ? PdfDocument.Open(input.FullName)
-            : PdfDocument.Open(input.FullName, request.Password);
+            : PdfDocument.Open(input.FullName, new PdfOpenOptions { UserPassword = request.Password });
         openWatch.Stop();
         cancellationToken.ThrowIfCancellationRequested();
 

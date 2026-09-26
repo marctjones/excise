@@ -97,7 +97,7 @@ public class PdfLinkTests
     public void Parse_PageWithNoAnnots_ReturnsEmpty()
     {
         var pdf = MakePdfWithLinks("[]", "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -109,7 +109,7 @@ public class PdfLinkTests
     public void Parse_PageWithNullAnnots_ReturnsEmpty()
     {
         var pdf = MakePdfWithLinks("null", "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -121,7 +121,7 @@ public class PdfLinkTests
     public void Parse_AnnotsNotArray_ReturnsEmpty()
     {
         var pdf = MakePdfWithLinks("<< /Name (NotArray) >>", "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -140,7 +140,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Highlight /Rect [60 60 150 80] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -158,7 +158,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Highlight /Rect [60 60 150 80] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -173,7 +173,7 @@ public class PdfLinkTests
             << /Type /Annot /Rect [10 10 50 50] /Dest [4 0 R /XYZ 0 0 0] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -190,7 +190,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [72.5 100.25 300.75 150.125] /Dest [4 0 R /XYZ 0 0 0] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -209,7 +209,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Dest [4 0 R /XYZ 0 0 0] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -224,7 +224,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 20] /Dest [4 0 R /XYZ 0 0 0] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -241,7 +241,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /A << /S /GoTo /D [4 0 R /XYZ 0 0 0] >> >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -257,7 +257,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /Dest [4 0 R /XYZ 0 0 0] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -273,7 +273,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /Dest [5 0 R /XYZ 0 0 0] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -293,7 +293,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /A << /S /URI /URI (https://example.com) >> >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -314,7 +314,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /A << /S /URI /URI ({uri}) >> >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -338,7 +338,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /A << /S /{actionType} >> >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -355,7 +355,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /A << /S /SubmitForm >> >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -374,7 +374,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /Dest /MyDestination >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
         var namedDests = new Dictionary<string, PdfObject>
         {
@@ -394,7 +394,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /Dest (StringDest) >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
         var namedDests = new Dictionary<string, PdfObject>
         {
@@ -414,7 +414,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /Dest /UnknownDest >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
         var namedDests = new Dictionary<string, PdfObject>
         {
@@ -433,7 +433,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /Dest /MyDest >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -453,7 +453,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [200 200 250 250] /Dest [4 0 R /XYZ 0 0 0] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -474,7 +474,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [200 200 250 250] /Dest [4 0 R /XYZ 0 0 0] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -491,7 +491,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /Dest (NotArray) >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -506,7 +506,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /Dest [] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -521,7 +521,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /Dest [123 /XYZ 0 0 0] >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);
@@ -538,7 +538,7 @@ public class PdfLinkTests
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /Dest [3 0 R /XYZ 0 0 0] >>
         ]";
         var pdf = MakePdfWithLinks("[]", annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(2).Dictionary;
 
         var result = PdfLinkParser.Parse(doc, pageDict, null);

@@ -379,7 +379,7 @@ public class EncryptionWriterInteropTests : IDisposable
         var encrypted = QpdfReferenceTool.EncryptR4(plainPath, qpdfEncryptedPath, "user-secret", "owner-secret");
         encrypted.Should().BeTrue("qpdf must succeed at writing its own R=4 encrypted file for this test to be meaningful");
 
-        using var reopened = PdfDocument.Open(File.ReadAllBytes(qpdfEncryptedPath), userPassword: "user-secret");
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(qpdfEncryptedPath), new PdfOpenOptions { UserPassword = "user-secret" });
         reopened.GetPage(1).Text.Should().Contain(MarkerText,
             "excise must be able to independently derive the correct file key and per-object keys " +
             "from a file it did not write, using only the same shared KDF helpers its own R=4 writer uses");

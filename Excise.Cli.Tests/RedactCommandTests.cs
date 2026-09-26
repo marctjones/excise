@@ -254,7 +254,7 @@ public class RedactCommandTests : IDisposable
 
         var withoutPassword = () => PdfDocument.Open(File.ReadAllBytes(output));
         withoutPassword.Should().Throw<Excise.Core.Parsing.PdfEncryptionNotSupportedException>();
-        using var redacted = PdfDocument.Open(File.ReadAllBytes(output), "flatten-pw");
+        using var redacted = PdfDocument.Open(File.ReadAllBytes(output), new PdfOpenOptions { UserPassword = "flatten-pw" });
         redacted.IsEncrypted.Should().BeTrue("image-only redaction must preserve source protection by default");
         redacted.GetPage(1).Text.Should().BeEmpty();
     }
@@ -569,7 +569,7 @@ public class RedactCommandTests : IDisposable
         withoutPassword.Should().Throw<Excise.Core.Parsing.PdfEncryptionNotSupportedException>(
             "the redacted output must still require the source's password");
 
-        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), "pw123");
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), new PdfOpenOptions { UserPassword = "pw123" });
         reopened.IsEncrypted.Should().BeTrue();
         string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value)).Should().NotContain("WORLD");
     }
@@ -688,7 +688,7 @@ public class RedactCommandTests : IDisposable
         exitCode.Should().Be(0);
         capturedOut.ToString().Should().Contain("Redacted 1 occurrence(s) of 'SECRET'");
 
-        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), "pw123");
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), new PdfOpenOptions { UserPassword = "pw123" });
         reopened.IsEncrypted.Should().BeTrue("the output must stay protected by the same password (#643)");
         string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value)).Should().NotContain("SECRET");
     }

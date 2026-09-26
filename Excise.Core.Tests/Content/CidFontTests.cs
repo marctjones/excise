@@ -21,7 +21,7 @@ public class CidFontTests
     {
         var pdf = BuildPdfWithType0Font();
 
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var page = doc.GetPage(1);
         var stream = page.GetContentStream();
 
@@ -38,7 +38,7 @@ public class CidFontTests
     {
         var pdf = BuildPdfWithType0FontTJ();
 
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var page = doc.GetPage(1);
         var stream = page.GetContentStream();
 
@@ -56,7 +56,7 @@ public class CidFontTests
     {
         var pdf = BuildPdfWithType1Font();
 
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var page = doc.GetPage(1);
         var stream = page.GetContentStream();
 
@@ -73,7 +73,7 @@ public class CidFontTests
     {
         var pdf = BuildPdfWithType0FontAndCidWidths();
 
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var page = doc.GetPage(1);
         var stream = page.GetContentStream();
 

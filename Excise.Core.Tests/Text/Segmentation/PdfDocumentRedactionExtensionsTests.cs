@@ -39,7 +39,7 @@ public class PdfDocumentRedactionExtensionsTests
         sb.Append($"{o5:D10} 00000 n \n");
         sb.Append("trailer\n<< /Size 6 /Root 1 0 R >>\n");
         sb.Append($"startxref\n{xref}\n%%EOF\n");
-        return PdfDocument.Open(new MemoryStream(Encoding.Latin1.GetBytes(sb.ToString())), false);
+        return PdfDocument.Open(new MemoryStream(Encoding.Latin1.GetBytes(sb.ToString())));
     }
 
     [Fact]
@@ -184,7 +184,7 @@ public class PdfDocumentRedactionExtensionsTests
         sb.Append("trailer\n<< /Size 8 /Root 1 0 R >>\n");
         sb.Append($"startxref\n{xref}\n%%EOF\n");
 
-        var doc = PdfDocument.Open(new MemoryStream(Encoding.Latin1.GetBytes(sb.ToString())), false);
+        var doc = PdfDocument.Open(new MemoryStream(Encoding.Latin1.GetBytes(sb.ToString())));
 
         var result = doc.RedactText("Hello").VerifiedRemovals;
 

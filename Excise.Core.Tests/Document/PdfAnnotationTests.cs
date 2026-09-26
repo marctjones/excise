@@ -81,7 +81,7 @@ public class PdfAnnotationTests
     public void GetAnnotations_PageWithNoAnnots_ReturnsEmpty()
     {
         var pdf = MakePdfWithAnnots("[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         doc.GetPage(1).GetAnnotations().Should().BeEmpty();
     }
@@ -97,7 +97,7 @@ public class PdfAnnotationTests
             /T (Marc Jones)
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var annots = doc.GetPage(1).GetAnnotations();
 
@@ -121,7 +121,7 @@ public class PdfAnnotationTests
             /C [1 1 0]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var annots = doc.GetPage(1).GetAnnotations();
 
@@ -143,7 +143,7 @@ public class PdfAnnotationTests
         {
             var annotsDef = $@"[<< /Type /Annot /Subtype /{subtype} /Rect [0 0 100 20] >>]";
             var pdf = MakePdfWithAnnots(annotsDef);
-            using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+            using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
             var annots = doc.GetPage(1).GetAnnotations();
             annots[0].IsTextMarkup.Should().BeTrue(
@@ -160,7 +160,7 @@ public class PdfAnnotationTests
             << /Type /Annot /Subtype /Stamp /Rect [100 500 300 600] >>
         ]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var annots = doc.GetPage(1).GetAnnotations();
 
@@ -175,7 +175,7 @@ public class PdfAnnotationTests
         // Flag 4 = Print, flag 64 = ReadOnly  →  combined = 68
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /F 68 >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var annots = doc.GetPage(1).GetAnnotations();
 
@@ -195,7 +195,7 @@ public class PdfAnnotationTests
             /A << /S /URI /URI (https://example.com) >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var annots = doc.GetPage(1).GetAnnotations();
 
@@ -212,7 +212,7 @@ public class PdfAnnotationTests
         // /C [0.5] → grayscale 0.5 → R=G=B=0.5
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /C [0.5] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var annot = doc.GetPage(1).GetAnnotations()[0];
         annot.Color.Should().NotBeNull();
@@ -226,7 +226,7 @@ public class PdfAnnotationTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /FutureType /Rect [0 0 10 10] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var annot = doc.GetPage(1).GetAnnotations()[0];
         annot.Subtype.Should().Be(PdfAnnotationSubtype.Unknown);

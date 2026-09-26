@@ -574,7 +574,7 @@ public class PdfDocumentServiceTests : IDisposable
         var openWithoutPassword = () => PdfDocument.Open(path);
         openWithoutPassword.Should().Throw<PdfEncryptionNotSupportedException>(
             $"{Path.GetFileName(path)} is a copy of a password-protected document");
-        using (var reopened = PdfDocument.Open(path, password))
+        using (var reopened = PdfDocument.Open(path, new PdfOpenOptions { UserPassword = password }))
             reopened.IsEncrypted.Should().BeTrue();
 
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");

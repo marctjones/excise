@@ -33,8 +33,7 @@ public class ObstructionStripperTests
         sb.Append("trailer\n<< /Size 4 /Root 1 0 R >>\n");
         sb.Append($"startxref\n{xrefPos}\n%%EOF\n");
         return PdfDocument.Open(
-            new MemoryStream(Encoding.Latin1.GetBytes(sb.ToString())),
-            ownsStream: false).Pages[0];
+            new MemoryStream(Encoding.Latin1.GetBytes(sb.ToString()))).Pages[0];
     }
 
     [Fact]

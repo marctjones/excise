@@ -753,12 +753,9 @@ namespace Excise.Core.Document
         public void SetSubject(string subject) { }
         public void SetTitle(string title) { }
         public static Excise.Core.Document.PdfDocument CreateNew(string version = "1.7") { }
-        public static Excise.Core.Document.PdfDocument Open(byte[] data, bool allowEncrypted = false) { }
-        public static Excise.Core.Document.PdfDocument Open(string path, bool allowEncrypted = false) { }
-        public static Excise.Core.Document.PdfDocument Open(System.IO.Stream stream, bool ownsStream = false, bool allowEncrypted = false) { }
-        public static Excise.Core.Document.PdfDocument Open(byte[] data, string? userPassword, bool allowEncrypted = false) { }
-        public static Excise.Core.Document.PdfDocument Open(string path, string? userPassword, bool allowEncrypted = false) { }
-        public static Excise.Core.Document.PdfDocument Open(System.IO.Stream stream, string? userPassword, bool ownsStream = false, bool allowEncrypted = false) { }
+        public static Excise.Core.Document.PdfDocument Open(System.IO.Stream stream, Excise.Core.Document.PdfOpenOptions? options = null) { }
+        public static Excise.Core.Document.PdfDocument Open(byte[] data, Excise.Core.Document.PdfOpenOptions? options = null) { }
+        public static Excise.Core.Document.PdfDocument Open(string path, Excise.Core.Document.PdfOpenOptions? options = null) { }
     }
     public sealed class PdfEmbeddedFile : System.IEquatable<Excise.Core.Document.PdfEmbeddedFile>
     {
@@ -873,6 +870,13 @@ namespace Excise.Core.Document
         public Excise.Core.Primitives.PdfObject? LayerOrder { get; }
         public System.Collections.Generic.IReadOnlySet<string> OffByDefault { get; }
         public bool IsVisibleByDefault(string ocgName) { }
+    }
+    public sealed class PdfOpenOptions : System.IEquatable<Excise.Core.Document.PdfOpenOptions>
+    {
+        public PdfOpenOptions() { }
+        public bool AllowEncrypted { get; init; }
+        public bool OwnsStream { get; init; }
+        public string? UserPassword { get; init; }
     }
     public static class PdfOutlineAuthoring
     {

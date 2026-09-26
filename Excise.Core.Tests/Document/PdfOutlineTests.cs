@@ -112,7 +112,7 @@ public class PdfOutlineTests
     public void Parse_NoOutlines_ReturnsEmpty()
     {
         var pdf = MakePdfWithOutline("");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.Parse(doc);
 
@@ -124,7 +124,7 @@ public class PdfOutlineTests
     {
         var outlineDef = "/Outlines << /Type /Outlines >>";
         var pdf = MakePdfWithOutline(outlineDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.Parse(doc);
 
@@ -185,7 +185,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.Parse(doc);
 
@@ -281,7 +281,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.Parse(doc);
 
@@ -376,7 +376,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.Parse(doc);
 
@@ -446,7 +446,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.Parse(doc);
 
@@ -505,7 +505,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.Parse(doc);
 
@@ -565,7 +565,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.Parse(doc);
 
@@ -616,7 +616,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.BuildNamedDestinations(doc);
 
@@ -663,7 +663,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.BuildNamedDestinations(doc);
 
@@ -722,7 +722,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         for (var obj = 3; obj <= 5; obj++)
         {
@@ -756,7 +756,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         doc.TryGetPageNumber(new PdfReference(1, 0), out _).Should().BeFalse();
     }
@@ -815,7 +815,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfOutlineParser.Parse(doc);
 
@@ -889,7 +889,7 @@ public class PdfOutlineTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         // Should not hang, should detect cycle and break
         var result = PdfOutlineParser.Parse(doc);

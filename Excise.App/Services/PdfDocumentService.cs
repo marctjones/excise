@@ -200,7 +200,7 @@ public class PdfDocumentService
             bufferSize: 1 << 16, FileOptions.None);
         try
         {
-            return PdfDocument.Open(stream, userPassword, ownsStream: true);
+            return PdfDocument.Open(stream, new PdfOpenOptions { UserPassword = userPassword, OwnsStream = true });
         }
         catch
         {
@@ -449,7 +449,7 @@ public class PdfDocumentService
     /// This is NOT a fresh cryptographic re-derivation against the
     /// document's own <c>/Encrypt</c> dictionary — it compares against
     /// <see cref="_currentUserPassword"/>, which <see cref="LoadDocument"/>
-    /// already proved correct via <see cref="PdfDocument.Open(byte[],string?)"/>'s
+    /// already proved correct via <see cref="PdfDocument.Open(byte[], PdfOpenOptions?)"/>'s
     /// own <c>PdfStandardSecurityHandler</c> verification. Re-deriving here
     /// would mean re-resolving the trailer's <c>/Encrypt</c> dictionary
     /// through the document's normal (decrypting) object resolver, which
