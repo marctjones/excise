@@ -78,12 +78,6 @@ internal static class Jbig2SymbolDictionaryDecoder
             : DecodeArithmetic(segment, payload, importedSymbols);
     }
 
-    internal static Jbig2DecodedSymbolDictionary DecodeArithmeticForTest(
-        Jbig2SymbolDictionarySegment segment,
-        IJbig2ArithmeticDecoder decoder,
-        IReadOnlyList<Jbig2Bitmap> importedSymbols)
-        => DecodeArithmetic(segment, decoder, importedSymbols);
-
     private static Jbig2DecodedSymbolDictionary DecodeHuffman(
         Jbig2SymbolDictionarySegment segment,
         ReadOnlySpan<byte> payload,
@@ -221,7 +215,7 @@ internal static class Jbig2SymbolDictionaryDecoder
         return DecodeArithmetic(segment, decoder, importedSymbols);
     }
 
-    private static Jbig2DecodedSymbolDictionary DecodeArithmetic(
+    internal static Jbig2DecodedSymbolDictionary DecodeArithmetic(
         Jbig2SymbolDictionarySegment segment,
         IJbig2ArithmeticDecoder decoder,
         IReadOnlyList<Jbig2Bitmap> importedSymbols)

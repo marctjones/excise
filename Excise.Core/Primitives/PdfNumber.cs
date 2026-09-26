@@ -77,17 +77,7 @@ public sealed class PdfReal : PdfObject
     public override PdfObjectType ObjectType => PdfObjectType.Real;
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        // Format without trailing zeros, use "0" for very small numbers
-        string result = Value.ToString("G15", CultureInfo.InvariantCulture);
-        // Ensure decimal point for real numbers
-        if (!result.Contains('.') && !result.Contains('E') && !result.Contains('e'))
-        {
-            result += ".0";
-        }
-        return result;
-    }
+    public override string ToString() => PdfNumberFormatter.Format(Value);
 
     /// <summary>
     /// Implicit conversion from double.

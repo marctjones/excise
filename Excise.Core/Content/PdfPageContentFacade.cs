@@ -25,9 +25,6 @@ public partial class PdfPage
     /// should keep using <see cref="GetContentStreamBytes"/> so undecodable
     /// content never silently disappears from mutation paths.
     /// </summary>
-    internal bool TryGetContentStreamBytes(out byte[] data)
-        => TryGetContentStreamBytes(out data, out _);
-
     internal bool TryGetContentStreamBytes(
         out byte[] data,
         out IReadOnlyList<ContentStreamReadWarning> warnings)

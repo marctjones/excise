@@ -21,7 +21,7 @@ public class Jbig2PatternAndHalftoneDecoderTests
             true, false, false, true,
             false, true, true, false);
 
-        var patterns = Jbig2PatternDictionaryDecoder.DecodeArithmeticForTest(segment, decoder);
+        var patterns = Jbig2PatternDictionaryDecoder.DecodeArithmetic(segment, decoder);
 
         patterns.Should().HaveCount(2);
         patterns[0].GetPixel(0, 0).Should().BeTrue();
@@ -57,7 +57,7 @@ public class Jbig2PatternAndHalftoneDecoderTests
             BitmapDataLength: 0);
         var decoder = new ScriptedArithmeticDecoder(true);
 
-        var bitmap = Jbig2HalftoneRegionDecoder.DecodeArithmeticForTest(
+        var bitmap = Jbig2HalftoneRegionDecoder.DecodeArithmetic(
             segment,
             decoder,
             [whitePattern, blackPattern]);

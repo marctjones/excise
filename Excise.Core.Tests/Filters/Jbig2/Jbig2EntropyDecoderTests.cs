@@ -6,22 +6,26 @@ namespace Excise.Core.Tests.Filters.Jbig2;
 
 public class Jbig2EntropyDecoderTests
 {
+    private static (int QeIndex, int Mps) ContextState(Jbig2ArithmeticContextState state, int context)
+        => (state.QeIndexByContext[context], state.MpsByContext[context]);
+
     [Fact]
     public void MqArithmeticDecoder_MaintainsIndependentContextStates()
     {
-        var decoder = new Jbig2MqArithmeticDecoder(new byte[] { 0x00, 0x00, 0x00 }, contextCount: 4);
+        var state = new Jbig2ArithmeticContextState(4);
+        var decoder = new Jbig2MqArithmeticDecoder(new byte[] { 0x00, 0x00, 0x00 }, state);
 
         int context0 = 0;
         int context1 = 1;
 
         decoder.Decode(ref context0).Should().BeFalse();
         decoder.Decode(ref context1).Should().BeTrue();
-        decoder.GetContextStateForTest(1).Should().Be((1, 1));
+        ContextState(state, 1).Should().Be((1, 1));
 
         decoder.Decode(ref context0).Should().BeTrue();
 
-        decoder.GetContextStateForTest(0).Should().Be((6, 0));
-        decoder.GetContextStateForTest(1).Should().Be((1, 1));
+        ContextState(state, 0).Should().Be((6, 0));
+        ContextState(state, 1).Should().Be((1, 1));
     }
 
     [Fact]

@@ -277,6 +277,16 @@ public class PdfObjectWriterTests
         result.Should().Contain("#02");
     }
 
+    [Theory]
+    [InlineData("A<B>", "/A#3CB#3E")]
+    [InlineData("50%", "/50#25")]
+    [InlineData("Line\nFeed", "/Line#0AFeed")]
+    [InlineData("Nul\0", "/Nul#00")]
+    public void Serialize_PdfNameWithDelimiterOrControlCharacter_EscapesWithHex(string value, string expected)
+    {
+        PdfObjectWriter.Serialize(new PdfName(value)).Should().Be(expected);
+    }
+
     // ===== String Tests =====
 
     [Fact]
@@ -417,6 +427,15 @@ public class PdfObjectWriterTests
         result.Should().EndWith(")");
         // Non-printable should be escaped as octal
         result.Should().Contain("\\");
+    }
+
+    [Theory]
+    [InlineData(0x00, "(\\000)")]
+    [InlineData(0x08, "(\\010)")]
+    [InlineData(0x0C, "(\\014)")]
+    public void Serialize_PdfStringWithBackspaceFormFeedOrNul_EscapesAsThreeDigitOctal(byte value, string expected)
+    {
+        PdfObjectWriter.Serialize(new PdfString(new[] { value }, isHex: false)).Should().Be(expected);
     }
 
     // ===== Array Tests =====

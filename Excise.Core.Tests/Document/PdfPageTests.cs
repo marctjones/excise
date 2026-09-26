@@ -698,7 +698,7 @@ public class PdfPageTests
         strictRead.Should().Throw<InvalidOperationException>()
             .WithMessage("Stream has not been decoded*");
 
-        page.TryGetContentStreamBytes(out var bytes).Should().BeFalse();
+        page.TryGetContentStreamBytes(out var bytes, out _).Should().BeFalse();
         bytes.Should().BeEmpty();
     }
 

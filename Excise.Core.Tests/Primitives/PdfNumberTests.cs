@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Excise.Core.Primitives;
+using Excise.Core.Writing;
 using Xunit;
 
 namespace Excise.Core.Tests.Primitives;
@@ -201,11 +202,11 @@ public class PdfRealTests
     }
 
     [Fact]
-    public void ToString_WithWholeNumber_IncludesDecimal()
+    public void ToString_WithWholeNumber_MatchesTheWriter()
     {
         var real = new PdfReal(42.0);
 
-        real.ToString().Should().Contain(".0");
+        real.ToString().Should().Be("42").And.Be(PdfObjectWriter.Serialize(real));
     }
 
     [Fact]

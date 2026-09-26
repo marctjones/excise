@@ -22,7 +22,7 @@ namespace Excise.Core.Tests.Document;
 /// its own page, and redacted text does not come back through a stale map.</para>
 /// <para>Test 1 is an old-vs-new behaviour pin: the reference is the pre-#1485
 /// letter scan, kept verbatim as
-/// <see cref="PdfDocument.ResolveStructElementTextFromLetters"/>. The
+/// <see cref="ResolveStructElementTextFromLetters"/>. The
 /// independent-oracle checks of MCID text are <see cref="StructElementMcidTextTests"/>.</para>
 /// </remarks>
 public class StructElementMcidTextMapTests
@@ -63,7 +63,7 @@ public class StructElementMcidTextMapTests
 
                 for (int i = 0; i < elements.Count; i++)
                 {
-                    var expected = reference.ResolveStructElementTextFromLetters(referenceElements[i]);
+                    var expected = ResolveStructElementTextFromLetters(reference, referenceElements[i]);
                     var actual = doc.ResolveStructElementText(elements[i]);
                     actual.Should().Be(expected, $"{name} element {i} ({elements[i].Type})");
                     comparedElements++;
@@ -134,6 +134,29 @@ public class StructElementMcidTextMapTests
             "the structure walk must read the redacted bytes, not a map built before the redaction");
         after.Should().Contain(t => t.Contains("Keep") && t.Contains("tail"),
             "the rest of the redacted element's text is still read");
+    }
+
+    /// <summary>
+    /// <see cref="PdfDocument.ResolveStructElementText"/> as it was before #1485: a scan
+    /// of each referenced page's letters per reference.
+    /// </summary>
+    private static string ResolveStructElementTextFromLetters(PdfDocument doc, PdfStructElement element)
+    {
+        var lettersByPage = new Dictionary<int, IReadOnlyList<Excise.Core.Text.Letter>>();
+        var sb = new StringBuilder();
+        foreach (var reference in element.MarkedContent)
+        {
+            if ((reference.PageNumber ?? element.PageNumber) is not int page || page < 1 || page > doc.PageCount)
+                continue;
+            if (!lettersByPage.TryGetValue(page, out var letters))
+                lettersByPage[page] = letters = doc.GetPage(page).Letters;
+            foreach (var letter in letters)
+            {
+                if (letter.MarkedContentId == reference.Mcid)
+                    sb.Append(letter.Value);
+            }
+        }
+        return sb.ToString();
     }
 
     private static List<string> Walk(PdfDocument doc, IReadOnlyList<PdfStructElement> elements) =>

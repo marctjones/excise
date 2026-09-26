@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Security.Cryptography;
 using Excise.Core.Document;
+using Excise.Core.Filters;
 using Excise.Core.Primitives;
 using Excise.Core.Security;
 
@@ -423,7 +424,7 @@ public static class PdfDocumentOptimizer
         // A losslessly stored image is often line art or a screenshot, where
         // JPEG ringing is ugly and Flate is already competitive, so for those
         // JPEG must win by at least half to be chosen.
-        var flate = isJpeg ? null : Deflate(resized);
+        var flate = isJpeg ? null : BasicStreamFilters.EncodeFlate(resized, CompressionLevel.SmallestSize);
         if (jpeg != null && (flate == null || jpeg.LongLength * 2 < flate.LongLength))
         {
             encoded = jpeg;
@@ -612,7 +613,7 @@ public static class PdfDocumentOptimizer
         if (decoded.Length == 0)
             return false;
 
-        var encoded = Deflate(decoded);
+        var encoded = BasicStreamFilters.EncodeFlate(decoded, CompressionLevel.SmallestSize);
         if (encoded.LongLength >= stream.EncodedData.LongLength)
             return false;
 
@@ -624,14 +625,6 @@ public static class PdfDocumentOptimizer
 
     private static bool IsPlumbingOrMetadata(PdfStream stream)
         => stream.GetNameOrNull("Type") is "ObjStm" or "XRef" or "Metadata";
-
-    internal static byte[] Deflate(byte[] data)
-    {
-        using var output = new MemoryStream();
-        using (var z = new ZLibStream(output, CompressionLevel.SmallestSize, leaveOpen: true))
-            z.Write(data, 0, data.Length);
-        return output.ToArray();
-    }
 
     private static PdfObject? TryGetObject(PdfDocument document, int objectNumber)
     {

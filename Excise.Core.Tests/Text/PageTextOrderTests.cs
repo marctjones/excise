@@ -18,7 +18,7 @@ public class PageTextOrderTests
     {
         var letters = CreateTwoColumnRows(proseRows: 8, tableRows: 0, rowMajor: true);
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.ColumnAware);
     }
 
@@ -44,7 +44,7 @@ public class PageTextOrderTests
     {
         var letters = CreateTwoColumnRows(proseRows: 8, tableRows: 0, rowMajor: false);
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.RawStream,
                 "a producer that already emits complete columns has no repeated backtracks to repair");
         TextSelectionEngine.SortPageTextOrder(letters).Should().Equal(letters);
@@ -55,7 +55,7 @@ public class PageTextOrderTests
     {
         var letters = CreateTwoColumnRows(proseRows: 7, tableRows: 0, rowMajor: true);
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.RawStream,
                 "#947 pins the lower side of the bounded eight-line structure threshold");
     }
@@ -71,7 +71,7 @@ public class PageTextOrderTests
             letters.AddRange(CreateRun(row % 2 == 0 ? "Value" : "Code", 360, y));
         }
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.RawStream,
                 "short field labels are a form grid, not two parallel prose columns");
     }
@@ -81,7 +81,7 @@ public class PageTextOrderTests
     {
         var letters = CreateTwoColumnRows(proseRows: 0, tableRows: 12, rowMajor: true);
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.RawStream);
         string.Concat(TextSelectionEngine.SortPageTextOrder(letters).Select(letter => letter.Value))
             .Should().Contain("Country table row 011001 51%Country table row 021002 52%",
@@ -93,7 +93,7 @@ public class PageTextOrderTests
     {
         var letters = CreateTwoColumnRows(proseRows: 8, tableRows: 8, rowMajor: true);
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.RawStream,
                 "paired prose must be a strict majority so mixed report/table pages remain row-oriented");
     }
@@ -110,7 +110,7 @@ public class PageTextOrderTests
             letters.AddRange(CreateRun($"Right prose row {row:00}", 470, y));
         }
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.RawStream,
                 "nested and multi-gutter layouts are intentionally outside the conservative page gate");
     }
@@ -123,7 +123,7 @@ public class PageTextOrderTests
         letters[0] = new Letter("א", first.GlyphRectangle, first.FontSize, first.FontName,
             first.StartX, first.StartY, first.Width, first.CharacterCode);
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.RawStream,
                 "visual left-to-right column sorting must not undo logical RTL extraction");
     }
@@ -142,7 +142,7 @@ public class PageTextOrderTests
             }
         }
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.RawStream);
     }
 
@@ -156,7 +156,7 @@ public class PageTextOrderTests
             glyphWidth: 6);
         letters.AddRange(CreateTwoColumnRows(proseRows: 8, tableRows: 0, rowMajor: true));
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.ColumnAware);
         var text = string.Concat(TextSelectionEngine.SortPageTextOrder(letters)
             .Select(letter => letter.Value));
@@ -172,7 +172,7 @@ public class PageTextOrderTests
         for (var row = 1; row <= 12; row++)
             letters.AddRange(CreateRun($"A complete single column prose line number {row:00}", 40, 740 - row * 22));
 
-        TextSelectionEngine.DeterminePageTextOrder(letters)
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
             .Should().Be(TextSelectionEngine.PageTextOrderStrategy.RawStream);
     }
 

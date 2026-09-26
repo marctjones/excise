@@ -128,32 +128,10 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
         try
         {
-            var type = node.GetNameOrNull("Type");
-
-            if (type == "Page")
+            if (IsLeaf(node, out var kids))
             {
-                AddLeaf(node, reference);
-                return;
-            }
-
-            // This is a Pages node
-            var kids = node.ResolveArray(_document, "Kids");
-
-            // A leaf carrying the WRONG /Type. pdfium's bad_page_type.pdf gives
-            // its second page /Type /Template, so the `type == "Page"` test
-            // above dropped it and the document reported 1 page where qpdf,
-            // pdfinfo and mutool all report 2 — losing an intact text page and
-            // six images.
-            //
-            // The test is deliberately NOT the simpler "no /Kids means leaf":
-            // an empty or malformed /Pages node has no /Kids either, and
-            // promoting those would manufacture phantom pages across a
-            // 3,915-document corpus. Requiring /Type to be present-and-not-
-            // /Pages keeps the recovery to nodes that actually claim to be
-            // something other than an internal node.
-            if (kids == null && type != null && type != "Pages")
-            {
-                _malformedPageTree = true;
+                if (node.GetNameOrNull("Type") != "Page")
+                    _malformedPageTree = true; // the wrong-/Type recovery
                 AddLeaf(node, reference);
                 return;
             }
@@ -177,6 +155,33 @@ public class PageCollection : IReadOnlyList<PdfPage>
         {
             visited.Remove(node);
         }
+    }
+
+    /// <summary>
+    /// The one page-tree leaf rule (#1833, #1848): a node typed <c>/Page</c>,
+    /// or a kid-less node typed as something other than <c>/Pages</c>. For a
+    /// non-leaf, <paramref name="kids"/> is its resolved <c>/Kids</c>.
+    /// </summary>
+    /// <remarks>
+    /// The second clause recovers a leaf carrying the WRONG /Type. pdfium's
+    /// bad_page_type.pdf gives its second page /Type /Template, so testing
+    /// <c>/Page</c> alone dropped it and the document reported 1 page where
+    /// qpdf, pdfinfo and mutool all report 2 — losing an intact text page and
+    /// six images. It is deliberately NOT the simpler "no /Kids means leaf":
+    /// an empty or malformed /Pages node has no /Kids either, and promoting
+    /// those would manufacture phantom pages across a 3,915-document corpus.
+    /// Requiring /Type to be present-and-not-/Pages keeps the recovery to nodes
+    /// that actually claim to be something other than an internal node.
+    /// </remarks>
+    private bool IsLeaf(PdfDictionary node, out PdfArray? kids)
+    {
+        kids = null;
+        var type = node.GetNameOrNull("Type");
+        if (type == "Page")
+            return true;
+
+        kids = node.ResolveArray(_document, "Kids");
+        return kids == null && type != null && type != "Pages";
     }
 
     /// <summary>
@@ -275,8 +280,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
         try
         {
-            var type = node.GetNameOrNull("Type");
-            if (type == "Page")
+            if (IsLeaf(node, out var kids))
             {
                 if (currentIndex == targetIndex)
                     return new PdfPage(_document, node, targetIndex + 1, reference: null);
@@ -285,7 +289,6 @@ public class PageCollection : IReadOnlyList<PdfPage>
                 return null;
             }
 
-            var kids = node.ResolveArray(_document, "Kids");
             if (kids == null)
                 return null;
 
@@ -538,19 +541,11 @@ public class PageCollection : IReadOnlyList<PdfPage>
         foreach (var kidObj in _kidsArray)
         {
             var kid = ResolvePageTreeKid(kidObj);
-            // Mirror LoadPagesRecursive's leaf test, including the
-            // wrong-/Type recovery: anything that is not an internal
-            // /Pages node counts as a leaf.
-            if (kid == null || kid.GetNameOrNull("Type") == "Pages")
+            if (kid == null || !IsLeaf(kid, out _))
                 return false;
         }
         return true;
     }
-
-    /// <summary>
-    /// Get the pages dictionary (for internal use).
-    /// </summary>
-    internal PdfDictionary PagesDictionary => _pagesDict;
 
     /// <inheritdoc />
     public IEnumerator<PdfPage> GetEnumerator() => _pages.GetEnumerator();

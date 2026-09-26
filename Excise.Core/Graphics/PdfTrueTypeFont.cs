@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO.Compression;
 using System.Text;
 using Excise.Core.Document;
+using Excise.Core.Filters;
 using Excise.Core.Fonts;
 using Excise.Core.Primitives;
 
@@ -391,12 +392,7 @@ internal sealed class PdfTrueTypeFont : PdfFont
     }
 
     private static byte[] Deflate(byte[] data)
-    {
-        using var outMs = new MemoryStream();
-        using (var z = new ZLibStream(outMs, CompressionLevel.SmallestSize, leaveOpen: true))
-            z.Write(data, 0, data.Length);
-        return outMs.ToArray();
-    }
+        => BasicStreamFilters.EncodeFlate(data, CompressionLevel.SmallestSize);
 
     // PDF names can't contain spaces; PostScript names normally don't, but be safe.
     private static string SafeBaseName(string psName) =>

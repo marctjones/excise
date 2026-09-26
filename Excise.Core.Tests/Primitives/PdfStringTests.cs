@@ -101,120 +101,6 @@ public class PdfStringTests
     }
 
     [Fact]
-    public void ToLiteralString_WrapsInParentheses()
-    {
-        var str = new PdfString("Hello");
-
-        var result = str.ToLiteralString();
-
-        result.Should().StartWith("(");
-        result.Should().EndWith(")");
-    }
-
-    [Fact]
-    public void ToLiteralString_EscapesParentheses()
-    {
-        var str = new PdfString("Hello(World)");
-
-        var result = str.ToLiteralString();
-
-        result.Should().Contain("\\(");
-        result.Should().Contain("\\)");
-    }
-
-    [Fact]
-    public void ToLiteralString_EscapesBackslash()
-    {
-        var str = new PdfString("Path\\To\\File");
-
-        var result = str.ToLiteralString();
-
-        result.Should().Contain("\\\\");
-    }
-
-    [Fact]
-    public void ToLiteralString_EscapesNewline()
-    {
-        var str = new PdfString("Line1\nLine2");
-
-        var result = str.ToLiteralString();
-
-        result.Should().Contain("\\n");
-    }
-
-    [Fact]
-    public void ToLiteralString_EscapesCarriageReturn()
-    {
-        var str = new PdfString("Line1\rLine2");
-
-        var result = str.ToLiteralString();
-
-        result.Should().Contain("\\r");
-    }
-
-    [Fact]
-    public void ToLiteralString_EscapesTab()
-    {
-        var str = new PdfString("Col1\tCol2");
-
-        var result = str.ToLiteralString();
-
-        result.Should().Contain("\\t");
-    }
-
-    [Fact]
-    public void ToLiteralString_EscapesFormFeed()
-    {
-        var str = new PdfString("Page\fBreak");
-
-        var result = str.ToLiteralString();
-
-        result.Should().Contain("\\f");
-    }
-
-    [Fact]
-    public void ToLiteralString_EscapesBackspace()
-    {
-        var str = new PdfString("Back\bspace");
-
-        var result = str.ToLiteralString();
-
-        result.Should().Contain("\\b");
-    }
-
-    [Fact]
-    public void ToHexString_WrapsInAngleBrackets()
-    {
-        var str = new PdfString("Hi");
-
-        var result = str.ToHexString();
-
-        result.Should().StartWith("<");
-        result.Should().EndWith(">");
-    }
-
-    [Fact]
-    public void ToHexString_EncodesAsHex()
-    {
-        var str = new PdfString("Hi");
-
-        var result = str.ToHexString();
-
-        result.Should().Contain("48");
-        result.Should().Contain("69");
-    }
-
-    [Fact]
-    public void ToHexString_UsesUppercaseHex()
-    {
-        var str = new PdfString("A");
-
-        var result = str.ToHexString();
-
-        result.Should().Contain("41");
-    }
-
-    [Fact]
     public void ToString_WithIsHexFalse_ReturnsLiteralString()
     {
         var str = new PdfString("Hello", isHex: false);
@@ -416,16 +302,6 @@ public class PdfStringTests
         var str = new PdfString(bytes);
 
         str.Bytes.Should().Equal(bytes);
-    }
-
-    [Fact]
-    public void ToLiteralString_WithBinaryData_EncodesNonPrintable()
-    {
-        var str = new PdfString(new byte[] { 0x00 });
-
-        var result = str.ToLiteralString();
-
-        result.Should().Contain("\\000");
     }
 
     // ---- PDFDocEncoding (ISO 32000-1 Annex D.3): the 0x80–0x9F / 0x18–0x1F

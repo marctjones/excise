@@ -1,4 +1,5 @@
 using System.Text;
+using Excise.Core.Writing;
 
 namespace Excise.Core.Primitives;
 
@@ -218,74 +219,8 @@ public sealed class PdfString : PdfObject, IEquatable<PdfString>
         return table;
     }
 
-    /// <summary>
-    /// Encode for writing as a literal string (parentheses).
-    /// </summary>
-    public string ToLiteralString()
-    {
-        var sb = new StringBuilder("(");
-        foreach (byte b in Bytes)
-        {
-            switch ((char)b)
-            {
-                case '(':
-                    sb.Append("\\(");
-                    break;
-                case ')':
-                    sb.Append("\\)");
-                    break;
-                case '\\':
-                    sb.Append("\\\\");
-                    break;
-                case '\n':
-                    sb.Append("\\n");
-                    break;
-                case '\r':
-                    sb.Append("\\r");
-                    break;
-                case '\t':
-                    sb.Append("\\t");
-                    break;
-                case '\b':
-                    sb.Append("\\b");
-                    break;
-                case '\f':
-                    sb.Append("\\f");
-                    break;
-                default:
-                    if (b < 32 || b > 126)
-                    {
-                        // Octal escape for non-printable
-                        sb.Append('\\');
-                        sb.Append(Convert.ToString(b, 8).PadLeft(3, '0'));
-                    }
-                    else
-                    {
-                        sb.Append((char)b);
-                    }
-                    break;
-            }
-        }
-        sb.Append(')');
-        return sb.ToString();
-    }
-
-    /// <summary>
-    /// Encode for writing as a hex string (angle brackets).
-    /// </summary>
-    public string ToHexString()
-    {
-        var sb = new StringBuilder("<");
-        foreach (byte b in Bytes)
-        {
-            sb.Append(b.ToString("X2"));
-        }
-        sb.Append('>');
-        return sb.ToString();
-    }
-
     /// <inheritdoc />
-    public override string ToString() => IsHex ? ToHexString() : ToLiteralString();
+    public override string ToString() => PdfObjectWriter.Serialize(this);
 
     /// <summary>
     /// Create a PdfString from text (literal string).

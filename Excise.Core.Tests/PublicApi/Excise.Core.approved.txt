@@ -1776,9 +1776,7 @@ namespace Excise.Core.Primitives
         public bool Equals(Excise.Core.Primitives.PdfName? other) { }
         public override bool Equals(object? obj) { }
         public override int GetHashCode() { }
-        public string ToEncodedString() { }
         public override string ToString() { }
-        public static string Decode(string encoded) { }
         public static string op_Implicit(Excise.Core.Primitives.PdfName n) { }
         public static Excise.Core.Primitives.PdfName op_Implicit(string s) { }
         public static bool operator !=(Excise.Core.Primitives.PdfName? left, Excise.Core.Primitives.PdfName? right) { }
@@ -1875,8 +1873,6 @@ namespace Excise.Core.Primitives
         public bool Equals(Excise.Core.Primitives.PdfString? other) { }
         public override bool Equals(object? obj) { }
         public override int GetHashCode() { }
-        public string ToHexString() { }
-        public string ToLiteralString() { }
         public override string ToString() { }
         public static Excise.Core.Primitives.PdfString FromHex(string hex) { }
         public static Excise.Core.Primitives.PdfString FromText(string text) { }

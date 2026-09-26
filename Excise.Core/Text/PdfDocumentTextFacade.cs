@@ -98,31 +98,6 @@ public partial class PdfDocument
         return sb.ToString();
     }
 
-    /// <summary>
-    /// <see cref="ResolveStructElementText"/> as it was before #1485: a scan of
-    /// each referenced page's letters per reference. Kept only so tests can
-    /// hold the per-MCID map to the letter-derived text it replaced.
-    /// </summary>
-    internal string ResolveStructElementTextFromLetters(PdfStructElement element)
-    {
-        if (element == null)
-            return string.Empty;
-
-        var lettersByPage = new Dictionary<int, IReadOnlyList<Excise.Core.Text.Letter>>();
-        var sb = new StringBuilder();
-        foreach (var (page, mcid) in PagedMarkedContent(element))
-        {
-            if (!lettersByPage.TryGetValue(page, out var letters))
-                lettersByPage[page] = letters = GetPage(page).Letters;
-            foreach (var letter in letters)
-            {
-                if (letter.MarkedContentId == mcid)
-                    sb.Append(letter.Value);
-            }
-        }
-        return sb.ToString();
-    }
-
     private IEnumerable<(int Page, int Mcid)> PagedMarkedContent(PdfStructElement element)
     {
         foreach (var reference in element.MarkedContent)

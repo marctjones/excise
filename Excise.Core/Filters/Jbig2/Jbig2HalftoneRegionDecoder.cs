@@ -20,13 +20,7 @@ internal static class Jbig2HalftoneRegionDecoder
         return DecodeArithmetic(segment, decoder, patterns);
     }
 
-    internal static Jbig2Bitmap DecodeArithmeticForTest(
-        Jbig2HalftoneRegionSegment segment,
-        IJbig2ArithmeticDecoder decoder,
-        IReadOnlyList<Jbig2Bitmap> patterns)
-        => DecodeArithmetic(segment, decoder, patterns);
-
-    private static Jbig2Bitmap DecodeArithmetic(
+    internal static Jbig2Bitmap DecodeArithmetic(
         Jbig2HalftoneRegionSegment segment,
         IJbig2ArithmeticDecoder decoder,
         IReadOnlyList<Jbig2Bitmap> patterns)

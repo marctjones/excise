@@ -9,14 +9,15 @@ namespace Excise.Core.Filters;
 internal static class BasicStreamFilters
 {
     /// <summary>
-    /// zlib-wrap + deflate, the encode side of /FlateDecode. Used when a stream
+    /// zlib-wrap + deflate, the one encode side of /FlateDecode. Used when a stream
     /// is rewritten (e.g. region-redacted image samples) and must be re-emitted
-    /// compressed. Mirrors PdfDocumentWriter.FlateCompress.
+    /// compressed. The size-optimising callers (the optimizer, embedded font
+    /// programs) pass <see cref="CompressionLevel.SmallestSize"/>.
     /// </summary>
-    public static byte[] EncodeFlate(byte[] data)
+    public static byte[] EncodeFlate(byte[] data, CompressionLevel level = CompressionLevel.Optimal)
     {
         using var output = new System.IO.MemoryStream();
-        using (var z = new ZLibStream(output, CompressionLevel.Optimal, leaveOpen: true))
+        using (var z = new ZLibStream(output, level, leaveOpen: true))
             z.Write(data, 0, data.Length);
         return output.ToArray();
     }

@@ -106,7 +106,6 @@ Excise.Core	tests-only	Symmetric	triage:public library/domain API; tests exercis
 Excise.Core	tests-only	TextField	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TextPosition	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ToDoubleArray	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	ToEncodedString	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ToIntArray	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	Transition	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TryGetString	triage:public library/domain API; tests exercise contract; external callers may use it

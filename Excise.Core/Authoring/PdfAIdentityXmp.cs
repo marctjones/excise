@@ -228,13 +228,6 @@ internal static class PdfAIdentityXmp
 
     /// <summary>
     /// Replace <paramref name="document"/>'s catalog <c>/Metadata</c> with a
-    /// packet that carries <paramref name="identity"/> and nothing else.
-    /// </summary>
-    internal static void Write(PdfDocument document, PdfAIdentity identity)
-        => Write(document, identity, null);
-
-    /// <summary>
-    /// Replace <paramref name="document"/>'s catalog <c>/Metadata</c> with a
     /// packet that carries the PDF/A and/or PDF/UA identifications given, and
     /// nothing else (#1586). At least one must be non-null.
     /// </summary>

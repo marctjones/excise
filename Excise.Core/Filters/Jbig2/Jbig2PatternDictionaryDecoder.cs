@@ -10,16 +10,14 @@ internal static class Jbig2PatternDictionaryDecoder
         Jbig2PatternDictionarySegment segment,
         ReadOnlySpan<byte> payload)
     {
-        var collectiveBitmap = segment.IsMmrEncoded
-            ? DecodeMmrCollectiveBitmap(segment, payload)
-            : DecodeArithmeticCollectiveBitmap(
+        return segment.IsMmrEncoded
+            ? ExtractPatterns(segment, DecodeMmrCollectiveBitmap(segment, payload))
+            : DecodeArithmetic(
                 segment,
                 new Jbig2MqArithmeticDecoder(payload.ToArray(), Jbig2ArithmeticGenericRegionDecoder.ContextCount));
-
-        return ExtractPatterns(segment, collectiveBitmap);
     }
 
-    internal static IReadOnlyList<Jbig2Bitmap> DecodeArithmeticForTest(
+    internal static IReadOnlyList<Jbig2Bitmap> DecodeArithmetic(
         Jbig2PatternDictionarySegment segment,
         IJbig2ArithmeticDecoder decoder)
         => ExtractPatterns(segment, DecodeArithmeticCollectiveBitmap(segment, decoder));
