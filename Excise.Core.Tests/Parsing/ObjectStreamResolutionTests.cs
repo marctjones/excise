@@ -21,9 +21,20 @@ public class ObjectStreamResolutionTests
     public ObjectStreamResolutionTests(ITestOutputHelper o) { _out = o; }
 
     private const string ScrambledBirthCert =
-        "../../../../test-pdfs/sample-pdfs/birth-certificate-request-scrambled.pdf";
+        "test-pdfs/sample-pdfs/birth-certificate-request-scrambled.pdf";
     private const string MultilingualCjk =
-        "../../../../test-pdfs/sample-pdfs/multilingual-noto-cjk.pdf";
+        "test-pdfs/sample-pdfs/multilingual-noto-cjk.pdf";
+
+    /// <summary>
+    /// The fixture's absolute path. An absent fixture skips with a reason that names the
+    /// searched paths (#1527); it never passes without testing anything (#1850).
+    /// </summary>
+    private static string Fixture(string relativePath, string what = "sample-pdfs fixture")
+    {
+        var path = TestRepoLayout.FindFile(relativePath);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason(what, relativePath));
+        return path!;
+    }
 
     [Fact]
     public void OpensFileWithObjectStreams_AllCompressedObjectsResolveWithoutError()
@@ -32,9 +43,7 @@ public class ObjectStreamResolutionTests
         // page-tree and resource objects (6 occurrences of /ObjStm in the
         // file). If compressed-object resolution were broken, opening
         // would fail or the catalog/pages chain would return garbage.
-        if (!File.Exists(ScrambledBirthCert)) return;
-
-        using var doc = PdfDocument.Open(ScrambledBirthCert);
+        using var doc = PdfDocument.Open(Fixture(ScrambledBirthCert));
 
         doc.Catalog.Should().NotBeNull("catalog must resolve even when stored in /ObjStm");
         doc.PageCount.Should().BeGreaterThan(0,
@@ -59,9 +68,7 @@ public class ObjectStreamResolutionTests
         // ONE object reachable from the catalog truly has IsCompressed=true
         // in its xref entry. Otherwise the file may not actually exercise
         // the /ObjStm path and the test is vacuous.
-        if (!File.Exists(ScrambledBirthCert)) return;
-
-        using var doc = PdfDocument.Open(ScrambledBirthCert);
+        using var doc = PdfDocument.Open(Fixture(ScrambledBirthCert));
 
         var xref = GetXRef(doc);
         var compressed = xref.Where(e => e.Value.IsCompressed).ToList();
@@ -88,11 +95,11 @@ public class ObjectStreamResolutionTests
         // each object as an uncompressed indirect — that's fine, /ObjStm
         // is just a compression scheme), reload, and check that every
         // object that was resolvable before is still resolvable after.
-        if (!File.Exists(ScrambledBirthCert)) return;
+        var birthCert = Fixture(ScrambledBirthCert);
 
         int originalPageCount;
         int originalCompressedCount;
-        using (var doc = PdfDocument.Open(ScrambledBirthCert))
+        using (var doc = PdfDocument.Open(birthCert))
         {
             originalPageCount = doc.PageCount;
             var xref = GetXRef(doc);
@@ -101,14 +108,14 @@ public class ObjectStreamResolutionTests
 
         // Round-trip through the writer.
         using var ms = new MemoryStream();
-        using (var doc = PdfDocument.Open(ScrambledBirthCert))
+        using (var doc = PdfDocument.Open(birthCert))
         {
             var writer = new Excise.Core.Writing.PdfDocumentWriter(doc);
             writer.Write(ms);
         }
         ms.Position = 0;
         var roundTripBytes = ms.ToArray();
-        _out.WriteLine($"original size: {new FileInfo(ScrambledBirthCert).Length}, " +
+        _out.WriteLine($"original size: {new FileInfo(birthCert).Length}, " +
                        $"round-trip size: {roundTripBytes.Length}, " +
                        $"compressed objs in original: {originalCompressedCount}");
 
@@ -138,9 +145,9 @@ public class ObjectStreamResolutionTests
     }
 
     [Theory]
-    [InlineData("../../../../test-pdfs/smoke/irs-1040.pdf")]
-    [InlineData("../../../../test-pdfs/smoke/irs-w9.pdf")]
-    [InlineData("../../../../test-pdfs/smoke/scotus-trump-v-anderson.pdf")]
+    [InlineData("test-pdfs/smoke/irs-1040.pdf")]
+    [InlineData("test-pdfs/smoke/irs-w9.pdf")]
+    [InlineData("test-pdfs/smoke/scotus-trump-v-anderson.pdf")]
     public void OpensLinearizedPdf_ParsesViaStartxrefFromTail(string relativePath)
     {
         // Linearized ("Fast Web View") PDFs have a /Linearized dict at the
@@ -149,9 +156,7 @@ public class ObjectStreamResolutionTests
         // file end-first via startxref. These IRS / SCOTUS forms are all
         // linearized; if startxref-tail parsing breaks on linearized
         // structure, every page fetch fails.
-        if (!File.Exists(relativePath)) return;
-
-        using var doc = PdfDocument.Open(relativePath);
+        using var doc = PdfDocument.Open(Fixture(relativePath, "smoke corpus fixture"));
         doc.Catalog.Should().NotBeNull("catalog must resolve in linearized PDF");
         doc.PageCount.Should().BeGreaterThan(0, "page count must resolve");
 
@@ -169,9 +174,7 @@ public class ObjectStreamResolutionTests
         // correctly until Phase 8, but the *parsing* should already work
         // — page tree and font dictionary objects must resolve through
         // the /ObjStm path.
-        if (!File.Exists(MultilingualCjk)) return;
-
-        using var doc = PdfDocument.Open(MultilingualCjk);
+        using var doc = PdfDocument.Open(Fixture(MultilingualCjk));
         doc.PageCount.Should().BeGreaterThan(0);
 
         var page = doc.GetPage(1);
@@ -206,20 +209,10 @@ public class ObjectStreamResolutionTests
     private const string PasswordEncryptedPdfDocEncoding =
         "test-pdfs/poppler/unittestcases/Gday garçon - open.pdf";
 
-    /// <summary>
-    /// The fixture's absolute path. An absent fixture skips with a reason that names the
-    /// searched paths (#1527); it never passes without testing anything (#1850).
-    /// </summary>
-    private static string EncryptedFixture(string relativePath)
-    {
-        var path = TestRepoLayout.FindFile(relativePath);
-        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason(
-            relativePath.StartsWith("test-pdfs/encrypted/", StringComparison.Ordinal)
-                ? "qpdf-encrypted fixture (scripts/generate-encrypted-test-pdfs.sh)"
-                : "encrypted corpus fixture",
-            relativePath));
-        return path!;
-    }
+    private static string EncryptedFixture(string relativePath) => Fixture(relativePath,
+        relativePath.StartsWith("test-pdfs/encrypted/", StringComparison.Ordinal)
+            ? "qpdf-encrypted fixture (scripts/generate-encrypted-test-pdfs.sh)"
+            : "encrypted corpus fixture");
 
     [Theory]
     [InlineData(EncryptedRC4_128, "RC4 V=2 R=3 (128-bit)")]
@@ -384,10 +377,10 @@ public class ObjectStreamResolutionTests
         // object stream is first touched via a different contained object).
         // Every object must serialize identically — fetch order and cache
         // state must not affect resolution.
-        if (!File.Exists(ScrambledBirthCert)) return;
+        var birthCert = Fixture(ScrambledBirthCert);
 
-        using var docAsc = PdfDocument.Open(ScrambledBirthCert);
-        using var docDesc = PdfDocument.Open(ScrambledBirthCert);
+        using var docAsc = PdfDocument.Open(birthCert);
+        using var docDesc = PdfDocument.Open(birthCert);
 
         var compressed = GetXRef(docAsc)
             .Where(e => e.Value.IsCompressed)
@@ -411,9 +404,7 @@ public class ObjectStreamResolutionTests
     [Fact]
     public void ObjStmCache_RepeatedFetchReturnsCachedInstance()
     {
-        if (!File.Exists(ScrambledBirthCert)) return;
-
-        using var doc = PdfDocument.Open(ScrambledBirthCert);
+        using var doc = PdfDocument.Open(Fixture(ScrambledBirthCert));
         var compressed = GetXRef(doc).First(e => e.Value.IsCompressed).Key;
 
         var first = doc.GetObject(compressed);

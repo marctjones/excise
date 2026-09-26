@@ -1,6 +1,7 @@
 using System.IO;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.TestSupport;
 using SkiaSharp;
 using Xunit;
 
@@ -31,15 +32,19 @@ namespace Excise.Rendering.Tests.Visual;
 /// </summary>
 public class CjkRenderingTests
 {
-    private const string CjkFixture = "../../../../test-pdfs/sample-pdfs/multilingual-noto-cjk.pdf";
+    private const string CjkFixture = "test-pdfs/sample-pdfs/multilingual-noto-cjk.pdf";
+
+    private static byte[] ReadFixture()
+    {
+        var path = TestRepoLayout.FindFile(CjkFixture);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("CJK fixture", CjkFixture));
+        return File.ReadAllBytes(path!);
+    }
 
     [Fact]
     public void Multilingual_Page1_AllRowsHaveInk()
     {
-        if (!File.Exists(CjkFixture))
-            return;
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(CjkFixture));
+        using var doc = PdfDocument.Open(ReadFixture());
         var page = doc.GetPage(1);
         using var bmp = new SkiaRenderer().RenderPage(page, new RenderOptions { Dpi = 120 });
         VisualAssertions.SavePng(bmp, "/tmp/cjk-rendering-test.png");
@@ -70,10 +75,7 @@ public class CjkRenderingTests
         // screenY than baseline) the glyph must be right-side-up. If glyphs
         // were upside-down (the pre-fix Tm.d=−1 bug), the top of the ink
         // would be BELOW the baseline.
-        if (!File.Exists(CjkFixture))
-            return;
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(CjkFixture));
+        using var doc = PdfDocument.Open(ReadFixture());
         var page = doc.GetPage(1);
         using var bmp = new SkiaRenderer().RenderPage(page, new RenderOptions { Dpi = 120 });
 

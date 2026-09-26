@@ -1,23 +1,29 @@
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Parsing;
 
 public class RecoverablePdfRegressionTests
 {
-    private const string Bug1606566 = "../../../../test-pdfs/pdfjs/bug1606566.pdf";
-    private const string PagesTreeRefs = "../../../../test-pdfs/pdfjs/Pages-tree-refs.pdf";
-    private const string Issue19484_1 = "../../../../test-pdfs/pdfjs/issue19484_1.pdf";
-    private const string Issue19484_2 = "../../../../test-pdfs/pdfjs/issue19484_2.pdf";
+    private const string Bug1606566 = "test-pdfs/pdfjs/bug1606566.pdf";
+    private const string PagesTreeRefs = "test-pdfs/pdfjs/Pages-tree-refs.pdf";
+    private const string Issue19484_1 = "test-pdfs/pdfjs/issue19484_1.pdf";
+    private const string Issue19484_2 = "test-pdfs/pdfjs/issue19484_2.pdf";
+
+    private static string RegressionFixture(string relativePath)
+    {
+        var path = TestRepoLayout.FindFile(relativePath);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("pdf.js regression fixture", relativePath));
+        return path!;
+    }
 
     [Fact]
     public void Open_InvalidHeaderWithRecoverableXref_UsesUnknownVersionAndLoadsPage()
     {
-        Assert.SkipWhen(!File.Exists(Bug1606566), "pdf.js regression fixture not available");
-
-        using var doc = PdfDocument.Open(Bug1606566);
+        using var doc = PdfDocument.Open(RegressionFixture(Bug1606566));
 
         doc.Version.Should().Be("0.0");
         doc.PageCount.Should().Be(1);
@@ -27,9 +33,7 @@ public class RecoverablePdfRegressionTests
     [Fact]
     public void GetPage_CircularPagesSubtree_ExposesDeclaredPageAndThrowsTypedCycleError()
     {
-        Assert.SkipWhen(!File.Exists(PagesTreeRefs), "pdf.js regression fixture not available");
-
-        using var doc = PdfDocument.Open(PagesTreeRefs);
+        using var doc = PdfDocument.Open(RegressionFixture(PagesTreeRefs));
 
         doc.PageCount.Should().Be(2);
         new TextExtractor(doc.GetPage(1)).ExtractText().Should().Contain("Testcase");
@@ -54,9 +58,7 @@ public class RecoverablePdfRegressionTests
     [InlineData(Issue19484_2, Issue19484_2_Key)]
     public void Open_AcrobatCompatibleV4R4ShortKeyPadding_DecodesFirstPage(string path, string expectedKeyText)
     {
-        Assert.SkipWhen(!File.Exists(path), "pdf.js regression fixture not available");
-
-        using var doc = PdfDocument.Open(path);
+        using var doc = PdfDocument.Open(RegressionFixture(path));
 
         doc.PageCount.Should().BeGreaterThan(0);
         Action act = () => _ = doc.GetPage(1).GetContentStreamBytes();

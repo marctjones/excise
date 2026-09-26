@@ -260,6 +260,56 @@ fi
 echo "==> 3c enforced in: ${STRICT_PROJECTS[*]}; $UNENFORCED hand-rolled locator(s) counted but NOT yet enforced in: ${OTHER_PROJECTS[*]:-(none)} (#1775)"
 
 # ---------------------------------------------------------------------------
+# 3d. No string-literal '../' chain to a repository location (#1756).
+#
+#    Checks 2-3c look for a walk or for '..' passed as separate arguments. The
+#    shortest spelling of the same defect is one literal:
+#
+#        private const string Bug = "../../../../test-pdfs/pdfjs/bug1978317.pdf";
+#
+#    Relative to the test host's working directory that resolves to the root of
+#    the checkout the tests were BUILT in, and in a git worktree that root holds
+#    only the tracked files. The gitignored corpora are in the MAIN checkout, so
+#    every such test skipped with a false "corpus fixture not available" (or,
+#    behind `if (!File.Exists(x)) return;`, passed without running anything)
+#    while passing untouched in the main checkout. Ten files carried it (and
+#    one more the same chain to a sibling project's tracked resource); no
+#    check saw it because 3c's chain pattern needs the '..' segments to be
+#    separate string literals.
+#
+#    Keyed on what the chain LANDS on, not on the chain alone: test-pdfs, a
+#    sibling Excise.* project, or another top-level repository directory. A
+#    path-traversal INPUT such as "../../.zshrc" or "..\\..\\Windows\\evil.dll"
+#    (AttachmentFileNamesTests) is data under test, not a locator, and lands on
+#    nothing in the repository. Enforced in EVERY test project, no phase-in: the
+#    population is zero. Exempt by construction, not by allowlist: the locator
+#    and its own tests, comment lines, and lines that CREATE a directory or file
+#    (a builder of a synthetic checkout).
+# ---------------------------------------------------------------------------
+LITERAL_CHAIN=$(grep -rnE '"(\.\.(/|\\+)){2,}(test-pdfs|tests|tools|docs|scripts|Excise\.[A-Za-z0-9.]+)(/|\\|")' \
+  --include='*.cs' "${TEST_PROJECTS[@]}" 2>/dev/null \
+  | grep -vE 'TestSupport/TestRepoLayout(Tests)?\.cs:' \
+  | grep -vE '^[^:]+:[0-9]+:[[:space:]]*(//|/\*|\*)' \
+  | grep -vE 'CreateDirectory|WriteAll' || true)
+
+if [ -n "$LITERAL_CHAIN" ]; then
+  echo
+  echo "FAIL: a string-literal '../' chain to a repository location in test code (#1756)."
+  echo "      \"../../../../test-pdfs/x.pdf\" is relative to the test host's working directory,"
+  echo "      so it resolves against the checkout the tests were built in. In a git worktree"
+  echo "      that holds only the TRACKED files: the gitignored corpora are in the MAIN"
+  echo "      checkout, and the test skips with a false \"not available\" while passing in the"
+  echo "      main checkout, so nothing was ever red."
+  echo
+  echo "      Use the ONE shared locator with a repo-relative path, and its checkable skip reason:"
+  echo "        var path = TestRepoLayout.FindFile(\"test-pdfs/pdfjs/x.pdf\");"
+  echo "        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason(\"pdf.js corpus fixture\", \"test-pdfs/pdfjs/x.pdf\"));"
+  echo "      Do NOT add an exception here."
+  echo "$LITERAL_CHAIN" | sed 's/^/        /'
+  FAIL=1
+fi
+
+# ---------------------------------------------------------------------------
 # 4. Every class that enumerates a GITIGNORED corpus into a theory must have a
 #    declared collected-row floor.
 #

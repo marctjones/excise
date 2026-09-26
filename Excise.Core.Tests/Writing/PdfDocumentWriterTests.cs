@@ -8,6 +8,7 @@ using Excise.Core.Parsing;
 using Excise.Core.Primitives;
 using Excise.Core.Security;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Writing;
@@ -583,10 +584,11 @@ public class PdfDocumentWriterTests
     [Fact]
     public void Pdf15Save_CompressedOutputSupportsCidCjkFixtureAfterReopen()
     {
-        const string fixture = "../../../../test-pdfs/sample-pdfs/multilingual-noto-cjk.pdf";
-        Assert.SkipWhen(!File.Exists(fixture), "CJK fixture not available");
+        const string fixture = "test-pdfs/sample-pdfs/multilingual-noto-cjk.pdf";
+        var path = TestRepoLayout.FindFile(fixture);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("CJK fixture", fixture));
 
-        using var source = PdfDocument.Open(fixture);
+        using var source = PdfDocument.Open(path!);
         source.PageCount.Should().BeGreaterThan(0);
 
         var compressed = source.SaveToBytes();
@@ -619,10 +621,11 @@ public class PdfDocumentWriterTests
     [Fact]
     public void Pdf15Save_LinearizedInputSavesToCompressedOutput()
     {
-        const string fixture = "../../../../test-pdfs/smoke/irs-w9.pdf";
-        Assert.SkipWhen(!File.Exists(fixture), "linearized smoke fixture not available");
+        const string fixture = "test-pdfs/smoke/irs-w9.pdf";
+        var path = TestRepoLayout.FindFile(fixture);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("linearized smoke fixture", fixture));
 
-        using var source = PdfDocument.Open(fixture);
+        using var source = PdfDocument.Open(path!);
         source.PageCount.Should().BeGreaterThan(0);
 
         var compressed = source.SaveToBytes();
@@ -652,10 +655,10 @@ public class PdfDocumentWriterTests
     /// </summary>
     private static readonly (string Fixture, double Budget)[] SmokeCorpusSizeBudgetFixtures =
     [
-        ("../../../../test-pdfs/smoke/irs-w4.pdf", 1.20),
-        ("../../../../test-pdfs/smoke/irs-w9.pdf", 1.20),
-        ("../../../../test-pdfs/smoke/scotus-trump-v-anderson.pdf", 1.20),
-        ("../../../../test-pdfs/smoke/irs-1040.pdf", 1.40),
+        ("test-pdfs/smoke/irs-w4.pdf", 1.20),
+        ("test-pdfs/smoke/irs-w9.pdf", 1.20),
+        ("test-pdfs/smoke/scotus-trump-v-anderson.pdf", 1.20),
+        ("test-pdfs/smoke/irs-1040.pdf", 1.40),
     ];
 
     [Fact]
@@ -663,11 +666,12 @@ public class PdfDocumentWriterTests
     {
         foreach (var (fixture, budget) in SmokeCorpusSizeBudgetFixtures)
         {
-            Assert.SkipWhen(!File.Exists(fixture), $"smoke fixture not available: {fixture}");
-            using var source = PdfDocument.Open(fixture);
+            var path = TestRepoLayout.FindFile(fixture);
+            Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("smoke fixture", fixture));
+            using var source = PdfDocument.Open(path!);
 
             var saved = source.SaveToBytes();
-            var ratio = saved.Length / (double)new FileInfo(fixture).Length;
+            var ratio = saved.Length / (double)new FileInfo(path!).Length;
 
             Encoding.Latin1.GetString(saved).Should().Contain("/Type /ObjStm");
             ratio.Should().BeLessThan(budget,
@@ -1317,20 +1321,10 @@ public class PdfDocumentWriterTests
             }
         }
 
-        var baseDir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (baseDir != null)
-        {
-            var vendorBin = Path.Combine(baseDir.FullName, "tools", "vendor", "bin");
-            var path = Path.Combine(vendorBin, executable);
-            if (File.Exists(path)) return path;
-            if (!executable.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-            {
-                var windowsPath = Path.Combine(vendorBin, executable + ".exe");
-                if (File.Exists(windowsPath)) return windowsPath;
-            }
-            baseDir = baseDir.Parent;
-        }
-        return null;
+        return TestRepoLayout.FindFile("tools", "vendor", "bin", executable)
+            ?? (executable.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+                ? null
+                : TestRepoLayout.FindFile("tools", "vendor", "bin", executable + ".exe"));
     }
 
     private static int CountOccurrences(string text, string value)

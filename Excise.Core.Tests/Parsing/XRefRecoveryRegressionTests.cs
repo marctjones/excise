@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Excise.Core.Text;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Parsing;
@@ -23,9 +24,16 @@ namespace Excise.Core.Tests.Parsing;
 /// </summary>
 public class XRefRecoveryRegressionTests
 {
-    private const string Bug1978317 = "../../../../test-pdfs/pdfjs/bug1978317.pdf";
-    private const string EmbeddedImages = "../../../../test-pdfs/pdfium/embedded_images.pdf";
-    private const string Bug452455 = "../../../../test-pdfs/pdfium/bug_452455.pdf";
+    private const string Bug1978317 = "test-pdfs/pdfjs/bug1978317.pdf";
+    private const string EmbeddedImages = "test-pdfs/pdfium/embedded_images.pdf";
+    private const string Bug452455 = "test-pdfs/pdfium/bug_452455.pdf";
+
+    private static string CorpusFixture(string relativePath, string what)
+    {
+        var path = TestRepoLayout.FindFile(relativePath);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason(what, relativePath));
+        return path!;
+    }
 
     // ── #869: type-2 xref entries must resolve BY OBJECT NUMBER ──────────────
 
@@ -87,9 +95,7 @@ public class XRefRecoveryRegressionTests
         // The corpus file the fixture above is modelled on: /W [1 3 2] over
         // 65,564 objects, catalog at slot 65541 of /ObjStm 65547, recorded as 5.
         // qpdf --show-npages, mutool info and pdftocairo all report one page.
-        Assert.SkipWhen(!File.Exists(Bug1978317), "pdf.js corpus fixture not available");
-
-        using var doc = PdfDocument.Open(Bug1978317);
+        using var doc = PdfDocument.Open(CorpusFixture(Bug1978317, "pdf.js corpus fixture"));
 
         doc.Catalog.GetNameOrNull("Type").Should().Be("Catalog");
         doc.PageCount.Should().Be(1);
@@ -146,9 +152,7 @@ public class XRefRecoveryRegressionTests
         // 34,279 bytes of a file whose tail was cut off: startxref 124724,
         // /Prev 123786, /XRefStm 123449 — all past EOF. mutool reports
         // "repairing PDF document" and Pages: 1; qpdf reconstructs and reports 1.
-        Assert.SkipWhen(!File.Exists(EmbeddedImages), "PDFium corpus fixture not available");
-
-        using var doc = PdfDocument.Open(EmbeddedImages);
+        using var doc = PdfDocument.Open(CorpusFixture(EmbeddedImages, "PDFium corpus fixture"));
 
         doc.PageCount.Should().Be(1);
         new TextExtractor(doc.GetPage(1)).ExtractText().Trim().Should().NotBeEmpty();
@@ -197,9 +201,7 @@ public class XRefRecoveryRegressionTests
     [Fact]
     public void Open_Bug452455_ResolvesTheUnterminatedFunctionStream()
     {
-        Assert.SkipWhen(!File.Exists(Bug452455), "PDFium corpus fixture not available");
-
-        using var doc = PdfDocument.Open(Bug452455);
+        using var doc = PdfDocument.Open(CorpusFixture(Bug452455, "PDFium corpus fixture"));
         doc.PageCount.Should().Be(1);
 
         var before = GC.GetAllocatedBytesForCurrentThread();
