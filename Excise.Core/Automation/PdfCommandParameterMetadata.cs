@@ -3,7 +3,7 @@ namespace Excise.Core.Automation;
 /// <summary>
 /// Describes one stable parameter accepted by a excise semantic command.
 /// </summary>
-public sealed class PdfCommandParameterMetadata
+internal sealed class PdfCommandParameterMetadata
 {
     public PdfCommandParameterMetadata(
         string name,

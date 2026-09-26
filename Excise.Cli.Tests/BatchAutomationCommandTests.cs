@@ -2,7 +2,6 @@ using System.IO;
 using System.Text.Json;
 using AwesomeAssertions;
 using Excise.Cli;
-using Excise.Core.Automation;
 using Excise.Core.Document;
 using Xunit;
 
@@ -36,9 +35,9 @@ public class BatchAutomationCommandTests : IDisposable
             schemaVersion = 1,
             steps = new object[]
             {
-                new { id = "info", command = PdfCommandIds.DocumentInfo, input = "input.pdf" },
-                new { id = "text", command = PdfCommandIds.ExtractText, input = "input.pdf", page = 1 },
-                new { id = "render", command = PdfCommandIds.RenderPage, input = "input.pdf", output = "page.png", page = 1, dpi = 72 },
+                new { id = "info", command = "document.info", input = "input.pdf" },
+                new { id = "text", command = "text.extract", input = "input.pdf", page = 1 },
+                new { id = "render", command = "render.page", input = "input.pdf", output = "page.png", page = 1, dpi = 72 },
             },
         }));
 
@@ -76,7 +75,7 @@ public class BatchAutomationCommandTests : IDisposable
                 new
                 {
                     id = "redact",
-                    command = PdfCommandIds.ApplyRedaction,
+                    command = "redaction.apply",
                     input = "input.pdf",
                     output = "redacted.pdf",
                     text = "SECRET",
@@ -117,7 +116,7 @@ public class BatchAutomationCommandTests : IDisposable
                 new
                 {
                     id = "redact",
-                    command = PdfCommandIds.ApplyRedaction,
+                    command = "redaction.apply",
                     input = "input.pdf",
                     output = "redacted.pdf",
                     text = "SECRET",
@@ -158,7 +157,7 @@ public class BatchAutomationCommandTests : IDisposable
                 new
                 {
                     id = "redact",
-                    command = PdfCommandIds.ApplyRedaction,
+                    command = "redaction.apply",
                     input = "input.pdf",
                     output = "redacted.pdf",
                     text = "SECRET",
@@ -198,7 +197,7 @@ public class BatchAutomationCommandTests : IDisposable
                 new
                 {
                     id = "redact",
-                    command = PdfCommandIds.ApplyRedaction,
+                    command = "redaction.apply",
                     input = "input.pdf",
                     output = "redacted.pdf",
                     text = "SECRET",
@@ -247,7 +246,7 @@ public class BatchAutomationCommandTests : IDisposable
                 new
                 {
                     id = "redact",
-                    command = PdfCommandIds.ApplyRedaction,
+                    command = "redaction.apply",
                     input = "input.pdf",
                     output = "input.pdf",
                     text = "SECRET",
@@ -273,7 +272,7 @@ public class BatchAutomationCommandTests : IDisposable
         info.ExitCode.Should().Be(0);
         using (var doc = JsonDocument.Parse(info.StdOut))
         {
-            doc.RootElement.GetProperty("command").GetString().Should().Be(PdfCommandIds.DocumentInfo);
+            doc.RootElement.GetProperty("command").GetString().Should().Be("document.info");
             doc.RootElement.GetProperty("pageCount").GetInt32().Should().Be(1);
             doc.RootElement.GetProperty("xfaForm").GetString().Should().Be("none"); // #1547
         }
@@ -282,7 +281,7 @@ public class BatchAutomationCommandTests : IDisposable
         text.ExitCode.Should().Be(0);
         using (var doc = JsonDocument.Parse(text.StdOut))
         {
-            doc.RootElement.GetProperty("command").GetString().Should().Be(PdfCommandIds.ExtractText);
+            doc.RootElement.GetProperty("command").GetString().Should().Be("text.extract");
             doc.RootElement.GetProperty("pages")[0].GetProperty("text").GetString().Should().Contain("HELLO JSON");
         }
 
@@ -292,7 +291,7 @@ public class BatchAutomationCommandTests : IDisposable
         render.StdOut.Should().NotContain("unused-secret");
         using (var doc = JsonDocument.Parse(render.StdOut))
         {
-            doc.RootElement.GetProperty("command").GetString().Should().Be(PdfCommandIds.RenderPage);
+            doc.RootElement.GetProperty("command").GetString().Should().Be("render.page");
             doc.RootElement.GetProperty("width").GetInt32().Should().BeGreaterThan(0);
             doc.RootElement.GetProperty("height").GetInt32().Should().BeGreaterThan(0);
         }
@@ -322,7 +321,7 @@ public class BatchAutomationCommandTests : IDisposable
                 new
                 {
                     id = "text-page-two",
-                    command = PdfCommandIds.ExtractText,
+                    command = "text.extract",
                     input = "input.pdf",
                     page = 2,
                 },
@@ -355,7 +354,7 @@ public class BatchAutomationCommandTests : IDisposable
                 new
                 {
                     id = "add-field",
-                    command = PdfCommandIds.AddFormField,
+                    command = "form.addField",
                     input = "input.pdf",
                     output = "with-field.pdf",
                     type = "Text",
@@ -367,7 +366,7 @@ public class BatchAutomationCommandTests : IDisposable
                 new
                 {
                     id = "fill-form",
-                    command = PdfCommandIds.FillForm,
+                    command = "form.fillForm",
                     input = "with-field.pdf",
                     output = "filled.pdf",
                     fields = new Dictionary<string, string> { ["Name"] = "Bob" },
@@ -375,7 +374,7 @@ public class BatchAutomationCommandTests : IDisposable
                 new
                 {
                     id = "audit",
-                    command = PdfCommandIds.AuditHiddenText,
+                    command = "audit.hiddenText",
                     input = "filled.pdf",
                     allowFindings = true,
                 },

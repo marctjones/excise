@@ -1,6 +1,5 @@
 using AwesomeAssertions;
 using Excise.Cli;
-using Excise.Core.Automation;
 using Xunit;
 
 namespace Excise.Cli.Tests;
@@ -24,8 +23,8 @@ public class CommandMetadataCommandTests
         }
 
         exitCode.Should().Be(0);
-        captured.ToString().Should().Contain(PdfCommandIds.Open);
-        captured.ToString().Should().Contain(PdfCommandIds.RenderPage);
+        captured.ToString().Should().Contain("app.open");
+        captured.ToString().Should().Contain("render.page");
         captured.ToString().Should().Contain("\"cliCommand\": \"render\"");
     }
 
@@ -38,7 +37,7 @@ public class CommandMetadataCommandTests
         int exitCode;
         try
         {
-            exitCode = await Program.RunAsync(["commands", PdfCommandIds.ApplyRedaction]);
+            exitCode = await Program.RunAsync(["commands", "redaction.apply"]);
         }
         finally
         {

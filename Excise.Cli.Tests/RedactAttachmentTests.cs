@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json;
 using AwesomeAssertions;
 using Excise.Cli.Commands;
-using Excise.Core.Automation;
 using Excise.Core.Document;
 using Excise.TestSupport;
 using Xunit;
@@ -179,12 +178,12 @@ public sealed class RedactAttachmentTests : IDisposable
             {
                 new
                 {
-                    id = "strip", command = PdfCommandIds.ApplyRedaction, input = "input.pdf",
+                    id = "strip", command = "redaction.apply", input = "input.pdf",
                     output = "stripped.pdf", text = PageWord, confirmDestructive = true,
                 },
                 new
                 {
-                    id = "keep", command = PdfCommandIds.ApplyRedaction, input = "input.pdf",
+                    id = "keep", command = "redaction.apply", input = "input.pdf",
                     output = "kept.pdf", text = PageWord, confirmDestructive = true, keepAttachments = true,
                 },
             },
@@ -223,7 +222,7 @@ public sealed class RedactAttachmentTests : IDisposable
             {
                 new
                 {
-                    id = "redact", command = PdfCommandIds.ApplyRedaction, input = "portfolio.pdf",
+                    id = "redact", command = "redaction.apply", input = "portfolio.pdf",
                     output = "portfolio-out.pdf", text = PageWord, confirmDestructive = true,
                 },
             },

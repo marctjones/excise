@@ -5,7 +5,7 @@ namespace Excise.Core.Automation;
 /// <summary>
 /// Central metadata registry for excise semantic commands.
 /// </summary>
-public static class PdfCommandRegistry
+internal static class PdfCommandRegistry
 {
     private static readonly IReadOnlyList<PdfCommandMetadata> Commands =
     [

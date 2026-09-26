@@ -117,23 +117,23 @@ internal static class MacNativeMenuBuilder
         public MenuState(MainWindowViewModel viewModel)
         {
             _viewModel = viewModel;
-            _saveItem = CommandItem("Save", _viewModel.SaveFileCommand, Key.S);
+            _saveItem = CommandItem("Save", _viewModel.SaveFileCommand, PdfCommandIds.Save);
             // #782: Cmd+Z / Cmd+Shift+Z app-wide undo/redo.
-            _undoItem = CommandItem("Undo", _viewModel.UndoCommand, Key.Z);
-            _redoItem = CommandItem("Redo", _viewModel.RedoCommand, Key.Z, KeyModifiers.Meta | KeyModifiers.Shift);
+            _undoItem = CommandItem("Undo", _viewModel.UndoCommand, PdfCommandIds.Undo);
+            _redoItem = CommandItem("Redo", _viewModel.RedoCommand, PdfCommandIds.Redo);
             _recentFilesItem = Submenu("Open Recent");
-            _selectTextItem = CommandItem("Select Text Mode", _viewModel.ToggleTextSelectionModeCommand, Key.T);
+            _selectTextItem = CommandItem("Select Text Mode", _viewModel.ToggleTextSelectionModeCommand, PdfCommandIds.SelectTextMode);
             _typewriterItem = CommandItem("Typewriter Mode", _viewModel.ToggleTypewriterModeCommand);
             // #780: keep the discard / next-pending-edit affordances reachable on
             // macOS's native menu, not just the in-window AXAML menu.
             _typewriterNextEditItem = CommandItem("Go to Next Pending Type-over Edit", _viewModel.GoToNextPendingTypewriterEditCommand);
             _typewriterDiscardItem = CommandItem("Discard Pending Type-over Edits", _viewModel.DiscardPendingTypewriterEditsCommand);
-            _redactionModeItem = CommandItem("Redaction Mode", _viewModel.ToggleRedactionModeCommand, Key.R, modifiers: KeyModifiers.None);
+            _redactionModeItem = CommandItem("Redaction Mode", _viewModel.ToggleRedactionModeCommand, PdfCommandIds.ToggleRedactionMode);
             _viewClipboardItem = ToggleItem("Show Clipboard History", _viewModel.ToggleClipboardSidebarCommand);
             _redactionClipboardItem = ToggleItem("Show Clipboard History", _viewModel.ToggleClipboardSidebarCommand);
-            _continuousScrollItem = CommandItem("Continuous Scroll", _viewModel.ToggleContinuousViewCommand, Key.C, KeyModifiers.Meta | KeyModifiers.Shift);
-            _outlineItem = ToggleItem("Show Outline", _viewModel.ToggleOutlineCommand, Key.O, KeyModifiers.Meta | KeyModifiers.Shift);
-            _thumbnailsItem = ToggleItem("Show Thumbnails", _viewModel.ToggleThumbnailsCommand, Key.T, KeyModifiers.Meta | KeyModifiers.Shift);
+            _continuousScrollItem = CommandItem("Continuous Scroll", _viewModel.ToggleContinuousViewCommand, PdfCommandIds.ToggleContinuousView);
+            _outlineItem = ToggleItem("Show Outline", _viewModel.ToggleOutlineCommand, PdfCommandIds.ToggleOutline);
+            _thumbnailsItem = ToggleItem("Show Thumbnails", _viewModel.ToggleThumbnailsCommand, PdfCommandIds.ToggleThumbnails);
             // #1563: the in-window menu is hidden on macOS, so the pane toggle
             // must exist here too or it is unreachable on the primary platform.
             _attachmentsItem = ToggleItem("Show Attachments", _viewModel.ToggleAttachmentsCommand);
@@ -149,7 +149,7 @@ internal static class MacNativeMenuBuilder
             _formAuthoringItem = CommandItem("Form Authoring Mode", _viewModel.ToggleFormAuthoringModeCommand);
             // #1545: enabled only when a document is open AND its /P flags allow
             // printing, so it is not a document item; Refresh sets it.
-            _printItem = CommandItem("Print...", _viewModel.PrintCommand, Key.P);
+            _printItem = CommandItem("Print...", _viewModel.PrintCommand, PdfCommandIds.Print);
             // #1598/#1552/#1553: this window's own document tabs, then macOS's
             // window-tab actions, then the open documents.
             //
@@ -196,23 +196,23 @@ internal static class MacNativeMenuBuilder
 
             Add(menu,
                 Submenu("File",
-                    CommandItem("Open...", _viewModel.OpenFileCommand, Key.O),
+                    CommandItem("Open...", _viewModel.OpenFileCommand, PdfCommandIds.Open),
                     _recentFilesItem,
                     Separator(),
                     TrackDocumentItem(_saveItem),
-                    TrackDocumentItem(CommandItem("Save As...", _viewModel.SaveAsCommand, Key.S, KeyModifiers.Meta | KeyModifiers.Shift)),
+                    TrackDocumentItem(CommandItem("Save As...", _viewModel.SaveAsCommand, PdfCommandIds.SaveAs)),
                     TrackDocumentItem(CommandItem("Save Flattened Form Copy...", _viewModel.SaveFlattenedFormCopyCommand)),
                     Separator(),
-                    TrackDocumentItem(CommandItem("Close Document", _viewModel.CloseDocumentCommand, Key.W))));
+                    TrackDocumentItem(CommandItem("Close Document", _viewModel.CloseDocumentCommand, PdfCommandIds.CloseDocument))));
 
             Add(menu,
                 Submenu("Edit",
                     _undoItem,
                     _redoItem,
                     Separator(),
-                    TrackDocumentItem(CommandItem("Find...", _viewModel.ToggleSearchCommand, Key.F)),
-                    TrackDocumentItem(CommandItem("Find Next", _viewModel.FindNextCommand, Key.F3, KeyModifiers.None)),
-                    TrackDocumentItem(CommandItem("Find Previous", _viewModel.FindPreviousCommand, Key.F3, KeyModifiers.Shift)),
+                    TrackDocumentItem(CommandItem("Find...", _viewModel.ToggleSearchCommand, PdfCommandIds.SearchOpen)),
+                    TrackDocumentItem(CommandItem("Find Next", _viewModel.FindNextCommand, PdfCommandIds.SearchNext)),
+                    TrackDocumentItem(CommandItem("Find Previous", _viewModel.FindPreviousCommand, PdfCommandIds.SearchPrevious)),
                     Separator(),
                     TrackDocumentItem(_selectTextItem),
                     TrackDocumentItem(_typewriterItem),
@@ -220,8 +220,8 @@ internal static class MacNativeMenuBuilder
                     TrackDocumentItem(_formAuthoringItem),
                     _typewriterNextEditItem,
                     _typewriterDiscardItem,
-                    TrackDocumentItem(CommandItem("Select All Text", _viewModel.SelectAllTextCommand, Key.A)),
-                    TrackTextSelectionItem(CommandItem("Copy Selected Text", _viewModel.CopyTextCommand, Key.C))));
+                    TrackDocumentItem(CommandItem("Select All Text", _viewModel.SelectAllTextCommand, PdfCommandIds.SelectAll)),
+                    TrackTextSelectionItem(CommandItem("Copy Selected Text", _viewModel.CopyTextCommand, PdfCommandIds.CopyText))));
 
             Add(menu,
                 Submenu("Annotate",
@@ -232,12 +232,12 @@ internal static class MacNativeMenuBuilder
 
             Add(menu,
                 Submenu("View",
-                    TrackDocumentItem(CommandItem("Zoom In", _viewModel.ZoomInCommand, Key.OemPlus)),
-                    TrackDocumentItem(CommandItem("Zoom Out", _viewModel.ZoomOutCommand, Key.OemMinus)),
-                    TrackDocumentItem(CommandItem("Actual Size", _viewModel.ZoomActualSizeCommand, Key.D0)),
+                    TrackDocumentItem(CommandItem("Zoom In", _viewModel.ZoomInCommand, PdfCommandIds.ZoomIn)),
+                    TrackDocumentItem(CommandItem("Zoom Out", _viewModel.ZoomOutCommand, PdfCommandIds.ZoomOut)),
+                    TrackDocumentItem(CommandItem("Actual Size", _viewModel.ZoomActualSizeCommand, PdfCommandIds.ZoomActualSize)),
                     Separator(),
-                    TrackDocumentItem(CommandItem("Fit Width", _viewModel.ZoomFitWidthCommand, Key.D1)),
-                    TrackDocumentItem(CommandItem("Fit Page", _viewModel.ZoomFitPageCommand, Key.D2)),
+                    TrackDocumentItem(CommandItem("Fit Width", _viewModel.ZoomFitWidthCommand, PdfCommandIds.ZoomFitWidth)),
+                    TrackDocumentItem(CommandItem("Fit Page", _viewModel.ZoomFitPageCommand, PdfCommandIds.ZoomFitPage)),
                     Separator(),
                     TrackDocumentItem(_continuousScrollItem),
                     Separator(),
@@ -266,11 +266,11 @@ internal static class MacNativeMenuBuilder
                     TrackSelectedPageRemoveItem(CommandItem("Remove Selected Pages", _viewModel.RemoveSelectedPagesCommand)),
                     TrackSelectedPageItem(CommandItem("Clear Page Selection", _viewModel.ClearSelectedPagesCommand)),
                     Separator(),
-                    TrackDocumentItem(CommandItem("Rotate Left 90 degrees", _viewModel.RotatePageLeftCommand, Key.L)),
-                    TrackDocumentItem(CommandItem("Rotate Right 90 degrees", _viewModel.RotatePageRightCommand, Key.R)),
+                    TrackDocumentItem(CommandItem("Rotate Left 90 degrees", _viewModel.RotatePageLeftCommand, PdfCommandIds.RotateLeft)),
+                    TrackDocumentItem(CommandItem("Rotate Right 90 degrees", _viewModel.RotatePageRightCommand, PdfCommandIds.RotateRight)),
                     TrackDocumentItem(CommandItem("Rotate 180 degrees", _viewModel.RotatePage180Command)),
                     Separator(),
-                    TrackDocumentItem(CommandItem("Export Current Page...", _viewModel.ExportCurrentPageCommand, Key.E)),
+                    TrackDocumentItem(CommandItem("Export Current Page...", _viewModel.ExportCurrentPageCommand, PdfCommandIds.ExportCurrentPage)),
                     TrackDocumentItem(CommandItem("Export All Pages as Images...", _viewModel.ExportPagesCommand)),
                     _printItem,
                     Separator(),
@@ -287,7 +287,7 @@ internal static class MacNativeMenuBuilder
             Add(menu,
                 Submenu("Redaction",
                     TrackDocumentItem(_redactionModeItem),
-                    TrackRedactionItem(CommandItem("Apply Redaction", _viewModel.ApplyRedactionCommand, Key.Enter, KeyModifiers.None)),
+                    TrackRedactionItem(CommandItem("Apply Redaction", _viewModel.ApplyRedactionCommand, PdfCommandIds.ApplyRedaction)),
                     Separator(),
                     _redactionClipboardItem));
 
@@ -310,7 +310,7 @@ internal static class MacNativeMenuBuilder
 
             Add(menu,
                 Submenu("Help",
-                    CommandItem("Keyboard Shortcuts", _viewModel.ShowShortcutsCommand, Key.F1, KeyModifiers.None),
+                    CommandItem("Keyboard Shortcuts", _viewModel.ShowShortcutsCommand, PdfCommandIds.KeyboardShortcuts),
                     CommandItem("Documentation", _viewModel.ShowDocumentationCommand)));
 
             menu.NeedsUpdate += (_, _) => Refresh();
@@ -605,23 +605,30 @@ internal static class MacNativeMenuBuilder
             return item;
         }
 
-        private static NativeMenuItem CommandItem(
-            string header,
-            System.Windows.Input.ICommand? command,
-            Key? key = null,
-            KeyModifiers modifiers = KeyModifiers.Meta)
+        // The key equivalents that differ from the registry's shortcut on macOS; every other item derives from it.
+        private static readonly Dictionary<string, string> MacShortcuts = new()
         {
-            var item = new NativeMenuItem(header)
+            [PdfCommandIds.Redo] = "Cmd+Shift+Z",
+            [PdfCommandIds.SelectTextMode] = "Cmd+T",
+        };
+
+        private static KeyGesture? GestureFor(string? commandId)
+        {
+            var shortcut = commandId is null ? null : MacShortcuts.GetValueOrDefault(commandId) ?? PdfCommandRegistry.Get(commandId).Shortcut;
+            shortcut = shortcut?.Replace("Ctrl", "Cmd");
+            // A bare digit parses as its numeric Key value ("0" is Key.None): name the key, D0.
+            if (shortcut is [.., '+', >= '0' and <= '9'])
+                shortcut = shortcut.Insert(shortcut.Length - 1, "D");
+            return shortcut is null ? null : KeyGesture.Parse(shortcut);
+        }
+
+        private static NativeMenuItem CommandItem(string header, ICommand? command, string? commandId = null) =>
+            new(header)
             {
                 Command = command,
-                IsEnabled = command != null
+                IsEnabled = command != null,
+                Gesture = GestureFor(commandId),
             };
-
-            if (key.HasValue)
-                item.Gesture = new KeyGesture(key.Value, modifiers);
-
-            return item;
-        }
 
         /// <summary>
         /// #1476: Edit &gt; Typewriter Text Color. Each preset is tracked as a
@@ -643,21 +650,13 @@ internal static class MacNativeMenuBuilder
                 IsEnabled = command != null,
             };
 
-        private static NativeMenuItem ToggleItem(
-            string header,
-            ICommand command,
-            Key? key = null,
-            KeyModifiers modifiers = KeyModifiers.Meta)
-        {
-            var item = new NativeMenuItem(header)
+        private static NativeMenuItem ToggleItem(string header, ICommand command, string? commandId = null) =>
+            new(header)
             {
                 ToggleType = MenuItemToggleType.CheckBox,
-                Command = command
+                Command = command,
+                Gesture = GestureFor(commandId),
             };
-            if (key.HasValue)
-                item.Gesture = new KeyGesture(key.Value, modifiers);
-            return item;
-        }
 
         private static NativeMenuItem Submenu(string header, params NativeMenuItem[] items)
         {
