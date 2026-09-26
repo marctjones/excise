@@ -315,7 +315,7 @@ public class GuiFullResponsivenessCoverageTests
                 vm.IsFormAuthoringMode = true;
                 vm.FormAuthoringFieldType = PdfFieldType.Text;
                 vm.OnFormFieldRectDrawn(new PdfRectangle(72, 700, 300, 720), pageNumber: 1);
-                vm.OnFormFieldEdited("Text1", "Alice");
+                vm.OnFormFieldEdited(vm.PdfCoreDocument!.GetAcroForm()!.Fields.Single(), "Alice", oldValue: null);
             });
             AddResult(results, "form-authoring-and-edit", formAuthoringMs, 150, 750, "gui.form.author-and-edit");
 

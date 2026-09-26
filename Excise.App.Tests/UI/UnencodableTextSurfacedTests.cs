@@ -114,19 +114,20 @@ public class UnencodableTextSurfacedTests
     }
 
     [FixedAvaloniaFact]
-    public async Task SavingDocumentSync_OfUnencodableFieldValue_IsToldToTheUser()
+    public async Task ViewModelFieldApply_OfUnencodableFieldValue_IsToldToTheUser()
     {
-        // The second swallow: the sync into the save document. Driven directly
-        // (no viewer) so it holds whichever caller reaches it.
+        // The second swallow: the view model's own write into the field, which
+        // Undo and Redo share. Driven directly (no viewer) so it holds whichever
+        // caller reaches it.
         var path = WriteBlankPdf();
         try
         {
             var (vm, toasts) = CreateViewModel();
             await vm.LoadDocumentAsync(path);
             vm.OnFormFieldRectDrawn(new PdfRectangle(72, 600, 300, 620), 1);
-            var name = AuthoredFieldName(vm);
+            var field = vm.PdfCoreDocument!.GetAcroForm()!.Fields.Single();
 
-            vm.OnFormFieldEdited(name, Polish);
+            vm.OnFormFieldEdited(field, Polish, oldValue: null);
 
             toasts.Should().ContainSingle(t => t.Severity == ToastService.ToastSeverity.Error)
                 .Which.Message.Should().Contain("NOT saved");

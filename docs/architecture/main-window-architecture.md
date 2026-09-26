@@ -354,8 +354,8 @@ handler (`MainWindow.axaml.cs:265-279` catches and `Debug.WriteLine`s it).
 | `_isFormAuthoringMode` (124), `IsFormAuthoringMode` (130–157), `_formAuthoringFieldType` (159), `FormAuthoringFieldType` (164–168) | mode | form-authoring mode with the same mutual-exclusion pattern; field type set from code-behind (`:1114`) | own; read as a **field** by cs:231/404/794/912 | — | command lambda, X, V |
 | `CurrentPageFormFields` (175–190) | computed | `GetFormFields()` for the current page, exceptions swallowed | `_pdfCoreDocument`, `CurrentPageIndex` | Core | X (`PdfViewerControl.FormFields`), raised at cs:459 |
 | `OnFormFieldEdited` (200–216), `OnFormFieldRectDrawn` (224–260), `AutoDetectAndApplyFormFields` (265–296), `AddFormFieldToDocument` (298–324), `NextUniqueFieldName` (431–450) | view callbacks | bits 4/6/9; mutate the viewer document and mirror to the save document when they differ (#917) | `_pdfCoreDocument`, `FileState.FormFieldEditsCount` | doc service, `PdfFormAutoDetector` | V (`:1060`, `:1069`), command |
-| `NotifyFormDirtyStateChanged` (326–330), `SyncFormFieldValueToServiceDocument` (332–348), `SyncAllFormFieldValuesToServiceDocument` (350–358) | private | dirty raise; value mirroring | — | doc service | save paths (cs:1243, 2222) |
-| `SaveFlattenedFormCopyAsync` (360–393), `SaveFlattenedFormCopyAsAsync` (395–417), `SuggestFlattenedFormFilename` (419–429) | async | sync → reopen from bytes → burn typewriter → flatten → save re-encrypted → `FileState.MarkSaved` → **`LoadDocumentAsync` of the new file** | typewriter, `FileState` | doc service, pickers, Core, toast | command, S |
+| `NotifyFormDirtyStateChanged` (326–330), `ApplyFormFieldValue` (332–348) | private | dirty raise; writes an edit, its undo or its redo into the `PdfField` itself, never a name lookup (#1865) | — | — | `OnFormFieldEdited`, undo/redo |
+| `SaveFlattenedFormCopyAsync` (360–393), `SaveFlattenedFormCopyAsAsync` (395–417), `SuggestFlattenedFormFilename` (419–429) | async | reopen from bytes → burn typewriter → flatten → save re-encrypted → `FileState.MarkSaved` → **`LoadDocumentAsync` of the new file** | typewriter, `FileState` | doc service, pickers, Core, toast | command, S |
 
 **`HiddenText.cs`**
 
@@ -1124,18 +1124,16 @@ static IReadOnlyList<string> StandardStampNames { get; }
 
 `Forms.cs` minus the two modes: `FormAuthoringFieldType` (set from a bound
 enum, not a string), `CurrentPageFormFields`, `OnFormFieldEdited`,
-`OnFormFieldRectDrawn`, `AutoDetectAndApplyFormFields`, `SaveFlattenedFormCopy*`,
-`SyncAllFormFieldValuesToServiceDocument` (called by the session's save).
+`OnFormFieldRectDrawn`, `AutoDetectAndApplyFormFields`, `SaveFlattenedFormCopy*`.
 
 ```csharp
 PdfFieldType FormAuthoringFieldType { get; set; }
 IReadOnlyList<PdfField>? CurrentPageFormFields { get; }
 RC<Unit> AutoDetectFieldsCommand, SaveFlattenedFormCopyCommand;
-void OnFormFieldEdited(string fieldName, string? newValue);
+void OnFormFieldEdited(PdfField field, string? newValue, string? oldValue);
 void OnFormFieldRectDrawn(PdfRectangle rect, int pageNumber);
 void AutoDetectAndApplyFormFields();
 Task SaveFlattenedFormCopyAsAsync(string outputPath);
-void SyncAllFormFieldValuesToServiceDocument();      // invoked by DocumentSessionViewModel.SaveAsync
 ```
 
 #### `TypewriterViewModel`

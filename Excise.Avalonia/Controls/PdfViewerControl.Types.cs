@@ -216,26 +216,23 @@ public class AnnotationPathDrawnEventArgs : EventArgs
 
 /// <summary>
 /// Event arguments for an AcroForm field edit. The control has already
-/// mutated <see cref="PdfField.SetValue"/>; carries the field's full name and
-/// the new value (null if cleared).
+/// mutated <see cref="PdfField.SetValue"/>; carries the field itself and the
+/// new value (null if cleared). The field, not its name, identifies the edit:
+/// a field with no name and two fields sharing one are told apart only by
+/// their dictionaries (#1865).
 /// </summary>
 public class FormFieldEditedEventArgs : EventArgs
 {
-    public string FieldName { get; }
+    public PdfField Field { get; }
     public string? NewValue { get; }
     public int PageNumber { get; }
 
     /// <summary>The value the field held before this edit (null if it was empty); what Undo restores.</summary>
     public string? OldValue { get; }
 
-    public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber)
-        : this(fieldName, newValue, pageNumber, oldValue: null)
+    public FormFieldEditedEventArgs(PdfField field, string? newValue, int pageNumber, string? oldValue)
     {
-    }
-
-    public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber, string? oldValue)
-    {
-        FieldName = fieldName;
+        Field = field;
         NewValue = newValue;
         PageNumber = pageNumber;
         OldValue = oldValue;

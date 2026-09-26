@@ -1255,7 +1255,6 @@ public partial class MainWindowViewModel : ViewModelBase
         // Safe to save directly - either redacted version or no changes
         try
         {
-            SyncAllFormFieldValuesToServiceDocument();
             var document = _documentService.GetCurrentDocument();
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
 
@@ -2230,7 +2229,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            SyncAllFormFieldValuesToServiceDocument();
             var document = _documentService.GetCurrentDocument();
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
 

@@ -73,7 +73,7 @@ public class FormWorkflowTests
 
             var field = vm.PdfCoreDocument!.GetAcroForm()!.FindField("Name")!;
             field.SetValue("Bob");
-            vm.OnFormFieldEdited("Name", "Bob");
+            vm.OnFormFieldEdited(field, "Bob", oldValue: null);
 
             await vm.SaveFileAsAsync(outputPath);
 
@@ -103,7 +103,7 @@ public class FormWorkflowTests
 
             var field = vm.PdfCoreDocument!.GetAcroForm()!.FindField("Name")!;
             field.SetValue("Carol");
-            vm.OnFormFieldEdited("Name", "Carol");
+            vm.OnFormFieldEdited(field, "Carol", oldValue: null);
 
             await vm.SaveFlattenedFormCopyAsAsync(outputPath);
 
