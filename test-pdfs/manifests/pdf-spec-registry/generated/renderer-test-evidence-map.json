@@ -33553,7 +33553,7 @@
       "path": "Excise.Rendering.Tests/PdfStringEscapeTests.cs",
       "class": "PdfStringEscapeTests",
       "method": "Decodes_StandardEscapes",
-      "line": 24,
+      "line": 48,
       "xunitKind": "theory",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33584,7 +33584,7 @@
       "path": "Excise.Rendering.Tests/PdfStringEscapeTests.cs",
       "class": "PdfStringEscapeTests",
       "method": "Decodes_OctalEscapes",
-      "line": 33,
+      "line": 54,
       "xunitKind": "theory",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33615,7 +33615,7 @@
       "path": "Excise.Rendering.Tests/PdfStringEscapeTests.cs",
       "class": "PdfStringEscapeTests",
       "method": "BackslashBeforeUnknownChar_DropsBackslash_KeepsChar",
-      "line": 40,
+      "line": 58,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33646,7 +33646,7 @@
       "path": "Excise.Rendering.Tests/PdfStringEscapeTests.cs",
       "class": "PdfStringEscapeTests",
       "method": "BackslashBeforeNewline_DropsBoth_LineContinuation",
-      "line": 51,
+      "line": 67,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33677,7 +33677,7 @@
       "path": "Excise.Rendering.Tests/PdfStringEscapeTests.cs",
       "class": "PdfStringEscapeTests",
       "method": "RealWorldBirthCertSequence_DropsContinuationGracefully",
-      "line": 66,
+      "line": 79,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
