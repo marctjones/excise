@@ -250,43 +250,40 @@ public class PdfDocumentService
     }
 
     /// <summary>Remove a single page by 0-based index.</summary>
-    public void RemovePage(int pageIndex)
-    {
-        if (_currentDocument == null)
-            throw new InvalidOperationException("No document loaded");
-        if (pageIndex < 0 || pageIndex >= PageCount)
-            throw new ArgumentOutOfRangeException(nameof(pageIndex));
-
-        _currentDocument.Pages.RemoveAt(pageIndex);
-        _logger.LogInformation("Page {PageIndex} removed; remaining: {Count}", pageIndex, PageCount);
-    }
+    public void RemovePage(int pageIndex, bool ignorePermissions = false) =>
+        RemovePages(new[] { pageIndex }, ignorePermissions);
 
     /// <summary>Remove multiple pages by 0-based indices (in any order).</summary>
-    public void RemovePages(IEnumerable<int> pageIndices)
+    public void RemovePages(IEnumerable<int> pageIndices, bool ignorePermissions = false)
     {
+        var document = RequireAssemble(ignorePermissions, "removing pages");
         foreach (var index in pageIndices.OrderByDescending(i => i))
-            RemovePage(index);
+        {
+            if (index < 0 || index >= PageCount)
+                throw new ArgumentOutOfRangeException(nameof(pageIndices));
+
+            document.Pages.RemoveAt(index);
+            _logger.LogInformation("Page {PageIndex} removed; remaining: {Count}", index, PageCount);
+        }
     }
 
     /// <summary>Move a page from one 0-based position to another.</summary>
-    public void MovePage(int fromIndex, int toIndex)
+    public void MovePage(int fromIndex, int toIndex, bool ignorePermissions = false)
     {
-        if (_currentDocument == null)
-            throw new InvalidOperationException("No document loaded");
+        var document = RequireAssemble(ignorePermissions, "moving pages");
         if (fromIndex < 0 || fromIndex >= PageCount)
             throw new ArgumentOutOfRangeException(nameof(fromIndex));
         if (toIndex < 0 || toIndex >= PageCount)
             throw new ArgumentOutOfRangeException(nameof(toIndex));
 
-        _currentDocument.Pages.Move(fromIndex, toIndex);
+        document.Pages.Move(fromIndex, toIndex);
         _logger.LogInformation("Moved page from {FromIndex} to {ToIndex}", fromIndex, toIndex);
     }
 
     /// <summary>Move selected pages one position earlier or later while preserving their relative order.</summary>
-    public IReadOnlyList<int> MovePages(IEnumerable<int> pageIndices, int delta)
+    public IReadOnlyList<int> MovePages(IEnumerable<int> pageIndices, int delta, bool ignorePermissions = false)
     {
-        if (_currentDocument == null)
-            throw new InvalidOperationException("No document loaded");
+        var document = RequireAssemble(ignorePermissions, "moving pages");
         if (delta is not (-1 or 1))
             throw new ArgumentOutOfRangeException(nameof(delta), "Delta must be -1 or 1.");
 
@@ -313,7 +310,7 @@ public class PdfDocumentService
             if (target < 0 || target >= PageCount || selectedPositions.Contains(target))
                 continue;
 
-            _currentDocument.Pages.Move(index, target);
+            document.Pages.Move(index, target);
             selectedPositions.Remove(index);
             selectedPositions.Add(target);
         }
@@ -323,22 +320,26 @@ public class PdfDocumentService
         return newPositions;
     }
 
-    /// <summary>Insert pages from another PDF at a specific 0-based position.</summary>
-    public void InsertPagesFromPdf(string sourcePdfPath, int insertAtIndex, IEnumerable<int>? pageIndices = null)
+    /// <summary>
+    /// Insert pages from another PDF at a specific 0-based position. Like merge, /P bit 11
+    /// gates both this document and the source.
+    /// </summary>
+    public void InsertPagesFromPdf(
+        string sourcePdfPath, int insertAtIndex, IEnumerable<int>? pageIndices = null, bool ignorePermissions = false)
     {
-        if (_currentDocument == null)
-            throw new InvalidOperationException("No document loaded");
+        var document = RequireAssemble(ignorePermissions, "inserting pages");
         if (insertAtIndex < 0 || insertAtIndex > PageCount)
             throw new ArgumentOutOfRangeException(nameof(insertAtIndex));
 
         using var sourceDocument = PdfDocument.Open(sourcePdfPath);
+        AssembleGate(ignorePermissions)(sourceDocument, $"inserting pages from '{Path.GetFileName(sourcePdfPath)}'");
         var indices = pageIndices?.ToList() ?? Enumerable.Range(0, sourceDocument.PageCount).ToList();
 
         var cursor = insertAtIndex;
         foreach (var index in indices)
         {
             if (index < 0 || index >= sourceDocument.PageCount) continue;
-            _currentDocument.Pages.Insert(cursor, sourceDocument.GetPage(index + 1));
+            document.Pages.Insert(cursor, sourceDocument.GetPage(index + 1));
             cursor++;
         }
 
@@ -354,8 +355,7 @@ public class PdfDocumentService
     /// </summary>
     public void ExtractPagesToPdf(string outputPath, IEnumerable<int> pageIndices, bool ignorePermissions = false)
     {
-        if (_currentDocument == null)
-            throw new InvalidOperationException("No document loaded");
+        var document = RequireAssemble(ignorePermissions, "extracting pages");
         if (string.IsNullOrWhiteSpace(outputPath))
             throw new ArgumentException("Output path is required", nameof(outputPath));
 
@@ -367,10 +367,9 @@ public class PdfDocumentService
         if (indices.Count == 0)
             throw new ArgumentException("At least one valid page index is required", nameof(pageIndices));
 
-        AssembleGate(ignorePermissions)(_currentDocument, "extracting pages");
-        using var extracted = PdfDocument.CreateNew(_currentDocument.Version);
+        using var extracted = PdfDocument.CreateNew(document.Version);
         foreach (var index in indices)
-            extracted.Pages.Add(_currentDocument.GetPage(index + 1));
+            extracted.Pages.Add(document.GetPage(index + 1));
 
         extracted.Save(outputPath, GetReEncryptionOptions());
         _logger.LogInformation(
@@ -411,9 +410,18 @@ public class PdfDocumentService
         return result;
     }
 
+    /// <summary>The loaded document, once <see cref="AssembleGate"/> admits <paramref name="operation"/> on it.</summary>
+    private PdfDocument RequireAssemble(bool ignorePermissions, string operation)
+    {
+        var document = _currentDocument ?? throw new InvalidOperationException("No document loaded");
+        AssembleGate(ignorePermissions)(document, operation);
+        return document;
+    }
+
     /// <summary>
-    /// The /P page-assembly gate (bit 11) for extract, merge and split. <paramref name="ignorePermissions"/>
-    /// is <c>MainWindowViewModel.IgnoreDocumentPermissions</c>; an override is logged.
+    /// The /P page-assembly gate (bit 11) for every page operation: remove, insert, move, rotate,
+    /// extract, merge and split. <paramref name="ignorePermissions"/> is
+    /// <c>MainWindowViewModel.IgnoreDocumentPermissions</c>; an override is logged.
     /// </summary>
     private Action<PdfDocument, string> AssembleGate(bool ignorePermissions) => (document, operation) =>
     {
@@ -464,10 +472,9 @@ public class PdfDocumentService
     /// Rotate a page by the given number of degrees (added to the
     /// existing rotation). Must be a multiple of 90.
     /// </summary>
-    public void RotatePage(int pageIndex, int degrees)
+    public void RotatePage(int pageIndex, int degrees, bool ignorePermissions = false)
     {
-        if (_currentDocument == null)
-            throw new InvalidOperationException("No document loaded");
+        var document = RequireAssemble(ignorePermissions, "rotating pages");
         if (pageIndex < 0 || pageIndex >= PageCount)
             throw new ArgumentOutOfRangeException(nameof(pageIndex));
 
@@ -475,13 +482,9 @@ public class PdfDocumentService
         if (degrees != 0 && degrees != 90 && degrees != 180 && degrees != 270)
             throw new ArgumentException("Rotation must be 0, 90, 180, or 270 degrees", nameof(degrees));
 
-        var page = _currentDocument.GetPage(pageIndex + 1);
+        var page = document.GetPage(pageIndex + 1);
         page.Rotation = (page.Rotation + degrees) % 360;
     }
-
-    public void RotatePageRight(int pageIndex) => RotatePage(pageIndex, 90);
-    public void RotatePageLeft(int pageIndex) => RotatePage(pageIndex, 270);
-    public void RotatePage180(int pageIndex) => RotatePage(pageIndex, 180);
 
     /// <summary>Dispose the current document and clear state.</summary>
     public void CloseDocument()

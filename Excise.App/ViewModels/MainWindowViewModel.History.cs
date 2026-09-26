@@ -108,10 +108,12 @@ public partial class MainWindowViewModel
     // ── Page operations (#782) — undo/redo apply clean inverses through the ──
     // low-level document mutators directly, never the recording command paths,
     // so replay cannot re-enter the history or surface confirmation dialogs.
+    // Replay passes ignorePermissions: the /P assemble gate already admitted
+    // the recorded operation (#1850).
 
     private async Task ApplyPageRotationAsync(int pageIndex, int degrees)
     {
-        _documentService.RotatePage(pageIndex, degrees);
+        _documentService.RotatePage(pageIndex, degrees, ignorePermissions: true);
         MarkPageOrganizationChanged();
         await RefreshAfterDocumentMutationAsync();
     }
@@ -119,7 +121,7 @@ public partial class MainWindowViewModel
     private async Task MovePageInternalAsync(int fromIndex, int toIndex)
     {
         var newCurrent = RemapCurrentPageAfterSingleMove(CurrentPageIndex, fromIndex, toIndex);
-        _documentService.MovePage(fromIndex, toIndex);
+        _documentService.MovePage(fromIndex, toIndex, ignorePermissions: true);
         CurrentPageIndex = newCurrent;
         MarkPageOrganizationChanged();
         await RefreshAfterDocumentMutationAsync();
@@ -127,7 +129,7 @@ public partial class MainWindowViewModel
 
     private async Task MoveSelectedPagesInternalAsync(IReadOnlyList<int> indices, int delta)
     {
-        var newPositions = _documentService.MovePages(indices, delta);
+        var newPositions = _documentService.MovePages(indices, delta, ignorePermissions: true);
         CurrentPageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
         MarkPageOrganizationChanged();
         await RefreshAfterDocumentMutationAsync();
@@ -152,7 +154,7 @@ public partial class MainWindowViewModel
 
     private async Task RemovePagesInternalAsync(IReadOnlyList<int> indices)
     {
-        _documentService.RemovePages(indices);
+        _documentService.RemovePages(indices, ignorePermissions: true);
         CurrentPageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
         MarkPageOrganizationChanged(removedPage: true, removedPageCount: indices.Count);
         await RefreshAfterDocumentMutationAsync();

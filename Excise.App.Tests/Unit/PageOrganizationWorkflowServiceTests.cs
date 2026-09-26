@@ -29,7 +29,7 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
         var dialog = new RecordingDialogService();
         var workflow = CreateWorkflow(documentService, dialog);
 
-        var result = await workflow.MovePageAsync(fromIndex: 0, toIndex: 2);
+        var result = await workflow.MovePageAsync(fromIndex: 0, toIndex: 2, ignorePermissions: false);
 
         result.DidChange.Should().BeTrue();
         result.CurrentPageIndex.Should().Be(2);
@@ -48,7 +48,7 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
         var documentService = CreateLoadedDocumentService(sourcePath);
         var workflow = CreateWorkflow(documentService, new RecordingDialogService());
 
-        var result = await workflow.RemovePageAsync(pageIndex: 1);
+        var result = await workflow.RemovePageAsync(pageIndex: 1, ignorePermissions: false);
 
         result.DidChange.Should().BeTrue();
         result.CurrentPageIndex.Should().Be(0);
@@ -64,7 +64,7 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
         var documentService = CreateLoadedDocumentService(sourcePath);
         var workflow = CreateWorkflow(documentService, new RecordingDialogService());
 
-        var result = await workflow.RemovePagesAsync(new[] { 1, 2 }, currentPageIndex: 3);
+        var result = await workflow.RemovePagesAsync(new[] { 1, 2 }, currentPageIndex: 3, ignorePermissions: false);
 
         result.DidChange.Should().BeTrue();
         result.CurrentPageIndex.Should().Be(1);
@@ -85,7 +85,7 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
         var documentService = CreateLoadedDocumentService(sourcePath);
         var workflow = CreateWorkflow(documentService, new RecordingDialogService());
 
-        var result = await workflow.MovePagesAsync(new[] { 1, 2 }, delta: -1, currentPageIndex: 2);
+        var result = await workflow.MovePagesAsync(new[] { 1, 2 }, delta: -1, currentPageIndex: 2, ignorePermissions: false);
 
         result.DidChange.Should().BeTrue();
         result.CurrentPageIndex.Should().Be(1);
@@ -110,7 +110,7 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
         var dialog = new RecordingDialogService();
         var workflow = CreateWorkflow(documentService, dialog);
 
-        var result = await workflow.InsertPagesFromFileAsync(insertPath, insertAtIndex: 1);
+        var result = await workflow.InsertPagesFromFileAsync(insertPath, insertAtIndex: 1, ignorePermissions: false);
 
         result.DidChange.Should().BeTrue();
         documentService.PageCount.Should().Be(2);

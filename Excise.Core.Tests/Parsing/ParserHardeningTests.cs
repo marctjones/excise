@@ -6,6 +6,7 @@ using Excise.Core.Content;
 using Excise.Core.Document;
 using Excise.Core.Parsing;
 using Excise.Core.Primitives;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Parsing;
@@ -293,10 +294,11 @@ public class ParserHardeningTests
     [Fact]
     public void PdfDocument_Open_ZeroPaddedOverlongAes256EncryptionStrings_TrimsPadding()
     {
-        const string pdf = "../../../../test-pdfs/pdfjs/empty_protected.pdf";
-        if (!File.Exists(pdf)) return;
+        const string relativePath = "test-pdfs/pdfjs/empty_protected.pdf";
+        var pdf = TestRepoLayout.FindFile(relativePath);
+        Assert.SkipWhen(pdf == null, TestRepoLayout.AbsenceReason("pdf.js corpus (scripts/download-pdfjs-corpus.sh)", relativePath));
 
-        using var doc = PdfDocument.Open(pdf);
+        using var doc = PdfDocument.Open(pdf!);
 
         doc.IsEncrypted.Should().BeTrue();
     }

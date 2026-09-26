@@ -682,6 +682,60 @@ public class PdfDocumentServiceTests : IDisposable
         _service.MergeDocumentsToPdf(sources, output, ignorePermissions: true).PageCount.Should().Be(2);
     }
 
+    /// <summary>
+    /// #1850: remove, move, rotate and insert pass the gate extract, merge and split pass. A refusal
+    /// leaves the document as it was; IgnoreDocumentPermissions overrides it.
+    /// </summary>
+    [Theory]
+    [InlineData("remove")]
+    [InlineData("move")]
+    [InlineData("rotate")]
+    [InlineData("insert")]
+    public void InPlacePageOperation_AssembleDenied_IsRefused(string operation)
+    {
+        var insertSource = CreateTestFile("insert-source.pdf", path => TestPdfGenerator.CreateSimpleTextPdf(path, "Inserted"));
+        _service.LoadDocument(AssembleDeniedPdf($"{operation}-denied"));
+        Action<bool> run = operation switch
+        {
+            "remove" => ignore => _service.RemovePage(0, ignore),
+            "move" => ignore => _service.MovePage(0, 1, ignore),
+            "rotate" => ignore => _service.RotatePage(0, 90, ignore),
+            _ => ignore => _service.InsertPagesFromPdf(insertSource, 0, ignorePermissions: ignore),
+        };
+        var before = PageArrangement();
+
+        var act = () => run(false);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*bit 11*");
+        PageArrangement().Should().Be(before, $"a refused {operation} must leave the document as it was");
+
+        run(true);
+        PageArrangement().Should().NotBe(before, "IgnoreDocumentPermissions overrides the gate");
+    }
+
+    /// <summary>Combine refuses an assemble-denied source, so inserting its pages must too (#1850).</summary>
+    [Fact]
+    public void InsertPagesFromPdf_AssembleDeniedSource_IsRefused()
+    {
+        _service.LoadDocument(CreateTestFile("insert-target.pdf", path => TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2)));
+        var deniedSource = AssembleDeniedPdf("insert-denied-source");
+
+        var act = () => _service.InsertPagesFromPdf(deniedSource, 0);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*inserting pages from*bit 11*");
+        _service.PageCount.Should().Be(2);
+
+        _service.InsertPagesFromPdf(deniedSource, 0, ignorePermissions: true);
+        _service.PageCount.Should().Be(4);
+    }
+
+    private string PageArrangement()
+    {
+        var document = _service.GetCurrentDocument()!;
+        return string.Join(" | ", Enumerable.Range(1, document.PageCount)
+            .Select(n => $"{ExtractPageText(document, n).Trim()} @{document.GetPage(n).Rotation}"));
+    }
+
     #endregion
 
     #region RotatePage Tests
@@ -702,26 +756,6 @@ public class PdfDocumentServiceTests : IDisposable
         _service.GetCurrentDocument()!.GetPage(1).Rotation.Should().Be(degrees);
     }
 
-    [Theory]
-    [InlineData("Right", 90)]
-    [InlineData("Left", 270)]
-    [InlineData("180", 180)]
-    public void RotateShortcuts_RotateByTheirDirection(string shortcut, int expectedRotation)
-    {
-        var filePath = CreateTestFile("rotate.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "Shortcut"));
-        _service.LoadDocument(filePath);
-
-        switch (shortcut)
-        {
-            case "Right": _service.RotatePageRight(0); break;
-            case "Left": _service.RotatePageLeft(0); break;
-            default: _service.RotatePage180(0); break;
-        }
-
-        _service.GetCurrentDocument()!.GetPage(1).Rotation.Should().Be(expectedRotation);
-    }
-
     [Fact]
     public void RotatePage_Accumulates_AndWrapsAtFullTurn()
     {
@@ -729,12 +763,12 @@ public class PdfDocumentServiceTests : IDisposable
             TestPdfGenerator.CreateSimpleTextPdf(path, "Turns"));
         _service.LoadDocument(filePath);
 
-        _service.RotatePageRight(0);
-        _service.RotatePageRight(0);
+        _service.RotatePage(0, 90);
+        _service.RotatePage(0, 90);
         _service.GetCurrentDocument()!.GetPage(1).Rotation.Should().Be(180);
 
-        _service.RotatePageRight(0);
-        _service.RotatePageRight(0);
+        _service.RotatePage(0, 90);
+        _service.RotatePage(0, 90);
         _service.GetCurrentDocument()!.GetPage(1).Rotation.Should().Be(0,
             "four right turns are a full circle, not a rotation of 360");
     }
