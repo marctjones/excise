@@ -4024,7 +4024,7 @@
       "path": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs",
       "class": "BlankPageRecoveryTests",
       "method": "GlyphNamesOutsideTheRendererSubset_ResolveThroughCore",
-      "line": 128,
+      "line": 127,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4066,7 +4066,7 @@
       "path": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs",
       "class": "BlankPageRecoveryTests",
       "method": "TextOperatorsOutsideATextObject_DrawWhatTheOraclesDraw",
-      "line": 154,
+      "line": 153,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [

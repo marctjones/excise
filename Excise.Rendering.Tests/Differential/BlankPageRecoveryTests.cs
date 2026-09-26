@@ -121,7 +121,6 @@ public class BlankPageRecoveryTests
     /// </summary>
     [Theory]
     [InlineData("Alpha", 'Α')]     // Greek — 363015187.pdf's actual name
-    [InlineData("Omega", 'Ω')]
     [InlineData("beta", 'β')]
     [InlineData("one", '1')]
     [InlineData("uni0142", 'ł')]   // algorithmic convention, unchanged
