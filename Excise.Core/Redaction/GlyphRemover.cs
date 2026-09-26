@@ -84,14 +84,6 @@ public class GlyphRemover
     private static readonly AsyncLocal<bool> _blankInPlace = new();
 
     /// <summary>
-    /// #1091 A/B TESTING ONLY — force the old restructuring path by skipping the
-    /// operand split, so a test can measure the split's collateral/leak DELTA
-    /// against the reconstruction it replaced. Never set in production; the split
-    /// is the primary path.
-    /// </summary>
-    internal static bool DisableOperandSplit { get; set; }
-
-    /// <summary>
     /// #1145 — WIDTH-CLOSING mode, per-instance and off by default. When set,
     /// reconstructed runs collapse the oversized gap a removed run leaves, so
     /// the advance-width residue channel (#1116) is destroyed. Opt-in: the
@@ -214,7 +206,7 @@ public class GlyphRemover
             // A malformed (implicitly-ended, no ET) block goes to reconstruction,
             // which REPAIRS it (§9.4 forbids an unterminated BT); the split keeps
             // operators in place and would leave the input's invalidity intact.
-            var splitOp = (block.ImplicitEnd || DisableOperandSplit)
+            var splitOp = block.ImplicitEnd
                 ? null : OperandGlyphSplitter.TrySplit(op, matchesToRemove, CloseWidth);
             if (splitOp != null)
             {
