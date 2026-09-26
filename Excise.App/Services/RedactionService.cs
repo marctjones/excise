@@ -24,7 +24,7 @@ namespace Excise.App.Services;
 /// <c>Excise.App.Tests.Security.ContentRemovalVerificationTests</c> pin
 /// this property.
 /// </remarks>
-public class RedactionService
+internal class RedactionService
 {
     private readonly ILogger<RedactionService> _logger;
 

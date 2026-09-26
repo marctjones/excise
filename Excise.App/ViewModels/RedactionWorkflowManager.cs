@@ -12,7 +12,7 @@ namespace Excise.App.ViewModels;
 /// Manages the mark-then-apply redaction workflow.
 /// Tracks pending and applied redactions.
 /// </summary>
-public class RedactionWorkflowManager : ReactiveObject
+internal class RedactionWorkflowManager : ReactiveObject
 {
     private readonly ObservableCollection<PendingRedaction> _pending = new();
     private readonly ObservableCollection<PendingRedaction> _applied = new();

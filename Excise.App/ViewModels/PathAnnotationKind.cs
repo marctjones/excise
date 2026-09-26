@@ -7,7 +7,7 @@ namespace Excise.App.ViewModels;
 /// across all of these; only this selection and the termination rule differ.
 /// That is why Ink, Line and Arrow are one interaction mode rather than three.
 /// </summary>
-public enum PathAnnotationKind
+internal enum PathAnnotationKind
 {
     /// <summary>Freehand stroke -> Ink.</summary>
     Ink,

@@ -12,7 +12,7 @@ using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     public InteractionMode InteractionMode
     {

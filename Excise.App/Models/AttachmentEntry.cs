@@ -23,7 +23,7 @@ namespace Excise.App.Models;
 /// The 1-based page whose <c>/FileAttachment</c> annotation carries the file, or
 /// <c>null</c> for a document-level attachment.
 /// </param>
-public sealed record AttachmentEntry(
+internal sealed record AttachmentEntry(
     string Name,
     string FileName,
     string? Description,

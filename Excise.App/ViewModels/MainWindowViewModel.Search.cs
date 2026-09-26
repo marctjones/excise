@@ -15,7 +15,7 @@ namespace Excise.App.ViewModels;
 /// <summary>
 /// Search-related functionality for MainWindowViewModel
 /// </summary>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     private readonly DocumentSearchSession _searchSession;
     private string _searchText = string.Empty;

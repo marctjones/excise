@@ -25,7 +25,7 @@ using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+internal partial class MainWindowViewModel : ViewModelBase
 {
     internal const int DefaultViewerRenderDpi = 120;
 

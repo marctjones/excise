@@ -7,7 +7,7 @@ using Excise.App.ViewModels;
 
 namespace Excise.App.Views;
 
-public partial class AboutWindow : Window
+internal partial class AboutWindow : Window
 {
     public AboutWindow()
     {

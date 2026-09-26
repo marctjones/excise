@@ -7,7 +7,7 @@ namespace Excise.App.ViewModels;
 /// are shared across all five; only this selection (and, for
 /// <see cref="Stamp"/>, which stamp) differs.
 /// </summary>
-public enum ShapeAnnotationKind
+internal enum ShapeAnnotationKind
 {
     /// <summary>The drag rect -> Square.</summary>
     Square,

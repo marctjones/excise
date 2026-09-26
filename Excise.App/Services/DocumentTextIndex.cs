@@ -35,7 +35,7 @@ namespace Excise.App.Services;
 /// <para>The index is a snapshot of the document when it was built. Every GUI
 /// mutation restarts it through <c>DocumentTextIndexSession.Start</c>.</para>
 /// </remarks>
-public sealed class DocumentTextIndex
+internal sealed class DocumentTextIndex
 {
     private readonly PdfDocument _doc;
     private readonly ILogger _logger;
@@ -140,7 +140,7 @@ public sealed class DocumentTextIndex
 /// string instance and the same four doubles — so a search over these returns
 /// the same matches, boxes and order as a search over the words themselves.
 /// </remarks>
-public readonly record struct IndexedWord(string Text, PdfRectangle BoundingBox)
+internal readonly record struct IndexedWord(string Text, PdfRectangle BoundingBox)
 {
     internal static IndexedWord[] FromWords(IReadOnlyList<Word> words)
     {

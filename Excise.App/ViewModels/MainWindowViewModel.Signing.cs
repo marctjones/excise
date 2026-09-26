@@ -27,7 +27,7 @@ namespace Excise.App.ViewModels;
 /// file would hand back a valid signature over the wrong bytes, which is worse
 /// than refusing.</para>
 /// </summary>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     /// <summary>
     /// Pick a PKCS#12 certificate, pick an output path, sign. The certificate

@@ -19,7 +19,7 @@ namespace Excise.App.Views;
 /// existing precedent).</item>
 /// </list>
 /// </summary>
-public partial class StickyNotePopupView : UserControl
+internal partial class StickyNotePopupView : UserControl
 {
     public StickyNotePopupView()
     {

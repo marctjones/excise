@@ -15,7 +15,7 @@ namespace Excise.App.ViewModels;
 /// anywhere in <c>Excise.App</c> or <c>Excise.Avalonia</c>, so nothing would
 /// have happened had a user dropped a file on the window.
 /// </remarks>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     /// <summary>
     /// Open the first openable PDF from an OS drag-and-drop payload.

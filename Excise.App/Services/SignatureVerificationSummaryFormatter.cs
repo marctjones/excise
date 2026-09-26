@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Excise.App.Services;
 
-public sealed class SignatureVerificationSummaryFormatter
+internal sealed class SignatureVerificationSummaryFormatter
 {
     public string Format(IReadOnlyList<SignatureVerificationResult> results)
     {

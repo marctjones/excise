@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Excise.App.Services;
 
-public sealed class SignatureVerificationWorkflowService
+internal sealed class SignatureVerificationWorkflowService
 {
     private readonly SignatureVerificationService _signatureService;
     private readonly SignatureVerificationSummaryFormatter _summaryFormatter;

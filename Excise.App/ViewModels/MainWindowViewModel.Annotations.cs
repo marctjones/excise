@@ -11,7 +11,7 @@ using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     internal const string DefaultStickyNoteText = "Review note";
 

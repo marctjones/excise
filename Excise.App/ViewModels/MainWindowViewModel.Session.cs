@@ -21,7 +21,7 @@ namespace Excise.App.ViewModels;
 /// multi-document support existed.
 /// </summary>
 /// <remarks>Design: docs/architecture/main-window-architecture.md §7.</remarks>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     private NotifyCollectionChangedEventHandler? _recentFilesChangedHandler;
     private ObservableCollection<string>? _observedRecentFiles;

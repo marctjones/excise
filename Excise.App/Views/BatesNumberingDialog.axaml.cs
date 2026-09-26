@@ -14,7 +14,7 @@ namespace Excise.App.Views;
 /// is applied by <c>MainWindowViewModel</c> through
 /// <c>BatesNumberingService</c>.
 /// </remarks>
-public partial class BatesNumberingDialog : Window
+internal partial class BatesNumberingDialog : Window
 {
     public BatesNumberingDialog()
     {

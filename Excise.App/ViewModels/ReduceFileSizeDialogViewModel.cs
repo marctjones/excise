@@ -10,7 +10,7 @@ namespace Excise.App.ViewModels;
 /// <param name="Preset">The optimizer preset.</param>
 /// <param name="Label">What the list shows.</param>
 /// <param name="Description">What the preset does, in the user's terms.</param>
-public sealed record ReduceFileSizeChoice(PdfOptimizationPreset Preset, string Label, string Description)
+internal sealed record ReduceFileSizeChoice(PdfOptimizationPreset Preset, string Label, string Description)
 {
     /// <inheritdoc />
     public override string ToString() => Label;
@@ -21,7 +21,7 @@ public sealed record ReduceFileSizeChoice(PdfOptimizationPreset Preset, string L
 /// nothing else; it never touches a document, the same decoupling
 /// <see cref="BatesNumberingDialogViewModel"/> uses.
 /// </summary>
-public sealed class ReduceFileSizeDialogViewModel : ReactiveObject
+internal sealed class ReduceFileSizeDialogViewModel : ReactiveObject
 {
     /// <summary>The presets, safest first.</summary>
     public static IReadOnlyList<ReduceFileSizeChoice> Choices { get; } =

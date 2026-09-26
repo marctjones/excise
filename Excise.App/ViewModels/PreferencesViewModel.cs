@@ -5,7 +5,7 @@ using System.Reactive;
 
 namespace Excise.App.ViewModels;
 
-public class PreferencesViewModel : ViewModelBase
+internal class PreferencesViewModel : ViewModelBase
 {
     private string _ocrLanguages = "eng";
     private int _ocrBaseDpi = 350;

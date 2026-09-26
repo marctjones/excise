@@ -109,7 +109,7 @@ internal readonly record struct ViewportTransition(
 /// pick a fit mode (Width / Page) that survives window resizes; manual zoom
 /// ends that latch.
 /// </summary>
-public enum ZoomFitMode
+internal enum ZoomFitMode
 {
     Manual,
     FitWidth,

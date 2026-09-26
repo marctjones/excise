@@ -14,7 +14,7 @@ namespace Excise.App.Services;
 ///
 /// See Issues #265, #266, #267 for platform-specific requirements.
 /// </summary>
-public static class AppPaths
+internal static class AppPaths
 {
     private const string AppName = "Excise.App";
 

@@ -6,7 +6,7 @@ namespace Excise.App.Models;
 /// the file itself, and a file that is already open is brought forward
 /// instead of being opened twice.
 /// </summary>
-public enum DocumentOpenMode
+internal enum DocumentOpenMode
 {
     /// <summary>
     /// The platform default: a new window. On macOS the system setting

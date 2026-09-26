@@ -14,7 +14,7 @@ namespace Excise.App.Views;
 /// pointer gestures a command cannot express: middle-click to close, and drag
 /// to reorder.
 /// </summary>
-public partial class DocumentTabStrip : UserControl
+internal partial class DocumentTabStrip : UserControl
 {
     // A press moves the tab only after the pointer has travelled this far, so
     // an ordinary click never reorders.

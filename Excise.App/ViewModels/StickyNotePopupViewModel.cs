@@ -19,7 +19,7 @@ namespace Excise.App.ViewModels;
 /// popup's own logic (a text box and a commit gesture) independent of how the
 /// host chooses to persist it.</para>
 /// </summary>
-public sealed class StickyNotePopupViewModel : ReactiveObject
+internal sealed class StickyNotePopupViewModel : ReactiveObject
 {
     /// <summary>1-based page the note lives on.</summary>
     public int PageNumber { get; }

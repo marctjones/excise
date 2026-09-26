@@ -3,7 +3,7 @@ namespace Excise.App.Models;
 /// <summary>
 /// Immutable location and preview for one document-search result.
 /// </summary>
-public sealed class SearchMatch
+internal sealed class SearchMatch
 {
     public int PageIndex { get; init; }
     public string MatchedText { get; init; } = string.Empty;

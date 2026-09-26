@@ -11,7 +11,7 @@ namespace Excise.App.Views;
 /// MainWindow.axaml.cs's SetAnnotationPaletteVisibility), matching how it
 /// owns other view-only mechanics like BeginMoveDrag for its own title bar.
 /// </summary>
-public partial class AnnotationPaletteWindow : Window
+internal partial class AnnotationPaletteWindow : Window
 {
     public AnnotationPaletteWindow()
     {

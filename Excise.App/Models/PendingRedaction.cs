@@ -7,7 +7,7 @@ namespace Excise.App.Models;
 /// Represents a redaction area that has been marked but not yet applied.
 /// Part of mark-then-apply workflow.
 /// </summary>
-public class PendingRedaction
+internal class PendingRedaction
 {
     /// <summary>
     /// Unique identifier for this pending redaction

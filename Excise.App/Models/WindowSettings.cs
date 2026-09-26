@@ -17,7 +17,7 @@ namespace Excise.App.Models;
 /// See Issue #23: Save and restore window position, size, zoom level, and last page
 /// Uses AppPaths for cross-platform storage locations (Issues #265, #266, #267).
 /// </summary>
-public class WindowSettings
+internal class WindowSettings
 {
     public double X { get; set; }
     public double Y { get; set; }

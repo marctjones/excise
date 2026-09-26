@@ -7,7 +7,7 @@ namespace Excise.App.ViewModels;
 /// tool first, then the ordinary gesture (here, a text-selection drag) — not
 /// a separate "select first, then click a button" step.
 /// </summary>
-public enum MarkupAnnotationKind
+internal enum MarkupAnnotationKind
 {
     /// <summary>The finished selection -> Highlight.</summary>
     Highlight,

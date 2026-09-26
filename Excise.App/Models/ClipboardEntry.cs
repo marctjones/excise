@@ -6,7 +6,7 @@ using Excise.Core.Text;
 
 namespace Excise.App.Models;
 
-public class ClipboardEntry : ReactiveObject
+internal class ClipboardEntry : ReactiveObject
 {
     private string _text = string.Empty;
     private DateTime _timestamp;

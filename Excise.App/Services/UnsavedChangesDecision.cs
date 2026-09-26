@@ -18,7 +18,7 @@ namespace Excise.App.Services;
 /// dirty, never silently discard.
 /// </para>
 /// </remarks>
-public enum UnsavedChangesDecision
+internal enum UnsavedChangesDecision
 {
     /// <summary>
     /// Keep the document open with its edits intact. The close/quit/open that

@@ -11,7 +11,7 @@ namespace Excise.App.Models;
 /// records removed terms on the service; this file-to-file result is just
 /// pass/fail plus a match count for the scripting surface.
 /// </remarks>
-public sealed record TextRedactionResult(
+internal sealed record TextRedactionResult(
     bool Success,
     int RedactionCount,
     string? ErrorMessage = null)

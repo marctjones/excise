@@ -15,7 +15,7 @@ namespace Excise.App.ViewModels;
 /// the content stream on save is irreversible by design and is never recorded
 /// (the stack is cleared on every open, close, and save).
 /// </summary>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     private readonly Services.EditHistoryService _history = new();
 

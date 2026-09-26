@@ -14,7 +14,7 @@ namespace Excise.App.ViewModels;
 /// <c>scripts/generate-license-manifest.sh</c> and exposes it as a
 /// strongly-typed list the dialog can bind to.
 /// </summary>
-public sealed class AboutWindowViewModel
+internal sealed class AboutWindowViewModel
 {
     public string AppName { get; } = "Excise";
 
@@ -127,7 +127,7 @@ public sealed class AboutWindowViewModel
     }
 }
 
-public sealed class LicenseManifest
+internal sealed class LicenseManifest
 {
 
     [JsonPropertyName("project")]
@@ -137,7 +137,7 @@ public sealed class LicenseManifest
     public List<ThirdPartyPackage> Packages { get; set; } = new();
 }
 
-public sealed class ThirdPartyPackage
+internal sealed class ThirdPartyPackage
 {
     [JsonPropertyName("nugetId")]       public string? Id { get; set; }
     [JsonPropertyName("nugetVersion")]  public string? Version { get; set; }

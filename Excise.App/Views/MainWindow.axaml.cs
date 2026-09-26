@@ -21,7 +21,7 @@ using System.Linq;
 
 namespace Excise.App.Views;
 
-public partial class MainWindow : Window
+internal partial class MainWindow : Window
 {
     private PdfViewerControl? _pdfViewerControl;
     private readonly ISettingsStore _settingsStore;

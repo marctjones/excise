@@ -6,7 +6,7 @@ using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     // Mode indicator for status bar.
     public string CurrentModeText

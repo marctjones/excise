@@ -26,7 +26,7 @@ namespace Excise.App.Automation;
 /// Gated entirely behind the EXCISE_VISUAL_TRACE_OUT env var — a no-op in normal
 /// use. The action is chosen by EXCISE_VISUAL_TRACE_ACTION (default rotate-right).
 /// </summary>
-public static class VisualTraceRunner
+internal static class VisualTraceRunner
 {
     private const int FrameIntervalMs = 80;
     private const int FramesAfterAction = 30;   // ~2.4s of settle observation

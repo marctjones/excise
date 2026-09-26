@@ -11,7 +11,7 @@ namespace Excise.App.Services.Printing;
 /// values match PDFKit's <c>PDFPrintScalingMode</c> (PDFDocument.h), so the
 /// macOS printer passes them through unchanged.
 /// </summary>
-public enum PrintScalingMode
+internal enum PrintScalingMode
 {
     /// <summary>Print every page at 100%. <c>kPDFPrintPageScaleNone</c>.</summary>
     ActualSize = 0,

@@ -6,7 +6,7 @@ namespace Excise.App.Services;
 /// <summary>
 /// Suggests filenames for saved PDF operations (redactions, page extractions, etc.)
 /// </summary>
-public class FilenameSuggestionService
+internal class FilenameSuggestionService
 {
     /// <summary>
     /// Suggest a filename for a redacted version of a PDF

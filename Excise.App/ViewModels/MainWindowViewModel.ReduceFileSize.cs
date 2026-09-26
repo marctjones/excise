@@ -26,7 +26,7 @@ namespace Excise.App.ViewModels;
 /// so it cannot see anything a save would not write — including text a
 /// redaction removed.</para>
 /// </remarks>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     /// <summary>
     /// Test seam: supply the preset directly instead of showing the dialog.

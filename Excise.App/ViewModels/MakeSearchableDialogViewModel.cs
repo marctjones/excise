@@ -17,7 +17,7 @@ namespace Excise.App.ViewModels;
 /// an open document — see <c>MainWindowViewModel.Searchable.cs</c> for the
 /// delegate that wires this up to the real <see cref="PdfSearchableConverter"/>.
 /// </summary>
-public sealed class MakeSearchableDialogViewModel : ReactiveObject
+internal sealed class MakeSearchableDialogViewModel : ReactiveObject
 {
     /// <summary>
     /// A short list of common tesseract language codes, offered as presets.

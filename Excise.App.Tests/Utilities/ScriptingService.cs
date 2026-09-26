@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Excise.App.ViewModels;
 
@@ -14,38 +16,18 @@ namespace Excise.App.Tests.Utilities;
 /// Service for executing C# scripts against the MainWindowViewModel.
 /// Enables GUI automation and testing through Roslyn scripting.
 /// </summary>
-public class ScriptingService
+internal class ScriptingService
 {
-    private readonly MainWindowViewModel _viewModel;
-    private ScriptOptions? _scriptOptions;
+    // Every assembly the host loaded: the view model's base types (ReactiveUI, System.ObjectModel)
+    // must be referenced for a script to bind to its members.
+    private static readonly Lazy<MetadataReference[]> References = new(() =>
+        ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
+            .Split(Path.PathSeparator)
+            .Select(path => (MetadataReference)MetadataReference.CreateFromFile(path))
+            .ToArray());
 
-    public ScriptingService(MainWindowViewModel viewModel)
-    {
-        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-    }
-
-    /// <summary>
-    /// Gets or creates the script options with required references and imports.
-    /// </summary>
-    private ScriptOptions GetScriptOptions()
-    {
-        if (_scriptOptions != null)
-            return _scriptOptions;
-
-        // Add references to assemblies the script might need
-        var assemblies = new[]
-        {
-            typeof(MainWindowViewModel).Assembly,  // Excise.App
-            typeof(object).Assembly,               // System.Private.CoreLib
-            typeof(Console).Assembly,              // System.Console
-            typeof(File).Assembly,                 // System.IO.FileSystem
-            typeof(Enumerable).Assembly,           // System.Linq
-            Assembly.Load("System.Runtime"),
-            Assembly.Load("System.Collections"),
-        };
-
-        // Add common namespaces
-        var imports = new[]
+    private static readonly string[] Imports = ScriptOptions.Default.Imports
+        .Concat(new[]
         {
             "System",
             "System.IO",
@@ -55,14 +37,31 @@ public class ScriptingService
             "Excise.App.ViewModels",
             "Excise.App.Services",
             "Excise.App.Models",
-        };
+        })
+        .Distinct()
+        .ToArray();
 
-        _scriptOptions = ScriptOptions.Default
-            .AddReferences(assemblies)
-            .AddImports(imports);
+    private readonly MainWindowViewModel _viewModel;
 
-        return _scriptOptions;
+    public ScriptingService(MainWindowViewModel viewModel)
+    {
+        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
     }
+
+    /// <summary>
+    /// Compiles a script into an assembly named <c>Excise.App.Scripts</c>, the name
+    /// <c>Excise.App</c> grants <c>InternalsVisibleTo</c>. <c>CSharpScript</c> names its
+    /// submission assembly with a fresh GUID, so it could not see the internal
+    /// <see cref="MainWindowViewModel"/> that scripts take as their globals.
+    /// </summary>
+    private static CSharpCompilation CreateCompilation(string scriptCode) =>
+        CSharpCompilation.CreateScriptCompilation(
+            "Excise.App.Scripts",
+            CSharpSyntaxTree.ParseText(scriptCode, new CSharpParseOptions(kind: SourceCodeKind.Script)),
+            References.Value,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, usings: Imports),
+            returnType: typeof(object),
+            globalsType: typeof(MainWindowViewModel));
 
     /// <summary>
     /// Executes a C# script with the MainWindowViewModel as the global context.
@@ -73,18 +72,15 @@ public class ScriptingService
     {
         try
         {
-            var options = GetScriptOptions();
-
-            // Create and run the script with the ViewModel as global context
-            var script = CSharpScript.Create(scriptCode, options, typeof(MainWindowViewModel));
+            var compilation = CreateCompilation(scriptCode);
 
             // Compile the script first to catch syntax errors. Only Error-severity
             // diagnostics block execution — warnings such as "Assuming assembly
             // reference X.0.0.0 used by ReactiveUI matches identity Y.0.0.0" are
             // benign on cross-major-version runtimes (e.g. ReactiveUI built for
             // net8 loaded by net10 host) and should not fail the script.
-            var fatal = script.Compile()
-                .Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
+            var fatal = compilation.GetDiagnostics()
+                .Where(d => d.Severity == DiagnosticSeverity.Error)
                 .ToList();
 
             if (fatal.Count > 0)
@@ -93,14 +89,29 @@ public class ScriptingService
                 return ScriptExecutionResult.FromError(string.Join("\n", errors));
             }
 
-            // Execute the script
-            var result = await script.RunAsync(_viewModel);
+            using var dll = new MemoryStream();
+            var emitted = compilation.Emit(dll);
+            if (!emitted.Success)
+            {
+                return ScriptExecutionResult.FromError(string.Join("\n",
+                    emitted.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage())));
+            }
 
-            return ScriptExecutionResult.FromSuccess(result.ReturnValue);
-        }
-        catch (CompilationErrorException ex)
-        {
-            return ScriptExecutionResult.FromError($"Compilation error: {ex.Message}");
+            // The script's entry point takes the submission array: slot 0 holds the
+            // globals, slot 1 receives the submission itself.
+            var factory = Assembly.Load(dll.ToArray()).GetType("Script")!.GetMethod("<Factory>")!;
+            Task<object?> run;
+            try
+            {
+                run = (Task<object?>)factory.Invoke(null, new object?[] { new object?[] { _viewModel, null } })!;
+            }
+            catch (TargetInvocationException ex) when (ex.InnerException is not null)
+            {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                throw;
+            }
+
+            return ScriptExecutionResult.FromSuccess(await run);
         }
         catch (Exception ex)
         {
@@ -140,10 +151,8 @@ public class ScriptingService
     {
         try
         {
-            var options = GetScriptOptions();
-            var script = CSharpScript.Create(scriptCode, options, typeof(MainWindowViewModel));
-            return script.Compile()
-                .Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
+            return CreateCompilation(scriptCode).GetDiagnostics()
+                .Where(d => d.Severity == DiagnosticSeverity.Error)
                 .Select(d => d.GetMessage())
                 .ToList();
         }

@@ -9,7 +9,7 @@ namespace Excise.App.Services;
 /// applied at the call site when the entry is recorded; <see cref="UndoAsync"/>
 /// reverts it and <see cref="RedoAsync"/> re-applies it.
 /// </summary>
-public sealed class EditHistoryEntry
+internal sealed class EditHistoryEntry
 {
     private readonly Func<Task> _undo;
     private readonly Func<Task> _redo;
@@ -36,7 +36,7 @@ public sealed class EditHistoryEntry
 /// on save is irreversible by design and is never pushed here, which is why the
 /// history is cleared on every save, open, and close.
 /// </summary>
-public sealed class EditHistoryService
+internal sealed class EditHistoryService
 {
     private readonly Stack<EditHistoryEntry> _undo = new();
     private readonly Stack<EditHistoryEntry> _redo = new();
