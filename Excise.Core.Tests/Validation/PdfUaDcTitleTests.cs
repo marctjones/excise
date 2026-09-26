@@ -34,6 +34,8 @@ public class PdfUaDcTitleTests
     // Not a Lang Alt: veraPDF does not read these as a title either (#1774).
     [InlineData("<dc:title>Bare Element</dc:title>")]
     [InlineData("dc:title=\"Attribute Shorthand\"")]
+    // A Lang Alt entry without xml:lang: veraPDF 7.1 test 9 fails it (#1875).
+    [InlineData("<dc:title><rdf:Alt><rdf:li>Untagged Alternative</rdf:li></rdf:Alt></dc:title>")]
     // The property NAME occurring outside a title: a comment, another value.
     [InlineData("<!-- dc:title is intentionally absent -->")]
     [InlineData("<dc:description><rdf:Alt><rdf:li>see dc:title elsewhere</rdf:li></rdf:Alt></dc:description>")]
@@ -46,10 +48,11 @@ public class PdfUaDcTitleTests
     // The shapes that must PASS, with the value read back.
     [InlineData("<dc:title><rdf:Alt><rdf:li xml:lang='x-default'>Quarterly Report</rdf:li></rdf:Alt></dc:title>",
         "Quarterly Report")]
-    [InlineData("<dc:title><rdf:Alt><rdf:li>Untagged Alternative</rdf:li></rdf:Alt></dc:title>",
-        "Untagged Alternative")]
+    [InlineData("<dc:title><rdf:Alt><rdf:li>Untagged</rdf:li><rdf:li xml:lang='de-DE'>Tagged</rdf:li></rdf:Alt></dc:title>",
+        "Tagged")]
     // Entities are decoded, so an entity-only title is not mistaken for text.
-    [InlineData("<dc:title><rdf:Alt><rdf:li>Smith &amp; Jones</rdf:li></rdf:Alt></dc:title>", "Smith & Jones")]
+    [InlineData("<dc:title><rdf:Alt><rdf:li xml:lang='x-default'>Smith &amp; Jones</rdf:li></rdf:Alt></dc:title>",
+        "Smith & Jones")]
     public void ARealTitle_IsReadBack(string body, string expected)
     {
         PdfUaValidator.ReadDcTitle(Head + body + Tail).Should().Be(expected);

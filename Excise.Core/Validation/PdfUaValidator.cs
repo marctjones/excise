@@ -425,7 +425,9 @@ public static class PdfUaValidator
     /// <para>Only the <c>rdf:Alt</c>/<c>rdf:li</c> form counts. A bare
     /// <c>&lt;dc:title&gt;Text&lt;/dc:title&gt;</c> and the attribute
     /// <c>dc:title="Text"</c> are not a Lang Alt, and veraPDF does not read
-    /// either as a title (#1774).</para>
+    /// either as a title (#1774). Nor is an <c>rdf:li</c> without an
+    /// <c>xml:lang</c> attribute: veraPDF ignores it, and fails a title whose
+    /// entries are all untagged (#1875).</para>
     /// </remarks>
     internal static string? ReadDcTitle(string xmp)
     {
@@ -440,10 +442,13 @@ public static class PdfUaValidator
         string? fallback = null;
         foreach (System.Text.RegularExpressions.Match li in RdfListItem.Matches(element.Groups["v"].Value))
         {
+            var attrs = li.Groups["attrs"].Value;
+            if (!attrs.Contains("xml:lang", StringComparison.Ordinal))
+                continue;
             var value = Clean(li.Groups["v"].Value);
             if (value == null)
                 continue;
-            if (li.Groups["attrs"].Value.Contains("x-default", StringComparison.Ordinal))
+            if (attrs.Contains("x-default", StringComparison.Ordinal))
                 return value;
             fallback ??= value;
         }
