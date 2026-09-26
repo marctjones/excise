@@ -609,26 +609,18 @@ internal static class RedactionFeatureStripper
     // ───────────────────────── hidden optional content ─────────────────────
 
     /// <summary>
-    /// Drop page content inside <c>/OC</c> marked-content spans whose group is
-    /// OFF in the default configuration, XObject invocations whose <c>/OC</c>
-    /// is OFF, and annotations in an OFF layer; then remove the now-unused
-    /// groups from <c>/OCProperties</c>.
-    /// </summary>
-    /// <remarks>
-    /// <para>No new parser: this consumes the walker's operators through
-    /// <c>page.GetContentStream</c> and writes them back through
-    /// <c>SetContentStream</c>, the same shape as
-    /// <see cref="ObstructionStripper"/> (CLAUDE.md "One walk, many sinks").</para>
-    /// <para><b>Nesting is counted, not assumed.</b> A hidden span can contain
-    /// further <c>BDC</c>/<c>BMC</c> pairs, so the skip runs to the EMC that
-    /// balances the one that opened it — dropping at the first EMC would leak
-    /// the tail of the layer back into the page.</para>
-    /// </remarks>
-    /// <summary>
     /// Drop every <c>/OC BDC … EMC</c> span whose group is OFF by default, and
     /// every <c>Do</c> of an XObject with a hidden <c>/OC</c>. Shared by the
     /// page pass and the form-XObject recursion, so the two cannot drift.
     /// </summary>
+    /// <remarks>
+    /// <para><b>Nesting is the parser's, not counted here.</b> A hidden span
+    /// can contain further <c>BDC</c>/<c>BMC</c> pairs; every operator up to
+    /// the EMC that balances the hidden one, that EMC included, carries it in
+    /// <see cref="ContentOperator.EnclosingSpans"/> (#1848). Nothing inside a
+    /// hidden span is evaluated, so a nested group is neither counted nor
+    /// recorded.</para>
+    /// </remarks>
     private static (List<ContentOperator> Kept, int Spans) FilterHiddenSpans(
         PdfDocument document,
         IReadOnlyList<ContentOperator> operators,
@@ -637,27 +629,16 @@ internal static class RedactionFeatureStripper
         HashSet<PdfDictionary> hiddenGroups)
     {
         var kept = new List<ContentOperator>(operators.Count);
-        var skipDepth = 0;          // >0 while inside a hidden span
-        var markedDepth = 0;        // BDC/BMC nesting while skipping
+        var hidden = new HashSet<ContentOperator>();
         var count = 0;
 
         foreach (var op in operators)
         {
-            if (skipDepth > 0)
-            {
-                if (op.Name is "BDC" or "BMC") markedDepth++;
-                else if (op.Name == "EMC")
-                {
-                    markedDepth--;
-                    if (markedDepth == 0) skipDepth = 0;
-                }
-                continue;   // the opening BDC and closing EMC go too
-            }
+            if (op.EnclosingSpans.Any(hidden.Contains)) continue;
 
             if (op.Name == "BDC" && IsHiddenOcSpan(document, properties, op, hiddenGroups))
             {
-                skipDepth = 1;
-                markedDepth = 1;
+                hidden.Add(op);
                 count++;
                 continue;
             }
@@ -749,6 +730,18 @@ internal static class RedactionFeatureStripper
         return removed;
     }
 
+    /// <summary>
+    /// Drop page content inside <c>/OC</c> marked-content spans whose group is
+    /// OFF in the default configuration, XObject invocations whose <c>/OC</c>
+    /// is OFF, and annotations in an OFF layer; then remove the now-unused
+    /// groups from <c>/OCProperties</c>.
+    /// </summary>
+    /// <remarks>
+    /// No new parser: this consumes the walker's operators through
+    /// <c>page.GetContentStream</c> and writes them back through
+    /// <c>SetContentStream</c>, the same shape as
+    /// <see cref="ObstructionStripper"/> (CLAUDE.md "One walk, many sinks").
+    /// </remarks>
     private static (int Spans, int Groups) RemoveHiddenOptionalContent(PdfDocument document)
     {
         // No /OCProperties means no optional content and nothing to do — and,
