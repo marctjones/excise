@@ -353,6 +353,8 @@ public static class PdfPageRedactionExtensions
         if (options.DrawBox && (options.FixedMarker || !options.CloseWidth))
             foreach (var area in list)
                 PdfDocumentRedactionExtensions.AppendBlackRectangle(page, area, options.BoxColor);
+        carriers.AddRange(PdfDocumentRedactionExtensions.UndecodableFormResults(
+            page.UndecodableForms.Select(form => (form, page.PageNumber))));   // #1863
         return AreaReport(page.Document, options, metadataRow, removals, carriers, imageCounts);
     }
 

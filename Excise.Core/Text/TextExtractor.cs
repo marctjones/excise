@@ -37,6 +37,7 @@ public class TextExtractor
     private readonly HashSet<PdfStream> _formXObjectStack = new();
     private int _formXObjectDepth;
     private const int MaxFormXObjectDepth = 64;
+    private readonly List<PdfStream> _undecodableForms = new();
 
     // Marked-content nesting depth of /OC spans that are hidden. Maintained in
     // lock-step with _optionalContentHiddenStack (BDC/BMC push, EMC pop) so the
@@ -74,6 +75,12 @@ public class TextExtractor
     public bool IncludeFormFieldValues { get; set; } = true;
 
     /// <summary>
+    /// Form XObjects (appearance streams included) the last extraction reached
+    /// but could not decode, so none of their text is in its letters (#1863).
+    /// </summary>
+    internal IReadOnlyList<PdfStream> UndecodableForms => _undecodableForms;
+
+    /// <summary>
     /// Extract all letters from the page.
     /// </summary>
     /// <param name="cancellationToken">Cooperatively abandons a runaway
@@ -83,6 +90,7 @@ public class TextExtractor
     public IReadOnlyList<Letter> ExtractLetters(CancellationToken cancellationToken = default)
     {
         _letters.Clear();
+        _undecodableForms.Clear();
         ParseContentStream(cancellationToken);
         // Restore logical character order for RTL (Arabic/Hebrew) runs (#632).
         // Content streams usually carry RTL text in VISUAL order (reversed);
@@ -682,6 +690,14 @@ public class TextExtractor
     {
         if (_formXObjectDepth >= MaxFormXObjectDepth)
             return;
+
+        // #1863: a form whose /Filter cannot be decoded is skipped and
+        // recorded, never walked: redaction reports it instead of aborting.
+        if (stream.IsFiltered && !stream.TryEnsureDecoded())
+        {
+            _undecodableForms.Add(stream);
+            return;
+        }
 
         if (!_formXObjectStack.Add(stream))
             return;

@@ -229,6 +229,14 @@ internal static class FormXObjectFlattener
             return;
         }
 
+        // #1863: a form excise cannot decode is kept as a Do, and nothing about
+        // it is recorded as inlined; the page's walk reports it.
+        if (form.IsFiltered && !form.TryEnsureDecoded())
+        {
+            output.Add(Rewrite(op, rename));
+            return;
+        }
+
         // --- Inline the form. ---
         ctx.Changed = true;
 
@@ -245,11 +253,7 @@ internal static class FormXObjectFlattener
             xobjDict.GetOptional(name!) is PdfReference formRef)
             ctx.InlinedFormObjects.Add(formRef.ObjectNum);
 
-        byte[] formBytes;
-        try { formBytes = form.DecodedData; }
-        catch (Exception __ex) when (__ex is not OutOfMemoryException) { output.Add(Rewrite(op, rename)); return; } // can't decode → leave as-is
-
-        var formOps = new ContentStreamParser(formBytes, null).Parse().Operators;
+        var formOps = new ContentStreamParser(form.DecodedData, null).Parse().Operators;
         var formResources = ctx.Resolve(form.GetOptional("Resources")) as PdfDictionary
                             ?? new PdfDictionary();
 

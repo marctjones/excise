@@ -1690,7 +1690,7 @@ internal sealed class ContentStreamWalker
                     // read (#659): an EXPLICITLY UNIFORM 1-byte codespace
                     // decodes one byte at a time; anything else keeps the
                     // safe 2-byte default.
-                    if (_registeredEncodingCMap == null)
+                    if (_registeredEncodingCMap == null && (!encStream.IsFiltered || encStream.TryEnsureDecoded()))
                     {
                         var detail = Text.ToUnicodeCMapParser.ParseDetailed(encStream.DecodedData);
                         if (detail.CodespaceRanges.Count > 0 && detail.MaxCodeBytes == 1)

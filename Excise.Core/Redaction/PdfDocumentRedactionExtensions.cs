@@ -193,6 +193,7 @@ public static class PdfDocumentRedactionExtensions
         var wordWrapCandidates = new List<WordWrapTermCandidate>();
         var carrierResults = new List<CarrierResult>();
         var imageCounts = default(ImageRedactionCounts);   // #1187/#1195 surfacing
+        var undecodableForms = new List<(Excise.Core.Primitives.PdfStream Form, int Page)>();   // #1863
 
         if (string.IsNullOrEmpty(text))
             return new RedactionReport
@@ -425,6 +426,7 @@ public static class PdfDocumentRedactionExtensions
                 FindWordWrapCandidates(page.Letters, text, caseSensitive, pageNum));
 
             var remaining = CountOccurrences(page, text, caseSensitive, includeHiddenLayers, wholeWord);
+            undecodableForms.AddRange(page.UndecodableForms.Select(form => (form, pageNum)));
             pageResults.Add(new PageRedactionResult(
                 pageNum,
                 pageLocated,
@@ -561,6 +563,7 @@ public static class PdfDocumentRedactionExtensions
         // silently redacted on pages the caller did not ask about. Runs after
         // every page, so a page this call also redacted is not named.
         carrierResults.AddRange(SharedImageCarrierResults(document, imageCounts.TouchedImages));
+        carrierResults.AddRange(UndecodableFormResults(undecodableForms));
 
         // #1599: a NAMED marked-content property list (/Span /P1 BDC) this
         // redaction could not scrub because a span that SURVIVES it still
@@ -655,6 +658,23 @@ public static class PdfDocumentRedactionExtensions
                 "redact those pages too (#1493)");
         }
     }
+
+    /// <summary>
+    /// #1863: one "not scrubbed" row per form a page draws that excise could
+    /// not decode, naming the pages. None of its text reached a letter, so
+    /// nothing in it was matched or removed; the form is kept and reported,
+    /// never skipped in silence (CLAUDE.md rules 5 and 6).
+    /// </summary>
+    internal static IEnumerable<CarrierResult> UndecodableFormResults(
+        IEnumerable<(Excise.Core.Primitives.PdfStream Form, int Page)> drawn) =>
+        drawn.GroupBy(d => d.Form, d => d.Page)
+            .Select(g => new CarrierResult(
+                $"form XObject {g.Key.ObjectNumber ?? 0} {g.Key.GenerationNumber ?? 0} R on page(s) " +
+                string.Join(", ", g.Distinct()),
+                false,
+                $"its /Filter {string.Join(" ", g.Key.Filters.Select(f => "/" + f))} could not be decoded" +
+                (g.Key.DecodeFailureReason is { } why ? $" ({why})" : "") +
+                ", so the text it draws was not examined and was left in place"));
 
     /// <summary>The document-level carriers the term is scrubbed from and
     /// reported on: #608's set (/Info, XMP, outline titles, annotation
