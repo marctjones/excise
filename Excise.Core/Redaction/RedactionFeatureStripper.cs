@@ -147,7 +147,7 @@ internal static class RedactionFeatureStripper
         // they want kept) must not have those layers DELETED instead — that
         // would be the opposite of what they asked for, which is worse than
         // either answer on its own.
-        var dropped = new Dictionary<int, PdfDictionary>();
+        var dropped = new HashSet<int>();
         var unreadableForms = new Dictionary<int, CarrierResult>();
         if (options.RemoveHiddenLayerContent && options.IncludeHiddenLayers)
         {
@@ -198,8 +198,12 @@ internal static class RedactionFeatureStripper
 
         // #1868: last, because the passes above remove drawers too (an
         // annotation and its appearance, a widget the flatten did not paint).
-        var freed = PruneXObjectsOnlyHiddenContentDrew(document, dropped, refusals);
-        Row("XObject(s) drawn only in hidden optional content", freed.Count);
+        // With no row they removed nothing, so the walk they shared still holds.
+        var freed = PruneUndrawnXObjects(document,
+            rows.Count == 0 && reachableCache != null ? reachableCache : ReachableDictionaries(document), dropped, refusals);
+        Row("XObject(s) drawn only in hidden optional content", freed.Count(dropped.Contains));
+        Row("XObject(s) no content stream draws", freed.Count(n => !dropped.Contains(n)),
+            "filed in a /Resources /XObject that no content stream left in the file invokes, so no reader shows it");
         foreach (var (form, row) in unreadableForms)
             if (!freed.Contains(form)) refusals.Add(row);
 
@@ -631,8 +635,7 @@ internal static class RedactionFeatureStripper
     /// hidden span is evaluated, so a nested group is neither counted nor
     /// recorded.</para>
     /// <para>Every XObject whose <c>Do</c> is dropped goes into
-    /// <paramref name="dropped"/>, with the <c>/XObject</c> its name resolved
-    /// in, for <see cref="PruneXObjectsOnlyHiddenContentDrew"/> (#1868, #1872).</para>
+    /// <paramref name="dropped"/>, for <see cref="PruneUndrawnXObjects"/> (#1868, #1872).</para>
     /// </remarks>
     private static (List<ContentOperator> Kept, int Spans) FilterHiddenSpans(
         PdfDocument document,
@@ -640,7 +643,7 @@ internal static class RedactionFeatureStripper
         PdfDictionary? properties,
         PdfDictionary? xobjects,
         HashSet<PdfDictionary> hiddenGroups,
-        Dictionary<int, PdfDictionary> dropped)
+        HashSet<int> dropped)
     {
         var kept = new List<ContentOperator>(operators.Count);
         var hidden = new HashSet<ContentOperator>();
@@ -673,10 +676,10 @@ internal static class RedactionFeatureStripper
         return (kept, count);
     }
 
-    private static void RecordDropped(PdfDictionary? xobjects, ContentOperator op, Dictionary<int, PdfDictionary> dropped)
+    private static void RecordDropped(PdfDictionary? xobjects, ContentOperator op, HashSet<int> dropped)
     {
         if (op.Name == "Do" && op.GetName(0) is { } name && xobjects?.GetOptional(name) is PdfReference target)
-            dropped.TryAdd(target.ObjectNum, xobjects);
+            dropped.Add(target.ObjectNum);
     }
 
     /// <summary>
@@ -697,7 +700,7 @@ internal static class RedactionFeatureStripper
         PdfDictionary? xobjects,
         HashSet<PdfDictionary> hiddenGroups,
         Dictionary<int, CarrierResult> unreadable,
-        Dictionary<int, PdfDictionary> dropped,
+        HashSet<int> dropped,
         int depth)
     {
         if (xobjects == null || depth > 8) return 0;
@@ -775,7 +778,7 @@ internal static class RedactionFeatureStripper
     /// <see cref="ObstructionStripper"/> (CLAUDE.md "One walk, many sinks").
     /// </remarks>
     private static (int Spans, int Groups) RemoveHiddenOptionalContent(
-        PdfDocument document, Dictionary<int, PdfDictionary> dropped, Dictionary<int, CarrierResult> unreadable)
+        PdfDocument document, HashSet<int> dropped, Dictionary<int, CarrierResult> unreadable)
     {
         // No /OCProperties means no optional content and nothing to do — and,
         // importantly, no cost on the overwhelming majority of documents.
@@ -848,11 +851,13 @@ internal static class RedactionFeatureStripper
     }
 
     /// <summary>
-    /// #1868, #1872: free the XObjects whose every <c>Do</c> was in removed
-    /// hidden content, and the forms only they drew; returns the object
-    /// numbers freed. An XObject some other content stream still draws is kept,
-    /// and its text is the text walk's. One that cannot be proved undrawn is
-    /// kept and added to <paramref name="refusals"/>.
+    /// Free every XObject filed in a <c>/Resources /XObject</c> that no content
+    /// stream draws: those whose every <c>Do</c> was in removed hidden content
+    /// (<paramref name="dropped"/>: #1868, #1872), those only they drew, and
+    /// those never drawn at all (#1873). Returns the object numbers freed. An
+    /// XObject some content stream draws is kept, and its text is the text
+    /// walk's. A dropped one that cannot be proved undrawn is kept and added to
+    /// <paramref name="refusals"/>.
     /// </summary>
     /// <remarks>
     /// <para><b>Decided for the whole document before anything is removed.</b>
@@ -861,30 +866,40 @@ internal static class RedactionFeatureStripper
     /// visible <c>Do</c>. The content streams are reached by walking the object
     /// graph: §7.8.2's pages, forms (appearance streams among them), tiling
     /// patterns and Type 3 glyphs.</para>
-    /// <para><b>Cannot prove, so kept and reported:</b> a form named by the
-    /// <c>/XObject</c> of a stream that could not be read; a form filed under a
+    /// <para><b>Referenced other than by an <c>/XObject</c> entry</b> (an
+    /// appearance, a soft mask's group), an XObject may be drawn without a
+    /// <c>Do</c>: it draws, and it is kept unless it was dropped.</para>
+    /// <para><b>Cannot prove, so kept:</b> an XObject named by the
+    /// <c>/XObject</c> of a stream that could not be read; one filed under a
     /// name that a stream with no <c>/Resources</c> invokes (§7.8.3: its names
-    /// resolve in its caller's); and a form something other than an
-    /// <c>/XObject</c> entry still reaches once those entries are gone.</para>
-    /// <para>A form nothing draws still counts as a drawer: see issue #1873.</para>
+    /// resolve in its caller's); and one something still reaches once those
+    /// entries are gone, such as the <c>/SMask</c> of a kept image. A dropped
+    /// one is reported.</para>
     /// </remarks>
-    private static HashSet<int> PruneXObjectsOnlyHiddenContentDrew(
-        PdfDocument document, Dictionary<int, PdfDictionary> dropped, ICollection<CarrierResult> refusals)
+    private static HashSet<int> PruneUndrawnXObjects(PdfDocument document, List<PdfDictionary> reachable,
+        HashSet<int> dropped, ICollection<CarrierResult> refusals)
     {
-        if (dropped.Count == 0) return new HashSet<int>();
-
-        var reachable = ReachableDictionaries(document);
         var xobjectDicts = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         foreach (var dict in reachable)
             if (Resolve(document, dict.GetOptional("XObject") ?? PdfNull.Instance) is PdfDictionary x and not PdfStream)
                 xobjectDicts.Add(x);
 
-        PdfStream? XObjectAt(int number)
+        var candidates = new Dictionary<int, PdfStream>();
+        foreach (var r in xobjectDicts.SelectMany(d => d.Values).OfType<PdfReference>())
+            if (!candidates.ContainsKey(r.ObjectNum) && Resolve(document, r) is PdfStream s)
+                candidates[r.ObjectNum] = s;
+        if (candidates.Count == 0) return new HashSet<int>();
+        // Referenced by an object that is neither an /XObject nor one of them.
+        var elsewhere = new HashSet<int>();
+        void Referenced(PdfObject value)
         {
-            try { return document.GetObject(number) as PdfStream; }
-            catch (Exception ex) when (ex is not OutOfMemoryException) { return null; }
+            if (value is PdfReference r) elsewhere.Add(r.ObjectNum);
+            else if (value is PdfArray array) foreach (var item in array) Referenced(item);
         }
-        static bool IsImage(PdfStream s) => s.GetNameOrNull("Subtype") == "Image";
+        foreach (var dict in reachable)
+            if (!xobjectDicts.Contains(dict) && !(dict is PdfStream { ObjectNumber: { } n } && candidates.ContainsKey(n)))
+                foreach (var (_, value) in dict) Referenced(value);
+
         // Empty when the /Resources has no /XObject; null when there is none (§7.8.3: a caller's apply).
         PdfDictionary? XObjects(PdfObject? resources) =>
             Resolve(document, resources ?? PdfNull.Instance) is PdfDictionary r
@@ -894,7 +909,7 @@ internal static class RedactionFeatureStripper
         // The objects a content stream's Do operators can name, and whether that
         // is proved: a stream that cannot be read may name any entry, and one
         // with no /Resources any entry of any /XObject under a name it invokes.
-        (List<int> Forms, bool Proved) Draws(Func<byte[]?> read, PdfDictionary? xobjects)
+        (List<int> Named, bool Proved) Draws(Func<byte[]?> read, PdfDictionary? xobjects)
         {
             List<string>? names;
             try
@@ -903,7 +918,7 @@ internal static class RedactionFeatureStripper
                 names = bytes == null ? null
                     : bytes.AsSpan().IndexOf("Do"u8) < 0 ? new List<string>()
                     : new ContentStreamParser(bytes) { ComputeOperatorMetadata = false }.Parse().Operators
-                        .Where(op => op.Name == "Do").Select(op => op.GetName(0)).OfType<string>().ToList();
+                        .Where(op => op.Name == "Do").Select(op => op.GetName(0)).ToList();
             }
             catch (Exception ex) when (ex is not OutOfMemoryException) { names = null; }
             var entries = xobjects == null ? xobjectDicts.SelectMany(d => d) : xobjects;
@@ -912,34 +927,30 @@ internal static class RedactionFeatureStripper
                 names != null && xobjects != null);
         }
 
-        // The dropped XObjects and, transitively, the ones their forms draw.
-        var candidates = new Dictionary<int, PdfStream>();
-        var pending = new Stack<(int XObject, PdfDictionary Caller)>(dropped.Select(d => (d.Key, d.Value)));
-        while (pending.TryPop(out var next))
-        {
-            if (candidates.ContainsKey(next.XObject) || XObjectAt(next.XObject) is not { } xobject) continue;
-            candidates[next.XObject] = xobject;
-            if (IsImage(xobject)) continue;
-            var xobjects = XObjects(xobject.GetOptional("Resources")) ?? next.Caller;
-            foreach (var drawn in Draws(() => Decoded(xobject), xobjects).Forms) pending.Push((drawn, xobjects));
-        }
-
-        // Every other content stream draws. A candidate one of them draws is
-        // kept, and draws in turn.
+        // Every content stream that is not only an /XObject entry draws. A
+        // candidate one of them draws is kept, and a kept form draws in turn.
         var streams = new Queue<(Func<byte[]?> Read, PdfDictionary? XObjects)>();
+        var pages = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         foreach (var page in SafePages(document))
+        {
+            pages.Add(page.Dictionary);
             streams.Enqueue((page.GetContentStreamBytes, XObjects(page.Resources)));
+        }
         var roots = new HashSet<PdfStream>(ReferenceEqualityComparer.Instance);
         void Root(PdfObject value)
         {
             if (Resolve(document, value) is PdfStream s && roots.Add(s)
-                && (s.ObjectNumber is not { } n || !candidates.ContainsKey(n)))
+                && (s.ObjectNumber is not { } n || !candidates.ContainsKey(n) || elsewhere.Contains(n)))
                 streams.Enqueue((() => Decoded(s), XObjects(s.GetOptional("Resources"))));
         }
         foreach (var dict in reachable)
         {
             if (dict.GetNameOrNull("Subtype") == "Form" || dict.GetOptional("PatternType") is PdfInteger { Value: 1 })
                 Root(dict);
+            // A page the page tree walk did not reach still draws in a reader that finds it.
+            if (!pages.Contains(dict) && dict.GetOptional("Contents") is { } contents)
+                if (Resolve(document, contents) is PdfArray parts) foreach (var part in parts) Root(part);
+                else Root(contents);
             foreach (var key in new[] { "CharProcs", "AP" })
                 if (Resolve(document, dict.GetOptional(key) ?? PdfNull.Instance) is PdfDictionary procs)
                     foreach (var (_, value) in procs)
@@ -952,27 +963,29 @@ internal static class RedactionFeatureStripper
         var unprovable = new HashSet<int>();
         while (streams.TryDequeue(out var stream))
         {
-            var (forms, proved) = Draws(stream.Read, stream.XObjects);
-            foreach (var number in forms)
+            var (named, proved) = Draws(stream.Read, stream.XObjects);
+            foreach (var number in named)
             {
                 if (!candidates.TryGetValue(number, out var xobject)) continue;
                 if (proved) unprovable.Remove(number);
                 else if (!kept.Contains(number)) unprovable.Add(number);
-                if (kept.Add(number) && !IsImage(xobject))
+                if (kept.Add(number) && xobject.GetNameOrNull("Subtype") != "Image")
                     streams.Enqueue((() => Decoded(xobject), XObjects(xobject.GetOptional("Resources")) ?? stream.XObjects));
             }
         }
 
-        var undrawn = candidates.Keys.Where(n => !kept.Contains(n)).ToHashSet();
+        var undrawn = candidates.Keys
+            .Where(n => !kept.Contains(n) && (dropped.Contains(n) || !elsewhere.Contains(n))).ToHashSet();
         foreach (var dict in xobjectDicts)
             foreach (var key in dict.Keys.Select(k => k.Value).ToList())
                 if (dict.GetOptional(key) is PdfReference r && undrawn.Contains(r.ObjectNum))
                     dict.Remove(key);
         var stillReached = FormXObjectFlattener.FreeUnreachable(document, undrawn);
 
-        foreach (var number in unprovable.Concat(stillReached))
+        foreach (var number in unprovable.Concat(stillReached).Where(dropped.Contains))
             refusals.Add(new CarrierResult(
-                $"{(IsImage(candidates[number]) ? "image" : "form")} XObject {number} {candidates[number].GenerationNumber ?? 0} R", false,
+                $"{(candidates[number].GetNameOrNull("Subtype") == "Image" ? "image" : "form")} XObject {number} " +
+                $"{candidates[number].GenerationNumber ?? 0} R", false,
                 "it was drawn in hidden optional content that was removed and could not be proved unused " +
                 "elsewhere, so it was left in place"));
         undrawn.ExceptWith(stillReached);

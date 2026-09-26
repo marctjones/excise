@@ -148,10 +148,11 @@ public class MarkedContentTermCarrierTests
     [Fact]
     public void AContentStreamThatCannotBeDecoded_IsReportedNotSkipped()
     {
-        // Listed in the resources, not drawn: the page still extracts, and the
-        // form is in the file for any tool that can decode it.
+        // Drawn, so it stays (a form nothing draws leaves the file, #1873): the
+        // page still extracts, and the form is in the file for any tool that
+        // can decode it.
         using var document = PdfDocument.Open(Excise.Core.Tests.Content.ContentStreamFixture.Build(
-            $"BT /F1 12 Tf 72 700 Td ({MarkedContentCarrierFixtures.Painted}) Tj ET",
+            $"BT /F1 12 Tf 72 700 Td ({MarkedContentCarrierFixtures.Painted}) Tj ET q /Fm0 Do Q",
             extraObjects: "6 0 obj\n<< /Type /XObject /Subtype /Form /BBox [0 0 10 10] /Filter /NoSuchDecode /Length 3 >>\n"
                 + "stream\nabc\nendstream\nendobj\n",
             extraResources: "/XObject << /Fm0 6 0 R >>"));

@@ -58,7 +58,7 @@ Removal applies to **every** way content can land in the redaction area, not jus
 | **Embedded files, every route** | Removed by default on every entry point; kept only on request, then redacted or reported (#1572) | `AttachmentCarrierScrubber` |
 | **XFA form (`/AcroForm /XFA`)** | Removed whole on any redaction (#1547, #1574) | `PdfXfaLayout.RemoveXfaFormForRedaction` |
 | **JavaScript, `/Launch`, `/SubmitForm`, `/ImportData`, `/GoToR`, `/GoToE`** | Removed whole by the output profile, found by walking the reachable graph (#1586, #1581) | `RedactionFeatureStripper` |
-| **`/PieceInfo`, page `/Thumb`, hidden-annotation `/AP`, OFF optional-content layers, `/Info` + XMP** | Removed whole by the output profile (#1586, #1583) | `RedactionFeatureStripper` |
+| **`/PieceInfo`, page `/Thumb`, hidden-annotation `/AP`, OFF optional-content layers, XObjects no content stream draws (#1868, #1872, #1873), `/Info` + XMP** | Removed whole by the output profile (#1586, #1583) | `RedactionFeatureStripper` |
 
 **Inline images (#354):** the parser now retains the binary data on
 `ContentOperator.InlineImageData` and `ContentStreamWriter` re-emits valid

@@ -11,8 +11,9 @@ using Excise.TestSupport;
 namespace Excise.Rendering.Tests.Differential;
 
 /// <summary>
-/// #1868, #1872: an XObject drawn only inside an OFF layer (a form or an image)
-/// leaves the file with the layer, read back by tools that are not excise. <c>RedactionProfileTests</c> holds the
+/// #1868, #1872, #1873: an XObject no content stream draws (a form or an image
+/// drawn only inside an OFF layer, a form never drawn) leaves the file, read
+/// back by tools that are not excise. <c>RedactionProfileTests</c> holds the
 /// report assertions; this is where qpdf and mutool are.
 /// </summary>
 /// <remarks>
@@ -93,11 +94,13 @@ public sealed class RedactionProfileHiddenLayerFormOracleTests : IDisposable
     }
 
     private const string ImageToken = "IMAGEPIXELTRAPXX";
+    private const string UndrawnToken = "UNDRAWNFORMTRAP";
 
     /// <summary>
-    /// #1872: an image drawn only in an OFF layer leaves the file, and mutool
-    /// renders the page as it rendered the input. The render is compared where
-    /// nothing else changes the page: a term with no match draws no box.
+    /// #1872 (image drawn only in an OFF layer) and #1873 (form filed and never
+    /// drawn): the object leaves the file, and mutool renders the page as it
+    /// rendered the input. The render is compared where nothing else changes
+    /// the page: a term with no match draws no box.
     /// </summary>
     [Theory]
     [InlineData("image", "NOMATCHXYZ", false)]
@@ -105,11 +108,18 @@ public sealed class RedactionProfileHiddenLayerFormOracleTests : IDisposable
     [InlineData("image", "area", false)]
     [InlineData("image", "NOMATCHXYZ", true)]
     [InlineData("image", "area", true)]
+    [InlineData("form", UndrawnToken, false)]
+    [InlineData("form", "VISIBLE", false)]
+    [InlineData("form", "area", false)]
+    [InlineData("form", UndrawnToken, true)]
+    [InlineData("form", "area", true)]
     public void AnXObjectNoContentStreamDraws_IsInNoReadersView(string shape, string entry, bool maximum)
     {
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable && MutoolReferenceRenderer.IsAvailable,
             "qpdf and mutool are the independent readers (brew install qpdf mupdf-tools)");
-        var (input, token) = (RecoveryFixtureBuilder.ImageInHiddenLayer(ImageToken), ImageToken);
+        var (input, token) = shape == "image"
+            ? (RecoveryFixtureBuilder.ImageInHiddenLayer(ImageToken), ImageToken)
+            : (RecoveryFixtureBuilder.UndrawnForm(UndrawnToken), UndrawnToken);
         var original = Path.Combine(_dir, $"{shape}-input.pdf");
         File.WriteAllBytes(original, input);
         CarrierTrapIndependentCorroborationTests.QpdfDump(original).Should().Contain(token,
@@ -120,7 +130,7 @@ public sealed class RedactionProfileHiddenLayerFormOracleTests : IDisposable
         CarrierTrapIndependentCorroborationTests.QpdfDump(path).Should().NotContain(token,
             "nothing draws the object, so it leaves the file");
         SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(path), token).Should().BeEmpty();
-        if (entry is "NOMATCHXYZ")
+        if (entry is "NOMATCHXYZ" or UndrawnToken)
         {
             using var before = MutoolReferenceRenderer.RenderPage(original, 1, 72);
             using var after = MutoolReferenceRenderer.RenderPage(path, 1, 72);

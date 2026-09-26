@@ -262,6 +262,23 @@ internal static class RecoveryFixtureBuilder
         catalogExtra: "/OCProperties << /OCGs [7 0 R] /D << /OFF [7 0 R] >> >>",
         resourcesExtra: "/Properties << /MC0 7 0 R >> /XObject << /Im0 8 0 R >>");
 
+    /// <summary>
+    /// #1873 — "VISIBLE" at y 700, and a decodable form XObject (object 7)
+    /// drawing <paramref name="token"/> that is filed in the page's
+    /// <c>/XObject</c> as <c>/Fx0</c> and that no content stream invokes.
+    /// </summary>
+    internal static byte[] UndrawnForm(string token)
+    {
+        var form = Encoding.ASCII.GetBytes($"BT /F1 12 Tf 72 500 Td ({token}) Tj ET");
+        return Build("BT /F1 12 Tf 72 700 Td (VISIBLE) Tj ET\n",
+            extraObjects: new List<Obj>
+            {
+                new("<< /Type /XObject /Subtype /Form /BBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> " +
+                    $"/Length {form.Length} >>", form),
+            },
+            resourcesExtra: "/XObject << /Fx0 7 0 R >>");
+    }
+
     /// <summary>A one-row 8-bit DeviceGray image whose samples are the ASCII of <paramref name="samples"/>.</summary>
     internal static Obj SampleImage(string samples, string extra = "") =>
         new($"<< /Type /XObject /Subtype /Image /Width {samples.Length} /Height 1 /ColorSpace /DeviceGray " +
