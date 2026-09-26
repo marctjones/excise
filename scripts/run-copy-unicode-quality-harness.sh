@@ -36,15 +36,8 @@ run_required() {
 
   echo
   echo "==> ${lane}"
-  # Native AOT/Release packaging deliberately restores Excise.App without
-  # Roslyn scripting. That shares the project's obj assets with Debug tests;
-  # reestablish the test-only graph here so this harness remains runnable
-  # after a release-package smoke.
-  if [ "$project" = "Excise.App.Tests/Excise.App.Tests.csproj" ]; then
-    dotnet restore "$project" -p:EnableScripting=true
-  fi
   set +e
-  dotnet test "$project" --no-restore -p:EnableScripting=true --filter "$filter" \
+  dotnet test "$project" --no-restore --filter "$filter" \
     --logger "console;verbosity=minimal" 2>&1 | tee "$log"
   local status=${PIPESTATUS[0]}
   set -e

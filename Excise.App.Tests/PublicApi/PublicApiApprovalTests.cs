@@ -44,12 +44,5 @@ public class PublicApiApprovalTests
     private static string ApprovedDir([CallerFilePath] string thisFile = "")
         => Path.GetDirectoryName(thisFile)!;   // this file lives in PublicApi/ already
 
-#if DEBUG
     private const string ApprovedFileName = "Excise.App.approved.txt";
-#else
-    // Release deliberately excludes development-only scripting surface. Keep
-    // its reviewed public API distinct rather than letting a Debug snapshot
-    // make release validation fail or, worse, skip the inventory check.
-    private const string ApprovedFileName = "Excise.App.release.approved.txt";
-#endif
 }

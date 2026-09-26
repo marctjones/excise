@@ -105,9 +105,6 @@ jobs:
         run: dotnet build excise.sln -c Debug --no-restore -warnaserror
 
       - name: Build (Release, warnings are errors)
-        # Release is a different compilation: EnableScripting is off, so the
-        # Roslyn-scripting #if branches are excluded and a warning inside them
-        # only appears here.
         run: dotnet build excise.sln -c Release --no-restore -warnaserror
 
       - name: The CA1416 suppression has not come back

@@ -101,8 +101,7 @@ public static class GuiInteractionRecorder
     /// <para><b>What that costs, stated plainly.</b> A window no test ever
     /// interacts with contributes neither numerator nor denominator, so it is
     /// invisible here rather than reported as uncovered — the one place this
-    /// gate under-reports. <c>SaveRedactedVersionDialog</c> is exactly that case
-    /// today. MainWindow, which is nearly all of the surface, is anchored
+    /// gate under-reports. MainWindow, which is nearly all of the surface, is anchored
     /// deterministically by <c>GuiInteractionCoverageTests</c> instead.</para>
     ///
     /// <para>Once per window INSTANCE, keyed by reference; and ids are deduped

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
-using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using AwesomeAssertions;
@@ -16,9 +15,9 @@ using Xunit;
 namespace Excise.App.Tests.UI;
 
 /// <summary>
-/// Makes the three dialogs that were invisible to the interaction-coverage gate
-/// visible to it (#1066): <see cref="SaveRedactedVersionDialog"/>,
-/// <see cref="PreferencesWindow"/>, <see cref="AboutWindow"/>. The gate
+/// Makes the dialogs that were invisible to the interaction-coverage gate
+/// visible to it (#1066): <see cref="PreferencesWindow"/>,
+/// <see cref="AboutWindow"/>. The gate
 /// enumerates a window's elements the first time input reaches it, so a window
 /// no test ever touches contributes to neither numerator nor denominator — it
 /// does not read as 0% covered, it is simply absent, which is the worst
@@ -28,24 +27,11 @@ namespace Excise.App.Tests.UI;
 /// trips <c>GuiInteractionRecorder.NoteSurface</c> and enrols the whole dialog
 /// into <c>gui-interaction-inventory.tsv</c>. From then on a dialog added with
 /// no interactive automation is reported rather than silently missing — that is
-/// the property being bought. <see cref="SaveRedactedVersionDialog"/> is the one
-/// that matters: it is on the redaction path.</para>
+/// the property being bought.</para>
 /// </summary>
 [Collection("AvaloniaTests")]
 public class HiddenDialogCoverageTests
 {
-    [FixedAvaloniaFact]
-    public async Task SaveRedactedVersionDialog_RealInput_EntersTheCoverageInventory()
-    {
-        var vm = new SaveRedactedVersionDialogViewModel("/tmp/document_REDACTED.pdf", 2);
-        var window = new SaveRedactedVersionDialog { DataContext = vm };
-        await DriveAndAssertVisible(
-            window,
-            "SaveRedactedVersionDialog",
-            "Cancel Save Redacted Version",
-            typeInto: new[] { "SavePathTextBox" });
-    }
-
     [FixedAvaloniaFact]
     public async Task PreferencesWindow_RealInput_EntersTheCoverageInventory()
     {
@@ -83,7 +69,7 @@ public class HiddenDialogCoverageTests
     /// </summary>
     private static async Task DriveAndAssertVisible(
         Window window, string surface, string buttonAutomationName,
-        string[]? typeInto = null, string[]? arrowKey = null)
+        string[]? arrowKey = null)
     {
         window.Show();
         window.UpdateLayout();
@@ -95,14 +81,6 @@ public class HiddenDialogCoverageTests
             // coverage rather than declared gaps. File-picker buttons and the
             // URL-launching / settings-persisting buttons are deliberately left
             // untouched (and declared as gaps) — driving them has side effects.
-            foreach (var name in typeInto ?? Array.Empty<string>())
-            {
-                var box = window.GetLogicalDescendants().OfType<TextBox>().First(c => c.Name == name);
-                box.Focus();
-                await KeyboardTestHelpers.FlushDispatcherAsync();
-                window.KeyTextInput("x");
-                await KeyboardTestHelpers.FlushDispatcherAsync();
-            }
             foreach (var name in arrowKey ?? Array.Empty<string>())
             {
                 var ctl = window.GetLogicalDescendants().OfType<Control>().First(c => c.Name == name);

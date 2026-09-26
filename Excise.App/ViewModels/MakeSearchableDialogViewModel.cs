@@ -167,8 +167,7 @@ public sealed class MakeSearchableDialogViewModel : ReactiveObject
 
         // BehaviorSubject driving canExecute, not ReactiveUI's WhenAnyValue —
         // its Expression-based member chain is evaluated via reflection
-        // (IL2026/IL3050, not trim/AOT-safe). See SaveRedactedVersionDialogViewModel
-        // for the established precedent of this workaround in this codebase.
+        // (IL2026/IL3050, not trim/AOT-safe).
         _canStart = new BehaviorSubject<bool>(tesseractAvailable);
         StartCommand = ReactiveCommand.CreateFromTask(StartAsync, _canStart);
         CancelCommand = ReactiveCommand.Create(CancelOrClose);

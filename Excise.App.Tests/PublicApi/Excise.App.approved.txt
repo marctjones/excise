@@ -95,14 +95,12 @@ namespace Excise.App.Models
     public class PendingRedaction
     {
         public PendingRedaction() { }
-        public Avalonia.Rect Area { get; set; }
         public string DisplayText { get; }
         public System.Guid Id { get; set; }
         public System.DateTime MarkedTime { get; set; }
         public Excise.Core.Document.PdfPageRect PageArea { get; set; }
         public int PageNumber { get; set; }
         public string PreviewText { get; set; }
-        public int RenderDpi { get; set; }
     }
     public enum PerformancePreset
     {
@@ -263,7 +261,6 @@ namespace Excise.App.Services
         public EditHistoryService() { }
         public bool CanRedo { get; }
         public bool CanUndo { get; }
-        public bool IsReplaying { get; }
         public string? RedoDescription { get; }
         public string? UndoDescription { get; }
         public event System.EventHandler? Changed;
@@ -276,10 +273,7 @@ namespace Excise.App.Services
     public class FilenameSuggestionService
     {
         public FilenameSuggestionService() { }
-        public string SuggestPageSubsetFilename(string originalPath, string pageRange) { }
         public string SuggestRedactedFilename(string originalPath) { }
-        public string SuggestSafeRedactedFilename(string originalPath) { }
-        public string SuggestWithAutoIncrement(string path) { }
     }
     public interface IUserDialogService
     {
@@ -326,13 +320,9 @@ namespace Excise.App.Services
         public int PageCount { get; }
         public string PdfVersion { get; }
         public Excise.Core.Xfa.XfaLayoutResult? XfaLayout { get; }
-        public void AddPagesFromPdf(string sourcePdfPath, System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
         public void CloseDocument() { }
         public void ExtractPagesToPdf(string outputPath, System.Collections.Generic.IEnumerable<int> pageIndices, bool ignorePermissions = false) { }
         public Excise.Core.Document.PdfDocument? GetCurrentDocument() { }
-        public System.IO.MemoryStream? GetCurrentDocumentAsStream() { }
-        public double GetPageHeight(int pageIndex) { }
-        public double GetPageWidth(int pageIndex) { }
         public Excise.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions() { }
         public void InsertPagesFromPdf(string sourcePdfPath, int insertAtIndex, System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
         public void LoadDocument(string filePath, string? userPassword = null) { }
@@ -377,23 +367,6 @@ namespace Excise.App.Services
         public void RedactArea(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfPageRect area, Excise.Core.Text.Segmentation.RedactionOptions options) { }
         public Excise.App.Models.TextRedactionResult RedactText(string inputPath, string outputPath, string textToRedact, Excise.Core.Text.Segmentation.RedactionOptions options, bool allowLowConfidence = false) { }
         public Excise.App.Models.TextRedactionResult RedactTextFlattenOcr(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false) { }
-    }
-    public class ScriptExecutionResult
-    {
-        public ScriptExecutionResult() { }
-        public string? ErrorMessage { get; init; }
-        public object? ReturnValue { get; init; }
-        public bool Success { get; init; }
-        public override string ToString() { }
-        public static Excise.App.Services.ScriptExecutionResult FromError(string errorMessage) { }
-        public static Excise.App.Services.ScriptExecutionResult FromSuccess(object? returnValue = null) { }
-    }
-    public class ScriptingService
-    {
-        public ScriptingService(Excise.App.ViewModels.MainWindowViewModel viewModel) { }
-        public System.Threading.Tasks.Task<Excise.App.Services.ScriptExecutionResult> ExecuteAsync(string scriptCode) { }
-        public System.Threading.Tasks.Task<Excise.App.Services.ScriptExecutionResult> ExecuteFileAsync(string scriptFilePath) { }
-        public System.Collections.Generic.List<string> ValidateScript(string scriptCode) { }
     }
     public sealed class SignatureVerificationSummaryFormatter
     {
@@ -1029,7 +1002,6 @@ namespace Excise.App.ViewModels
         public System.Collections.Generic.IEnumerable<Excise.App.Models.PendingRedaction> GetAppliedForPage(int pageNumber) { }
         public System.Collections.Generic.IEnumerable<Excise.App.Models.PendingRedaction> GetPendingForPage(int pageNumber) { }
         public void MarkArea(Excise.Core.Document.PdfPageRect area, string previewText) { }
-        public void MarkArea(int pageNumber, Avalonia.Rect area, string previewText, int renderDpi = 120) { }
         public void MoveToApplied() { }
         public bool RemovePending(System.Guid id) { }
         public void Reset() { }
@@ -1049,16 +1021,6 @@ namespace Excise.App.ViewModels
         public Excise.App.ViewModels.ReduceFileSizeChoice Selected { get; set; }
         public static System.Collections.Generic.IReadOnlyList<Excise.App.ViewModels.ReduceFileSizeChoice> Choices { get; }
         public void Confirm() { }
-    }
-    public class SaveRedactedVersionDialogViewModel : ReactiveUI.ReactiveObject
-    {
-        public SaveRedactedVersionDialogViewModel(string suggestedFilePath, int pendingCount) { }
-        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, string?> BrowseCommand { get; }
-        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, string?> CancelCommand { get; }
-        public int PendingCount { get; set; }
-        public string PendingCountText { get; }
-        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, string?> SaveCommand { get; }
-        public string SaveFilePath { get; set; }
     }
     public sealed class SecurityDialogViewModel : ReactiveUI.ReactiveObject
     {
@@ -1201,13 +1163,6 @@ namespace Excise.App.Views
     public class ReduceFileSizeDialog : Avalonia.Controls.Window
     {
         public ReduceFileSizeDialog() { }
-        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-        public void InitializeComponent(bool loadXaml = true) { }
-    }
-    public class SaveRedactedVersionDialog : Avalonia.Controls.Window
-    {
-        public SaveRedactedVersionDialog() { }
-        public string? ResultFilePath { get; }
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public void InitializeComponent(bool loadXaml = true) { }
     }

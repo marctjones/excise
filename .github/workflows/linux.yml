@@ -106,8 +106,6 @@ jobs:
         run: dotnet build excise.sln -c Debug --no-restore -warnaserror
 
       - name: Build (Release, warnings are errors)
-        # Release excludes the Roslyn-scripting branches (EnableScripting is
-        # off there), so a warning inside them only appears in this build.
         run: dotnet build excise.sln -c Release --no-restore -warnaserror
 
       # ── publish ──────────────────────────────────────────────────────────

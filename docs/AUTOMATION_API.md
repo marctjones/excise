@@ -218,10 +218,8 @@ Rules enforced by the batch contract:
 - Hidden-text audit fails the workflow when findings are present unless
   `allowFindings: true` is supplied.
 
-Release builds exclude Roslyn GUI scripting by default unless a builder
-explicitly publishes with `-p:EnableScripting=true`. The `.csx` scripts under
-`automation-scripts/` remain developer/test automation, not the supported
-end-user automation contract.
+The `.csx` scripts under `automation-scripts/` are developer/test automation run
+by the test project, not the supported end-user automation contract.
 
 If a future long-lived automation service is added, it must be local-only,
 disabled by default, explicitly enabled by the user, and gated by a per-session

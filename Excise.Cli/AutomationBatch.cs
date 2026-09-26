@@ -446,12 +446,7 @@ partial class Program
         if (hits.Count > 0 && step.AllowFindings != true)
             throw new AutomationValidationException(
                 "HIDDEN_TEXT_FOUND",
-                $"Hidden-text audit found {hits.Count} issue(s). Set allowFindings: true to record findings without failing the workflow.",
-                new
-                {
-                    inputPath = input,
-                    hitCount = hits.Count,
-                });
+                $"Hidden-text audit found {hits.Count} issue(s). Set allowFindings: true to record findings without failing the workflow.");
 
         return new AuditStepResult(
             result.FilePath,
@@ -572,11 +567,10 @@ partial class Program
         public string Category { get; } = category;
     }
 
-    private sealed class AutomationValidationException(string code, string message, object? result = null)
+    private sealed class AutomationValidationException(string code, string message)
         : Exception(message)
     {
         public string Code { get; } = code;
-        public object? Result { get; } = result;
     }
 
 

@@ -23,7 +23,7 @@ What excise does, by area. For the short version see the [README](../README.md).
 - **Reduce File Size** — Document ▸ Reduce File Size… writes a smaller copy to a location you choose and shows the size before and after. *Lossless* recompresses and deduplicates data and drops page thumbnails and other applications' private data, so pages look exactly the same; *High* (300 dpi), *Standard* (150 dpi) and *Screen* (96 dpi) also downsample images well above that resolution. The original file is never changed, and a redacted document stays redacted
 - CLI-first automation with stable JSON, batch workflows, progress NDJSON, and
   AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME examples
-- Roslyn-based GUI scripting for developer/test automation in Debug builds; Release builds exclude it by default unless `-p:EnableScripting=true` is set
+- Roslyn-based GUI scripting for developer/test automation (test project only; the product ships no script engine)
 
 ## Glyph-level redaction
 **Text is removed from the PDF structure, not just visually covered.**

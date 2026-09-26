@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Verify the default Release package keeps heavy optional subsystems out of the
-# normal startup path (#341): Roslyn scripting is not shipped unless explicitly
-# enabled, repo-local tessdata is not bundled unless requested, and the GUI
-# hidden-text toggle does not load Excise.Ocr before the user asks for raster OCR.
+# normal startup path (#341): Roslyn scripting is not shipped, repo-local
+# tessdata is not bundled unless requested, and the GUI hidden-text toggle does
+# not load Excise.Ocr before the user asks for raster OCR.
 
 set -euo pipefail
 

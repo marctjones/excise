@@ -20,14 +20,6 @@ NOISE = {
     "Deconstruct", "PrintMembers", "GetEnumerator", "op_Equality", "op_Inequality",
 }
 
-# PublicApiApprovalTests emits configuration-specific snapshots by appending a
-# suffix to the assembly name (currently ``.release``).  Those files describe
-# variants of one public contract; treating the suffix as a second assembly
-# duplicates every diagnostic and bypasses the existing ratchet under a new
-# key.  A suffix is normalized only when the unsuffixed snapshot is present, so
-# a real assembly whose name happens to end in ``.release`` remains distinct.
-SNAPSHOT_VARIANTS = (".debug", ".release")
-
 BASELINE_HEADER = """# Public API that nothing calls, or that only tests call.
 #
 # A RATCHET, not an inventory. Entries here are ACCEPTED — mostly library API
@@ -154,21 +146,6 @@ def snapshot_assembly(path):
     return os.path.basename(path)[: -len(".approved.txt")]
 
 
-def group_approved_files(paths):
-    """Group Debug/Release approval snapshots under one logical assembly."""
-    raw_names = {snapshot_assembly(path) for path in paths}
-    grouped = defaultdict(list)
-    for path in paths:
-        assembly = snapshot_assembly(path)
-        logical = assembly
-        for suffix in SNAPSHOT_VARIANTS:
-            if assembly.endswith(suffix) and assembly[: -len(suffix)] in raw_names:
-                logical = assembly[: -len(suffix)]
-                break
-        grouped[logical].append(path)
-    return {assembly: sorted(grouped[assembly]) for assembly in sorted(grouped)}
-
-
 def identifiers(path, min_len):
     """Public identifiers worth cross-referencing, with three noise classes
     excluded at the source (#913).
@@ -233,38 +210,19 @@ def classify(names, prod, test, occ):
 
 
 def self_test():
-    """Mutation-sized checks for snapshot identity and tests-only detection."""
-    paths = [
-        "/repo/PublicApi/Excise.App.approved.txt",
-        "/repo/PublicApi/Excise.App.release.approved.txt",
-        "/repo/PublicApi/Excise.Core.approved.txt",
-    ]
-    grouped = group_approved_files(paths)
-    assert sorted(grouped) == ["Excise.App", "Excise.Core"]
-    assert len(grouped["Excise.App"]) == 2
-
-    # The two configuration variants contribute one unioned contract.  A
-    # Release-only member must be checked, but must not create an
-    # Excise.App.release baseline namespace.
-    fake_names = {
-        paths[0]: {"SharedMember"},
-        paths[1]: {"SharedMember", "ReleaseOnlyMember"},
-    }
-    app_names = sorted(set().union(*(fake_names[path] for path in grouped["Excise.App"])))
-    assert app_names == ["ReleaseOnlyMember", "SharedMember"]
-
+    """Mutation-sized checks for tests-only detection."""
     prod = {
         "SharedMember": {"src/Shared.cs", "src/Caller.cs"},
-        "ReleaseOnlyMember": {"src/ReleaseOnly.cs"},
+        "DeadMember": {"src/Dead.cs"},
         "NewTestsOnlyMember": {"src/NewTestsOnly.cs"},
     }
     test = {"NewTestsOnlyMember": {"tests/NewTestsOnlyTests.cs"}}
-    occ = {"SharedMember": 1, "ReleaseOnlyMember": 1, "NewTestsOnlyMember": 1}
+    occ = {"SharedMember": 1, "DeadMember": 1, "NewTestsOnlyMember": 1}
     dead, only_tests = classify(
-        app_names + ["NewTestsOnlyMember"], prod, test, occ)
-    assert dead == ["ReleaseOnlyMember"]
+        ["SharedMember", "DeadMember", "NewTestsOnlyMember"], prod, test, occ)
+    assert dead == ["DeadMember"]
     assert only_tests == ["NewTestsOnlyMember"]
-    print("PASS: unwired API checker normalizes configuration snapshots and detects tests-only API")
+    print("PASS: unwired API checker detects unreferenced and tests-only API")
 
     # #1447: a doc comment naming a dead identifier (<see cref="Foo"/>) must
     # not read as a call site. XfdfSerializer had three of these while
@@ -323,20 +281,11 @@ def main():
     print("    stripped. Files alone gave 18/22 false positives; occurrences")
     print("    alone hid every dead IDisposable behind nameof(X).")
 
-    grouped = group_approved_files(approved)
-    requested_assembly = args.assembly
-    if requested_assembly not in grouped:
-        for suffix in SNAPSHOT_VARIANTS:
-            if requested_assembly and requested_assembly.endswith(suffix):
-                base = requested_assembly[: -len(suffix)]
-                if base in grouped:
-                    requested_assembly = base
-                    break
-
+    grouped = {snapshot_assembly(path): [path] for path in sorted(approved)}
     found = []          # (assembly, state, name)
     total = flagged = tested_only = 0
     for asm, paths in grouped.items():
-        if requested_assembly and asm != requested_assembly:
+        if args.assembly and asm != args.assembly:
             continue
         names = sorted(set().union(*(identifiers(path, args.min_length) for path in paths)))
         # Unreferenced in production means BOTH: no file other than the
@@ -351,8 +300,7 @@ def main():
         tested_only += len(only_tests)
         found += [(asm, "nowhere", n) for n in dead]
         found += [(asm, "tests-only", n) for n in only_tests]
-        variants = f" ({len(paths)} configuration snapshots)" if len(paths) > 1 else ""
-        print(f"\n── {asm}{variants}: {len(names)} identifiers >= {args.min_length} chars")
+        print(f"\n── {asm}: {len(names)} identifiers >= {args.min_length} chars")
         print(f"     {len(dead)} referenced nowhere;  {len(only_tests)} referenced ONLY by tests")
         if not args.quiet:
             for n in dead:

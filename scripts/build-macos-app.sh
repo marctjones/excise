@@ -54,12 +54,10 @@ SYMBOLS_OUT="${SYMBOLS_OUT:-$OUT/symbols/${APP_NAME}-${VERSION}-macos-${ARCH}}"
 rm -rf "$BUNDLE" "$PUBLISH_DIR"
 mkdir -p "$OUT"
 
-# #1322 — an AOT publish restores a graph with EnableScripting=false /
-# PublishAot=true, which omits the Microsoft.CodeAnalysis.CSharp.Scripting
-# packages. Left in the ordinary in-tree obj/, that restore graph
-# overwrites Excise.App/obj/project.assets.json (and every ProjectReference's
-# obj/) and breaks the NEXT normal Debug build (ScriptingService.cs fails to
-# compile: CS0234/CS0246). --artifacts-path buckets each project's
+# #1322 — an AOT publish restores a different graph (PublishAot=true). Left in
+# the ordinary in-tree obj/, that restore graph overwrites
+# Excise.App/obj/project.assets.json (and every ProjectReference's obj/) and
+# can break the NEXT normal Debug build. --artifacts-path buckets each project's
 # intermediate output under its own subfolder of a throwaway mktemp
 # directory, so this publish never touches any project's real obj/, and a
 # fresh mktemp per invocation means concurrent AOT builds cannot collide
@@ -85,7 +83,6 @@ if [ "$AOT" = "1" ]; then
     PUBLISH_ARGS+=(
         -p:PublishAot=true
         -p:PublishReadyToRun=false
-        -p:EnableScripting=false
         -p:IncludeTessdataInApp=false
         --artifacts-path "$AOT_ARTIFACTS_DIR"
     )

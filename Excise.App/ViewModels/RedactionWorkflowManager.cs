@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Avalonia;
 using Excise.App.Models;
 using Excise.Core.Document;
 using ReactiveUI;
@@ -48,21 +47,7 @@ public class RedactionWorkflowManager : ReactiveObject
     }
 
     /// <summary>
-    /// Mark an area for redaction (adds to pending list)
-    /// </summary>
-    public void MarkArea(
-        int pageNumber,
-        Rect area,
-        string previewText,
-        int renderDpi = MainWindowViewModel.DefaultViewerRenderDpi)
-    {
-        MarkArea(
-            PdfPageRect.ViewerDips(pageNumber, area.X, area.Y, area.Width, area.Height, renderDpi),
-            previewText);
-    }
-
-    /// <summary>
-    /// Mark a page-scoped area for redaction.
+    /// Mark a page-scoped area for redaction (adds to pending list).
     /// </summary>
     public void MarkArea(PdfPageRect area, string previewText)
     {

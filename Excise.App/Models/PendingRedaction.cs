@@ -1,5 +1,4 @@
 using System;
-using Avalonia;
 using Excise.Core.Document;
 
 namespace Excise.App.Models;
@@ -27,37 +26,6 @@ public class PendingRedaction
     /// </summary>
     public PdfPageRect PageArea { get; set; } =
         PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, 0, 0));
-
-    /// <summary>
-    /// Legacy viewer-space area accessor. Prefer <see cref="PageArea"/>.
-    /// </summary>
-    public Rect Area
-    {
-        get => new(PageArea.X, PageArea.Y, PageArea.Width, PageArea.Height);
-        set => PageArea = PdfPageRect.ViewerDips(
-            Math.Max(PageNumber, 1),
-            value.X,
-            value.Y,
-            value.Width,
-            value.Height,
-            RenderDpi);
-    }
-
-    /// <summary>
-    /// DPI of the rendered page coordinate space used by <see cref="Area"/>.
-    /// The main viewer currently reports 120 DPI; older service paths default to 150 DPI.
-    /// </summary>
-    public int RenderDpi
-    {
-        get => (int)Math.Round(PageArea.Dpi);
-        set => PageArea = PdfPageRect.ViewerDips(
-            Math.Max(PageNumber, 1),
-            PageArea.X,
-            PageArea.Y,
-            PageArea.Width,
-            PageArea.Height,
-            value);
-    }
 
     /// <summary>
     /// Preview of text that will be removed (for user review)

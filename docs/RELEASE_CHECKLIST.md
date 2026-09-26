@@ -86,9 +86,8 @@ the decisions no row can make.
    `scripts/test-tier.sh t2` is `release-smoke.sh --release-tests` and accepts
    only `--resume`, so the candidate run is the wrapper directly.
    `--release-tests` is Release configuration, which the `signature` and `ui`
-   rows are declared for; without it the build and test rows run in Debug
-   (Release excludes the developer scripting surface by default) — fine for a
-   quick investigation, not release evidence. The `build` row
+   rows are declared for; without it the build and test rows run in Debug —
+   fine for a quick investigation, not release evidence. The `build` row
    (`dotnet build excise.sln` in the tier's configuration) is first in every
    tier that builds, restores packages so it is reliable after
    configuration-changing package builds, and is never checkpointed.

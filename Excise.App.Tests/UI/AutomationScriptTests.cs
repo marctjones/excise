@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using AwesomeAssertions;
-using Excise.App.Services;
+using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Xunit;
 using Excise.TestSupport;

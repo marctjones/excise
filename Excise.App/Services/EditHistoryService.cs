@@ -40,6 +40,9 @@ public sealed class EditHistoryService
 {
     private readonly Stack<EditHistoryEntry> _undo = new();
     private readonly Stack<EditHistoryEntry> _redo = new();
+    // True while an undo or redo is being replayed. Recording is suppressed during
+    // replay so the low-level mutators a closure calls cannot push new entries
+    // (belt-and-suspenders against re-entrancy).
     private bool _isReplaying;
 
     /// <summary>Raised whenever the stacks change (push, undo, redo, clear).</summary>
@@ -50,14 +53,6 @@ public sealed class EditHistoryService
 
     public string? UndoDescription => _undo.Count > 0 ? _undo.Peek().Description : null;
     public string? RedoDescription => _redo.Count > 0 ? _redo.Peek().Description : null;
-
-    /// <summary>
-    /// True while an undo or redo is being replayed. Recording is suppressed
-    /// during replay so the low-level mutators a closure calls cannot push new
-    /// entries (belt-and-suspenders against re-entrancy — closures should call
-    /// the low-level mutators directly, not the recording wrappers).
-    /// </summary>
-    public bool IsReplaying => _isReplaying;
 
     /// <summary>Record an already-applied mutation with async revert/re-apply.</summary>
     public void Push(string description, Func<Task> undo, Func<Task> redo)

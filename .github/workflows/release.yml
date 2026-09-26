@@ -13,7 +13,7 @@
 # EVERY PACKAGE IS NATIVE AOT, AND EVERY JOB FAILS IF ITS PACKAGE IS NOT (owner
 #   requirement). All four legs publish with the same flags
 #   (-p:PublishAot=true -p:PublishReadyToRun=false -p:PublishSingleFile=false
-#   -p:EnableScripting=false -p:IncludeTessdataInApp=false). A publish can fall back
+#   -p:IncludeTessdataInApp=false). A publish can fall back
 #   to an ordinary self-contained or single-file build and still start, so each job
 #   unpacks what it is about to ship (the .deb, the tarball, the zip, the installed
 #   tree) and runs scripts/check-aot-payload.py on it: no managed assembly (a PE
