@@ -78,9 +78,9 @@ internal static class RedactionFeatureStripper
     /// <remarks>
     /// ⚠️ Never throws for a malformed document: a removal that cannot be made
     /// is skipped and the row is simply absent, exactly as if the feature were
-    /// not there. The exception is the form flatten, whose promise is that no
-    /// interactive object survives: a form it could not flatten is added to
-    /// <paramref name="refusals"/> (#1857).
+    /// not there. The exceptions are the form flatten, whose promise is that no
+    /// interactive object survives (#1857), and a form XObject the hidden-layer
+    /// pass cannot read (#1866): each is added to <paramref name="refusals"/>.
     /// </remarks>
     internal static IReadOnlyList<RedactedFeatureRemoval> Apply(
         PdfDocument document, RedactionOptions options, ICollection<CarrierResult> refusals)
@@ -148,7 +148,7 @@ internal static class RedactionFeatureStripper
         // either answer on its own.
         if (options.RemoveHiddenLayerContent && options.IncludeHiddenLayers)
         {
-            var (spans, groups) = RemoveHiddenOptionalContent(document);
+            var (spans, groups) = RemoveHiddenOptionalContent(document, refusals);
             Row("hidden optional-content span(s)", spans,
                 "content in layers that are OFF in the default configuration");
             Row("hidden optional-content group(s)", groups);
@@ -609,26 +609,18 @@ internal static class RedactionFeatureStripper
     // ───────────────────────── hidden optional content ─────────────────────
 
     /// <summary>
-    /// Drop page content inside <c>/OC</c> marked-content spans whose group is
-    /// OFF in the default configuration, XObject invocations whose <c>/OC</c>
-    /// is OFF, and annotations in an OFF layer; then remove the now-unused
-    /// groups from <c>/OCProperties</c>.
-    /// </summary>
-    /// <remarks>
-    /// <para>No new parser: this consumes the walker's operators through
-    /// <c>page.GetContentStream</c> and writes them back through
-    /// <c>SetContentStream</c>, the same shape as
-    /// <see cref="ObstructionStripper"/> (CLAUDE.md "One walk, many sinks").</para>
-    /// <para><b>Nesting is counted, not assumed.</b> A hidden span can contain
-    /// further <c>BDC</c>/<c>BMC</c> pairs, so the skip runs to the EMC that
-    /// balances the one that opened it — dropping at the first EMC would leak
-    /// the tail of the layer back into the page.</para>
-    /// </remarks>
-    /// <summary>
     /// Drop every <c>/OC BDC … EMC</c> span whose group is OFF by default, and
     /// every <c>Do</c> of an XObject with a hidden <c>/OC</c>. Shared by the
     /// page pass and the form-XObject recursion, so the two cannot drift.
     /// </summary>
+    /// <remarks>
+    /// <para><b>Nesting is the parser's, not counted here.</b> A hidden span
+    /// can contain further <c>BDC</c>/<c>BMC</c> pairs; every operator up to
+    /// the EMC that balances the hidden one, that EMC included, carries it in
+    /// <see cref="ContentOperator.EnclosingSpans"/> (#1848). Nothing inside a
+    /// hidden span is evaluated, so a nested group is neither counted nor
+    /// recorded.</para>
+    /// </remarks>
     private static (List<ContentOperator> Kept, int Spans) FilterHiddenSpans(
         PdfDocument document,
         IReadOnlyList<ContentOperator> operators,
@@ -637,27 +629,16 @@ internal static class RedactionFeatureStripper
         HashSet<PdfDictionary> hiddenGroups)
     {
         var kept = new List<ContentOperator>(operators.Count);
-        var skipDepth = 0;          // >0 while inside a hidden span
-        var markedDepth = 0;        // BDC/BMC nesting while skipping
+        var hidden = new HashSet<ContentOperator>();
         var count = 0;
 
         foreach (var op in operators)
         {
-            if (skipDepth > 0)
-            {
-                if (op.Name is "BDC" or "BMC") markedDepth++;
-                else if (op.Name == "EMC")
-                {
-                    markedDepth--;
-                    if (markedDepth == 0) skipDepth = 0;
-                }
-                continue;   // the opening BDC and closing EMC go too
-            }
+            if (op.EnclosingSpans.Any(hidden.Contains)) continue;
 
             if (op.Name == "BDC" && IsHiddenOcSpan(document, properties, op, hiddenGroups))
             {
-                skipDepth = 1;
-                markedDepth = 1;
+                hidden.Add(op);
                 count++;
                 continue;
             }
@@ -677,7 +658,8 @@ internal static class RedactionFeatureStripper
     /// Recurse into the VISIBLE form XObjects of <paramref name="xobjects"/>
     /// and filter their hidden spans in place. A form whose own <c>/OC</c> is
     /// hidden is skipped — the <c>Do</c> that draws it is already dropped, and
-    /// it may be drawn from elsewhere too.
+    /// it may be drawn from elsewhere too. A form that cannot be decoded or
+    /// parsed is kept and added to <paramref name="refusals"/> once (#1866).
     /// </summary>
     /// <remarks>
     /// ⚠️ Rewrites the form's stream, but through the #1093 source-preserving
@@ -689,6 +671,7 @@ internal static class RedactionFeatureStripper
         PdfDocument document,
         PdfDictionary? xobjects,
         HashSet<PdfDictionary> hiddenGroups,
+        ICollection<CarrierResult> refusals,
         int depth)
     {
         if (xobjects == null || depth > 8) return 0;
@@ -709,26 +692,26 @@ internal static class RedactionFeatureStripper
             var nested = Resolve(document, resources?.GetOptional("XObject") ?? PdfNull.Instance)
                 as PdfDictionary;
 
-            removed += RemoveHiddenSpansInForms(document, nested, hiddenGroups, depth + 1);
+            removed += RemoveHiddenSpansInForms(document, nested, hiddenGroups, refusals, depth + 1);
 
-            ContentStream parsed;
-            byte[] formBytes;
-            try
+            var unreadable = form.IsFiltered && !form.TryEnsureDecoded()
+                ? $"its /Filter {string.Join(" ", form.Filters.Select(f => "/" + f))} could not be decoded"
+                : null;
+            ContentStream? parsed = null;
+            // #1093: source spans, so the operators we KEEP are copied verbatim
+            // instead of round-tripping through this class's escaping and number
+            // formatting, as the page path does.
+            if (unreadable == null)
+                try { parsed = new ContentStreamParser(form.DecodedData, null) { TrackSourceSpans = true }.Parse(); }
+                catch (Exception ex) when (ex is not OutOfMemoryException) { unreadable = "its content could not be parsed"; }
+            if (parsed == null)
             {
-                formBytes = form.DecodedData;
-                // #1093: source spans, so the operators we KEEP are copied
-                // verbatim instead of round-tripping through this class's
-                // escaping and number formatting. The page path already does
-                // this (GetContentStream(trackSourceSpans: true)); a form is
-                // no less able to hold an inline image or a string this
-                // writer would reformat.
-                var parser = new Excise.Core.Content.ContentStreamParser(formBytes, null)
-                {
-                    TrackSourceSpans = true,
-                };
-                parsed = parser.Parse();
+                // #1866: kept and reported once, never skipped in silence.
+                var row = new CarrierResult($"form XObject {form.ObjectNumber ?? 0} {form.GenerationNumber ?? 0} R",
+                    false, unreadable + ", so the hidden-layer pass could not examine it and left it in place");
+                if (!refusals.Contains(row)) refusals.Add(row);
+                continue;
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException) { continue; }
 
             var (kept, count) =
                 FilterHiddenSpans(document, parsed.Operators, properties, nested, hiddenGroups);
@@ -741,7 +724,7 @@ internal static class RedactionFeatureStripper
                     {
                         SourceBytes = parsed.SourceBytes,
                         SourceArrayBoundaries = parsed.SourceArrayBoundaries,
-                    }, formBytes);
+                    }, parsed.SourceBytes!);
                 removed += count;
             }
             catch (Exception ex) when (ex is not OutOfMemoryException) { /* leave as-is */ }
@@ -749,7 +732,20 @@ internal static class RedactionFeatureStripper
         return removed;
     }
 
-    private static (int Spans, int Groups) RemoveHiddenOptionalContent(PdfDocument document)
+    /// <summary>
+    /// Drop page content inside <c>/OC</c> marked-content spans whose group is
+    /// OFF in the default configuration, XObject invocations whose <c>/OC</c>
+    /// is OFF, and annotations in an OFF layer; then remove the now-unused
+    /// groups from <c>/OCProperties</c>.
+    /// </summary>
+    /// <remarks>
+    /// No new parser: this consumes the walker's operators through
+    /// <c>page.GetContentStream</c> and writes them back through
+    /// <c>SetContentStream</c>, the same shape as
+    /// <see cref="ObstructionStripper"/> (CLAUDE.md "One walk, many sinks").
+    /// </remarks>
+    private static (int Spans, int Groups) RemoveHiddenOptionalContent(
+        PdfDocument document, ICollection<CarrierResult> refusals)
     {
         // No /OCProperties means no optional content and nothing to do — and,
         // importantly, no cost on the overwhelming majority of documents.
@@ -779,7 +775,7 @@ internal static class RedactionFeatureStripper
             // we would have removed the page-level spans and left the ones one
             // level down, which is the kind of partial guarantee this project
             // treats as worse than none.
-            spans += RemoveHiddenSpansInForms(document, xobjects, hiddenGroups, 0);
+            spans += RemoveHiddenSpansInForms(document, xobjects, hiddenGroups, refusals, 0);
 
             if (pageSpans == 0) continue;
             spans += pageSpans;

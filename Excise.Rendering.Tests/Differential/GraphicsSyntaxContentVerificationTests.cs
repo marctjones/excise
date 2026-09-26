@@ -12,6 +12,7 @@ using Excise.Rendering.Differential;
 using SkiaSharp;
 using Xunit;
 using Excise.TestSupport;
+using RecoveryFixtureBuilder = Excise.Core.Tests.Redaction.Recovery.RecoveryFixtureBuilder;
 
 namespace Excise.Rendering.Tests.Differential;
 
@@ -324,6 +325,40 @@ public class GraphicsSyntaxContentVerificationTests : IDisposable
             c => c.Kind == "vector" && Math.Abs(c.Obstruction.Left - CmykBar.Left) < 0.5 &&
                  Math.Abs(c.Obstruction.Top - CmykBar.Top) < 0.5,
             "the audit must agree with the independent render that the bar covers the path");
+    }
+
+    // #1848: a bar drawn inside a form whose /Matrix scales and moves it onto CmykBar. mutool, not
+    // excise, says where the bar is painted; the audit's mark must be there. The detector read an
+    // INDIRECT /Matrix as identity and put the mark at the page origin at half the size.
+    [Theory]
+    [InlineData("[2 0 0 2 90 590]")]
+    [InlineData("8 0 R")]
+    public void FormBarWithMatrix_MarkLandsWhereMutoolPaintsTheBar(string matrix)
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var form = Encoding.ASCII.GetBytes("0 0 100 20 re f");
+        var input = RecoveryFixtureBuilder.Build("q /Fx0 Do Q\n",
+            extraObjects: new List<RecoveryFixtureBuilder.Obj>
+            {
+                new($"<< /Type /XObject /Subtype /Form /BBox [0 0 100 20] /Matrix {matrix} /Length {form.Length} >>", form),
+                new("[2 0 0 2 90 590]"),
+            },
+            resourcesExtra: "/XObject << /Fx0 7 0 R >>");
+        var path = TempPath();
+        File.WriteAllBytes(path, input);
+        using var rendered = MutoolReferenceRenderer.RenderPage(path, 1, dpi: 150);
+        using var doc = PdfDocument.Open(input);
+        var page = doc.GetPage(1);
+        rendered.Should().NotBeNull();
+
+        InkFractionIn(rendered!, CmykBar, page.Height).Should().BeGreaterThan(0.99,
+            "guard: mutool paints the form's bar over the whole of CmykBar");
+        RedactionMarkDetector.DetectPage(page, 1).Should().ContainSingle().Which.Should().Match<RedactionMark>(m =>
+            m.Kind == RedactionMarkKind.FormXObjectBox
+            && Math.Abs(m.Rect.Left - CmykBar.Left) < 1 && Math.Abs(m.Rect.Bottom - CmykBar.Bottom) < 1
+            && Math.Abs(m.Rect.Right - CmykBar.Right) < 1 && Math.Abs(m.Rect.Top - CmykBar.Top) < 1,
+            "the mark is where the independent renderer paints the bar");
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

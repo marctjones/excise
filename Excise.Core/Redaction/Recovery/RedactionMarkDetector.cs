@@ -205,7 +205,8 @@ public static class RedactionMarkDetector
     {
         if (depth >= MaxFormDepth) return;
 
-        var matrix = ContentTransform.FromArray(form.GetOptional("Matrix") as PdfArray);
+        // #1050: resolved, as FormXObjectFlattener reads it; unresolved read as identity.
+        var matrix = ContentTransform.FromArray(form.ResolveArray(page.Document, "Matrix"));
 
         try { CollectFills(page, form, matrix.Multiply(ctm), found, depth + 1); }
         catch { /* a form whose content will not parse contributes no marks */ }
