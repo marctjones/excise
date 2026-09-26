@@ -34,7 +34,7 @@ namespace Excise.Rendering.Differential;
 /// "clean" — a null and an empty list mean opposite things, and conflating
 /// them is how an absent oracle turns into a passing gate.</para>
 /// </summary>
-public static class XRayBadRedactionDetector
+internal static class XRayBadRedactionDetector
 {
     /// <summary>One bad redaction: where it is, and what is readable under it.</summary>
     public sealed record BadRedaction(int Page, double X0, double Y0, double X1, double Y1, string Text);

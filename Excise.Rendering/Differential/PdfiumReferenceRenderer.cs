@@ -10,7 +10,7 @@ namespace Excise.Rendering.Differential;
 /// Shells out to PDFium's standalone <c>pdfium_test</c> sample renderer.
 /// This is an optional browser-engine oracle for diagnostic corpus runs.
 /// </summary>
-public static class PdfiumReferenceRenderer
+internal static class PdfiumReferenceRenderer
 {
     private static readonly Lazy<string?> _commandName = new(() =>
     {

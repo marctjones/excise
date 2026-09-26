@@ -12,7 +12,7 @@ namespace Excise.Rendering.Differential;
 /// diagnostic oracle used when MuPDF/Poppler/Ghostscript do not explain a
 /// rendering split.
 /// </summary>
-public static class PdfBoxReferenceRenderer
+internal static class PdfBoxReferenceRenderer
 {
     private sealed record Invocation(string Command, string[] PrefixArgs, string Description);
 

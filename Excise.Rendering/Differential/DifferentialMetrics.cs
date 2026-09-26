@@ -9,7 +9,7 @@ namespace Excise.Rendering.Differential;
 /// Used by <see cref="DifferentialRenderingTests"/> to flag pages where
 /// excise's output diverges meaningfully from <c>mutool draw</c>.
 /// </summary>
-public sealed record DifferentialReport(
+internal sealed record DifferentialReport(
     int Width,
     int Height,
     int PixelCount,
@@ -24,7 +24,7 @@ public sealed record DifferentialReport(
         $"max-pixel-Δ {MaxAbsoluteError:F0}/255";
 }
 
-public static class DifferentialMetrics
+internal static class DifferentialMetrics
 {
     /// <summary>
     /// Per-channel L1 threshold above which a pixel is considered to

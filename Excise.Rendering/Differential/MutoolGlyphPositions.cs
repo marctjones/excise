@@ -25,7 +25,7 @@ namespace Excise.Rendering.Differential;
 /// matching <see cref="MutoolTextExtractor"/>. Null is "no answer", not
 /// "no glyphs".</para>
 /// </summary>
-public static class MutoolGlyphPositions
+internal static class MutoolGlyphPositions
 {
     /// <summary>One glyph, at the position mutool places it.</summary>
     public readonly record struct Glyph(string Char, double X, double Y);

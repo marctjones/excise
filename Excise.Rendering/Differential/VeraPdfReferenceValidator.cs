@@ -11,7 +11,7 @@ namespace Excise.Rendering.Differential;
 /// not one we asked for — a change in it between input and output is itself a
 /// finding.
 /// </summary>
-public sealed record VeraPdfResult(bool Passed, string Flavour, string? Failure)
+internal sealed record VeraPdfResult(bool Passed, string Flavour, string? Failure)
 {
     public bool Ran => Failure == null;
 }
@@ -40,7 +40,7 @@ public sealed record VeraPdfResult(bool Passed, string Flavour, string? Failure)
 /// Never throws: a failure is returned as data, matching the other reference
 /// tools.</para>
 /// </summary>
-public static class VeraPdfReferenceValidator
+internal static class VeraPdfReferenceValidator
 {
     private static readonly Lazy<bool> _available = new(() =>
     {

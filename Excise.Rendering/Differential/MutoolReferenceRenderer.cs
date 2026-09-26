@@ -19,7 +19,7 @@ namespace Excise.Rendering.Differential;
 /// to Skipped rather than fail in environments without it (CI windows-latest,
 /// for example).
 /// </summary>
-public static class MutoolReferenceRenderer
+internal static class MutoolReferenceRenderer
 {
     private static readonly Lazy<bool> _available = new(() =>
     {

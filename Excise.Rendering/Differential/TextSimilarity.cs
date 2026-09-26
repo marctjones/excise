@@ -11,7 +11,7 @@ namespace Excise.Rendering.Differential;
 /// runtime redaction-confidence checker (#650). One formula, not three
 /// copies silently drifting apart.
 /// </summary>
-public static class TextSimilarity
+internal static class TextSimilarity
 {
     /// <summary>
     /// <paramref name="exciseText"/>'s letter/digit count as a fraction of

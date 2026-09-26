@@ -6,7 +6,7 @@ namespace Excise.Rendering.Differential;
 /// <summary>
 /// Result from an external reference renderer subprocess.
 /// </summary>
-public sealed record ReferenceRenderResult(
+internal sealed record ReferenceRenderResult(
     SKBitmap? Bitmap,
     string Status,
     string? ErrorMessage,
@@ -19,7 +19,7 @@ public sealed record ReferenceRenderResult(
 /// Kept separate from the bitmap result so performance comparisons never need
 /// to retain or cache a renderer's image output.
 /// </summary>
-public readonly record struct ReferenceProcessResources(long? PeakWorkingSetBytes, long? CpuMs)
+internal readonly record struct ReferenceProcessResources(long? PeakWorkingSetBytes, long? CpuMs)
 {
     /// <summary>
     /// How often the running child is sampled. ⚠️ #1674 — this used to WAIT first and

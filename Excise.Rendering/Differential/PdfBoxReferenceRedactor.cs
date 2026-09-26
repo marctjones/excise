@@ -28,7 +28,7 @@ namespace Excise.Rendering.Differential;
 /// see is a BROKEN RUN, never a clean baseline — so <see cref="ReferenceRedactionResult.HitsFound"/>
 /// is returned, not hidden (the #1041 lesson).</para>
 /// </summary>
-public static class PdfBoxReferenceRedactor
+internal static class PdfBoxReferenceRedactor
 {
     public static bool IsAvailable =>
         ResolveJava() != null && FindJar() != null && FindDriver() != null;

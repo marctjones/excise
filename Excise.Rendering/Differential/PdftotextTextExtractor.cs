@@ -31,7 +31,7 @@ namespace Excise.Rendering.Differential;
 /// <see cref="MutoolTextExtractor"/>'s convention, so callers treat "no answer"
 /// as data rather than an exception.</para>
 /// </summary>
-public static class PdftotextTextExtractor
+internal static class PdftotextTextExtractor
 {
     private static readonly Lazy<bool> Available = new(() =>
     {

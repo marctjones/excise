@@ -26,7 +26,7 @@ namespace Excise.Rendering.Differential;
 /// contract as every other renderer in this namespace, so tests can treat
 /// "no answer" as data.
 /// </summary>
-public static class PdftoppmReferenceRenderer
+internal static class PdftoppmReferenceRenderer
 {
     private static readonly Lazy<bool> _available = new(() =>
     {

@@ -31,7 +31,7 @@ namespace Excise.Rendering.Differential;
 /// something about what most people will actually see, not just what one more
 /// library thinks.
 /// </summary>
-public static class PdfiumNativeReferenceRenderer
+internal static class PdfiumNativeReferenceRenderer
 {
     private const string LibAlias = "pdfium";
 

@@ -11,7 +11,7 @@ namespace Excise.Rendering.Differential;
 /// occurrences the REFERENCE located — the number the caller must sanity-check
 /// against an independent extractor before trusting anything else here.
 /// </summary>
-public sealed record ReferenceRedactionResult(int HitsFound, string? Failure)
+internal sealed record ReferenceRedactionResult(int HitsFound, string? Failure)
 {
     public bool Succeeded => Failure == null;
 }
@@ -47,7 +47,7 @@ public sealed record ReferenceRedactionResult(int HitsFound, string? Failure)
 /// an independent extractor can see is a BROKEN RUN, never a clean
 /// baseline.</b></para>
 /// </summary>
-public static class MutoolReferenceRedactor
+internal static class MutoolReferenceRedactor
 {
     public static bool IsAvailable => MutoolReferenceRenderer.IsAvailable;
 

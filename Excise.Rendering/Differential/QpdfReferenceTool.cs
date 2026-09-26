@@ -21,7 +21,7 @@ namespace Excise.Rendering.Differential;
 /// §8.10.2 defines as the identity — the two are NOT distinguished here because
 /// nothing downstream needs to.
 /// </summary>
-public sealed record QpdfAppearance(
+internal sealed record QpdfAppearance(
     double BBoxLeft,
     double BBoxBottom,
     double BBoxRight,
@@ -47,7 +47,7 @@ public sealed record QpdfAppearance(
 /// numbers mean, and a mis-grouping in that decision would then be invisible to
 /// every caller — the oracle must report what it read, not an interpretation.
 /// </summary>
-public sealed record QpdfAnnotation(
+internal sealed record QpdfAnnotation(
     string Subtype,
     double Left,
     double Bottom,
@@ -70,7 +70,7 @@ public sealed record QpdfAnnotation(
 /// a check that could not run and a check that ran and was refused both read
 /// as a harmless skip.
 /// </summary>
-public enum QpdfStreamDataStatus
+internal enum QpdfStreamDataStatus
 {
     /// <summary>qpdf decoded the stream; <see cref="QpdfFilteredStream.Bytes"/> holds the result.</summary>
     Ok,
@@ -93,13 +93,13 @@ public enum QpdfStreamDataStatus
 /// them, with the outcome that produced them (#1527 — see
 /// <see cref="QpdfStreamDataStatus"/>).
 /// </summary>
-public sealed record QpdfFilteredStream(QpdfStreamDataStatus Status, byte[] Bytes, string Diagnostics)
+internal sealed record QpdfFilteredStream(QpdfStreamDataStatus Status, byte[] Bytes, string Diagnostics)
 {
     /// <summary>True only when qpdf actually decoded the stream.</summary>
     public bool IsOk => Status == QpdfStreamDataStatus.Ok;
 }
 
-public enum QpdfPasswordStatus
+internal enum QpdfPasswordStatus
 {
     /// <summary>Exit 0: a password, other than as supplied, is required — i.e. the supplied (or absent) password was REJECTED.</summary>
     PasswordRequired = 0,
@@ -133,7 +133,7 @@ public enum QpdfPasswordStatus
 /// available, so tests can degrade to Skipped rather than fail in
 /// environments without it — matching every other tool in this namespace.
 /// </summary>
-public static class QpdfReferenceTool
+internal static class QpdfReferenceTool
 {
     private static readonly Lazy<bool> _available = new(() =>
     {

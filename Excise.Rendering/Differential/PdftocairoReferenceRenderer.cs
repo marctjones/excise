@@ -21,7 +21,7 @@ namespace Excise.Rendering.Differential;
 /// Returns null on missing tool, timeout, non-zero exit, or decode
 /// failure — same contract as <see cref="MutoolReferenceRenderer"/>.
 /// </summary>
-public static class PdftocairoReferenceRenderer
+internal static class PdftocairoReferenceRenderer
 {
     private static readonly Lazy<bool> _available = new(() =>
     {

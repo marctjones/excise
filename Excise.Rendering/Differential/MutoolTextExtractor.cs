@@ -16,7 +16,7 @@ namespace Excise.Rendering.Differential;
 /// <see cref="MutoolReferenceRenderer"/>'s convention so callers can treat
 /// "no answer" as data, not an exception to catch.
 /// </summary>
-public static class MutoolTextExtractor
+internal static class MutoolTextExtractor
 {
     /// <summary>Extract text from a single page (1-based). Returns null when mutool isn't available or refuses.</summary>
     public static string? ExtractPage(string pdfPath, int pageNumber, int timeoutMs = 30_000)

@@ -34,7 +34,7 @@ namespace Excise.Rendering.Differential;
 /// DEFAULT instead of the callers would invalidate every cached oracle render
 /// (<see cref="InvocationSignature"/> is the cache key).</para>
 /// </summary>
-public static class GhostscriptReferenceRenderer
+internal static class GhostscriptReferenceRenderer
 {
     private static readonly Lazy<string?> _commandName = new(() =>
     {

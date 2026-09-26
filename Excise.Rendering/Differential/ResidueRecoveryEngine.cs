@@ -30,7 +30,7 @@ namespace Excise.Rendering.Differential;
 /// <para>Cross-checked against <see cref="MutoolGlyphPositions"/>: excise must
 /// not be the only witness that a gap of a given width exists. No-self-oracle.</para>
 /// </summary>
-public static class ResidueRecoveryEngine
+internal static class ResidueRecoveryEngine
 {
     public enum WidthMetricSource { Standard14Exact, MutoolPositionTolerance, Unknown }
 
