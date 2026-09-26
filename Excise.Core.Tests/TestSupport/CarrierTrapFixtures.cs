@@ -104,6 +104,12 @@ internal static class CarrierTrapFixtures
         Add("acroform-all-carriers", "FORMCARRIERSTRAP", "acroform /DV", Oracle.QpdfDump,
             (t, v) => Field(V(t, v), $"/FT /Tx /T (name) /TU (Enter {t}TOOLTIP here) /V ({t}VALUE) "
                 + $"/DV ({t}DEFAULT) /RV (<body><p>{t}RICH</p></body>) /MK << /CA ({t}CAPTION) >>"));
+        // #1861: a certification signature names its signer in the signature
+        // dictionary, and its certificate chain in /Contents and the /DSS.
+        Add("signature-identity", "SIGNERNAMETRAP", "signature /Name", Oracle.QpdfDump,
+            (t, v) => Signed(V(t, v), t, "Example Signing CA"));
+        Add("signature-certificate", "SIGNERCERTTRAP", "signature certificates", Oracle.PresenceOnly,
+            (t, v) => Signed(V(t, v), "Pat Example", t));
         Add("field-javascript", "FIELDSCRIPTTRAP", "JavaScript", Oracle.QpdfDump,
             (t, v) => Field(V(t, v), $"/FT /Tx /T (name) /AA << /K << /S /JavaScript /JS (var who = \"{t}\";) >> >>"));
         Add("field-javascript-stream", "FIELDSCRIPTSTREAMTRAP", "JavaScript", Oracle.QpdfDump,
@@ -441,6 +447,29 @@ internal static class CarrierTrapFixtures
             catalog: "/AcroForm << /Fields [6 0 R] /DR << /Font << /F1 5 0 R >> >> /DA (/F1 10 Tf 0 g) >>",
             extra: all.ToArray(), extraContent: extraContent);
     }
+
+    /// <summary>
+    /// A certification-signed document (#1861): a signature field/widget (object 6)
+    /// whose <c>/V</c> is the signature dictionary (7), which <c>/Perms /DocMDP</c>
+    /// names too, and a <c>/DSS</c> (8) whose compressed certificate stream (9)
+    /// carries <c>CN=</c><paramref name="subject"/> as the signature's
+    /// <c>/Contents</c> does: the stand-in for a DER subject name.
+    /// </summary>
+    internal static byte[] Signed(string? visibleToken, string signer, string subject) =>
+        Doc(visibleToken, page: "/Annots [6 0 R]",
+            catalog: "/AcroForm << /Fields [6 0 R] /SigFlags 3 >> /Perms << /DocMDP 7 0 R >> /DSS 8 0 R",
+            extra: new[]
+            {
+                "<< /Type /Annot /Subtype /Widget /FT /Sig /T (Signature1) /Rect [72 100 272 140] /P 3 0 R /V 7 0 R >>",
+                "<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /adbe.pkcs7.detached "
+                    + $"/Name ({signer}) /Reason (Approved by {signer}) /Location ({signer} office) "
+                    + $"/ContactInfo ({signer}@example.test) /M (D:20260926000000Z) /ByteRange [0 0 0 0] "
+                    + $"/Contents <{Convert.ToHexString(Encoding.UTF8.GetBytes($"CN={subject}, OU=signature"))}> "
+                    + "/Reference [<< /Type /SigRef /TransformMethod /DocMDP "
+                    + "/TransformParams << /Type /TransformParams /P 2 /V /1.2 >> >>] >>",
+                "<< /Type /DSS /Certs [9 0 R] /VRI << /A1B2C3 << /Cert [9 0 R] >> >> >>",
+                Stream("", $"CN={subject}, OU=dss", compress: true),
+            });
 
     internal static string AppearanceStream(string content, bool compress) =>
         Stream("/Type /XObject /Subtype /Form /BBox [0 0 300 20] /Resources << /Font << /F1 5 0 R >> >>", content, compress);

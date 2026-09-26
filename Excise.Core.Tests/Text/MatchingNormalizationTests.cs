@@ -15,7 +15,8 @@ namespace Excise.Core.Tests.Text;
 /// the code points themselves), not a tool's opinion.
 /// Stages: presentation forms/ligatures (#632/#722) → canonical NFC
 /// (#724) → harakat/niqqud strip (#725) → invisible separators (#726) →
-/// halfwidth/fullwidth forms (#727).
+/// halfwidth/fullwidth forms (#727) → typographic quotes, dashes and
+/// whitespace runs (#1871).
 /// </summary>
 public class MatchingNormalizationTests
 {
@@ -119,6 +120,26 @@ public class MatchingNormalizationTests
         MatchingNormalization.Fold("\uFF76\uFF80").Should().Be("\u30AB\u30BF");
         // ｶ + halfwidth voiced mark ﾞ → カ + U+3099 → composes to ガ.
         MatchingNormalization.Fold("\uFF76\uFF9E").Should().Be("\u30AC");
+    }
+
+    // ---- Stage 6: typographic quotes, dashes, whitespace runs (#1871) ----
+
+    [Theory]
+    [InlineData("O\u2019Brien", "O'Brien")]
+    [InlineData("O\u2018Brien", "O'Brien")]
+    [InlineData("O\u02BCBrien", "O'Brien")]
+    [InlineData("5\u2032", "5'")]
+    [InlineData("12\u2013345", "12-345")]
+    [InlineData("12\u2014345", "12-345")]
+    [InlineData("12\u2212345", "12-345")]
+    [InlineData("Smith  Jones", "Smith Jones")]
+    [InlineData("Smith\t\r\nJones", "Smith Jones")]
+    [InlineData("Smith \u00A0\u2003Jones", "Smith Jones")]
+    [InlineData("  lead and trail  ", " lead and trail ")]
+    [InlineData("\uFF07quoted\uFF07", "'quoted'")]
+    public void Fold_ReadsTypographicQuotesDashesAndWhitespaceRunsAsThePageMatcherDoes(string text, string folded)
+    {
+        MatchingNormalization.Fold(text).Should().Be(folded);
     }
 
     // ---- Earlier stages still compose (#632/#722 regression) ----

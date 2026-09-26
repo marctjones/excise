@@ -138,12 +138,12 @@ public class ReformedTermCarrierRedactionTests
     }
 
     /// <summary>
-    /// A soft hyphen inside the term hides it from a raw cut but not from the
-    /// page matcher's fold, nor from a reader, which does not draw it. No cut of
-    /// the raw text removes it, so the whole value goes.
+    /// A soft hyphen inside the term hides it from a raw search but not from the
+    /// page matcher's fold, nor from a reader, which does not draw it. The cut
+    /// takes the raw span whose fold is the term (#1871), soft hyphen and all.
     /// </summary>
     [Fact]
-    public void ATermOnlyTheFoldSees_TakesTheWholeValue()
+    public void ATermOnlyTheFoldSees_IsCutWhereTheFoldMapsBackToTheValue()
     {
         const string hidden = "KES­TREL";
         var title = "<FEFF" + Convert.ToHexString(Encoding.BigEndianUnicode.GetBytes($"Wren {hidden} Heron")) + ">";
@@ -161,8 +161,8 @@ public class ReformedTermCarrierRedactionTests
 
         var saved = document.SaveToBytes();
         SavedPdfLeakScanner.FindTerm(saved, hidden).Should().BeEmpty();
-        SavedPdfLeakScanner.FindTerm(saved, "Wren").Should().BeEmpty("the value the term was in is replaced whole");
-        PdfOutlineParser.Parse(document).Single().Title.Should().Be("[redacted]");
+        SavedPdfLeakScanner.FindTerm(saved, Reformed).Should().BeEmpty();
+        PdfOutlineParser.Parse(document).Single().Title.Should().Be("Wren  Heron");
     }
 
     /// <summary>

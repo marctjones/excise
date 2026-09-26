@@ -191,6 +191,10 @@ internal static class RedactionFeatureStripper
             if (formRemains)
                 refusals.Add(new CarrierResult("/AcroForm", false,
                     "the form could not be flattened, so its field dictionaries and their values are still in the file"));
+            var (signatureDictionaries, dss) = RemoveSignatures(document, Reachable().Any(IsSignatureDictionary), refusals);
+            Row("signature dictionary(ies) removed", signatureDictionaries,
+                "each named its signer; its /Perms entry (DocMDP, UR3) and every other reference to it went too");
+            Row("/DSS document security store", dss, "the certificates, OCSP responses and CRLs that name the signers");
         }
 
         if (options.RemoveFieldNames)
@@ -1224,6 +1228,95 @@ internal static class RedactionFeatureStripper
         }
         return (flattened, signatures, unpainted,
             Resolve(document, document.Catalog.GetOptional("AcroForm") ?? PdfNull.Instance) is PdfDictionary);
+    }
+
+    /// <summary>
+    /// #1861: with every signature field flattened away, a signature dictionary is
+    /// still reached from <c>/Perms</c> (§12.8.4.1: DocMDP and UR3 each name one),
+    /// or from a widget the structure tree still reaches, and <c>/DSS</c>
+    /// (§12.8.4.3) holds the certificates, OCSP responses and CRLs that validate
+    /// it. Every reference to a signature dictionary goes, and so does
+    /// <c>/DSS</c>. A <c>/Perms</c> entry that is not a signature, and a signature
+    /// dictionary the object graph still reaches after, are kept and refused.
+    /// </summary>
+    private static (int Signatures, int Dss) RemoveSignatures(
+        PdfDocument document, bool hadSignatures, ICollection<CarrierResult> refusals)
+    {
+        var removed = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        if (hadSignatures)
+            foreach (var dict in ReachableDictionaries(document).Where(d => !IsSignatureDictionary(d)))
+                foreach (var key in dict.Keys.Select(k => k.Value).ToList())
+                    if (Resolve(document, dict.GetOptional(key) ?? PdfNull.Instance) is PdfDictionary sig
+                        && IsSignatureDictionary(sig))
+                    {
+                        dict.Remove(key);
+                        removed.Add(sig);
+                    }
+
+        if (Resolve(document, document.Catalog.GetOptional("Perms") ?? PdfNull.Instance) is PdfDictionary perms)
+        {
+            if (perms.Count == 0) document.Catalog.Remove("Perms");
+            else refusals.Add(new CarrierResult("/Perms", false,
+                string.Join(", ", perms.Keys.Select(k => "/" + k.Value)) + " is not a signature dictionary, so it was kept"));
+        }
+        var dss = document.Catalog.Remove("DSS") ? 1 : 0;
+
+        if (hadSignatures)
+            foreach (var sig in SignatureDictionaries(document))
+            {
+                removed.Remove(sig);
+                refusals.Add(new CarrierResult($"signature dictionary {document.GetReferenceTo(sig)?.ObjectNum ?? 0} 0 R", false,
+                    "still reachable after every reference the object graph held was removed, so it still names the signer"));
+            }
+        return (removed.Count, dss);
+    }
+
+    /// <summary>§12.8.1 Table 255: the text strings of a signature dictionary that name or place its signer.</summary>
+    internal static readonly string[] SignerKeys = { "Name", "Reason", "Location", "ContactInfo" };
+
+    /// <summary>
+    /// A signature or document time-stamp dictionary (§12.8.1, §12.8.5). <c>/Type</c>
+    /// is optional there and UR3 signatures omit it, so <c>/ByteRange</c>, which
+    /// nothing else has, identifies one too.
+    /// </summary>
+    internal static bool IsSignatureDictionary(PdfDictionary dict) =>
+        dict.GetNameOrNull("Type") is "Sig" or "DocTimeStamp" || dict.GetOptional("ByteRange") != null;
+
+    /// <summary>Every signature dictionary the object graph reaches.</summary>
+    internal static List<PdfDictionary> SignatureDictionaries(PdfDocument document) =>
+        ReachableDictionaries(document).Where(IsSignatureDictionary).ToList();
+
+    /// <summary>
+    /// The bytes of every certificate-bearing value of <paramref name="signatures"/>
+    /// (<c>/Contents</c>, <c>/Cert</c>) and of the catalog's <c>/DSS</c>: each string
+    /// and each decodable stream found by walking them.
+    /// </summary>
+    internal static IEnumerable<byte[]> CertificateData(PdfDocument document, IEnumerable<PdfDictionary> signatures)
+    {
+        var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        var stack = new Stack<(PdfObject? Node, int Depth)>();
+        stack.Push((document.Catalog.GetOptional("DSS"), 0));
+        foreach (var sig in signatures)
+        {
+            stack.Push((sig.GetOptional("Contents"), 0));
+            stack.Push((sig.GetOptional("Cert"), 0));
+        }
+        while (stack.Count > 0)
+        {
+            var (node, depth) = stack.Pop();
+            if (node == null || depth > 32) continue;
+            var value = Resolve(document, node);
+            if (!visited.Add(value)) continue;
+            switch (value)
+            {
+                case PdfString s: yield return s.Bytes; break;
+                case PdfStream stream:
+                    yield return stream.IsFiltered && !stream.TryEnsureDecoded() ? stream.EncodedData : stream.DecodedData;
+                    break;
+                case PdfDictionary dict: foreach (var (_, v) in dict) stack.Push((v, depth + 1)); break;
+                case PdfArray array: foreach (var v in array) stack.Push((v, depth + 1)); break;
+            }
+        }
     }
 
     /// <summary>§12.7.4.1: <c>/FT</c> is inheritable, so a widget kid finds it on an ancestor.</summary>

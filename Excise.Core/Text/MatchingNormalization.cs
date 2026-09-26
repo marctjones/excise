@@ -43,6 +43,11 @@ namespace Excise.Core.Text;
 /// width fold can surface combining marks (halfwidth voiced ﾞ → U+3099),
 /// so the result is canonically re-composed to keep the NFC invariant
 /// (ｶ + ﾞ ends as ガ).</item>
+/// <item>Typographic folding (#1871) — curly single quotes, the modifier
+/// letter apostrophe and the prime read as <c>'</c>; en dash, em dash and
+/// minus sign read as <c>-</c>; every whitespace run reads as one space. So
+/// "O'Brien" matches "O’Brien", "12-345" matches "12–345" and "Smith Jones"
+/// matches "Smith  Jones", on the page and in every carrier alike.</item>
 /// </list>
 /// </summary>
 /// <remarks>
@@ -71,9 +76,10 @@ internal static class MatchingNormalization
     /// Fold <paramref name="text"/> into the canonical matching space:
     /// presentation forms/ligatures decomposed to plain letters, the whole
     /// string composed to Unicode NFC, optional Arabic/Hebrew vocalization
-    /// marks stripped, invisible separators removed (NBSP → space), and
-    /// halfwidth/fullwidth forms folded. Returns the original string
-    /// instance when nothing changes.
+    /// marks stripped, invisible separators removed (NBSP → space),
+    /// halfwidth/fullwidth forms folded, and typographic quotes, dashes and
+    /// whitespace runs folded. Returns the original string instance when
+    /// nothing changes.
     /// </summary>
     public static string Fold(string text)
     {
@@ -83,13 +89,16 @@ internal static class MatchingNormalization
         folded = CanonicalCompose(folded);
         folded = StripSemiticVocalization(folded);
         folded = FoldSeparators(folded);
-        return FoldWidthForms(folded);
+        folded = FoldWidthForms(folded);
+        return FoldTypography(folded);
     }
 
     /// <summary>
     /// Fold a sequence of per-letter text values so that
     /// <c>string.Concat(result)</c> equals <see cref="Fold"/> of the
-    /// concatenated values (modulo unmatched cluster boundaries). A letter
+    /// concatenated values (modulo unmatched cluster boundaries and a
+    /// whitespace run spread over letters, which only the whole-string fold
+    /// collapses). A letter
     /// whose folded value begins with a combining mark contributes the empty
     /// string, and its mark is composed into the preceding letter's folded
     /// value — callers doing folded-space index arithmetic must treat
@@ -319,6 +328,48 @@ internal static class MatchingNormalization
 
         WidthFoldCache[index] = folded;
         return folded;
+    }
+
+    /// <summary>The ASCII reading of a typographic quote or dash, or <paramref name="c"/> itself.</summary>
+    private static char TypographicFold(char c) => c switch
+    {
+        '\u2018' or '\u2019' or '\u02BC' or '\u2032' => '\'',   // curly quotes, modifier apostrophe, prime
+        '\u2013' or '\u2014' or '\u2212' => '-',                 // en dash, em dash, minus sign
+        _ => c,
+    };
+
+    /// <summary>
+    /// Replace every typographic quote and dash with its ASCII reading and
+    /// every whitespace run (<see cref="char.IsWhiteSpace(char)"/>, the set
+    /// the regex <c>\s</c> matches) with one space. Returns the original
+    /// string instance when neither occurs.
+    /// </summary>
+    private static string FoldTypography(string text)
+    {
+        int first = -1;
+        for (int i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (TypographicFold(c) != c ||
+                (char.IsWhiteSpace(c) && (c != ' ' || (i + 1 < text.Length && char.IsWhiteSpace(text[i + 1])))))
+            {
+                first = i;
+                break;
+            }
+        }
+
+        if (first < 0) return text;
+
+        var sb = new StringBuilder(text.Length);
+        sb.Append(text, 0, first);
+        for (int i = first; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (!char.IsWhiteSpace(c)) sb.Append(TypographicFold(c));
+            else if (i == 0 || !char.IsWhiteSpace(text[i - 1])) sb.Append(' ');
+        }
+
+        return sb.ToString();
     }
 
     /// <summary>

@@ -120,6 +120,8 @@ public sealed class CarrierTrapIndependentCorroborationTests : IDisposable
                 if (hit.Carrier.StartsWith("attachment", StringComparison.Ordinal))
                     Encoding.UTF8.GetString(RunTool("qpdf", "--list-attachments", path) ?? Array.Empty<byte>())
                         .Should().Contain("blob.bin", $"{id}: qpdf must list the attachment excise reports as present");
+                else if (hit.Carrier.StartsWith("signature", StringComparison.Ordinal))
+                    QpdfDump(path).Should().Contain("/DSS", $"{id}: qpdf must see the certificate store excise reports");
                 else
                     QpdfDump(path).Should().Contain("/Thumb", $"{id}: qpdf must see the thumbnail excise reports");
                 break;

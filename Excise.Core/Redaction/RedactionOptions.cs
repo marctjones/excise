@@ -365,8 +365,9 @@ public sealed record RedactionOptions
 
     /// <summary>
     /// Flatten forms and annotations into page content, so no interactive
-    /// object survives to carry text. Default false;
-    /// <see cref="RedactionProfile.Maximum"/> sets it. Enforced by: Core.
+    /// object survives to carry text. A signature is removed, with the
+    /// <c>/Perms</c> entry and the <c>/DSS</c> that name its signer (#1861).
+    /// Default false; <see cref="RedactionProfile.Maximum"/> sets it. Enforced by: Core.
     /// </summary>
     public bool FlattenInteractiveContent { get; init; } = false;
 
@@ -413,7 +414,8 @@ public sealed record RedactionOptions
             | Operations.RedactionCarriers.ActionUris
             | Operations.RedactionCarriers.MarkedContent
             | Operations.RedactionCarriers.PageLabels
-            | Operations.RedactionCarriers.NameTreeKeys,
+            | Operations.RedactionCarriers.NameTreeKeys
+            | Operations.RedactionCarriers.Signatures,
             Operations.CarrierScrubMode.RemoveWhole),
     };
 
