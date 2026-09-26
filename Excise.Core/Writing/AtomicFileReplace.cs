@@ -19,12 +19,12 @@ namespace Excise.Core.Writing;
 /// onto a link replaced it with a regular file and the file it pointed at
 /// never received the save).</para>
 ///
-/// <para>Consequences a caller accepts: the target gets a NEW inode, so Finder
-/// tags, comments and other extended attributes and the old mode bits are not
-/// carried over (measured on macOS for #1683: <c>user.*</c> and
-/// <c>kMDItemFinderComment</c> are gone after a save; Reduce File Size has
-/// behaved this way since #1550), and the save needs write permission on the
-/// DIRECTORY, not only on the file.</para>
+/// <para>Consequences a caller accepts: the target gets a NEW inode. Its mode
+/// bits and extended attributes (Finder tags and comments, <c>user.*</c>) are
+/// copied onto the temporary first, best effort (#1802: one that cannot be
+/// copied is dropped and the save goes on). Its owner and macOS ACLs are not,
+/// and another hard link to it keeps the old content. And the save needs write
+/// permission on the DIRECTORY, not only on the file.</para>
 /// </remarks>
 internal static class AtomicFileReplace
 {
@@ -103,6 +103,8 @@ internal static class AtomicFileReplace
             // the rename itself.
             if (expected is { } known && known.IsSameFileAs(fullPath))
                 known.ThrowIfChangedOnDisk();
+            // Attributes before the mode: a read-only temporary refuses them.
+            ExtendedAttributes.CarryOver(fullPath, temporary);
             CarryOverUnixMode(fullPath, temporary);
             MoveIntoPlace(temporary, fullPath);
         }
