@@ -319,18 +319,13 @@ internal static class XfaXmlCarrier
         IReadOnlyList<string> terms,
         bool caseSensitive)
     {
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        bool Holds(string value) => TermMatch.Holds(value, terms, caseSensitive, wholeWord: false);
 
-        return document.Descendants().Attributes().Where(a => !a.IsNamespaceDeclaration)
-                   .Any(a => terms.Any(t => a.Value.Contains(t, comparison)))
-            || document.DescendantNodes().OfType<XText>()
-                   .Any(n => terms.Any(t => n.Value.Contains(t, comparison)))
-            || document.DescendantNodes().OfType<XComment>()
-                   .Any(n => terms.Any(t => n.Value.Contains(t, comparison)))
-            || document.DescendantNodes().OfType<XProcessingInstruction>()
-                   .Any(n => terms.Any(t => n.Data.Contains(t, comparison)))
-            || document.Descendants()
-                   .Any(e => terms.Any(t => e.Value.Contains(t, comparison)));
+        return document.Descendants().Attributes().Where(a => !a.IsNamespaceDeclaration).Any(a => Holds(a.Value))
+            || document.DescendantNodes().OfType<XText>().Any(n => Holds(n.Value))
+            || document.DescendantNodes().OfType<XComment>().Any(n => Holds(n.Value))
+            || document.DescendantNodes().OfType<XProcessingInstruction>().Any(n => Holds(n.Data))
+            || document.Descendants().Any(e => Holds(e.Value));
     }
 
     private static bool ContainsAnyTerm(
@@ -338,7 +333,6 @@ internal static class XfaXmlCarrier
         IReadOnlyList<string> terms,
         bool caseSensitive)
     {
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
         var encodings = new[]
         {
             Encoding.UTF8,
@@ -347,11 +341,7 @@ internal static class XfaXmlCarrier
             Encoding.Latin1,
         };
 
-        return encodings.Any(encoding =>
-        {
-            var text = encoding.GetString(bytes);
-            return terms.Any(term => text.Contains(term, comparison));
-        });
+        return encodings.Any(encoding => TermMatch.Holds(encoding.GetString(bytes), terms, caseSensitive, wholeWord: false));
     }
 
     // Substring, not whole-word: the packet checks above read it that way too.

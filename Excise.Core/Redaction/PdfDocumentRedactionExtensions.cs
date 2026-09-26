@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using Excise.Core.Content;
 using Excise.Core.Document;
 
@@ -732,7 +731,7 @@ public static class PdfDocumentRedactionExtensions
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, int pageNumber)
     {
         var found = new List<HyphenatedTermCandidate>();
-        var needle = NormalizeText(searchText).Trim();
+        var needle = MatchingNormalization.Fold(searchText).Trim();
         if (needle.Length < 2 || letters.Count == 0) return found;
 
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
@@ -757,7 +756,7 @@ public static class PdfDocumentRedactionExtensions
             // The join must produce the needle AND the needle must actually
             // straddle the break — a term wholly inside one line is already
             // matched by FindTextMatches and is not a candidate.
-            var joined = NormalizeText(beforeText + afterText);
+            var joined = MatchingNormalization.Fold(beforeText + afterText);
             var idx = joined.IndexOf(needle, comparison);
             if (idx < 0) continue;
             if (idx + needle.Length <= beforeText.Length) continue;   // ends before the break
@@ -824,7 +823,7 @@ public static class PdfDocumentRedactionExtensions
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, int pageNumber)
     {
         var found = new List<WordWrapTermCandidate>();
-        var needle = NormalizeText(searchText).Trim();
+        var needle = MatchingNormalization.Fold(searchText).Trim();
         // A single-word needle cannot straddle a plain (non-hyphenated) wrap:
         // with no hyphen consumed, whitespace normalization means the needle
         // itself would need an internal space to span two words.
@@ -851,7 +850,7 @@ public static class PdfDocumentRedactionExtensions
 
             // Join WITH a space — the wrap stands in for the word boundary a
             // producer would otherwise have drawn as a literal space glyph.
-            var joined = NormalizeText(beforeText + " " + afterText);
+            var joined = MatchingNormalization.Fold(beforeText + " " + afterText);
             var idx = joined.IndexOf(needle, comparison);
             if (idx < 0) continue;
             // The break sits right after beforeText in the joined string (one
@@ -981,7 +980,7 @@ public static class PdfDocumentRedactionExtensions
         // lets matching start on an unrelated whitespace glyph, whose geometry
         // may be on another line or column. The resulting bounding box can span
         // most of a page and destroy remote text (#942).
-        var needle = NormalizeText(searchText).Trim();
+        var needle = MatchingNormalization.Fold(searchText).Trim();
         if (needle.Length == 0) return matches;
 
         // NOTE: not `i <= fullText.Length - needle.Length` — normalization can
@@ -990,39 +989,9 @@ public static class PdfDocumentRedactionExtensions
         int i = 0;
         while (i < fullText.Length)
         {
-            // Normalize may collapse whitespace and SHRINK raw text
-            // (decomposed accents compose: e + U+0301 → é, up to several raw
-            // marks per folded char), so a window of 4× needle length is the
-            // safe upper bound on "does the text here start with needle?"
-            var windowLen = Math.Min(needle.Length * 4, fullText.Length - i);
-            var normWindow = NormalizeText(fullText.Substring(i, windowLen));
-
-            if (normWindow.StartsWith(needle, comparison))
+            var endIndex = TermMatch.MatchEnd(fullText, i, needle, comparison);
+            if (endIndex >= 0)
             {
-                // Expand one original character at a time until the
-                // normalized prefix equals the needle — that's the minimum
-                // letter span covering the match.
-                int endIndex = i;
-                while (endIndex < fullText.Length)
-                {
-                    var cur = NormalizeText(fullText.Substring(i, endIndex - i + 1));
-                    if (cur.Equals(needle, comparison)) break;
-                    if (cur.Length >= needle.Length) break;
-                    endIndex++;
-                }
-
-                // Absorb trailing raw combining marks: the last matched
-                // letter's canonical cluster may continue past the minimal
-                // span (needle "café" against raw "cafe" + U+0301 — the
-                // expansion stops at the 'e' when the raw length reaches the
-                // needle length, but the accent belongs to the matched
-                // cluster and must be removed with it).
-                while (endIndex + 1 < fullText.Length &&
-                       MatchingNormalization.IsCombiningMark(fullText[endIndex + 1]))
-                {
-                    endIndex++;
-                }
-
                 // #1052: whole-word matching, when the user asked for it. #1000
                 // decided substring stays the DEFAULT — it is right for a case
                 // number inside a longer citation — precisely because the
@@ -1380,37 +1349,5 @@ public static class PdfDocumentRedactionExtensions
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// Normalize typographic variants (curly quotes, en/em dashes), fold
-    /// Arabic presentation forms to base letters, and collapse whitespace so
-    /// that string comparison isn't defeated by inconsequential differences
-    /// between the search term and the text as encoded in the PDF.
-    /// </summary>
-    private static string NormalizeText(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return text;
-
-        // Arabic can be stored as shaped presentation forms (U+FB50–U+FDFF,
-        // U+FE70–U+FEFF — #632), Latin text as ligature code points
-        // (U+FB00–U+FB06, e.g. "oﬃce" — #722), and accented text in either
-        // canonical spelling ("café" vs "cafe" + U+0301 — #724) while the
-        // user types plain/precomposed letters; fold both sides of the
-        // comparison into the canonical matching space. Note the fold can
-        // change length in BOTH directions (lam-alef 1 char → 2, ﬃ 1 → 3
-        // expand; e + U+0301 → é shrinks 2 → 1), so normalized length may
-        // differ from raw length either way — FindTextMatches accounts for
-        // that.
-        var normalized = MatchingNormalization.Fold(text)
-            .Replace('’', '\'')  // right single quote
-            .Replace('‘', '\'')  // left single quote
-            .Replace('ʼ', '\'')  // modifier letter apostrophe
-            .Replace('′', '\'')  // prime
-            .Replace('–', '-')   // en dash
-            .Replace('—', '-')   // em dash
-            .Replace('−', '-');  // minus sign
-
-        return Regex.Replace(normalized, @"\s+", " ");
     }
 }
