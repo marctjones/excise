@@ -68,7 +68,10 @@ public static class CoveredContentRecovery
         // #1624: §8.4.2 q/Q save and restore the fill colour. These were bare
         // locals with no q/Q handling at all, so a colour set inside a block
         // applied to every later fill on the page.
-        var fillState = new FillColourState(1, 1, 1);
+        // #1856: this channel alone started WHITE and ignored every fill drawn
+        // before a colour operator, so a spec-black `re f` hid content unseen.
+        // Starting black changed no finding on 4,625 clean corpus files.
+        var fillState = new FillColourState();
 
         for (var i = 0; i < ops.Count; i++)
         {
@@ -117,7 +120,7 @@ public static class CoveredContentRecovery
                     if (box.Width < MinSidePt || box.Height < MinSidePt) break;
 
                     var isFill = op.Name is not ("S" or "s");
-                    if (isFill && fillState.Set && fillState.Current.IsDark(DarkLuminance) &&
+                    if (isFill && fillState.Current.IsDark(DarkLuminance) &&
                         box.Width * box.Height <= 0.9 * pageArea)
                     {
                         obstructions.Add((i, box));

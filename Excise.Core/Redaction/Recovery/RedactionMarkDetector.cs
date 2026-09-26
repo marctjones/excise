@@ -136,7 +136,7 @@ public static class RedactionMarkDetector
         // rejects them, while the bars are 13.8pt.
         // #1624: §8.4.2 q/Q save and restore the fill colour. This used to be a
         // bare local, so a colour set inside a block leaked past its Q.
-        var fillState = new FillColourState(0, 0, 0);
+        var fillState = new FillColourState();
 
         foreach (var op in ops)
         {

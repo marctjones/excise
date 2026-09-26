@@ -38,7 +38,7 @@ public static class ObstructionStripper
         var newOps = new List<ContentOperator>(content.Operators.Count);
         var pendingPath = new List<int>(); // indices into the input stream
         // §8.4.1 Table 52: the initial fill colour is black; §8.4.2: Q restores it.
-        var fill = new FillColourState(0, 0, 0);
+        var fill = new FillColourState();
 
         for (int i = 0; i < content.Operators.Count; i++)
         {

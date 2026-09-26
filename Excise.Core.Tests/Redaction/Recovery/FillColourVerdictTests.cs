@@ -50,7 +50,7 @@ public class FillColourVerdictTests
         var expected = string.Join('\n', new[]
         {
             "                             | A C D M V",
-            "(none)                       | Y Y Y Y -",
+            "(none)                       | Y Y Y Y Y",
             "0 g                          | Y Y Y Y Y",
             "0.3 g                        | Y Y - Y Y",
             "0.4 g                        | Y - - Y Y",
