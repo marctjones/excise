@@ -1139,7 +1139,7 @@ public partial class PdfViewerControl : UserControl
         input.MinHeight = 0;
         // #1205: the field's fully-qualified NAME is an identifier the document
         // supplies and the tooltip is where the user reads it. Display only —
-        // the field is still addressed and written by its real name.
+        // an edit is written to the field itself, never looked up by name (#1865).
         ToolTip.SetTip(input, Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(field.FullName));
 
         var (tint, border) = FieldOverlayBrushes(input);
@@ -1221,7 +1221,7 @@ public partial class PdfViewerControl : UserControl
         // The field's own page: in continuous view (#1807) several pages are
         // editable at once, so CurrentPage is only the scroll anchor.
         FormFieldEdited?.Invoke(this,
-            new FormFieldEditedEventArgs(field.FullName, newValue, field.PageNumber ?? CurrentPage, oldValue));
+            new FormFieldEditedEventArgs(field, newValue, field.PageNumber ?? CurrentPage, oldValue));
         return true;
     }
 

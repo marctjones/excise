@@ -157,7 +157,7 @@ public class FileOpsCommandTests
 
         var field = vm.PdfCoreDocument!.GetAcroForm()!.FindField("Name")!;
         field.SetValue("Dana");
-        vm.OnFormFieldEdited("Name", "Dana");
+        vm.OnFormFieldEdited(field, "Dana", oldValue: null);
 
         vm.StorageProviderOverride = CreateStorageProviderStub(saveFile: outputPath);
 

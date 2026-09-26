@@ -112,10 +112,6 @@ public partial class MainWindowViewModel
             return;
         }
 
-        // What Save writes: the form values the viewer holds are pushed into
-        // the service document first. This changes no user-visible state.
-        SyncAllFormFieldValuesToServiceDocument();
-
         DocumentPrintWorkflowResult result;
         using var cancellation = new CancellationTokenSource();
         _printCancellation = cancellation;

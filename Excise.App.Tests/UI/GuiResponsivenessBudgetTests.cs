@@ -88,7 +88,7 @@ public class GuiResponsivenessBudgetTests
                 .Should().BeLessThan(DirectInputBudget,
                     "form authoring should create the field and update overlays without a page rerender");
 
-            Measure(() => vm.OnFormFieldEdited("Text1", "Alice"))
+            Measure(() => vm.OnFormFieldEdited(vm.PdfCoreDocument!.GetAcroForm()!.Fields.Single(), "Alice", oldValue: null))
                 .Should().BeLessThan(DirectInputBudget,
                     "form edits should mark state dirty without blocking on save or flattening");
 

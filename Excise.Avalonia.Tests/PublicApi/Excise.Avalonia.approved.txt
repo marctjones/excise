@@ -34,9 +34,8 @@ namespace Excise.Avalonia.Controls
     }
     public class FormFieldEditedEventArgs : System.EventArgs
     {
-        public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber) { }
-        public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber, string? oldValue) { }
-        public string FieldName { get; }
+        public FormFieldEditedEventArgs(Excise.Core.Document.PdfField field, string? newValue, int pageNumber, string? oldValue) { }
+        public Excise.Core.Document.PdfField Field { get; }
         public string? NewValue { get; }
         public string? OldValue { get; }
         public int PageNumber { get; }

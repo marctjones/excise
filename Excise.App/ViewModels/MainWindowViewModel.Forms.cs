@@ -486,17 +486,16 @@ public partial class MainWindowViewModel
     /// <summary>
     /// Called by MainWindow when PdfViewerControl raises FormFieldEdited.
     /// The viewer has already mutated the field value via PdfField.SetValue,
-    /// so all that remains is to mark the document dirty so the Save command
-    /// activates. The form-fill overlay reflects the new value already; the
-    /// underlying bitmap is left as-is (the user sees the text in the input
-    /// box, not a rasterized appearance, until they save and re-open).
+    /// so what remains is to mark the document dirty so the Save command
+    /// activates and to record the edit for Undo (#1660). The form-fill overlay
+    /// reflects the new value already; the underlying bitmap is left as-is (the
+    /// user sees the text in the input box, not a rasterized appearance, until
+    /// they save and re-open). The field itself identifies the edit, never its
+    /// name: a nameless field and two fields sharing one name are told apart
+    /// only by their dictionaries (#1865).
     /// </summary>
-    public void OnFormFieldEdited(string fieldName, string? newValue) =>
-        OnFormFieldEdited(fieldName, newValue, oldValue: null, recordUndo: false);
-
     /// <param name="oldValue">What the field held before; what Undo puts back.</param>
-    /// <param name="recordUndo">True when <paramref name="oldValue"/> is known, so the edit joins the undo stack (#1660).</param>
-    public void OnFormFieldEdited(string fieldName, string? newValue, string? oldValue, bool recordUndo)
+    public void OnFormFieldEdited(PdfField field, string? newValue, string? oldValue)
     {
         if (_pdfCoreDocument == null) return;
 
@@ -506,18 +505,15 @@ public partial class MainWindowViewModel
             return;
         }
 
-        SyncFormFieldValueToServiceDocument(fieldName, newValue);
+        ApplyFormFieldValue(field, newValue);
         FileState.FormFieldEditsCount++;
         NotifyFormDirtyStateChanged();
-        if (recordUndo)
-        {
-            _history.Push(
-                $"Edit field '{Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(fieldName)}'",
-                undo: () => ApplyFormFieldValueAsync(fieldName, oldValue, dirtyDelta: -1),
-                redo: () => ApplyFormFieldValueAsync(fieldName, newValue, dirtyDelta: +1));
-        }
-        _logger.LogInformation("Form field '{Field}' set to '{Value}'",
-            Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(fieldName), newValue);
+        var shownName = Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(field.FullName);
+        _history.Push(
+            $"Edit field '{shownName}'",
+            undo: () => ApplyFormFieldValueAsync(field, oldValue, dirtyDelta: -1),
+            redo: () => ApplyFormFieldValueAsync(field, newValue, dirtyDelta: +1));
+        _logger.LogInformation("Form field '{Field}' set to '{Value}'", shownName, newValue);
     }
 
     /// <summary>
@@ -716,52 +712,38 @@ public partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Undo/redo of a field edit: write the value into the save document, then rebuild
-    /// the viewer's document from it so the overlay shows what will be saved. Goes
-    /// through the sync helper, never <see cref="OnFormFieldEdited(string, string?, string?, bool)"/>,
+    /// Undo/redo of a field edit: write the value into the field, then rebuild the
+    /// viewer so the overlay shows what will be saved. Goes through
+    /// <see cref="ApplyFormFieldValue"/>, never <see cref="OnFormFieldEdited"/>,
     /// so replay cannot re-enter the history.
     /// </summary>
-    private async Task ApplyFormFieldValueAsync(string fieldName, string? value, int dirtyDelta)
+    private async Task ApplyFormFieldValueAsync(PdfField field, string? value, int dirtyDelta)
     {
-        SyncFormFieldValueToServiceDocument(fieldName, value);
+        ApplyFormFieldValue(field, value);
         FileState.FormFieldEditsCount = Math.Max(0, FileState.FormFieldEditsCount + dirtyDelta);
         NotifyFormDirtyStateChanged();
         RequestPreserveReadingPosition();
         await RefreshAfterDocumentMutationAsync();
     }
 
-    private void SyncFormFieldValueToServiceDocument(string fieldName, string? value)
+    private void ApplyFormFieldValue(PdfField field, string? value)
     {
-        var serviceForm = _documentService.GetCurrentDocument()?.GetAcroForm();
-        var serviceField = serviceForm?.FindField(fieldName);
-        if (serviceField == null) return;
-
         try
         {
-            if (!string.Equals(serviceField.Value, value, StringComparison.Ordinal))
-                serviceField.SetValue(value);
+            if (!string.Equals(field.Value, value, StringComparison.Ordinal))
+                field.SetValue(value);
         }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
         {
-            _logger.LogWarning(ex, "Failed to synchronize form field '{Field}' to save document",
-                Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(fieldName));
+            _logger.LogWarning(ex, "Failed to set form field '{Field}'",
+                Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(field.FullName));
 
             // #1671: an ArgumentException here is the field refusing text it
             // cannot represent — the saved file will hold the OLD value, and a
             // log line is not telling the user that.
             if (ex is ArgumentException)
-                OnFormFieldEditRejected(fieldName, ex.Message);
+                OnFormFieldEditRejected(field.FullName, ex.Message);
         }
-    }
-
-    private void SyncAllFormFieldValuesToServiceDocument()
-    {
-        var sourceForm = _pdfCoreDocument?.GetAcroForm();
-        var serviceForm = _documentService.GetCurrentDocument()?.GetAcroForm();
-        if (sourceForm == null || serviceForm == null) return;
-
-        foreach (var sourceField in sourceForm.Fields)
-            SyncFormFieldValueToServiceDocument(sourceField.FullName, sourceField.Value);
     }
 
     private async Task SaveFlattenedFormCopyAsync()
@@ -803,7 +785,6 @@ public partial class MainWindowViewModel
         if (document == null)
             return;
 
-        SyncAllFormFieldValuesToServiceDocument();
         using var flattenedCopy = PdfDocument.Open(document.SaveToBytes());
         ApplyPendingTypewriterText(flattenedCopy);
         flattenedCopy.FlattenAcroForm();

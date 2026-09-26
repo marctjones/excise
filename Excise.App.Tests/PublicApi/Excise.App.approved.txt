@@ -859,8 +859,7 @@ namespace Excise.App.ViewModels
                 "X",
                 "Y"})] System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>> strokes, int pageNumber) { }
         public void OnFormFieldEditRejected(string fieldName, string message) { }
-        public void OnFormFieldEdited(string fieldName, string? newValue) { }
-        public void OnFormFieldEdited(string fieldName, string? newValue, string? oldValue, bool recordUndo) { }
+        public void OnFormFieldEdited(Excise.Core.Document.PdfField field, string? newValue, string? oldValue) { }
         public void OnFormFieldRectDrawn(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
         public System.Threading.Tasks.Task OnShapeAnnotationRectDrawnAsync(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
         public void OnTypewriterTextBoundsChanged(System.Guid operationId, Excise.Core.Document.PdfRectangle rect, int pageNumber) { }

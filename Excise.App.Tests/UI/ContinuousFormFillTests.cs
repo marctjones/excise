@@ -54,21 +54,24 @@ public class ContinuousFormFillTests
             .Where(t => t.Classes.Contains("continuous-form-field") && t.IsEffectivelyVisible)
             .ToList();
 
-    private static async Task<TextBox> WaitForFieldOnPageAsync(
-        MainWindow window, PdfViewerControl viewer, string fieldName)
+    private static Task<TextBox> WaitForFieldOnPageAsync(
+        MainWindow window, PdfViewerControl viewer, string fieldName) =>
+        WaitForFieldInputAsync(window, viewer, fieldName,
+            t => ToolTip.GetTip(t) is string tip && tip.Contains(fieldName, StringComparison.Ordinal));
+
+    private static async Task<TextBox> WaitForFieldInputAsync(
+        MainWindow window, PdfViewerControl viewer, string what, Func<TextBox, bool> match)
     {
         TextBox? found = null;
         var deadline = DateTime.UtcNow.AddSeconds(15);
         while (DateTime.UtcNow < deadline && found == null)
         {
             window.UpdateLayout();
-            found = ContinuousFieldInputs(viewer).FirstOrDefault(t =>
-                ToolTip.GetTip(t) is string tip && tip.Contains(fieldName, StringComparison.Ordinal)
-                && t.Bounds.Height > 0);
+            found = ContinuousFieldInputs(viewer).FirstOrDefault(t => match(t) && t.Bounds.Height > 0);
             if (found == null) await Task.Delay(100);
         }
         found.Should().NotBeNull(
-            $"the continuous view must show a fillable input for '{fieldName}' (it showed none " +
+            $"the continuous view must show a fillable input for '{what}' (it showed none " +
             "before #1807: a form opened in the default view looked like a plain page)");
         return found!;
     }
@@ -93,7 +96,7 @@ public class ContinuousFormFillTests
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
             var edits = new System.Collections.Generic.List<(string Name, string? Value, int Page)>();
-            viewer.FormFieldEdited += (_, e) => edits.Add((e.FieldName, e.NewValue, e.PageNumber));
+            viewer.FormFieldEdited += (_, e) => edits.Add((e.Field.FullName, e.NewValue, e.PageNumber));
 
             // A field on page 1, then one on page 2: several pages are fillable at once, and
             // the edit event must name the field's own page, not the scroll anchor.
@@ -238,4 +241,177 @@ public class ContinuousFormFillTests
 
     private static string? FieldValue(MainWindowViewModel vm, string name) =>
         vm.PdfCoreDocument!.GetAcroForm()!.FindField(name)!.Value;
+
+    /// <summary>
+    /// Three fields a name cannot tell apart (#1865): one with no /T anywhere (the empty full
+    /// name, #1864) and two nameless kids of the field "Pair", which both take its name
+    /// (§12.7.3.2). Each widget carries its own /TU, which is the key qpdf reports them by.
+    /// </summary>
+    private static string WriteFieldsANameCannotTellApartPdf()
+    {
+        var objects = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R 6 0 R] >> >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> /Contents 4 0 R /Annots [5 0 R 9 0 R 10 0 R] >>",
+            "<< /Length 0 >>\nstream\n\nendstream",
+            "<< /Type /Annot /Subtype /Widget /FT /Tx /TU (nameless) /V (Nobody) /Rect [72 700 300 720] /P 3 0 R >>",
+            "<< /FT /Tx /T (Pair) /Kids [7 0 R 8 0 R] >>",
+            "<< /Parent 6 0 R /V (One) /Kids [9 0 R] >>",
+            "<< /Parent 6 0 R /V (Two) /Kids [10 0 R] >>",
+            "<< /Type /Annot /Subtype /Widget /Parent 7 0 R /TU (first) /Rect [72 600 300 620] /P 3 0 R >>",
+            "<< /Type /Annot /Subtype /Widget /Parent 8 0 R /TU (second) /Rect [72 500 300 520] /P 3 0 R >>",
+        };
+        var sb = new System.Text.StringBuilder("%PDF-1.7\n");
+        var offsets = new long[objects.Length];
+        for (var i = 0; i < objects.Length; i++)
+        {
+            offsets[i] = sb.Length;
+            sb.Append($"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+        }
+        var xref = sb.Length;
+        sb.Append($"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
+        foreach (var offset in offsets)
+            sb.Append($"{offset:D10} 00000 n \n");
+        sb.Append($"trailer << /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+
+        var path = Path.Combine(Path.GetTempPath(), $"excise-contform-names-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, System.Text.Encoding.Latin1.GetBytes(sb.ToString()));
+        return path;
+    }
+
+    /// <summary>
+    /// qpdf's own reading of the saved form: each widget's value keyed by its /TU, and
+    /// /NeedAppearances. Not excise's parser, which would read its own write back.
+    /// </summary>
+    private static (System.Collections.Generic.Dictionary<string, string?> ValueByTooltip, bool NeedAppearances)
+        QpdfFormFields(string pdf)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo("qpdf", $"--json=2 --json-key=acroform \"{pdf}\"")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        using var process = System.Diagnostics.Process.Start(psi)!;
+        // #1068/#1516: drain both pipes concurrently and bound the wait.
+        var stdout = process.StandardOutput.ReadToEndAsync();
+        var stderr = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(30000))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { }
+            throw new TimeoutException("qpdf did not exit within 30s (#1516).");
+        }
+        _ = stderr.GetAwaiter().GetResult();
+
+        using var json = System.Text.Json.JsonDocument.Parse(stdout.GetAwaiter().GetResult());
+        var acroform = json.RootElement.GetProperty("acroform");
+        var values = new System.Collections.Generic.Dictionary<string, string?>(StringComparer.Ordinal);
+        foreach (var field in acroform.GetProperty("fields").EnumerateArray())
+        {
+            // qpdf writes a text string as "u:<text>".
+            var value = field.GetProperty("value").GetString();
+            values[field.GetProperty("alternativename").GetString()!] =
+                value != null && value.StartsWith("u:", StringComparison.Ordinal) ? value[2..] : value;
+        }
+        return (values, acroform.GetProperty("needappearances").GetBoolean());
+    }
+
+    private static async Task FillAsync(MainWindow window, PdfViewerControl viewer, string shown, string typed)
+    {
+        var box = await WaitForFieldInputAsync(window, viewer, shown, t => t.Text == shown);
+        var centre = box.TranslatePoint(new Point(box.Bounds.Width / 2, box.Bounds.Height / 2), window)!.Value;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            window.MouseDown(centre, MouseButton.Left);
+            window.MouseUp(centre, MouseButton.Left);
+            box.SelectAll();
+            window.KeyTextInput(typed);
+            window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+        });
+        await Task.Delay(100);
+    }
+
+    /// <summary>
+    /// #1865: the edit reached the document by FULL NAME. The nameless field's edit found no
+    /// field, and an edit to the second "Pair" kid was written into the first one as well.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 120000)]
+    public async Task FieldsANameCannotTellApart_EachKeepTheirOwnValue_InTheSavedFile()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var path = WriteFieldsANameCannotTellApartPdf();
+        var saved = Path.Combine(Path.GetTempPath(), $"excise-contform-names-out-{Guid.NewGuid():N}.pdf");
+        var window = new MainWindow { Width = 1280, Height = 900 };
+        try
+        {
+            var vm = MainWindowViewModelTestFactory.Create();
+            window.DataContext = vm;
+            window.Show();
+            await Task.Delay(200);
+            await vm.LoadDocumentAsync(path);
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+
+            await FillAsync(window, viewer, "Nobody", "Zulu1");
+            await FillAsync(window, viewer, "Two", "Yankee2");
+            await vm.SaveFileAsAsync(saved);
+
+            var (values, needAppearances) = QpdfFormFields(saved);
+            values.Should().Equal(new System.Collections.Generic.Dictionary<string, string?>
+            {
+                ["nameless"] = "Zulu1",
+                ["first"] = "One",
+                ["second"] = "Yankee2",
+            }, "each edit belongs to the field the user typed into, and no other");
+            needAppearances.Should().BeTrue(
+                "a field read from a file is not redrawn; the saved form asks the reader to redraw it");
+        }
+        finally
+        {
+            window.Close();
+            try { File.Delete(path); } catch { }
+            try { File.Delete(saved); } catch { }
+        }
+    }
+
+    /// <summary>
+    /// #1865: Undo put the old value back by FULL NAME, so undoing the nameless field did
+    /// nothing and undoing the second "Pair" kid overwrote the first.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 120000)]
+    public async Task FieldsANameCannotTellApart_UndoPutsBackEachOwnValue_InTheSavedFile()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var path = WriteFieldsANameCannotTellApartPdf();
+        var saved = Path.Combine(Path.GetTempPath(), $"excise-contform-names-undo-{Guid.NewGuid():N}.pdf");
+        var window = new MainWindow { Width = 1280, Height = 900 };
+        try
+        {
+            var vm = MainWindowViewModelTestFactory.Create();
+            window.DataContext = vm;
+            window.Show();
+            await Task.Delay(200);
+            await vm.LoadDocumentAsync(path);
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+
+            await FillAsync(window, viewer, "Nobody", "Zulu1");
+            await FillAsync(window, viewer, "Two", "Yankee2");
+            await vm.UndoCommand.Execute();
+            await vm.UndoCommand.Execute();
+            await vm.SaveFileAsAsync(saved);
+
+            QpdfFormFields(saved).ValueByTooltip.Should().Equal(new System.Collections.Generic.Dictionary<string, string?>
+            {
+                ["nameless"] = "Nobody",
+                ["first"] = "One",
+                ["second"] = "Two",
+            }, "undoing both edits must put back what each field held, and touch no other field");
+        }
+        finally
+        {
+            window.Close();
+            try { File.Delete(path); } catch { }
+            try { File.Delete(saved); } catch { }
+        }
+    }
 }
