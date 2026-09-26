@@ -251,6 +251,40 @@ internal static class RecoveryFixtureBuilder
     }
 
     /// <summary>
+    /// #1872 — an image XObject (object 8, <see cref="SampleImage"/>) whose
+    /// samples spell <paramref name="token"/>, drawn inside an optional-content
+    /// span whose group (object 7) is OFF by default. "VISIBLE" is page text at
+    /// y 700; the image is drawn at 72 400.
+    /// </summary>
+    internal static byte[] ImageInHiddenLayer(string token) => Build(
+        "BT /F1 12 Tf 72 700 Td (VISIBLE) Tj ET\n/OC /MC0 BDC q 100 0 0 100 72 400 cm /Im0 Do Q EMC\n",
+        extraObjects: new List<Obj> { new("<< /Type /OCG /Name (Draft) >>"), SampleImage(token) },
+        catalogExtra: "/OCProperties << /OCGs [7 0 R] /D << /OFF [7 0 R] >> >>",
+        resourcesExtra: "/Properties << /MC0 7 0 R >> /XObject << /Im0 8 0 R >>");
+
+    /// <summary>
+    /// #1873 — "VISIBLE" at y 700, and a decodable form XObject (object 7)
+    /// drawing <paramref name="token"/> that is filed in the page's
+    /// <c>/XObject</c> as <c>/Fx0</c> and that no content stream invokes.
+    /// </summary>
+    internal static byte[] UndrawnForm(string token)
+    {
+        var form = Encoding.ASCII.GetBytes($"BT /F1 12 Tf 72 500 Td ({token}) Tj ET");
+        return Build("BT /F1 12 Tf 72 700 Td (VISIBLE) Tj ET\n",
+            extraObjects: new List<Obj>
+            {
+                new("<< /Type /XObject /Subtype /Form /BBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> " +
+                    $"/Length {form.Length} >>", form),
+            },
+            resourcesExtra: "/XObject << /Fx0 7 0 R >>");
+    }
+
+    /// <summary>A one-row 8-bit DeviceGray image whose samples are the ASCII of <paramref name="samples"/>.</summary>
+    internal static Obj SampleImage(string samples, string extra = "") =>
+        new($"<< /Type /XObject /Subtype /Image /Width {samples.Length} /Height 1 /ColorSpace /DeviceGray " +
+            $"/BitsPerComponent 8 {extra} /Length {samples.Length} >>", Encoding.ASCII.GetBytes(samples));
+
+    /// <summary>
     /// #1608 — a page drawing a REPLACEMENT image while the same-size original
     /// stays in the file, referenced by nothing. The shape of an editor that
     /// swaps an image rather than removing it.
@@ -379,8 +413,9 @@ internal static class RecoveryFixtureBuilder
     }
 
     /// <summary>
-    /// Assemble a one-page PDF. Object numbers are fixed: 1 catalog, 2 pages,
-    /// 3 page, 4 contents, 5 font, 6 unused, 7+ extras.
+    /// Assemble a PDF. Object numbers are fixed: 1 catalog, 2 pages, 3 page,
+    /// 4 contents, 5 font, 6 unused, 7+ extras. <paramref name="extraPages"/>
+    /// are object numbers among the extras, appended to <c>/Kids</c>.
     /// </summary>
     internal static byte[] Build(
         string content,
@@ -388,12 +423,15 @@ internal static class RecoveryFixtureBuilder
         string pageExtra = "",
         string catalogExtra = "",
         string resourcesExtra = "",
-        string extraResources = "")
+        string extraResources = "",
+        int[]? extraPages = null)
     {
+        extraPages ??= Array.Empty<int>();
         var objects = new List<Obj>
         {
             new($"<< /Type /Catalog /Pages 2 0 R {catalogExtra} >>"),
-            new("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            new($"<< /Type /Pages /Kids [3 0 R{string.Concat(extraPages.Select(n => $" {n} 0 R"))}] " +
+                $"/Count {1 + extraPages.Length} >>"),
             new($"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
                 $"/Resources << /Font << /F1 5 0 R >> {resourcesExtra} {extraResources} >> {pageExtra} >>"),
             new($"<< /Length {Encoding.ASCII.GetByteCount(content)} >>",
