@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Tests.Redaction.Recovery;
 using Excise.Core.Text.Segmentation;
 using Excise.TestSupport;
 using Xunit;
@@ -820,6 +821,45 @@ public class RedactionProfileTests
                 RedactionOptions.Default with { RemoveHiddenLayerContent = false });
             SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), trap.Token).Should().NotBeEmpty();
         }
+    }
+
+    /// <summary>
+    /// #1866: a form excise cannot decode, drawn only inside a hidden layer.
+    /// The page-level pass drops the span and its <c>Do</c>, so the text walk
+    /// that reports undecodable forms (#1863) never reaches it; the form stays
+    /// in the page's resources. The hidden-layer pass skipped it in silence.
+    /// </summary>
+    [Theory]
+    [InlineData("RedactText")]
+    [InlineData("RedactArea")]
+    public void AnUndecodableFormInAHiddenLayer_IsKeptAndReported(string entry)
+    {
+        const string token = "HIDDENUNDECODABLETRAP";
+        var form = System.Text.Encoding.ASCII.GetBytes($"BT /F1 12 Tf 72 500 Td ({token}) Tj ET");
+        var input = RecoveryFixtureBuilder.Build(
+            "BT /F1 12 Tf 72 700 Td (VISIBLE) Tj ET\n/OC /MC0 BDC q /Fx0 Do Q EMC\n",
+            extraObjects: new List<RecoveryFixtureBuilder.Obj>
+            {
+                new("<< /Type /OCG /Name (Draft) >>"),
+                new("<< /Type /XObject /Subtype /Form /BBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> " +
+                    $"/Filter /Nonexistent /Length {form.Length} >>", form),
+            },
+            catalogExtra: "/OCProperties << /OCGs [7 0 R] /D << /OFF [7 0 R] >> >>",
+            resourcesExtra: "/Properties << /MC0 7 0 R >> /XObject << /Fx0 8 0 R >>");
+        using var doc = PdfDocument.Open(input);
+
+        var report = entry == "RedactText"
+            ? doc.RedactText("VISIBLE", RedactionOptions.Default)
+            : doc.GetPage(1).RedactAreaWithReport(new PdfRectangle(60, 690, 200, 720), RedactionOptions.Default);
+
+        report.Removals.Should().Contain(r => r.Feature.Contains("hidden optional-content span"));
+        report.Carriers.Should().ContainSingle(c => c.Carrier == "form XObject 8 0 R")
+            .Which.Should().Match<CarrierResult>(c => !c.Scrubbed
+                && c.RefusedReason!.Contains("/Filter /Nonexistent could not be decoded")
+                && c.RefusedReason.Contains("hidden-layer pass"));
+        report.IsCleanSuccess.Should().BeFalse("a form the hidden-layer pass could not read was left in place");
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), token).Should().NotBeEmpty(
+            "the form is kept and reported, never stripped or skipped in silence");
     }
 
     /// <summary>

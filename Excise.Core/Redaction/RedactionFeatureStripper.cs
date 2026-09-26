@@ -78,9 +78,9 @@ internal static class RedactionFeatureStripper
     /// <remarks>
     /// ⚠️ Never throws for a malformed document: a removal that cannot be made
     /// is skipped and the row is simply absent, exactly as if the feature were
-    /// not there. The exception is the form flatten, whose promise is that no
-    /// interactive object survives: a form it could not flatten is added to
-    /// <paramref name="refusals"/> (#1857).
+    /// not there. The exceptions are the form flatten, whose promise is that no
+    /// interactive object survives (#1857), and a form XObject the hidden-layer
+    /// pass cannot read (#1866): each is added to <paramref name="refusals"/>.
     /// </remarks>
     internal static IReadOnlyList<RedactedFeatureRemoval> Apply(
         PdfDocument document, RedactionOptions options, ICollection<CarrierResult> refusals)
@@ -148,7 +148,7 @@ internal static class RedactionFeatureStripper
         // either answer on its own.
         if (options.RemoveHiddenLayerContent && options.IncludeHiddenLayers)
         {
-            var (spans, groups) = RemoveHiddenOptionalContent(document);
+            var (spans, groups) = RemoveHiddenOptionalContent(document, refusals);
             Row("hidden optional-content span(s)", spans,
                 "content in layers that are OFF in the default configuration");
             Row("hidden optional-content group(s)", groups);
@@ -658,7 +658,8 @@ internal static class RedactionFeatureStripper
     /// Recurse into the VISIBLE form XObjects of <paramref name="xobjects"/>
     /// and filter their hidden spans in place. A form whose own <c>/OC</c> is
     /// hidden is skipped — the <c>Do</c> that draws it is already dropped, and
-    /// it may be drawn from elsewhere too.
+    /// it may be drawn from elsewhere too. A form that cannot be decoded or
+    /// parsed is kept and added to <paramref name="refusals"/> once (#1866).
     /// </summary>
     /// <remarks>
     /// ⚠️ Rewrites the form's stream, but through the #1093 source-preserving
@@ -670,6 +671,7 @@ internal static class RedactionFeatureStripper
         PdfDocument document,
         PdfDictionary? xobjects,
         HashSet<PdfDictionary> hiddenGroups,
+        ICollection<CarrierResult> refusals,
         int depth)
     {
         if (xobjects == null || depth > 8) return 0;
@@ -690,26 +692,26 @@ internal static class RedactionFeatureStripper
             var nested = Resolve(document, resources?.GetOptional("XObject") ?? PdfNull.Instance)
                 as PdfDictionary;
 
-            removed += RemoveHiddenSpansInForms(document, nested, hiddenGroups, depth + 1);
+            removed += RemoveHiddenSpansInForms(document, nested, hiddenGroups, refusals, depth + 1);
 
-            ContentStream parsed;
-            byte[] formBytes;
-            try
+            var unreadable = form.IsFiltered && !form.TryEnsureDecoded()
+                ? $"its /Filter {string.Join(" ", form.Filters.Select(f => "/" + f))} could not be decoded"
+                : null;
+            ContentStream? parsed = null;
+            // #1093: source spans, so the operators we KEEP are copied verbatim
+            // instead of round-tripping through this class's escaping and number
+            // formatting, as the page path does.
+            if (unreadable == null)
+                try { parsed = new ContentStreamParser(form.DecodedData, null) { TrackSourceSpans = true }.Parse(); }
+                catch (Exception ex) when (ex is not OutOfMemoryException) { unreadable = "its content could not be parsed"; }
+            if (parsed == null)
             {
-                formBytes = form.DecodedData;
-                // #1093: source spans, so the operators we KEEP are copied
-                // verbatim instead of round-tripping through this class's
-                // escaping and number formatting. The page path already does
-                // this (GetContentStream(trackSourceSpans: true)); a form is
-                // no less able to hold an inline image or a string this
-                // writer would reformat.
-                var parser = new Excise.Core.Content.ContentStreamParser(formBytes, null)
-                {
-                    TrackSourceSpans = true,
-                };
-                parsed = parser.Parse();
+                // #1866: kept and reported once, never skipped in silence.
+                var row = new CarrierResult($"form XObject {form.ObjectNumber ?? 0} {form.GenerationNumber ?? 0} R",
+                    false, unreadable + ", so the hidden-layer pass could not examine it and left it in place");
+                if (!refusals.Contains(row)) refusals.Add(row);
+                continue;
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException) { continue; }
 
             var (kept, count) =
                 FilterHiddenSpans(document, parsed.Operators, properties, nested, hiddenGroups);
@@ -722,7 +724,7 @@ internal static class RedactionFeatureStripper
                     {
                         SourceBytes = parsed.SourceBytes,
                         SourceArrayBoundaries = parsed.SourceArrayBoundaries,
-                    }, formBytes);
+                    }, parsed.SourceBytes!);
                 removed += count;
             }
             catch (Exception ex) when (ex is not OutOfMemoryException) { /* leave as-is */ }
@@ -742,7 +744,8 @@ internal static class RedactionFeatureStripper
     /// <c>SetContentStream</c>, the same shape as
     /// <see cref="ObstructionStripper"/> (CLAUDE.md "One walk, many sinks").
     /// </remarks>
-    private static (int Spans, int Groups) RemoveHiddenOptionalContent(PdfDocument document)
+    private static (int Spans, int Groups) RemoveHiddenOptionalContent(
+        PdfDocument document, ICollection<CarrierResult> refusals)
     {
         // No /OCProperties means no optional content and nothing to do — and,
         // importantly, no cost on the overwhelming majority of documents.
@@ -772,7 +775,7 @@ internal static class RedactionFeatureStripper
             // we would have removed the page-level spans and left the ones one
             // level down, which is the kind of partial guarantee this project
             // treats as worse than none.
-            spans += RemoveHiddenSpansInForms(document, xobjects, hiddenGroups, 0);
+            spans += RemoveHiddenSpansInForms(document, xobjects, hiddenGroups, refusals, 0);
 
             if (pageSpans == 0) continue;
             spans += pageSpans;
