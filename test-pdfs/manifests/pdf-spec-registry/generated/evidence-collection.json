@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1439,
-  "indexedContentSha256": "c9620c1538b14921973849a90771e6d4602225c018b2e700142a2633cb9f36c6",
+  "indexedFileCount": 1440,
+  "indexedContentSha256": "9630109d19346552fad660cdbae9b98f8d8694abe51ad73513daea258080e178",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -57199,16 +57199,6 @@
           ]
         },
         {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Typewriter.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "screen",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -57516,7 +57506,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 60
+      "candidateReferenceCount": 59
     },
     {
       "id": "pdf.20.annotation.subtype-023",
@@ -58987,7 +58977,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 218
+      "candidateReferenceCount": 219
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -64761,7 +64751,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 211
+      "candidateReferenceCount": 212
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -71276,7 +71266,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 158
+      "candidateReferenceCount": 159
     },
     {
       "id": "pdf.20.profile.pdfa",

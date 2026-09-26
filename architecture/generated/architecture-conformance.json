@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "32367e8b1821783698132a9798c2809d16ff127a",
+  "sourceRevision": "f856dd88792a567d3b04866d6d95709c7fd8f1ef",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8071,
+    "retainedSymbols": 8069,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -38,14 +38,14 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 745,
+      "references": 739,
       "typeDependencyCount": 76,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.App.Services.PdfDocumentService",
-          "references": 122
+          "references": 118
         }
       ]
     },
