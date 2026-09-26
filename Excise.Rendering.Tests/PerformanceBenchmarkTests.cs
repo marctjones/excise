@@ -214,7 +214,7 @@ public class PerformanceBenchmarkTests
         // measured document, so one-time JIT and static-table allocation does
         // not count against the budget.
         using (var warm = PdfDocument.Open(path))
-            warm.RedactText("ZzzzNoSuchStringZzzz", drawBlackRect: false);
+            warm.RedactText("ZzzzNoSuchStringZzzz", RedactionOptions.Default with { DrawBox = false });
 
         const double CeilingMiB = 2048;
         const double FloorMiB = 100;
@@ -222,7 +222,7 @@ public class PerformanceBenchmarkTests
         using var document = PdfDocument.Open(path);
         var allocatedBefore = GC.GetAllocatedBytesForCurrentThread();
         var sw = Stopwatch.StartNew();
-        var matches = document.RedactText("the").VerifiedRemovals;
+        var matches = document.RedactText("the", RedactionOptions.Default).VerifiedRemovals;
         sw.Stop();
         var allocatedMiB = (GC.GetAllocatedBytesForCurrentThread() - allocatedBefore) / (1024.0 * 1024.0);
 

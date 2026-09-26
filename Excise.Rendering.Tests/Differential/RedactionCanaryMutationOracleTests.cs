@@ -42,7 +42,7 @@ public sealed class RedactionCanaryMutationOracleTests
 
             using (var doc = PdfDocument.Open(File.ReadAllBytes(input)))
             {
-                doc.RedactText(Canary).VerifiedRemovals.Should().Be(1);
+                doc.RedactText(Canary, RedactionOptions.Default).VerifiedRemovals.Should().Be(1);
                 doc.Save(output);
             }
 

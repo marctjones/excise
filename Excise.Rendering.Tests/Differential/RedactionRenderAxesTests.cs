@@ -78,7 +78,7 @@ public class RedactionRenderAxesTests
             File.WriteAllBytes(input, MultiOccurrenceFixture(10));
             using (var doc = PdfDocument.Open(File.ReadAllBytes(input)))
             {
-                doc.RedactText(Secret);
+                doc.RedactText(Secret, RedactionOptions.Default);
                 using var fs = File.Create(output);
                 doc.Save(fs);
             }
@@ -107,7 +107,7 @@ public class RedactionRenderAxesTests
             File.WriteAllBytes(input, Fixture($"KEEP AAA {Secret} keep BBB"));
             using (var doc = PdfDocument.Open(File.ReadAllBytes(input)))
             {
-                doc.RedactText(Secret);           // excise glyph-level removal + black box
+                doc.RedactText(Secret, RedactionOptions.Default);           // excise glyph-level removal + black box
                 using var fs = File.Create(output);
                 doc.Save(fs);
             }
@@ -147,7 +147,7 @@ public class RedactionRenderAxesTests
         {
             using (var doc = PdfDocument.Open(input))
             {
-                var report = doc.RedactText(Jbig2Secret);
+                var report = doc.RedactText(Jbig2Secret, RedactionOptions.Default);
                 report.ImageRegionsRedacted.Should().BeGreaterThan(0,
                     "the requested scan region must be destroyed in place");
                 report.ImagesDroppedWhole.Should().Be(0,

@@ -71,7 +71,7 @@ public class IndirectXObjectResourceRedactionTests
     private static byte[] RedactAndSave(byte[] pdf, string term, out int reported)
     {
         using var doc = PdfDocument.Open(pdf);
-        reported = doc.RedactText(term).VerifiedRemovals;
+        reported = doc.RedactText(term, RedactionOptions.Default).VerifiedRemovals;
         using var ms = new MemoryStream();
         doc.Save(ms);
         return ms.ToArray();

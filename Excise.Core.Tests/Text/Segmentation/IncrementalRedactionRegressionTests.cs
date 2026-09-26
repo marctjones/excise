@@ -36,7 +36,7 @@ public sealed class IncrementalRedactionRegressionTests
         beforeText.Should().Contain("CURRENTREVISIONSECRET");
         beforeText.Should().NotContain("OLDREVISIONSECRET");
 
-        doc.RedactText("CURRENTREVISIONSECRET", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+        doc.RedactText("CURRENTREVISIONSECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
 
         var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
         saved.Should().NotContain("CURRENTREVISIONSECRET");
@@ -72,7 +72,7 @@ public sealed class IncrementalRedactionRegressionTests
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).GetAnnotations().Should().ContainSingle(a => a.Contents == "CURRENTANNOTREVISIONSECRET");
 
-        doc.GetPage(1).RedactArea(new PdfRectangle(95, 645, 265, 685));
+        doc.GetPage(1).RedactArea(new PdfRectangle(95, 645, 265, 685), RedactionOptions.Default with { DrawBox = false });
 
         var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
         saved.Should().NotContain("CURRENTANNOTREVISIONSECRET");

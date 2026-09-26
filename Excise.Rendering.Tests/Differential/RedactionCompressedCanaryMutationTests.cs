@@ -25,7 +25,7 @@ public sealed class RedactionCompressedCanaryMutationTests
         byte[] cleanOutput;
         using (var document = PdfDocument.Open(input))
         {
-            document.RedactText(Canary).VerifiedRemovals.Should().Be(1);
+            document.RedactText(Canary, RedactionOptions.Default).VerifiedRemovals.Should().Be(1);
             cleanOutput = document.SaveToBytes();
         }
 

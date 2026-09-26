@@ -122,7 +122,7 @@ public class RedactedFormAppearanceConformanceTests
     public void RedactingATerm_WhoseAppearanceIsRewritten_LeavesNeedAppearancesUnset()
     {
         using var doc = PdfDocument.Open(BuildFieldWithAppearance(declaresPdfA: false));
-        doc.RedactText("SECRET");
+        doc.RedactText("SECRET", RedactionOptions.Default);
 
         using var after = SaveAndReopen(doc);
 
@@ -158,7 +158,7 @@ public class RedactedFormAppearanceConformanceTests
         using var doc = PdfDocument.Open(BuildFieldWithAppearance(declaresPdfA: true));
         doc.TargetsPdfA.Should().BeTrue("the fixture's XMP carries the pdfaid identifier");
 
-        doc.GetPage(1).RedactArea(new PdfRectangle(20, 40, 220, 60));
+        doc.GetPage(1).RedactArea(new PdfRectangle(20, 40, 220, 60), RedactionOptions.Default with { DrawBox = false });
 
         doc.TargetsPdfA.Should().BeTrue(
             "#1507: the default carrier strip must leave the pdfaid identification in place — " +
@@ -192,7 +192,7 @@ public class RedactedFormAppearanceConformanceTests
 
         // Default call, exactly like the PDF/A sibling above, so the only
         // difference between the two tests is the document's own declaration.
-        doc.GetPage(1).RedactArea(new PdfRectangle(20, 40, 220, 60));
+        doc.GetPage(1).RedactArea(new PdfRectangle(20, 40, 220, 60), RedactionOptions.Default with { DrawBox = false });
 
         using var after = SaveAndReopen(doc);
 

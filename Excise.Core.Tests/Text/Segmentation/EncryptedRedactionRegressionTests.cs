@@ -36,7 +36,7 @@ public sealed class EncryptedRedactionRegressionTests
         doc.IsEncrypted.Should().BeTrue();
         string.Concat(doc.GetPage(1).Letters.Select(l => l.Value)).Should().Contain(secret);
 
-        doc.RedactText(secret, drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+        doc.RedactText(secret, RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
 
         // #643: the redacted copy of an encrypted source saves ENCRYPTED —
         // same permissions, same password (these RC4 fixtures upgrade to

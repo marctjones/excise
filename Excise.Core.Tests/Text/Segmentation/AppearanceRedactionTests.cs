@@ -79,7 +79,7 @@ public class AppearanceRedactionTests
         // guard: the appearance really draws the term before redaction.
         AppearanceText(doc).Should().Contain("SECRET").And.Contain("Jones");
 
-        doc.RedactText("SECRET");
+        doc.RedactText("SECRET", RedactionOptions.Default);
 
         using var ms = new System.IO.MemoryStream();
         doc.Save(ms);

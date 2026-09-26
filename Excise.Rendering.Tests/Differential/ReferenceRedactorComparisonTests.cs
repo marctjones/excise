@@ -103,7 +103,7 @@ public class ReferenceRedactorComparisonTests
 
                 using (var doc = PdfDocument.Open(File.ReadAllBytes(path!)))
                 {
-                    doc.RedactText(term);
+                    doc.RedactText(term, RedactionOptions.Default);
                     doc.Save(exOut);
                 }
 

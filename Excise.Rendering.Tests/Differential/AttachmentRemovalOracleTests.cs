@@ -122,17 +122,17 @@ public sealed class AttachmentRemovalOracleTests : IDisposable
             case "safe-copy (GUI)":
                 // What RedactionWorkflowService does: area passes, then the
                 // shared safety policy with its defaults.
-                document.GetPage(1).RedactArea(box);
+                document.GetPage(1).RedactArea(box, RedactionOptions.Default with { DrawBox = false });
                 RedactedCopySafetyPolicy.Evaluate(document, RedactedCopySafetyRequest.ForAreas(
                     new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, box), "Visible") },
                     RedactionOptions.Default))
                     .AttachmentResults.Should().HaveCount(3, "the report names every removed file");
                 break;
             case "RedactText (CLI, batch, scripting)":
-                document.RedactText("Visible").Attachments.Should().HaveCount(3);
+                document.RedactText("Visible", RedactionOptions.Default).Attachments.Should().HaveCount(3);
                 break;
             case "RedactArea":
-                document.GetPage(1).RedactArea(box);
+                document.GetPage(1).RedactArea(box, RedactionOptions.Default with { DrawBox = false });
                 break;
             default:
                 document.ScrubMetadata(scrubAttachments: true);

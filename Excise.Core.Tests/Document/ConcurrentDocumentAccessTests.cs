@@ -158,7 +158,7 @@ public class ConcurrentDocumentAccessTests
             {
                 gate.SignalAndWait();
                 using var doc = PdfDocument.Open(job.Bytes);
-                int removed = doc.RedactText(job.Secret).VerifiedRemovals;
+                int removed = doc.RedactText(job.Secret, RedactionOptions.Default).VerifiedRemovals;
                 if (removed <= 0)
                     leaks.Enqueue($"{job.Secret}: RedactText reported {removed} matches");
 

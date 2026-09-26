@@ -206,7 +206,7 @@ public class XfaFormCalcRedactionTests : IDisposable
         var path = Path.Combine(Path.GetTempPath(), $"excise-fc-redact-{Guid.NewGuid():N}.pdf");
         MutoolTextExtractor.ExtractPage(SaveCopy(document, path), 1).Should().Contain(Secret, "it is on the page before redaction");
 
-        document.RedactText(Secret);
+        document.RedactText(Secret, RedactionOptions.Default);
         var redacted = Path.Combine(Path.GetTempPath(), $"excise-fc-redacted-{Guid.NewGuid():N}.pdf");
         document.Save(redacted);
         _temp.Add(redacted);

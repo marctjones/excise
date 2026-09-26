@@ -45,7 +45,7 @@ public class PdfDocumentRedactionExtensionsTests
     [Fact]
     public void RedactText_NullDocument_ThrowsArgumentNullException()
     {
-        var action = () => PdfDocumentRedactionExtensions.RedactText(null!, "test").VerifiedRemovals;
+        var action = () => PdfDocumentRedactionExtensions.RedactText(null!, "test", RedactionOptions.Default).VerifiedRemovals;
 
         action.Should().Throw<ArgumentNullException>().WithParameterName("document");
     }
@@ -55,7 +55,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello) Tj ET");
 
-        var result = doc.RedactText("").VerifiedRemovals;
+        var result = doc.RedactText("", RedactionOptions.Default).VerifiedRemovals;
 
         result.Should().Be(0);
     }
@@ -65,7 +65,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello) Tj ET");
 
-        var result = doc.RedactText(null!).VerifiedRemovals;
+        var result = doc.RedactText(null!, RedactionOptions.Default).VerifiedRemovals;
 
         result.Should().Be(0);
     }
@@ -75,7 +75,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("");
 
-        var result = doc.RedactText("test").VerifiedRemovals;
+        var result = doc.RedactText("test", RedactionOptions.Default).VerifiedRemovals;
 
         result.Should().Be(0);
     }
@@ -85,7 +85,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("q 0 0 0 rg 100 100 50 50 re f Q");
 
-        var result = doc.RedactText("Hello").VerifiedRemovals;
+        var result = doc.RedactText("Hello", RedactionOptions.Default).VerifiedRemovals;
 
         result.Should().Be(0);
     }
@@ -96,7 +96,7 @@ public class PdfDocumentRedactionExtensionsTests
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello World) Tj ET");
 
         var originalPageOps = doc.GetPage(1).GetContentStream().Count;
-        var result = doc.RedactText("Hello", drawBlackRect: true).VerifiedRemovals;
+        var result = doc.RedactText("Hello", RedactionOptions.Default with { DrawBox = true }).VerifiedRemovals;
 
         var newPageOps = doc.GetPage(1).GetContentStream().Count;
         if (result > 0)
@@ -110,7 +110,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello World) Tj ET");
 
-        var result = doc.RedactText("Hello", drawBlackRect: false).VerifiedRemovals;
+        var result = doc.RedactText("Hello", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals;
 
         if (result > 0)
         {
@@ -124,7 +124,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello) Tj ET");
 
-        var resultLower = doc.RedactText("hello", caseSensitive: true).VerifiedRemovals;
+        var resultLower = doc.RedactText("hello", RedactionOptions.Default with { CaseSensitive = true }).VerifiedRemovals;
 
         resultLower.Should().Be(0);
     }
@@ -134,7 +134,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello) Tj ET");
 
-        var resultLower = doc.RedactText("hello", caseSensitive: false).VerifiedRemovals;
+        var resultLower = doc.RedactText("hello", RedactionOptions.Default).VerifiedRemovals;
 
         resultLower.Should().BeGreaterThanOrEqualTo(0);
     }
@@ -145,7 +145,7 @@ public class PdfDocumentRedactionExtensionsTests
         var contentWithCurlyQuote = "BT /F1 12 Tf 100 700 Td (It's) Tj ET";
         var doc = OpenDoc(contentWithCurlyQuote);
 
-        var result = doc.RedactText("It's", caseSensitive: false).VerifiedRemovals;
+        var result = doc.RedactText("It's", RedactionOptions.Default).VerifiedRemovals;
 
         result.Should().BeGreaterThanOrEqualTo(0);
     }
@@ -186,7 +186,7 @@ public class PdfDocumentRedactionExtensionsTests
 
         var doc = PdfDocument.Open(new MemoryStream(Encoding.Latin1.GetBytes(sb.ToString())));
 
-        var result = doc.RedactText("Hello").VerifiedRemovals;
+        var result = doc.RedactText("Hello", RedactionOptions.Default).VerifiedRemovals;
 
         result.Should().BeGreaterThanOrEqualTo(0);
     }
@@ -196,7 +196,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello   World) Tj ET");
 
-        var result = doc.RedactText("Hello World").VerifiedRemovals;
+        var result = doc.RedactText("Hello World", RedactionOptions.Default).VerifiedRemovals;
 
         result.Should().BeGreaterThanOrEqualTo(0);
     }
@@ -478,7 +478,7 @@ public class PdfDocumentRedactionExtensionsTests
             .FindTextMatches(page.Letters, "styles", false).Count);
         raw.Should().Be(2,
             "normal within-word glyph-bound gaps must not be treated as whitespace (#1198)");
-        doc.RedactText("styles", drawBlackRect: false).VerifiedRemovals.Should().Be(2,
+        doc.RedactText("styles", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(2,
             "both visible occurrences must be structurally removed (#1198)");
         doc.GetPage(1).Text.Should().NotContain("styles", "the first visible occurrence must be structurally removed");
         doc.GetPage(2).Text.Should().NotContain("styles", "the second visible occurrence must be structurally removed");
@@ -527,7 +527,7 @@ public class PdfDocumentRedactionExtensionsTests
             "BT /F1 1 Tf 10 0 0 10 50 700 Tm " +
             "(your target) Tj 0 -0.95 Td (remote line survives) Tj ET");
 
-        doc.RedactText("your", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+        doc.RedactText("your", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
 
         doc.GetPage(1).Text.Should().NotContain("your");
         doc.GetPage(1).Text.Should().Contain("remote line survives");
@@ -538,7 +538,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Test) Tj ET");
 
-        var action = () => doc.RedactText("Test").VerifiedRemovals;
+        var action = () => doc.RedactText("Test", RedactionOptions.Default).VerifiedRemovals;
 
         action.Should().NotThrow();
     }
@@ -548,7 +548,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello) Tj ET");
 
-        var result = doc.RedactText("Hello").VerifiedRemovals;
+        var result = doc.RedactText("Hello", RedactionOptions.Default).VerifiedRemovals;
 
         result.Should().BeGreaterThanOrEqualTo(0);
     }
@@ -558,7 +558,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello) Tj ET");
 
-        var result = doc.RedactText("Hello", strategy: GlyphRemovalStrategy.AnyOverlap).VerifiedRemovals;
+        var result = doc.RedactText("Hello", RedactionOptions.Default).VerifiedRemovals;
 
         result.Should().BeGreaterThanOrEqualTo(0);
     }
@@ -568,7 +568,7 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello) Tj ET");
 
-        var result = doc.RedactText("Nonexistent").VerifiedRemovals;
+        var result = doc.RedactText("Nonexistent", RedactionOptions.Default).VerifiedRemovals;
 
         result.Should().Be(0);
     }

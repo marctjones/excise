@@ -85,7 +85,7 @@ public class NamedMarkedContentCarrierTests
     {
         using var pdf = PdfDocument.Open(BuildPdf(twoSpans: true));
 
-        var report = pdf.RedactText(First);
+        var report = pdf.RedactText(First, RedactionOptions.Default);
 
         report.Carriers.Should().Contain(
             c => c.RefusedReason != null && c.RefusedReason.Contains("#1599"),
@@ -139,7 +139,7 @@ public class NamedMarkedContentCarrierTests
             run.Max(l => l.GlyphRectangle.Right) + 1,
             run.Max(l => l.GlyphRectangle.Top) + 1).Normalize();
 
-        page.RedactArea(area, GlyphRemovalStrategy.AnyOverlap);
+        page.RedactArea(area, RedactionOptions.Default with { DrawBox = false });
     }
 
     private static byte[] Save(PdfDocument pdf)

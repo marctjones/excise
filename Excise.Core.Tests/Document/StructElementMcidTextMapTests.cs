@@ -127,7 +127,7 @@ public class StructElementMcidTextMapTests
         var elements = Descendants(doc.GetStructureTree()).ToList();
         Walk(doc, elements).Count(t => t.Contains("REDACTEDWORD")).Should().BeGreaterThanOrEqualTo(2);
 
-        doc.RedactText("REDACTEDWORD", drawBlackRect: false).VerifiedRemovals.Should().Be(2);
+        doc.RedactText("REDACTEDWORD", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(2);
 
         var after = Walk(doc, elements);
         after.Should().NotContain(t => t.Contains("REDACTEDWORD"),

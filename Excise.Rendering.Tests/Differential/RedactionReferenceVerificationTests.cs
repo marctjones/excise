@@ -133,7 +133,7 @@ public class RedactionReferenceVerificationTests : IDisposable
             "fixture sanity — the secret must actually be inked on the page before we redact it, " +
             "or this test proves nothing");
 
-        page.RedactArea(box, GlyphRemovalStrategy.AnyOverlap);
+        page.RedactArea(box, RedactionOptions.Default with { DrawBox = false });
         var afterPath = SaveTemp(pdf);
 
         using var after = GhostscriptReferenceRenderer.RenderPage(afterPath, 1, dpi: 150);
@@ -188,7 +188,7 @@ public class RedactionReferenceVerificationTests : IDisposable
         var page = pdf.GetPage(1);
         if (rotation != 0) page.Rotation = rotation;
 
-        page.RedactArea(BoundsOf(page, Secret), GlyphRemovalStrategy.AnyOverlap);
+        page.RedactArea(BoundsOf(page, Secret), RedactionOptions.Default with { DrawBox = false });
         return SaveTemp(pdf);
     }
 

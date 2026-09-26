@@ -62,7 +62,7 @@ public class RedactAreaPdfAIdentityTests
         doc.TargetsPdfA.Should().BeTrue("the fixture's XMP carries pdfaid:part");
         doc.Title.Should().Contain(Canary, "a green run must not come from an empty fixture");
 
-        doc.GetPage(1).RedactArea(Box);   // default: scrubDocumentCarriers = true
+        doc.GetPage(1).RedactArea(Box, RedactionOptions.Default with { DrawBox = false });   // default: scrubDocumentCarriers = true
 
         // Asserted BEFORE the save, because this is what #1499's per-widget
         // appearance decision reads mid-pipeline. If the strip leaves the
@@ -105,7 +105,7 @@ public class RedactAreaPdfAIdentityTests
     public void TheReinstatedPacket_CarriesTheIdentificationAndNothingElse()
     {
         using var doc = PdfDocument.Open(BuildFixture(PdfA2Identity));
-        doc.GetPage(1).RedactArea(Box);
+        doc.GetPage(1).RedactArea(Box, RedactionOptions.Default with { DrawBox = false });
 
         var xmp = Encoding.UTF8.GetString(doc.GetXmpMetadata()!);
 
@@ -133,7 +133,7 @@ public class RedactAreaPdfAIdentityTests
         doc.TargetsPdfA.Should().BeFalse();
         doc.GetXmpMetadata().Should().NotBeNull("sanity: there is a packet to drop");
 
-        doc.GetPage(1).RedactArea(Box);
+        doc.GetPage(1).RedactArea(Box, RedactionOptions.Default with { DrawBox = false });
 
         doc.GetXmpMetadata().Should().BeNull(
             "with no identification to preserve there is nothing to write back, and the packet " +
@@ -162,7 +162,7 @@ public class RedactAreaPdfAIdentityTests
             "<pdfaid:part>4</pdfaid:part><pdfaid:rev>2020</pdfaid:rev>",
             infoExtra: " /ModDate (D:20260101000000Z)"));
 
-        doc.GetPage(1).RedactArea(Box);
+        doc.GetPage(1).RedactArea(Box, RedactionOptions.Default with { DrawBox = false });
         var saved = SaveToBytes(doc);
 
         using var after = PdfDocument.Open(saved);
@@ -199,7 +199,7 @@ public class RedactAreaPdfAIdentityTests
             "<pdfaid:part>9</pdfaid:part><pdfaid:conformance>Z</pdfaid:conformance>"));
         doc.TargetsPdfA.Should().BeTrue("the property is present, which is all TargetsPdfA asks");
 
-        doc.GetPage(1).RedactArea(Box);
+        doc.GetPage(1).RedactArea(Box, RedactionOptions.Default with { DrawBox = false });
 
         doc.GetXmpMetadata().Should().BeNull(
             "part 9 is not a part of ISO 19005; excise does not know what file this is, so it " +
@@ -223,9 +223,9 @@ public class RedactAreaPdfAIdentityTests
             Box,
             new PdfRectangle(60, 600, 400, 640),
             new PdfRectangle(60, 500, 400, 540),
-        });
+        }, RedactionOptions.Default with { DrawBox = false });
         act.Should().NotThrow();
-        doc.GetPage(1).RedactArea(new PdfRectangle(60, 400, 400, 440));
+        doc.GetPage(1).RedactArea(new PdfRectangle(60, 400, 400, 440), RedactionOptions.Default with { DrawBox = false });
 
         var saved = SaveToBytes(doc);
         doc.TargetsPdfA.Should().BeTrue();

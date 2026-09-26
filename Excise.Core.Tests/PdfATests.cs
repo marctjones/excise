@@ -254,7 +254,7 @@ public class PdfATests
             // cannot come from having redacted nothing.
             doc.GetAcroForm()!.FindField("name")!.Value.Should().Contain("Lovelace");
 
-            doc.RedactText("Lovelace");
+            doc.RedactText("Lovelace", RedactionOptions.Default);
             redacted = doc.SaveToBytes();
         }
 
@@ -373,7 +373,7 @@ public class PdfATests
         using (var doc = PdfDocument.Open(authored))
         {
             doc.TargetsPdfA.Should().BeTrue("PdfA() writes the pdfaid XMP");
-            doc.GetPage(1).RedactArea(GlyphBoxOf(doc.GetPage(1), AreaCanary));
+            doc.GetPage(1).RedactArea(GlyphBoxOf(doc.GetPage(1), AreaCanary), RedactionOptions.Default with { DrawBox = false });
             doc.TargetsPdfA.Should().BeTrue(
                 "the carrier strip must leave the identification in place, not just the file");
             redacted = doc.SaveToBytes();
@@ -412,7 +412,7 @@ public class PdfATests
     public void AreaRedaction_OnAPdfA1_StillSuppressesObjectStreams()
     {
         using var doc = PdfDocument.Open(BuildPdfAWithCanary(PdfAConformance.PdfA1B));
-        doc.GetPage(1).RedactArea(GlyphBoxOf(doc.GetPage(1), AreaCanary));
+        doc.GetPage(1).RedactArea(GlyphBoxOf(doc.GetPage(1), AreaCanary), RedactionOptions.Default with { DrawBox = false });
 
         var redacted = doc.SaveToBytes();
         Encoding.Latin1.GetString(redacted).Should().NotContain("/Type /ObjStm",

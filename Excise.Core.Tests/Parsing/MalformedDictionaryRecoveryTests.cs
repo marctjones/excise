@@ -208,7 +208,7 @@ public class MalformedDictionaryRecoveryTests
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).Text.Should().Contain(secret, "the recovery must actually recover the text");
 
-        doc.RedactText(secret);
+        doc.RedactText(secret, RedactionOptions.Default);
         var saved = doc.SaveToBytes();
 
         // Carrier-agnostic: search the SAVED BYTES in both encodings, per

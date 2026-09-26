@@ -48,7 +48,7 @@ public class WordWrapRedactionReportingTests
                 // matches the concatenated "...BettyMary...".
                 doc.GetPage(1).Text.Should().Contain("Betty").And.Contain("Mary");
 
-                report = doc.RedactText("Betty Mary");
+                report = doc.RedactText("Betty Mary", RedactionOptions.Default);
                 doc.Save(output);
             }
 

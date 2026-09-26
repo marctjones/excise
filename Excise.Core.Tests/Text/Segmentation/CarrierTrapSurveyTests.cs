@@ -42,7 +42,7 @@ public class CarrierTrapSurveyTests
             try
             {
                 using var document = PdfDocument.Open(trap.Build(true));
-                document.RedactText(trap.Token);
+                document.RedactText(trap.Token, RedactionOptions.Default);
                 var saved = document.SaveToBytes();
                 var hits = SavedPdfLeakScanner.FindTerm(saved, trap.Token);
                 verdict = hits.Count == 0 ? "scrubbed" : $"SURVIVES in {string.Join(", ", hits.Take(3))}";

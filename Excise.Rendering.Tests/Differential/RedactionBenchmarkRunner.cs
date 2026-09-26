@@ -706,7 +706,7 @@ public sealed class RedactionBenchmarkRunner
                 if (tool == "excise")
                 {
                     using var doc = PdfDocument.Open(path);
-                    var report = doc.RedactText(term);
+                    var report = doc.RedactText(term, RedactionOptions.Default);
                     reported = report.VerifiedRemovals;
                     cleanSuccess = report.IsCleanSuccess;
                     doc.Save(output);
@@ -1191,7 +1191,7 @@ public sealed class RedactionBenchmarkRunner
             {
                 using (var doc = PdfDocument.Open(path))
                 {
-                    doc.RedactText(term, drawBlackRect: false);
+                    doc.RedactText(term, RedactionOptions.Default with { DrawBox = false });
                     doc.Save(tmp);
                 }
                 using var after = RenderGhostscript(tmp, 1, dpi: 150, externalOracles);

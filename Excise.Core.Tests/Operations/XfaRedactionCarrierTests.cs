@@ -162,7 +162,7 @@ public class XfaRedactionCarrierTests
         doc.DetectXfaForm().Should().Be(PdfXfaFormKind.Static, "fixture sanity: the W-9 is a static XFA form");
         var fieldsBefore = doc.GetAcroForm()!.Fields.Count;
 
-        var report = doc.RedactText("Form", drawBlackRect: false);
+        var report = doc.RedactText("Form", RedactionOptions.Default with { DrawBox = false });
         report.VerifiedRemovals.Should().BeGreaterThan(0,
             "fixture sanity: the W-9 page content must contain the reported term");
         report.Carriers.Should().Contain(c => c.Carrier.StartsWith("/XFA (static XFA form", StringComparison.Ordinal));

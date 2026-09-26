@@ -42,7 +42,7 @@ public class RedactionReportTests
     public void AVerifiedRemoval_ReportsOneRemovedAndNoneSurviving()
     {
         using var doc = PdfDocument.Open(Pdf());
-        var report = doc.RedactText(Secret, drawBlackRect: false);
+        var report = doc.RedactText(Secret, RedactionOptions.Default with { DrawBox = false });
 
         report.VerifiedRemovals.Should().Be(1);
         report.Survived.Should().Be(0,
@@ -59,7 +59,7 @@ public class RedactionReportTests
     public void TheReportDistinguishesLocatedFromVerified()
     {
         using var doc = PdfDocument.Open(Pdf());
-        var report = doc.RedactText(Secret, drawBlackRect: false);
+        var report = doc.RedactText(Secret, RedactionOptions.Default with { DrawBox = false });
 
         report.MatchesLocated.Should().BeGreaterThan(0,
             "the fixture contains the term — a report claiming it located nothing " +
@@ -78,7 +78,7 @@ public class RedactionReportTests
     public void ASubFloorTerm_ReportsEveryCarrierAsRefusedWithAReason()
     {
         using var doc = PdfDocument.Open(Pdf());
-        var report = doc.RedactText("Fa", drawBlackRect: false);
+        var report = doc.RedactText("Fa", RedactionOptions.Default with { DrawBox = false });
 
         report.Carriers.Should().NotBeEmpty();
         report.Carriers.Should().OnlyContain(c => !c.Scrubbed && c.RefusedReason != null,
@@ -93,7 +93,7 @@ public class RedactionReportTests
     public void OptingOutOfCarrierScrub_IsAlsoReported()
     {
         using var doc = PdfDocument.Open(Pdf());
-        var report = doc.RedactText(Secret, drawBlackRect: false, scrubDocumentCarriers: false);
+        var report = doc.RedactText(Secret, RedactionOptions.Default with { DrawBox = false, ScrubDocumentCarriers = false });
 
         report.Carriers.Should().OnlyContain(c => !c.Scrubbed && c.RefusedReason != null,
             "the caller asked for it, and still needs it in the record — a redacted " +
@@ -108,7 +108,7 @@ public class RedactionReportTests
     public void TheSummaryLine_StatesRefusalsRatherThanOnlyTheCount()
     {
         using var doc = PdfDocument.Open(Pdf());
-        var report = doc.RedactText("Fa", drawBlackRect: false);
+        var report = doc.RedactText("Fa", RedactionOptions.Default with { DrawBox = false });
 
         report.ToString().Should().Contain("NOT scrubbed",
             "a one-line summary that mentions only removals would reproduce exactly the " +
@@ -119,7 +119,7 @@ public class RedactionReportTests
     public void AnEmptyTerm_ReportsNothingRatherThanThrowing()
     {
         using var doc = PdfDocument.Open(Pdf());
-        var report = doc.RedactText("", drawBlackRect: false);
+        var report = doc.RedactText("", RedactionOptions.Default with { DrawBox = false });
 
         report.VerifiedRemovals.Should().Be(0);
         report.Pages.Should().BeEmpty();

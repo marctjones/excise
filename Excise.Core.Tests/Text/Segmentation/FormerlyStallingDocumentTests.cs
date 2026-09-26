@@ -75,7 +75,7 @@ public class FormerlyStallingDocumentTests
         Assert.SkipWhen(path == null, $"{Fixture} not present (gitignored corpus)");
 
         using var doc = PdfDocument.Open(path!);
-        var report = doc.RedactText(Term, drawBlackRect: false);
+        var report = doc.RedactText(Term, RedactionOptions.Default with { DrawBox = false });
 
         // Guard: if the term is not in this document any more, the gate is
         // pinning nothing and must say so rather than passing.
@@ -117,7 +117,7 @@ public class FormerlyStallingDocumentTests
         Assert.SkipWhen(path == null, $"{Fixture} not present (gitignored corpus)");
 
         using var doc = PdfDocument.Open(path!);
-        var report = doc.RedactText(Term, drawBlackRect: false);
+        var report = doc.RedactText(Term, RedactionOptions.Default with { DrawBox = false });
 
         using var ms = new MemoryStream();
         doc.Save(ms);

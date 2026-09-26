@@ -120,7 +120,7 @@ public sealed class OperandSplitImprovementTests : IDisposable
             using (var doc = PdfDocument.Open(File.ReadAllBytes(path)))
             {
                 pageCount = doc.PageCount;
-                doc.RedactText(term, drawBlackRect: false);
+                doc.RedactText(term, RedactionOptions.Default with { DrawBox = false });
                 doc.Save(output);
             }
 

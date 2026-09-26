@@ -137,7 +137,7 @@ public class RedactAreaCarrierScopeTests
         try
         {
             using var doc = PdfDocument.Open(path);
-            doc.GetPage(1).RedactArea(Box);
+            doc.GetPage(1).RedactArea(Box, RedactionOptions.Default with { DrawBox = false });
             var combined = CombinedEncodings(SaveToBytes(doc));
 
             foreach (var carrier in WholesaleStrippedCarriers)
@@ -161,7 +161,7 @@ public class RedactAreaCarrierScopeTests
         try
         {
             using var doc = PdfDocument.Open(path);
-            doc.GetPage(1).RedactArea(Box, scrubDocumentCarriers: false);
+            doc.GetPage(1).RedactArea(Box, RedactionOptions.Default with { DrawBox = false, ScrubDocumentCarriers = false, KeepAttachments = true });
             var combined = CombinedEncodings(SaveToBytes(doc));
 
             combined.Should().NotContain("SECRETNAME appears here",
@@ -194,7 +194,7 @@ public class RedactAreaCarrierScopeTests
         try
         {
             using var doc = PdfDocument.Open(path);
-            doc.GetPage(1).RedactArea(Box);
+            doc.GetPage(1).RedactArea(Box, RedactionOptions.Default with { DrawBox = false });
             var combined = CombinedEncodings(SaveToBytes(doc));
 
             foreach (var fragment in SubstringCorruptionEvidence)
@@ -223,7 +223,7 @@ public class RedactAreaCarrierScopeTests
                 Box,
                 new PdfRectangle(60, 600, 400, 640),
                 new PdfRectangle(60, 500, 400, 540),
-            });
+            }, RedactionOptions.Default with { DrawBox = false });
 
             act.Should().NotThrow("the document-carrier strip must be idempotent — RedactAreas " +
                 "applies it once per rectangle");
@@ -267,8 +267,7 @@ public class RedactAreaCarrierScopeTests
     /// <summary>
     /// Redact by area and report, carrier by carrier, whether the string is
     /// still in the saved bytes. <paramref name="scrubDocumentCarriers"/> null
-    /// means "call the default overload", so this works before and after the
-    /// parameter exists.
+    /// means the default, which scrubs.
     /// </summary>
     private static Dictionary<string, bool> CarrierLeakReport(bool? scrubDocumentCarriers)
     {
@@ -277,10 +276,13 @@ public class RedactAreaCarrierScopeTests
         {
             using var doc = PdfDocument.Open(path);
             var page = doc.GetPage(1);
-            if (scrubDocumentCarriers is null)
-                page.RedactArea(Box);
-            else
-                page.RedactArea(Box, scrubDocumentCarriers: scrubDocumentCarriers.Value);
+            var scrub = scrubDocumentCarriers ?? true;
+            page.RedactArea(Box, RedactionOptions.Default with
+            {
+                DrawBox = false,
+                ScrubDocumentCarriers = scrub,
+                KeepAttachments = !scrub,
+            });
 
             var combined = CombinedEncodings(SaveToBytes(doc));
             return new Dictionary<string, bool>

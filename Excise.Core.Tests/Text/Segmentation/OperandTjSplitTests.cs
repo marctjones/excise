@@ -38,7 +38,7 @@ public class OperandTjSplitTests
         using var doc = PdfDocument.Open(Pdf("BT /F1 14 Tf 20 50 Td (Name: Louise Anne Farrar here) Tj ET\n"));
         var hereBefore = doc.GetPage(1).Letters.First(l => l.Value == "h").StartX;
 
-        doc.RedactText("Farrar", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+        doc.RedactText("Farrar", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
         var saved = doc.SaveToBytes();
 
         // Term gone from the saved bytes (any carrier).
@@ -66,7 +66,7 @@ public class OperandTjSplitTests
         // The word "SECRET" is spread across a TJ with kerning; only its glyphs go.
         using var doc = PdfDocument.Open(Pdf("BT /F1 14 Tf 20 50 Td [(Keep )-20(SECRET)-20( tail)] TJ ET\n"));
 
-        doc.RedactText("SECRET", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+        doc.RedactText("SECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
         var saved = doc.SaveToBytes();
 
         SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("SECRET");

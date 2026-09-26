@@ -64,7 +64,7 @@ public sealed class RedactedFormFieldOracleTests
             doc.GetAcroForm()!.FindField("name")!.Value.Should().Contain(Term,
                 "a green run must not come from having redacted nothing");
 
-            doc.RedactText(Term);
+            doc.RedactText(Term, RedactionOptions.Default);
             redacted = doc.SaveToBytes();
         }
 

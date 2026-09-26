@@ -40,7 +40,7 @@ public sealed class Type3RedactionCountTests
         }
 
         using var doc = PdfDocument.Open(path!);
-        doc.RedactText("ababab", drawBlackRect: false).VerifiedRemovals
+        doc.RedactText("ababab", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals
             .Should().BeGreaterThan(0, "Type3 redaction must REPORT the removal, not 0 (#1190)");
     }
 }

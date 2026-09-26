@@ -195,7 +195,7 @@ public class RedactionCollateralHarness
                 try
                 {
                     using var doc = PdfDocument.Open(File.ReadAllBytes(path!));
-                    reported = doc.RedactText(term).VerifiedRemovals;
+                    reported = doc.RedactText(term, RedactionOptions.Default).VerifiedRemovals;
                     doc.Save(output);
                 }
                 catch (Exception ex) when (ex is not OutOfMemoryException)

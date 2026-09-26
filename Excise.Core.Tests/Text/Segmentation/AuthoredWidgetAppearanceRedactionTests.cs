@@ -59,7 +59,7 @@ public class AuthoredWidgetAppearanceRedactionTests
             "precondition: the authored value is in the file, so the redaction checks can fail");
 
         using var doc = PdfDocument.Open(authored);
-        doc.RedactText(Secret);
+        doc.RedactText(Secret, RedactionOptions.Default);
         return doc.SaveToBytes();
     }
 }

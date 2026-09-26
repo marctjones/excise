@@ -493,7 +493,7 @@ public class SmallSectionsVerificationTests
             {
                 // 0 page-content matches: the secret lives only in the
                 // annotation carrier, matching the real #1185 shape.
-                doc.RedactText(secret, drawBlackRect: false);
+                doc.RedactText(secret, RedactionOptions.Default with { DrawBox = false });
                 doc.Save(savedPath);
             }
 

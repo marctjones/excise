@@ -32,11 +32,11 @@ public sealed class RedactionVisualMutationAdequacyTests
             File.WriteAllBytes(input, BuildPdf($"{Keep} {Secret} {Keep}"));
             using (var document = PdfDocument.Open(File.ReadAllBytes(input)))
             {
-                document.RedactText(Secret).VerifiedRemovals.Should().Be(1);
+                document.RedactText(Secret, RedactionOptions.Default).VerifiedRemovals.Should().Be(1);
                 // Mutation: the target is properly removed, but unrelated
                 // visible words are removed too. A target-only leak detector
                 // would accept this; the surviving-render axis must not.
-                document.RedactText(Keep).VerifiedRemovals.Should().Be(1);
+                document.RedactText(Keep, RedactionOptions.Default).VerifiedRemovals.Should().Be(1);
                 document.Save(output);
             }
 

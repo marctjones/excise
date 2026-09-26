@@ -156,7 +156,7 @@ public class TextExtractorDifferencesEncodingTests
         doc.GetPage(1).Text.Should().Contain("filing",
             "sanity: the /f_i differences glyph must decode to \"fi\" for the word to read as \"filing\" at all");
 
-        var removed = doc.RedactText("filing").VerifiedRemovals;
+        var removed = doc.RedactText("filing", RedactionOptions.Default).VerifiedRemovals;
         removed.Should().BeGreaterThan(0);
 
         var saved = doc.SaveToBytes();

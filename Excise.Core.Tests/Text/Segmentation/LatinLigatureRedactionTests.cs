@@ -64,7 +64,7 @@ public class LatinLigatureRedactionTests
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(ABCD)",
             "sanity: the glyph-code carrier must be present before redaction");
 
-        var removed = doc.RedactText(PlainWord).VerifiedRemovals;
+        var removed = doc.RedactText(PlainWord, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a plain-letter needle must match a ligature code point via " +
@@ -89,7 +89,7 @@ public class LatinLigatureRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(LigatedScalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText(LigatedWord).VerifiedRemovals;
+        var removed = doc.RedactText(LigatedWord, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -121,7 +121,7 @@ public class LatinLigatureRedactionTests
         var storedWord = prefix + (char)ligature + suffix;
         doc.GetPage(1).Text.Should().Contain(storedWord, "sanity: raw ligature must extract");
 
-        var removed = doc.RedactText(plainWord).VerifiedRemovals;
+        var removed = doc.RedactText(plainWord, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             $"needle '{plainWord}' must match stored '{storedWord}' (U+{ligature:X4})");
@@ -140,7 +140,7 @@ public class LatinLigatureRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText(PlainWord).VerifiedRemovals;
+        var removed = doc.RedactText(PlainWord, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -171,7 +171,7 @@ public class LatinLigatureRedactionTests
         doc.GetPage(1).Text.Should().Contain(ligatureRun,
             "sanity: the fixture must extract the raw ligature code points");
 
-        var removed = doc.RedactText("flffiffl").VerifiedRemovals; // ﬂ + ﬃ + ﬄ in plain letters
+        var removed = doc.RedactText("flffiffl", RedactionOptions.Default).VerifiedRemovals; // ﬂ + ﬃ + ﬄ in plain letters
 
         removed.Should().BeGreaterThan(0,
             "a plain-letter needle must match the ligated run in a real-world PDF");

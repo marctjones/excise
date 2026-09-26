@@ -45,7 +45,7 @@ public class SharedImageRegionRedactionTests : IDisposable
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
         using var doc = PdfDocument.Open(SharedImageDocument());
-        doc.GetPage(1).RedactArea(LowerLeftQuadrant);
+        doc.GetPage(1).RedactArea(LowerLeftQuadrant, RedactionOptions.Default with { DrawBox = false });
 
         double viewerPage2;
         using (var viewer = RenderWithExcise(doc, 2))
@@ -76,8 +76,8 @@ public class SharedImageRegionRedactionTests : IDisposable
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
         using var doc = PdfDocument.Open(SharedImageDocument());
-        doc.GetPage(1).RedactArea(LowerLeftQuadrant);
-        doc.GetPage(2).RedactArea(UpperRightQuadrant);
+        doc.GetPage(1).RedactArea(LowerLeftQuadrant, RedactionOptions.Default with { DrawBox = false });
+        doc.GetPage(2).RedactArea(UpperRightQuadrant, RedactionOptions.Default with { DrawBox = false });
         var path = SaveTemp(doc);
 
         using var page1 = MutoolReferenceRenderer.RenderPage(path, 1, dpi: Dpi);

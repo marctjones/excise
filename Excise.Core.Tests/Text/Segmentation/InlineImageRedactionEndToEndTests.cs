@@ -36,7 +36,7 @@ public class InlineImageRedactionEndToEndTests
         Encoding.Latin1.GetString(page.GetContentStreamBytes())
             .Should().Contain(MarkerStr, "the inline image bytes start out in the stream");
 
-        page.RedactArea(new PdfRectangle(50, 550, 250, 750)); // fully covers the image
+        page.RedactArea(new PdfRectangle(50, 550, 250, 750), RedactionOptions.Default with { DrawBox = false }); // fully covers the image
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain(MarkerStr,
@@ -56,7 +56,7 @@ public class InlineImageRedactionEndToEndTests
         using var doc = PdfDocument.Open(pdfBytes);
         var page = doc.GetPage(1);
 
-        page.RedactArea(new PdfRectangle(0, 0, 40, 40)); // misses the image entirely
+        page.RedactArea(new PdfRectangle(0, 0, 40, 40), RedactionOptions.Default with { DrawBox = false }); // misses the image entirely
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.AllCarriersText(saved).Should().Contain(MarkerStr,

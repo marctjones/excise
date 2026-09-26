@@ -78,7 +78,7 @@ public class PdfBoxReferenceRedactorTests
 
             using (var doc = PdfDocument.Open(pdf))
             {
-                doc.RedactText(Secret);
+                doc.RedactText(Secret, RedactionOptions.Default);
                 using var fs = File.Create(exOut);
                 doc.Save(fs);
             }

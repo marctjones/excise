@@ -107,7 +107,7 @@ public class FormFieldValueRedactionTests
     private static byte[] RedactAndSave(string term, out RedactionReport report)
     {
         using var doc = PdfDocument.Open(BuildPdfWithLongTextFieldValue());
-        report = doc.RedactText(term);
+        report = doc.RedactText(term, RedactionOptions.Default);
         using var ms = new MemoryStream();
         doc.Save(ms);
         return ms.ToArray();

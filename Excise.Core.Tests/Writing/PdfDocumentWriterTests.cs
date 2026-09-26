@@ -386,7 +386,7 @@ public class PdfDocumentWriterTests
         var compressed = source.SaveToBytes();
 
         using var doc = PdfDocument.Open(compressed);
-        doc.RedactText("SECRET", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+        doc.RedactText("SECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
         var redacted = doc.SaveToBytes();
 
         Encoding.Latin1.GetString(redacted).Should().Contain("/Type /ObjStm",
@@ -403,7 +403,7 @@ public class PdfDocumentWriterTests
         var compressed = source.SaveToBytes();
 
         using var doc = PdfDocument.Open(compressed);
-        doc.GetPage(1).RedactArea(new PdfRectangle(95, 690, 180, 720));
+        doc.GetPage(1).RedactArea(new PdfRectangle(95, 690, 180, 720), RedactionOptions.Default with { DrawBox = false });
         var redacted = doc.SaveToBytes();
 
         Encoding.Latin1.GetString(redacted).Should().Contain("/Type /ObjStm");

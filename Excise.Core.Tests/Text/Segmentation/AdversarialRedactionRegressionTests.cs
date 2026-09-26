@@ -46,7 +46,7 @@ public sealed class AdversarialRedactionRegressionTests
         var before = CountImageDo(doc.GetPage(1));
         before.Should().BeGreaterThan(0, "the fixture draws a full-page image");
 
-        doc.RedactText("IMAGEOCROVERLAYSECRET");
+        doc.RedactText("IMAGEOCROVERLAYSECRET", RedactionOptions.Default);
         var saved = doc.SaveToBytes();
 
         using var reopened = PdfDocument.Open(saved);
@@ -92,7 +92,7 @@ public sealed class AdversarialRedactionRegressionTests
         Assert.SkipUnless(File.Exists(path),
             "CCITT scan fixture absent [requires: corpus:poppler]");
         using var doc = PdfDocument.Open(path);
-        var report = doc.RedactText("STURBRIDGE");
+        var report = doc.RedactText("STURBRIDGE", RedactionOptions.Default);
         report.ImageRegionsRedacted.Should().BeGreaterThan(0,
             "a CCITT scan's term region is blacked out in place");
         report.ImagesDroppedWhole.Should().Be(0, "the image is preserved, not dropped");
@@ -111,7 +111,7 @@ public sealed class AdversarialRedactionRegressionTests
             "JBIG2 scan fixture absent [requires: corpus:pdfjs]");
         using var doc = PdfDocument.Open(path);
         var before = CountImageDo(doc.GetPage(1));
-        var report = doc.RedactText("V1HH");
+        var report = doc.RedactText("V1HH", RedactionOptions.Default);
         report.ImageRegionsRedacted.Should().BeGreaterThan(0,
             "the JBIG2 scan's matched region is destroyed in place (#1197)");
         report.ImagesDroppedWhole.Should().Be(0,
@@ -131,52 +131,6 @@ public sealed class AdversarialRedactionRegressionTests
             image.GetNameOrNull("Subtype") == "Image" && image.GetNameOrNull("Filter") == "FlateDecode");
         hasFlateReplacement.Should().BeTrue(
             "the saved page must reference the fresh Flate image, not the original JBIG2 bytes");
-    }
-
-    [Fact]
-    public void RedactText_OptionsOverload_ByteEquivalentToParamOverload()
-    {
-        // #1187: the RedactionOptions overload must be a pure surface over the
-        // parameter overload — same output, byte for byte, for the same settings.
-        byte[] MakePdf() => Build(
-            Obj("<< /Type /Catalog /Pages 2 0 R >>"),
-            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
-            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
-                "/Resources << /Font << /F1 5 0 R >> >> >>"),
-            Stream("", "BT /F1 12 Tf 72 700 Td (SECRETWORD and more) Tj ET"),
-            Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"));
-
-        using var d1 = PdfDocument.Open(MakePdf());
-        var r1 = d1.RedactText("SECRETWORD", caseSensitive: true,
-            strategy: GlyphRemovalStrategy.AnyOverlap, drawBlackRect: false,
-            includeHiddenLayers: true, scrubDocumentCarriers: false, closeWidth: true);
-        var b1 = d1.SaveToBytes();
-
-        using var d2 = PdfDocument.Open(MakePdf());
-        var r2 = d2.RedactText("SECRETWORD", new RedactionOptions
-        {
-            CaseSensitive = true,
-            Strategy = GlyphRemovalStrategy.AnyOverlap,
-            DrawBox = false,
-            IncludeHiddenLayers = true,
-            ScrubDocumentCarriers = false,
-            Width = WidthPolicy.CloseGap,
-        });
-        var b2 = d2.SaveToBytes();
-
-        r2.VerifiedRemovals.Should().Be(r1.VerifiedRemovals);
-        r2.MatchesLocated.Should().Be(r1.MatchesLocated);
-
-        // Same redaction output (a fresh save may differ only in the random
-        // trailer /ID, so compare the reopened page content, not raw bytes).
-        string Letters(byte[] pdf)
-        {
-            using var d = PdfDocument.Open(pdf);
-            return string.Concat(d.GetPage(1).Letters.Select(l => l.Value));
-        }
-        Letters(b2).Should().Be(Letters(b1),
-            "the options overload must produce the same redacted content as the param overload (#1187)");
-        Letters(b1).Should().NotContain("SECRETWORD", "the term was redacted in both");
     }
 
     [Fact]
@@ -203,7 +157,7 @@ public sealed class AdversarialRedactionRegressionTests
         string.Concat(page.Letters.Select(l => l.Value)).Should().Contain("FORMSECRET",
             "AcroForm values are part of searchable and redactable page text");
 
-        page.RedactArea(new PdfRectangle(95, 645, 265, 680));
+        page.RedactArea(new PdfRectangle(95, 645, 265, 680), RedactionOptions.Default with { DrawBox = false });
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("FORMSECRET",
@@ -235,7 +189,7 @@ public sealed class AdversarialRedactionRegressionTests
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).GetAnnotations().Should().ContainSingle();
 
-        doc.GetPage(1).RedactArea(new PdfRectangle(80, 680, 290, 735));
+        doc.GetPage(1).RedactArea(new PdfRectangle(80, 680, 290, 735), RedactionOptions.Default with { DrawBox = false });
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("ANNOTSECRET",
@@ -274,7 +228,7 @@ public sealed class AdversarialRedactionRegressionTests
         string.Concat(page.Letters.Select(l => l.Value)).Should().Contain("ANNOTSECRET",
             "FreeText content must be findable by search/RedactText, not just page.GetAnnotations()");
 
-        var removed = doc.RedactText("ANNOTSECRET", drawBlackRect: false).VerifiedRemovals;
+        var removed = doc.RedactText("ANNOTSECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals;
         removed.Should().BeGreaterThan(0, "RedactText must actually find the annotation content");
 
         var saved = doc.SaveToBytes();
@@ -334,7 +288,7 @@ public sealed class AdversarialRedactionRegressionTests
             "a Signature widget's /AP/N appearance text must be findable by search/RedactText, " +
             "not just page.GetFormFields() (#669)");
 
-        var removed = doc.RedactText("SIGSECRET", drawBlackRect: false).VerifiedRemovals;
+        var removed = doc.RedactText("SIGSECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals;
         removed.Should().BeGreaterThan(0, "RedactText must actually find the signature appearance text");
 
         var saved = doc.SaveToBytes();
@@ -385,7 +339,7 @@ public sealed class AdversarialRedactionRegressionTests
                 "orphaned widget letters must carry the AcroForm: FontName prefix so RedactText " +
                 "routes them through InteractiveRedactionScrubber instead of the glyph-removal path");
 
-        var removed = doc.RedactText("WIDGETSECRET", drawBlackRect: false).VerifiedRemovals;
+        var removed = doc.RedactText("WIDGETSECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals;
         removed.Should().BeGreaterThan(0, "RedactText must actually find the orphaned widget's value");
 
         var saved = doc.SaveToBytes();
@@ -421,7 +375,7 @@ public sealed class AdversarialRedactionRegressionTests
         string.Concat(page.Letters.Select(l => l.Value)).Should().Contain("NOPAGESECRET",
             "a linked field's value must be findable even when its widget has no /P");
 
-        var removed = doc.RedactText("NOPAGESECRET", drawBlackRect: false).VerifiedRemovals;
+        var removed = doc.RedactText("NOPAGESECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals;
         removed.Should().BeGreaterThan(0, "RedactText must find the value of a field whose widget lacks /P");
 
         var saved = doc.SaveToBytes();
@@ -452,7 +406,7 @@ public sealed class AdversarialRedactionRegressionTests
             b.GlyphRectangle.Right + 1,
             b.GlyphRectangle.Top);
 
-        page.RedactArea(partialB);
+        page.RedactArea(partialB, RedactionOptions.Default with { DrawBox = false });
 
         var saved = doc.SaveToBytes();
         using var reopened = PdfDocument.Open(saved);
@@ -485,7 +439,7 @@ public sealed class AdversarialRedactionRegressionTests
             letters.Max(l => l.GlyphRectangle.Right),
             letters.Max(l => l.GlyphRectangle.Top));
 
-        page.RedactArea(bounds);
+        page.RedactArea(bounds, RedactionOptions.Default with { DrawBox = false });
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("ROTSECRET");
@@ -511,7 +465,7 @@ public sealed class AdversarialRedactionRegressionTests
 
         using (var excluded = PdfDocument.Open(pdf))
         {
-            excluded.RedactText("HIDDENSECRET", includeHiddenLayers: false).VerifiedRemovals.Should().Be(0);
+            excluded.RedactText("HIDDENSECRET", RedactionOptions.Default with { IncludeHiddenLayers = false }).VerifiedRemovals.Should().Be(0);
             SavedPdfLeakScanner.AllCarriersText(excluded.SaveToBytes()).Should().Contain("HIDDENSECRET",
                 "callers can explicitly exclude hidden layers when they are not doing security redaction");
         }
@@ -521,7 +475,7 @@ public sealed class AdversarialRedactionRegressionTests
             // The hidden layer is the last thing on the page. Its span is removed as a hidden
             // optional-content span before the text search runs, so nothing is left to locate;
             // this used to read 1 only because the writer copied the removed tail back.
-            var report = included.RedactText("HIDDENSECRET");
+            var report = included.RedactText("HIDDENSECRET", RedactionOptions.Default);
             report.Removals.Should().ContainSingle(r =>
                 r.Feature == "hidden optional-content span(s)" && r.Count == 1);
             report.Survived.Should().Be(0);
@@ -543,7 +497,7 @@ public sealed class AdversarialRedactionRegressionTests
         var hiddenLetters = page.Letters.Where(l => l.IsInHiddenOptionalContent).ToList();
         hiddenLetters.Should().NotBeEmpty();
 
-        page.RedactArea(BoundingBoxOf(hiddenLetters));
+        page.RedactArea(BoundingBoxOf(hiddenLetters), RedactionOptions.Default with { DrawBox = false });
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.FindTerm(saved, "HIDDENSECRET").Should().BeEmpty();
@@ -578,7 +532,7 @@ public sealed class AdversarialRedactionRegressionTests
         Encoding.Latin1.GetString(pdf).Should().Contain("INLINESECRET");
 
         using var doc = PdfDocument.Open(pdf);
-        doc.RedactText("INLINESECRET", drawBlackRect: false).VerifiedRemovals
+        doc.RedactText("INLINESECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals
             .Should().BeGreaterThan(0);
         var saved = doc.SaveToBytes();
 
@@ -616,7 +570,7 @@ public sealed class AdversarialRedactionRegressionTests
 
         using var doc = PdfDocument.Open(pdf);
         // 0 page-content matches — the term lives only in the annotation carrier.
-        doc.RedactText("STICKYSECRET", drawBlackRect: false);
+        doc.RedactText("STICKYSECRET", RedactionOptions.Default with { DrawBox = false });
         var saved = doc.SaveToBytes();
 
         SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("STICKYSECRET",
@@ -639,7 +593,7 @@ public sealed class AdversarialRedactionRegressionTests
             $"corpus fixture {file} absent [requires: corpus:pdfium]");
 
         using var doc = PdfDocument.Open(System.IO.File.ReadAllBytes(path));
-        doc.RedactText(term, drawBlackRect: false);
+        doc.RedactText(term, RedactionOptions.Default with { DrawBox = false });
         var saved = doc.SaveToBytes();
 
         SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain(term,
@@ -682,11 +636,11 @@ public sealed class AdversarialRedactionRegressionTests
                 .Should().Contain("yoursoftware");
 
         using var doc = PdfDocument.Open(pdf);
-        doc.RedactText("yours", drawBlackRect: false).VerifiedRemovals.Should().Be(0,
+        doc.RedactText("yours", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(0,
             "'yours' must not match across the your|software word gap (#1177)");
         // sanity: the real words still match.
         using var doc2 = PdfDocument.Open(pdf);
-        doc2.RedactText("software", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+        doc2.RedactText("software", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
     }
 
     private static string Obj(string body) => body;

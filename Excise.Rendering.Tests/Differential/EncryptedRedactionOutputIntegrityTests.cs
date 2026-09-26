@@ -147,7 +147,7 @@ public class EncryptedRedactionOutputIntegrityTests
             try
             {
                 using var doc = PdfDocument.Open(path, new PdfOpenOptions { UserPassword = password });
-                report = doc.RedactText(term);
+                report = doc.RedactText(term, RedactionOptions.Default);
                 doc.Save(output, doc.GetReEncryptionOptions(password));
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)

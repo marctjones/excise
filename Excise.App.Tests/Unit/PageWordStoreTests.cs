@@ -72,7 +72,7 @@ public sealed class PageWordStoreTests
 
         Service.Search(doc, "SECRETTERM").Should().HaveCount(2);
 
-        doc.RedactText("SECRETTERM", drawBlackRect: false).VerifiedRemovals.Should().Be(2);
+        doc.RedactText("SECRETTERM", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(2);
 
         Service.Search(doc, "SECRETTERM").Should().BeEmpty("search must reflect the redacted bytes");
         Service.Search(doc, "Keep5").Should().ContainSingle("the redacted page's other words are re-read, not lost");

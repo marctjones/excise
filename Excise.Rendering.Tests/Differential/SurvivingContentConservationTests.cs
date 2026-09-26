@@ -134,7 +134,7 @@ public class SurvivingContentConservationTests
             File.WriteAllBytes(input, LigatureFixture());
             using (var doc = PdfDocument.Open(File.ReadAllBytes(input)))
             {
-                doc.RedactText(Secret);
+                doc.RedactText(Secret, RedactionOptions.Default);
                 using var fs = File.Create(output);
                 doc.Save(fs);
             }

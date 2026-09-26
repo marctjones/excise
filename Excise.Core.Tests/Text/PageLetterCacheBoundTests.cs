@@ -124,7 +124,7 @@ public class PageLetterCacheBoundTests
         page.GetWords().Select(w => w.Text).Should().Contain("STALESECRET");
         page.Text.Should().Contain("STALESECRET");
 
-        doc.RedactText("STALESECRET", drawBlackRect: false).VerifiedRemovals.Should().Be(2);
+        doc.RedactText("STALESECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(2);
 
         string.Concat(page.Letters.Select(l => l.Value)).Should().NotContain("STALESECRET",
             "the letters must be re-walked from the rewritten bytes");
@@ -147,7 +147,7 @@ public class PageLetterCacheBoundTests
             _ = doc.GetPage(p).Letters;
         doc.GetPage(1).HasCachedLetters.Should().BeFalse("page 1 must be evicted before the redaction");
 
-        var report = doc.RedactText(term, drawBlackRect: false);
+        var report = doc.RedactText(term, RedactionOptions.Default with { DrawBox = false });
         report.VerifiedRemovals.Should().Be(2, "both occurrences must be removed and verified");
 
         using var saved = new MemoryStream();
