@@ -3,9 +3,9 @@
 # These files are deliberately gitignored — they're reproducible from the
 # (committed) scrambled birth certificate source.
 #
-# Tests under Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs early-
-# return when the files are missing, so this script is only needed to
-# exercise the RC4 decryption assertions locally.
+# Tests under Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs skip,
+# naming the paths they searched, when the files are missing; run this script
+# to exercise their RC4 and AES decryption assertions.
 #
 # Requires: qpdf (sudo apt install qpdf  /  brew install qpdf).
 

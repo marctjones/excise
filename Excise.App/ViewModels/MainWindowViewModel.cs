@@ -1470,7 +1470,7 @@ public partial class MainWindowViewModel : ViewModelBase
             RequestPreserveReadingPosition(); // #846: snapshot reading position before the page count/order changes
             var removedIndex = CommandTargetPageIndex; // #1650: the page filling the viewport, not the sliver at its top edge
             var capturedPages = CapturePages(new[] { removedIndex });
-            var result = await _pageOrganizationWorkflow.RemovePageAsync(removedIndex);
+            var result = await _pageOrganizationWorkflow.RemovePageAsync(removedIndex, IgnoreDocumentPermissions);
             if (!result.DidChange)
                 return;
 
@@ -1495,6 +1495,7 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error removing page");
+            _toastService.ShowError("Failed to remove page", ex.Message);
         }
     }
 
@@ -1549,7 +1550,8 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             var pagesBefore = _documentService.PageCount;
-            var result = await _pageOrganizationWorkflow.InsertPagesFromFileAsync(sourcePdfPath, insertAtIndex);
+            var result = await _pageOrganizationWorkflow.InsertPagesFromFileAsync(
+                sourcePdfPath, insertAtIndex, IgnoreDocumentPermissions);
             if (!result.DidChange)
                 return;
 
@@ -1574,6 +1576,7 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error inserting pages");
+            _toastService.ShowError("Failed to insert pages", ex.Message);
         }
     }
 
@@ -1710,7 +1713,8 @@ public partial class MainWindowViewModel : ViewModelBase
             RequestPreserveReadingPosition(); // #846
             var removedIndices = selected.OrderBy(i => i).ToList();
             var capturedPages = CapturePages(removedIndices);
-            var result = await _pageOrganizationWorkflow.RemovePagesAsync(selected, CurrentPageIndex);
+            var result = await _pageOrganizationWorkflow.RemovePagesAsync(
+                selected, CurrentPageIndex, IgnoreDocumentPermissions);
             if (!result.DidChange)
                 return;
 
@@ -1769,7 +1773,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             RequestPreserveReadingPosition(); // #846
             var newCurrentPageIndex = RemapCurrentPageAfterSingleMove(CurrentPageIndex, fromIndex, toIndex);
-            var result = await _pageOrganizationWorkflow.MovePageAsync(fromIndex, toIndex);
+            var result = await _pageOrganizationWorkflow.MovePageAsync(fromIndex, toIndex, IgnoreDocumentPermissions);
             if (!result.DidChange)
                 return;
 
@@ -1807,7 +1811,8 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             RequestPreserveReadingPosition(); // #846
-            var result = await _pageOrganizationWorkflow.MovePagesAsync(selected, delta, CurrentPageIndex);
+            var result = await _pageOrganizationWorkflow.MovePagesAsync(
+                selected, delta, CurrentPageIndex, IgnoreDocumentPermissions);
             if (!result.DidChange)
                 return;
 
@@ -2257,10 +2262,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private void RequestPreserveReadingPosition() =>
         PreserveReadingPositionRequested?.Invoke(this, EventArgs.Empty);
 
-    private async Task RotatePageLeftAsync()
+    /// <summary>Rotate the command-target page clockwise by <paramref name="degrees"/>, as one undo step.</summary>
+    private async Task RotateCommandTargetPageAsync(int degrees, string historyLabel)
     {
-        _logger.LogInformation("Rotating current page left (counter-clockwise)");
-
         if (!_documentService.IsDocumentLoaded)
         {
             _logger.LogWarning("Cannot rotate page: No document loaded");
@@ -2270,77 +2274,20 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             var rotatedIndex = CommandTargetPageIndex; // #1650
-            _documentService.RotatePageLeft(rotatedIndex);
+            _documentService.RotatePage(rotatedIndex, degrees, IgnoreDocumentPermissions);
             MarkPageOrganizationChanged();
-            _history.Push("Rotate page left",
-                () => ApplyPageRotationAsync(rotatedIndex, 90),
-                () => ApplyPageRotationAsync(rotatedIndex, 270));
-            _logger.LogInformation("Page {PageIndex} rotated left successfully", rotatedIndex);
+            _history.Push(historyLabel,
+                () => ApplyPageRotationAsync(rotatedIndex, 360 - degrees),
+                () => ApplyPageRotationAsync(rotatedIndex, degrees));
+            _logger.LogInformation("Page {PageIndex} rotated by {Degrees} degrees", rotatedIndex, degrees);
 
             RequestPreserveReadingPosition();
             await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error rotating page left");
-        }
-    }
-
-    private async Task RotatePageRightAsync()
-    {
-        _logger.LogInformation("Rotating current page right (clockwise)");
-
-        if (!_documentService.IsDocumentLoaded)
-        {
-            _logger.LogWarning("Cannot rotate page: No document loaded");
-            return;
-        }
-
-        try
-        {
-            var rotatedIndex = CommandTargetPageIndex; // #1650
-            _documentService.RotatePageRight(rotatedIndex);
-            MarkPageOrganizationChanged();
-            _history.Push("Rotate page right",
-                () => ApplyPageRotationAsync(rotatedIndex, 270),
-                () => ApplyPageRotationAsync(rotatedIndex, 90));
-            _logger.LogInformation("Page {PageIndex} rotated right successfully", rotatedIndex);
-
-            RequestPreserveReadingPosition();
-            await RefreshAfterDocumentMutationAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error rotating page right");
-        }
-    }
-
-    private async Task RotatePage180Async()
-    {
-        _logger.LogInformation("Rotating current page 180 degrees");
-
-        if (!_documentService.IsDocumentLoaded)
-        {
-            _logger.LogWarning("Cannot rotate page: No document loaded");
-            return;
-        }
-
-        try
-        {
-            var rotatedIndex = CommandTargetPageIndex; // #1650
-            _documentService.RotatePage180(rotatedIndex);
-            MarkPageOrganizationChanged();
-            _history.Push("Rotate page 180°",
-                () => ApplyPageRotationAsync(rotatedIndex, 180),
-                () => ApplyPageRotationAsync(rotatedIndex, 180));
-            _logger.LogInformation("Page {PageIndex} rotated 180 degrees successfully", rotatedIndex);
-
-            RequestPreserveReadingPosition();
-            await RefreshAfterDocumentMutationAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error rotating page 180 degrees");
+            _logger.LogError(ex, "Error rotating page");
+            _toastService.ShowError("Failed to rotate page", ex.Message);
         }
     }
 

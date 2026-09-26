@@ -1453,7 +1453,6 @@ namespace Excise.Core.Parsing
 {
     public class PdfEncryptionNotSupportedException : System.Exception
     {
-        public PdfEncryptionNotSupportedException() { }
         public PdfEncryptionNotSupportedException(string message) { }
     }
     public class PdfLexer : System.IDisposable

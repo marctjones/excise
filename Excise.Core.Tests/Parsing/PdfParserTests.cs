@@ -564,15 +564,6 @@ public class PdfParserTests
     }
 
     [Fact]
-    public void PdfEncryptionNotSupportedException_DefaultConstructor()
-    {
-        var ex = new PdfEncryptionNotSupportedException();
-
-        ex.Message.Should().Contain("encrypted");
-        ex.Message.Should().Contain("allowEncrypted");
-    }
-
-    [Fact]
     public void PdfEncryptionNotSupportedException_WithMessage()
     {
         var ex = new PdfEncryptionNotSupportedException("Custom message");

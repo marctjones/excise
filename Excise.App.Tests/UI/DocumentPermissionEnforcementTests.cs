@@ -297,6 +297,22 @@ public class DocumentPermissionEnforcementTests : IDisposable
             "the fixture denies /P bit 6 (annotate)");
     }
 
+    // ---- page assembly (#1850) --------------------------------------------
+
+    [FixedAvaloniaFact]
+    public async Task RotatePageRightCommand_AssembleForbidden_LeavesThePage_WithToast()
+    {
+        var fixturePath = SaveWithPermissions("Assemble-forbidden page", -4 & ~1024L); // bit 11 cleared
+        var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath);
+
+        await vm.RotatePageRightCommand.Execute();
+
+        vm.SaveDocumentForTests!.GetPage(1).Rotation.Should().Be(0, "the fixture denies /P bit 11 (assemble)");
+        vm.CanUndo.Should().BeFalse("a refused rotation records no undo step");
+        toasts.Should().ContainSingle(t => t.Details != null && t.Details.Contains("Blocked by document permissions"),
+            "the rotate command used to log a failure and show nothing");
+    }
+
     // ---- what must KEEP working -----------------------------------------
 
     [Fact]

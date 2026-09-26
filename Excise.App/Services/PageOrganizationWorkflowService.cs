@@ -27,20 +27,21 @@ public sealed class PageOrganizationWorkflowService
         _logger = logger;
     }
 
-    public async Task<PageOrganizationResult> RemovePageAsync(int pageIndex)
+    public async Task<PageOrganizationResult> RemovePageAsync(int pageIndex, bool ignorePermissions)
     {
         if (!_documentService.IsDocumentLoaded || _documentService.PageCount <= 1)
             return PageOrganizationResult.NoChange(pageIndex);
 
 
-        _documentService.RemovePage(pageIndex);
+        _documentService.RemovePage(pageIndex, ignorePermissions);
         var newPageIndex = Math.Min(pageIndex, Math.Max(0, _documentService.PageCount - 1));
         _logger.LogInformation("Removed page {PageIndex}; current page should become {NewPageIndex}", pageIndex, newPageIndex);
 
         return PageOrganizationResult.Changed(newPageIndex);
     }
 
-    public async Task<PageOrganizationResult> RemovePagesAsync(IEnumerable<int> pageIndices, int currentPageIndex)
+    public async Task<PageOrganizationResult> RemovePagesAsync(
+        IEnumerable<int> pageIndices, int currentPageIndex, bool ignorePermissions)
     {
         if (!_documentService.IsDocumentLoaded)
             return PageOrganizationResult.NoChange(currentPageIndex);
@@ -51,19 +52,20 @@ public sealed class PageOrganizationWorkflowService
 
 
         var newPageIndex = RemapCurrentPageAfterRemoval(currentPageIndex, indices, _documentService.PageCount);
-        _documentService.RemovePages(indices);
+        _documentService.RemovePages(indices, ignorePermissions);
         newPageIndex = Math.Min(newPageIndex, Math.Max(0, _documentService.PageCount - 1));
 
         _logger.LogInformation("Removed {Count} selected page(s)", indices.Length);
         return PageOrganizationResult.Changed(newPageIndex);
     }
 
-    public async Task<PageOrganizationResult> InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex)
+    public async Task<PageOrganizationResult> InsertPagesFromFileAsync(
+        string sourcePdfPath, int insertAtIndex, bool ignorePermissions)
     {
         if (!_documentService.IsDocumentLoaded)
             return PageOrganizationResult.NoChange();
 
-        _documentService.InsertPagesFromPdf(sourcePdfPath, insertAtIndex);
+        _documentService.InsertPagesFromPdf(sourcePdfPath, insertAtIndex, ignorePermissions: ignorePermissions);
 
         _logger.LogInformation("Inserted pages from {SourcePdfPath} at {InsertAtIndex}", sourcePdfPath, insertAtIndex);
         return PageOrganizationResult.Changed();
@@ -80,12 +82,12 @@ public sealed class PageOrganizationWorkflowService
         _logger.LogInformation("Extracted {PageCount} page(s) to {OutputPath}", materialized.Length, outputPath);
     }
 
-    public async Task<PageOrganizationResult> MovePageAsync(int fromIndex, int toIndex)
+    public async Task<PageOrganizationResult> MovePageAsync(int fromIndex, int toIndex, bool ignorePermissions)
     {
         if (!_documentService.IsDocumentLoaded || fromIndex == toIndex)
             return PageOrganizationResult.NoChange(fromIndex);
 
-        _documentService.MovePage(fromIndex, toIndex);
+        _documentService.MovePage(fromIndex, toIndex, ignorePermissions);
 
         _logger.LogInformation("Moved page from {FromIndex} to {ToIndex}", fromIndex, toIndex);
         return PageOrganizationResult.Changed(toIndex);
@@ -94,7 +96,8 @@ public sealed class PageOrganizationWorkflowService
     public async Task<PageOrganizationResult> MovePagesAsync(
         IEnumerable<int> pageIndices,
         int delta,
-        int currentPageIndex)
+        int currentPageIndex,
+        bool ignorePermissions)
     {
         if (!_documentService.IsDocumentLoaded)
             return PageOrganizationResult.NoChange(currentPageIndex);
@@ -111,7 +114,7 @@ public sealed class PageOrganizationWorkflowService
 
 
         var newCurrentPageIndex = RemapCurrentPageAfterMove(currentPageIndex, indices, delta, _documentService.PageCount);
-        var newSelectedPageIndices = _documentService.MovePages(indices, delta);
+        var newSelectedPageIndices = _documentService.MovePages(indices, delta, ignorePermissions);
 
         _logger.LogInformation("Moved {Count} selected page(s) by delta {Delta}", indices.Length, delta);
         return PageOrganizationResult.Changed(newCurrentPageIndex, newSelectedPageIndices);

@@ -838,23 +838,15 @@ public class PdfParseException : Exception
 }
 
 /// <summary>
-/// Thrown when an encrypted PDF is opened but decryption is not yet
-/// implemented. Encrypted streams in such files contain ciphertext that
-/// excise cannot read; silently parsing the unencrypted catalog and
-/// returning garbage stream bytes was the prior behaviour and produced
-/// confusing failures (e.g. redactions appearing to succeed but doing
-/// nothing). Callers can pass <c>allowEncrypted: true</c> to
-/// <c>PdfDocument.Open</c> to suppress this and accept best-effort
-/// behaviour at their own risk.
+/// Thrown when an encrypted PDF is opened but excise cannot build a security
+/// handler for it: a missing or unreadable <c>/Encrypt</c> dictionary, an
+/// unsupported security handler or revision, or a wrong or missing user
+/// password. Its streams would read as ciphertext, and extraction and
+/// redaction would find nothing yet report success. Callers can pass
+/// <c>allowEncrypted: true</c> to <c>PdfDocument.Open</c> to inspect such a
+/// file anyway, accepting the ciphertext.
 /// </summary>
 public class PdfEncryptionNotSupportedException : Exception
 {
-    public PdfEncryptionNotSupportedException()
-        : base("This PDF is encrypted and excise does not yet support decryption. " +
-               "See https://github.com/marctjones/excise/issues/324. " +
-               "Pass allowEncrypted: true to Open() to bypass this check (returns garbage for encrypted streams).")
-    {
-    }
-
     public PdfEncryptionNotSupportedException(string message) : base(message) { }
 }

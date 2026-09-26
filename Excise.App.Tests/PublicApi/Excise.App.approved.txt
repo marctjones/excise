@@ -302,12 +302,12 @@ namespace Excise.App.Services
     {
         public PageOrganizationWorkflowService(Excise.App.Services.PdfDocumentService documentService, Excise.App.Services.IUserDialogService dialogService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PageOrganizationWorkflowService> logger) { }
         public System.Threading.Tasks.Task ExtractPagesToFileAsync(string outputPath, System.Collections.Generic.IEnumerable<int> pageIndices, bool ignorePermissions) { }
-        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex, bool ignorePermissions) { }
         public System.Threading.Tasks.Task MergeDocumentsAsync(System.Collections.Generic.IReadOnlyList<string> sourcePaths, string outputPath, bool ignorePermissions) { }
-        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> MovePageAsync(int fromIndex, int toIndex) { }
-        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> MovePagesAsync(System.Collections.Generic.IEnumerable<int> pageIndices, int delta, int currentPageIndex) { }
-        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> RemovePageAsync(int pageIndex) { }
-        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> RemovePagesAsync(System.Collections.Generic.IEnumerable<int> pageIndices, int currentPageIndex) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> MovePageAsync(int fromIndex, int toIndex, bool ignorePermissions) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> MovePagesAsync(System.Collections.Generic.IEnumerable<int> pageIndices, int delta, int currentPageIndex, bool ignorePermissions) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> RemovePageAsync(int pageIndex, bool ignorePermissions) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> RemovePagesAsync(System.Collections.Generic.IEnumerable<int> pageIndices, int currentPageIndex, bool ignorePermissions) { }
         public System.Threading.Tasks.Task<Excise.Core.Operations.SplitDocumentResult> SplitDocumentAsync(string outputFolder, Excise.Core.Operations.SplitDocumentSpecification specification, bool ignorePermissions) { }
     }
     public class PdfDocumentService
@@ -324,17 +324,14 @@ namespace Excise.App.Services
         public void ExtractPagesToPdf(string outputPath, System.Collections.Generic.IEnumerable<int> pageIndices, bool ignorePermissions = false) { }
         public Excise.Core.Document.PdfDocument? GetCurrentDocument() { }
         public Excise.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions() { }
-        public void InsertPagesFromPdf(string sourcePdfPath, int insertAtIndex, System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
+        public void InsertPagesFromPdf(string sourcePdfPath, int insertAtIndex, System.Collections.Generic.IEnumerable<int>? pageIndices = null, bool ignorePermissions = false) { }
         public void LoadDocument(string filePath, string? userPassword = null) { }
         public Excise.Core.Operations.MergeDocumentsResult MergeDocumentsToPdf(System.Collections.Generic.IReadOnlyList<string> sourcePaths, string outputPath, bool ignorePermissions = false) { }
-        public void MovePage(int fromIndex, int toIndex) { }
-        public System.Collections.Generic.IReadOnlyList<int> MovePages(System.Collections.Generic.IEnumerable<int> pageIndices, int delta) { }
-        public void RemovePage(int pageIndex) { }
-        public void RemovePages(System.Collections.Generic.IEnumerable<int> pageIndices) { }
-        public void RotatePage(int pageIndex, int degrees) { }
-        public void RotatePage180(int pageIndex) { }
-        public void RotatePageLeft(int pageIndex) { }
-        public void RotatePageRight(int pageIndex) { }
+        public void MovePage(int fromIndex, int toIndex, bool ignorePermissions = false) { }
+        public System.Collections.Generic.IReadOnlyList<int> MovePages(System.Collections.Generic.IEnumerable<int> pageIndices, int delta, bool ignorePermissions = false) { }
+        public void RemovePage(int pageIndex, bool ignorePermissions = false) { }
+        public void RemovePages(System.Collections.Generic.IEnumerable<int> pageIndices, bool ignorePermissions = false) { }
+        public void RotatePage(int pageIndex, int degrees, bool ignorePermissions = false) { }
         public void SaveDocument(string? filePath = null) { }
         public Excise.Core.Operations.SplitDocumentResult SplitDocument(string outputFolder, Excise.Core.Operations.SplitDocumentSpecification specification, bool ignorePermissions = false) { }
         public bool VerifyPassword(string? candidate) { }

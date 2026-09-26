@@ -333,9 +333,9 @@ public partial class MainWindowViewModel
         PreviousPageCommand = ReactiveCommand.CreateFromTask(PreviousPageAsync);
         GoToPageCommand = ReactiveCommand.CreateFromTask<int>(GoToPageAsync);
 
-        RotatePageLeftCommand = ReactiveCommand.CreateFromTask(RotatePageLeftAsync);
-        RotatePageRightCommand = ReactiveCommand.CreateFromTask(RotatePageRightAsync);
-        RotatePage180Command = ReactiveCommand.CreateFromTask(RotatePage180Async);
+        RotatePageLeftCommand = ReactiveCommand.CreateFromTask(() => RotateCommandTargetPageAsync(270, "Rotate page left"));
+        RotatePageRightCommand = ReactiveCommand.CreateFromTask(() => RotateCommandTargetPageAsync(90, "Rotate page right"));
+        RotatePage180Command = ReactiveCommand.CreateFromTask(() => RotateCommandTargetPageAsync(180, "Rotate page 180°"));
 
         ZoomActualSizeCommand = ReactiveCommand.Create(ZoomActualSize);
         ZoomFitWidthCommand = ReactiveCommand.Create(ZoomFitWidth);

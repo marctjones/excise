@@ -155,6 +155,50 @@ public class SecurityHandlerEdgeTests
         inspected.GetPage(1).Text.Should().NotContain("RC4SECRET");
     }
 
+    /// <summary>
+    /// #1850: ISO 32000-2 §7.3.7 treats a dictionary entry whose value is null as absent, so a
+    /// trailer's <c>/Encrypt null</c> is an unencrypted file (qpdf: "File is not encrypted"). The
+    /// genuinely encrypted control is <see cref="Rc4V1R2_GenuinelyEncryptedContentAndStrings_DecryptEndToEnd"/>.
+    /// </summary>
+    [Fact]
+    public void Open_TrailerEncryptNull_IsAnUnencryptedDocument()
+    {
+        var pdf = BuildPlaintextPdf("NULLENCRYPT", trailerEntry: "/Encrypt null");
+
+        using var doc = PdfDocument.Open(pdf);
+
+        doc.IsEncrypted.Should().BeFalse("a null /Encrypt is the same as no /Encrypt");
+        doc.GetPage(1).Text.Should().Contain("NULLENCRYPT");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractAllPages(pdf).Should().Contain("NULLENCRYPT", "MuPDF reads the same file as plaintext");
+    }
+
+    /// <summary>A one-page plaintext PDF whose trailer also carries <paramref name="trailerEntry"/>.</summary>
+    private static byte[] BuildPlaintextPdf(string text, string trailerEntry)
+    {
+        var content = $"BT /F1 12 Tf 100 700 Td ({text}) Tj ET";
+        var objects = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+            $"<< /Length {content.Length} >>\nstream\n{content}\nendstream",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+        };
+        var pdf = new StringBuilder("%PDF-1.4\n");
+        var offsets = new List<int>();
+        for (var i = 0; i < objects.Length; i++)
+        {
+            offsets.Add(pdf.Length);
+            pdf.Append($"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+        }
+        var xrefPos = pdf.Length;
+        pdf.Append($"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
+        foreach (var offset in offsets) pdf.Append($"{offset:D10} 00000 n \n");
+        pdf.Append($"trailer\n<< /Root 1 0 R /Size {objects.Length + 1} {trailerEntry} >>\nstartxref\n{xrefPos}\n%%EOF\n");
+        return Encoding.ASCII.GetBytes(pdf.ToString());
+    }
+
     [Fact]
     public void Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions()
     {

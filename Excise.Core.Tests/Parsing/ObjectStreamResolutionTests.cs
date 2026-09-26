@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.TestSupport;
 using Xunit;
 namespace Excise.Core.Tests.Parsing;
 
@@ -179,7 +180,7 @@ public class ObjectStreamResolutionTests
     }
 
     private const string EncryptedRC4Pdf =
-        "../../../../test-pdfs/isartor/Isartor testsuite/PDFA-1b/6.1 File structure/6.1.3 File trailer/isartor-6-1-3-t02-fail-a.pdf";
+        "test-pdfs/isartor/Isartor testsuite/PDFA-1b/6.1 File structure/6.1.3 File trailer/isartor-6-1-3-t02-fail-a.pdf";
 
     // qpdf-generated test PDFs: the Isartor file works for testing the
     // open path, but its single page has an empty content stream
@@ -189,21 +190,36 @@ public class ObjectStreamResolutionTests
     //   qpdf --allow-weak-crypto --encrypt '' '' 128 -- src.pdf rc4-128.pdf
     //   qpdf --allow-weak-crypto --encrypt '' '' 40  -- src.pdf rc4-40.pdf
     private const string EncryptedRC4_128 =
-        "../../../../test-pdfs/encrypted/birth-cert-rc4-128.pdf";
+        "test-pdfs/encrypted/birth-cert-rc4-128.pdf";
     private const string EncryptedRC4_40 =
-        "../../../../test-pdfs/encrypted/birth-cert-rc4-40.pdf";
+        "test-pdfs/encrypted/birth-cert-rc4-40.pdf";
     private const string EncryptedAES_128 =
-        "../../../../test-pdfs/encrypted/birth-cert-aes-128.pdf";
+        "test-pdfs/encrypted/birth-cert-aes-128.pdf";
     private const string EncryptedAES_256 =
-        "../../../../test-pdfs/encrypted/birth-cert-aes-256.pdf";
+        "test-pdfs/encrypted/birth-cert-aes-256.pdf";
     private const string EmbeddedFileOnlyEncryptedPdf =
-        "../../../../test-pdfs/pdfjs/auth-event-ef-open.pdf";
+        "test-pdfs/pdfjs/auth-event-ef-open.pdf";
     private const string PasswordEncryptedAes128 =
-        "../../../../test-pdfs/poppler/unittestcases/PasswordEncrypted.pdf";
+        "test-pdfs/poppler/unittestcases/PasswordEncrypted.pdf";
     private const string PasswordEncryptedAes256 =
-        "../../../../test-pdfs/poppler/unittestcases/encrypted-256.pdf";
+        "test-pdfs/poppler/unittestcases/encrypted-256.pdf";
     private const string PasswordEncryptedPdfDocEncoding =
-        "../../../../test-pdfs/poppler/unittestcases/Gday garçon - open.pdf";
+        "test-pdfs/poppler/unittestcases/Gday garçon - open.pdf";
+
+    /// <summary>
+    /// The fixture's absolute path. An absent fixture skips with a reason that names the
+    /// searched paths (#1527); it never passes without testing anything (#1850).
+    /// </summary>
+    private static string EncryptedFixture(string relativePath)
+    {
+        var path = TestRepoLayout.FindFile(relativePath);
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason(
+            relativePath.StartsWith("test-pdfs/encrypted/", StringComparison.Ordinal)
+                ? "qpdf-encrypted fixture (scripts/generate-encrypted-test-pdfs.sh)"
+                : "encrypted corpus fixture",
+            relativePath));
+        return path!;
+    }
 
     [Theory]
     [InlineData(EncryptedRC4_128, "RC4 V=2 R=3 (128-bit)")]
@@ -218,9 +234,7 @@ public class ObjectStreamResolutionTests
         // verify excise decrypts it transparently and the content stream
         // bytes are recognisable PDF operators ("BT", "Tj", "ET", etc.)
         // not RC4 ciphertext.
-        if (!File.Exists(path)) return;
-
-        using var doc = PdfDocument.Open(path);
+        using var doc = PdfDocument.Open(EncryptedFixture(path));
         doc.IsEncrypted.Should().BeTrue();
         doc.IsDecrypting.Should().BeTrue($"{description}: handler must build for empty password");
 
@@ -255,9 +269,7 @@ public class ObjectStreamResolutionTests
         // 32-byte file encryption key, and produces a usable handler.
         // End-to-end content is also covered by the parameterised theory
         // above since AES-256 is included there.
-        if (!File.Exists(EncryptedAES_256)) return;
-
-        using var doc = PdfDocument.Open(EncryptedAES_256);
+        using var doc = PdfDocument.Open(EncryptedFixture(EncryptedAES_256));
         doc.IsEncrypted.Should().BeTrue();
         doc.IsDecrypting.Should().BeTrue(
             "V=5 R=6 with empty password must verify via Algorithm 2.B and yield a working handler");
@@ -267,9 +279,7 @@ public class ObjectStreamResolutionTests
     [Fact]
     public void OpensEmbeddedFileOnlyEncryptedPdf_IdentityDocumentFiltersDoNotRequirePassword()
     {
-        if (!File.Exists(EmbeddedFileOnlyEncryptedPdf)) return;
-
-        using var doc = PdfDocument.Open(EmbeddedFileOnlyEncryptedPdf);
+        using var doc = PdfDocument.Open(EncryptedFixture(EmbeddedFileOnlyEncryptedPdf));
 
         doc.IsEncrypted.Should().BeTrue();
         doc.IsDecrypting.Should().BeFalse(
@@ -287,9 +297,7 @@ public class ObjectStreamResolutionTests
         // here. End-to-end content-bytes-are-operators is covered by
         // OpensRealEncryptedPdf_DecryptedContentIsValidPdfOperators on
         // qpdf-generated files with real content.
-        if (!File.Exists(EncryptedRC4Pdf)) return;
-
-        using var doc = PdfDocument.Open(EncryptedRC4Pdf);
+        using var doc = PdfDocument.Open(EncryptedFixture(EncryptedRC4Pdf));
         doc.IsEncrypted.Should().BeTrue("file's trailer carries /Encrypt");
         doc.IsDecrypting.Should().BeTrue(
             "the security handler must have built successfully for the empty-password case " +
@@ -323,9 +331,7 @@ public class ObjectStreamResolutionTests
         // /Encrypt dict at the caller's risk. With RC4 working, the
         // empty-password case won't hit this fallback path; this test
         // just keeps the API contract pinned.
-        if (!File.Exists(EncryptedRC4Pdf)) return;
-
-        using var doc = PdfDocument.Open(EncryptedRC4Pdf, allowEncrypted: true);
+        using var doc = PdfDocument.Open(EncryptedFixture(EncryptedRC4Pdf), allowEncrypted: true);
         doc.IsEncrypted.Should().BeTrue();
         doc.Trailer.GetOptional("Encrypt").Should().NotBeNull(
             "/Encrypt dict must be reachable so callers inspecting encryption parameters can read /V, /R, /U, /O");
@@ -334,9 +340,7 @@ public class ObjectStreamResolutionTests
     [Fact]
     public void OpensEncryptedPdf_WithSuppliedAsciiUserPassword()
     {
-        if (!File.Exists(PasswordEncryptedAes128)) return;
-
-        using var doc = PdfDocument.Open(PasswordEncryptedAes128, userPassword: "password");
+        using var doc = PdfDocument.Open(EncryptedFixture(PasswordEncryptedAes128), userPassword: "password");
 
         doc.IsEncrypted.Should().BeTrue();
         doc.IsDecrypting.Should().BeTrue();
@@ -346,9 +350,7 @@ public class ObjectStreamResolutionTests
     [Fact]
     public void OpensEncryptedPdf_WithSuppliedAes256UserPassword()
     {
-        if (!File.Exists(PasswordEncryptedAes256)) return;
-
-        using var doc = PdfDocument.Open(PasswordEncryptedAes256, userPassword: "user-secret");
+        using var doc = PdfDocument.Open(EncryptedFixture(PasswordEncryptedAes256), userPassword: "user-secret");
 
         doc.IsEncrypted.Should().BeTrue();
         doc.IsDecrypting.Should().BeTrue();
@@ -358,9 +360,7 @@ public class ObjectStreamResolutionTests
     [Fact]
     public void OpensEncryptedPdf_WithPdfDocEncodingPassword()
     {
-        if (!File.Exists(PasswordEncryptedPdfDocEncoding)) return;
-
-        using var doc = PdfDocument.Open(PasswordEncryptedPdfDocEncoding, userPassword: "garçon");
+        using var doc = PdfDocument.Open(EncryptedFixture(PasswordEncryptedPdfDocEncoding), userPassword: "garçon");
 
         doc.IsEncrypted.Should().BeTrue();
         doc.IsDecrypting.Should().BeTrue();
