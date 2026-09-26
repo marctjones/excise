@@ -24,7 +24,7 @@ namespace Excise.Core.Fonts;
 ///
 /// Reference: Adobe Technical Note #5176 (The Compact Font Format Specification).
 /// </summary>
-public static class CffSubsetter
+internal static class CffSubsetter
 {
     /// <summary>
     /// Subset a CFF font to contain only the specified glyph IDs.

@@ -7,7 +7,7 @@ namespace Excise.Core.Parsing;
 /// Decompresses PDF streams by applying the stream's /Filter pipeline.
 /// ISO 32000-2:2020 Section 7.4.
 /// </summary>
-public class StreamDecompressor
+internal class StreamDecompressor
 {
     private readonly PdfFilterRegistry _filters;
 

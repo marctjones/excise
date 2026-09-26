@@ -4,7 +4,7 @@ namespace Excise.Core.Text.Segmentation;
 /// Type of overlap between a glyph and a redaction area.
 /// Used to determine whether partial glyph rasterization is needed.
 /// </summary>
-public enum GlyphOverlapType
+internal enum GlyphOverlapType
 {
     /// <summary>
     /// Glyph does not intersect the redaction area at all (keep glyph).

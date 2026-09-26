@@ -27,7 +27,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// form design (#1431's carrier list keeps them greppable for exactly that
 /// reason). A blank or whitespace value carries nothing and is skipped.</para>
 /// </summary>
-public static class FormFieldValueRecovery
+internal static class FormFieldValueRecovery
 {
     /// <param name="Rect">The widget's rectangle, or null for a field with no widget on any page.</param>
     public readonly record struct FieldValue(

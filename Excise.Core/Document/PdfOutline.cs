@@ -135,7 +135,7 @@ public static class PdfOutlineParser
     /// has no named destinations (most don't). Public so link-parser code
     /// can share one resolved map across outline and per-page link parsing.
     /// </summary>
-    public static Dictionary<string, PdfObject>? BuildNamedDestinations(PdfDocument doc)
+    internal static Dictionary<string, PdfObject>? BuildNamedDestinations(PdfDocument doc)
     {
         var map = new Dictionary<string, PdfObject>();
 

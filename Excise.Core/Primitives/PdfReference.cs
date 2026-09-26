@@ -76,7 +76,7 @@ public sealed class PdfReference : PdfObject, IEquatable<PdfReference>
 /// <summary>
 /// Represents an indirect object (object with object number and generation).
 /// </summary>
-public sealed class PdfIndirectObject
+internal sealed class PdfIndirectObject
 {
     /// <summary>
     /// The object number.

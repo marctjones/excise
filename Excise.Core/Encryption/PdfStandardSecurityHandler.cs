@@ -29,7 +29,7 @@ namespace Excise.Core.Security;
 /// whole flow but uses a single SHA-256 in place of Algorithm 2.B; it is
 /// supported for decryption and re-encrypts to R=6 (#1128).
 /// </summary>
-public sealed class PdfStandardSecurityHandler
+internal sealed class PdfStandardSecurityHandler
 {
     /// <summary>32-byte padding string used by Algorithms 2 and 6.</summary>
     private static readonly byte[] PasswordPadding =

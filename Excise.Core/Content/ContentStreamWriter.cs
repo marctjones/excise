@@ -7,7 +7,7 @@ namespace Excise.Core.Content;
 /// Serializes a ContentStream to PDF content stream bytes.
 /// ISO 32000-2:2020 Section 7.8.2.
 /// </summary>
-public class ContentStreamWriter
+internal class ContentStreamWriter
 {
     private readonly StringBuilder _sb = new();
 

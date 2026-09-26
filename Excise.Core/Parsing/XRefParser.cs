@@ -9,7 +9,7 @@ namespace Excise.Core.Parsing;
 /// Parser for PDF cross-reference tables and streams.
 /// ISO 32000-2:2020 Section 7.5.
 /// </summary>
-public class XRefParser
+internal class XRefParser
 {
     private readonly Stream _stream;
     private readonly PdfLexer _lexer;
@@ -1008,7 +1008,7 @@ public class XRefParser
 /// <summary>
 /// Entry in the cross-reference table.
 /// </summary>
-public class XRefEntry
+internal class XRefEntry
 {
     /// <summary>
     /// Byte offset of the object in the file (for uncompressed objects).

@@ -65,7 +65,7 @@ namespace Excise.Core.Text;
 /// concatenation.
 /// </para>
 /// </remarks>
-public static class MatchingNormalization
+internal static class MatchingNormalization
 {
     /// <summary>
     /// Fold <paramref name="text"/> into the canonical matching space:

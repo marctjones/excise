@@ -31,7 +31,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// establishes that image data survives and which object holds it. It does not
 /// decode it.</para>
 /// </summary>
-public static class ImageLayerRecovery
+internal static class ImageLayerRecovery
 {
     /// <summary>Smaller than this in either dimension is an icon or a rule, not content.</summary>
     private const int MinPixelDimension = 16;

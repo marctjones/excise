@@ -34,7 +34,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// <para><b>Confidence is Certain.</b> The glyphs are in the content stream and
 /// any extractor reads them. Nothing here is estimated.</para>
 /// </summary>
-public static class MarkRegionTextRecovery
+internal static class MarkRegionTextRecovery
 {
     /// <summary>A glyph's centre must fall inside the mark for its letter to count.</summary>
     private const double EdgeTolerancePt = 0.5;

@@ -35,7 +35,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// lost, because any text under it still surfaces as an UNLINKED finding —
 /// the report loses the attribution, never the leak.</para>
 /// </summary>
-public static class RedactionMarkDetector
+internal static class RedactionMarkDetector
 {
     /// <summary>Luminance at or below this counts as a redaction-dark fill.</summary>
     internal const double DarkLuminance = 0.45;

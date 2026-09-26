@@ -33,7 +33,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// strokes, not fills), but the obstruction itself must be a FILL — a stroked
 /// outline does not hide anything.</para>
 /// </summary>
-public static class CoveredContentRecovery
+internal static class CoveredContentRecovery
 {
     private const double DarkLuminance = 0.45;   // a fill at or below this hides what it covers
     private const double CoveredFraction = 0.5;

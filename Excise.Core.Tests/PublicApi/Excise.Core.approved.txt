@@ -417,11 +417,6 @@ namespace Excise.Core.Content
         public int MaxNestingDepth { get; set; }
         public Excise.Core.Content.ContentStream Parse(System.Threading.CancellationToken cancellationToken = default) { }
     }
-    public class ContentStreamWriter
-    {
-        public ContentStreamWriter() { }
-        public byte[] Write(Excise.Core.Content.ContentStream content) { }
-    }
     public readonly struct ContentTransform : System.IEquatable<Excise.Core.Content.ContentTransform>
     {
         public ContentTransform(double A, double B, double C, double D, double E, double F) { }
@@ -847,10 +842,6 @@ namespace Excise.Core.Document
         ExternalUri = 1,
         Dangerous = 2,
     }
-    public static class PdfLinkParser
-    {
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfLink> Parse(Excise.Core.Document.PdfDocument doc, Excise.Core.Primitives.PdfDictionary pageDict, System.Collections.Generic.Dictionary<string, Excise.Core.Primitives.PdfObject>? namedDests) { }
-    }
     public readonly struct PdfMarkedContentReference : System.IEquatable<Excise.Core.Document.PdfMarkedContentReference>
     {
         public PdfMarkedContentReference(int Mcid, int? PageNumber) { }
@@ -888,7 +879,6 @@ namespace Excise.Core.Document
     }
     public static class PdfOutlineParser
     {
-        public static System.Collections.Generic.Dictionary<string, Excise.Core.Primitives.PdfObject>? BuildNamedDestinations(Excise.Core.Document.PdfDocument doc) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOutlineItem> Parse(Excise.Core.Document.PdfDocument doc) { }
     }
     public class PdfPage
@@ -1183,13 +1173,6 @@ namespace Excise.Core.Editing
         public static Excise.Core.Editing.PdfTypewriterTextStyle Default { get; }
     }
 }
-namespace Excise.Core.Fonts
-{
-    public static class CffSubsetter
-    {
-        public static byte[] Subset(byte[] originalCff, System.Collections.Generic.IReadOnlySet<int> usedGlyphIds) { }
-    }
-}
 namespace Excise.Core.Graphics
 {
     public class PdfBrush
@@ -1455,90 +1438,11 @@ namespace Excise.Core.Parsing
     {
         public PdfEncryptionNotSupportedException(string message) { }
     }
-    public class PdfLexer : System.IDisposable
-    {
-        public PdfLexer(byte[] data) { }
-        public PdfLexer(System.IO.Stream stream, bool ownsStream = false) { }
-        public long Position { get; }
-        public void Dispose() { }
-        public Excise.Core.Parsing.PdfToken NextToken() { }
-        public Excise.Core.Parsing.PdfToken PeekToken() { }
-        public byte[] ReadStreamData(int length) { }
-        public void Seek(long position) { }
-    }
     public class PdfParseException : System.Exception
     {
         public PdfParseException(string message) { }
         public PdfParseException(string message, System.Exception inner) { }
         public bool IsResourceGuard { get; init; }
-    }
-    public class PdfParser : System.IDisposable
-    {
-        public PdfParser(System.IO.Stream stream) { }
-        public PdfParser(byte[] data) { }
-        public PdfParser(Excise.Core.Parsing.PdfLexer lexer, bool ownsLexer = false) { }
-        public System.Threading.CancellationToken CancellationToken { get; set; }
-        public System.Func<int, Excise.Core.Primitives.PdfObject?>? IndirectObjectResolver { get; set; }
-        public Excise.Core.Parsing.PdfLexer Lexer { get; }
-        public int MaxNestingDepth { get; set; }
-        public long Position { get; }
-        public void Dispose() { }
-        public Excise.Core.Primitives.PdfIndirectObject ParseIndirectObject() { }
-        public Excise.Core.Primitives.PdfObject ParseObject() { }
-        public void Seek(long position) { }
-        public Excise.Core.Primitives.PdfIndirectObject? TryParseIndirectObject() { }
-    }
-    public readonly struct PdfToken
-    {
-        public PdfToken(Excise.Core.Parsing.PdfTokenType type, string value, long position) { }
-        public bool IsEof { get; }
-        public bool IsNumber { get; }
-        public long Position { get; }
-        public Excise.Core.Parsing.PdfTokenType Type { get; }
-        public string Value { get; }
-        public bool IsKeyword(string keyword) { }
-        public override string ToString() { }
-    }
-    public enum PdfTokenType
-    {
-        Eof = 0,
-        Integer = 1,
-        Real = 2,
-        LiteralString = 3,
-        HexString = 4,
-        Name = 5,
-        Keyword = 6,
-        ArrayStart = 7,
-        ArrayEnd = 8,
-        DictionaryStart = 9,
-        DictionaryEnd = 10,
-        Comment = 11,
-    }
-    public class StreamDecompressor
-    {
-        public StreamDecompressor() { }
-        public byte[] ApplyFilter(string filterName, byte[] data, Excise.Core.Primitives.PdfDictionary? parms) { }
-        public void Decompress(Excise.Core.Primitives.PdfStream stream) { }
-    }
-    public class XRefEntry
-    {
-        public XRefEntry() { }
-        public int Generation { get; init; }
-        public bool InUse { get; init; }
-        public int? IndexInStream { get; init; }
-        public bool IsCompressed { get; }
-        public int? ObjectStreamNumber { get; init; }
-        public long Offset { get; init; }
-        public override string ToString() { }
-    }
-    public class XRefParser
-    {
-        public XRefParser(System.IO.Stream stream) { }
-        public long FindStartXRef() { }
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "Trailer",
-                "XRef"})]
-        public System.ValueTuple<Excise.Core.Primitives.PdfDictionary, System.Collections.Generic.Dictionary<int, Excise.Core.Parsing.XRefEntry>> ParseXRef(long position) { }
     }
 }
 namespace Excise.Core.Primitives
@@ -1640,15 +1544,6 @@ namespace Excise.Core.Primitives
         public bool TryGetString(string key, out string value) { }
         public bool TryGetValue(Excise.Core.Primitives.PdfName key, out Excise.Core.Primitives.PdfObject value) { }
         public bool TryGetValue(string key, out Excise.Core.Primitives.PdfObject value) { }
-    }
-    public sealed class PdfIndirectObject
-    {
-        public PdfIndirectObject(int objectNumber, int generation, Excise.Core.Primitives.PdfObject value) { }
-        public int Generation { get; }
-        public int ObjectNumber { get; }
-        public Excise.Core.Primitives.PdfReference Reference { get; }
-        public Excise.Core.Primitives.PdfObject Value { get; }
-        public override string ToString() { }
     }
     public sealed class PdfInteger : Excise.Core.Primitives.PdfObject
     {
@@ -1881,44 +1776,6 @@ namespace Excise.Core.Primitives
 }
 namespace Excise.Core.Redaction.Recovery
 {
-    public static class CoveredContentRecovery
-    {
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.CoveredContentRecovery.CoveredContent> Scan(Excise.Core.Document.PdfDocument document) { }
-        public readonly struct CoveredContent : System.IEquatable<Excise.Core.Redaction.Recovery.CoveredContentRecovery.CoveredContent>
-        {
-            public CoveredContent(int PageNumber, string Kind, string Description, Excise.Core.Document.PdfRectangle Covered, Excise.Core.Document.PdfRectangle Obstruction) { }
-            public Excise.Core.Document.PdfRectangle Covered { get; init; }
-            public string Description { get; init; }
-            public string Kind { get; init; }
-            public Excise.Core.Document.PdfRectangle Obstruction { get; init; }
-            public int PageNumber { get; init; }
-        }
-    }
-    public static class FormFieldValueRecovery
-    {
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.FormFieldValueRecovery.FieldValue> Scan(Excise.Core.Document.PdfDocument document) { }
-        public readonly struct FieldValue : System.IEquatable<Excise.Core.Redaction.Recovery.FormFieldValueRecovery.FieldValue>
-        {
-            public FieldValue(int PageNumber, string FieldName, string Value, Excise.Core.Document.PdfRectangle? Rect) { }
-            public string FieldName { get; init; }
-            public int PageNumber { get; init; }
-            public Excise.Core.Document.PdfRectangle? Rect { get; init; }
-            public string Value { get; init; }
-        }
-    }
-    public static class ImageLayerRecovery
-    {
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.ImageLayerRecovery.ImageLayerLeak> Scan(Excise.Core.Document.PdfDocument document) { }
-        public readonly struct ImageLayerLeak : System.IEquatable<Excise.Core.Redaction.Recovery.ImageLayerRecovery.ImageLayerLeak>
-        {
-            public ImageLayerLeak(string Kind, int ObjectNumber, int Width, int Height, string Description) { }
-            public string Description { get; init; }
-            public int Height { get; init; }
-            public string Kind { get; init; }
-            public int ObjectNumber { get; init; }
-            public int Width { get; init; }
-        }
-    }
     public enum MarkRecoveryOutcome
     {
         Recovered = 0,
@@ -1927,19 +1784,6 @@ namespace Excise.Core.Redaction.Recovery
         ContentSurvives = 3,
         NotRecovered = 4,
     }
-    public static class MarkRegionTextRecovery
-    {
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.MarkRegionTextRecovery.MarkRegionText> Scan(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionMark> marks) { }
-        public readonly struct MarkRegionText : System.IEquatable<Excise.Core.Redaction.Recovery.MarkRegionTextRecovery.MarkRegionText>
-        {
-            public MarkRegionText(int PageNumber, string MarkId, string Kind, string Text, Excise.Core.Document.PdfRectangle Rect) { }
-            public string Kind { get; init; }
-            public string MarkId { get; init; }
-            public int PageNumber { get; init; }
-            public Excise.Core.Document.PdfRectangle Rect { get; init; }
-            public string Text { get; init; }
-        }
-    }
     public sealed class MarkSummary : System.IEquatable<Excise.Core.Redaction.Recovery.MarkSummary>
     {
         public MarkSummary(Excise.Core.Redaction.Recovery.RedactionMark Mark, Excise.Core.Redaction.Recovery.MarkRecoveryOutcome Outcome, System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RecoveredFinding> Findings, Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport? Fit = null) { }
@@ -1947,42 +1791,6 @@ namespace Excise.Core.Redaction.Recovery
         public Excise.Core.Redaction.Recovery.RedactionFitAnalyzer.FitReport? Fit { get; init; }
         public Excise.Core.Redaction.Recovery.RedactionMark Mark { get; init; }
         public Excise.Core.Redaction.Recovery.MarkRecoveryOutcome Outcome { get; init; }
-    }
-    public static class MarkedContentTextRecovery
-    {
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.MarkedContentTextRecovery.MarkedContentText> Scan(Excise.Core.Document.PdfDocument document) { }
-        public readonly struct MarkedContentText : System.IEquatable<Excise.Core.Redaction.Recovery.MarkedContentTextRecovery.MarkedContentText>
-        {
-            public MarkedContentText(int PageNumber, string Carrier, string Text, Excise.Core.Document.PdfRectangle? Enclosed, bool NamedPropertyList) { }
-            public string Carrier { get; init; }
-            public Excise.Core.Document.PdfRectangle? Enclosed { get; init; }
-            public bool NamedPropertyList { get; init; }
-            public int PageNumber { get; init; }
-            public string Text { get; init; }
-        }
-    }
-    public static class PriorRevisionRecovery
-    {
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "Findings",
-                "Summary"})]
-        public static System.ValueTuple<System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.PriorRevisionRecovery.PriorRevisionText>, Excise.Core.Redaction.Recovery.PriorRevisionRecovery.PriorRevisionSummary> Scan(byte[] pdfBytes, System.Threading.CancellationToken cancellationToken = default) { }
-        public readonly struct PriorRevisionSummary : System.IEquatable<Excise.Core.Redaction.Recovery.PriorRevisionRecovery.PriorRevisionSummary>
-        {
-            public PriorRevisionSummary(int RevisionCount, int RevisionsParsed, int RevisionsUnreadable, int PagesRemoved) { }
-            public int PagesRemoved { get; init; }
-            public int RevisionCount { get; init; }
-            public int RevisionsParsed { get; init; }
-            public int RevisionsUnreadable { get; init; }
-        }
-        public readonly struct PriorRevisionText : System.IEquatable<Excise.Core.Redaction.Recovery.PriorRevisionRecovery.PriorRevisionText>
-        {
-            public PriorRevisionText(int RevisionIndex, int PageNumber, string Text, Excise.Core.Document.PdfRectangle Rect) { }
-            public int PageNumber { get; init; }
-            public Excise.Core.Document.PdfRectangle Rect { get; init; }
-            public int RevisionIndex { get; init; }
-            public string Text { get; init; }
-        }
     }
     public sealed class RecoveredFinding : System.IEquatable<Excise.Core.Redaction.Recovery.RecoveredFinding>
     {
@@ -2146,11 +1954,6 @@ namespace Excise.Core.Redaction.Recovery
         public int PageNumber { get; init; }
         public Excise.Core.Document.PdfRectangle Rect { get; init; }
     }
-    public static class RedactionMarkDetector
-    {
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionMark> Detect(Excise.Core.Document.PdfDocument document) { }
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.RedactionMark> DetectPage(Excise.Core.Document.PdfPage page, int pageNumber) { }
-    }
     public enum RedactionMarkKind
     {
         FilledBox = 0,
@@ -2158,17 +1961,6 @@ namespace Excise.Core.Redaction.Recovery
         ShapeAnnotation = 2,
         FormXObjectBox = 3,
         EmptiedRegion = 4,
-    }
-    public static class ResidualArtefactRecovery
-    {
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.ResidualArtefactRecovery.ResidualArtefact> Scan(Excise.Core.Document.PdfDocument document) { }
-        public readonly struct ResidualArtefact : System.IEquatable<Excise.Core.Redaction.Recovery.ResidualArtefactRecovery.ResidualArtefact>
-        {
-            public ResidualArtefact(string Kind, int PageNumber, string Description) { }
-            public string Description { get; init; }
-            public string Kind { get; init; }
-            public int PageNumber { get; init; }
-        }
     }
     public static class RestoredCopyBuilder
     {
@@ -2180,26 +1972,6 @@ namespace Excise.Core.Redaction.Recovery
             public int ItemsDrawn { get; init; }
             public bool SummaryPageAdded { get; init; }
             public int UndrawableCharacters { get; init; }
-        }
-    }
-    public static class XfaValueRecovery
-    {
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "Values",
-                "Summary"})]
-        public static System.ValueTuple<System.Collections.Generic.IReadOnlyList<Excise.Core.Redaction.Recovery.XfaValueRecovery.XfaValue>, Excise.Core.Redaction.Recovery.XfaValueRecovery.XfaSummary> Scan(Excise.Core.Document.PdfDocument document) { }
-        public readonly struct XfaSummary : System.IEquatable<Excise.Core.Redaction.Recovery.XfaValueRecovery.XfaSummary>
-        {
-            public XfaSummary(bool HasXfa, int PacketsExamined, int PacketsUnexamined) { }
-            public bool HasXfa { get; init; }
-            public int PacketsExamined { get; init; }
-            public int PacketsUnexamined { get; init; }
-        }
-        public readonly struct XfaValue : System.IEquatable<Excise.Core.Redaction.Recovery.XfaValueRecovery.XfaValue>
-        {
-            public XfaValue(string FieldPath, string Value) { }
-            public string FieldPath { get; init; }
-            public string Value { get; init; }
         }
     }
 }
@@ -2243,18 +2015,6 @@ namespace Excise.Core.Security
         public override string ToString() { }
         public static bool operator !=(Excise.Core.Security.PdfPermissions left, Excise.Core.Security.PdfPermissions right) { }
         public static bool operator ==(Excise.Core.Security.PdfPermissions left, Excise.Core.Security.PdfPermissions right) { }
-    }
-    public sealed class PdfStandardSecurityHandler
-    {
-        public bool EncryptMetadata { get; }
-        public int KeyLengthBytes { get; }
-        public int R { get; }
-        public bool UsesAes { get; }
-        public int V { get; }
-        public byte[] DecryptStream(int objNum, int gen, byte[] cipherBytes) { }
-        public byte[] DecryptString(int objNum, int gen, byte[] cipherBytes) { }
-        public static Excise.Core.Security.PdfStandardSecurityHandler Build(Excise.Core.Primitives.PdfDictionary encryptDict, byte[] firstId, byte[] userPassword) { }
-        public static Excise.Core.Security.PdfStandardSecurityHandler Build(Excise.Core.Primitives.PdfDictionary encryptDict, byte[] firstId, string? userPassword) { }
     }
 }
 namespace Excise.Core.Signatures
@@ -2336,18 +2096,6 @@ namespace Excise.Core.Signatures
 }
 namespace Excise.Core.Text
 {
-    public static class ArabicPresentationForms
-    {
-        public static bool ContainsPresentationForms(string? text) { }
-        public static string Fold(string text) { }
-        public static bool IsPresentationForm(char c) { }
-    }
-    public static class LatinLigatures
-    {
-        public static bool ContainsLigatures(string? text) { }
-        public static string Fold(string text) { }
-        public static bool IsLigature(char c) { }
-    }
     public class Letter
     {
         public Letter(string value, Excise.Core.Document.PdfRectangle glyphRectangle, double fontSize, string fontName, double startX, double startY, double width, int characterCode, int codeByteLength = 1) { }
@@ -2369,21 +2117,6 @@ namespace Excise.Core.Text
         public string Value { get; }
         public double Width { get; }
         public override string ToString() { }
-    }
-    public static class MatchingNormalization
-    {
-        public static string Fold(string text) { }
-        public static string[] FoldAll(System.Collections.Generic.IReadOnlyList<string> values) { }
-        public static bool IsCombiningMark(char c) { }
-        public static bool IsIgnorableSeparator(char c) { }
-        public static bool IsSemiticVocalizationMark(char c) { }
-        public static bool IsWidthForm(char c) { }
-    }
-    public static class PresentationFormFolding
-    {
-        public static bool ContainsFoldable(string? text) { }
-        public static string Fold(string text) { }
-        public static bool IsFoldable(char c) { }
     }
     public enum ReadingOrderStrategy
     {
@@ -2409,15 +2142,6 @@ namespace Excise.Core.Text
         public static System.Collections.Generic.List<Excise.Core.Text.Letter> RangeBetween(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> ordered, Excise.Core.Text.Letter anchor, Excise.Core.Text.Letter focus) { }
         public static System.Collections.Generic.List<Excise.Core.Text.Letter> SortReadingOrder(System.Collections.Generic.IEnumerable<Excise.Core.Text.Letter> letters) { }
         public static System.Collections.Generic.List<Excise.Core.Text.Letter> SortReadingOrder(System.Collections.Generic.IEnumerable<Excise.Core.Text.Letter> letters, Excise.Core.Text.ReadingOrderStrategy strategy) { }
-    }
-    public class ToUnicodeCMapParser
-    {
-        public ToUnicodeCMapParser() { }
-        public System.Collections.Generic.IReadOnlyDictionary<int, string> Mapping { get; }
-        public int MaxCodeBytes { get; }
-        public static System.Collections.Generic.Dictionary<int, string> Parse(byte[] cmapData) { }
-        public static System.Collections.Generic.Dictionary<int, string> Parse(string cmapContent) { }
-        public static Excise.Core.Text.ToUnicodeCMapParser ParseDetailed(byte[] cmapData) { }
     }
     public static class UnicodeTextSafety
     {
@@ -2478,24 +2202,11 @@ namespace Excise.Core.Text.Segmentation
             public bool VisibleElsewhere { get; init; }
         }
     }
-    public enum GlyphOverlapType
-    {
-        None = 0,
-        Full = 1,
-        Partial = 2,
-    }
     public enum GlyphRemovalStrategy
     {
         AnyOverlap = 0,
         FullyContained = 1,
         CenterPoint = 2,
-    }
-    public class GlyphRemover
-    {
-        public GlyphRemover() { }
-        public GlyphRemover(Excise.Core.Text.Segmentation.LetterFinder letterFinder, Excise.Core.Text.Segmentation.TextSegmenter textSegmenter, Excise.Core.Text.Segmentation.OperationReconstructor reconstructor) { }
-        public bool CloseWidth { get; set; }
-        public System.Collections.Generic.List<Excise.Core.Content.ContentOperator> ProcessOperations(System.Collections.Generic.IReadOnlyList<Excise.Core.Content.ContentOperator> operations, System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters, Excise.Core.Document.PdfRectangle redactionArea, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
     }
     public static class HiddenTextDetector
     {
@@ -2519,40 +2230,9 @@ namespace Excise.Core.Text.Segmentation
         public int PageNumber { get; init; }
         public override string ToString() { }
     }
-    public class LetterFinder
-    {
-        public LetterFinder() { }
-        public System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> FindOperationLetters(string operationText, System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> allLetters) { }
-    }
-    public class LetterMatch
-    {
-        public LetterMatch() { }
-        public required int CharacterIndex { get; init; }
-        public required Excise.Core.Text.Letter Letter { get; init; }
-        public byte[]? RawBytes { get; set; }
-        public object? SourceOperation { get; set; }
-    }
     public static class ObstructionStripper
     {
         public static void StripObstructions(Excise.Core.Document.PdfPage page) { }
-    }
-    public class OperationReconstructor
-    {
-        public OperationReconstructor() { }
-        public System.Collections.Generic.List<Excise.Core.Content.ContentOperator> ReconstructWithPositioning(System.Collections.Generic.List<Excise.Core.Text.Segmentation.TextSegment> segments, Excise.Core.Text.Segmentation.OperationReconstructor.Context context) { }
-        public sealed class Context
-        {
-            public Context() { }
-            public double CharacterSpacing { get; init; }
-            public bool CloseWidth { get; init; }
-            public required string FontName { get; init; }
-            public required double FontSize { get; init; }
-            public double HorizontalScaling { get; init; }
-            public double TextLeading { get; init; }
-            public int TextRenderingMode { get; init; }
-            public double TextRise { get; init; }
-            public double WordSpacing { get; init; }
-        }
     }
     public sealed class PageRedactionResult : System.IEquatable<Excise.Core.Text.Segmentation.PageRedactionResult>
     {
@@ -2697,20 +2377,6 @@ namespace Excise.Core.Text.Segmentation
         public string Feature { get; init; }
         public override string ToString() { }
     }
-    public sealed class RedactionCarrierAudit : System.IEquatable<Excise.Core.Text.Segmentation.RedactionCarrierAudit>
-    {
-        public const int ScrubFloor = 3;
-        public RedactionCarrierAudit(int OutlineTitleCount, int AnnotationsWithTextCount, int UnexaminedXfaPacketCount, int PageLabelPrefixCount, int NameTreeKeyCount, System.Collections.Generic.IReadOnlyList<string> TermsBelowScrubFloor) { }
-        public int AnnotationsWithTextCount { get; init; }
-        public bool HasUnexaminedCarriers { get; }
-        public int NameTreeKeyCount { get; init; }
-        public int OutlineTitleCount { get; init; }
-        public int PageLabelPrefixCount { get; init; }
-        public System.Collections.Generic.IReadOnlyList<string> TermsBelowScrubFloor { get; init; }
-        public int UnexaminedXfaPacketCount { get; init; }
-        public System.Collections.Generic.IReadOnlyList<string> Describe() { }
-        public static Excise.Core.Text.Segmentation.RedactionCarrierAudit Inspect(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string>? requestedTerms = null) { }
-    }
     public sealed class RedactionOptions : System.IEquatable<Excise.Core.Text.Segmentation.RedactionOptions>
     {
         public RedactionOptions() { }
@@ -2777,32 +2443,6 @@ namespace Excise.Core.Text.Segmentation
         public bool WholeWord { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.WordWrapTermCandidate> WordWrapCandidates { get; init; }
         public override string ToString() { }
-    }
-    public class TextSegment
-    {
-        public TextSegment() { }
-        public Excise.Core.Document.PdfRectangle BoundingBox { get; }
-        public int EndIndex { get; set; }
-        public bool HasToUnicode { get; set; }
-        public required double Height { get; set; }
-        public bool IsCidFont { get; set; }
-        public bool IsPartialOverlap { get; }
-        public required bool Keep { get; init; }
-        public System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> LetterMatches { get; set; }
-        public required string OriginalText { get; init; }
-        public Excise.Core.Text.Segmentation.GlyphOverlapType OverlapType { get; set; }
-        public required int StartIndex { get; init; }
-        public required double StartX { get; init; }
-        public required double StartY { get; init; }
-        public string Text { get; }
-        public bool WasHexString { get; set; }
-        public double Width { get; set; }
-        public byte[] GetRawBytes() { }
-    }
-    public class TextSegmenter
-    {
-        public TextSegmenter() { }
-        public System.Collections.Generic.List<Excise.Core.Text.Segmentation.TextSegment> BuildSegments(string text, Excise.Core.Document.PdfRectangle operationBounds, System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> letterMatches, Excise.Core.Document.PdfRectangle redactionArea, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
     }
     public sealed class UnresolvedRedactAnnotationsException : System.InvalidOperationException
     {
@@ -2894,12 +2534,6 @@ namespace Excise.Core.Writing
     {
         public PdfDocumentWriter(Excise.Core.Document.PdfDocument document, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions = null) { }
         public void Write(System.IO.Stream stream) { }
-    }
-    public static class PdfObjectWriter
-    {
-        public static string Serialize(Excise.Core.Primitives.PdfObject obj) { }
-        public static void SerializeObject(Excise.Core.Primitives.PdfObject obj, System.Text.StringBuilder sb) { }
-        public static void SerializeStreamDictionary(Excise.Core.Primitives.PdfStream stream, System.Text.StringBuilder sb) { }
     }
     public sealed class PdfOptimizationOptions : System.IEquatable<Excise.Core.Writing.PdfOptimizationOptions>
     {

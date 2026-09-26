@@ -7,7 +7,7 @@ namespace Excise.Core.Writing;
 /// <summary>
 /// Serializes PDF objects to their text representation.
 /// </summary>
-public static class PdfObjectWriter
+internal static class PdfObjectWriter
 {
     /// <summary>
     /// Serialize a PDF object to its string representation.
