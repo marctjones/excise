@@ -34,7 +34,7 @@ namespace Excise.Core.Text;
 /// do it consistently in either raw or folded space, not across the two.
 /// </para>
 /// </remarks>
-public static class ArabicPresentationForms
+internal static class ArabicPresentationForms
 {
     private const int BlockAStart = 0xFB50;
     private const int BlockALength = 0xFDFF - 0xFB50 + 1;

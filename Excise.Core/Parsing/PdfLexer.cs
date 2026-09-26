@@ -7,7 +7,7 @@ namespace Excise.Core.Parsing;
 /// Tokenizer for PDF syntax.
 /// Reads a stream and produces tokens according to ISO 32000-2:2020 Section 7.2.
 /// </summary>
-public class PdfLexer : IDisposable
+internal class PdfLexer : IDisposable
 {
     private readonly Stream _stream;
     private readonly bool _ownsStream;

@@ -3,7 +3,7 @@ namespace Excise.Core.Parsing;
 /// <summary>
 /// Represents a token from the PDF lexer.
 /// </summary>
-public readonly struct PdfToken
+internal readonly struct PdfToken
 {
     /// <summary>
     /// The type of token.
@@ -53,7 +53,7 @@ public readonly struct PdfToken
 /// <summary>
 /// Types of PDF tokens.
 /// </summary>
-public enum PdfTokenType
+internal enum PdfTokenType
 {
     /// <summary>End of file/stream.</summary>
     Eof,

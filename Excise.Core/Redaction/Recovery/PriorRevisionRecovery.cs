@@ -41,7 +41,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// signal; one that does not is an ordinary edit, and the report files it as
 /// unlinked.</para>
 /// </summary>
-public static class PriorRevisionRecovery
+internal static class PriorRevisionRecovery
 {
     /// <summary>
     /// A file with more revisions than this is not walked exhaustively — each

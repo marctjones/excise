@@ -304,7 +304,7 @@ public partial class PdfPage
     /// x increasing right, y increasing <b>down</b>, sized
     /// <see cref="VisualWidth"/>×<see cref="VisualHeight"/> — into
     /// content-stream space (PDF default: MediaBox origin at the bottom-left,
-    /// y increasing up), which is what <see cref="Excise.Core.Text.Segmentation.PdfPageRedactionExtensions.RedactArea(PdfPage, PdfRectangle, Excise.Core.Text.Segmentation.GlyphRemovalStrategy)"/>
+    /// y increasing up), which is what <see cref="Excise.Core.Text.Segmentation.PdfPageRedactionExtensions.RedactArea(PdfPage, PdfRectangle, Excise.Core.Text.Segmentation.RedactionOptions)"/>
     /// and the rest of the engine operate in.
     /// </summary>
     /// <remarks>

@@ -62,7 +62,7 @@ public sealed class PdfLink
         new(rect, PdfLinkKind.Dangerous, uri: null, dangerousActionType: actionType);
 }
 
-public static class PdfLinkParser
+internal static class PdfLinkParser
 {
     /// <summary>
     /// Extract internal-document link annotations from <paramref name="pageDict"/>.

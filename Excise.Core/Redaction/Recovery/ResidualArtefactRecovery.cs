@@ -35,7 +35,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// the thumbnail back into a visible image is <c>--restore</c>'s job
 /// (#1588).</para>
 /// </summary>
-public static class ResidualArtefactRecovery
+internal static class ResidualArtefactRecovery
 {
     /// <param name="Kind">"thumbnail" or "attachment".</param>
     /// <param name="PageNumber">1-based for a thumbnail; 0 for a document-level attachment.</param>

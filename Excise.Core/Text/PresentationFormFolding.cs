@@ -20,7 +20,7 @@ namespace Excise.Core.Text;
 /// ﬃ 1→3), so index arithmetic must stay consistently in raw or folded
 /// space, not across the two.
 /// </remarks>
-public static class PresentationFormFolding
+internal static class PresentationFormFolding
 {
     /// <summary>
     /// True when <paramref name="c"/> is folded by this helper — an Arabic

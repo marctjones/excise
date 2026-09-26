@@ -27,7 +27,7 @@ namespace Excise.Core.Text;
 /// (ligatures, ﬂag → "fl", emoji surrogate pairs, etc.) — we always store
 /// them as System.String UTF-16.
 /// </summary>
-public class ToUnicodeCMapParser
+internal class ToUnicodeCMapParser
 {
     private readonly Dictionary<int, string> _mapping = new();
     private readonly List<CodespaceRange> _codespaces = new();

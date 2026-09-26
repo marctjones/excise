@@ -34,7 +34,7 @@ namespace Excise.Core.Text.Segmentation;
 /// does would be the guess this exists to avoid. Word the output accordingly.
 /// </para>
 /// </remarks>
-public sealed record RedactionCarrierAudit(
+internal sealed record RedactionCarrierAudit(
     int OutlineTitleCount,
     int AnnotationsWithTextCount,
     int UnexaminedXfaPacketCount,

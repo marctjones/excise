@@ -23,7 +23,7 @@ namespace Excise.Core.Fonts;
 ///   <item>the black rectangle for the redacted word was drawn at x=82-142
 ///     while the glyphs sat at 56-106, so the visible marker missed the text it
 ///     claimed to cover by 26pt;</item>
-///   <item><c>page.RedactArea(rect)</c> selects glyphs by this same geometry,
+///   <item><c>page.RedactArea(rect, options)</c> selects glyphs by this same geometry,
 ///     so area redaction on a Times document removed the wrong ones.</item>
 /// </list>
 ///

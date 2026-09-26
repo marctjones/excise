@@ -43,7 +43,7 @@ namespace Excise.Core.Redaction.Recovery;
 /// this <c>BDC</c> and its matching <c>EMC</c>, nesting-aware — the same
 /// enclosure signal the scrubber uses to decide what to remove.</para>
 /// </summary>
-public static class MarkedContentTextRecovery
+internal static class MarkedContentTextRecovery
 {
     /// <summary>One inline carrier value and where its span painted.</summary>
     /// <param name="Enclosed">

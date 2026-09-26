@@ -31,7 +31,7 @@ namespace Excise.Core.Text.Segmentation;
 /// character work with the current shape.
 /// </para>
 /// </remarks>
-public class LetterFinder
+internal class LetterFinder
 {
     /// <summary>
     /// Locate the letters that correspond to <paramref name="operationText"/>.

@@ -17,7 +17,7 @@ namespace Excise.Core.Text.Segmentation;
 /// - Maintaining correct text positioning after segmentation
 /// - Identifying partially overlapped glyphs for rasterization
 /// </remarks>
-public class TextSegmenter
+internal class TextSegmenter
 {
 
     /// <summary>
