@@ -16,8 +16,9 @@ namespace Excise.Rendering.Tests.Differential;
 /// <summary>
 /// #1863: a page that draws a form excise cannot decode. Redaction must not
 /// abort: it removes what it can read, keeps the form, and reports it. The
-/// same unchecked read in the XMP scrub and in a font's /Encoding CMap is
-/// pinned here too. qpdf is the structure oracle for the saved file.
+/// same unchecked read in the XMP scrub, in a font's /Encoding CMap and in the
+/// writer's PDF/A-1 check (#1867) is pinned here too. qpdf is the structure
+/// oracle for the saved file.
 /// </summary>
 public sealed class UndecodableFormRedactionTests : IDisposable
 {
@@ -129,6 +130,31 @@ public sealed class UndecodableFormRedactionTests : IDisposable
         report.Carriers.Should().ContainSingle(c => c.Carrier == "XMP /Metadata")
             .Which.RefusedReason.Should().Contain("could not be decoded");
         SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(output), Term).Should().BeEmpty();
+        AssertQpdfNoWorseThan(input, output);
+    }
+
+    /// <summary>
+    /// #1867: the writer reads the catalog's XMP to decide whether the file
+    /// declares PDF/A-1. An XMP packet it cannot decode declares nothing, and
+    /// the save goes ahead.
+    /// </summary>
+    [Fact]
+    public void Save_UndecodableCatalogXmp_WritesAFileQpdfAccepts()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf is the structure oracle (brew install qpdf)");
+        var xmp = Encoding.ASCII.GetBytes("<x:xmpmeta xmlns:x='adobe:ns:meta/'/>");
+        var output = Path.Combine(_dir, "catalog-xmp.pdf");
+        var input = RecoveryFixtureBuilder.Build(
+            $"BT /F1 12 Tf 72 700 Td ({Term}) Tj ET\n",
+            extraObjects: new List<Obj>
+            {
+                new($"<< /Type /Metadata /Subtype /XML /Filter /Nonexistent /Length {xmp.Length} >>", xmp),
+            },
+            catalogExtra: "/Metadata 7 0 R");
+        using var doc = PdfDocument.Open(input);
+
+        doc.Save(output);
+
         AssertQpdfNoWorseThan(input, output);
     }
 

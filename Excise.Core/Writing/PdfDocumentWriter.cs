@@ -125,6 +125,9 @@ public class PdfDocumentWriter
             return false;
         if (SaveSession.Resolve(metadataRef) is not PdfStream metadata)
             return false;
+        // #1867: an XMP packet excise cannot decode declares nothing it can read.
+        if (metadata.IsFiltered && !metadata.TryEnsureDecoded())
+            return false;
 
         var xmp = Encoding.UTF8.GetString(metadata.DecodedData);
         return PdfAIdentityXmp.ReadDeclaredPart(xmp) == "1";

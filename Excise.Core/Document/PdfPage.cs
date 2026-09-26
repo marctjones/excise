@@ -1,3 +1,4 @@
+using Excise.Core.Content;
 using Excise.Core.Graphics;
 using Excise.Core.Primitives;
 
@@ -317,34 +318,29 @@ public partial class PdfPage
     /// </remarks>
     /// <param name="visualRect">Rectangle in visual space; its numeric x range
     /// and y range are interpreted as visual coordinates (y measured downward).</param>
-    public PdfRectangle ToContentStreamCoordinates(PdfRectangle visualRect)
+    public PdfRectangle ToContentStreamCoordinates(PdfRectangle visualRect) =>
+        VisualToContent.TransformBounds(visualRect);
+
+    /// <summary>
+    /// Visual space (x right, y down, top-left origin) to content space (x right,
+    /// y up, MediaBox bottom-left origin): the unrotated page image rotated
+    /// clockwise by /Rotate degrees. <see cref="PdfCoordinateMapper"/> inverts it
+    /// for the other direction.
+    /// </summary>
+    internal ContentTransform VisualToContent
     {
-        var visibleBox = EffectiveCropBox;
-        double l = visibleBox.Left, b = visibleBox.Bottom, w = visibleBox.Width, h = visibleBox.Height;
-        int r = Rotation;
-
-        // Map one visual point (x right, y down, top-left origin) to content
-        // space (x right, y up, MediaBox bottom-left origin). Derived from
-        // rotating the unrotated page image clockwise by /Rotate degrees.
-        (double x, double y) Map(double vx, double vy) => r switch
+        get
         {
-            90  => (l + vy,         b + vx),
-            180 => (l + w - vx,     b + vy),
-            270 => (l + w - vy,     b + h - vx),
-            _   => (l + vx,         b + h - vy),   // 0°
-        };
-
-        var p1 = Map(visualRect.Left, visualRect.Bottom);
-        var p2 = Map(visualRect.Left, visualRect.Top);
-        var p3 = Map(visualRect.Right, visualRect.Bottom);
-        var p4 = Map(visualRect.Right, visualRect.Top);
-
-        double minX = Math.Min(Math.Min(p1.x, p2.x), Math.Min(p3.x, p4.x));
-        double maxX = Math.Max(Math.Max(p1.x, p2.x), Math.Max(p3.x, p4.x));
-        double minY = Math.Min(Math.Min(p1.y, p2.y), Math.Min(p3.y, p4.y));
-        double maxY = Math.Max(Math.Max(p1.y, p2.y), Math.Max(p3.y, p4.y));
-
-        return new PdfRectangle(minX, minY, maxX, maxY);
+            var visibleBox = EffectiveCropBox;
+            double l = visibleBox.Left, b = visibleBox.Bottom, w = visibleBox.Width, h = visibleBox.Height;
+            return Rotation switch
+            {
+                90  => new ContentTransform(0, 1, 1, 0, l, b),
+                180 => new ContentTransform(-1, 0, 0, 1, l + w, b),
+                270 => new ContentTransform(0, -1, -1, 0, l + w, b + h),
+                _   => new ContentTransform(1, 0, 0, -1, l, b + h),   // 0°
+            };
+        }
     }
 
     private static bool HasPositiveArea(PdfRectangle rectangle) =>
