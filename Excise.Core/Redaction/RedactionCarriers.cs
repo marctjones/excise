@@ -67,7 +67,16 @@ public enum RedactionCarriers
     /// </summary>
     NameTreeKeys = 1 << 12,
 
+    /// <summary>
+    /// A signature dictionary's <c>/Name</c>, <c>/Reason</c>, <c>/Location</c> and
+    /// <c>/ContactInfo</c>, and the certificates that name the signer (its
+    /// <c>/Contents</c> and <c>/Cert</c>, and the catalog's <c>/DSS</c>) (#1861).
+    /// A term in a certificate is reported, never cut: DER cannot lose a name and stay readable.
+    /// </summary>
+    Signatures = 1 << 13,
+
     /// <summary>Every carrier — the default and the safe choice.</summary>
     All = Info | Xmp | Xfa | Outlines | Annotations | FormFields
-        | StructTree | JavaScript | EmbeddedFiles | ActionUris | MarkedContent | PageLabels | NameTreeKeys,
+        | StructTree | JavaScript | EmbeddedFiles | ActionUris | MarkedContent | PageLabels | NameTreeKeys
+        | Signatures,
 }

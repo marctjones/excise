@@ -66,19 +66,25 @@ public class CarrierTrapSurveyTests
         (scrubbed.Count + surviving.Count).Should().Be(CarrierTrapFixtures.All.Count,
             "every trap must be surveyed, or the table understates the leak");
 
-        // A RATCHET, not a snapshot: exactly one carrier may still hold its
-        // token, and only because the term is two characters long. The
-        // sanitizer refuses to strip a term below three characters from a
-        // free-text carrier (RedactionOptions: "the 3-character scrub floor is
-        // REPORTED, not configurable"), because excising "of" from every /Alt
-        // corrupts unrelated values. That refusal is reported to the caller, so
-        // it is a declared limit rather than a silent leak.
+        // A RATCHET, not a snapshot: exactly two carriers may still hold their
+        // token. One because the term is two characters long: the sanitizer
+        // refuses to strip a term below three characters from a free-text
+        // carrier (RedactionOptions: "the 3-character scrub floor is REPORTED,
+        // not configurable"), because excising "of" from every /Alt corrupts
+        // unrelated values. The other because a signer's certificate is DER,
+        // which cannot lose a name and stay readable, and Standard keeps the
+        // signature (#1861). Both refusals are reported to the caller, so each
+        // is a declared limit rather than a silent leak.
         //
         // Anything else appearing here is a regression in the core guarantee.
-        surviving.Should().BeEquivalentTo(["structure-alt-short-term"],
-            "every other carrier must be scrubbed by a default redaction; the one exception is the "
-            + "documented short-term floor, whose token is two characters");
+        surviving.Should().BeEquivalentTo(["structure-alt-short-term", "signature-certificate"],
+            "every other carrier must be scrubbed by a default redaction; the exceptions are the "
+            + "documented short-term floor, whose token is two characters, and a certificate");
         CarrierTrapFixtures.Get("structure-alt-short-term").Token.Length.Should().BeLessThan(3,
             "if that trap's token grows past the floor it stops being an exception and must scrub");
+        var certificate = CarrierTrapFixtures.Get("signature-certificate");
+        using var signed = PdfDocument.Open(certificate.Build(true));
+        signed.RedactText(certificate.Token, RedactionOptions.Default).IsCleanSuccess.Should().BeFalse(
+            "the certificate exception holds only while the refusal is reported");
     }
 }

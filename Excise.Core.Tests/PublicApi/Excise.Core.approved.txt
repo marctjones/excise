@@ -1239,7 +1239,8 @@ namespace Excise.Core.Operations
         MarkedContent = 1024,
         PageLabels = 2048,
         NameTreeKeys = 4096,
-        All = 8191,
+        Signatures = 8192,
+        All = 16383,
     }
     public enum SplitDocumentMode
     {

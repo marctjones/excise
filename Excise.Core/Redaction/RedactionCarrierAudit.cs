@@ -40,13 +40,14 @@ internal sealed record RedactionCarrierAudit(
     int UnexaminedXfaPacketCount,
     int PageLabelPrefixCount,
     int NameTreeKeyCount,
+    int SignatureCount,
     IReadOnlyList<string> TermsBelowScrubFloor)
 {
     /// <summary>True when anything at all was left unexamined.</summary>
     public bool HasUnexaminedCarriers =>
         OutlineTitleCount > 0 || AnnotationsWithTextCount > 0 ||
         UnexaminedXfaPacketCount > 0 || PageLabelPrefixCount > 0 || NameTreeKeyCount > 0 ||
-        TermsBelowScrubFloor.Count > 0;
+        SignatureCount > 0 || TermsBelowScrubFloor.Count > 0;
 
     /// <summary>
     /// Shortest term <c>PdfDocumentSanitizer</c> will act on. Mirrored here
@@ -94,6 +95,7 @@ internal sealed record RedactionCarrierAudit(
             CountUnexaminedXfaPackets(document, termsToFind),
             CountPageLabelPrefixes(document, termsToFind),
             CountNameTreeKeys(document, termsToFind),
+            CountSignatures(document, termsToFind),
             shortTerms);
     }
 
@@ -143,6 +145,13 @@ internal sealed record RedactionCarrierAudit(
             lines.Add(
                 $"{NameTreeKeyCount} name-tree key(s) (named destinations, scripts, templates) were not " +
                 "examined — a key is not drawn on any page.");
+        }
+
+        if (SignatureCount > 0)
+        {
+            lines.Add(
+                $"{SignatureCount} signature dictionar(ies) or certificate(s) were not examined — they name the " +
+                "signer and carry no position; the maximum profile removes them.");
         }
 
         foreach (var term in TermsBelowScrubFloor)
@@ -249,6 +258,30 @@ internal sealed record RedactionCarrierAudit(
             if (document.Resolve(document.Catalog.GetOptional("Dests") ?? PdfNull.Instance) is PdfDictionary legacy)
                 keys.AddRange(legacy.Keys.Select(key => key.Value));
             return keys.Count(key => Matches(key, terms));
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return 1;
+        }
+    }
+
+    /// <summary>
+    /// #1861: every signature dictionary and <c>/DSS</c> when there is no term (an
+    /// area redaction over a signature block is the common case); against a term,
+    /// each signer string and certificate that still holds it.
+    /// </summary>
+    private static int CountSignatures(PdfDocument document, IReadOnlyList<string>? terms)
+    {
+        try
+        {
+            var signatures = RedactionFeatureStripper.SignatureDictionaries(document);
+            if (terms == null) return signatures.Count + (document.Catalog.GetOptional("DSS") != null ? 1 : 0);
+            return signatures.Sum(sig => RedactionFeatureStripper.SignerKeys.Count(
+                       key => document.Resolve(sig.GetOptional(key) ?? PdfNull.Instance) is PdfString value
+                              && Matches(value.Value, terms)))
+                   + RedactionFeatureStripper.CertificateData(document, signatures).Count(
+                       bytes => Matches(System.Text.Encoding.UTF8.GetString(bytes), terms)
+                                || Matches(System.Text.Encoding.BigEndianUnicode.GetString(bytes), terms));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {

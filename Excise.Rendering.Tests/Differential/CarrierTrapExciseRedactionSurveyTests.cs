@@ -31,6 +31,9 @@ namespace Excise.Rendering.Tests.Differential;
 ///     image with no MCID link — <b>0 of 49</b> under both profiles. Both
 ///     leaked before their fixes; the form-XObject one was a report that
 ///     OVERSTATED (page-level spans removed, the one level down left).</item>
+///   <item>2026-09-26, with the #1861 signature traps: <b>0 of 56</b> under
+///     Maximum, <b>1 of 56</b> under Standard: <c>signature-certificate</c>, the
+///     declared limit (a term in a certificate is refused and reported, not cut).</item>
 /// </list>
 /// <para>Corroborated on the same 98 outputs (49 traps × 2 profiles) by tools
 /// that are not excise: mutool, pdftotext and pdfdetach read the token 0

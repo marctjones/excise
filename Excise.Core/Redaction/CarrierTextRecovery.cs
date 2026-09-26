@@ -37,6 +37,8 @@ namespace Excise.Core.Text.Segmentation;
 ///   <item><c>/Info</c> (content keys only), XMP (content properties only), outline
 ///     titles, page-label prefixes, <c>/PieceInfo</c> private data, text in hidden
 ///     optional content, and the keys of the catalog's name trees and <c>/Dests</c>;</item>
+///   <item>signature <c>/Name</c>, <c>/Reason</c>, <c>/Location</c>, <c>/ContactInfo</c>, and the
+///     presence of certificate data (<c>/Contents</c>, <c>/Cert</c>, <c>/DSS</c>);</item>
 ///   <item>unreferenced (orphan) objects, and text an incremental update superseded
 ///     but left in an earlier revision.</item>
 /// </list>
@@ -169,6 +171,7 @@ public static partial class CarrierTextRecovery
         Guarded(c, "XMP", () => ScanXmp(doc, c));
         Guarded(c, "outlines", () => ScanOutlines(doc, c));
         Guarded(c, "page labels", () => ScanPageLabels(doc, c));
+        Guarded(c, "signatures", () => ScanSignatures(doc, c));
         Guarded(c, "optional content", () => ScanHiddenOptionalContent(doc, c));
         Guarded(c, "page thumbnails", () => ScanThumbnails(doc, c));
         Guarded(c, "/PieceInfo", () => ScanPieceInfo(doc, c));

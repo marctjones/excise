@@ -29,7 +29,8 @@ public enum RedactionProfile
     /// <para>Accessibility and navigation carriers are KEPT and term-scrubbed:
     /// <c>/TU</c>, <c>/Alt</c>, <c>/ActualText</c>, <c>/E</c>,
     /// structure-element <c>/T</c>, field names, bookmark titles, link
-    /// targets.</para>
+    /// targets, and a signature with its signer strings (a term in its
+    /// certificate is reported, #1861).</para>
     /// </summary>
     Standard,
 
@@ -37,7 +38,8 @@ public enum RedactionProfile
     /// Everything <see cref="Standard"/> removes, plus every KEPT carrier
     /// removed whole rather than term-scrubbed, bookmarks, link annotations,
     /// markup/comment annotations and field names stripped, and forms and
-    /// annotations flattened into the page.
+    /// annotations flattened into the page, signatures removed with their
+    /// <c>/Perms</c> entries and the <c>/DSS</c>.
     ///
     /// <para>⚠️ The output is no longer accessible or interactive, and
     /// <see cref="RedactionReport.AccessibilityAndInteractivityRemoved"/> says

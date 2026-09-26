@@ -198,6 +198,7 @@ public static class PdfDocumentSanitizer
         Stage(RedactionCarriers.MarkedContent, s => ScrubMarkedContent(document, s)); // #1854
         Stage(RedactionCarriers.PageLabels, s => ScrubPageLabels(document, s), PdfDocumentDerivedStateScope.PageLabels); // #1853
         Stage(RedactionCarriers.NameTreeKeys, s => ScrubNameTreeKeys(document, s), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1852
+        Stage(RedactionCarriers.Signatures, s => ScrubSignatures(document, s)); // #1861
 
         if (invalidation != PdfDocumentDerivedStateScope.None)
             document.InvalidateDerivedState(invalidation);
@@ -241,7 +242,7 @@ public static class PdfDocumentSanitizer
         /// <summary>True once any value in this carrier was seen to hold a term.</summary>
         internal bool TermFound { get; private set; }
 
-        /// <summary>Why part of this carrier could not be examined; the row reports it.</summary>
+        /// <summary>Why part of this carrier could not be examined or scrubbed; the row reports it.</summary>
         internal string? Unexamined { get; set; }
 
         /// <summary>
@@ -844,6 +845,31 @@ public static class PdfDocumentSanitizer
 
     private static readonly string[] DestinationSlots = { "Dest", "OpenAction" };
     private static readonly string[] GoToSlots = { "Dest", "OpenAction", "D" };
+
+    /// <summary>
+    /// #1861 — a signature dictionary's <c>/Name</c>, <c>/Reason</c>, <c>/Location</c>
+    /// and <c>/ContactInfo</c> are cut like any kept carrier. A certificate is DER,
+    /// and removing the signature is the form flatten's (Maximum), so a term in
+    /// one is refused rather than cut.
+    /// </summary>
+    private static bool ScrubSignatures(PdfDocument document, CarrierScrub scrub)
+    {
+        var changed = false;
+        var signatures = Excise.Core.Text.Segmentation.RedactionFeatureStripper.SignatureDictionaries(document);
+        foreach (var sig in signatures)
+            foreach (var key in Excise.Core.Text.Segmentation.RedactionFeatureStripper.SignerKeys)
+            {
+                if (!scrub.TryApply(ResolveStringOrNull(document, sig, key), out var scrubbed)) continue;
+                if (scrubbed.Length == 0) sig.Remove(key);
+                else sig[key] = new PdfString(scrubbed);
+                changed = true;
+            }
+        if (Excise.Core.Text.Segmentation.RedactionFeatureStripper.CertificateData(document, signatures).Any(
+                bytes => scrub.Hits(Encoding.UTF8.GetString(bytes)) || scrub.Hits(Encoding.BigEndianUnicode.GetString(bytes))))
+            scrub.Unexamined = "a certificate (a signature's /Contents or /Cert, or the /DSS) holds the term and was kept: "
+                + "a name cannot be cut out of DER, and the maximum profile removes the signature";
+        return changed;
+    }
 
     private static bool ScrubAnnotationContents(PdfDocument document, CarrierScrub scrub)
     {
