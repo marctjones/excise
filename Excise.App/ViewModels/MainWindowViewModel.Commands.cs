@@ -168,9 +168,6 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> NextPageCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> PreviousPageCommand { get; private set; } = null!;
     public ReactiveCommand<int, Unit> GoToPageCommand { get; private set; } = null!;
-    public ReactiveCommand<Models.OutlineNode, Unit> JumpToOutlineCommand =>
-        _jumpToOutline ??= ReactiveCommand.Create<Models.OutlineNode>(JumpToOutline);
-    private ReactiveCommand<Models.OutlineNode, Unit>? _jumpToOutline;
 
     public ReactiveCommand<Unit, Unit> RotatePageLeftCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> RotatePageRightCommand { get; private set; } = null!;

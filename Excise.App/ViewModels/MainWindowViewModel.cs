@@ -703,7 +703,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Click handler for an outline tree row. Jumps to the node's page
     /// (1-based) if the destination resolved during parse; no-op otherwise.
-    /// Bound via JumpToOutlineCommand on the TreeView item template.
+    /// Called when <see cref="SelectedOutlineNode"/> changes.
     /// </summary>
     public void JumpToOutline(Models.OutlineNode? node)
     {

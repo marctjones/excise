@@ -665,7 +665,6 @@ namespace Excise.App.ViewModels
         public bool IsTypewriterStyleInspectorVisible { get; }
         public bool IsXfaFormLaidOut { get; }
         public bool IsXfaNoticeOpen { get; set; }
-        public ReactiveUI.ReactiveCommand<Excise.App.Models.OutlineNode, System.Reactive.Unit> JumpToOutlineCommand { get; }
         public ReactiveUI.ReactiveCommand<Excise.App.Models.SearchMatch, System.Reactive.Unit>? JumpToSearchMatchCommand { get; }
         public Excise.App.ViewModels.DocumentOpenTiming? LastDocumentOpenTiming { get; }
         public int LoadDocumentTimeoutSeconds { get; set; }
