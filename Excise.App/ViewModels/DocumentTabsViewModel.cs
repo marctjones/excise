@@ -19,7 +19,7 @@ namespace Excise.App.ViewModels;
 /// viewer.
 /// </summary>
 /// <remarks>Design: docs/architecture/main-window-architecture.md §7.3.</remarks>
-public sealed class DocumentTabsViewModel : ReactiveObject
+internal sealed class DocumentTabsViewModel : ReactiveObject
 {
     private readonly ITabsHost _host;
     private DocumentTabViewModel? _selectedTab;
@@ -194,7 +194,7 @@ public sealed class DocumentTabsViewModel : ReactiveObject
 }
 
 /// <summary>One document tab (#1554).</summary>
-public sealed class DocumentTabViewModel : ReactiveObject
+internal sealed class DocumentTabViewModel : ReactiveObject
 {
     private readonly DocumentTabsViewModel _owner;
     private bool _isSelected;

@@ -46,7 +46,7 @@ public sealed class SecondOpenDuringLoadTests : IDisposable
     [FixedAvaloniaTheory(Timeout = 60000)]
     [InlineData(DocumentOpenMode.NewTab)]
     [InlineData(DocumentOpenMode.Automatic)]
-    public async Task SecondOpen_WhileTheFirstIsLoading_KeepsTheFirstInItsOwnTab(DocumentOpenMode mode)
+    internal async Task SecondOpen_WhileTheFirstIsLoading_KeepsTheFirstInItsOwnTab(DocumentOpenMode mode)
     {
         using var harness = new MultiDocumentSessionTests.Harness();
         var origin = harness.OpenWindow(mode);

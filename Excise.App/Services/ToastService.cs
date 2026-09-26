@@ -6,7 +6,7 @@ namespace Excise.App.Services;
 /// Service for displaying toast notifications (error, info).
 /// Provides a clean interface for ViewModels to request toast displays.
 /// </summary>
-public class ToastService
+internal class ToastService
 {
     /// <summary>
     /// Event args for toast notifications.

@@ -15,7 +15,7 @@ namespace Excise.App.Models;
 /// replaced, never edited. Enums persist as their names. Every default is the
 /// pre-option behaviour (#1187): changing one is a product decision.
 /// </remarks>
-public sealed record RedactionPreferences
+internal sealed record RedactionPreferences
 {
     /// <summary>
     /// Match whole words only (#1052). Default false — substring matching, the

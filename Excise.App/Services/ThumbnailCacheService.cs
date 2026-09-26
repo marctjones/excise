@@ -26,7 +26,7 @@ namespace Excise.App.Services;
 ///   macOS:   $HOME/Library/Caches/excise
 ///   Windows: %LOCALAPPDATA%/excise/Cache
 /// </summary>
-public sealed class ThumbnailCacheService : IDisposable
+internal sealed class ThumbnailCacheService : IDisposable
 {
     private readonly PdfDocument _doc;
     private readonly SkiaRenderer _renderer = new();

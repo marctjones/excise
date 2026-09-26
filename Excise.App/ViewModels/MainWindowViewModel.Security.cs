@@ -34,7 +34,7 @@ namespace Excise.App.ViewModels;
 /// <see cref="Excise.Core.Document.PdfDocument"/> obtained via
 /// <see cref="PdfDocumentService.GetCurrentDocument"/>.
 /// </summary>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     private async Task ShowSecurityDialogAsync()
     {

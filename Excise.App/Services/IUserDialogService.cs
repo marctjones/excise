@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 
 namespace Excise.App.Services;
 
-public interface IUserDialogService
+internal interface IUserDialogService
 {
     Task ShowMessageAsync(string title, string message);
 

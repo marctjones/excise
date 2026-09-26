@@ -18,7 +18,7 @@ namespace Excise.App.ViewModels;
 /// and so does the phase-1 warning. The notice is a persistent, closable
 /// banner rather than a toast, because what it explains stays on screen.
 /// </remarks>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     internal const string DynamicXfaNoticeTitle = "This PDF is a dynamic XFA form.";
     internal const string DynamicXfaNoticeMessage =

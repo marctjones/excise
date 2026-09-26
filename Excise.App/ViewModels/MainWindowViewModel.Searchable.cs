@@ -16,7 +16,7 @@ namespace Excise.App.ViewModels;
 /// <c>MainWindowViewModel.Redaction.cs</c> orchestrates
 /// <c>Excise.Core</c>'s redaction engine.
 /// </summary>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     /// <summary>
     /// Opens the "Make Searchable" dialog. Instantiates

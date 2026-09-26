@@ -6,7 +6,7 @@ using ReactiveUI;
 
 namespace Excise.App.ViewModels;
 
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     // #781: styling UI for the type-over tool. The engine
     // (PdfTypewriterTextStyle + PdfTypewriterTextOperation.WithStyle) already

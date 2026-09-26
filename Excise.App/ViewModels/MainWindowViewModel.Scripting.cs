@@ -16,7 +16,7 @@ namespace Excise.App.ViewModels;
 /// Scripting API for MainWindowViewModel.
 /// These commands expose GUI functionality to Roslyn C# scripts for automation and testing.
 /// </summary>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     // Scripting Properties (exposed to Roslyn scripts)
 
@@ -554,7 +554,7 @@ public partial class MainWindowViewModel
 /// <summary>
 /// Wrapper class that provides scripting-friendly access to document information.
 /// </summary>
-public class CurrentDocumentInfo
+internal class CurrentDocumentInfo
 {
     private readonly Excise.Core.Document.PdfDocument? _document;
 

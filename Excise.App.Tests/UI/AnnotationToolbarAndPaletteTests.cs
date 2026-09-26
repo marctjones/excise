@@ -240,18 +240,13 @@ public class AnnotationToolbarAndPaletteTests
     // precise assertions because they need only IsDocumentLoaded=true — no
     // text selection or pending drag rect to stage.
 
-    public static readonly TheoryData<string, PathAnnotationKind> ToolbarPathModeButtons = new()
-    {
-        { "AnnotationToolbarInkButton", PathAnnotationKind.Ink },
-        { "AnnotationToolbarLineButton", PathAnnotationKind.Line },
-        { "AnnotationToolbarArrowButton", PathAnnotationKind.Arrow },
-        { "AnnotationToolbarPolygonButton", PathAnnotationKind.Polygon },
-        { "AnnotationToolbarPolyLineButton", PathAnnotationKind.PolyLine },
-    };
-
     [FixedAvaloniaTheory]
-    [MemberData(nameof(ToolbarPathModeButtons))]
-    public async Task RealPointerClick_OnToolbarRowButton_TogglesThePathAnnotationMode(
+    [InlineData("AnnotationToolbarInkButton", PathAnnotationKind.Ink)]
+    [InlineData("AnnotationToolbarLineButton", PathAnnotationKind.Line)]
+    [InlineData("AnnotationToolbarArrowButton", PathAnnotationKind.Arrow)]
+    [InlineData("AnnotationToolbarPolygonButton", PathAnnotationKind.Polygon)]
+    [InlineData("AnnotationToolbarPolyLineButton", PathAnnotationKind.PolyLine)]
+    internal async Task RealPointerClick_OnToolbarRowButton_TogglesThePathAnnotationMode(
         string buttonName, PathAnnotationKind kind)
     {
         var (vm, window, pdf) = await OpenWithDocumentAsync();
@@ -277,18 +272,13 @@ public class AnnotationToolbarAndPaletteTests
         }
     }
 
-    public static readonly TheoryData<string, PathAnnotationKind> PalettePathModeButtons = new()
-    {
-        { "PaletteInkButton", PathAnnotationKind.Ink },
-        { "PaletteLineButton", PathAnnotationKind.Line },
-        { "PaletteArrowButton", PathAnnotationKind.Arrow },
-        { "PalettePolygonButton", PathAnnotationKind.Polygon },
-        { "PalettePolyLineButton", PathAnnotationKind.PolyLine },
-    };
-
     [FixedAvaloniaTheory]
-    [MemberData(nameof(PalettePathModeButtons))]
-    public async Task RealPointerClick_OnPaletteButton_TogglesThePathAnnotationMode(
+    [InlineData("PaletteInkButton", PathAnnotationKind.Ink)]
+    [InlineData("PaletteLineButton", PathAnnotationKind.Line)]
+    [InlineData("PaletteArrowButton", PathAnnotationKind.Arrow)]
+    [InlineData("PalettePolygonButton", PathAnnotationKind.Polygon)]
+    [InlineData("PalettePolyLineButton", PathAnnotationKind.PolyLine)]
+    internal async Task RealPointerClick_OnPaletteButton_TogglesThePathAnnotationMode(
         string buttonName, PathAnnotationKind kind)
     {
         var (vm, window, pdf) = await OpenWithDocumentAsync();
@@ -468,7 +458,7 @@ public class AnnotationToolbarAndPaletteTests
     [InlineData(false, "PaletteUnderlineButton", MarkupAnnotationKind.Underline)]
     [InlineData(false, "PaletteStrikeOutButton", MarkupAnnotationKind.StrikeOut)]
     [InlineData(false, "PaletteSquigglyButton", MarkupAnnotationKind.Squiggly)]
-    public async Task RealPointerClick_OnMarkupButtons_ArmsMarkupModeWithNoSelectionNeeded(
+    internal async Task RealPointerClick_OnMarkupButtons_ArmsMarkupModeWithNoSelectionNeeded(
         bool onToolbar, string buttonName, MarkupAnnotationKind expectedKind)
     {
         var (vm, window, pdf) = await OpenWithDocumentAsync();

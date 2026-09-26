@@ -10,7 +10,7 @@ namespace Excise.App.Services;
 /// Service for extracting text from PDF pages
 /// Uses Excise.Core for text extraction
 /// </summary>
-public class PdfTextExtractionService
+internal class PdfTextExtractionService
 {
     private readonly ILogger<PdfTextExtractionService> _logger;
 

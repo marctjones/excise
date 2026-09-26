@@ -29,7 +29,7 @@ namespace Excise.App.ViewModels;
 /// reason these are two separate, separately-gated commands rather than one
 /// that guesses from field state.
 /// </summary>
-public sealed class SecurityDialogViewModel : ReactiveObject
+internal sealed class SecurityDialogViewModel : ReactiveObject
 {
     public static IReadOnlyList<PdfEncryptionAlgorithm> Algorithms { get; } = new[]
     {

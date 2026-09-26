@@ -16,7 +16,7 @@ namespace Excise.App.Services;
 /// load / save / page-manipulation / rotation operations to the GUI.
 /// Pure Excise.Core — no other PDF library.
 /// </summary>
-public class PdfDocumentService
+internal class PdfDocumentService
 {
     private readonly ILogger<PdfDocumentService> _logger;
     private PdfDocument? _currentDocument;

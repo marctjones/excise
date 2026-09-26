@@ -14,7 +14,7 @@ using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
 
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     private bool _isTypewriterMode;
 

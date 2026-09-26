@@ -8,7 +8,7 @@ namespace Excise.App.ViewModels;
 /// Manages document file state and path tracking.
 /// Determines if file is original, redacted version, or modified copy.
 /// </summary>
-public class DocumentStateManager : ReactiveObject
+internal class DocumentStateManager : ReactiveObject
 {
     private string _currentFilePath = string.Empty;
     private string _originalFilePath = string.Empty;

@@ -26,7 +26,7 @@ namespace Excise.App.ViewModels;
 /// in the GUI unless a script sets <see cref="IgnoreDocumentPermissions"/>
 /// (the scripting counterpart of the CLI's <c>--ignore-permissions</c>).
 /// </summary>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     /// <summary>
     /// Scripting/automation override for document /P permission enforcement

@@ -11,7 +11,7 @@ namespace Excise.App.Views;
 /// event to actually closing the window, since a ViewModel can't close
 /// its own view directly without a reference to it.
 /// </summary>
-public partial class MakeSearchableDialog : Window
+internal partial class MakeSearchableDialog : Window
 {
     public MakeSearchableDialog()
     {

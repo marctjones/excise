@@ -12,7 +12,7 @@ namespace Excise.App.ViewModels;
 /// and the cache-trim coordinator belong to the window and App, which listen to
 /// <see cref="PerformanceSettingsApplied"/>.
 /// </summary>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     private PerformanceSettings _performanceSettings = PerformanceSettings.Balanced;
 

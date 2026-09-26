@@ -19,7 +19,7 @@ namespace Excise.App.ViewModels;
 /// and excise's own printer chooser (#1710); other platforms show an honest
 /// explanation.
 /// </summary>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     internal const string PrintDialogTitle = "Print";
     internal const string PrintNeedsDocumentMessage = "Open a PDF before printing.";

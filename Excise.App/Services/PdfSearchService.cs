@@ -15,7 +15,7 @@ namespace Excise.App.Services;
 /// <summary>
 /// Service for searching text within PDF documents
 /// </summary>
-public class PdfSearchService
+internal class PdfSearchService
 {
     private readonly ILogger<PdfSearchService> _logger;
 

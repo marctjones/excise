@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Excise.App.Services;
 
-public sealed class AnnotationWorkflowService
+internal sealed class AnnotationWorkflowService
 {
     private readonly PdfDocumentService _documentService;
     private readonly ILogger<AnnotationWorkflowService> _logger;

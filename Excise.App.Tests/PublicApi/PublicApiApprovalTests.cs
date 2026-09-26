@@ -1,48 +1,28 @@
-using System;
-using System.IO;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using AwesomeAssertions;
-using PublicApiGenerator;
 using Xunit;
 
 namespace Excise.App.Tests.PublicApi;
 
 /// <summary>
-/// Public-API snapshot for <c>Excise.App</c> (#910). Unlike the packable-library
-/// gates (#383/#384), the point here is not SemVer stability — it is
-/// INVENTORY: <c>scripts/check-unwired-api.sh</c> reads
-/// <c>PublicApi/*.approved.txt</c> as its universe, and until this file
-/// existed the assembly's ~public surface was invisible to the
-/// implemented-but-unreachable check. #920's 283 dead lines and #928's
-/// mis-documented redaction path both lived in exactly that blind spot.
-/// Accept changes with <c>APPROVE_PUBLIC_API=1</c>; the diff is the review.
+/// <c>Excise.App</c> is an executable, so it exports nothing (#1836). The gate is the
+/// INVERSE of a snapshot, like <c>Excise.Cli.Tests/PublicApi</c>: tests reach the
+/// internals through <c>InternalsVisibleTo</c>, and there is no approved baseline to
+/// maintain.
 /// </summary>
 public class PublicApiApprovalTests
 {
     [Fact]
-    public void ExciseApp_PublicApi_MatchesApprovedBaseline()
+    public void ExciseApp_ExportsNoPublicTypes()
     {
-        var api = typeof(Excise.App.Services.PdfDocumentService).Assembly
-            .GeneratePublicApi(new ApiGeneratorOptions { IncludeAssemblyAttributes = false })
-            .Replace("\r\n", "\n")
-            .TrimEnd() + "\n";
-        var file = Path.Combine(ApprovedDir(), ApprovedFileName);
-        if (Environment.GetEnvironmentVariable("APPROVE_PUBLIC_API") == "1")
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            File.WriteAllText(file, api);
-            return;
-        }
-        File.Exists(file).Should().BeTrue(
-            $"missing baseline {file} — run once with APPROVE_PUBLIC_API=1");
-        var approved = File.ReadAllText(file).Replace("\r\n", "\n");
-        api.Should().Be(approved,
-            "the Excise.App public API must not change without an intentional review. " +
-            "If deliberate, re-run with APPROVE_PUBLIC_API=1 and commit the updated Excise.App.approved.txt.");
+        // The Avalonia XAML compiler emits CompiledAvaloniaXaml.!XamlLoader and
+        // !AvaloniaResources public and has no visibility switch; they are not our types.
+        var publics = typeof(Excise.App.Services.PdfDocumentService).Assembly
+            .GetExportedTypes()
+            .Where(t => t.Namespace != "CompiledAvaloniaXaml")
+            .Select(t => t.FullName);
+        publics.Should().BeEmpty(
+            "Excise.App is internal-only by design: public surface on an executable is API " +
+            "nobody can consume, and a public type would need an approved baseline again");
     }
-
-    private static string ApprovedDir([CallerFilePath] string thisFile = "")
-        => Path.GetDirectoryName(thisFile)!;   // this file lives in PublicApi/ already
-
-    private const string ApprovedFileName = "Excise.App.approved.txt";
 }

@@ -9,7 +9,7 @@ namespace Excise.App.ViewModels;
 /// owns cache and background-work lifetime; page-operation selection remains
 /// a workspace concern in <see cref="MainWindowViewModel"/>.
 /// </summary>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     internal const int ThumbnailPrefetchMargin = ThumbnailSidebarSession.PrefetchMargin;
     internal const int ThumbnailKeepMargin = ThumbnailSidebarSession.KeepMargin;

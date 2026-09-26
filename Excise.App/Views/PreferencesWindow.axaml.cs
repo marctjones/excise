@@ -6,7 +6,7 @@ using System;
 
 namespace Excise.App.Views;
 
-public partial class PreferencesWindow : Window
+internal partial class PreferencesWindow : Window
 {
     /// <summary>Memory readout refresh period.</summary>
     internal static readonly TimeSpan MemoryReadoutInterval = TimeSpan.FromSeconds(1);

@@ -25,7 +25,7 @@ namespace Excise.App.ViewModels;
 /// cancelling the synchronous <c>Closing</c> event and re-issuing the close.
 /// </para>
 /// </remarks>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     /// <summary>
     /// Whether a destructive transition would lose work right now.

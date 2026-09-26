@@ -14,7 +14,7 @@ namespace Excise.App.Threading;
 /// the Native AOT lane had to suppress (#593). The app uses no other part of
 /// the integration (no IViewFor, WhenActivated, or ReactiveWindow).
 /// </summary>
-public sealed class AvaloniaDispatcherScheduler : LocalScheduler
+internal sealed class AvaloniaDispatcherScheduler : LocalScheduler
 {
     /// <summary>
     /// Work already on the UI thread is run inline up to this depth, matching

@@ -178,7 +178,7 @@ public class LinuxCupsDocumentPrinterTests : IDisposable
     [Theory]
     [InlineData(PrintScalingMode.ActualSize)]
     [InlineData(PrintScalingMode.ShrinkOversized)]
-    public void LpArguments_OnlyFitToPageEmitsAScalingOption(PrintScalingMode scaling)
+    internal void LpArguments_OnlyFitToPageEmitsAScalingOption(PrintScalingMode scaling)
     {
         // CUPS has no shrink-only mode. Emitting fit-to-page for it would
         // scale small pages UP, which is not what the preference says.

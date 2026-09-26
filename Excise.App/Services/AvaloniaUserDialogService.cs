@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Excise.App.Services;
 
-public sealed class AvaloniaUserDialogService : IUserDialogService
+internal sealed class AvaloniaUserDialogService : IUserDialogService
 {
     private readonly ILogger<AvaloniaUserDialogService> _logger;
     private readonly System.Func<Window?>? _ownerResolver;

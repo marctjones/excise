@@ -7,7 +7,7 @@ namespace Excise.App.Models;
 /// what the Preferences dialog shows once any individual value differs from
 /// every named preset.
 /// </summary>
-public enum PerformancePreset
+internal enum PerformancePreset
 {
     LowMemory,
     Balanced,
@@ -30,7 +30,7 @@ public enum PerformancePreset
 /// <param name="SoftCacheTrims">Trim on deactivate/minimize/idle (#1478).</param>
 /// <param name="IdleTrimSeconds">Idle delay before a soft trim.</param>
 /// <param name="RenderThreads">Concurrent continuous-view band renders.</param>
-public sealed record PerformanceSettings(
+internal sealed record PerformanceSettings(
     int TileCacheBudgetMb,
     int SinglePageCachedPages,
     bool ThumbnailPrewarm,

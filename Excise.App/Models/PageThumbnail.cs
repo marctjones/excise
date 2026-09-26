@@ -3,7 +3,7 @@ using ReactiveUI;
 
 namespace Excise.App.Models;
 
-public class PageThumbnail : ReactiveObject
+internal class PageThumbnail : ReactiveObject
 {
     private Bitmap? _thumbnailImage;
     private bool _isSelected;

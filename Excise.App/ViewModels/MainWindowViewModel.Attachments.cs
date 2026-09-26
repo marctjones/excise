@@ -32,7 +32,7 @@ namespace Excise.App.ViewModels;
 /// a location the user picks is the only way an attachment leaves excise.
 /// </para>
 /// </remarks>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     /// <summary>Embedded files in the open document, refreshed on open.</summary>
     public ObservableCollection<AttachmentEntry> Attachments { get; } = new();

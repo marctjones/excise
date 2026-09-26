@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace Excise.App;
 
-public partial class App : Application
+internal partial class App : Application
 {
     private IServiceProvider? _serviceProvider;
     private MetricsJsonlSink? _metricsSink;
@@ -495,7 +495,7 @@ public partial class App : Application
     }
 }
 
-public class BooleanToBrushConverter : global::Avalonia.Data.Converters.IValueConverter
+internal class BooleanToBrushConverter : global::Avalonia.Data.Converters.IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
     {

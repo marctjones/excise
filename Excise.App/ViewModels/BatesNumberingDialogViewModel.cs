@@ -24,7 +24,7 @@ namespace Excise.App.ViewModels;
 /// not.
 /// </para>
 /// </remarks>
-public sealed class BatesNumberingDialogViewModel : ReactiveObject
+internal sealed class BatesNumberingDialogViewModel : ReactiveObject
 {
     /// <summary>Positions offered in the dialog, in reading order.</summary>
     public static IReadOnlyList<BatesPosition> Positions { get; } =

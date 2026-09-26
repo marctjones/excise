@@ -12,7 +12,7 @@ using PdfCoreDocument = Excise.Core.Document.PdfDocument;
 
 namespace Excise.App.ViewModels;
 
-public sealed record DocumentOpenTiming(
+internal sealed record DocumentOpenTiming(
     string FilePath,
     int PageCount,
     long DocumentInstancesLoadedElapsedMs,
@@ -22,7 +22,7 @@ public sealed record DocumentOpenTiming(
     long SearchIndexStartedElapsedMs,
     long TotalLoadElapsedMs);
 
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     private sealed class DocumentOpenStageTimings
     {

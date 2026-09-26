@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Excise.App.Services;
 
-public sealed class PageOrganizationWorkflowService
+internal sealed class PageOrganizationWorkflowService
 {
     private readonly PdfDocumentService _documentService;
     private readonly IUserDialogService _dialogService;
@@ -227,7 +227,7 @@ public sealed class PageOrganizationWorkflowService
     }
 }
 
-public sealed record PageOrganizationResult(
+internal sealed record PageOrganizationResult(
     bool DidChange,
     int? CurrentPageIndex,
     IReadOnlyList<int> SelectedPageIndices)

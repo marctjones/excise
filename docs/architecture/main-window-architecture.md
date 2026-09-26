@@ -557,8 +557,7 @@ place), `BuildUnsavedChangesMessage` (125–159). Callers: `MainWindow.axaml.cs:
 
 These are the constraints on any rename or move (from
 `scripts/build-gui-interaction-registry.py`, `Excise.App.Tests/UI/InteractionCoverage/GuiInteractiveElement.cs`,
-`Views/MacNativeMenuBuilder.cs`, `Excise.App.Tests/Utilities/ScriptingService.cs`,
-`Excise.App.Tests/PublicApi/*.approved.txt`):
+`Views/MacNativeMenuBuilder.cs` and `Excise.App.Tests/Utilities/ScriptingService.cs`):
 
 | Consumer | What it reads | Effect of moving a member off `MainWindowViewModel` |
 |---|---|---|
@@ -567,7 +566,6 @@ These are the constraints on any rename or move (from
 | GUI coverage ids (t1 IMPROVE `gui-interaction-coverage`) | reflection over **public `ICommand` properties of the root DataContext** (`GuiInteractiveElement.cs:241-262`) | a command moved to a child VM falls back to `x:Name`/text/ordinal and the id changes; `GuiClickSafetySweepTests.BuildCommandNameMap` uses the same reflection |
 | `MacNativeMenuBuilder` | `PropertyChanged` filtered by `nameof(...)` on 21 properties (`:206-226`) and ~55 commands | menu silently stops refreshing unless the shell re-raises the same names |
 | `ScriptingService` | the VM **type** is the script globals | every public member is script-reachable; renames break `.csx` files only at run time |
-| Public-API baselines | 278 `MainWindowViewModel` member lines; `scripts/check_unwired_api.py` reads the same file | any public addition/removal/rename regenerates it (`APPROVE_PUBLIC_API=1`) |
 | `MainWindowViewModelTestFactory` (353 uses in 82 files) and `ApplicationComposition` | the 16-argument internal constructor | a constructor change edits **two** files; the factory's parameters are all optional |
 | `architecture/design.json` `app-main-window.sourceRoots` (`:406-440`) | 15 partial paths + sessions/services, `pathRole: ownership`; `check_architecture_registry.py:269-274` fails on a missing path; unlisted files fall back to the `app` container; overlapping ownership roots are an error (`:305-321`) | every new or removed file under the subsystem is a registry edit + `scripts/check-architecture-artifacts.sh --update`; Attachments, Bates, DragDrop, Performance, Signing and UnsavedChanges are **already unlisted** |
 | Named controls | `FindControl("PdfViewerControl")` in code-behind and **63 test lookups**; `SearchTextBox` 6; `OutlineTree`, `ThumbnailsItemsControl`, `ToastInfoBar` and the toggle menu items in tests | a control moved into a `UserControl` is in another name scope |
@@ -1417,8 +1415,8 @@ Each step is independently mergeable and behaviour-preserving. "Must not
 change" is the same for every step unless stated: command property names,
 public member names and types on `MainWindowViewModel`, `AutomationProperties`
 names (derived from `PdfCommandIds`), `tests/gui-interaction-registry.json`,
-`tests/gui-interaction-coverage.tsv`, the scripting members, the
-`Excise.App.approved.txt` file, and `MainWindow.axaml`'s named controls.
+`tests/gui-interaction-coverage.tsv`, the scripting members, and
+`MainWindow.axaml`'s named controls.
 Every step that adds or moves a file under the subsystem updates
 `architecture/design.json` `app-main-window.sourceRoots` and regenerates via
 `scripts/check-architecture-artifacts.sh --update` in the same change (this

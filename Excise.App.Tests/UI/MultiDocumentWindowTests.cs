@@ -245,7 +245,7 @@ public sealed class MultiDocumentWindowTests : IDisposable
     [InlineData("nonsense", DocumentOpenMode.Automatic)]
     [InlineData("42", DocumentOpenMode.Automatic)]
     [InlineData(null, DocumentOpenMode.Automatic)]
-    public void AnUnknownPersistedOpenMode_KeepsTheDefault(string? persisted, DocumentOpenMode expected)
+    internal void AnUnknownPersistedOpenMode_KeepsTheDefault(string? persisted, DocumentOpenMode expected)
     {
         var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
 

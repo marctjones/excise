@@ -8,7 +8,7 @@ using System;
 
 namespace Excise.App.Automation;
 
-public static class CommandAccessibility
+internal static class CommandAccessibility
 {
     public static readonly AttachedProperty<string?> CommandIdProperty =
         AvaloniaProperty.RegisterAttached<Control, string?>(

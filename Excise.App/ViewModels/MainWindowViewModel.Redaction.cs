@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Excise.App.ViewModels;
 
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     private void ToggleRedactionMode()
     {

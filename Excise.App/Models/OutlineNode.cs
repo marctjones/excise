@@ -9,7 +9,7 @@ namespace Excise.App.Models;
 /// expects an ObservableCollection per level so we materialise children
 /// eagerly — outlines are typically small (hundreds of nodes max).
 /// </summary>
-public sealed class OutlineNode
+internal sealed class OutlineNode
 {
     public string Title { get; }
     public int? PageNumber { get; }

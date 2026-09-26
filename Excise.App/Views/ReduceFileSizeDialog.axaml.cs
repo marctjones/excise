@@ -9,7 +9,7 @@ namespace Excise.App.Views;
 /// <see cref="ReduceFileSizeDialogViewModel.Confirmed"/> and
 /// <see cref="ReduceFileSizeDialogViewModel.Selected"/> after it closes.
 /// </summary>
-public partial class ReduceFileSizeDialog : Window
+internal partial class ReduceFileSizeDialog : Window
 {
     public ReduceFileSizeDialog()
     {

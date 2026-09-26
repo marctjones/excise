@@ -11,7 +11,7 @@ namespace Excise.App.Views;
 /// to actually closing the window, matching
 /// <see cref="MakeSearchableDialog"/>'s code-behind.
 /// </summary>
-public partial class SecurityDialog : Window
+internal partial class SecurityDialog : Window
 {
     public SecurityDialog()
     {

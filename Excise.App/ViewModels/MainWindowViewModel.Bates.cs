@@ -31,7 +31,7 @@ namespace Excise.App.ViewModels;
 /// and quietly retire a baseline row that is still true.)
 /// </para>
 /// </remarks>
-public partial class MainWindowViewModel
+internal partial class MainWindowViewModel
 {
     private readonly BatesNumberingService _batesService =
         new();
