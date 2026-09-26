@@ -30,7 +30,7 @@ internal static class PdfActionParser
         if (resolved is PdfArray destArray)
         {
             var pageNum = ResolveDestinationArrayPage(doc, destArray);
-            return new PdfAction("GoTo", DestinationPage: pageNum);
+            return new PdfAction { Type = "GoTo", DestinationPage = pageNum };
         }
 
         if (resolved is not PdfDictionary dict) return null;
@@ -104,7 +104,7 @@ internal static class PdfActionParser
                 next = ParseNextChain(doc, doc.Resolve(nextObj), depth + 1);
         }
 
-        return new PdfAction(type, uri, js, namedName, destPage, next);
+        return new PdfAction { Type = type, Uri = uri, JavaScriptSource = js, NamedActionName = namedName, DestinationPage = destPage, Next = next };
     }
 
     private static IReadOnlyList<PdfAction> ParseNextChain(PdfDocument doc, PdfObject resolvedNext, int depth)

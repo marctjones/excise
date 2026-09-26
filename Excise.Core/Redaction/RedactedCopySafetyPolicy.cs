@@ -271,33 +271,34 @@ public static class RedactedCopySafetyPolicy
                 "correctly to a screen reader.");
         }
 
-        return new RedactedCopySafetyReport(
-            RedactionAreaCount: request.RedactionAreas.Count,
-            SkippedRedactionAreaCount: request.SkippedRedactionAreaCount,
-            RequestedTermCount: terms.Length,
-            CheckedTermCount: checkedTermCount,
-            RemainingTermCount: remainingTermCount,
-            SkippedShortTermCount: skippedShortTermCount,
-            ContentVerificationStatus: contentStatus,
-            MetadataScrubbed: metadataScrubbed,
-            InfoFieldsScrubbed: metadataScrubbed ? infoFieldsBefore : 0,
-            HadXmpMetadata: hadXmpMetadata,
-            AttachmentsScrubbed: attachmentsScrubbed,
-            EmbeddedFileCountBefore: removedAttachments.Count,
-            HiddenTextAuditStatus: hiddenTextStatus,
-            HiddenTextFindingCount: hiddenTextFindingCount,
-            RasterRedactionAuditStatus: rasterAuditStatus,
-            RemainingRasterOverlapCount: remainingRasterOverlapCount,
-            FailedStages: failedStages,
-            Warnings: warnings,
-            UnresolvedRedactAnnotationCount: unresolvedRedactMarks,
-            PdfAIdentificationPreserved: pdfAIdentificationPreserved,   // #1507
-            Attachments: attachmentResults,                              // #1572
-            XfaRemovals: document.RedactionLedger.XfaRemovals.ToList(), // #1574
-            Profile: redaction.Profile,                                  // #1586
-            ProfileRemovals: profileRemovals,
-            AccessibilityAndInteractivityRemoved:
-                RedactionFeatureStripper.DestroysAccessibility(redaction));
+        return new RedactedCopySafetyReport
+        {
+            RedactionAreaCount = request.RedactionAreas.Count,
+            SkippedRedactionAreaCount = request.SkippedRedactionAreaCount,
+            RequestedTermCount = terms.Length,
+            CheckedTermCount = checkedTermCount,
+            RemainingTermCount = remainingTermCount,
+            SkippedShortTermCount = skippedShortTermCount,
+            ContentVerificationStatus = contentStatus,
+            MetadataScrubbed = metadataScrubbed,
+            InfoFieldsScrubbed = metadataScrubbed ? infoFieldsBefore : 0,
+            HadXmpMetadata = hadXmpMetadata,
+            AttachmentsScrubbed = attachmentsScrubbed,
+            EmbeddedFileCountBefore = removedAttachments.Count,
+            HiddenTextAuditStatus = hiddenTextStatus,
+            HiddenTextFindingCount = hiddenTextFindingCount,
+            RasterRedactionAuditStatus = rasterAuditStatus,
+            RemainingRasterOverlapCount = remainingRasterOverlapCount,
+            FailedStages = failedStages,
+            Warnings = warnings,
+            UnresolvedRedactAnnotationCount = unresolvedRedactMarks,
+            PdfAIdentificationPreserved = pdfAIdentificationPreserved,   // #1507
+            Attachments = attachmentResults,                             // #1572
+            XfaRemovals = document.RedactionLedger.XfaRemovals.ToList(), // #1574
+            Profile = redaction.Profile,                                 // #1586
+            ProfileRemovals = profileRemovals,
+            AccessibilityAndInteractivityRemoved = RedactionFeatureStripper.DestroysAccessibility(redaction),
+        };
     }
 
     /// <summary>

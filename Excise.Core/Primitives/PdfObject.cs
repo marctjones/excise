@@ -15,12 +15,12 @@ public abstract class PdfObject
     /// <summary>
     /// If this object is an indirect object, its object number.
     /// </summary>
-    public int? ObjectNumber { get; set; }
+    public int? ObjectNumber { get; internal set; }
 
     /// <summary>
     /// If this object is an indirect object, its generation number.
     /// </summary>
-    public int? GenerationNumber { get; set; }
+    public int? GenerationNumber { get; internal set; }
 
     /// <summary>
     /// Whether this object is an indirect object (has object/generation numbers).

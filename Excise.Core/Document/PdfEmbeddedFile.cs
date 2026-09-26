@@ -66,7 +66,7 @@ public sealed record PdfEmbeddedFile
     /// <summary>
     /// Create a new embedded file record.
     /// </summary>
-    public PdfEmbeddedFile(
+    internal PdfEmbeddedFile(
         string name,
         string? fileName,
         string? description,

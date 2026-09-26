@@ -254,57 +254,57 @@ public class BatesOptions
     /// <summary>
     /// Prefix before the number (e.g., "DOE" for DOE000001)
     /// </summary>
-    public string Prefix { get; set; } = "";
+    public string Prefix { get; init; } = "";
 
     /// <summary>
     /// Suffix after the number (e.g., "-CONF" for DOE000001-CONF)
     /// </summary>
-    public string Suffix { get; set; } = "";
+    public string Suffix { get; init; } = "";
 
     /// <summary>
     /// Starting number
     /// </summary>
-    public int StartNumber { get; set; } = 1;
+    public int StartNumber { get; init; } = 1;
 
     /// <summary>
     /// Minimum number of digits (will pad with zeros)
     /// </summary>
-    public int NumberOfDigits { get; set; } = 6;
+    public int NumberOfDigits { get; init; } = 6;
 
     /// <summary>
     /// Position on the page
     /// </summary>
-    public BatesPosition Position { get; set; } = BatesPosition.BottomRight;
+    public BatesPosition Position { get; init; } = BatesPosition.BottomRight;
 
     /// <summary>
     /// Font name
     /// </summary>
-    public string FontName { get; set; } = "Arial";
+    public string FontName { get; init; } = "Arial";
 
     /// <summary>
     /// Font size in points
     /// </summary>
-    public double FontSize { get; set; } = 10;
+    public double FontSize { get; init; } = 10;
 
     /// <summary>
     /// Horizontal margin from page edge
     /// </summary>
-    public double MarginX { get; set; } = 36; // 0.5 inch
+    public double MarginX { get; init; } = 36; // 0.5 inch
 
     /// <summary>
     /// Vertical margin from page edge
     /// </summary>
-    public double MarginY { get; set; } = 36; // 0.5 inch
+    public double MarginY { get; init; } = 36; // 0.5 inch
 
     /// <summary>
     /// Output directory for batch processing (null = same directory)
     /// </summary>
-    public string? OutputDirectory { get; set; }
+    public string? OutputDirectory { get; init; }
 
     /// <summary>
     /// Suffix to add to output filename (e.g., "_bates")
     /// </summary>
-    public string OutputSuffix { get; set; } = "_bates";
+    public string OutputSuffix { get; init; } = "_bates";
 }
 
 /// <summary>
@@ -325,11 +325,11 @@ public enum BatesPosition
 /// </summary>
 public class BatesResult
 {
-    public List<BatesDocumentResult> Documents { get; set; } = new();
-    public string FirstBatesNumber { get; set; } = "";
-    public string LastBatesNumber { get; set; } = "";
-    public int NextBatesNumber { get; set; }
-    public int TotalPages { get; set; }
+    public List<BatesDocumentResult> Documents { get; internal set; } = new();
+    public string FirstBatesNumber { get; internal set; } = "";
+    public string LastBatesNumber { get; internal set; } = "";
+    public int NextBatesNumber { get; internal set; }
+    public int TotalPages { get; internal set; }
 }
 
 /// <summary>
@@ -337,12 +337,12 @@ public class BatesResult
 /// </summary>
 public class BatesDocumentResult
 {
-    public string FilePath { get; set; } = "";
-    public string FileName { get; set; } = "";
-    public string OutputPath { get; set; } = "";
-    public string FirstBatesNumber { get; set; } = "";
-    public string LastBatesNumber { get; set; } = "";
-    public int PageCount { get; set; }
-    public bool Success { get; set; }
-    public string? ErrorMessage { get; set; }
+    public string FilePath { get; internal set; } = "";
+    public string FileName { get; internal set; } = "";
+    public string OutputPath { get; internal set; } = "";
+    public string FirstBatesNumber { get; internal set; } = "";
+    public string LastBatesNumber { get; internal set; } = "";
+    public int PageCount { get; internal set; }
+    public bool Success { get; internal set; }
+    public string? ErrorMessage { get; internal set; }
 }

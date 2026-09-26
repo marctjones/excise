@@ -21,7 +21,7 @@ public sealed class PdfAcroForm
     /// </summary>
     public bool NeedsAppearances { get; }
 
-    public PdfAcroForm(IReadOnlyList<PdfField> fields, bool needsAppearances)
+    internal PdfAcroForm(IReadOnlyList<PdfField> fields, bool needsAppearances)
     {
         Fields = fields;
         NeedsAppearances = needsAppearances;
