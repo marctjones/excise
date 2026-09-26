@@ -932,11 +932,12 @@ public class RedactionProfileTests
     /// hidden-layer pass.
     /// </summary>
     [Theory]
-    [InlineData("an appearance stream draws it", "kept")]
-    [InlineData("a form only it draws, also filed on the page", "removed")]
-    [InlineData("its own /OC is off", "removed")]
-    [InlineData("a form excise cannot decode may draw it", "reported")]
-    public void WhetherAFormLeftUndrawnIsRemoved_IsDecidedOverTheWholeFile(string shape, string outcome)
+    [InlineData("an appearance stream draws it", false, "kept")]
+    [InlineData("an appearance stream draws it", true, "removed")] // Maximum removes the annotation too
+    [InlineData("a form only it draws, also filed on the page", false, "removed")]
+    [InlineData("its own /OC is off", false, "removed")]
+    [InlineData("a form excise cannot decode may draw it", false, "reported")]
+    public void WhetherAFormLeftUndrawnIsRemoved_IsDecidedOverTheWholeFile(string shape, bool maximum, string outcome)
     {
         var form = $"BT /F1 12 Tf 72 500 Td ({HiddenFormToken}) Tj ET";
         var hidden = "/OC /MC0 BDC q /Fx0 Do Q EMC\n";
@@ -976,7 +977,7 @@ public class RedactionProfileTests
             catalogExtra: "/OCProperties << /OCGs [7 0 R] /D << /OFF [7 0 R] >> >>",
             resourcesExtra: $"/Properties << /MC0 7 0 R >> /XObject << {xobjects} >>"));
 
-        var report = doc.RedactText("VISIBLE", RedactionOptions.Default);
+        var report = doc.RedactText("VISIBLE", maximum ? RedactionOptions.Maximum : RedactionOptions.Default);
 
         var found = SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), HiddenFormToken);
         var row = report.Carriers.Where(c => c.Carrier == "form XObject 8 0 R");

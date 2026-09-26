@@ -147,12 +147,13 @@ internal static class RedactionFeatureStripper
         // they want kept) must not have those layers DELETED instead — that
         // would be the opposite of what they asked for, which is worse than
         // either answer on its own.
+        var droppedForms = new Dictionary<int, PdfDictionary>();
+        var unreadableForms = new Dictionary<int, CarrierResult>();
         if (options.RemoveHiddenLayerContent && options.IncludeHiddenLayers)
         {
-            var (spans, groups, forms) = RemoveHiddenOptionalContent(document, refusals);
+            var (spans, groups) = RemoveHiddenOptionalContent(document, droppedForms, unreadableForms);
             Row("hidden optional-content span(s)", spans,
                 "content in layers that are OFF in the default configuration");
-            Row("form XObject(s) drawn only in hidden optional content", forms);
             Row("hidden optional-content group(s)", groups);
             if (spans + groups > 0)
                 invalidate |= PdfDocumentDerivedStateScope.OptionalContent;
@@ -194,6 +195,13 @@ internal static class RedactionFeatureStripper
 
         if (options.RemoveFieldNames)
             Row("form field name(s) and tooltip(s)", RemoveFieldNames(document));
+
+        // #1868: last, because the passes above remove drawers too (an
+        // annotation and its appearance, a widget the flatten did not paint).
+        var freed = PruneFormsOnlyHiddenContentDrew(document, droppedForms, refusals);
+        Row("form XObject(s) drawn only in hidden optional content", freed.Count);
+        foreach (var (form, row) in unreadableForms)
+            if (!freed.Contains(form)) refusals.Add(row);
 
         if (invalidate != PdfDocumentDerivedStateScope.None)
             document.InvalidateDerivedState(invalidate);
@@ -758,8 +766,10 @@ internal static class RedactionFeatureStripper
     /// <summary>
     /// Drop page content inside <c>/OC</c> marked-content spans whose group is
     /// OFF in the default configuration, XObject invocations whose <c>/OC</c>
-    /// is OFF, and annotations in an OFF layer; then the forms only that
-    /// content drew, and the now-unused groups from <c>/OCProperties</c>.
+    /// is OFF, and annotations in an OFF layer; then remove the now-unused
+    /// groups from <c>/OCProperties</c>. Every form whose <c>Do</c> is dropped
+    /// goes into <paramref name="droppedForms"/>, and the row of every form it
+    /// cannot read into <paramref name="unreadable"/> (#1866).
     /// </summary>
     /// <remarks>
     /// No new parser: this consumes the walker's operators through
@@ -767,17 +777,15 @@ internal static class RedactionFeatureStripper
     /// <c>SetContentStream</c>, the same shape as
     /// <see cref="ObstructionStripper"/> (CLAUDE.md "One walk, many sinks").
     /// </remarks>
-    private static (int Spans, int Groups, int Forms) RemoveHiddenOptionalContent(
-        PdfDocument document, ICollection<CarrierResult> refusals)
+    private static (int Spans, int Groups) RemoveHiddenOptionalContent(
+        PdfDocument document, Dictionary<int, PdfDictionary> droppedForms, Dictionary<int, CarrierResult> unreadable)
     {
         // No /OCProperties means no optional content and nothing to do — and,
         // importantly, no cost on the overwhelming majority of documents.
-        if (document.Catalog.GetOptional("OCProperties") == null) return (0, 0, 0);
+        if (document.Catalog.GetOptional("OCProperties") == null) return (0, 0);
 
         var spans = 0;
         var hiddenGroups = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
-        var droppedForms = new Dictionary<int, PdfDictionary>();
-        var unreadable = new Dictionary<int, CarrierResult>();
 
         foreach (var page in SafePages(document))
         {
@@ -839,11 +847,7 @@ internal static class RedactionFeatureStripper
         }
         spans += annotationsRemoved;
 
-        var freed = PruneFormsOnlyHiddenContentDrew(document, droppedForms, refusals);
-        foreach (var (form, row) in unreadable)
-            if (!freed.Contains(form)) refusals.Add(row);
-
-        return (spans, RemoveHiddenGroupDefinitions(document, hiddenGroups), freed.Count);
+        return (spans, RemoveHiddenGroupDefinitions(document, hiddenGroups));
     }
 
     /// <summary>
