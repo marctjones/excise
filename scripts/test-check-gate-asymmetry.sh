@@ -114,9 +114,10 @@ git -C "$REPO" config commit.gpgsign false
 
 # Every pathspec check-gate-asymmetry.sh declares must match a TRACKED file or
 # its own preflight fails the run (a pathspec matching nothing is silent, #941).
-mkdir -p Excise.Rendering Excise.Avalonia/Controls Excise.Core/Content \
+mkdir -p Excise.Rendering/Differential Excise.Avalonia/Controls Excise.Core/Content \
          Excise.Core/Fonts tools/Excise.RenderTools Excise.Benchmarks Demo.Tests
 echo "// hot path" > Excise.Rendering/Renderer.cs
+echo "// oracle" > Excise.Rendering/Differential/Oracle.cs
 
 # #1627: the hook refuses a v* tag that disagrees with the tree, so the
 # synthetic repo needs the two files that declare the version. v9.9.9 below
@@ -214,6 +215,39 @@ scripts/check-gate-asymmetry.sh no-such-base >/dev/null 2>&1 && rc=0 || rc=$?
 GATE_ASYMMETRY_ALLOW_NO_BASE=1 scripts/check-gate-asymmetry.sh no-such-base >/dev/null 2>&1 && rc=0 || rc=$?
 [ "$rc" -eq 77 ] || fail "GATE_ASYMMETRY_ALLOW_NO_BASE=1 must SKIP (77), got $rc"
 ok
+
+# 5b. #1757: Excise.Rendering/Differential/ (the reference-oracle wrappers) is not a performance
+#     path, so a change there next to a rewritten expectation is legal in one range. Exactly that
+#     folder: a sibling file still trips the gate, and an exclusion that matches nothing fails.
+git checkout -q -b oracle "$BASE_SHA"
+echo "// changed oracle" >> Excise.Rendering/Differential/Oracle.cs
+git commit -qam "test: oracle wrapper"
+sed -i '' 's/Be(1280)/Be(2560)/' Demo.Tests/TileTests.cs
+git commit -qam "test: tile size is 2560"
+out="$(scripts/check-gate-asymmetry.sh "$BASE_SHA" 2>&1)" && rc=0 || rc=$?
+[ "$rc" -eq 0 ] || fail "an oracle-only change with a rewritten expectation must pass, got $rc: $out"
+case "$out" in
+    *"no performance-sensitive paths touched"*) ok ;;
+    *) fail "the oracle folder must not count as a perf path: $out" ;;
+esac
+echo "// sibling" > Excise.Rendering/DifferentialHelper.cs
+git add Excise.Rendering/DifferentialHelper.cs
+git commit -qm "perf: a file that only starts with the folder's name"
+out="$(scripts/check-gate-asymmetry.sh "$BASE_SHA" 2>&1)" && rc=0 || rc=$?
+[ "$rc" -eq 1 ] || fail "the exclusion is exactly the folder; a sibling file must trip the gate, got $rc: $out"
+case "$out" in
+    *"Excise.Rendering/DifferentialHelper.cs"*) ok ;;
+    *) fail "the failure must name the sibling perf file: $out" ;;
+esac
+git rm -q -r Excise.Rendering/Differential
+git commit -qm "the oracle folder moves away"
+out="$(scripts/check-gate-asymmetry.sh "$BASE_SHA" 2>&1)" && rc=0 || rc=$?
+[ "$rc" -eq 1 ] || fail "an exclusion matching no tracked file must fail, got $rc: $out"
+case "$out" in
+    *"excludes 'Excise.Rendering/Differential/'"*) ok ;;
+    *) fail "the failure must name the dead exclusion: $out" ;;
+esac
+git checkout -q develop
 
 # ─────────────────────────────── the hook ───────────────────────────────────
 

@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -11,7 +10,7 @@ namespace Excise.Rendering.Differential;
 /// occurrences the REFERENCE located — the number the caller must sanity-check
 /// against an independent extractor before trusting anything else here.
 /// </summary>
-public sealed record ReferenceRedactionResult(int HitsFound, string? Failure)
+internal sealed record ReferenceRedactionResult(int HitsFound, string? Failure)
 {
     public bool Succeeded => Failure == null;
 }
@@ -47,7 +46,7 @@ public sealed record ReferenceRedactionResult(int HitsFound, string? Failure)
 /// an independent extractor can see is a BROKEN RUN, never a clean
 /// baseline.</b></para>
 /// </summary>
-public static class MutoolReferenceRedactor
+internal static class MutoolReferenceRedactor
 {
     public static bool IsAvailable => MutoolReferenceRenderer.IsAvailable;
 
@@ -88,41 +87,16 @@ public static class MutoolReferenceRedactor
         {
             File.WriteAllText(scriptPath, RedactScript);
 
-            var psi = new ProcessStartInfo("mutool")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            psi.ArgumentList.Add("run");
-            psi.ArgumentList.Add(scriptPath);
-            psi.ArgumentList.Add(inputPath);
-            psi.ArgumentList.Add(term);
-            psi.ArgumentList.Add(outputPath);
-
-            using var proc = Process.Start(psi);
-            if (proc == null) return new ReferenceRedactionResult(0, "could not start mutool");
-
-            // #1083: drain concurrently, bound the wait.
-            var outT = proc.StandardOutput.ReadToEndAsync();
-            var errT = proc.StandardError.ReadToEndAsync();
-
-            if (!proc.WaitForExit(timeoutMs))
-            {
-                try { proc.Kill(entireProcessTree: true); } catch { /* best effort */ }
+            var run = ReferenceProcess.Run("mutool", new[] { "run", scriptPath, inputPath, term, outputPath }, timeoutMs);
+            if (!run.Started) return new ReferenceRedactionResult(0, "could not start mutool");
+            if (run.TimedOut)
                 return new ReferenceRedactionResult(0, $"mutool timed out after {timeoutMs}ms");
-            }
+            if (run.ExitCode != 0)
+                return new ReferenceRedactionResult(0, $"mutool exited {run.ExitCode}: {run.Stderr.Trim()}");
 
-            var stdout = outT.GetAwaiter().GetResult();
-            var stderr = errT.GetAwaiter().GetResult();
-
-            if (proc.ExitCode != 0)
-                return new ReferenceRedactionResult(0, $"mutool exited {proc.ExitCode}: {stderr.Trim()}");
-
-            var m = Regex.Match(stdout, @"EXCISE_REF_HITS\s+(\d+)");
+            var m = Regex.Match(run.Stdout, @"EXCISE_REF_HITS\s+(\d+)");
             if (!m.Success)
-                return new ReferenceRedactionResult(0, $"mutool produced no hit count. stdout: {stdout.Trim()}");
+                return new ReferenceRedactionResult(0, $"mutool produced no hit count. stdout: {run.Stdout.Trim()}");
 
             if (!File.Exists(outputPath))
                 return new ReferenceRedactionResult(0, "mutool wrote no output file");

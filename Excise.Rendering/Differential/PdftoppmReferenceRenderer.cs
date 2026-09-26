@@ -26,29 +26,9 @@ namespace Excise.Rendering.Differential;
 /// contract as every other renderer in this namespace, so tests can treat
 /// "no answer" as data.
 /// </summary>
-public static class PdftoppmReferenceRenderer
+internal static class PdftoppmReferenceRenderer
 {
-    private static readonly Lazy<bool> _available = new(() =>
-    {
-        try
-        {
-            var psi = new ProcessStartInfo("pdftoppm", "-v")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            using var p = Process.Start(psi);
-            if (p == null) return false;
-            p.WaitForExit(2000);
-            return true; // any exit code means it's installed
-        }
-        catch
-        {
-            return false;
-        }
-    });
+    private static readonly Lazy<bool> _available = new(() => ReferenceProcess.IsLaunchable("pdftoppm", 2000, "-v"));
 
     /// <summary>True when the <c>pdftoppm</c> CLI is launchable on PATH.</summary>
     public static bool IsAvailable => _available.Value;
@@ -93,66 +73,32 @@ public static class PdftoppmReferenceRenderer
 
         try
         {
-            var psi = new ProcessStartInfo("pdftoppm")
+            var args = new List<string>
             {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
+                "-png", "-singlefile",
+                "-r", dpi.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "-f", pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "-l", pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
             };
-            psi.ArgumentList.Add("-png");
-            psi.ArgumentList.Add("-singlefile");
-            psi.ArgumentList.Add("-r");
-            psi.ArgumentList.Add(dpi.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            psi.ArgumentList.Add("-f");
-            psi.ArgumentList.Add(pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            psi.ArgumentList.Add("-l");
-            psi.ArgumentList.Add(pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
             if (userPassword != null)
             {
-                psi.ArgumentList.Add("-upw");
-                psi.ArgumentList.Add(userPassword);
+                args.Add("-upw");
+                args.Add(userPassword);
             }
             if (ownerPassword != null)
             {
-                psi.ArgumentList.Add("-opw");
-                psi.ArgumentList.Add(ownerPassword);
+                args.Add("-opw");
+                args.Add(ownerPassword);
             }
-            psi.ArgumentList.Add(pdfPath);
-            psi.ArgumentList.Add(outPrefix);
+            args.Add(pdfPath);
+            args.Add(outPrefix);
 
-            using var p = Process.Start(psi);
-            if (p == null)
-                return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
-            if (!p.WaitForExit(timeoutMs))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-                return new ReferenceRenderResult(null, "TIMEOUT", $"pdftoppm exceeded {timeoutMs}ms", sw.ElapsedMilliseconds);
-            }
-            if (p.ExitCode != 0)
-            {
-                var stderr = p.StandardError.ReadToEnd();
-                return new ReferenceRenderResult(null, "EXIT_CODE",
-                    $"pdftoppm exited {p.ExitCode}: {Trunc(stderr.Trim(), 200)}", sw.ElapsedMilliseconds);
-            }
-            if (!File.Exists(outPath))
-                return new ReferenceRenderResult(null, "MISSING_OUTPUT", "pdftoppm did not write an output PNG", sw.ElapsedMilliseconds);
-
-            var bitmap = SKBitmap.Decode(outPath);
-            return bitmap == null
-                ? new ReferenceRenderResult(null, "DECODE_ERROR", "pdftoppm output PNG could not be decoded", sw.ElapsedMilliseconds)
-                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds);
-        }
-        catch (Exception ex)
-        {
-            return new ReferenceRenderResult(null, "ERROR", ex.Message, sw.ElapsedMilliseconds);
+            return ReferenceProcess.RenderPng(sw, "pdftoppm", "pdftoppm", args, timeoutMs,
+                () => File.Exists(outPath) ? outPath : null);
         }
         finally
         {
             try { File.Delete(outPath); } catch { }
         }
     }
-
-    private static string Trunc(string value, int length)
-        => value.Length <= length ? value : value.Substring(0, length) + "…";
 }

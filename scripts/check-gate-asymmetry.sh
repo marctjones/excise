@@ -153,12 +153,27 @@ DEAD
   exit 1
 fi
 
+# The one folder under a perf path that is not one (#1757). Excise.Rendering/Differential/ holds
+# the reference-oracle wrappers (mutool, qpdf, pdftocairo, ...): tests, `excise unredact` and the
+# OCR confidence check call them, no render, scroll or tile path does, and nothing in it can move
+# a benchmark. Exactly this folder: a sibling file or the rest of Excise.Rendering/ is still a
+# perf path. Checked like PERF_PATHS, because an exclusion that matches nothing would go on
+# excluding silently after a rename.
+PERF_EXCLUDE='Excise.Rendering/Differential/'
+if [[ -z "$(git ls-files -- "$PERF_EXCLUDE")" ]]; then
+  echo
+  echo "FAIL: check-gate-asymmetry excludes '$PERF_EXCLUDE' from its performance-sensitive paths,"
+  echo "but that matches NO tracked file. Fix the exclusion or drop it if the folder moved."
+  exit 1
+fi
+
 perf_hits=""
 while IFS= read -r p; do
   [[ -z "$p" ]] && continue
   hit="$(git diff --name-only "$RANGE" -- "$p" 2>/dev/null || true)"
   [[ -n "$hit" ]] && perf_hits+="$hit"$'\n'
 done <<< "$PERF_PATHS"
+perf_hits="$(printf '%s' "$perf_hits" | awk -v ex="$PERF_EXCLUDE" 'index($0, ex) != 1')"
 
 if [[ -z "${perf_hits// /}" ]]; then
   echo "==> gate asymmetry OK (no performance-sensitive paths touched)"

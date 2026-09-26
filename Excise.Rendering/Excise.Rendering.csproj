@@ -45,6 +45,11 @@
     <InternalsVisibleTo Include="Excise.Rendering.Tests" />
     <!-- #1492: the viewer passes RenderOptions.ImageSampleStreamSink. -->
     <InternalsVisibleTo Include="Excise.Avalonia" />
+    <!-- #1836: Differential (the reference-oracle wrappers) is internal; these are its in-repo callers. -->
+    <InternalsVisibleTo Include="Excise.Ocr" />
+    <InternalsVisibleTo Include="Excise.Ocr.Tests" />
+    <InternalsVisibleTo Include="Excise.Cli.Tests" />
+    <InternalsVisibleTo Include="Excise.App.Tests" />
   </ItemGroup>
 
 </Project>

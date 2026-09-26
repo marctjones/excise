@@ -31,7 +31,7 @@ namespace Excise.Rendering.Differential;
 /// something about what most people will actually see, not just what one more
 /// library thinks.
 /// </summary>
-public static class PdfiumNativeReferenceRenderer
+internal static class PdfiumNativeReferenceRenderer
 {
     private const string LibAlias = "pdfium";
 
@@ -94,7 +94,7 @@ public static class PdfiumNativeReferenceRenderer
     /// <summary>
     /// The static flags TryRenderPage invokes with (#1385) -- see
     /// MutoolReferenceRenderer for why this must stay in sync with the
-    /// ArgumentList.Add calls below.
+    /// argument list below.
     /// </summary>
     public static string InvocationSignature(bool renderAnnotations) =>
         "pdfium-render" + (renderAnnotations ? " --annots" : "");
@@ -249,30 +249,22 @@ public static class PdfiumNativeReferenceRenderer
         var png = Path.Combine(Path.GetTempPath(), $"excise-pdfium-{Guid.NewGuid():N}.png");
         try
         {
-            var psi = new ProcessStartInfo("dotnet")
+            var args = new List<string>
             {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
+                host, "pdfium-render",
+                "--pdf", pdfPath,
+                "--page", pageNumber.ToString(CultureInfo.InvariantCulture),
+                "--dpi", dpi.ToString(CultureInfo.InvariantCulture),
             };
-            psi.ArgumentList.Add(host);
-            psi.ArgumentList.Add("pdfium-render");
-            psi.ArgumentList.Add("--pdf"); psi.ArgumentList.Add(pdfPath);
-            psi.ArgumentList.Add("--page"); psi.ArgumentList.Add(pageNumber.ToString(CultureInfo.InvariantCulture));
-            psi.ArgumentList.Add("--dpi"); psi.ArgumentList.Add(dpi.ToString(CultureInfo.InvariantCulture));
-            if (renderAnnotations) psi.ArgumentList.Add("--annots");
-            if (!string.IsNullOrEmpty(userPassword)) { psi.ArgumentList.Add("--password"); psi.ArgumentList.Add(userPassword); }
-            psi.ArgumentList.Add("--output"); psi.ArgumentList.Add(png);
+            if (renderAnnotations) args.Add("--annots");
+            if (!string.IsNullOrEmpty(userPassword)) { args.Add("--password"); args.Add(userPassword); }
+            args.Add("--output"); args.Add(png);
             // The host renders in process; keep its own serialisation honest.
-            psi.Environment["EXCISE_PDFIUM_INPROC"] = "1";
-
-            using var p = Process.Start(psi);
-            if (p == null) return new ReferenceRenderResult(null, "HOST_START_FAILED", null, sw.ElapsedMilliseconds);
-            var stderr = p.StandardError.ReadToEnd();
-            if (!p.WaitForExit(HostTimeoutMs))
+            var run = ReferenceProcess.Run("dotnet", args, HostTimeoutMs,
+                new[] { KeyValuePair.Create("EXCISE_PDFIUM_INPROC", "1") });
+            if (!run.Started) return new ReferenceRenderResult(null, "HOST_START_FAILED", null, sw.ElapsedMilliseconds);
+            if (run.TimedOut)
             {
-                try { p.Kill(entireProcessTree: true); } catch { }
                 return new ReferenceRenderResult(null, "TIMEOUT",
                     $"pdfium host exceeded {HostTimeoutMs} ms", sw.ElapsedMilliseconds);
             }
@@ -281,14 +273,14 @@ public static class PdfiumNativeReferenceRenderer
             {
                 // 3 is the host's own "pdfium refused" exit; anything else with no
                 // PNG is the child dying, which is what isolation exists to survive.
-                var status = p.ExitCode == 3 ? "LOAD_FAILED" : "CRASHED";
+                var status = run.ExitCode == 3 ? "LOAD_FAILED" : "CRASHED";
                 return new ReferenceRenderResult(null, status,
-                    $"pdfium host exit {p.ExitCode}: {stderr.Trim()}", sw.ElapsedMilliseconds);
+                    $"pdfium host exit {run.ExitCode}: {run.Stderr.Trim()}", sw.ElapsedMilliseconds);
             }
 
             var bitmap = SKBitmap.Decode(png);
             return bitmap == null
-                ? new ReferenceRenderResult(null, "DECODE_FAILED", stderr.Trim(), sw.ElapsedMilliseconds)
+                ? new ReferenceRenderResult(null, "DECODE_FAILED", run.Stderr.Trim(), sw.ElapsedMilliseconds)
                 : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds);
         }
         catch (Exception ex)

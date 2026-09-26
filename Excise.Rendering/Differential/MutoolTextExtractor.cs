@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
@@ -16,7 +15,7 @@ namespace Excise.Rendering.Differential;
 /// <see cref="MutoolReferenceRenderer"/>'s convention so callers can treat
 /// "no answer" as data, not an exception to catch.
 /// </summary>
-public static class MutoolTextExtractor
+internal static class MutoolTextExtractor
 {
     /// <summary>Extract text from a single page (1-based). Returns null when mutool isn't available or refuses.</summary>
     public static string? ExtractPage(string pdfPath, int pageNumber, int timeoutMs = 30_000)
@@ -66,49 +65,15 @@ public static class MutoolTextExtractor
 
         var outPath = Path.Combine(Path.GetTempPath(),
             $"excise-mutool-text-{Guid.NewGuid():N}.txt");
-        try
+        // -F txt makes mutool emit plain UTF-8 text (extracted by its
+        // own text-merge engine, which is independent of excise).
+        var args = new List<string> { "draw" };
+        if (!string.IsNullOrEmpty(password))
         {
-            var psi = new ProcessStartInfo("mutool")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            // -F txt makes mutool emit plain UTF-8 text (extracted by its
-            // own text-merge engine, which is independent of excise).
-            psi.ArgumentList.Add("draw");
-            if (!string.IsNullOrEmpty(password))
-            {
-                psi.ArgumentList.Add("-p");
-                psi.ArgumentList.Add(password);
-            }
-            psi.ArgumentList.Add("-o");
-            psi.ArgumentList.Add(outPath);
-            psi.ArgumentList.Add("-F");
-            psi.ArgumentList.Add("txt");
-            psi.ArgumentList.Add(pdfPath);
-            psi.ArgumentList.Add(pageSpec);
-
-            using var p = Process.Start(psi);
-            if (p == null) return null;
-            if (!p.WaitForExit(timeoutMs))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-                return null;
-            }
-            if (p.ExitCode != 0) return null;
-            if (!File.Exists(outPath)) return null;
-
-            return File.ReadAllText(outPath);
+            args.Add("-p");
+            args.Add(password);
         }
-        catch
-        {
-            return null;
-        }
-        finally
-        {
-            try { File.Delete(outPath); } catch { }
-        }
+        args.AddRange(new[] { "-o", outPath, "-F", "txt", pdfPath, pageSpec });
+        return ReferenceProcess.RunToTextFile("mutool", args, outPath, timeoutMs);
     }
 }

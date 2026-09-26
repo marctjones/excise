@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -11,7 +10,7 @@ namespace Excise.Rendering.Differential;
 /// not one we asked for — a change in it between input and output is itself a
 /// finding.
 /// </summary>
-public sealed record VeraPdfResult(bool Passed, string Flavour, string? Failure)
+internal sealed record VeraPdfResult(bool Passed, string Flavour, string? Failure)
 {
     public bool Ran => Failure == null;
 }
@@ -40,30 +39,9 @@ public sealed record VeraPdfResult(bool Passed, string Flavour, string? Failure)
 /// Never throws: a failure is returned as data, matching the other reference
 /// tools.</para>
 /// </summary>
-public static class VeraPdfReferenceValidator
+internal static class VeraPdfReferenceValidator
 {
-    private static readonly Lazy<bool> _available = new(() =>
-    {
-        try
-        {
-            var psi = new ProcessStartInfo("verapdf")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            psi.ArgumentList.Add("--version");
-            using var p = Process.Start(psi);
-            if (p == null) return false;
-            var outT = p.StandardOutput.ReadToEndAsync();  // #1083
-            var errT = p.StandardError.ReadToEndAsync();
-            var ok = p.WaitForExit(20_000);
-            outT.GetAwaiter().GetResult(); errT.GetAwaiter().GetResult();
-            return ok && p.ExitCode == 0;
-        }
-        catch { return false; }
-    });
+    private static readonly Lazy<bool> _available = new(() => ReferenceProcess.ExitsZero("verapdf", 20_000, "--version"));
 
     public static bool IsAvailable => _available.Value;
 
@@ -96,43 +74,28 @@ public static class VeraPdfReferenceValidator
 
         try
         {
-            var psi = new ProcessStartInfo("verapdf")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            psi.ArgumentList.Add("--format");
-            psi.ArgumentList.Add("text");
+            var args = new List<string> { "--format", "text" };
             if (flavour != null)
             {
-                psi.ArgumentList.Add("-f");
-                psi.ArgumentList.Add(flavour);
+                args.Add("-f");
+                args.Add(flavour);
             }
-            psi.ArgumentList.Add(pdfPath);
+            args.Add(pdfPath);
 
-            using var proc = Process.Start(psi);
-            if (proc == null) return new VeraPdfResult(false, "", "could not start verapdf");
-
-            var stdout = proc.StandardOutput.ReadToEnd();
-            var stderr = proc.StandardError.ReadToEnd();
-            if (!proc.WaitForExit(timeoutMs))
-            {
-                try { proc.Kill(entireProcessTree: true); } catch { /* best effort */ }
-                return new VeraPdfResult(false, "", $"verapdf timed out after {timeoutMs}ms");
-            }
+            var run = ReferenceProcess.Run("verapdf", args, timeoutMs);
+            if (!run.Started) return new VeraPdfResult(false, "", "could not start verapdf");
+            if (run.TimedOut) return new VeraPdfResult(false, "", $"verapdf timed out after {timeoutMs}ms");
 
             // The JVM prints reflection warnings to stdout on some builds; the
             // verdict line is "PASS <path> <flavour>" or "FAIL <path> <flavour>".
-            foreach (var line in stdout.Split('\n'))
+            foreach (var line in run.Stdout.Split('\n'))
             {
                 var m = Regex.Match(line.Trim(), @"^(PASS|FAIL)\s+.*\s+(\S+)$");
                 if (!m.Success) continue;
                 return new VeraPdfResult(m.Groups[1].Value == "PASS", m.Groups[2].Value, null);
             }
 
-            return new VeraPdfResult(false, "", $"no verdict line. stderr: {stderr.Trim()}");
+            return new VeraPdfResult(false, "", $"no verdict line. stderr: {run.Stderr.Trim()}");
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {

@@ -12,7 +12,7 @@ namespace Excise.Rendering.Differential;
 /// diagnostic oracle used when MuPDF/Poppler/Ghostscript do not explain a
 /// rendering split.
 /// </summary>
-public static class PdfBoxReferenceRenderer
+internal static class PdfBoxReferenceRenderer
 {
     private sealed record Invocation(string Command, string[] PrefixArgs, string Description);
 
@@ -73,31 +73,21 @@ public static class PdfBoxReferenceRenderer
             if (userPassword != null)
                 args = args.Append($"-password={userPassword}");
 
-            var psi = CreateStartInfo(invocation.Command, args);
-
-            using var p = Process.Start(psi);
-            if (p == null)
+            var run = ReferenceProcess.Run(invocation.Command, args, timeoutMs);
+            if (!run.Started)
                 return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
-            var stdoutTask = p.StandardOutput.ReadToEndAsync();
-            var stderrTask = p.StandardError.ReadToEndAsync();
-            if (!ReferenceProcessResources.WaitForExitAndCapture(p, timeoutMs, out var resources))
+
+            var capturedOutput = FormatCapturedOutput(run.Stderr, run.Stdout);
+            if (run.TimedOut)
             {
-                try { p.Kill(entireProcessTree: true); } catch { }
-                var timeoutOutput = FormatCapturedOutput(
-                    ReadCapturedOutput(stderrTask),
-                    ReadCapturedOutput(stdoutTask));
                 return new ReferenceRenderResult(null, "TIMEOUT",
-                    AppendDetail($"{invocation.Description} exceeded {timeoutMs}ms", timeoutOutput),
+                    AppendDetail($"{invocation.Description} exceeded {timeoutMs}ms", capturedOutput),
                     sw.ElapsedMilliseconds);
             }
-
-            var stdout = ReadCapturedOutput(stdoutTask);
-            var stderr = ReadCapturedOutput(stderrTask);
-            var capturedOutput = FormatCapturedOutput(stderr, stdout);
-            if (p.ExitCode != 0)
+            if (run.ExitCode != 0)
             {
                 return new ReferenceRenderResult(null, "EXIT_CODE",
-                    AppendDetail($"{invocation.Description} exited {p.ExitCode}", capturedOutput),
+                    AppendDetail($"{invocation.Description} exited {run.ExitCode}", capturedOutput),
                     sw.ElapsedMilliseconds);
             }
 
@@ -124,7 +114,7 @@ public static class PdfBoxReferenceRenderer
                 ? new ReferenceRenderResult(null, "DECODE_ERROR",
                     $"{invocation.Description} output PNG could not be decoded", sw.ElapsedMilliseconds)
                 : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds,
-                    resources.PeakWorkingSetBytes, resources.CpuMs);
+                    run.Resources.PeakWorkingSetBytes, run.Resources.CpuMs);
         }
         catch (Exception ex)
         {
@@ -142,7 +132,7 @@ public static class PdfBoxReferenceRenderer
     private static Invocation? ResolveInvocation()
     {
         var explicitCommand = Environment.GetEnvironmentVariable("EXCISE_PDFBOX_COMMAND");
-        if (!string.IsNullOrWhiteSpace(explicitCommand) && CanStart(explicitCommand, "--help"))
+        if (!string.IsNullOrWhiteSpace(explicitCommand) && ReferenceProcess.IsLaunchable(explicitCommand, 2000, "--help"))
             return new Invocation(explicitCommand, Array.Empty<string>(), explicitCommand);
 
         var jarPath = Environment.GetEnvironmentVariable("EXCISE_PDFBOX_JAR")
@@ -160,7 +150,7 @@ public static class PdfBoxReferenceRenderer
 
         foreach (var command in new[] { "pdfbox", "pdfbox-app" })
         {
-            if (CanStart(command, "--help"))
+            if (ReferenceProcess.IsLaunchable(command, 2000, "--help"))
                 return new Invocation(command, Array.Empty<string>(), command);
         }
 
@@ -174,72 +164,7 @@ public static class PdfBoxReferenceRenderer
             ? new[] { "/opt/homebrew/opt/openjdk/bin/java", "java" }
             : new[] { explicitJava };
 
-        return candidates.FirstOrDefault(candidate => CanStartSuccessfully(candidate, "-version"));
-    }
-
-    private static bool CanStart(string command, params string[] args)
-    {
-        try
-        {
-            var psi = CreateStartInfo(command, args);
-            using var p = Process.Start(psi);
-            if (p == null) return false;
-            if (!p.WaitForExit(2000))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-            }
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static bool CanStartSuccessfully(string command, params string[] args)
-    {
-        try
-        {
-            var psi = CreateStartInfo(command, args);
-            using var p = Process.Start(psi);
-            if (p == null) return false;
-            if (!p.WaitForExit(2000))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-                return false;
-            }
-            return p.ExitCode == 0;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static ProcessStartInfo CreateStartInfo(string command, IEnumerable<string> args)
-    {
-        var psi = new ProcessStartInfo(command)
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-        foreach (var arg in args)
-            psi.ArgumentList.Add(arg);
-        return psi;
-    }
-
-    private static string ReadCapturedOutput(System.Threading.Tasks.Task<string> readTask)
-    {
-        try
-        {
-            return readTask.GetAwaiter().GetResult();
-        }
-        catch
-        {
-            return "";
-        }
+        return candidates.FirstOrDefault(candidate => ReferenceProcess.ExitsZero(candidate, 2000, "-version"));
     }
 
     private static string? FormatCapturedOutput(string stderr, string stdout)
@@ -250,14 +175,11 @@ public static class PdfBoxReferenceRenderer
         if (!string.IsNullOrWhiteSpace(stdout))
             parts.Add("stdout: " + stdout.Trim());
 
-        return parts.Count == 0 ? null : Trunc(string.Join("; ", parts), 200);
+        return parts.Count == 0 ? null : ReferenceProcess.Trunc(string.Join("; ", parts), 200);
     }
 
     private static string AppendDetail(string message, string? detail)
         => string.IsNullOrWhiteSpace(detail) ? message : $"{message}: {detail}";
-
-    private static string Trunc(string value, int length)
-        => value.Length <= length ? value : value.Substring(0, length) + "…";
 
     /// <summary>
     /// Locates tools/vendor/pdfbox-app-*.jar by walking up from the test

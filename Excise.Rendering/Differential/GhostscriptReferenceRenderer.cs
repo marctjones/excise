@@ -34,7 +34,7 @@ namespace Excise.Rendering.Differential;
 /// DEFAULT instead of the callers would invalidate every cached oracle render
 /// (<see cref="InvocationSignature"/> is the cache key).</para>
 /// </summary>
-public static class GhostscriptReferenceRenderer
+internal static class GhostscriptReferenceRenderer
 {
     private static readonly Lazy<string?> _commandName = new(() =>
     {
@@ -43,29 +43,7 @@ public static class GhostscriptReferenceRenderer
             ? new[] { "ghostpdf", "gpdf", "gs", "gswin64c", "gswin32c" }
             : new[] { explicitCommand };
 
-        foreach (var candidate in candidates)
-        {
-            try
-            {
-                var psi = new ProcessStartInfo(candidate, "--version")
-                {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                };
-                using var p = Process.Start(psi);
-                if (p == null) continue;
-                p.WaitForExit(2000);
-                return candidate;
-            }
-            catch
-            {
-                // Try the next candidate.
-            }
-        }
-
-        return null;
+        return candidates.FirstOrDefault(candidate => ReferenceProcess.IsLaunchable(candidate, 2000, "--version"));
     });
 
     public static bool IsAvailable => _commandName.Value != null;
@@ -73,7 +51,7 @@ public static class GhostscriptReferenceRenderer
     /// <summary>
     /// The static flags TryRenderPage invokes with (#1385) -- see
     /// MutoolReferenceRenderer for why this must stay in sync with the
-    /// ArgumentList.Add calls below. Parameterized on the one flag that
+    /// argument list below. Parameterized on the one flag that
     /// actually varies per call.
     /// </summary>
     public static string InvocationSignature(bool overprintSimulate, bool viewIntent = false) =>
@@ -163,72 +141,36 @@ public static class GhostscriptReferenceRenderer
 
         try
         {
-            var psi = new ProcessStartInfo(command)
+            var args = new List<string>
             {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
+                "-dBATCH", "-dNOPAUSE", "-dSAFER", "-dQUIET", "-sDEVICE=png16m",
+                // #1380 — render the CropBox, not the MediaBox. Ghostscript, like
+                // pdftocairo, defaults to the MediaBox; see the note in
+                // PdftocairoReferenceRenderer for the measurement and the §7.7.3.3 basis.
+                "-dUseCropBox",
+                "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
             };
-            psi.ArgumentList.Add("-dBATCH");
-            psi.ArgumentList.Add("-dNOPAUSE");
-            psi.ArgumentList.Add("-dSAFER");
-            psi.ArgumentList.Add("-dQUIET");
-            psi.ArgumentList.Add("-sDEVICE=png16m");
-            // #1380 — render the CropBox, not the MediaBox. Ghostscript, like
-            // pdftocairo, defaults to the MediaBox; see the note in
-            // PdftocairoReferenceRenderer for the measurement and the §7.7.3.3 basis.
-            psi.ArgumentList.Add("-dUseCropBox");
-            psi.ArgumentList.Add("-dTextAlphaBits=4");
-            psi.ArgumentList.Add("-dGraphicsAlphaBits=4");
             if (overprintSimulate)
-                psi.ArgumentList.Add("-dOverprint=/simulate");
+                args.Add("-dOverprint=/simulate");
             // #1573: only the VIEW-intent variant passes anything. gs with a
             // file output device already behaves as -dPrinted=true, so the
             // default invocation (and its cached signature) is unchanged.
             if (viewIntent)
-                psi.ArgumentList.Add("-dPrinted=false");
-            psi.ArgumentList.Add($"-r{dpi.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-            psi.ArgumentList.Add($"-dFirstPage={pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-            psi.ArgumentList.Add($"-dLastPage={pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+                args.Add("-dPrinted=false");
+            args.Add($"-r{dpi.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+            args.Add($"-dFirstPage={pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+            args.Add($"-dLastPage={pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
             if (userPassword != null)
-                psi.ArgumentList.Add($"-sPDFPassword={userPassword}");
-            psi.ArgumentList.Add($"-sOutputFile={outPath}");
-            psi.ArgumentList.Add(pdfPath);
+                args.Add($"-sPDFPassword={userPassword}");
+            args.Add($"-sOutputFile={outPath}");
+            args.Add(pdfPath);
 
-            using var p = Process.Start(psi);
-            if (p == null)
-                return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
-            if (!ReferenceProcessResources.WaitForExitAndCapture(p, timeoutMs, out var resources))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-                return new ReferenceRenderResult(null, "TIMEOUT", $"{command} exceeded {timeoutMs}ms", sw.ElapsedMilliseconds);
-            }
-            if (p.ExitCode != 0)
-            {
-                var stderr = p.StandardError.ReadToEnd();
-                return new ReferenceRenderResult(null, "EXIT_CODE",
-                    $"{command} exited {p.ExitCode}: {Trunc(stderr.Trim(), 200)}", sw.ElapsedMilliseconds);
-            }
-            if (!File.Exists(outPath))
-                return new ReferenceRenderResult(null, "MISSING_OUTPUT", $"{command} did not write an output PNG", sw.ElapsedMilliseconds);
-
-            var bitmap = SKBitmap.Decode(outPath);
-            return bitmap == null
-                ? new ReferenceRenderResult(null, "DECODE_ERROR", $"{command} output PNG could not be decoded", sw.ElapsedMilliseconds)
-                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds,
-                    resources.PeakWorkingSetBytes, resources.CpuMs);
-        }
-        catch (Exception ex)
-        {
-            return new ReferenceRenderResult(null, "ERROR", ex.Message, sw.ElapsedMilliseconds);
+            return ReferenceProcess.RenderPng(sw, command, command, args, timeoutMs,
+                () => File.Exists(outPath) ? outPath : null);
         }
         finally
         {
             try { File.Delete(outPath); } catch { }
         }
     }
-
-    private static string Trunc(string value, int length)
-        => value.Length <= length ? value : value.Substring(0, length) + "…";
 }

@@ -10,15 +10,15 @@ namespace Excise.Rendering.Differential;
 /// Shells out to PDFium's standalone <c>pdfium_test</c> sample renderer.
 /// This is an optional browser-engine oracle for diagnostic corpus runs.
 /// </summary>
-public static class PdfiumReferenceRenderer
+internal static class PdfiumReferenceRenderer
 {
     private static readonly Lazy<string?> _commandName = new(() =>
     {
         var explicitCommand = Environment.GetEnvironmentVariable("EXCISE_PDFIUM_TEST");
-        if (!string.IsNullOrWhiteSpace(explicitCommand) && CanStart(explicitCommand, "--help"))
+        if (!string.IsNullOrWhiteSpace(explicitCommand) && ReferenceProcess.IsLaunchable(explicitCommand, 2000, "--help"))
             return explicitCommand;
 
-        return CanStart("pdfium_test", "--help") ? "pdfium_test" : null;
+        return ReferenceProcess.IsLaunchable("pdfium_test", 2000, "--help") ? "pdfium_test" : null;
     });
 
     public static bool IsAvailable => _commandName.Value != null;
@@ -62,44 +62,13 @@ public static class PdfiumReferenceRenderer
             Directory.CreateDirectory(tempDir);
             File.Copy(pdfPath, tempPdf, overwrite: true);
 
-            var psi = new ProcessStartInfo(command)
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            foreach (var arg in BuildPdfiumTestArguments(tempPdf, zeroBasedPage, scale, userPassword))
-                psi.ArgumentList.Add(arg);
-
-            using var p = Process.Start(psi);
-            if (p == null)
-                return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
-            if (!ReferenceProcessResources.WaitForExitAndCapture(p, timeoutMs, out var resources))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-                return new ReferenceRenderResult(null, "TIMEOUT", $"pdfium_test exceeded {timeoutMs}ms", sw.ElapsedMilliseconds);
-            }
-            if (p.ExitCode != 0)
-            {
-                var stderr = p.StandardError.ReadToEnd();
-                return new ReferenceRenderResult(null, "EXIT_CODE",
-                    $"pdfium_test exited {p.ExitCode}: {Trunc(stderr.Trim(), 200)}", sw.ElapsedMilliseconds);
-            }
-
-            var outPath = File.Exists(expectedPng)
-                ? expectedPng
-                : Directory.GetFiles(tempDir, "input.pdf.*.png", SearchOption.TopDirectoryOnly)
-                    .OrderBy(path => path, StringComparer.Ordinal)
-                    .FirstOrDefault();
-            if (outPath == null)
-                return new ReferenceRenderResult(null, "MISSING_OUTPUT", "pdfium_test did not write an output PNG", sw.ElapsedMilliseconds);
-
-            var bitmap = SKBitmap.Decode(outPath);
-            return bitmap == null
-                ? new ReferenceRenderResult(null, "DECODE_ERROR", "pdfium_test output PNG could not be decoded", sw.ElapsedMilliseconds)
-                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds,
-                    resources.PeakWorkingSetBytes, resources.CpuMs);
+            return ReferenceProcess.RenderPng(sw, "pdfium_test", command,
+                BuildPdfiumTestArguments(tempPdf, zeroBasedPage, scale, userPassword), timeoutMs,
+                () => File.Exists(expectedPng)
+                    ? expectedPng
+                    : Directory.GetFiles(tempDir, "input.pdf.*.png", SearchOption.TopDirectoryOnly)
+                        .OrderBy(path => path, StringComparer.Ordinal)
+                        .FirstOrDefault());
         }
         catch (Exception ex)
         {
@@ -110,36 +79,6 @@ public static class PdfiumReferenceRenderer
             try { Directory.Delete(tempDir, recursive: true); } catch { }
         }
     }
-
-    private static bool CanStart(string command, params string[] args)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo(command)
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            foreach (var arg in args)
-                psi.ArgumentList.Add(arg);
-            using var p = Process.Start(psi);
-            if (p == null) return false;
-            if (!p.WaitForExit(2000))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-            }
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static string Trunc(string value, int length)
-        => value.Length <= length ? value : value.Substring(0, length) + "…";
 
     internal static IReadOnlyList<string> BuildPdfiumTestArguments(
         string pdfPath,

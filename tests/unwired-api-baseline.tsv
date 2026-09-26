@@ -120,26 +120,3 @@ Excise.Ocr	tests-only	RecognizeDocument	triage:public OCR API; tests exercise co
 Excise.Ocr	tests-only	ScanFile	triage:public OCR API; tests exercise contract, external callers may use it
 Excise.Ocr	tests-only	Similarity	triage:public OCR API; tests exercise contract, external callers may use it
 Excise.Ocr.Native	tests-only	OcrRegion	#1139 public binding surface (text+confidence); production consumer is #1137 Use B (OCR context prior), deferred to main session. Word-level path uses OcrRegionTsv.
-Excise.Rendering	tests-only	BBoxHeight	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
-Excise.Rendering	tests-only	BBoxWidth	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
-Excise.Rendering	tests-only	EncryptR4	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	EndLineEnding	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	FallbackTolerancePt	#1146 residue CLI wires these
-Excise.Rendering	tests-only	FilteredStreamData	triage:reference-oracle surface, like the QpdfReferenceTool row above it; an independent DECODER exists to be compared against in tests and has no production caller by design -- excise must never route its own decoding through qpdf
-Excise.Rendering	tests-only	HitsFound	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	InkStrokeCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	LayoutGapPreserved	#1146 residue CLI wires these
-Excise.Rendering	tests-only	ListAnnotations	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	MutoolReferenceRedactor	reference redactor, tests-only BY DESIGN like the other Differential reference tools; production must never redact via mutool
-Excise.Rendering	tests-only	NormalAppearance	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
-Excise.Rendering	tests-only	PdfBoxReferenceRedactor	reference redactor (#1042) — tests-only BY DESIGN, like the other Differential reference tools; production must never redact via PDFBox (two agreeing references are signal, one is an opinion)
-Excise.Rendering	tests-only	PdftoppmReferenceRenderer	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	PdftotextTextExtractor	#1372 a reference ORACLE, like MutoolTextExtractor: test-only by design. Production must never read a PDF through Poppler — that would make an external tool part of excise's behaviour. It exists so the redaction bench has a second text engine, because mutool is MuPDF and PyMuPDF (a measured redactor) is the same engine.
-Excise.Rendering	tests-only	QpdfReferenceTool	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	RequiresPassword	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	ShowEncryption	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	TryRenderPageForViewIntent	#1573 a reference ORACLE entry point, like TryRenderPageWithOverprintSimulation beside it: tests-only BY DESIGN. It passes gs -dPrinted=false so a excise VIEWER raster is compared against a view raster; gs with a file output device otherwise renders for paper. Production must never shell out to Ghostscript. #1611 tracks the sweep of the existing gs differentials onto it.
-Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	VeraPdfReferenceValidator	triage:external validator oracle (#1056) — tests-only BY DESIGN, like the other Differential reference tools; production must never depend on veraPDF being installed
-Excise.Rendering	tests-only	VertexCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	XRayBadRedactionDetector	#1146 residue CLI wires these
