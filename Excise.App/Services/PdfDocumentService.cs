@@ -95,15 +95,7 @@ internal class PdfDocumentService
     internal event Action<DocumentReleaseReason>? DocumentReleased;
 
     /// <summary>Load a PDF from disk. Replaces any previously-loaded document.</summary>
-    public void LoadDocument(string filePath, string? userPassword = null) =>
-        LoadDocument(filePath, userPassword, DocumentReleaseReason.Replaced);
-
-    /// <summary>
-    /// <see cref="LoadDocument(string, string?)"/>, naming why a previously
-    /// loaded document is being released: the app's post-save reload passes
-    /// <see cref="DocumentReleaseReason.SaveReload"/>.
-    /// </summary>
-    internal void LoadDocument(string filePath, string? userPassword, DocumentReleaseReason releaseReason)
+    public void LoadDocument(string filePath, string? userPassword = null)
     {
         _logger.LogInformation("Loading PDF document from: {FilePath}", filePath);
         if (!File.Exists(filePath))
@@ -123,7 +115,7 @@ internal class PdfDocumentService
         // A failed open throws above and leaves the disposed previous instance
         // current; the caller's CloseDocument then reports it as Closed.
         if (replacing)
-            DocumentReleased?.Invoke(releaseReason);
+            DocumentReleased?.Invoke(DocumentReleaseReason.Replaced);
     }
 
     /// <summary>
@@ -226,7 +218,9 @@ internal class PdfDocumentService
     /// Save the current document. If <paramref name="filePath"/> is null,
     /// saves back to the file the document was loaded from. An
     /// encrypted-source document saves encrypted with the same parameters
-    /// and password it was opened with (#643).
+    /// and password it was opened with (#643). The saved file is reopened: the
+    /// saved instance is disposed and <see cref="GetCurrentDocument"/> is a new
+    /// one, which the caller must show from then on (#1877).
     /// </summary>
     public void SaveDocument(string? filePath = null)
     {

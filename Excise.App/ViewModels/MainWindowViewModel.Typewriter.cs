@@ -6,10 +6,8 @@ using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Excise.Core.Security;
 
 namespace Excise.App.ViewModels;
@@ -297,34 +295,5 @@ internal partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
         this.RaisePropertyChanged(nameof(HasPendingTypewriterEdits));
-    }
-
-    private Task ReloadPdfCoreDocumentAfterSaveAsync(string filePath, bool keepPagesOnScreen)
-    {
-        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
-            return Task.CompletedTask;
-
-        var pageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
-
-        // #643: a preserving save writes encrypted output; reopen it with the
-        // password the document was opened with (null = empty password).
-        //
-        // #917/#926: reload through the SERVICE so the reopened document is
-        // byte-backed and the file is not held open — reopening file-backed
-        // here is what made "redact twice into the same path" fail on Windows.
-        // The service disposes its previous instance, so nothing is leaked.
-        _documentService.LoadDocument(filePath, _documentService.CurrentUserPassword, Services.DocumentReleaseReason.SaveReload);
-        var reopened = _documentService.GetCurrentDocument();
-        if (keepPagesOnScreen && reopened != null)
-            KeepPagesOnScreenRequested?.Invoke(this, reopened);
-        PdfCoreDocument = reopened;
-        CurrentPageIndex = pageIndex;
-        StartThumbnailSession(filePath, PdfCoreDocument!);
-
-        _textIndexSession.Start(PdfCoreDocument!);
-
-        this.RaisePropertyChanged(nameof(TotalPages));
-        RefreshCurrentPageBindings();
-        return Task.CompletedTask;
     }
 }

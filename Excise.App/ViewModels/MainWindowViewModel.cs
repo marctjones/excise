@@ -1074,14 +1074,6 @@ internal partial class MainWindowViewModel : ViewModelBase
     public bool IsDocumentLoaded => _documentService.IsDocumentLoaded;
 
     /// <summary>
-    /// Dispose the viewer document only when it is NOT the service's instance.
-    ///
-    /// Since #917 they are normally the same object and the service owns it;
-    /// disposing here would hand the rest of the app a disposed document. The
-    /// check is not belt-and-braces — the typewriter save path still opens a
-    /// separate instance transiently, so both cases are live.
-    /// </summary>
-    /// <summary>
     /// Test seam for #917's invariant: the viewer document and the save
     /// document must be the SAME instance. Exposed because reference identity
     /// is the only way to assert it, and it is the property that makes every
@@ -1107,13 +1099,6 @@ internal partial class MainWindowViewModel : ViewModelBase
                 _memoryReclaimer.Request(HeapReclaimTrigger.DocumentReplaced);
                 break;
         }
-    }
-
-    private void DisposeViewerDocumentIfNotShared()
-    {
-        var owned = _documentService.GetCurrentDocument();
-        if (_pdfCoreDocument != null && !ReferenceEquals(owned, _pdfCoreDocument))
-            _pdfCoreDocument.Dispose();
     }
 
     private async Task ShowErrorDialogAsync(string title, string message)
@@ -1231,7 +1216,7 @@ internal partial class MainWindowViewModel : ViewModelBase
         // #1788: a still-open sticky-note popup's typed text lives only in
         // the popup VM until now — flush it into the save document so "a note
         // left open persists as open" holds even without clicking away first.
-        FlushOpenStickyNotePopupBeforeSave();
+        var flushedStickyNote = FlushOpenStickyNotePopupBeforeSave();
 
         // CRITICAL: If working on the original with pending redactions, force
         // the redacted-copy workflow. Other edits still preserve the original,
@@ -1260,11 +1245,8 @@ internal partial class MainWindowViewModel : ViewModelBase
 
             _documentService.SaveDocument();
             if (flattenedTypewriter)
-            {
                 ClearPendingTypewriterText();
-                if (!string.IsNullOrWhiteSpace(_currentFilePath))
-                    await ReloadPdfCoreDocumentAfterSaveAsync(_currentFilePath, keepPagesOnScreen: false);
-            }
+            ShowSavedDocument(keepPagesOnScreen: !flattenedTypewriter && !flushedStickyNote);
             // Saved edits are committed to the file; nothing before this point
             // remains reversible in-session (#782).
             ClearEditHistory();
@@ -1717,14 +1699,11 @@ internal partial class MainWindowViewModel : ViewModelBase
         if (current == null)
             return Task.CompletedTask;
 
-        // Normally a no-op (they are the same instance). It is a real
-        // re-point only on the paths that still hand the viewer a separate
-        // document, and those dispose the old one here rather than leak it.
+        // Normally a no-op (they are the same instance). The headless scripting
+        // load replaces the service's document without pointing this one at it;
+        // the service disposed the one this held.
         if (!ReferenceEquals(current, _pdfCoreDocument))
-        {
-            DisposeViewerDocumentIfNotShared();
             PdfCoreDocument = current;
-        }
 
         // THE SIGNAL, which used to be a side effect of the reparse.
         //
@@ -2248,9 +2227,7 @@ internal partial class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(DocumentName));
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));
-            // #1876: a flush changed the document after its pages were drawn.
-            await ReloadPdfCoreDocumentAfterSaveAsync(filePath,
-                keepPagesOnScreen: !flattenedTypewriter && !flushedStickyNote);
+            ShowSavedDocument(keepPagesOnScreen: !flattenedTypewriter && !flushedStickyNote);
             _logger.LogInformation("Document saved successfully to: {FilePath}", filePath);
         }
         catch (Exception ex)
@@ -2261,6 +2238,29 @@ internal partial class MainWindowViewModel : ViewModelBase
         }
 
         await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Show the instance a save reopened (#1877): <see cref="PdfDocumentService.SaveDocument"/>
+    /// disposed the one on screen. Every save comes here, or the view model and the viewer
+    /// stay on the disposed instance and later edits never reach the next save (#917).
+    /// </summary>
+    /// <param name="keepPagesOnScreen">
+    /// The saved bytes are the pages drawn, so the viewer keeps them up until it has
+    /// re-rendered them (#1876). Not after a flatten or a flush changed the document.
+    /// </param>
+    private void ShowSavedDocument(bool keepPagesOnScreen)
+    {
+        var saved = _documentService.GetCurrentDocument()!;
+        var pageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, saved.PageCount - 1));
+        if (keepPagesOnScreen)
+            KeepPagesOnScreenRequested?.Invoke(this, saved);
+        PdfCoreDocument = saved;
+        CurrentPageIndex = pageIndex;
+        StartThumbnailSession(_currentFilePath, saved);
+        _textIndexSession.Start(saved);
+        this.RaisePropertyChanged(nameof(TotalPages));
+        RefreshCurrentPageBindings();
     }
 
     /// <summary>
