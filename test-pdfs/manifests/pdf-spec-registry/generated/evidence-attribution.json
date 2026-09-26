@@ -44065,6 +44065,20 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_OmegaAndDotlessi_DecodeToTheAglCodePoint",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToGlyphName_GreekCapitalOmega_HasNoAglNameOnceOmegaIsOhm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -44823,24 +44837,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_FontFile3EmbedsSubsettedBareCff",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_UnicodeText_RoundTripsThroughExtraction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_RoundTripsThroughOpen_NoErrors",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -45538,6 +45534,20 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_OmegaAndDotlessi_DecodeToTheAglCodePoint",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToGlyphName_GreekCapitalOmega_HasNoAglNameOnceOmegaIsOhm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46296,24 +46306,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_FontFile3EmbedsSubsettedBareCff",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_UnicodeText_RoundTripsThroughExtraction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_RoundTripsThroughOpen_NoErrors",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -46993,6 +46985,20 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_OmegaAndDotlessi_DecodeToTheAglCodePoint",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToGlyphName_GreekCapitalOmega_HasNoAglNameOnceOmegaIsOhm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -47751,24 +47757,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_FontFile3EmbedsSubsettedBareCff",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_UnicodeText_RoundTripsThroughExtraction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_RoundTripsThroughOpen_NoErrors",
           "mappingSources": [
             "keyword-facet-candidate"
           ],

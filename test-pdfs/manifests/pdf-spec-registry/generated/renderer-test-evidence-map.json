@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "61a78e01c0771232893efd5c091db85d30bf22b39dc054f10c89f00bb236e201",
+  "sourceFingerprint": "f79ce5bf45299d1d2f909e23cbb2ee637f2677364150f78ef3850ce6b77e5048",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -4024,7 +4024,7 @@
       "path": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs",
       "class": "BlankPageRecoveryTests",
       "method": "GlyphNamesOutsideTheRendererSubset_ResolveThroughCore",
-      "line": 127,
+      "line": 128,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4066,7 +4066,7 @@
       "path": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs",
       "class": "BlankPageRecoveryTests",
       "method": "TextOperatorsOutsideATextObject_DrawWhatTheOraclesDraw",
-      "line": 153,
+      "line": 154,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -29399,11 +29399,42 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs::GlyphNameAndMacRomanEncodingOracleTests.Differences_OmegaAndDotlessi_ExtractorMatchesMutoolPdftotextAndTheRenderer",
+      "path": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs",
+      "class": "GlyphNameAndMacRomanEncodingOracleTests",
+      "method": "Differences_OmegaAndDotlessi_ExtractorMatchesMutoolPdftotextAndTheRenderer",
+      "line": 103,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "content-streams",
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs::GlyphNameAndMacRomanEncodingOracleTests.MacRomanEncoding_AnnexDHighCodes_ExtractorMatchesMutool",
       "path": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs",
       "class": "GlyphNameAndMacRomanEncodingOracleTests",
       "method": "MacRomanEncoding_AnnexDHighCodes_ExtractorMatchesMutool",
-      "line": 103,
+      "line": 133,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29426,7 +29457,7 @@
       "path": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs",
       "class": "GlyphNameAndMacRomanEncodingOracleTests",
       "method": "Renderer_MacRomanCode333_DrawsTheCurrencySignExtractionReads",
-      "line": 127,
+      "line": 157,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -48404,12 +48435,12 @@
     }
   ],
   "summary": {
-    "testMethods": 1337,
+    "testMethods": 1338,
     "facets": {
-      "content-streams": 383,
+      "content-streams": 384,
       "content-strings-and-text": 9,
       "differential-rendering": 755,
-      "fonts": 225,
+      "fonts": 226,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 316,
       "images": 232,
@@ -48420,16 +48451,16 @@
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
-      "pdf.17.content.streams:parse": 390,
-      "pdf.17.content.streams:render": 905,
+      "pdf.17.content.streams:parse": 391,
+      "pdf.17.content.streams:render": 906,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
       "pdf.17.graphics.color:parse": 53,
       "pdf.17.graphics.color:render": 53,
-      "pdf.17.graphics.fonts:extract": 225,
-      "pdf.17.graphics.fonts:parse": 225,
-      "pdf.17.graphics.fonts:render": 901,
+      "pdf.17.graphics.fonts:extract": 226,
+      "pdf.17.graphics.fonts:parse": 226,
+      "pdf.17.graphics.fonts:render": 902,
       "pdf.17.graphics.images:extract": 232,
       "pdf.17.graphics.images:parse": 232,
       "pdf.17.graphics.images:render": 902,

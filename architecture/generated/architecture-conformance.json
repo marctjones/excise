@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "a8944da33034c23e3ca29190b43fd9c7decc86cf",
+  "sourceRevision": "601645da781ae50a4162b8a2f0f15770fdf8e917",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8079,
+    "retainedSymbols": 8061,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -17,21 +17,21 @@
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
     "unownedShippingSymbols": 0,
-    "unresolvedTypeDependencies": 284,
+    "unresolvedTypeDependencies": 285,
     "registryMismatches": 0
   },
   "componentDependencies": [
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 453,
+      "references": 452,
       "typeDependencyCount": 29,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Views.MainWindow",
           "target": "Excise.App.ViewModels.MainWindowViewModel",
-          "references": 176
+          "references": 175
         }
       ]
     },
@@ -66,7 +66,7 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 478,
+      "references": 471,
       "typeDependencyCount": 29,
       "classification": "declared",
       "evidence": [
@@ -641,7 +641,7 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1213,
+      "references": 1207,
       "typeDependencyCount": 151,
       "classification": "declared",
       "evidence": [
