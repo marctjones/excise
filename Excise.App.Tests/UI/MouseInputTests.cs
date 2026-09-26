@@ -578,10 +578,10 @@ public class MouseInputTests : IDisposable
             "dragging in redaction mode must fire RedactionDrawn event");
         redaction!.PageArea.PageNumber.Should().Be(targetPageNumber);
         redaction.PageArea.Space.Should().Be(PdfCoordinateSpace.ViewerDips);
-        redaction.RenderDpi.Should().Be((int)RenderDpi);
-        redaction.Area.Width.Should().BeGreaterThan(0);
-        redaction.Area.Height.Should().BeGreaterThan(0);
-        _out.WriteLine($"Redaction rect: {redaction.Area}");
+        redaction.PageArea.Dpi.Should().BeApproximately(RenderDpi, 0.5);
+        redaction.PageArea.Width.Should().BeGreaterThan(0);
+        redaction.PageArea.Height.Should().BeGreaterThan(0);
+        _out.WriteLine($"Redaction rect: {redaction.PageArea}");
     }
 
     [FixedAvaloniaFact]

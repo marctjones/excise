@@ -227,7 +227,7 @@ public class TextSelectionDragTests : IDisposable
     {
         // The user-reported "wrong text" bug — pressing Ctrl+C after a
         // letter-run selection. CopyTextAsync sees a non-empty
-        // CurrentTextSelectionArea (the letter run's bounding box) and
+        // CurrentTextSelectionPageArea (the letter run's bounding box) and
         // re-extracts text from that rect via the text-extraction
         // service, which can pick up letters above/below/around the
         // run that aren't part of what the user selected. The fix:
@@ -264,7 +264,7 @@ public class TextSelectionDragTests : IDisposable
         vm.SelectedText.Should().Be(targetPhrase, "selection drag must produce the exact phrase first");
 
         // Now invoke Ctrl+C (the CopyTextCommand). The buggy code path
-        // re-extracts text from CurrentTextSelectionArea instead of
+        // re-extracts text from CurrentTextSelectionPageArea instead of
         // using SelectedText, so SelectedText would be overwritten with
         // a wider bbox extraction. After the fix, Ctrl+C uses
         // SelectedText directly, leaving it intact, and adds the same

@@ -612,8 +612,8 @@ public class KeyboardShortcutEffectTests
     [FixedAvaloniaFact(Timeout = 20000)]
     public async Task Space_IsNoOp_PanNotImplemented()
     {
-        // Space-pan is the dead InteractionMode.Pan feature #827 itself lists as
-        // a pointer/scroll gap (batch A/C) — deliberately NOT implemented here.
+        // Space-pan is a pointer/scroll gap #827 itself lists (batch A/C) —
+        // deliberately NOT implemented here.
         // Assert Space changes nothing and doesn't crash.
         var path = Temp("space_noop.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
