@@ -143,6 +143,71 @@ public class AnnotateAndDialogCommandTests
         Cleanup(dir);
     }
 
+    // #1623: three ShowMessageAsync strings looked unreachable behind a
+    // CanExecute. One was (Security with no document: the menu item is
+    // IsEnabled-bound to IsDocumentLoaded, so no message exists); two are not,
+    // and the next sweep must not delete them for looking alike.
+
+    [FixedAvaloniaFact]
+    public async Task SecurityCommand_WithNoDocument_ShowsNothing()
+    {
+        var dialog = new RecordingDialogService();
+        var vm = CreateViewModelWithDialog(dialog);
+
+        vm.IsDocumentLoaded.Should().BeFalse();
+        await vm.SecurityCommand.Execute();
+
+        dialog.Messages.Should().BeEmpty(
+            "the disabled menu item is the whole UX, so there is no message to show");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task SaveFlattenedFormCopyCommand_OnADocumentWithoutFormFields_SaysWhyAndAsksForNoFile()
+    {
+        var (source, _, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "No form here");
+        var dialog = new RecordingDialogService();
+        var picker = new Excise.App.Tests.Utilities.Fakes.RecordingFilePicker();
+        var vm = MainWindowViewModelTestFactory.Create(dialogService: dialog, filePicker: picker);
+        await vm.LoadDocumentAsync(source);
+
+        // The button and menu item are enabled by IsDocumentLoaded alone, so
+        // this message is what tells the user why nothing happened.
+        await vm.SaveFlattenedFormCopyCommand.Execute();
+
+        dialog.Messages.Should().ContainSingle(m => m.Title == "No Form Fields");
+        picker.SaveRequests.Should().BeEmpty("there is nothing to flatten, so no file is asked for");
+
+        Cleanup(dir);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task AddHighlightAnnotationFromSelectionCommand_WithASelectionThatHasNoPage_SaysSoAndAddsNothing()
+    {
+        var (source, _, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "One page");
+        var dialog = new RecordingDialogService();
+        var vm = CreateViewModelWithDialog(dialog);
+        await vm.LoadDocumentAsync(source);
+
+        // HasTextSelection (what enables and shows the menu item) asks for a
+        // sized area and text; the command also needs the area's page to
+        // exist. A selection held across a page removal satisfies the first
+        // and not the second.
+        vm.CurrentTextSelectionPageArea = PdfPageRect.ViewerDips(
+            99, x: 120, y: 120, width: 180, height: 30,
+            renderDpi: MainWindowViewModel.DefaultViewerRenderDpi);
+        vm.SelectedText = "Selected clause";
+        vm.HasTextSelection.Should().BeTrue("the menu item is enabled for this selection");
+
+        await vm.AddHighlightAnnotationFromSelectionCommand.Execute();
+
+        dialog.Messages.Should().ContainSingle(m => m.Message == "Select text before adding a highlight.");
+        vm.PdfCoreDocument!.GetPage(1).GetAnnotations().Should().BeEmpty();
+
+        Cleanup(dir);
+    }
+
     [FixedAvaloniaFact]
     public async Task SecurityCommand_OnLoadedDocument_OpensTheSecurityDialogWindow()
     {
