@@ -604,7 +604,6 @@ namespace Excise.App.ViewModels
         public Excise.Core.Document.PdfPageRect? CurrentRedactionPageArea { get; set; }
         public int CurrentRedactionRenderDpi { get; set; }
         public int CurrentSearchMatchIndex { get; set; }
-        public Avalonia.Rect CurrentTextSelectionArea { get; set; }
         public Excise.Core.Document.PdfPageRect? CurrentTextSelectionPageArea { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> DeleteContextAnnotationCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> DiscardPendingTypewriterEditsCommand { get; }

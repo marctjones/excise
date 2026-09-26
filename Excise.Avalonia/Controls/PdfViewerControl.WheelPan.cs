@@ -9,10 +9,9 @@ public partial class PdfViewerControl
     #region Wheel zoom + middle-button pan (#827)
 
     // Pan gesture state. Pan is an ambient middle-button-drag gesture available
-    // in every InteractionMode (it is NOT tied to the dead InteractionMode.Pan
-    // enum value — that value is left in place for a possible future explicit
-    // hand-tool). Grabbing the page and dragging moves the active ScrollViewer's
-    // offset so the content follows the pointer (browser "grab" convention).
+    // in every InteractionMode. Grabbing the page and dragging moves the active
+    // ScrollViewer's offset so the content follows the pointer (browser "grab"
+    // convention).
     private bool _isPanning;
     private Point _panStartPointer;
     private Vector _panStartOffset;

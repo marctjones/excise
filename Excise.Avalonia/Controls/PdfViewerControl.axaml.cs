@@ -67,7 +67,7 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
-    /// Interaction mode (None, Redaction, TextSelection, Pan).
+    /// Interaction mode: what a pointer drag on the page does.
     /// </summary>
     public static readonly StyledProperty<InteractionMode> InteractionModeProperty =
         AvaloniaProperty.Register<PdfViewerControl, InteractionMode>(nameof(InteractionMode));
@@ -2259,13 +2259,6 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
-    /// Add a search highlight rectangle already expressed in viewer DIPs.
-    /// Prefer <see cref="AddSearchHighlight(PdfPageRect)"/> for new code.
-    /// </summary>
-    public void AddSearchHighlight(Rect area) =>
-        AddSearchHighlight(ViewerDipsRect(area, CurrentPage));
-
-    /// <summary>
     /// Clear all search highlights.
     /// </summary>
     public void ClearSearchHighlights()
@@ -2299,13 +2292,6 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
-    /// Add a pending redaction overlay already expressed in viewer DIPs.
-    /// Prefer <see cref="AddPendingRedaction(PdfPageRect)"/> for new code.
-    /// </summary>
-    public void AddPendingRedaction(Rect area) =>
-        AddPendingRedaction(ViewerDipsRect(area, CurrentPage));
-
-    /// <summary>
     /// Clear all pending redaction overlays.
     /// </summary>
     public void ClearPendingRedactions()
@@ -2336,13 +2322,6 @@ public partial class PdfViewerControl : UserControl
         Canvas.SetTop(rect, viewerArea.Y);
         appliedLayer.Children.Add(rect);
     }
-
-    /// <summary>
-    /// Add an applied redaction overlay already expressed in viewer DIPs.
-    /// Prefer <see cref="AddAppliedRedaction(PdfPageRect)"/> for new code.
-    /// </summary>
-    public void AddAppliedRedaction(Rect area) =>
-        AddAppliedRedaction(ViewerDipsRect(area, CurrentPage));
 
     /// <summary>
     /// Clear all applied redaction overlays.

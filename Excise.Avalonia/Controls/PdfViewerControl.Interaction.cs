@@ -408,14 +408,12 @@ public partial class PdfViewerControl
         var letterDips = selection.VisualRange
             .Select(l => PdfRectangleToDips(l.GlyphRectangle))
             .ToList();
-        // Bounding box of the whole run — keeps backwards compat with
-        // listeners that just want a single Rect.
+        // Bounding box of the whole run, bound to the page it is on.
         Rect? bbox = letterDips.Count > 0
             ? UnionRects(letterDips)
             : null;
         TextSelected?.Invoke(this, new TextSelectedEventArgs(
-            bbox ?? new Rect(), text, letterDips,
-            bbox is { Width: > 0, Height: > 0 } b ? ViewerDipsRect(b, CurrentPage) : null));
+            text, bbox is { Width: > 0, Height: > 0 } b ? ViewerDipsRect(b, CurrentPage) : null));
     }
 
     /// <summary>

@@ -1705,12 +1705,6 @@ public partial class MainWindow : Window
         if (DataContext is not MainWindowViewModel viewModel)
             return;
 
-        // Pre-fix this set CurrentTextSelectionArea (a 2D rect) and asked
-        // the VM to re-extract text within the rect. The new text-line
-        // selection path computes the actual text in the control via
-        // letter hit-testing, so the event already carries the joined
-        // string — feed it directly.
-        viewModel.CurrentTextSelectionArea = e.Area;
         // The viewer binds the rect to its page and coordinate space. Rebuilding
         // it here as single-page DIPs at the default DPI on CurrentPage put every
         // continuous-view markup off by the zoom factor, and on the wrong page
