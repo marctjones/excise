@@ -347,6 +347,12 @@ public static class PdfDocumentSanitizer
         var changed = false;
         foreach (var stream in document.EnumerateMetadataStreams())
         {
+            if (stream.IsFiltered && !stream.TryEnsureDecoded())
+            {
+                scrub.Unexamined = "an XMP packet could not be decoded, so it was not examined and may still hold the term";   // #1863
+                continue;
+            }
+
             // The XMP packet is plain-text XML. We treat it as text rather than
             // parsing it: a redacted name can appear in dc:title, dc:description,
             // pdf:Keywords, or a custom schema we have never heard of, and a

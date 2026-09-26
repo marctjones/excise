@@ -53,6 +53,14 @@ public partial class PdfPage
     internal int TextWalkCount => Volatile.Read(ref _textWalkCount);
 
     /// <summary>
+    /// The forms the most recent <see cref="GetLetters"/> walk of this page
+    /// could not decode, so their text is in no letter (#1863). Redaction
+    /// reports each one rather than calling the page clean.
+    /// </summary>
+    internal IReadOnlyList<Excise.Core.Primitives.PdfStream> UndecodableForms { get; private set; }
+        = Array.Empty<Excise.Core.Primitives.PdfStream>();
+
+    /// <summary>
     /// Get the extracted text content from the page.
     /// Cached on first access; subsequent calls return the cached result.
     /// </summary>
@@ -133,6 +141,7 @@ public partial class PdfPage
         Interlocked.Increment(ref _textWalkCount);
         var extractor = new Excise.Core.Text.TextExtractor(this);
         var letters = extractor.ExtractLetters(cancellationToken);
+        UndecodableForms = extractor.UndecodableForms;
 
         lock (_document.TextCacheGate)
         {
