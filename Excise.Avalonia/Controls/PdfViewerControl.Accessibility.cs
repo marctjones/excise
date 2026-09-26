@@ -1,66 +1,53 @@
 using Excise.Core.Document;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Excise.Avalonia.Controls;
 
 /// <summary>
-/// Accessibility support for the document content (issue #631): reading the
-/// tagged-PDF structure tree's textual carriers for the current page —
-/// <c>/Alt</c> alternative descriptions (figures/images contribute nothing to
-/// the extractable text layer) and <c>/ActualText</c> replacement text
+/// Accessibility support for the document content (issue #631): the tagged-PDF
+/// structure tree's textual carriers for the current page — <c>/Alt</c>
+/// alternative descriptions (figures/images contribute nothing to the
+/// extractable text layer) and <c>/ActualText</c> replacement text
 /// (ISO 32000-2 §14.9.4: the author-supplied text that assistive technology
 /// should read <em>instead of</em> the raw glyphs, used where glyph
 /// extraction is wrong — hyphenation rejoins, ligature or symbol
-/// substitutions, stylized text).
+/// substitutions, stylized text) — and the role layer (headings, lists,
+/// tables) with structure-based keyboard navigation.
 ///
 /// <para>
-/// This is deliberately read-only over Excise.Core's public surface
-/// (<see cref="PdfDocument.GetStructureTree"/>). Splicing <c>/ActualText</c> into the page text stream
-/// in-place (true glyph substitution) and full struct-tree reading order
-/// both require mapping marked-content IDs to extracted letters, which the
-/// extraction pipeline does not surface yet — those remain follow-up slices
-/// of #631. Until then, replacement text is exposed as additional peers with
-/// a containment dedup (see <see cref="GetAccessibleActualTexts"/>) so
-/// content is not announced twice.
+/// Read-only over the one structure model, <see cref="PdfDocument.GetStructureTree"/>.
+/// Replacement text is exposed as additional peers with a containment dedup
+/// (see <see cref="GetAccessibleActualTexts"/>) so content is not announced twice.
 /// </para>
 /// </summary>
 public partial class PdfViewerControl
 {
-    // Caches for the current page's structure-tree text carriers, keyed by
-    // the same content identity the announced-text dedupe uses: (Document,
-    // CurrentPage, RenderVersion). A RenderVersion bump matters here too —
-    // redaction scrubs /Alt and /ActualText from the structure tree (#636),
-    // and the accessibility tree must not keep announcing redacted text.
-    private PdfDocument? _structTextDocument;
-    private int _structTextPage = -1;
-    private long _structTextRenderVersion = -1;
-    private IReadOnlyList<string> _altTextCache = Array.Empty<string>();
-    private IReadOnlyList<string> _actualTextCache = Array.Empty<string>();
-
-    // ── struct-tree reading order + role layer (#631) ────────────────────
-    // Doc-wide (not per-page) caches: keyboard structure navigation crosses
-    // page boundaries, so the ordered node list must span the whole document.
-    // Keyed by (Document, RenderVersion) — a RenderVersion bump means the
-    // structure tree may have been rewritten (redaction scrubs /Alt and
-    // /ActualText, #636), so the model must be rebuilt and stale roles dropped.
-    private PdfDocument? _structNavDocument;
-    private long _structNavRenderVersion = -1;
-    // Reading-order text carriers (elements with /ActualText) in document
-    // order, tagged with their page. This is the ONLY per-element text the
-    // read-only Excise.Core surface exposes: mapping marked-content IDs back
-    // to the extracted glyphs (so a heading's real body text could be read in
-    // struct order) needs Excise.Core to surface MCID→letter mapping, which it
-    // does not yet — a follow-up slice of #631.
-    private IReadOnlyList<(int Page, string Text)> _structReadingParts =
-        Array.Empty<(int, string)>();
+    // The structure tree flattened once, in document order, each element tagged
+    // with the page it is announced on. Doc-wide (not per-page) because keyboard
+    // structure navigation crosses page boundaries. Keyed by (Document,
+    // RenderVersion): a RenderVersion bump means the tree may have been rewritten
+    // (redaction scrubs /Alt and /ActualText, #636), so the model is rebuilt and
+    // the accessibility tree must not keep announcing redacted text.
+    private PdfDocument? _structDocument;
+    private long _structRenderVersion = -1;
+    private IReadOnlyList<(int Page, PdfStructElement Element)> _structElements =
+        Array.Empty<(int, PdfStructElement)>();
     // Structurally significant elements (headings, lists, tables) in document
-    // order, for the role automation peers and keyboard navigation.
-    private IReadOnlyList<AccessibleStructNode> _structNodes =
-        Array.Empty<AccessibleStructNode>();
-    // Index into _structNodes the last structure-navigation keystroke landed
+    // order, for the role automation peers and keyboard navigation; built from
+    // _structElements on first use.
+    private IReadOnlyList<AccessibleStructNode>? _structNodes;
+    // Index into the role nodes the last structure-navigation keystroke landed
     // on, or -1 before any navigation.
     private int _structNavCursor = -1;
+
+    // The current page's /Alt and /ActualText carriers, keyed by the model they
+    // were read from and the page.
+    private IReadOnlyList<(int Page, PdfStructElement Element)>? _structTextElements;
+    private int _structTextPage = -1;
+    private IReadOnlyList<string> _altTextCache = Array.Empty<string>();
+    private IReadOnlyList<string> _actualTextCache = Array.Empty<string>();
 
     /// <summary>
     /// The <c>/Alt</c> alternative descriptions of tagged structure elements
@@ -87,9 +74,6 @@ public partial class PdfViewerControl
     /// <c>/ActualText</c> exists for: spans where glyph extraction reads
     /// wrong (<c>back- ground</c> vs <c>background</c>, ligature and symbol
     /// substitutions), including pages where extraction fails entirely.
-    /// In-place substitution (replacing the raw glyphs inside the text
-    /// stream) requires MCID-to-letter mapping from Excise.Core — a
-    /// follow-up slice of #631.
     /// </para>
     /// </summary>
     internal IReadOnlyList<string> GetAccessibleActualTexts()
@@ -100,13 +84,11 @@ public partial class PdfViewerControl
 
     private void EnsureStructTextCaches()
     {
+        EnsureStructModel();
         var doc = Document;
         int page = CurrentPage;
-        long version = RenderVersion;
 
-        if (ReferenceEquals(_structTextDocument, doc)
-            && _structTextPage == page
-            && _structTextRenderVersion == version)
+        if (ReferenceEquals(_structTextElements, _structElements) && _structTextPage == page)
             return;
 
         IReadOnlyList<string> alts = Array.Empty<string>();
@@ -115,8 +97,8 @@ public partial class PdfViewerControl
         {
             try
             {
-                (alts, actuals) = CollectStructTextsForPage(doc, page);
-                actuals = FilterActualTextsAlreadyInPageText(actuals);
+                alts = TextCarriersOn(page, e => e.AltText);
+                actuals = FilterActualTextsAlreadyInPageText(TextCarriersOn(page, e => e.ActualText));
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
@@ -127,12 +109,24 @@ public partial class PdfViewerControl
             }
         }
 
-        _structTextDocument = doc;
+        _structTextElements = _structElements;
         _structTextPage = page;
-        _structTextRenderVersion = version;
         _altTextCache = alts;
         _actualTextCache = actuals;
     }
+
+    /// <summary>
+    /// The trimmed, non-blank text one carrier (<c>/Alt</c> or <c>/ActualText</c>)
+    /// holds across the elements announced on <paramref name="page"/>, in
+    /// document order.
+    /// </summary>
+    private List<string> TextCarriersOn(int page, Func<PdfStructElement, string?> carrier) =>
+        _structElements
+            .Where(e => e.Page == page)
+            .Select(e => carrier(e.Element))
+            .Where(text => !string.IsNullOrWhiteSpace(text))
+            .Select(text => text!.Trim())
+            .ToList();
 
     /// <summary>
     /// Drop replacement texts the extractable text layer already contains
@@ -162,68 +156,21 @@ public partial class PdfViewerControl
     private static string NormalizeWhitespace(string s) =>
         string.Join(" ", s.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 
-    private static (IReadOnlyList<string> Alts, IReadOnlyList<string> ActualTexts)
-        CollectStructTextsForPage(PdfDocument doc, int pageNumber)
-    {
-        var root = doc.GetStructureTree();
-        if (root == null)
-            return (Array.Empty<string>(), Array.Empty<string>());
-
-        var alts = new List<string>();
-        var actuals = new List<string>();
-        Walk(doc, root, pageNumber, alts, actuals);
-        return (alts.Count == 0 ? Array.Empty<string>() : alts,
-                actuals.Count == 0 ? Array.Empty<string>() : actuals);
-    }
-
-    private static void Walk(
-        PdfDocument doc,
-        PdfStructElement element,
-        int targetPage,
-        List<string> alts,
-        List<string> actuals)
-    {
-        // An element with no determinable page can still be safely announced
-        // when there is only one page it could belong to.
-        int? effectivePage = element.PageNumber ?? (doc.PageCount == 1 ? 1 : (int?)null);
-        if (effectivePage == targetPage)
-        {
-            if (!string.IsNullOrWhiteSpace(element.AltText))
-                alts.Add(element.AltText!.Trim());
-            if (!string.IsNullOrWhiteSpace(element.ActualText))
-                actuals.Add(element.ActualText!.Trim());
-        }
-
-        foreach (var child in element.Children)
-            Walk(doc, child, targetPage, alts, actuals);
-    }
-
-    // ── struct-tree reading order + role model (#631) ────────────────────
-
     /// <summary>
     /// The current page's text in reading order, ordered by the structure
     /// tree when the tagged PDF supplies orderable text (issue #631). Uses the
     /// document-order sequence of <c>/ActualText</c> carriers where present;
     /// otherwise falls back to the geometric reading-order text (see
     /// <see cref="GetAccessiblePageText"/>). Struct order is used only when it
-    /// actually carries text: without MCID-to-letter mapping (a follow-up
-    /// slice of #631) a heading's body glyphs cannot be read in struct order,
-    /// so a tagged PDF that supplies no <c>/ActualText</c> reads geometrically.
+    /// actually carries text: a tagged PDF that supplies no <c>/ActualText</c>
+    /// reads geometrically.
     /// </summary>
     internal string GetAccessibleReadingOrderText()
     {
-        EnsureStructNavModel();
+        EnsureStructModel();
 
-        int page = CurrentPage;
-        List<string>? parts = null;
-        foreach (var (p, text) in _structReadingParts)
-        {
-            if (p != page)
-                continue;
-            (parts ??= new List<string>()).Add(text);
-        }
-
-        return parts is { Count: > 0 }
+        var parts = TextCarriersOn(CurrentPage, e => e.ActualText);
+        return parts.Count > 0
             ? string.Join(" ", parts)
             : GetAccessiblePageText();
     }
@@ -238,19 +185,10 @@ public partial class PdfViewerControl
     /// </summary>
     internal IReadOnlyList<AccessibleStructNode> GetAccessibleStructRoleNodes()
     {
-        EnsureStructNavModel();
-
         int page = CurrentPage;
-        List<AccessibleStructNode>? nodes = null;
-        foreach (var node in _structNodes)
-        {
-            if (node.Page != page || node.Role == AccessibleStructRole.Figure)
-                continue;
-            (nodes ??= new List<AccessibleStructNode>()).Add(node);
-        }
-
-        return (IReadOnlyList<AccessibleStructNode>?)nodes
-            ?? Array.Empty<AccessibleStructNode>();
+        return StructNodes()
+            .Where(node => node.Page == page && node.Role != AccessibleStructRole.Figure)
+            .ToList();
     }
 
     /// <summary>
@@ -259,8 +197,8 @@ public partial class PdfViewerControl
     /// navigation. Exposed for assistive-technology announcement and tests.
     /// </summary>
     internal AccessibleStructNode? CurrentStructureNavigationTarget =>
-        _structNavCursor >= 0 && _structNavCursor < _structNodes.Count
-            ? _structNodes[_structNavCursor]
+        _structNodes is { } nodes && _structNavCursor >= 0 && _structNavCursor < nodes.Count
+            ? nodes[_structNavCursor]
             : null;
 
     /// <summary>
@@ -274,14 +212,14 @@ public partial class PdfViewerControl
     /// <param name="headingsOnly">Only stop on heading elements.</param>
     internal bool MoveToNextStructure(bool backward, bool headingsOnly)
     {
-        EnsureStructNavModel();
-        if (_structNodes.Count == 0)
+        var nodes = StructNodes();
+        if (nodes.Count == 0)
             return false;
 
         int step = backward ? -1 : 1;
-        for (int i = _structNavCursor + step; i >= 0 && i < _structNodes.Count; i += step)
+        for (int i = _structNavCursor + step; i >= 0 && i < nodes.Count; i += step)
         {
-            var node = _structNodes[i];
+            var node = nodes[i];
             if (node.Role == AccessibleStructRole.Figure)
                 continue; // navigable structure, not a figure description
             if (headingsOnly && node.Role != AccessibleStructRole.Heading)
@@ -303,89 +241,86 @@ public partial class PdfViewerControl
         return false; // already at the last (or first) matching element
     }
 
-    private void EnsureStructNavModel()
+    private void EnsureStructModel()
     {
         var doc = Document;
         long version = RenderVersion;
 
-        if (ReferenceEquals(_structNavDocument, doc) && _structNavRenderVersion == version)
+        if (ReferenceEquals(_structDocument, doc) && _structRenderVersion == version)
             return;
 
-        IReadOnlyList<(int, string)> reading = Array.Empty<(int, string)>();
-        IReadOnlyList<AccessibleStructNode> nodes = Array.Empty<AccessibleStructNode>();
+        var elements = new List<(int Page, PdfStructElement Element)>();
         if (doc != null && doc.PageCount > 0)
         {
             try
             {
-                (reading, nodes) = CollectStructModel(doc);
+                if (doc.GetStructureTree() is { } root)
+                    Flatten(root, doc.PageCount == 1 ? 1 : 0, elements);
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
                 // A malformed structure tree must never take the viewer down;
                 // structure navigation degrades to nothing.
-                reading = Array.Empty<(int, string)>();
-                nodes = Array.Empty<AccessibleStructNode>();
+                elements.Clear();
             }
         }
 
-        _structNavDocument = doc;
-        _structNavRenderVersion = version;
-        _structReadingParts = reading;
-        _structNodes = nodes;
+        _structDocument = doc;
+        _structRenderVersion = version;
+        _structElements = elements;
+        _structNodes = null;
         _structNavCursor = -1; // a new model invalidates the navigation cursor
     }
 
-    private static (IReadOnlyList<(int, string)> Reading,
-                    IReadOnlyList<AccessibleStructNode> Nodes)
-        CollectStructModel(PdfDocument doc)
-    {
-        var root = doc.GetStructureTree();
-        if (root == null)
-            return (Array.Empty<(int, string)>(), Array.Empty<AccessibleStructNode>());
-
-        var reading = new List<(int, string)>();
-        var nodes = new List<AccessibleStructNode>();
-        WalkModel(doc, root, reading, nodes);
-        return (reading.Count == 0 ? Array.Empty<(int, string)>() : reading,
-                nodes.Count == 0 ? Array.Empty<AccessibleStructNode>() : nodes);
-    }
-
-    private static void WalkModel(
-        PdfDocument doc,
+    /// <summary>
+    /// Append <paramref name="element"/> and its descendants in document order,
+    /// each with the page it is announced on. An element with no determinable
+    /// page can still be announced when the document has one page it could
+    /// belong to (<paramref name="onlyPage"/>); one with neither is left out.
+    /// </summary>
+    private static void Flatten(
         PdfStructElement element,
-        List<(int, string)> reading,
-        List<AccessibleStructNode> nodes)
+        int onlyPage,
+        List<(int Page, PdfStructElement Element)> into)
     {
-        int effectivePage = element.PageNumber ?? (doc.PageCount == 1 ? 1 : 0);
-
-        if (effectivePage >= 1)
-        {
-            // Reading order: /ActualText is the author's "read this instead of
-            // the glyphs" carrier, so it is the only content safe to splice
-            // into linear reading order. /Alt is a supplementary description
-            // (exposed separately as an image peer), never linear text.
-            if (!string.IsNullOrWhiteSpace(element.ActualText))
-                reading.Add((effectivePage, element.ActualText!.Trim()));
-
-            var (role, headingLevel) = ClassifyStructRole(element.Type);
-            if (role != AccessibleStructRole.Generic)
-            {
-                // /ActualText (author's replacement) wins, then /Alt (image
-                // description). With neither, resolve the element's REAL body
-                // glyphs from its /MCID marked-content references so a screen
-                // reader reads the actual heading/cell text instead of a
-                // role-only peer — the MCID→letter bridge (#776).
-                string text = !string.IsNullOrWhiteSpace(element.ActualText)
-                    ? element.ActualText!.Trim()
-                    : (!string.IsNullOrWhiteSpace(element.AltText)
-                        ? element.AltText!.Trim()
-                        : ResolveMcidText(doc, element));
-                nodes.Add(new AccessibleStructNode(role, headingLevel, text, effectivePage));
-            }
-        }
+        int page = element.PageNumber ?? onlyPage;
+        if (page >= 1)
+            into.Add((page, element));
 
         foreach (var child in element.Children)
-            WalkModel(doc, child, reading, nodes);
+            Flatten(child, onlyPage, into);
+    }
+
+    private IReadOnlyList<AccessibleStructNode> StructNodes()
+    {
+        EnsureStructModel();
+        return _structNodes ??= BuildStructNodes(_structDocument!, _structElements);
+    }
+
+    private static List<AccessibleStructNode> BuildStructNodes(
+        PdfDocument doc,
+        IReadOnlyList<(int Page, PdfStructElement Element)> elements)
+    {
+        var nodes = new List<AccessibleStructNode>();
+        foreach (var (page, element) in elements)
+        {
+            var (role, headingLevel) = ClassifyStructRole(element.Type);
+            if (role == AccessibleStructRole.Generic)
+                continue;
+
+            // /ActualText (author's replacement) wins, then /Alt (image
+            // description). With neither, resolve the element's REAL body
+            // glyphs from its /MCID marked-content references so a screen
+            // reader reads the actual heading/cell text instead of a
+            // role-only peer — the MCID→letter bridge (#776).
+            string text = !string.IsNullOrWhiteSpace(element.ActualText)
+                ? element.ActualText!.Trim()
+                : (!string.IsNullOrWhiteSpace(element.AltText)
+                    ? element.AltText!.Trim()
+                    : ResolveMcidText(doc, element));
+            nodes.Add(new AccessibleStructNode(role, headingLevel, text, page));
+        }
+        return nodes;
     }
 
     /// <summary>
