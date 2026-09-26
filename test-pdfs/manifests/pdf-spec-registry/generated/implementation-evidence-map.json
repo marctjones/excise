@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "eb9e7ff97584260f6d9c22033c933dfd85df8b1d00bfe95cd610d2bb36ad9d6c",
+  "sourceFingerprint": "85686599c8e5809c0db84a165b20e8e77266841b896a19e50531673de7156bb0",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -1505,6 +1505,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Document/PdfOpenOptions.cs",
+      "path": "Excise.Core/Document/PdfOpenOptions.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -7906,6 +7916,29 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Models/RedactionPreferences.cs",
+      "path": "Excise.App/Models/RedactionPreferences.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Models/SearchMatch.cs",
       "path": "Excise.App/Models/SearchMatch.cs",
       "kind": "source-file",
@@ -8632,16 +8665,6 @@
     {
       "id": "Excise.App/Services/ResponsivenessReport.cs",
       "path": "Excise.App/Services/ResponsivenessReport.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.App/Services/ScriptingService.cs",
-      "path": "Excise.App/Services/ScriptingService.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -9517,63 +9540,6 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.App/ViewModels/SaveRedactedVersionDialogViewModel.cs",
-      "path": "Excise.App/ViewModels/SaveRedactedVersionDialogViewModel.cs",
-      "kind": "source-file",
-      "facets": [
-        "redaction",
-        "safe-save-and-metadata"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.document.metadata",
-          "modes": [
-            "mutate",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdf.17.security.redaction-content-removal",
-          "modes": [
-            "extract",
-            "mutate",
-            "render",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdf.17.syntax.objects",
-          "modes": [
-            "mutate",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdfe.product.security.privacy-clean-copy",
-          "modes": [
-            "mutate",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
-      "promotion": "review-required"
-    },
-    {
       "id": "Excise.App/ViewModels/SecurityDialogViewModel.cs",
       "path": "Excise.App/ViewModels/SecurityDialogViewModel.cs",
       "kind": "source-file",
@@ -9816,63 +9782,6 @@
         "product-integration-general"
       ],
       "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.App/Views/SaveRedactedVersionDialog.axaml.cs",
-      "path": "Excise.App/Views/SaveRedactedVersionDialog.axaml.cs",
-      "kind": "source-file",
-      "facets": [
-        "redaction",
-        "safe-save-and-metadata"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.document.metadata",
-          "modes": [
-            "mutate",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdf.17.security.redaction-content-removal",
-          "modes": [
-            "extract",
-            "mutate",
-            "render",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdf.17.syntax.objects",
-          "modes": [
-            "mutate",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        },
-        {
-          "capability": "pdfe.product.security.privacy-clean-copy",
-          "modes": [
-            "mutate",
-            "preserve",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
       "promotion": "review-required"
     },
     {
@@ -11048,7 +10957,7 @@
     }
   ],
   "summary": {
-    "records": 551,
+    "records": 550,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 18,
@@ -11057,8 +10966,8 @@
       "forms": 9,
       "images": 33,
       "product-integration-general": 313,
-      "redaction": 81,
-      "safe-save-and-metadata": 20,
+      "redaction": 80,
+      "safe-save-and-metadata": 18,
       "security-and-encryption": 23,
       "transparency": 2
     },
@@ -11070,9 +10979,9 @@
       "pdf.17.document.catalog-pages:parse": 36,
       "pdf.17.document.catalog-pages:preserve": 36,
       "pdf.17.document.catalog-pages:write": 36,
-      "pdf.17.document.metadata:mutate": 20,
-      "pdf.17.document.metadata:preserve": 20,
-      "pdf.17.document.metadata:write": 20,
+      "pdf.17.document.metadata:mutate": 18,
+      "pdf.17.document.metadata:preserve": 18,
+      "pdf.17.document.metadata:write": 18,
       "pdf.17.graphics.color:parse": 1,
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
@@ -11106,10 +11015,10 @@
       "pdf.17.interactive.redaction-annotations:parse": 14,
       "pdf.17.interactive.redaction-annotations:preserve": 14,
       "pdf.17.interactive.redaction-annotations:render": 14,
-      "pdf.17.security.redaction-content-removal:extract": 81,
-      "pdf.17.security.redaction-content-removal:mutate": 81,
-      "pdf.17.security.redaction-content-removal:render": 81,
-      "pdf.17.security.redaction-content-removal:write": 81,
+      "pdf.17.security.redaction-content-removal:extract": 80,
+      "pdf.17.security.redaction-content-removal:mutate": 80,
+      "pdf.17.security.redaction-content-removal:render": 80,
+      "pdf.17.security.redaction-content-removal:write": 80,
       "pdf.17.syntax.encryption:mutate": 23,
       "pdf.17.syntax.encryption:parse": 23,
       "pdf.17.syntax.encryption:preserve": 23,
@@ -11117,19 +11026,19 @@
       "pdf.17.syntax.file:parse": 36,
       "pdf.17.syntax.file:preserve": 36,
       "pdf.17.syntax.file:write": 36,
-      "pdf.17.syntax.objects:mutate": 20,
+      "pdf.17.syntax.objects:mutate": 18,
       "pdf.17.syntax.objects:parse": 36,
-      "pdf.17.syntax.objects:preserve": 53,
-      "pdf.17.syntax.objects:write": 53,
+      "pdf.17.syntax.objects:preserve": 51,
+      "pdf.17.syntax.objects:write": 51,
       "pdf.17.transparency.model:parse": 2,
       "pdf.17.transparency.model:render": 2,
       "pdfe.product.security.attachments:extract": 4,
       "pdfe.product.security.attachments:mutate": 4,
       "pdfe.product.security.attachments:parse": 4,
       "pdfe.product.security.attachments:preserve": 4,
-      "pdfe.product.security.privacy-clean-copy:mutate": 20,
-      "pdfe.product.security.privacy-clean-copy:preserve": 20,
-      "pdfe.product.security.privacy-clean-copy:write": 20,
+      "pdfe.product.security.privacy-clean-copy:mutate": 18,
+      "pdfe.product.security.privacy-clean-copy:preserve": 18,
+      "pdfe.product.security.privacy-clean-copy:write": 18,
       "pdfe.product.security.signature-and-permission-warning:mutate": 23,
       "pdfe.product.security.signature-and-permission-warning:parse": 23,
       "pdfe.product.security.signature-and-permission-warning:preserve": 23,
