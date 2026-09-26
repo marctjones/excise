@@ -175,7 +175,7 @@ public class SettingsStoreSeamTests
             ContinuousScrollEnabled = false,
             ReadingOrderStrategy = "Raw",
             WhitespaceMode = "Preserve",
-            RedactionWholeWord = true,
+            Redaction = new RedactionPreferences { WholeWord = true, Profile = Excise.Core.Text.Segmentation.RedactionProfile.Maximum },
             PerformancePreset = "LowMemory",
             TileCacheBudgetMb = 42,
         };
@@ -188,7 +188,7 @@ public class SettingsStoreSeamTests
         reloaded.ContinuousScrollEnabled.Should().BeFalse();
         reloaded.ReadingOrderStrategy.Should().Be("Raw");
         reloaded.WhitespaceMode.Should().Be("Preserve");
-        reloaded.RedactionWholeWord.Should().BeTrue();
+        reloaded.Redaction.Should().Be(seed.Redaction);
         reloaded.PerformancePreset.Should().Be("LowMemory");
         reloaded.TileCacheBudgetMb.Should().Be(42);
     }

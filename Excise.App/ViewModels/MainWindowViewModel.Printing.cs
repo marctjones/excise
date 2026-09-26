@@ -125,7 +125,7 @@ public partial class MainWindowViewModel
                 document,
                 RedactionWorkflow.PendingRedactions,
                 TypewriterTextOperations,
-                BuildRedactionOptions(),
+                RedactionPreferences.ToOptions(),
                 string.IsNullOrWhiteSpace(DocumentName) ? "excise document" : DocumentName,
                 PrintScaling,
                 _windowHost.MainWindow),

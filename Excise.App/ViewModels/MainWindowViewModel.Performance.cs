@@ -146,12 +146,7 @@ public partial class MainWindowViewModel
         // #1052/#1169/#1189: redaction policy is a preference like any
         // other. A security choice that silently resets to the less-safe
         // default on every launch is worse than no choice at all.
-        settings.RedactionWholeWord = RedactionWholeWord;
-        settings.RedactionKeepAttachments = RedactionKeepAttachments;   // #1572
-        settings.RedactionWidthPolicy = RedactionWidthPolicy.ToString();
-        settings.RedactionProfile = RedactionProfile.ToString();   // #1586
-        settings.LinkUriCarrierPolicy = LinkUriCarrierPolicy.ToString();
-        settings.MetadataCarrierPolicy = MetadataCarrierPolicy.ToString();
+        settings.Redaction = RedactionPreferences;
         settings.PrintScaling = PrintScaling.ToString();
         settings.DocumentOpenMode = DocumentOpenMode.ToString(); // #1463
         _performanceSettings.WriteTo(settings);

@@ -138,6 +138,21 @@ namespace Excise.App.Models
         public static Excise.App.Models.PerformanceSettings For(Excise.App.Models.PerformancePreset preset) { }
         public static Excise.App.Models.PerformanceSettings FromWindowSettings(Excise.App.Models.WindowSettings settings) { }
     }
+    public sealed class RedactionPreferences : System.IEquatable<Excise.App.Models.RedactionPreferences>
+    {
+        public RedactionPreferences() { }
+        public bool KeepAttachments { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Excise.Core.Operations.CarrierScrubMode>))]
+        public Excise.Core.Operations.CarrierScrubMode LinkUriPolicy { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Excise.Core.Operations.CarrierScrubMode>))]
+        public Excise.Core.Operations.CarrierScrubMode MetadataPolicy { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Excise.Core.Text.Segmentation.RedactionProfile>))]
+        public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; set; }
+        public bool WholeWord { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Excise.Core.Text.Segmentation.WidthPolicy>))]
+        public Excise.Core.Text.Segmentation.WidthPolicy Width { get; set; }
+        public Excise.Core.Text.Segmentation.RedactionOptions ToOptions() { }
+    }
     public sealed class SearchMatch
     {
         public SearchMatch() { }
@@ -176,15 +191,10 @@ namespace Excise.App.Models
         public System.Collections.Generic.List<Excise.App.Models.WindowSettings.DocumentState> DocumentStates { get; set; }
         public double Height { get; set; }
         public bool IsMaximized { get; set; }
-        public string LinkUriCarrierPolicy { get; set; }
-        public string MetadataCarrierPolicy { get; set; }
         public string? PerformancePreset { get; set; }
         public string PrintScaling { get; set; }
         public string ReadingOrderStrategy { get; set; }
-        public bool RedactionKeepAttachments { get; set; }
-        public string RedactionProfile { get; set; }
-        public bool RedactionWholeWord { get; set; }
-        public string RedactionWidthPolicy { get; set; }
+        public Excise.App.Models.RedactionPreferences Redaction { get; set; }
         public int RenderThreads { get; set; }
         public int SinglePageCachedPages { get; set; }
         public int ThumbnailKeepMargin { get; set; }
@@ -661,12 +671,10 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<Excise.App.Models.OutlineNode, System.Reactive.Unit> JumpToOutlineCommand { get; }
         public ReactiveUI.ReactiveCommand<Excise.App.Models.SearchMatch, System.Reactive.Unit>? JumpToSearchMatchCommand { get; }
         public Excise.App.ViewModels.DocumentOpenTiming? LastDocumentOpenTiming { get; }
-        public Excise.Core.Operations.CarrierScrubMode LinkUriCarrierPolicy { get; set; }
         public int LoadDocumentTimeoutSeconds { get; set; }
         public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> LoadRecentFileCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MakeSearchableCommand { get; }
         public Excise.App.ViewModels.MarkupAnnotationKind MarkupAnnotationKind { get; set; }
-        public Excise.Core.Operations.CarrierScrubMode MetadataCarrierPolicy { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveCurrentPageEarlierCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveCurrentPageLaterCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveSelectedPagesEarlierCommand { get; }
@@ -693,10 +701,7 @@ namespace Excise.App.ViewModels
         public int RedactAnnotationCount { get; }
         public string? RedactAnnotationNotice { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RedactSelectionCommand { get; }
-        public bool RedactionKeepAttachments { get; set; }
-        public Excise.Core.Text.Segmentation.RedactionProfile RedactionProfile { get; set; }
-        public bool RedactionWholeWord { get; set; }
-        public Excise.Core.Text.Segmentation.WidthPolicy RedactionWidthPolicy { get; set; }
+        public Excise.App.Models.RedactionPreferences RedactionPreferences { get; set; }
         public Excise.App.ViewModels.RedactionWorkflowManager RedactionWorkflow { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RedoCommand { get; }
         public string RedoMenuHeader { get; }
@@ -824,7 +829,6 @@ namespace Excise.App.ViewModels
         public void ApplyContinuousScrollPreference(bool enabled) { }
         public void ApplyPrintScalingPreference(string? printScaling) { }
         public void ApplyReadingOrderStrategyPreference(Excise.Core.Text.ReadingOrderStrategy strategy) { }
-        public void ApplyRedactionPolicyPreferences(bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy, bool keepAttachments = false, string? profile = null) { }
         public System.Threading.Tasks.Task ApplyRedactionsCommand() { }
         public void ApplyWhitespaceModePreference(Excise.Core.Text.WhitespaceMode mode) { }
         public int AutoDetectAndApplyFormFields() { }
@@ -961,20 +965,15 @@ namespace Excise.App.ViewModels
         public Excise.App.Models.PerformancePreset[] PerformancePresetOptions { get; }
         public Excise.App.Services.Printing.PrintScalingMode[] PrintScalingOptions { get; }
         public Excise.Core.Text.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; }
-        public bool RedactionKeepAttachments { get; set; }
+        public Excise.App.Models.RedactionPreferences RedactionPreferences { get; set; }
         public Excise.Core.Text.Segmentation.RedactionProfile[] RedactionProfileOptions { get; }
-        public bool RedactionWholeWord { get; set; }
         public int RenderThreads { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ResetToDefaultsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveCommand { get; }
         public Excise.App.Models.DocumentOpenMode SelectedDocumentOpenMode { get; set; }
-        public Excise.Core.Operations.CarrierScrubMode SelectedLinkUriCarrierPolicy { get; set; }
-        public Excise.Core.Operations.CarrierScrubMode SelectedMetadataCarrierPolicy { get; set; }
         public Excise.App.Models.PerformancePreset SelectedPerformancePreset { get; set; }
         public Excise.App.Services.Printing.PrintScalingMode SelectedPrintScaling { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy SelectedReadingOrderStrategy { get; set; }
-        public Excise.Core.Text.Segmentation.RedactionProfile SelectedRedactionProfile { get; set; }
-        public Excise.Core.Text.Segmentation.WidthPolicy SelectedRedactionWidthPolicy { get; set; }
         public Excise.Core.Text.WhitespaceMode SelectedWhitespaceMode { get; set; }
         public int SinglePageCachedPages { get; set; }
         public bool SoftCacheTrims { get; set; }

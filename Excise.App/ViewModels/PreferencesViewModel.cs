@@ -18,18 +18,9 @@ public class PreferencesViewModel : ViewModelBase
         Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
     private Excise.Core.Text.WhitespaceMode _whitespaceMode =
         Excise.Core.Text.WhitespaceMode.Smart;
-    private Excise.Core.Operations.CarrierScrubMode _linkUriCarrierPolicy =
-        Excise.Core.Operations.CarrierScrubMode.Strip;
-    private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
-        Excise.Core.Operations.CarrierScrubMode.Strip;
-    private bool _redactionWholeWord;
-    private bool _redactionKeepAttachments;
-    private Excise.Core.Text.Segmentation.RedactionProfile _redactionProfile =
-        Excise.Core.Text.Segmentation.RedactionProfile.Standard;
+    private RedactionPreferences _redactionPreferences = new();
     private Excise.App.Services.Printing.PrintScalingMode _printScaling =
         Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
-    private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
-        Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
 
     // Performance (Balanced until loaded).
     private PerformancePreset _performancePreset = PerformancePreset.Balanced;
@@ -299,51 +290,22 @@ public class PreferencesViewModel : ViewModelBase
     public Excise.Core.Operations.CarrierScrubMode[] CarrierScrubModeOptions { get; } =
         System.Enum.GetValues<Excise.Core.Operations.CarrierScrubMode>();
 
-    public Excise.Core.Operations.CarrierScrubMode SelectedLinkUriCarrierPolicy
-    {
-        get => _linkUriCarrierPolicy;
-        set => this.RaiseAndSetIfChanged(ref _linkUriCarrierPolicy, value);
-    }
-
-    public Excise.Core.Operations.CarrierScrubMode SelectedMetadataCarrierPolicy
-    {
-        get => _metadataCarrierPolicy;
-        set => this.RaiseAndSetIfChanged(ref _metadataCarrierPolicy, value);
-    }
-
-    /// <summary>Whole-word matching for text redaction (#1052).</summary>
-    public bool RedactionWholeWord
-    {
-        get => _redactionWholeWord;
-        set => this.RaiseAndSetIfChanged(ref _redactionWholeWord, value);
-    }
-
-    /// <summary>Keep attachments in redacted copies (#1572).</summary>
-    public bool RedactionKeepAttachments
-    {
-        get => _redactionKeepAttachments;
-        set => this.RaiseAndSetIfChanged(ref _redactionKeepAttachments, value);
-    }
-
     // Redaction output profile (#1586). AOT-safe Enum.GetValues<T>().
     public Excise.Core.Text.Segmentation.RedactionProfile[] RedactionProfileOptions { get; } =
         System.Enum.GetValues<Excise.Core.Text.Segmentation.RedactionProfile>();
-
-    /// <summary>The redaction output profile (#1586).</summary>
-    public Excise.Core.Text.Segmentation.RedactionProfile SelectedRedactionProfile
-    {
-        get => _redactionProfile;
-        set => this.RaiseAndSetIfChanged(ref _redactionProfile, value);
-    }
 
     // Redaction width / box policy (#1189). AOT-safe Enum.GetValues<T>().
     public Excise.Core.Text.Segmentation.WidthPolicy[] WidthPolicyOptions { get; } =
         System.Enum.GetValues<Excise.Core.Text.Segmentation.WidthPolicy>();
 
-    public Excise.Core.Text.Segmentation.WidthPolicy SelectedRedactionWidthPolicy
+    /// <summary>
+    /// The dialog's own copy of the redaction preferences (#1840): the controls
+    /// bind into it, and Save hands the main view model a copy of it.
+    /// </summary>
+    public RedactionPreferences RedactionPreferences
     {
-        get => _redactionWidthPolicy;
-        set => this.RaiseAndSetIfChanged(ref _redactionWidthPolicy, value);
+        get => _redactionPreferences;
+        set => this.RaiseAndSetIfChanged(ref _redactionPreferences, value);
     }
 
     // Print page scaling (#1545). AOT-safe Enum.GetValues<T>().
@@ -393,12 +355,7 @@ public class PreferencesViewModel : ViewModelBase
         OcrDenoiseRadius = 0.8;
         SelectedReadingOrderStrategy = Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
         SelectedWhitespaceMode = Excise.Core.Text.WhitespaceMode.Smart;
-        SelectedLinkUriCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
-        SelectedMetadataCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
-        RedactionWholeWord = false;
-        RedactionKeepAttachments = false;
-        SelectedRedactionProfile = Excise.Core.Text.Segmentation.RedactionProfile.Standard;
-        SelectedRedactionWidthPolicy = Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
+        RedactionPreferences = new();
         SelectedPrintScaling = Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
         SetPerformanceFields(PerformanceSettings.Balanced);
         SelectedDocumentOpenMode = DocumentOpenMode.Automatic;
@@ -413,12 +370,7 @@ public class PreferencesViewModel : ViewModelBase
     {
         SelectedReadingOrderStrategy = mainViewModel.ReadingOrderStrategy;
         SelectedWhitespaceMode = mainViewModel.WhitespaceMode;
-        SelectedLinkUriCarrierPolicy = mainViewModel.LinkUriCarrierPolicy;
-        SelectedMetadataCarrierPolicy = mainViewModel.MetadataCarrierPolicy;
-        RedactionWholeWord = mainViewModel.RedactionWholeWord;
-        RedactionKeepAttachments = mainViewModel.RedactionKeepAttachments;
-        SelectedRedactionProfile = mainViewModel.RedactionProfile;
-        SelectedRedactionWidthPolicy = mainViewModel.RedactionWidthPolicy;
+        RedactionPreferences = mainViewModel.RedactionPreferences with { };
         SelectedPrintScaling = mainViewModel.PrintScaling;
         SetPerformanceFields(mainViewModel.PerformanceSettings);
         TileCacheBytesSource = mainViewModel.ViewerTileCacheResidentBytesProvider;
@@ -429,12 +381,7 @@ public class PreferencesViewModel : ViewModelBase
     {
         mainViewModel.ReadingOrderStrategy = SelectedReadingOrderStrategy;
         mainViewModel.WhitespaceMode = SelectedWhitespaceMode;
-        mainViewModel.LinkUriCarrierPolicy = SelectedLinkUriCarrierPolicy;
-        mainViewModel.MetadataCarrierPolicy = SelectedMetadataCarrierPolicy;
-        mainViewModel.RedactionWholeWord = RedactionWholeWord;
-        mainViewModel.RedactionKeepAttachments = RedactionKeepAttachments;
-        mainViewModel.RedactionProfile = SelectedRedactionProfile;
-        mainViewModel.RedactionWidthPolicy = SelectedRedactionWidthPolicy;
+        mainViewModel.RedactionPreferences = RedactionPreferences with { };
         mainViewModel.PrintScaling = SelectedPrintScaling;
         mainViewModel.ApplyPerformanceSettings(BuildPerformanceSettings());
         mainViewModel.DocumentOpenMode = SelectedDocumentOpenMode;

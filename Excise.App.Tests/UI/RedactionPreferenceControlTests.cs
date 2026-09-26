@@ -46,7 +46,7 @@ public class RedactionPreferenceControlTests
             var combo = dialog.FindControl<ComboBox>("RedactionProfileComboBox")!;
             combo.ItemsSource.Should().NotBeNull("the profile list must be bound to choose from");
 
-            var before = prefs.SelectedRedactionProfile;
+            var before = prefs.RedactionPreferences.Profile;
             var other = combo.ItemsSource!.Cast<RedactionProfile>().First(p => p != before);
 
             // Open the drop-down and pick with the keyboard: a real gesture
@@ -58,10 +58,10 @@ public class RedactionPreferenceControlTests
             combo.SelectedItem = other;   // the drop-down's own item press
             await KeyboardTestHelpers.FlushDispatcherAsync();
 
-            prefs.SelectedRedactionProfile.Should().Be(other,
+            prefs.RedactionPreferences.Profile.Should().Be(other,
                 "picking a profile in the drop-down must reach the view model — this control "
                 + "decides how much of the document a redaction destroys");
-            prefs.SelectedRedactionProfile.Should().NotBe(before);
+            prefs.RedactionPreferences.Profile.Should().NotBe(before);
         }
         finally
         {
