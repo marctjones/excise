@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -36,8 +37,10 @@ public class SaveReloadKeepsPagesOnScreenTests
 {
     private const int Page = 2;
 
-    [FixedAvaloniaFact(Timeout = 120000)]
-    public async Task SaveAs_InContinuousView_KeepsThePageOnScreen_UntilTheReopenedDocumentRendersIt()
+    [FixedAvaloniaTheory(Timeout = 120000)]
+    [InlineData(false)]
+    [InlineData(true)] // #1877: a plain Save reopens the document too
+    public async Task Save_InContinuousView_KeepsThePageOnScreen_UntilTheReopenedDocumentRendersIt(bool plainSave)
     {
         using var s = await Session.OpenAsync();
         // Read from inside the page, not at its top: a rebuild jumped back to the top.
@@ -52,7 +55,10 @@ public class SaveReloadKeepsPagesOnScreenTests
         using var before = AnnotationPlacementAccuracyTests.Capture(s.Window, s.Viewer);
         using var watch = new CompositeWatch(s.Viewer, Page);
 
-        await s.Vm.SaveFileAsAsync(s.Output);
+        if (plainSave)
+            await s.Vm.SaveFileCommand.Execute();
+        else
+            await s.Vm.SaveFileAsAsync(s.Output);
         s.Window.UpdateLayout();
         using var rightAfterSave = AnnotationPlacementAccuracyTests.Capture(s.Window, s.Viewer);
         var rerendered = await s.WaitForComposite(c => !ReferenceEquals(c, shown) && s.Viewer.ContinuousRenderStartCount > renders);
