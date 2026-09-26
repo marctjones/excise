@@ -40,7 +40,7 @@ public sealed record SearchableDocumentResult(
 /// Writes OCR-recognized text back into a scanned PDF as an invisible
 /// (<c>Tr 3</c>) text layer, so the page becomes searchable/selectable
 /// while its visual appearance is unchanged (#627). The raster image is
-/// untouched; only new text-showing operators are appended.
+/// untouched; only new operators are appended.
 /// </summary>
 /// <remarks>
 /// Render mode does not affect what search or redaction can reach — see
@@ -74,28 +74,41 @@ public sealed class PdfSearchableConverter
         if (!force && page.Letters.Count > 0)
             return new SearchablePageResult(page.PageNumber, Skipped: true, AlreadyHadText: true, 0, 0);
 
-        var ocr = _ocrService.RecognizePage(page);
+        return WriteInvisibleWords(page, _ocrService.RecognizePage(page).Words);
+    }
 
+    /// <summary>Write <paramref name="words"/> (boxes in content points) as invisible text.</summary>
+    internal static SearchablePageResult WriteInvisibleWords(PdfPage page, IReadOnlyList<OcrWord> words)
+    {
         int written = 0;
         int skippedEncoding = 0;
 
         using (var graphics = page.GetGraphics())
         {
-            foreach (var word in ocr.Words)
+            foreach (var word in words)
             {
                 if (string.IsNullOrWhiteSpace(word.Text))
                     continue;
 
+                // The word must run along its displayed baseline: /Rotate turns the page
+                // clockwise, so the text turns anticlockwise about the content corner that
+                // is displayed bottom-left (#1848). Same fold to 0 as PdfCoordinateMapper.
                 var bbox = word.BoundingBox;
-                var width = bbox.Width;
-                if (width <= 0)
+                var (x, y, along, across, cos, sin) = page.Rotation switch
+                {
+                    90 => (bbox.Right, bbox.Bottom, bbox.Height, bbox.Width, 0, 1),
+                    180 => (bbox.Right, bbox.Top, bbox.Width, bbox.Height, -1, 0),
+                    270 => (bbox.Left, bbox.Top, bbox.Height, bbox.Width, 0, -1),
+                    _ => (bbox.Left, bbox.Bottom, bbox.Width, bbox.Height, 1, 0),
+                };
+                if (along <= 0)
                     continue;
 
-                // Font size from the box height: tall enough that the
+                // Font size from the box's displayed height: tall enough that the
                 // glyphs' natural width/height stay in a sane ratio for Tz
                 // scaling, floored so a degenerate near-zero-height TSV box
                 // never produces an unusable font size.
-                var fontSize = Math.Max(bbox.Height, 1.0);
+                var fontSize = Math.Max(across, 1.0);
                 var font = PdfFont.Helvetica(fontSize);
 
                 if (!font.CanEncodeFully(word.Text))
@@ -104,7 +117,10 @@ public sealed class PdfSearchableConverter
                     continue;
                 }
 
-                graphics.DrawInvisibleText(word.Text, font, bbox.Left, bbox.Bottom, width);
+                graphics.SaveState();
+                graphics.Transform(cos, sin, -sin, cos, x, y);
+                graphics.DrawInvisibleText(word.Text, font, 0, 0, along);
+                graphics.RestoreState();
                 written++;
             }
         } // Dispose() flushes the accumulated operators in one content-stream write.

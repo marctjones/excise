@@ -80,8 +80,12 @@ public class RotatedCroppedPageOcrTests
         Center(anchor).y.Should().BeApproximately(Center(glyphs).y, 10, $"rotation {rotation}: box {anchor} vs glyphs {glyphs}");
     }
 
-    [Fact]
-    public void RedactToImageOnly_EmitsTheVisualPageAndBlacksOutTheWordWhereItIsSeen()
+    // The converter renders, OCRs and paints at the OCR service's DPI (#1848): a
+    // second DPI would put the black box at the wrong scale away from 300.
+    [Theory]
+    [InlineData(150)]
+    [InlineData(300)]
+    public void RedactToImageOnly_EmitsTheVisualPageAndBlacksOutTheWordWhereItIsSeen(int ocrDpi)
     {
         Assert.SkipUnless(TesseractAvailable, "tesseract CLI not installed");
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
@@ -99,7 +103,7 @@ public class RotatedCroppedPageOcrTests
                 doc.Save(input);
             }
 
-            new PdfRasterRedactionConverter(new PdfOcrService()).RedactToImageOnly(input, output, "SECRET")
+            new PdfRasterRedactionConverter(new PdfOcrService(dpi: ocrDpi)).RedactToImageOnly(input, output, "SECRET")
                 .Should().Be(1);
 
             using (var redacted = PdfDocument.Open(output))
