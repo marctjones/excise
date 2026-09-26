@@ -70,7 +70,7 @@ public class FillColourStateTests
     [Fact]
     public void NestedBlocksRestoreToTheEnclosingColour()
     {
-        var state = new FillColourState(0, 0, 0);
+        var state = new FillColourState();
         var ops = Ops("1 g q 0.5 g q 0.141 g Q Q");
 
         foreach (var op in ops) state.Apply(op);
@@ -86,7 +86,7 @@ public class FillColourStateTests
     [Fact]
     public void AnUnbalancedQ_LeavesTheColourAloneRatherThanThrowing()
     {
-        var state = new FillColourState(0, 0, 0);
+        var state = new FillColourState();
         var act = () => { foreach (var op in Ops("0.5 g Q Q Q")) state.Apply(op); };
 
         act.Should().NotThrow();

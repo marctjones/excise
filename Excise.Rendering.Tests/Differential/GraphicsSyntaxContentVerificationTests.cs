@@ -292,6 +292,40 @@ public class GraphicsSyntaxContentVerificationTests : IDisposable
             "the audit's mark verdict must follow the colour on the page, not a CMYK formula no renderer uses");
     }
 
+    // #1856: a bar with NO fill colour operator (§8.4.1 Table 52: the initial fill is black) over a
+    // stroked path. mutool, not excise, says the bar is painted black over the whole path; the
+    // covered-content channel must report the path under it. It started white and reported nothing.
+    [Fact]
+    public void NoColourOperatorBarOverAPath_MutoolPaintsItBlack_AndTheAuditReportsThePathCovered()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // RG sets the STROKE colour, so the fill is still the initial one when the bar is painted.
+        var path = $"q 2 w 0 0 1 RG {CmykBar.Left + 10} {CmykBar.Bottom + 5} m {CmykBar.Right - 10} {CmykBar.Top - 5} l S Q ";
+        var barePath = TempPath();
+        File.WriteAllBytes(barePath, PagePdf(path));
+        using var bare = MutoolReferenceRenderer.RenderPage(barePath, 1, dpi: 150);
+        using var doc = PdfDocument.Open(PagePdf(
+            path + $"{CmykBar.Left} {CmykBar.Bottom} {CmykBar.Width} {CmykBar.Height} re f"));
+        var page = doc.GetPage(1);
+        using var barred = MutoolReferenceRenderer.RenderPage(SaveTemp(doc), 1, dpi: 150);
+        bare.Should().NotBeNull();
+        barred.Should().NotBeNull();
+
+        InkFractionIn(bare!, CmykBar, page.Height).Should().BeInRange(0.001, 0.5,
+            "guard: the path inks part of the bar's area, so full ink below is the bar's own");
+        var inside = new PdfRectangle(CmykBar.Left + 2, CmykBar.Bottom + 2, CmykBar.Right - 2, CmykBar.Top - 2);
+        MaxDeviationIn(barred!, inside, page.Height, out var painted).Should().BeLessThanOrEqualTo(8,
+            "mutool paints the bar as one flat colour over the whole path");
+        InkFractionIn(barred!, CmykBar, page.Height).Should().BeGreaterThan(0.99);
+        new FillColour(painted.Red / 255.0, painted.Green / 255.0, painted.Blue / 255.0).Describe().Should().Be("black");
+
+        CoveredContentRecovery.Scan(doc).Should().Contain(
+            c => c.Kind == "vector" && Math.Abs(c.Obstruction.Left - CmykBar.Left) < 0.5 &&
+                 Math.Abs(c.Obstruction.Top - CmykBar.Top) < 0.5,
+            "the audit must agree with the independent render that the bar covers the path");
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     /// <summary>Largest per-channel distance from the rect's centre pixel, which it returns.</summary>

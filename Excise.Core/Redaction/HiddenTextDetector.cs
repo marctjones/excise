@@ -128,7 +128,7 @@ public static class HiddenTextDetector
         // ONLY the CTM, so a colour set inside a block leaked past its Q — which
         // read white pleading-line bands as the same grey as the body text and
         // reported 83.7% of a clean court filing as hidden.
-        var fillState = new FillColourState(0, 0, 0);
+        var fillState = new FillColourState();
         var currentPath = new List<PdfRectangle>();
         var finder = new LetterFinder();
 

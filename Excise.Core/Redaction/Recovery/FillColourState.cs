@@ -47,20 +47,11 @@ internal sealed class FillColourState
 {
     private readonly Stack<FillColour> _stack = new();
 
-    /// <param name="r">
-    /// §8.6.8: the initial colour is BLACK. Two detectors start there; one
-    /// (<see cref="CoveredContentRecovery"/>) starts white and gates on
-    /// <c>Set</c>, so the default is a parameter rather than a constant.
-    /// ⚠️ Do not "simplify" this to always-black: #1617 is the record of what
-    /// assuming a default costs, in both directions.
-    /// </param>
-    public FillColourState(double r, double g, double b) => Current = new FillColour(r, g, b);
-
-    /// <summary>The fill colour in force.</summary>
-    public FillColour Current { get; private set; }
-
-    /// <summary>True once a colour operator has been seen at this nesting or an enclosing one.</summary>
-    public bool Set { get; private set; }
+    /// <summary>
+    /// The fill colour in force. §8.4.1 Table 52: it starts BLACK, for every
+    /// detector (#1617, #1856).
+    /// </summary>
+    public FillColour Current { get; private set; } = new(0, 0, 0);
 
     /// <summary>
     /// Apply one operator. Returns true when it was a colour or state operator
@@ -85,27 +76,20 @@ internal sealed class FillColourState
             {
                 var v = op.GetNumber(0);
                 Current = new FillColour(v, v, v);
-                Set = true;
                 return true;
             }
 
             case "rg" when op.Operands.Count >= 3:
                 Current = new FillColour(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2));
-                Set = true;
                 return true;
 
             case "k" when op.Operands.Count >= 4:
                 Current = FillColour.FromCmyk(op.GetNumber(0), op.GetNumber(1), op.GetNumber(2), op.GetNumber(3));
-                Set = true;
                 return true;
 
             case "sc":
             case "scn":
-                if (TryReadComponents(op, out var scn))
-                {
-                    Current = scn;
-                    Set = true;
-                }
+                if (TryReadComponents(op, out var scn)) Current = scn;
                 return true;
 
             default:
