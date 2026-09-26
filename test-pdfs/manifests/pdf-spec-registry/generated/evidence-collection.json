@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1437,
-  "indexedContentSha256": "8611b279e971c90b6fe9a7d340d4dddefc884869adbca1c3f288ee6320c1d6be",
+  "indexedContentSha256": "dfef31c12f5ec4932384e5a6c9fde515ddcd3e4cb596ea192c4120f3f427f5ed",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -5933,7 +5933,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 124
+      "candidateReferenceCount": 125
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -14773,14 +14773,6 @@
           ]
         },
         {
-          "path": "tests/unwired-api-baseline.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "marked",
-            "property"
-          ]
-        },
-        {
           "path": "docs/architecture/README.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -14814,7 +14806,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 78
+      "candidateReferenceCount": 77
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -51504,7 +51496,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 222
+      "candidateReferenceCount": 223
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -62735,7 +62727,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 124
+      "candidateReferenceCount": 123
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -68260,7 +68252,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 408
+      "candidateReferenceCount": 407
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -69772,7 +69764,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 209
+      "candidateReferenceCount": 210
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -70561,7 +70553,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 723
+      "candidateReferenceCount": 724
     },
     {
       "id": "pdf.20.extension.developer",
@@ -73336,6 +73328,7 @@
           "matchedTerms": [
             "editing",
             "redaction",
+            "refusal",
             "safety",
             "redaction",
             "security"
@@ -74421,7 +74414,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 163
+      "candidateReferenceCount": 162
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -76638,6 +76631,14 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AnnotationPlacementAccuracyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "invalidation",
+            "override"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AttachmentsPanelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -76712,8 +76713,6 @@
           "matchedTerms": [
             "override",
             "signature",
-            "ocr",
-            "privacy",
             "redaction"
           ]
         },
@@ -76841,7 +76840,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 44
+      "candidateReferenceCount": 45
     },
     {
       "id": "pdfe.product.ocr.scanned-documents",
@@ -77518,17 +77517,6 @@
           ]
         },
         {
-          "path": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "documents",
-            "ocr",
-            "ocr",
-            "privacy",
-            "redaction"
-          ]
-        },
-        {
           "path": "Excise.App.Tests/Unit/PdfDocumentServiceTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -77657,9 +77645,20 @@
             "ocr",
             "redaction"
           ]
+        },
+        {
+          "path": "tests/redaction-visual-gold-set.json",
+          "kind": "test",
+          "matchedTerms": [
+            "ocr",
+            "scanned",
+            "ocr",
+            "redaction",
+            "security"
+          ]
         }
       ],
-      "candidateReferenceCount": 87
+      "candidateReferenceCount": 86
     },
     {
       "id": "pdfe.product.security.audit-log",
