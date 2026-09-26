@@ -28,20 +28,19 @@ namespace Excise.Rendering.Tests.Differential;
 /// than inferred from a bare FAIL.</para>
 ///
 /// <para><b>The Info <c>/Title</c> is removed from every variant unless a row
-/// says otherwise.</b> <c>UA-Title</c> is "Info /Title <i>or</i> XMP dc:title",
-/// so a file that keeps an Info title passes excise however empty its XMP title
-/// is, while veraPDF reads the XMP alone. That is one of the divergences below;
-/// keeping the Info title out of the other rows makes each one test the XMP
-/// parse and nothing else.</para>
+/// says otherwise.</b> veraPDF reads the title from the XMP alone, and so does
+/// <c>UA-Title</c> (#1774), so a kept Info title must not change either verdict;
+/// keeping it out of the other rows makes each one test the XMP parse and
+/// nothing else.</para>
 ///
-/// <para><b>Measured 2026-09-21, veraPDF 1.30.0 (<c>-f ua1</c>): the two tools
-/// AGREE on the shapes in the first two tests and DISAGREE on the rest, and the
-/// disagreements are pinned exactly rather than hidden.</b> Every veraPDF
+/// <para><b>Measured 2026-09-26, veraPDF 1.30.0 (<c>-f ua1</c>): the two tools
+/// AGREE on every shape but one, and the one is pinned exactly.</b> Every veraPDF
 /// failure is clause 7.1 test 9. veraPDF does not check the VALUE of a
 /// well-formed <c>rdf:Alt</c>/<c>rdf:li</c>, so an empty one passes it while
-/// excise (following the ISO wording) fails it; and veraPDF rejects the bare
-/// and attribute serialisations and an Info-only title, which excise accepts.
-/// The lenient direction is filed as #1774.</para>
+/// excise (following the ISO wording, #1532) fails it. veraPDF rejects the bare
+/// element and attribute serialisations and an Info-only title, which are not a
+/// Lang Alt in XMP; <c>UA-Title</c> used to accept all three and now fails them
+/// (#1774).</para>
 /// </remarks>
 public class PdfUaDocumentTitleVeraPdfTests
 {
@@ -167,6 +166,9 @@ public class PdfUaDocumentTitleVeraPdfTests
     [InlineData("   <dc:title></dc:title>\n", "")]
     [InlineData("   <dc:title>   </dc:title>\n", "")]
     [InlineData("", " dc:title=\"\"")]
+    // Not a Lang Alt, so not a title for either tool (#1774).
+    [InlineData("   <dc:title>" + Title + "</dc:title>\n", "")]
+    [InlineData("", " dc:title=\"" + Title + "\"")]
     // The property NAME occurring outside a title: a comment, another property's value.
     [InlineData("   <!-- dc:title is intentionally absent -->\n", "")]
     [InlineData("   <dc:description><rdf:Alt><rdf:li xml:lang=\"x-default\">see dc:title elsewhere</rdf:li></rdf:Alt></dc:description>\n", "")]
@@ -200,35 +202,16 @@ public class PdfUaDocumentTitleVeraPdfTests
             "#1532: an empty title is not a title, so excise is deliberately stricter than veraPDF here");
     }
 
-    [Theory]
-    // Not valid XMP for a Lang Alt property; ReadDcTitle accepts them anyway. See #1774.
-    [InlineData("   <dc:title>" + Title + "</dc:title>\n", "")]
-    [InlineData("", " dc:title=\"" + Title + "\"")]
-    public void ANonLangAltTitle_ExcisePasses_VeraPdfFails_RegisteredDivergence(string titleBody, string descAttr)
-    {
-        var fontPath = RequireFont();
-        var pdf = Fixture(fontPath, Xmp(titleBody, descAttr));
-
-        var vera = VeraUa1(pdf);
-        vera.Compliant.Should().BeFalse("veraPDF does not read dc:title from these serialisations");
-        VeraFailsOnTheTitleRule(vera);
-        ExciseTitleRule(pdf).Should().Be(RuleStatus.Pass,
-            "REGISTERED DIVERGENCE (#1774): excise accepts a title veraPDF does not see. If this now " +
-            "Fails, the divergence is retired and this row should join NoUsableTitle_FailsBoth");
-    }
-
     [Fact]
-    public void AnInfoOnlyTitle_ExcisePasses_VeraPdfFails_RegisteredDivergence()
+    public void AnInfoOnlyTitle_FailsBoth()
     {
         var fontPath = RequireFont();
-        // Info /Title kept, XMP dc:title absent.
+        // Info /Title kept, XMP dc:title absent: PDF/UA-1 reads the title from XMP.
         var pdf = Fixture(fontPath, Xmp(""), keepInfoTitle: true);
 
         var vera = VeraUa1(pdf);
-        vera.Compliant.Should().BeFalse("PDF/UA-1 reads the title from XMP; an Info /Title does not satisfy it");
+        vera.Compliant.Should().BeFalse("an Info /Title does not satisfy the PDF/UA-1 title rule");
         VeraFailsOnTheTitleRule(vera);
-        ExciseTitleRule(pdf).Should().Be(RuleStatus.Pass,
-            "REGISTERED DIVERGENCE (#1774): UA-Title accepts 'Info /Title or XMP dc:title'. If this now " +
-            "Fails, the divergence is retired and this row should join NoUsableTitle_FailsBoth");
+        ExciseTitleRule(pdf).Should().Be(RuleStatus.Fail, "excise must reach the same verdict as veraPDF (#1774)");
     }
 }

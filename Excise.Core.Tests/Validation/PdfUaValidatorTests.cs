@@ -101,6 +101,14 @@ public class PdfUaValidatorTests
     }
 
     [Fact]
+    public void InfoTitleWithoutXmpDcTitle_FailsTitleRule()
+    {
+        // #1774: PDF/UA-1 reads the title from XMP; veraPDF fails an Info-only title.
+        var doc = Craft(SimpleTaggedTree(), title: "Crafted");
+        Status(PdfUaValidator.Validate(doc), "UA-Title").Should().Be(RuleStatus.Fail);
+    }
+
+    [Fact]
     public void MissingDisplayDocTitle_FailsDisplayRule()
     {
         var doc = Craft(SimpleTaggedTree(), displayDocTitle: false);

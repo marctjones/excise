@@ -33,7 +33,7 @@ public static class PdfUaValidator
         "Font embedding and character-to-Unicode mapping for every glyph (glyphs without a ToUnicode map)",
         "Annotations, links, and form-field accessibility (widgets, tab order, /TU) beyond tag presence",
         "Optional-content, XObject, and annotation appearance-stream tagging (only the page content stream is scanned for untagged text)",
-        "Full XMP metadata schema validation (only dc:title presence is consulted as a Title fallback)",
+        "Full XMP metadata schema validation (only the dc:title Lang Alt is consulted)",
         "Multi-page marked-content-to-page qualification when /Pg is absent (single-page association only)",
         "Approximately 120 further Matterhorn checkpoints not listed above",
     };
@@ -99,17 +99,16 @@ public static class PdfUaValidator
             reference: "ISO 14289-1 §7.2; Matterhorn 11-001"));
     }
 
-    // 7.1 — a title must be present (Info /Title or XMP dc:title).
+    // 7.1 — the XMP dc:title must be present and non-empty. Info /Title does not
+    // satisfy it (veraPDF fails an Info-only title, #1774).
     private static void CheckTitle(PdfDocument doc, List<ValidationResult> results)
     {
-        bool infoTitle = !string.IsNullOrWhiteSpace(doc.Title);
-        bool xmpTitle = XmpHasDcTitle(doc);
         results.Add(new ValidationResult(
             "UA-Title",
-            "Document has a title (Info /Title or XMP dc:title).",
+            "Document has a title (XMP dc:title).",
             RuleSeverity.Error,
-            (infoTitle || xmpTitle) ? RuleStatus.Pass : RuleStatus.Fail,
-            location: infoTitle ? "Info/Title" : "Metadata/dc:title",
+            XmpHasDcTitle(doc) ? RuleStatus.Pass : RuleStatus.Fail,
+            location: "Metadata/dc:title",
             reference: "ISO 14289-1 §7.1; Matterhorn 06-004"));
     }
 
@@ -391,19 +390,14 @@ public static class PdfUaValidator
     private static bool IsStandard(string type) =>
         PdfStructTreeParser.StandardStructureTypes.Contains(type.TrimStart('/'));
 
-    // #1532: dc:title, parsed. Both serialisations XMP permits — an element
-    // (<dc:title><rdf:Alt><rdf:li>T</rdf:li></rdf:Alt></dc:title>) and the
-    // simplified-RDF attribute (dc:title="T") — with length-bounded captures
-    // and no nested quantifier, so they stay linear on hostile input. Same
-    // construction as PdfAIdentityXmp (#1524/#1526).
+    // #1532/#1774: dc:title, parsed as the Lang Alt XMP defines for it
+    // (<dc:title><rdf:Alt><rdf:li>T</rdf:li></rdf:Alt></dc:title>), with
+    // length-bounded captures and no nested quantifier, so they stay linear on
+    // hostile input. Same construction as PdfAIdentityXmp (#1524/#1526).
     private static readonly System.Text.RegularExpressions.Regex DcTitleElement = new(
         @"<dc:title\b[^>]{0,512}>(?<v>.{0,8192}?)</dc:title>",
         System.Text.RegularExpressions.RegexOptions.Singleline
         | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
-
-    private static readonly System.Text.RegularExpressions.Regex DcTitleAttribute = new(
-        @"\bdc:title\s{0,16}=\s{0,16}""(?<v>[^""]{0,8192})""",
-        System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
     private static readonly System.Text.RegularExpressions.Regex RdfListItem = new(
         @"<rdf:li\b(?<attrs>[^>]{0,512})>(?<v>.{0,8192}?)</rdf:li>",
@@ -425,7 +419,13 @@ public static class PdfUaValidator
     /// empty title was reported conformant on this rule.</para>
     /// <para>Presence and VALUE are deliberately the same question here: a
     /// title that exists and is empty does not satisfy the rule, so there is
-    /// nothing for a caller to do with "present but unusable".</para>
+    /// nothing for a caller to do with "present but unusable". veraPDF checks
+    /// only that the Lang Alt exists, so an empty <c>rdf:li</c> is the one shape
+    /// where this is stricter than it.</para>
+    /// <para>Only the <c>rdf:Alt</c>/<c>rdf:li</c> form counts. A bare
+    /// <c>&lt;dc:title&gt;Text&lt;/dc:title&gt;</c> and the attribute
+    /// <c>dc:title="Text"</c> are not a Lang Alt, and veraPDF does not read
+    /// either as a title (#1774).</para>
     /// </remarks>
     internal static string? ReadDcTitle(string xmp)
     {
@@ -433,30 +433,21 @@ public static class PdfUaValidator
             return null;
 
         var element = DcTitleElement.Match(xmp);
-        if (element.Success)
+        if (!element.Success)
+            return null;
+
+        // Prefer x-default, as XMP readers do.
+        string? fallback = null;
+        foreach (System.Text.RegularExpressions.Match li in RdfListItem.Matches(element.Groups["v"].Value))
         {
-            var inner = element.Groups["v"].Value;
-
-            // rdf:Alt/rdf:li, preferring x-default as XMP readers do.
-            string? fallback = null;
-            foreach (System.Text.RegularExpressions.Match li in RdfListItem.Matches(inner))
-            {
-                var value = Clean(li.Groups["v"].Value);
-                if (value == null)
-                    continue;
-                if (li.Groups["attrs"].Value.Contains("x-default", StringComparison.Ordinal))
-                    return value;
-                fallback ??= value;
-            }
-            if (fallback != null)
-                return fallback;
-
-            // No rdf:li: a bare <dc:title>Text</dc:title>.
-            return inner.Contains('<', StringComparison.Ordinal) ? null : Clean(inner);
+            var value = Clean(li.Groups["v"].Value);
+            if (value == null)
+                continue;
+            if (li.Groups["attrs"].Value.Contains("x-default", StringComparison.Ordinal))
+                return value;
+            fallback ??= value;
         }
-
-        var attribute = DcTitleAttribute.Match(xmp);
-        return attribute.Success ? Clean(attribute.Groups["v"].Value) : null;
+        return fallback;
     }
 
     /// <summary>Decoded and trimmed, or null when nothing usable is left.</summary>

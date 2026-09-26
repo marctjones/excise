@@ -21,6 +21,8 @@ internal sealed class PdfDocumentObjectStore : IDisposable
     private readonly Dictionary<int, PdfObject> _objectCache = new();
     /// <summary>Slots <see cref="ReplaceIndirectObject"/> wrote: never evictable (the file holds the predecessor).</summary>
     private readonly HashSet<int> _replacedObjects = new();
+    /// <summary>Objects whose bytes did not parse and so resolve to null (see <see cref="IsDeclaredNull"/>).</summary>
+    private readonly HashSet<int> _unparseableObjects = new();
     private readonly PdfParser _parser;
 
     // Resolution seeks and reads one shared parser/lexer stream and mutates
@@ -226,6 +228,23 @@ internal sealed class PdfDocumentObjectStore : IDisposable
     internal PdfObject GetObject(PdfReference reference)
         => GetObject(reference.ObjectNum);
 
+    /// <summary>
+    /// True when the file itself says this object is <c>null</c>: it is in use,
+    /// its bytes parse, and the value is the null object. A missing, free or
+    /// unparseable object also resolves to null, but is not this, and reading
+    /// it as "absent" is only safe for one the file declared (#1850).
+    /// </summary>
+    internal bool IsDeclaredNull(PdfReference reference)
+    {
+        lock (_parseLock)
+        {
+            return GetObject(reference) is PdfNull
+                && _xref.TryGetValue(reference.ObjectNum, out var entry)
+                && entry is { InUse: true, IsCompressed: false }
+                && !_unparseableObjects.Contains(reference.ObjectNum);
+        }
+    }
+
     internal PdfObject GetObject(int objectNumber)
     {
         lock (_parseLock)
@@ -253,6 +272,7 @@ internal sealed class PdfDocumentObjectStore : IDisposable
                 }
                 catch (PdfParseException ex) when (!ex.IsResourceGuard)
                 {
+                    _unparseableObjects.Add(objectNumber);
                     _objectCache[objectNumber] = PdfNull.Instance;
                     return PdfNull.Instance;
                 }

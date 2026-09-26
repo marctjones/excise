@@ -233,14 +233,27 @@ internal static class PdfDocumentOpenPipeline
         try
         {
             var encryptObj = trailer.GetOptional("Encrypt");
-            if (encryptObj is PdfReference encryptRef)
+            var encryptRef = encryptObj as PdfReference;
+            if (encryptRef != null)
                 encryptObj = objectStore.GetObject(encryptRef);
 
-            // A missing or unparseable object resolves to null. Opening without
-            // a handler would hand ciphertext to every reader (#1828).
             if (encryptObj is PdfNull)
+            {
+                // §7.3.9: a null entry is an absent entry. A direct /Encrypt null
+                // never reaches the trailer (the dictionary drops it); a reference
+                // to an object the file declares null is the same file (#1850).
+                if (encryptRef != null && objectStore.IsDeclaredNull(encryptRef))
+                {
+                    trailer.Remove("Encrypt");
+                    return permissions;
+                }
+
+                // A missing or unparseable object resolves to null too. Opening
+                // without a handler would hand ciphertext to every reader (#1828).
                 throw new PdfEncryptionNotSupportedException(
                     "The /Encrypt dictionary is missing or unreadable, so this document cannot be decrypted.");
+            }
+
             if (encryptObj is not PdfDictionary encryptDict)
                 throw new PdfParseException("/Encrypt is not a dictionary");
 
