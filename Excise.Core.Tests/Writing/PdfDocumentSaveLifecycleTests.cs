@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
@@ -182,6 +183,141 @@ public class PdfDocumentSaveLifecycleTests
         {
             Directory.Delete(dir, recursive: true);
         }
+    }
+
+    /// <summary>
+    /// #1802: the save's rename gives the file a new inode, which used to drop
+    /// its extended attributes (a Finder comment, measured). The macOS
+    /// <c>xattr</c> tool sets and reads them, not excise. The attribute copy
+    /// must not change a byte of the PDF either.
+    /// </summary>
+    [Fact]
+    public void SaveToPath_KeepsTheFilesExtendedAttributes_AndWritesTheSameBytes()
+    {
+        Assert.SkipUnless(OperatingSystem.IsMacOS(), "xattr copy is verified on macOS, with its xattr tool");
+        var dir = Directory.CreateTempSubdirectory("excise-xattr-").FullName;
+        try
+        {
+            var plain = SeedFile(Path.Combine(dir, "plain.pdf"));
+            var tagged = Path.Combine(dir, "tagged.pdf");
+            File.Copy(plain, tagged);
+            Run("xattr", "-w", "com.apple.metadata:kMDItemFinderComment", "signed copy", tagged);
+
+            foreach (var path in new[] { plain, tagged })
+            {
+                using var document = PdfDocument.Open(path);
+                document.Pages.AddBlank(100, 100);
+                document.Save(path);
+            }
+
+            Run("xattr", "-p", "com.apple.metadata:kMDItemFinderComment", tagged)
+                .Should().Be("signed copy\n", "the Finder comment survives the save (#1802)");
+            File.ReadAllBytes(tagged).Should().Equal(File.ReadAllBytes(plain),
+                "carrying attributes over must not change what is written to the PDF");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// #1802: every attribute, byte for byte: a Finder tag (binary plist), an
+    /// empty value, a 128 KiB binary value and quarantine (carried on purpose:
+    /// dropping it would clear a download's quarantine on its first save). The
+    /// file is read-only, so the attributes must reach the temporary before
+    /// its mode does: a read-only file refuses them.
+    /// </summary>
+    [Fact]
+    [System.Runtime.Versioning.UnsupportedOSPlatform("windows")]
+    public void SaveToPath_KeepsEveryExtendedAttribute_OfAReadOnlyFile()
+    {
+        Assert.SkipUnless(OperatingSystem.IsMacOS(), "xattr copy is verified on macOS, with its xattr tool");
+        var dir = Directory.CreateTempSubdirectory("excise-xattr-").FullName;
+        try
+        {
+            var path = SeedFile(Path.Combine(dir, "tagged.pdf"));
+            var large = new byte[128 * 1024];
+            new Random(1802).NextBytes(large);
+            var attributes = new Dictionary<string, string>
+            {
+                ["com.apple.metadata:_kMDItemUserTags"] =
+                    "62706c6973743030a101555265640a36080a0000000000000101000000000000000200000000000000000000000000000010",
+                ["com.apple.quarantine"] = Convert.ToHexString("0081;00000000;Safari;"u8),
+                ["user.excise.empty"] = "",
+                ["user.excise.large"] = Convert.ToHexString(large),
+            };
+            foreach (var (name, hex) in attributes)
+                Run("xattr", "-wx", name, hex, path);
+            var readOnly = UnixFileMode.UserRead | UnixFileMode.GroupRead | UnixFileMode.OtherRead;
+            File.SetUnixFileMode(path, readOnly);
+
+            using (var document = PdfDocument.Open(path))
+            {
+                document.Pages.AddBlank(100, 100);
+                document.Save(path);
+            }
+
+            File.GetUnixFileMode(path).Should().Be(readOnly);
+            foreach (var (name, hex) in attributes)
+                string.Concat(Run("xattr", "-px", name, path).Where(c => !char.IsWhiteSpace(c)))
+                    .Should().BeEquivalentTo(hex, $"{name} survives the save byte for byte (#1802)");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// #1802: the attribute copy is best effort. Attributes the save cannot
+    /// read (an ACL on the file) or cannot write (an ACL the temporary
+    /// inherits from its directory) are dropped; the save itself succeeds.
+    /// </summary>
+    [Theory]
+    [InlineData("deny readextattr", false)]
+    [InlineData("deny writeextattr,file_inherit", true)]
+    public void SaveToPath_WhenAttributesCannotBeCopied_StillSaves(string acl, bool onDirectory)
+    {
+        Assert.SkipUnless(OperatingSystem.IsMacOS(), "xattr copy is verified on macOS, with its xattr and chmod +a tools");
+        var dir = Directory.CreateTempSubdirectory("excise-xattr-").FullName;
+        try
+        {
+            var path = SeedFile(Path.Combine(dir, "locked.pdf"));
+            Run("xattr", "-w", "user.excise.note", "kept if possible", path);
+            Run("chmod", "+a", $"user:{Environment.UserName} {acl}", onDirectory ? dir : path);
+
+            using (var document = PdfDocument.Open(path))
+            {
+                document.Pages.AddBlank(100, 100);
+                document.Save(path);
+            }
+
+            using var saved = PdfDocument.Open(path);
+            saved.PageCount.Should().Be(2, "an attribute that cannot be copied must not fail the save");
+            Directory.GetFiles(dir, "*.tmp").Should().BeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    private static string Run(string tool, params string[] args)
+    {
+        var start = new ProcessStartInfo(tool)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        foreach (var arg in args)
+            start.ArgumentList.Add(arg);
+        using var process = Process.Start(start)!;
+        var error = process.StandardError.ReadToEndAsync();
+        var output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit(TimeSpan.FromSeconds(30)).Should().BeTrue($"{tool} finishes");
+        process.ExitCode.Should().Be(0, $"{tool} {string.Join(' ', args.Take(2))}: {error.Result}");
+        return output;
     }
 
     /// <summary>
