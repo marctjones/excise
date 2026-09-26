@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "6aeba2ddecd46c5d94379cae122efd5d3b9c6fed",
+  "sourceRevision": "ffad76dc5a7db04bab60682d7e28de54c326cf74",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8061,
+    "retainedSymbols": 8063,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -66,14 +66,14 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 471,
+      "references": 464,
       "typeDependencyCount": 29,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 85
+          "references": 79
         }
       ]
     },
@@ -627,7 +627,7 @@
     {
       "source": "core-redaction",
       "target": "core-content",
-      "references": 313,
+      "references": 323,
       "typeDependencyCount": 54,
       "classification": "declared",
       "evidence": [
@@ -641,7 +641,7 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1207,
+      "references": 1215,
       "typeDependencyCount": 151,
       "classification": "declared",
       "evidence": [
@@ -683,8 +683,8 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 976,
-      "typeDependencyCount": 148,
+      "references": 1005,
+      "typeDependencyCount": 149,
       "classification": "declared",
       "evidence": [
         {
@@ -697,7 +697,7 @@
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 163,
+      "references": 166,
       "typeDependencyCount": 26,
       "classification": "declared",
       "evidence": [
