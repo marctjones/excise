@@ -189,18 +189,16 @@ public class ContentStreamParser
         if (!ComputeOperatorMetadata)
             return;
 
-        // CTM in effect when THIS operator executed (§8.3.4) -- not only for
-        // text-showing operators (BeginTextShow snapshots the same values for
-        // its own TextTransform pairing). A caller wanting page-space
-        // coordinates for a path-construction operator's raw Operands
-        // transforms them through this, mirroring how redaction already
-        // cancels it to recover page-space letter geometry (#1433). For a
-        // "cm" operator itself, this is the CTM BEFORE that cm's own product
-        // is folded in -- the walker applies cm's own state change only
-        // after this callback returns.
-        op.GraphicsTransform = new ContentTransform(
-            _walker.Ctm_a, _walker.Ctm_b, _walker.Ctm_c,
-            _walker.Ctm_d, _walker.Ctm_e, _walker.Ctm_f);
+        // CTM in effect when THIS operator executed (§8.3.4), for every
+        // operator: a text-showing one pairs it with the TextTransform that
+        // BeginTextShow takes, and no text-showing operator moves the CTM
+        // before that. A caller wanting page-space coordinates for a
+        // path-construction operator's raw Operands transforms them through
+        // this, mirroring how redaction already cancels it to recover
+        // page-space letter geometry (#1433). For a "cm" operator itself, this
+        // is the CTM BEFORE that cm's own product is folded in -- the walker
+        // applies cm's own state change only after this callback returns.
+        op.GraphicsTransform = _walker.Ctm;
 
         // A BDC/BMC is stamped with the spans around it; an EMC returns to the
         // stamp of the span it closes, and a stray one closes nothing.
@@ -361,12 +359,7 @@ public class ContentStreamParser
     {
         if (_current is { } op)
         {
-            op.GraphicsTransform = new ContentTransform(
-                _walker.Ctm_a, _walker.Ctm_b, _walker.Ctm_c,
-                _walker.Ctm_d, _walker.Ctm_e, _walker.Ctm_f);
-            op.TextTransform = new ContentTransform(
-                _walker.Tm_a, _walker.Tm_b, _walker.Tm_c,
-                _walker.Tm_d, _walker.Tm_e, _walker.Tm_f);
+            op.TextTransform = _walker.Tm;
             op.TextState = _walker.CaptureTextState();
         }
 

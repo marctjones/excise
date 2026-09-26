@@ -355,31 +355,11 @@ internal sealed class ContentStreamWalker
 
     #region State accessors
 
-    /// <summary>Current transformation matrix, a.</summary>
-    public double Ctm_a => _state.Ctm_a;
-    /// <summary>Current transformation matrix, b.</summary>
-    public double Ctm_b => _state.Ctm_b;
-    /// <summary>Current transformation matrix, c.</summary>
-    public double Ctm_c => _state.Ctm_c;
-    /// <summary>Current transformation matrix, d.</summary>
-    public double Ctm_d => _state.Ctm_d;
-    /// <summary>Current transformation matrix, e.</summary>
-    public double Ctm_e => _state.Ctm_e;
-    /// <summary>Current transformation matrix, f.</summary>
-    public double Ctm_f => _state.Ctm_f;
+    /// <summary>Current transformation matrix (§8.3.4).</summary>
+    public ContentTransform Ctm => new(_state.Ctm_a, _state.Ctm_b, _state.Ctm_c, _state.Ctm_d, _state.Ctm_e, _state.Ctm_f);
 
-    /// <summary>Current text matrix, a.</summary>
-    public double Tm_a => _tm_a;
-    /// <summary>Current text matrix, b.</summary>
-    public double Tm_b => _tm_b;
-    /// <summary>Current text matrix, c.</summary>
-    public double Tm_c => _tm_c;
-    /// <summary>Current text matrix, d.</summary>
-    public double Tm_d => _tm_d;
-    /// <summary>Current text matrix, e.</summary>
-    public double Tm_e => _tm_e;
-    /// <summary>Current text matrix, f.</summary>
-    public double Tm_f => _tm_f;
+    /// <summary>Current text matrix (§9.4.2).</summary>
+    public ContentTransform Tm => new(_tm_a, _tm_b, _tm_c, _tm_d, _tm_e, _tm_f);
 
     /// <summary>Transform a point from user space through the CTM.</summary>
     public (double x, double y) TransformPoint(double x, double y)
@@ -394,8 +374,7 @@ internal sealed class ContentStreamWalker
     /// the CTM.
     /// </summary>
     public PdfRectangle TransformBounds(double minX, double minY, double maxX, double maxY) =>
-        new ContentTransform(_state.Ctm_a, _state.Ctm_b, _state.Ctm_c, _state.Ctm_d, _state.Ctm_e, _state.Ctm_f)
-            .TransformBounds(new PdfRectangle(minX, minY, maxX, maxY));
+        Ctm.TransformBounds(new PdfRectangle(minX, minY, maxX, maxY));
 
     #endregion
 
