@@ -31,6 +31,9 @@ public class PdfUaDcTitleTests
     [InlineData("<dc:title><rdf:Alt><rdf:li xml:lang='x-default'></rdf:li></rdf:Alt></dc:title>")]
     [InlineData("<dc:title><rdf:Alt><rdf:li xml:lang='x-default'>  </rdf:li></rdf:Alt></dc:title>")]
     [InlineData("dc:title=\"\"")]
+    // Not a Lang Alt: veraPDF does not read these as a title either (#1774).
+    [InlineData("<dc:title>Bare Element</dc:title>")]
+    [InlineData("dc:title=\"Attribute Shorthand\"")]
     // The property NAME occurring outside a title: a comment, another value.
     [InlineData("<!-- dc:title is intentionally absent -->")]
     [InlineData("<dc:description><rdf:Alt><rdf:li>see dc:title elsewhere</rdf:li></rdf:Alt></dc:description>")]
@@ -45,8 +48,6 @@ public class PdfUaDcTitleTests
         "Quarterly Report")]
     [InlineData("<dc:title><rdf:Alt><rdf:li>Untagged Alternative</rdf:li></rdf:Alt></dc:title>",
         "Untagged Alternative")]
-    [InlineData("<dc:title>Bare Element</dc:title>", "Bare Element")]
-    [InlineData("dc:title=\"Attribute Shorthand\"", "Attribute Shorthand")]
     // Entities are decoded, so an entity-only title is not mistaken for text.
     [InlineData("<dc:title><rdf:Alt><rdf:li>Smith &amp; Jones</rdf:li></rdf:Alt></dc:title>", "Smith & Jones")]
     public void ARealTitle_IsReadBack(string body, string expected)
