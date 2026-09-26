@@ -100,6 +100,36 @@ public sealed class GlyphNameAndMacRomanEncodingOracleTests
     }
 
     [Fact]
+    public void Differences_OmegaAndDotlessi_ExtractorMatchesMutoolPdftotextAndTheRenderer()
+    {
+        // #1848: AGL Omega;2126 (U+03A9 is Omegagreek) and dotlessi;0131. The
+        // extractor read Omega as U+03A9 and did not know dotlessi, so code 66
+        // fell through to WinAnsi and extracted as "B".
+        (string Name, char Expected)[] names = { ("Omega", 'Ω'), ("dotlessi", 'ı') };
+        var pdf = BuildPdf(DifferencesFont("Helvetica", names.Select(n => n.Name)), CodesFrom(65, names.Length));
+        var excise = ExciseText(pdf);
+        excise.Should().Be("Ωı");
+
+        foreach (var (name, expected) in names)
+        {
+            AdobeGlyphList.TryGet(name, out var drawn).Should().BeTrue($"the renderer must resolve /{name}");
+            drawn.Should().Be(expected, $"the renderer must draw the character extraction reads for /{name}");
+        }
+
+        WithTempPdf(pdf, path =>
+        {
+            Assert.SkipWhen(!MutoolReferenceRenderer.IsAvailable, "mutool not installed.");
+            Assert.SkipWhen(!PdftotextTextExtractor.IsAvailable, "pdftotext not installed.");
+            var mutool = MutoolTextExtractor.ExtractPage(path, 1);
+            var poppler = PdftotextTextExtractor.ExtractPage(path, 1);
+            Assert.SkipWhen(mutool == null || poppler == null, "an oracle declined to extract.");
+            _out.WriteLine($"excise '{excise}' mutool '{mutool!.Trim()}' pdftotext '{poppler!.Trim()}'");
+            WithoutWhitespace(mutool).Should().Be(excise);
+            WithoutWhitespace(poppler).Should().Be(excise);
+        });
+    }
+
+    [Fact]
     public void MacRomanEncoding_AnnexDHighCodes_ExtractorMatchesMutool()
     {
         var codes = Enumerable.Range(0x80, 0x80)

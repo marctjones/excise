@@ -112,4 +112,25 @@ public class AdobeGlyphListTests
         // fall back to "uni0394" (ContentStreamWalker's CFF width rung).
         AdobeGlyphList.ToGlyphName(0x0394).Should().BeNull();
     }
+
+    /// <summary>
+    /// #1848: AGL glyphlist.txt gives Omega;2126 (U+03A9 is Omegagreek), the
+    /// same split as Delta, and dotlessi;0131 (Annex D code 365 in
+    /// StandardEncoding and MacRomanEncoding). mutool and pdftotext extract the
+    /// same code points from a <c>/Differences</c> font.
+    /// </summary>
+    [Theory]
+    [InlineData("Omega", 0x2126)]
+    [InlineData("dotlessi", 0x0131)]
+    public void ToUnicode_OmegaAndDotlessi_DecodeToTheAglCodePoint(string glyphName, int codePoint)
+    {
+        AdobeGlyphList.ToUnicode(glyphName).Should().Be(char.ConvertFromUtf32(codePoint));
+        AdobeGlyphList.ToGlyphName(codePoint).Should().Be(glyphName);
+    }
+
+    [Fact]
+    public void ToGlyphName_GreekCapitalOmega_HasNoAglNameOnceOmegaIsOhm()
+    {
+        AdobeGlyphList.ToGlyphName(0x03A9).Should().BeNull();
+    }
 }
