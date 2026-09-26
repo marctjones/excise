@@ -102,7 +102,7 @@ public class RedactionMouseWorkflowTests
             var pending = vm.RedactionWorkflow.PendingRedactions.Single();
             pending.PageArea.Space.Should().Be(PdfCoordinateSpace.ViewerDips,
                 $"{scenario.Name}: mouse-drawn redactions must carry their viewer coordinate space");
-            pending.RenderDpi.Should().Be(120,
+            pending.PageArea.Dpi.Should().BeApproximately(120, 1e-6,
                 $"{scenario.Name}: the viewer renders single-page editing overlays at 120 DPI");
 
             if (!string.IsNullOrEmpty(scenario.ExpectedPreviewContains))

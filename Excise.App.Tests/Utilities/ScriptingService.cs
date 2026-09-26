@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Excise.App.ViewModels;
 
-namespace Excise.App.Services;
+namespace Excise.App.Tests.Utilities;
 
 /// <summary>
 /// Service for executing C# scripts against the MainWindowViewModel.

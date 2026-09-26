@@ -76,9 +76,8 @@ Write-Host "  iscc        : $iscc"
 # ── dotnet publish (Native AOT) ───────────────────────────────────────
 # Native AOT and PublishSingleFile are mutually exclusive: AOT already emits one
 # native executable, so the flags below are the ones build-macos-app.sh and
-# build-deb.sh pass for their AOT lanes. EnableScripting and IncludeTessdataInApp
-# are already off for a Release build; they are stated here so the recipe does
-# not depend on a default.
+# build-deb.sh pass for their AOT lanes. IncludeTessdataInApp is already off for
+# a Release build; it is stated here so the recipe does not depend on a default.
 $publishDir = Join-Path $RepoRoot "artifacts\publish\win-x64\gui"
 $symbolsDir = Join-Path $RepoRoot "artifacts\publish\win-x64\symbols"
 if (Test-Path $publishDir) { Remove-Item -Recurse -Force $publishDir }
@@ -92,7 +91,6 @@ $aotArgs = @(
     '-p:PublishAot=true',
     '-p:PublishSingleFile=false',
     '-p:PublishReadyToRun=false',
-    '-p:EnableScripting=false',
     '-p:IncludeTessdataInApp=false',
     '-p:DebugType=None', '-p:DebugSymbols=false',
     '-o', $publishDir

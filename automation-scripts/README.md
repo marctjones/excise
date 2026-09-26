@@ -6,9 +6,8 @@ For end-user and CI automation, use the stable CLI contract documented in
 structured JSON without taking GUI focus.
 
 The `.csx` files in this directory are developer/test GUI automation scripts.
-They use Roslyn scripting against `MainWindowViewModel`; Release builds exclude
-that scripting surface by default unless explicitly published with
-`-p:EnableScripting=true`.
+They use Roslyn scripting against `MainWindowViewModel`; the runner
+(`ScriptingService`) lives in `Excise.App.Tests`, not in the product.
 
 C# scripts (.csx files) that automate GUI workflows using Roslyn scripting. These scripts interact with the MainWindowViewModel to test and automate the PDF Editor application.
 

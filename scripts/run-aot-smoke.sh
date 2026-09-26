@@ -183,10 +183,9 @@ else
     # project.assets.json (and everything else under obj/) into each
     # project's own in-tree obj/ directory — the SAME directory a plain
     # `dotnet build`/`dotnet restore` uses. An AOT publish restores a
-    # graph with EnableScripting=false and PublishAot=true, which excludes
-    # the Microsoft.CodeAnalysis.CSharp.Scripting packages; overwriting the
-    # in-tree obj/project.assets.json with that graph breaks the next
-    # normal --no-restore build (ScriptingService.cs fails CS0234/CS0246).
+    # graph with PublishAot=true; overwriting the in-tree
+    # obj/project.assets.json with that graph can break the next
+    # normal --no-restore build.
     # --artifacts-path buckets every project's intermediate output under
     # "$AOT_ARTIFACTS_DIR/obj/<ProjectName>/" — verified per-project-unique
     # (Excise.App vs Excise.Core land in distinct subfolders) — so this
@@ -202,7 +201,6 @@ else
         --self-contained true \
         -p:PublishAot=true \
         -p:PublishReadyToRun=false \
-        -p:EnableScripting=false \
         -p:IncludeTessdataInApp=false \
         --artifacts-path "$AOT_ARTIFACTS_DIR" \
         -o "$PUBLISH_DIR" >> "$BUILD_LOG" 2>&1 || build_rc=$?

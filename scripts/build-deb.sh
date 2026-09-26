@@ -114,7 +114,6 @@ publish() {
             -p:PublishAot=true \
             -p:PublishSingleFile=false \
             -p:PublishReadyToRun=false \
-            -p:EnableScripting=false \
             -p:IncludeTessdataInApp=false \
             -p:DebugType=None -p:DebugSymbols=false \
             -o "$outdir" >/dev/null

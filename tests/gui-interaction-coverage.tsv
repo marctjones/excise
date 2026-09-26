@@ -114,5 +114,3 @@ MainWindow/ToggleMenuItem:ToggleOutlineCommand	B	reached only by Command.Execute
 MainWindow/ToggleMenuItem:ToggleThumbnailsCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 PreferencesWindow/Button:ResetToDefaultsCommand	C	no automation of any kind (#1066: dialog now visible to the gate; this control is a declared gap)
 PreferencesWindow/Button:SaveCommand	C	no automation of any kind (#1066: dialog now visible to the gate; this control is a declared gap)
-SaveRedactedVersionDialog/Button:Browse...	C	no automation of any kind (#1066: dialog now visible to the gate; this control is a declared gap)
-SaveRedactedVersionDialog/Button:SaveCommand	C	no automation of any kind (#1066: dialog now visible to the gate; this control is a declared gap)

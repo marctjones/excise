@@ -1,6 +1,8 @@
 using Avalonia;
 using AwesomeAssertions;
+using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
+using Excise.Core.Document;
 using Xunit;
 
 namespace Excise.App.Tests.Unit;
@@ -50,9 +52,8 @@ public class RedactionWorkflowManagerTests
         // Assert
         var pending = _manager.PendingRedactions.First();
         pending.PageNumber.Should().Be(2);
-        pending.Area.Should().Be(area);
+        pending.PageArea.Should().Be(PdfPageRect.ViewerDips(2, area.X, area.Y, area.Width, area.Height, 120));
         pending.PreviewText.Should().Be(previewText);
-        pending.RenderDpi.Should().Be(120);
         pending.Id.Should().NotBe(Guid.Empty);
         pending.MarkedTime.Should().BeCloseTo(DateTime.Now, TimeSpan.FromSeconds(1));
     }
@@ -64,7 +65,7 @@ public class RedactionWorkflowManagerTests
 
         _manager.MarkArea(2, area, "Secret data", renderDpi: 120);
 
-        _manager.PendingRedactions.Single().RenderDpi.Should().Be(120);
+        _manager.PendingRedactions.Single().PageArea.Dpi.Should().BeApproximately(120, 1e-6);
         _manager.PendingRedactions.Single().PageArea.Space.Should().Be(Excise.Core.Document.PdfCoordinateSpace.ViewerDips);
     }
 
@@ -425,7 +426,7 @@ public class RedactionWorkflowManagerTests
 
         _manager.PendingCount.Should().Be(1);
         var pending = _manager.PendingRedactions.Single();
-        pending.Area.Should().Be(new Rect(x, y, width, height));
+        pending.PageArea.Should().Be(PdfPageRect.ViewerDips(1, x, y, width, height, 120));
         pending.PreviewText.Should().Be(previewText);
     }
 

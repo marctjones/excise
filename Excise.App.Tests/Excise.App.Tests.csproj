@@ -14,25 +14,7 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-
-    <!-- Mirror Excise.App.csproj's EnableScripting default (#341/#342):
-         Roslyn scripting is compiled out of Release builds, so the tests
-         that exercise ScriptingService/ScriptExecutionResult must be
-         excluded from Release too — otherwise `dotnet build excise.sln -c
-         Release` (the release smoke's build gate under - -release-tests)
-         fails on types the referenced Release Excise.App assembly doesn't
-         contain. This was a latent gap: T2 as defined by #646 was never
-         actually green in Release config, at v2.28.0 or since. -->
-    <EnableScripting Condition="'$(EnableScripting)' == '' and '$(Configuration)' == 'Release'">false</EnableScripting>
-    <EnableScripting Condition="'$(EnableScripting)' == ''">true</EnableScripting>
-    <DefineConstants Condition="'$(EnableScripting)' == 'true'">$(DefineConstants);EXCISE_SCRIPTING</DefineConstants>
   </PropertyGroup>
-
-  <ItemGroup Condition="'$(EnableScripting)' != 'true'">
-    <Compile Remove="UI\AutomationScriptTests.cs" />
-    <Compile Remove="UI\ScriptedGuiTests.cs" />
-    <Compile Remove="Unit\ScriptingServiceTests.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <!-- Testing Framework -->
@@ -65,6 +47,9 @@
     <!-- Avalonia Headless Testing (synced with main app) -->
     <PackageReference Include="Avalonia.Headless" Version="12.1.2" />
     <PackageReference Include="Avalonia.Headless.XUnit" Version="12.1.2" />
+
+    <!-- Roslyn scripting drives the view-model from .csx scripts (Utilities/ScriptingService.cs). -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.3.0" />
   </ItemGroup>
 
   <ItemGroup>

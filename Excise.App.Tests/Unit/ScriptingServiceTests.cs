@@ -1,5 +1,5 @@
 using AwesomeAssertions;
-using Excise.App.Services;
+using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Xunit;
 

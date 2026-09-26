@@ -198,8 +198,6 @@ internal static unsafe class MacPdfKitInterop
             NativeLibrary.TryGetExport(lib, name, out address) && address != 0;
     }
 
-    internal static bool IsMainThread => TryResolveApi() && s_pthreadMainNp() != 0;
-
     internal static nint Class(string name) => Utf8Call(name, s_getClass);
 
     internal static nint Selector(string name) => Utf8Call(name, s_registerName);

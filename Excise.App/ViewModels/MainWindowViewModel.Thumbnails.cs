@@ -34,12 +34,6 @@ public partial class MainWindowViewModel
         set => _thumbnailSession.PrewarmIdleDelay = value;
     }
 
-    /// <summary>
-    /// Something is using this document, so the pre-warm's quiet period starts
-    /// again (#1565).
-    /// </summary>
-    internal void NotifyThumbnailActivity() => _thumbnailSession.NotifyActivity();
-
     /// <summary>Background thumbnail renders this document has cost (#1565).</summary>
     internal int ThumbnailRenderCountForTests => _thumbnailSession.ThumbnailRenderCountForTests;
 

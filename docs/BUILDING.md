@@ -18,11 +18,6 @@ dotnet publish Excise.App -c Release -r osx-arm64  --self-contained true -p:Publ
 
 Published binaries land in `bin/Release/net10.0/<runtime>/publish/`.
 
-Release builds exclude the Roslyn scripting engine by default to keep shipped
-packages lean and AOT/trim-friendlier. To produce a developer build with the
-GUI scripting service included, add `-p:EnableScripting=true` to the publish
-command.
-
 Repo-local `tessdata/*.traineddata` files are also excluded from app packages by
 default; excise uses the system `tesseract` installation when differential OCR is
 requested. To bundle local language data for an offline/developer package, add

@@ -125,7 +125,7 @@ jobs:
           ARGS=(Excise.App/Excise.App.csproj -c Release -r "$RID" --self-contained true -p:PublishSingleFile=false -o publish)
           if [ "$SHAPE" = aot ]; then
             # The same flags scripts/build-macos-app.sh passes for its AOT lane.
-            ARGS+=(-p:PublishAot=true -p:PublishReadyToRun=false -p:EnableScripting=false -p:IncludeTessdataInApp=false)
+            ARGS+=(-p:PublishAot=true -p:PublishReadyToRun=false -p:IncludeTessdataInApp=false)
           fi
           dotnet publish "${ARGS[@]}"
           {

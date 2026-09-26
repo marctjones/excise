@@ -82,22 +82,6 @@ public class PdfDocumentService
     /// </summary>
     public string PdfVersion => _currentDocument?.Version ?? string.Empty;
 
-    /// <summary>Width of page <paramref name="pageIndex"/> in points. Falls back to Letter.</summary>
-    public double GetPageWidth(int pageIndex)
-    {
-        if (_currentDocument == null || pageIndex < 0 || pageIndex >= PageCount)
-            return 612;
-        return _currentDocument.GetPage(pageIndex + 1).Width;
-    }
-
-    /// <summary>Height of page <paramref name="pageIndex"/> in points. Falls back to Letter.</summary>
-    public double GetPageHeight(int pageIndex)
-    {
-        if (_currentDocument == null || pageIndex < 0 || pageIndex >= PageCount)
-            return 792;
-        return _currentDocument.GetPage(pageIndex + 1).Height;
-    }
-
     public PdfDocumentService(ILogger<PdfDocumentService> logger)
     {
         _logger = logger;
@@ -339,30 +323,6 @@ public class PdfDocumentService
         return newPositions;
     }
 
-    /// <summary>
-    /// Append pages from another PDF file to the end of the current
-    /// document. If <paramref name="pageIndices"/> is null, all pages
-    /// from the source are appended.
-    /// </summary>
-    public void AddPagesFromPdf(string sourcePdfPath, IEnumerable<int>? pageIndices = null)
-    {
-        if (_currentDocument == null)
-            throw new InvalidOperationException("No document loaded");
-
-        // Page cloning copies every stream's bytes at Add time, so the source
-        // need not outlive this method (#918).
-        using var sourceDocument = PdfDocument.Open(sourcePdfPath);
-        var indices = pageIndices?.ToList() ?? Enumerable.Range(0, sourceDocument.PageCount).ToList();
-
-        foreach (var index in indices)
-        {
-            if (index < 0 || index >= sourceDocument.PageCount) continue;
-            _currentDocument.Pages.Add(sourceDocument.GetPage(index + 1));
-        }
-
-        _logger.LogInformation("Added {Count} page(s); total now: {Total}", indices.Count, PageCount);
-    }
-
     /// <summary>Insert pages from another PDF at a specific 0-based position.</summary>
     public void InsertPagesFromPdf(string sourcePdfPath, int insertAtIndex, IEnumerable<int>? pageIndices = null)
     {
@@ -499,17 +459,6 @@ public class PdfDocumentService
 
     /// <summary>Get the current document for advanced operations. Null when unloaded.</summary>
     public PdfDocument? GetCurrentDocument() => _currentDocument;
-
-    /// <summary>
-    /// Serialize the current document to a fresh <see cref="MemoryStream"/>
-    /// for in-memory rendering.
-    /// </summary>
-    public MemoryStream? GetCurrentDocumentAsStream()
-    {
-        if (_currentDocument == null) return null;
-        var ms = new MemoryStream(_currentDocument.SaveToBytes()) { Position = 0 };
-        return ms;
-    }
 
     /// <summary>
     /// Rotate a page by the given number of degrees (added to the

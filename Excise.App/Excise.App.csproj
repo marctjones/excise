@@ -27,22 +27,7 @@
          full and t2), so its JSON contexts are load-bearing in a shipped artifact - the
          analyzer moves the failure from a silent empty object to a compile-time warning. -->
     <IsAotCompatible>true</IsAotCompatible>
-
-  </PropertyGroup>
-
-  <!-- Roslyn scripting is a developer/test automation surface, not required
-       for normal viewing/editing. Keep it on for Debug and tests, but exclude
-       it from Release builds by default so shipped binaries do not carry the
-       runtime C# compiler. Builders can opt in with -p:EnableScripting=true.
-       Tracked in #341 / #342. -->
-  <PropertyGroup>
-    <!-- Roslyn scripting embeds a runtime C# compiler that NativeAOT cannot
-         compile — force it off for any AOT publish regardless of configuration. -->
-    <EnableScripting Condition="'$(EnableScripting)' == '' and '$(PublishAot)' == 'true'">false</EnableScripting>
-    <EnableScripting Condition="'$(EnableScripting)' == '' and '$(Configuration)' == 'Release'">false</EnableScripting>
-    <EnableScripting Condition="'$(EnableScripting)' == ''">true</EnableScripting>
     <IncludeTessdataInApp Condition="'$(IncludeTessdataInApp)' == ''">false</IncludeTessdataInApp>
-    <DefineConstants Condition="'$(EnableScripting)' == 'true'">$(DefineConstants);EXCISE_SCRIPTING</DefineConstants>
   </PropertyGroup>
 
   <!-- Release startup/responsiveness tuning (#339). These only take effect for
@@ -211,14 +196,6 @@
          (< 0.92.0). 0.93.0 dropped the Tmds.DBus.Protocol.Connection
          type that Avalonia.X11 reflects on, so over-pinning crashes
          startup with a TypeLoadException. -->
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(EnableScripting)' == 'true'">
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.3.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(EnableScripting)' != 'true'">
-    <Compile Remove="Services\ScriptingService.cs" />
   </ItemGroup>
 
   <ItemGroup>

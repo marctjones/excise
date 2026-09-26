@@ -197,25 +197,6 @@ public class AccessibilityRegressionTests
         cancelPreferences.Should().NotBeNull();
         cancelPreferences!.IsCancel.Should().BeTrue();
 
-        var redactedDialog = new SaveRedactedVersionDialog
-        {
-            DataContext = new SaveRedactedVersionDialogViewModel("/tmp/document_REDACTED.pdf", 2)
-        };
-        redactedDialog.Show();
-        redactedDialog.UpdateLayout();
-
-        var savePathTextBox = redactedDialog.FindControl<TextBox>("SavePathTextBox");
-        savePathTextBox.Should().NotBeNull();
-        AutomationProperties.GetName(savePathTextBox!).Should().Be("Redacted PDF Save Path");
-
-        var saveRedacted = FindButtonByName(redactedDialog, "Save Redacted Version");
-        saveRedacted.Should().NotBeNull();
-        saveRedacted!.IsDefault.Should().BeTrue();
-
-        var cancelRedacted = FindButtonByName(redactedDialog, "Cancel Save Redacted Version");
-        cancelRedacted.Should().NotBeNull();
-        cancelRedacted!.IsCancel.Should().BeTrue();
-
         var about = new AboutWindow();
         about.Show();
         about.UpdateLayout();
