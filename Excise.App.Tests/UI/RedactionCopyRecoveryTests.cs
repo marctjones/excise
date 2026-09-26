@@ -156,7 +156,7 @@ public class RedactionCopyRecoveryTests
     private static void RedactAndSave(string sourcePath, string outPath)
     {
         using var doc = PdfDocument.Open(File.ReadAllBytes(sourcePath));
-        var report = doc.RedactText(Secret);
+        var report = doc.RedactText(Secret, RedactionOptions.Default);
         report.MatchesLocated.Should().BeGreaterThan(0, "the redaction engine must locate and remove the term");
         doc.Save(outPath);
     }

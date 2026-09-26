@@ -124,7 +124,7 @@ public class ContentStreamReleaseTests
         page.GetContentStreamBytes();
         page.ReleaseDecodedContentStreams().Should().BePositive("precondition");
 
-        page.RedactArea(new PdfRectangle(15, 190, 200, 220));
+        page.RedactArea(new PdfRectangle(15, 190, 200, 220), RedactionOptions.Default with { DrawBox = false });
 
         page.ReleaseDecodedContentStreams().Should().Be(0, "the redaction wrote the content; it must never be released and reverted");
         var saved = doc.SaveToBytes();

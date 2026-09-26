@@ -189,7 +189,7 @@ public class VerticalWritingMetricsTests
             File.WriteAllBytes(input, pdf);
             using (var doc = PdfDocument.Open(input))
             {
-                doc.RedactText("SECRET").VerifiedRemovals.Should().Be(1,
+                doc.RedactText("SECRET", RedactionOptions.Default).VerifiedRemovals.Should().Be(1,
                     "glyph-level removal must match exactly one occurrence in the vertical run");
                 doc.Save(output);
             }

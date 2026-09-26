@@ -56,7 +56,7 @@ public class ButtonCaptionRedactionReportingTests
                 // FindTextMatches on excise's own extraction is not the
                 // oracle here (that would be self-referential); it only
                 // establishes what this test is measuring.
-                doc.RedactText("toggled");
+                doc.RedactText("toggled", RedactionOptions.Default);
                 doc.Save(output);
             }
 

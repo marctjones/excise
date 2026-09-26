@@ -60,7 +60,7 @@ public class RedactTextCarrierScopeTests
         try
         {
             using var doc = PdfDocument.Open(path);
-            doc.RedactText(Secret);
+            doc.RedactText(Secret, RedactionOptions.Default);
             var bytes = SaveToBytes(doc);
             var combined = SavedPdfLeakScanner.AllCarriersText(bytes);
 
@@ -88,7 +88,7 @@ public class RedactTextCarrierScopeTests
         try
         {
             using var doc = PdfDocument.Open(path);
-            doc.RedactText(Secret, scrubDocumentCarriers: false);
+            doc.RedactText(Secret, RedactionOptions.Default with { ScrubDocumentCarriers = false });
             var saved = SaveToString(doc);
 
             saved.Should().NotContain("SECRETNAME appears here",
@@ -117,7 +117,7 @@ public class RedactTextCarrierScopeTests
         try
         {
             using var doc = PdfDocument.Open(path);
-            doc.RedactText("SE");
+            doc.RedactText("SE", RedactionOptions.Default);
             var saved = SaveToString(doc);
 
             // #1586 CHANGED HALF OF THIS. The sub-3-character floor is still
@@ -159,7 +159,7 @@ public class RedactTextCarrierScopeTests
         try
         {
             using var doc = PdfDocument.Open(path);
-            doc.RedactText(Secret);
+            doc.RedactText(Secret, RedactionOptions.Default);
             PdfDocumentSanitizer.ScrubTerms(doc, new[] { Secret });
             var bytes = SaveToBytes(doc);
 
@@ -215,7 +215,7 @@ public class RedactTextCarrierScopeTests
         try
         {
             using var doc = PdfDocument.Open(path);
-            doc.RedactText(Secret.ToLowerInvariant());   // fixture stores it upper-case
+            doc.RedactText(Secret.ToLowerInvariant(), RedactionOptions.Default);   // fixture stores it upper-case
             var bytes = SaveToBytes(doc);
             var combined = SavedPdfLeakScanner.AllCarriersText(bytes);
 

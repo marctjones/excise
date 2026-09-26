@@ -70,7 +70,7 @@ public class WidthGapLeakMeasurementTests
             // the black rectangle does not perturb the surviving glyph positions.
             using (var doc = PdfDocument.Open(pdf))
             {
-                var report = doc.RedactText(Term, drawBlackRect: false);
+                var report = doc.RedactText(Term, RedactionOptions.Default with { DrawBox = false });
                 report.VerifiedRemovals.Should().BeGreaterThan(0, "the term must actually be removed");
                 using var fs = File.Create(afterPath);
                 doc.Save(fs);
@@ -146,7 +146,7 @@ public class WidthGapLeakMeasurementTests
             // measurement sees the glyph gap, not the box (#1140).
             using (var doc = PdfDocument.Open(pdf))
             {
-                doc.RedactText(Term, drawBlackRect: false, closeWidth: true);
+                doc.RedactText(Term, RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.CloseGap });
                 using var fs = File.Create(afterPath);
                 doc.Save(fs);
             }

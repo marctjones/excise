@@ -42,7 +42,7 @@ public class PdfPageRedactionEndToEndTests
             wLetters.Max(l => l.GlyphRectangle.Right),
             wLetters.Max(l => l.GlyphRectangle.Top));
 
-        page.RedactArea(worldBox);
+        page.RedactArea(worldBox, RedactionOptions.Default with { DrawBox = false });
 
         // Save the mutated document and re-open. This forces the content
         // stream to be re-serialized and re-parsed — catches anything that
@@ -74,7 +74,7 @@ public class PdfPageRedactionEndToEndTests
         var originalContent = page.GetContentStreamBytes();
 
         // Far from where the text actually is.
-        page.RedactArea(new PdfRectangle(500, 50, 600, 100));
+        page.RedactArea(new PdfRectangle(500, 50, 600, 100), RedactionOptions.Default with { DrawBox = false });
 
         var after = page.GetContentStreamBytes();
         // "No-op" doesn't have to mean byte-identical — the parser/serializer
@@ -99,7 +99,7 @@ public class PdfPageRedactionEndToEndTests
         var appleBox = BoundingBoxOf(apple);
         var cherryBox = BoundingBoxOf(cherry);
 
-        page.RedactAreas(new[] { appleBox, cherryBox });
+        page.RedactAreas(new[] { appleBox, cherryBox }, RedactionOptions.Default with { DrawBox = false });
 
         var rawContent = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         rawContent.Should().NotContain("APPLE");

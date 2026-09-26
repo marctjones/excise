@@ -30,7 +30,7 @@ public class ImageRedactionTests
         var before = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         before.Should().Contain("/Im0 Do", "sanity: image is invoked in content stream");
 
-        page.RedactArea(new PdfRectangle(50, 550, 250, 750));
+        page.RedactArea(new PdfRectangle(50, 550, 250, 750), RedactionOptions.Default with { DrawBox = false });
 
         var after = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         after.Should().NotContain("/Im0 Do",
@@ -47,7 +47,7 @@ public class ImageRedactionTests
         using var doc = PdfDocument.Open(pdfBytes);
         var page = doc.GetPage(1);
 
-        page.RedactArea(new PdfRectangle(0, 0, 100, 100));
+        page.RedactArea(new PdfRectangle(0, 0, 100, 100), RedactionOptions.Default with { DrawBox = false });
 
         var after = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         after.Should().Contain("/Im0 Do", "image must survive when it doesn't overlap redaction");
@@ -64,7 +64,7 @@ public class ImageRedactionTests
         using var doc = PdfDocument.Open(pdfBytes);
         var page = doc.GetPage(1);
 
-        page.RedactArea(new PdfRectangle(90, 590, 110, 610));  // 10pt overlap
+        page.RedactArea(new PdfRectangle(90, 590, 110, 610), RedactionOptions.Default with { DrawBox = false });  // 10pt overlap
 
         var after = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         after.Should().NotContain("/Im0 Do");
@@ -81,9 +81,7 @@ public class ImageRedactionTests
         using var doc = PdfDocument.Open(pdfBytes);
         var page = doc.GetPage(1);
 
-        page.RedactArea(
-            new PdfRectangle(90, 590, 150, 650),
-            GlyphRemovalStrategy.FullyContained);
+        page.RedactArea(new PdfRectangle(90, 590, 150, 650), RedactionOptions.Default with { DrawBox = false, Strategy = GlyphRemovalStrategy.FullyContained });
 
         var after = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         after.Should().Contain("/Im0 Do",

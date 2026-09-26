@@ -63,7 +63,7 @@ public sealed class ToolResistanceComparisonTests
             try
             {
                 using var doc = PdfDocument.Open(src);
-                doc.RedactText(term);
+                doc.RedactText(term, RedactionOptions.Default);
                 doc.Save(dst);
                 return true;
             }

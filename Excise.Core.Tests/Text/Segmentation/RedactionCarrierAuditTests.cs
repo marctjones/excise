@@ -38,7 +38,7 @@ public class RedactionCarrierAuditTests
         try
         {
             using var doc = PdfDocument.Open(path);
-            doc.GetPage(1).RedactArea(new PdfRectangle(40, 675, 560, 750));
+            doc.GetPage(1).RedactArea(new PdfRectangle(40, 675, 560, 750), RedactionOptions.Default with { DrawBox = false });
 
             var audit = RedactionCarrierAudit.Inspect(doc);
 

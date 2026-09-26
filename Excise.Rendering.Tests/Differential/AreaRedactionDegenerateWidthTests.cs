@@ -76,7 +76,7 @@ public class AreaRedactionDegenerateWidthTests : IDisposable
         area.Bottom.Should().BeGreaterThan(Baseline + 4,
             "the guard only means something if the area's bottom is clear of the baseline corner");
 
-        page.RedactArea(area, GlyphRemovalStrategy.AnyOverlap);
+        page.RedactArea(area, RedactionOptions.Default with { DrawBox = false });
         var afterPath = WriteTemp(pdf.SaveToBytes());
 
         var extracted = MutoolTextExtractor.ExtractPage(afterPath, 1);
@@ -106,7 +106,7 @@ public class AreaRedactionDegenerateWidthTests : IDisposable
             "fixture sanity — the secret must be inked before redaction");
 
         double areaBottom = Baseline + EffSize * 0.30;
-        page.RedactArea(new PdfRectangle(60, areaBottom, 200, CapTop + 3), GlyphRemovalStrategy.AnyOverlap);
+        page.RedactArea(new PdfRectangle(60, areaBottom, 200, CapTop + 3), RedactionOptions.Default with { DrawBox = false });
         var afterPath = WriteTemp(pdf.SaveToBytes());
 
         using var after = GhostscriptReferenceRenderer.RenderPage(afterPath, 1, dpi: 150);

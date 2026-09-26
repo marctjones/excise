@@ -52,7 +52,7 @@ public class RotatedPageRedactionTests
             .ToPdfRectangle()
             .Normalize();
 
-        page.RedactArea(contentRect, GlyphRemovalStrategy.AnyOverlap);
+        page.RedactArea(contentRect, RedactionOptions.Default with { DrawBox = false });
 
         var after = page.Text;
         after.Should().NotContain(Secret,
@@ -126,7 +126,7 @@ public class RotatedPageRedactionTests
 
         var visualRect = VisualRectOf(page, Secret);
         var contentRect = PdfCoordinateMapper.ToContentPoints(page, visualRect).ToPdfRectangle().Normalize();
-        page.RedactArea(contentRect, GlyphRemovalStrategy.AnyOverlap);
+        page.RedactArea(contentRect, RedactionOptions.Default with { DrawBox = false });
 
         page.Text.Should().NotContain(Secret, "inherited /Rotate must be applied to the redaction mapping");
         page.Text.Should().Contain(Keep);

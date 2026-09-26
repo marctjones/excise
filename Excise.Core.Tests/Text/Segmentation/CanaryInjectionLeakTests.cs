@@ -105,7 +105,7 @@ public class CanaryInjectionLeakTests
                 before.GetPage(1).Text.Replace(" ", "").Should().Contain(Canary,
                     "guard: the extractor must reassemble the split canary before redaction");
             using var doc0 = PdfDocument.Open(pdf);
-            doc0.RedactText(Canary);
+            doc0.RedactText(Canary, RedactionOptions.Default);
             doc0.GetPage(1).Text.Replace(" ", "").Should().NotContain(Canary,
                 "the split canary must be gone from the extracted text after redaction");
             return;
@@ -120,7 +120,7 @@ public class CanaryInjectionLeakTests
         byte[] saved;
         using (var doc = PdfDocument.Open(pdf))
         {
-            doc.RedactText(Canary);
+            doc.RedactText(Canary, RedactionOptions.Default);
             using var ms = new MemoryStream();
             doc.Save(ms);
             saved = ms.ToArray();
@@ -178,7 +178,7 @@ public class CanaryInjectionLeakTests
         byte[] saved;
         using (var doc = PdfDocument.Open(pdf))
         {
-            doc.RedactText(Canary);
+            doc.RedactText(Canary, RedactionOptions.Default);
             using var ms = new MemoryStream();
             doc.Save(ms);
             saved = ms.ToArray();
@@ -261,7 +261,7 @@ public class CanaryInjectionLeakTests
         byte[] saved;
         using (var doc = PdfDocument.Open(input))
         {
-            doc.RedactText(Canary);
+            doc.RedactText(Canary, RedactionOptions.Default);
             using var stream = new MemoryStream();
             doc.Save(stream);
             saved = stream.ToArray();
@@ -339,7 +339,7 @@ public class CanaryInjectionLeakTests
         byte[] saved;
         using (var doc = PdfDocument.Open(pdf))
         {
-            doc.RedactText(Canary);
+            doc.RedactText(Canary, RedactionOptions.Default);
             using var ms = new MemoryStream();
             doc.Save(ms);
             saved = ms.ToArray();
@@ -379,7 +379,7 @@ public class CanaryInjectionLeakTests
         byte[] saved;
         using (var doc = PdfDocument.Open(pdf))
         {
-            doc.RedactText(Canary);
+            doc.RedactText(Canary, RedactionOptions.Default);
             using var ms = new MemoryStream();
             doc.Save(ms);
             saved = ms.ToArray();

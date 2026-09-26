@@ -96,7 +96,7 @@ public class IndirectResourceResolutionTests
                 $"/Length {Encoding.Latin1.GetByteCount(form)} >>\nstream\n{form}endstream\nendobj\n");
 
         using var doc = PdfDocument.Open(pdf);
-        doc.RedactText(Secret);
+        doc.RedactText(Secret, RedactionOptions.Default);
         using var ms = new MemoryStream();
         doc.Save(ms);
 

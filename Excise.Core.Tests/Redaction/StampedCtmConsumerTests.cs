@@ -135,8 +135,8 @@ public class StampedCtmConsumerTests
         SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "INLSECRET").Should().NotBeEmpty("fixture sanity");
 
         var page = doc.GetPage(1);
-        page.RedactArea(new PdfRectangle(15, 15, 125, 125));
-        page.RedactArea(new PdfRectangle(295, 295, 345, 345));
+        page.RedactArea(new PdfRectangle(15, 15, 125, 125), RedactionOptions.Default with { DrawBox = false });
+        page.RedactArea(new PdfRectangle(295, 295, 345, 345), RedactionOptions.Default with { DrawBox = false });
         var saved = doc.SaveToBytes();
 
         SavedPdfLeakScanner.FindTerm(saved, "IMGSECRET").Should().BeEmpty(
@@ -149,7 +149,7 @@ public class StampedCtmConsumerTests
     public void RedactArea_WhereAWrongCtmWouldPutTheImages_LeavesTheirBytes()
     {
         using var doc = PdfDocument.Open(Fixture());
-        doc.GetPage(1).RedactArea(NearOrigin);
+        doc.GetPage(1).RedactArea(NearOrigin, RedactionOptions.Default with { DrawBox = false });
         var saved = doc.SaveToBytes();
 
         SavedPdfLeakScanner.FindTerm(saved, "IMGSECRET").Should().NotBeEmpty();

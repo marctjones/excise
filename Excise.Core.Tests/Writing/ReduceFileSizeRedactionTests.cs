@@ -42,7 +42,7 @@ public sealed class ReduceFileSizeRedactionTests : IDisposable
         using (var doc = PdfDocument.Open(UncompressedTextPageWithThumbnail()))
         {
             doc.SetTitle($"Statement of {Term}");
-            doc.RedactText(Term, drawBlackRect: true).VerifiedRemovals.Should().Be(12);
+            doc.RedactText(Term, RedactionOptions.Default with { DrawBox = true }).VerifiedRemovals.Should().Be(12);
             redacted = doc.SaveToBytes();
         }
 

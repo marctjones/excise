@@ -57,7 +57,7 @@ public class HyphenWrappedRedactionReportingTests
             int pageCount;
             using (var doc = PdfDocument.Open(File.ReadAllBytes(source!)))
             {
-                report = doc.RedactText("Anderson");
+                report = doc.RedactText("Anderson", RedactionOptions.Default);
                 pageCount = doc.PageCount;
                 doc.Save(output);
             }

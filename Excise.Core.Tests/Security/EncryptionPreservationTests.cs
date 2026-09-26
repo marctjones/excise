@@ -171,7 +171,7 @@ public sealed class EncryptionPreservationTests
             "the reproduction needs a cross-reference STREAM (the exempt object), not a classic table");
 
         using var doc = PdfDocument.Open(encrypted, "");
-        doc.RedactText("REDACTME");
+        doc.RedactText("REDACTME", RedactionOptions.Default);
 
         // #643: an encrypted source re-encrypts like the source. This Save — the
         // GetAllObjects walk inside it — is exactly where #1048 threw.
@@ -203,7 +203,7 @@ public sealed class EncryptionPreservationTests
         doc.GetPage(1).Text.Should().Contain(secret,
             "the per-stream Identity override must leave the content stream readable");
 
-        doc.RedactText(secret, drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+        doc.RedactText(secret, RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
         var saved = doc.SaveToBytes(doc.GetReEncryptionOptions("pw"));
 
         using var reopened = PdfDocument.Open(saved, "pw");

@@ -157,7 +157,7 @@ public sealed class RedactionRoundTripTests
         try
         {
             using var doc = PdfDocument.Open(pdfBytes);
-            matchCount = doc.RedactText(target!, caseSensitive: false).VerifiedRemovals;
+            matchCount = doc.RedactText(target!, RedactionOptions.Default).VerifiedRemovals;
             redactedBytes = doc.SaveToBytes();
         }
         catch (Exception ex)

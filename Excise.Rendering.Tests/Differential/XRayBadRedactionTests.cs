@@ -120,7 +120,7 @@ public class XRayBadRedactionTests
         {
             using (var doc = PdfDocument.Open(source))
             {
-                doc.RedactText(Secret).VerifiedRemovals.Should().Be(1,
+                doc.RedactText(Secret, RedactionOptions.Default).VerifiedRemovals.Should().Be(1,
                     "guard: the fixture must actually be redacted, or the clean verdict below is vacuous");
                 doc.Save(output);
             }

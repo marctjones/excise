@@ -90,7 +90,7 @@ public class EditedStreamCompressionTests
         var plainSaved = plain.SaveToBytes();
 
         using var doc = PdfDocument.Open(source);
-        doc.RedactText(Term, drawBlackRect: true).VerifiedRemovals.Should().Be(12);
+        doc.RedactText(Term, RedactionOptions.Default with { DrawBox = true }).VerifiedRemovals.Should().Be(12);
         var redactedSaved = doc.SaveToBytes();
 
         // Measured 2026-09-17: plain save 1,062 bytes, redacted 1,149 (1.08x) —
@@ -107,7 +107,7 @@ public class EditedStreamCompressionTests
     public void RedactedContentStream_IsSavedFlateEncoded_AndReadsBack()
     {
         using var doc = PdfDocument.Open(CompressedTextPagePdf());
-        doc.RedactText(Term, drawBlackRect: false).VerifiedRemovals.Should().Be(12);
+        doc.RedactText(Term, RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(12);
         var saved = doc.SaveToBytes();
 
         using var reopened = PdfDocument.Open(saved);
@@ -126,7 +126,7 @@ public class EditedStreamCompressionTests
         Assert.SkipWhen(qpdf is null, "qpdf not on PATH");
 
         using var doc = PdfDocument.Open(CompressedTextPagePdf());
-        doc.RedactText(Term).VerifiedRemovals.Should().Be(12);
+        doc.RedactText(Term, RedactionOptions.Default).VerifiedRemovals.Should().Be(12);
         var path = Path.Combine(Path.GetTempPath(), $"excise-1549-{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, doc.SaveToBytes());
         try

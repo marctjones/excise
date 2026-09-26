@@ -32,7 +32,7 @@ public sealed class ScannedOcrRedactionRegressionTests
         HiddenTextDetector.ScanPage(doc.GetPage(1)).Should().ContainSingle(r =>
             r.Text == ocrSecret && r.HiddenBy == "image /Im0");
 
-        doc.RedactText(ocrSecret, drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+        doc.RedactText(ocrSecret, RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.AllCarriersText(saved).Should()
@@ -58,7 +58,7 @@ public sealed class ScannedOcrRedactionRegressionTests
         Encoding.Latin1.GetString(pdf).Should().Contain(rasterMarker);
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(110, 650, 150, 680));
+        doc.GetPage(1).RedactArea(new PdfRectangle(110, 650, 150, 680), RedactionOptions.Default with { DrawBox = false });
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain(rasterMarker,

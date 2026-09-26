@@ -191,7 +191,7 @@ public class LongSessionSoakTests
 
         // Case-insensitive by default, so this matches the fixture's
         // "BIRTH CERTIFICATE" heading.
-        int redacted = doc.RedactText("Certificate").VerifiedRemovals;
+        int redacted = doc.RedactText("Certificate", RedactionOptions.Default).VerifiedRemovals;
 
         using var ms = new MemoryStream();
         doc.Save(ms);

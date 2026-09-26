@@ -221,7 +221,7 @@ public class HostileStructureTests
         await AdversarialInputContract.WithinBudget("outline /Next+/First self-loop", Budget, () =>
         {
             using var doc = PdfDocument.Open(bytes);
-            doc.RedactText("secret");           // walks outline titles (#608)
+            doc.RedactText("secret", RedactionOptions.Default);           // walks outline titles (#608)
             using var ms = new System.IO.MemoryStream();
             doc.Save(ms);
             ms.Length.Should().BeGreaterThan(0);
@@ -236,7 +236,7 @@ public class HostileStructureTests
         await AdversarialInputContract.WithinBudget("struct-tree /K self-loop", Budget, () =>
         {
             using var doc = PdfDocument.Open(bytes);
-            doc.RedactText("secret");           // walks /ActualText, /Alt (#636)
+            doc.RedactText("secret", RedactionOptions.Default);           // walks /ActualText, /Alt (#636)
             using var ms = new System.IO.MemoryStream();
             doc.Save(ms);
             ms.Length.Should().BeGreaterThan(0);

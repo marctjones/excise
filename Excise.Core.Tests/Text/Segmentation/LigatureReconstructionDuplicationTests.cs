@@ -52,7 +52,7 @@ public class LigatureReconstructionDuplicationTests
             "sanity: exactly the multi-character-per-glyph mapping this bug needs " +
             "— a single Letter whose Value is the 2-character \"ft\" — must be present");
 
-        var removed = doc.RedactText("XYZ").VerifiedRemovals;
+        var removed = doc.RedactText("XYZ", RedactionOptions.Default).VerifiedRemovals;
         removed.Should().BeGreaterThan(0, "the neighbouring term must actually be removed");
 
         // excise's own extractor already sees the corruption (#1156 is content-
@@ -73,7 +73,7 @@ public class LigatureReconstructionDuplicationTests
         var pdf = BuildLigatureFixture();
         using var doc = PdfDocument.Open(pdf);
 
-        doc.RedactText("XYZ").VerifiedRemovals.Should().BeGreaterThan(0);
+        doc.RedactText("XYZ", RedactionOptions.Default).VerifiedRemovals.Should().BeGreaterThan(0);
 
         var outPath = Path.Combine(Path.GetTempPath(),
             $"lig-{Guid.NewGuid():N}.pdf");

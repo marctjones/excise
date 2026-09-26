@@ -165,8 +165,7 @@ public class NonPageCarrierRedactionLeakTests
     /// </summary>
     private static void RedactAllText(PdfPage page)
     {
-        page.RedactArea(new PdfRectangle(0, 0, 612, 792), GlyphRemovalStrategy.AnyOverlap,
-            scrubDocumentCarriers: false);
+        page.RedactArea(new PdfRectangle(0, 0, 612, 792), RedactionOptions.Default with { DrawBox = false, ScrubDocumentCarriers = false, KeepAttachments = true });
     }
 
     private static byte[] Save(PdfDocument pdf)

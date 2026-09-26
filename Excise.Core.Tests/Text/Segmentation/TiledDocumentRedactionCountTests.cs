@@ -59,7 +59,7 @@ public class TiledDocumentRedactionCountTests
     private static byte[] RedactAndSave(byte[] pdf, out int verified)
     {
         using var doc = PdfDocument.Open(pdf);
-        verified = doc.RedactText(Secret).VerifiedRemovals;
+        verified = doc.RedactText(Secret, RedactionOptions.Default).VerifiedRemovals;
         using var ms = new MemoryStream();
         doc.Save(ms);
         return ms.ToArray();

@@ -35,7 +35,7 @@ public class GlyphBlankingSpikeTests
         try
         {
             using var doc = PdfDocument.Open(OneLinePdf());
-            doc.RedactText(Secret, drawBlackRect: false);
+            doc.RedactText(Secret, RedactionOptions.Default with { DrawBox = false });
             using var ms = new MemoryStream();
             doc.Save(ms);
             var saved = ms.ToArray();

@@ -62,7 +62,7 @@ public class ScannedRasterRedactionLeakTests : IDisposable
         InkFractionIn(before!, SecretBlock, page.Height).Should().BeGreaterThan(0.5,
             "fixture sanity — the secret must be a solid block of scanned ink before we redact it");
 
-        page.RedactArea(SecretBlock, GlyphRemovalStrategy.AnyOverlap);
+        page.RedactArea(SecretBlock, RedactionOptions.Default with { DrawBox = false });
         var afterPath = SaveTemp(pdf);
 
         using var after = GhostscriptReferenceRenderer.RenderPage(afterPath, 1, dpi: 150);
@@ -90,7 +90,7 @@ public class ScannedRasterRedactionLeakTests : IDisposable
 
         page.Text.Should().Contain("SECRET", "fixture sanity — the invisible text layer is present");
 
-        page.RedactArea(SecretBlock, GlyphRemovalStrategy.AnyOverlap);
+        page.RedactArea(SecretBlock, RedactionOptions.Default with { DrawBox = false });
         var path = SaveTemp(pdf);
 
         // Carrier 1: the invisible text layer.

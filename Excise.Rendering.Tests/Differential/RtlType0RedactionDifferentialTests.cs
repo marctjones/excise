@@ -26,7 +26,7 @@ namespace Excise.Rendering.Tests.Differential;
 ///      BEFORE redaction (anti-vacuity) and cannot recover it AFTER, in either
 ///      order.
 ///   2. Ghostscript as an INDEPENDENT RENDERER — an ink differential over the
-///      word's region. Redaction is driven with drawBlackRect:false, so the
+///      word's region. Redaction is driven with DrawBox = false, so the
 ///      region must come back BLANK (glyphs REMOVED), not black (merely
 ///      covered) — the strictly stronger result.
 ///
@@ -71,7 +71,7 @@ public class RtlType0RedactionDifferentialTests : IDisposable
         RtlOracleText.Recovered(before, Keep).Should().BeTrue("the keep word is present too");
 
         using var doc = PdfDocument.Open(Type0RtlFixture.VisualOrderWithKeep(scalars));
-        var removed = doc.RedactText(word, drawBlackRect: false).VerifiedRemovals;
+        var removed = doc.RedactText(word, RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals;
         removed.Should().BeGreaterThan(0,
             "a logical-order needle must match the visual-order CID run");
 
@@ -108,9 +108,9 @@ public class RtlType0RedactionDifferentialTests : IDisposable
         InkFractionIn(before!, wordBox, page.Height).Should().BeGreaterThan(0.02,
             "fixture sanity — the RTL word must actually be inked before redaction");
 
-        // drawBlackRect:false ⇒ structural removal only. The region must come
+        // DrawBox = false ⇒ structural removal only. The region must come
         // back BLANK, proving the glyphs are GONE, not covered by a box.
-        var removed = doc.RedactText(word, drawBlackRect: false).VerifiedRemovals;
+        var removed = doc.RedactText(word, RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals;
         removed.Should().BeGreaterThan(0);
 
         var afterPath = SaveTemp(doc);

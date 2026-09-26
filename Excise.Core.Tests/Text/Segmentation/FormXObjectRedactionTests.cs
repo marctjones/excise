@@ -38,7 +38,7 @@ public class FormXObjectRedactionTests
         Encoding.Latin1.GetString(pdf).Should().Contain("SECRETFORM");
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716));
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716), RedactionOptions.Default with { DrawBox = false });
         var saved = doc.SaveToBytes();
 
         SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("SECRETFORM",
@@ -67,7 +67,7 @@ public class FormXObjectRedactionTests
                    "BT /F1 12 Tf 100 600 Td (OUTSIDEBAND) Tj ET"));
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 300, 716));
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 300, 716), RedactionOptions.Default with { DrawBox = false });
         // #1549: the rewritten stream is Flate-encoded, so a raw byte scan is
         // blind to it — search through the inflating scanner instead.
         var saved = doc.SaveToBytes();
@@ -95,7 +95,7 @@ public class FormXObjectRedactionTests
                    "BT /F1 12 Tf 100 700 Td (NESTEDSECRET) Tj ET"));
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 280, 716));
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 280, 716), RedactionOptions.Default with { DrawBox = false });
         var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
 
         saved.Should().NotContain("NESTEDSECRET",
@@ -122,7 +122,7 @@ public class FormXObjectRedactionTests
             Stream("", "q /Fm0 Do Q"));
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716));
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716), RedactionOptions.Default with { DrawBox = false });
         var saved = doc.SaveToBytes();
 
         // The shared form is still reachable from page 2, so it must NOT be
@@ -159,7 +159,7 @@ public class FormXObjectRedactionTests
                    "BT /F1 12 Tf 100 600 Td (FORMKEEP) Tj ET"));
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716));
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716), RedactionOptions.Default with { DrawBox = false });
 
         using var re = PdfDocument.Open(doc.SaveToBytes());
         var text = string.Concat(re.GetPage(1).Letters.Select(l => l.Value));
@@ -183,7 +183,7 @@ public class FormXObjectRedactionTests
                    "BT /F1 8 Tf 5 25 Td (CORNERONLY) Tj ET"));
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(400, 700, 560, 740)); // far from the form
+        doc.GetPage(1).RedactArea(new PdfRectangle(400, 700, 560, 740), RedactionOptions.Default with { DrawBox = false }); // far from the form
         var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
 
         saved.Should().Contain("CORNERONLY",
@@ -206,7 +206,7 @@ public class FormXObjectRedactionTests
                    "BT /F1 12 Tf 70 700 Td (MATRIXTEXT) Tj ET")); // +30 x => ~page (100,700)
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 300, 716));
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 300, 716), RedactionOptions.Default with { DrawBox = false });
         var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
 
         saved.Should().NotContain("MATRIXTEXT",
@@ -230,7 +230,7 @@ public class FormXObjectRedactionTests
                    "/BitsPerComponent 8 /ColorSpace /DeviceGray", "\xFF"));
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 280, 716));
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 280, 716), RedactionOptions.Default with { DrawBox = false });
         var saved = SavedPdfLeakScanner.AllCarriersText(doc.SaveToBytes());
 
         saved.Should().NotContain("FORMOVERIMAGE", "the form text is flattened and redacted");
@@ -251,7 +251,7 @@ public class FormXObjectRedactionTests
                    "BT /F1 12 Tf 100 700 Td (INHERITEDRES) Tj ET"));
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 260, 716));
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 260, 716), RedactionOptions.Default with { DrawBox = false });
 
         // The form is reached via the Pages node's /Resources, so it stays
         // reachable (every page under that node inherits it) and is NOT pruned
@@ -282,7 +282,7 @@ public class FormXObjectRedactionTests
             Obj("<< /Type /ExtGState /ca 0.5 >>")); // form's GS0 (different object)
 
         using var doc = PdfDocument.Open(pdf);
-        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 300, 716));
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 300, 716), RedactionOptions.Default with { DrawBox = false });
 
         using var re = PdfDocument.Open(doc.SaveToBytes());
         var page = re.GetPage(1);

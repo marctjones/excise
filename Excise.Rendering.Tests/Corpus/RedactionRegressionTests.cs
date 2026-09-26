@@ -147,7 +147,7 @@ public class RedactionRegressionTests
             using (var doc = PdfDocument.Open(pdfPath))
             {
                 var page1 = doc.GetPage(1);
-                page1.RedactArea(redactionRect);
+                page1.RedactArea(redactionRect, RedactionOptions.Default with { DrawBox = false });
                 doc.Save(tempFile);
             }
 

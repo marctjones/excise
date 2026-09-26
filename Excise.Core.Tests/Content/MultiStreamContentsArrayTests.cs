@@ -255,7 +255,7 @@ public class MultiStreamContentsArrayTests
         using var doc = PdfDocument.Open(BuildMultiStreamPdf(stream0, stream1));
         var page = doc.GetPage(1);
 
-        var report = doc.RedactText("SECRET");
+        var report = doc.RedactText("SECRET", RedactionOptions.Default);
         report.MatchesLocated.Should().BeGreaterThan(0);
 
         var array = doc.Resolve(page.Dictionary["Contents"]) as PdfArray;

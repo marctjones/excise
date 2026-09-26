@@ -88,7 +88,7 @@ public class XfaLayoutRedactionTests : IDisposable
 
         // The widget region: x 162..378, y 90..118.8 from the top of a 792pt
         // page, as a PDF rectangle (bottom-left origin).
-        document.Pages[0].RedactArea(new PdfRectangle(160, 792 - 120, 380, 792 - 88));
+        document.Pages[0].RedactArea(new PdfRectangle(160, 792 - 120, 380, 792 - 88), RedactionOptions.Default with { DrawBox = false });
 
         var path = Save(document);
         AssertNoXfaSurvives(path, File.ReadAllBytes(path));
@@ -102,7 +102,7 @@ public class XfaLayoutRedactionTests : IDisposable
 
         using var document = LaidOutForm($"Jane {Secret}");
 
-        var report = document.RedactText(Secret);
+        var report = document.RedactText(Secret, RedactionOptions.Default);
 
         report.Carriers.Should().Contain(c => c.Carrier.StartsWith("/XFA", StringComparison.Ordinal) && c.Scrubbed);
         var path = Save(document);
@@ -117,7 +117,7 @@ public class XfaLayoutRedactionTests : IDisposable
 
         using var document = LaidOutForm(Secret);
 
-        document.RedactText(Secret, scrubDocumentCarriers: false);
+        document.RedactText(Secret, RedactionOptions.Default with { ScrubDocumentCarriers = false });
 
         var path = Save(document);
         MutoolShow(path, "trailer/Root/AcroForm/XFA").Should().Be("null",
@@ -128,7 +128,7 @@ public class XfaLayoutRedactionTests : IDisposable
     public void ReopeningARedactedForm_DoesNotLayItOutAgain()
     {
         using var document = LaidOutForm(Secret);
-        document.RedactText(Secret);
+        document.RedactText(Secret, RedactionOptions.Default);
         var saved = document.SaveToBytes();
 
         using var reopened = PdfDocument.Open(saved);
@@ -145,7 +145,7 @@ public class XfaLayoutRedactionTests : IDisposable
         using var document = PdfDocument.Open(XfaTestForms.BuildPdf(
             XfaTestForms.PositionedTemplate(), XfaTestForms.Data("<FullName>Plain</FullName>")));
 
-        var report = document.RedactText("Placeholder-term-not-present");
+        var report = document.RedactText("Placeholder-term-not-present", RedactionOptions.Default);
 
         document.DetectXfaForm().Should().Be(PdfXfaFormKind.None);
         report.Carriers.Should().Contain(c => c.Carrier.StartsWith("/XFA (dynamic XFA form", StringComparison.Ordinal));
@@ -179,7 +179,7 @@ public class XfaLayoutRedactionTests : IDisposable
 
         using var document = PdfDocument.Open(input);
         document.DetectXfaForm().Should().Be(PdfXfaFormKind.Static, "fixture sanity");
-        document.Pages[0].RedactArea(new PdfRectangle(90, 590, 410, 640));
+        document.Pages[0].RedactArea(new PdfRectangle(90, 590, 410, 640), RedactionOptions.Default with { DrawBox = false });
 
         var path = Save(document);
         AssertNoXfaSurvives(path, File.ReadAllBytes(path));

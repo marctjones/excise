@@ -35,7 +35,7 @@ public class UserUnitRedactionSafetyTests
             g.Flush();
         }
 
-        var report = doc.RedactText(Secret);
+        var report = doc.RedactText(Secret, RedactionOptions.Default);
         var saved = doc.SaveToBytes();
 
         report.Pages.Sum(p => p.MatchesLocated).Should().Be(1,
@@ -66,7 +66,7 @@ public class UserUnitRedactionSafetyTests
                 g.DrawString($"Before {Secret} After", PdfFont.Helvetica(12), PdfBrush.Black, 100, 700);
                 g.Flush();
             }
-            doc.RedactText(Secret);
+            doc.RedactText(Secret, RedactionOptions.Default);
             return doc.GetPage(1).GetAnnotations()
                 .Where(a => a.Subtype == PdfAnnotationSubtype.Redact
                             || a.RawDictionary.GetNameOrNull("Subtype") == "Square")

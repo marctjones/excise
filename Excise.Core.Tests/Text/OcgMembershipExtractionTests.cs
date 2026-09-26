@@ -160,7 +160,7 @@ public sealed class OcgMembershipExtractionTests
             // The OCMD layer is the last thing on the page, so its span is removed as a hidden
             // optional-content span before the text search runs; this used to read
             // VerifiedRemovals == 1 only because the writer copied the removed tail back.
-            var report = included.RedactText("SECRETA");
+            var report = included.RedactText("SECRETA", RedactionOptions.Default);
             report.Removals.Should().ContainSingle(r =>
                 r.Feature == "hidden optional-content span(s)" && r.Count == 1);
             report.Survived.Should().Be(0);
@@ -173,7 +173,7 @@ public sealed class OcgMembershipExtractionTests
         // Opt-out: caller excludes hidden layers -> no match, text retained.
         using (var excluded = PdfDocument.Open(Fixture()))
         {
-            excluded.RedactText("SECRETA", includeHiddenLayers: false).VerifiedRemovals.Should().Be(0);
+            excluded.RedactText("SECRETA", RedactionOptions.Default with { IncludeHiddenLayers = false }).VerifiedRemovals.Should().Be(0);
             Encoding.ASCII.GetString(excluded.SaveToBytes()).Should().Contain("SECRETA");
         }
     }

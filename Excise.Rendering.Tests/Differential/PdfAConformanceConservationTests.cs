@@ -155,7 +155,7 @@ public class PdfAConformanceConservationTests
         {
             using var doc = PdfDocument.Open(File.ReadAllBytes(src));
             var term = FirstWord(doc);
-            if (term != null) doc.RedactText(term);   // a no-op (no term) must conserve too
+            if (term != null) doc.RedactText(term, RedactionOptions.Default);   // a no-op (no term) must conserve too
             doc.Save(outPath);
         });
 

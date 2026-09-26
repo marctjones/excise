@@ -430,7 +430,7 @@ public class RedactedCopySafetyPolicyTests : IDisposable
         var area = new PdfRectangle(110, 650, 150, 680);
         using var document = PdfDocument.Open(BuildPdfWithImageOnlyXObject(marker));
 
-        document.GetPage(1).RedactArea(area);
+        document.GetPage(1).RedactArea(area, RedactionOptions.Default with { DrawBox = false });
 
         var report = PrepareRedactedCopy(document, new[]
         {

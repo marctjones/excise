@@ -120,7 +120,7 @@ public class EncryptionPreservationInteropTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "rc4-upgraded.pdf");
         using (var doc = PdfDocument.Open(File.ReadAllBytes(fixturePath), password))
         {
-            doc.RedactText(fixtureSecret, drawBlackRect: false).VerifiedRemovals.Should().BeGreaterThan(0,
+            doc.RedactText(fixtureSecret, RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().BeGreaterThan(0,
                 "the fixture's known secret must be found before this test can prove anything");
             doc.Save(outputPath, doc.GetReEncryptionOptions(password));
         }
@@ -201,7 +201,7 @@ public class EncryptionPreservationInteropTests : IDisposable
     {
         var outputPath = Path.Combine(_tempDir, $"out-{Guid.NewGuid():N}.pdf");
         using var doc = PdfDocument.Open(File.ReadAllBytes(sourcePath), password);
-        doc.RedactText(Secret, drawBlackRect: false).VerifiedRemovals.Should().BeGreaterThan(0,
+        doc.RedactText(Secret, RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().BeGreaterThan(0,
             "the secret must be found and removed before this test can prove anything");
         doc.Save(outputPath, doc.GetReEncryptionOptions(password));
         return outputPath;

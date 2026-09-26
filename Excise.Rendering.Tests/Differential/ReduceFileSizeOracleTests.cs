@@ -146,7 +146,7 @@ public sealed class ReduceFileSizeOracleTests : IDisposable
         int pageCount;
         using (var document = PdfDocument.Open(source))
         {
-            document.RedactText(term).VerifiedRemovals.Should().BeGreaterThan(0);
+            document.RedactText(term, RedactionOptions.Default).VerifiedRemovals.Should().BeGreaterThan(0);
             redacted = document.SaveToBytes();
             pageCount = document.PageCount;
         }

@@ -74,7 +74,7 @@ public class EvictionEditSafetyTests
         using var doc = PdfDocument.Open(OneIndirectFlateImageDocument(Samples(3)));
         var page = doc.GetPage(1);
         // The image is drawn at 10..50 x 10..50 (see the content stream).
-        page.RedactArea(new PdfRectangle(10, 10, 50, 50));
+        page.RedactArea(new PdfRectangle(10, 10, 50, 50), RedactionOptions.Default with { DrawBox = false });
 
         using var _ = new SkiaRenderer().RenderPage(page, new RenderOptions { Dpi = 72 });
 

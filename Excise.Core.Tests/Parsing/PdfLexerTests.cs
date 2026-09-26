@@ -8,32 +8,32 @@ namespace Excise.Core.Tests.Parsing;
 public class PdfLexerTests
 {
     [Theory]
-    [InlineData("123", PdfTokenType.Integer, "123")]
-    [InlineData("-45", PdfTokenType.Integer, "-45")]
-    [InlineData("+67", PdfTokenType.Integer, "+67")]
-    [InlineData("0", PdfTokenType.Integer, "0")]
-    public void NextToken_Integer_ReturnsCorrectToken(string input, PdfTokenType expectedType, string expectedValue)
+    [InlineData("123", "Integer", "123")]
+    [InlineData("-45", "Integer", "-45")]
+    [InlineData("+67", "Integer", "+67")]
+    [InlineData("0", "Integer", "0")]
+    public void NextToken_Integer_ReturnsCorrectToken(string input, string expectedType, string expectedValue)
     {
         using var lexer = new PdfLexer(Encoding.ASCII.GetBytes(input));
 
         var token = lexer.NextToken();
 
-        token.Type.Should().Be(expectedType);
+        token.Type.ToString().Should().Be(expectedType);
         token.Value.Should().Be(expectedValue);
     }
 
     [Theory]
-    [InlineData("3.14", PdfTokenType.Real, "3.14")]
-    [InlineData("-0.5", PdfTokenType.Real, "-0.5")]
-    [InlineData(".25", PdfTokenType.Real, ".25")]
-    [InlineData("123.456", PdfTokenType.Real, "123.456")]
-    public void NextToken_Real_ReturnsCorrectToken(string input, PdfTokenType expectedType, string expectedValue)
+    [InlineData("3.14", "Real", "3.14")]
+    [InlineData("-0.5", "Real", "-0.5")]
+    [InlineData(".25", "Real", ".25")]
+    [InlineData("123.456", "Real", "123.456")]
+    public void NextToken_Real_ReturnsCorrectToken(string input, string expectedType, string expectedValue)
     {
         using var lexer = new PdfLexer(Encoding.ASCII.GetBytes(input));
 
         var token = lexer.NextToken();
 
-        token.Type.Should().Be(expectedType);
+        token.Type.ToString().Should().Be(expectedType);
         token.Value.Should().Be(expectedValue);
     }
 
@@ -278,17 +278,17 @@ public class PdfLexerTests
     }
 
     [Theory]
-    [InlineData("1e5", PdfTokenType.Real, "1e5")] // Scientific notation
-    [InlineData("1E-3", PdfTokenType.Real, "1E-3")] // Uppercase E with sign
-    [InlineData("-2.5e+10", PdfTokenType.Real, "-2.5e+10")] // Full notation
-    [InlineData(".5e2", PdfTokenType.Real, ".5e2")] // Starting with decimal
-    public void ReadNumberOrKeyword_ScientificNotation(string input, PdfTokenType expectedType, string expectedValue)
+    [InlineData("1e5", "Real", "1e5")] // Scientific notation
+    [InlineData("1E-3", "Real", "1E-3")] // Uppercase E with sign
+    [InlineData("-2.5e+10", "Real", "-2.5e+10")] // Full notation
+    [InlineData(".5e2", "Real", ".5e2")] // Starting with decimal
+    public void ReadNumberOrKeyword_ScientificNotation(string input, string expectedType, string expectedValue)
     {
         using var lexer = new PdfLexer(Encoding.ASCII.GetBytes(input));
 
         var token = lexer.NextToken();
 
-        token.Type.Should().Be(expectedType);
+        token.Type.ToString().Should().Be(expectedType);
         token.Value.Should().Be(expectedValue);
     }
 

@@ -148,7 +148,7 @@ public class AttachmentRedactionTests
     {
         using var doc = PdfDocument.Open(BuildAllRoutesPdf());
 
-        var report = doc.RedactText("Public");
+        var report = doc.RedactText("Public", RedactionOptions.Default);
         var saved = doc.SaveToBytes();
 
         foreach (var secret in PayloadSecrets.Append(AnnotContentsSecret))
@@ -163,7 +163,7 @@ public class AttachmentRedactionTests
     {
         using var doc = PdfDocument.Open(BuildAllRoutesPdf());
 
-        doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720));
+        doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720), RedactionOptions.Default with { DrawBox = false });
         var report = RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForAreas(
             new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, new PdfRectangle(60, 690, 300, 720))) },
             RedactionOptions.Default));
@@ -182,7 +182,7 @@ public class AttachmentRedactionTests
         // options keep attachments must still be told what went.
         using var doc = PdfDocument.Open(BuildAllRoutesPdf());
 
-        doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720));
+        doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720), RedactionOptions.Default with { DrawBox = false });
         var report = RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForAreas(
             new[] { new RedactedCopySafetyArea(1, PdfPageRect.FromContentPoints(1, new PdfRectangle(60, 690, 300, 720))) },
             RedactionOptions.Default with { KeepAttachments = true }));
@@ -196,7 +196,7 @@ public class AttachmentRedactionTests
     {
         using var doc = PdfDocument.Open(BuildAllRoutesPdf());
 
-        doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720), scrubDocumentCarriers: false);
+        doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720), RedactionOptions.Default with { DrawBox = false, ScrubDocumentCarriers = false, KeepAttachments = true });
 
         SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), DocSecret).Should().NotBeEmpty(
             "the caller opted out of every document-level strip");
@@ -217,9 +217,9 @@ public class AttachmentRedactionTests
         var input = PortfolioPdf();
         using var doc = PdfDocument.Open(input);
 
-        var text = () => doc.RedactText("Public");
+        var text = () => doc.RedactText("Public", RedactionOptions.Default);
         text.Should().Throw<PdfPortfolioRedactionException>().WithMessage("*portfolio*");
-        var area = () => doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720));
+        var area = () => doc.GetPage(1).RedactArea(new PdfRectangle(60, 690, 300, 720), RedactionOptions.Default with { DrawBox = false });
         area.Should().Throw<PdfPortfolioRedactionException>();
         var copy = () => RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForTerms(new[] { "Public" }, RedactionOptions.Default));
         copy.Should().Throw<PdfPortfolioRedactionException>();

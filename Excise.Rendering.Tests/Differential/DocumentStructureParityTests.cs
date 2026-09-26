@@ -302,7 +302,7 @@ public class DocumentStructureParityTests
 
             using (var doc = PdfDocument.Open(pdf))
             {
-                doc.RedactText(canary);
+                doc.RedactText(canary, RedactionOptions.Default);
                 File.WriteAllBytes(after, doc.SaveToBytes());
             }
 

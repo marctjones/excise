@@ -43,7 +43,7 @@ public class RedactionSourceBytePreservationTests
     {
         using var doc = PdfDocument.Open(BuildPdfWithContent(AwkwardContent));
 
-        doc.RedactText("SECRET").MatchesLocated.Should().BeGreaterThan(0);
+        doc.RedactText("SECRET", RedactionOptions.Default).MatchesLocated.Should().BeGreaterThan(0);
 
         var after = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
 
@@ -64,7 +64,7 @@ public class RedactionSourceBytePreservationTests
     public void RedactingAWord_RemovesItFromTheSavedBytes()
     {
         using var doc = PdfDocument.Open(BuildPdfWithContent(AwkwardContent));
-        doc.RedactText("SECRET");
+        doc.RedactText("SECRET", RedactionOptions.Default);
 
         var saved = doc.SaveToBytes();
         SavedPdfLeakScanner.FindTerm(saved, "SECRET").Should().BeEmpty(

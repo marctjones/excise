@@ -539,7 +539,7 @@ public class DecodedImageReleaseTests
             var shared = GetImage(doc);
             shared.DecodedData.Should().Equal(Samples, "precondition: a render decoded the image");
 
-            doc.GetPage(1).RedactArea(new PdfRectangle(15, 15, 30, 30));
+            doc.GetPage(1).RedactArea(new PdfRectangle(15, 15, 30, 30), RedactionOptions.Default with { DrawBox = false });
 
             shared.DecodedData.Should().Equal(Samples,
                 "#1493: the shared original is not edited, so page 2 shows in the viewer what the saved file holds");
@@ -568,8 +568,8 @@ public class DecodedImageReleaseTests
         byte[] saved;
         using (var doc = PdfDocument.Open(SavedSharedFlateImageDocument()))
         {
-            doc.GetPage(1).RedactArea(new PdfRectangle(15, 15, 30, 30));
-            doc.GetPage(2).RedactArea(new PdfRectangle(35, 35, 48, 48));
+            doc.GetPage(1).RedactArea(new PdfRectangle(15, 15, 30, 30), RedactionOptions.Default with { DrawBox = false });
+            doc.GetPage(2).RedactArea(new PdfRectangle(35, 35, 48, 48), RedactionOptions.Default with { DrawBox = false });
             saved = doc.SaveToBytes();
         }
 
@@ -592,7 +592,7 @@ public class DecodedImageReleaseTests
         const string term = "SECRETNAME";
         using var doc = PdfDocument.Open(SavedSharedFlateImageDocument(textOnPage1: term));
 
-        var report = doc.RedactText(term);
+        var report = doc.RedactText(term, RedactionOptions.Default);
 
         report.ImageRegionsRedacted.Should().BeGreaterThan(0, "precondition: the term lies over the image on page 1");
         var row = report.Carriers.Should()
@@ -614,7 +614,7 @@ public class DecodedImageReleaseTests
         const string term = "SECRETNAME";
         using var doc = PdfDocument.Open(SavedSharedFlateImageDocument(textOnPage1: term, textOnPage2: term));
 
-        var report = doc.RedactText(term);
+        var report = doc.RedactText(term, RedactionOptions.Default);
 
         report.ImageRegionsRedacted.Should().BeGreaterThanOrEqualTo(2, "precondition: both pages' images were region-redacted");
         report.Carriers.Should().NotContain(c => c.Carrier.StartsWith("image XObject", StringComparison.Ordinal),
