@@ -228,6 +228,29 @@ internal static class RecoveryFixtureBuilder
     }
 
     /// <summary>
+    /// #1868 — an ordinary, decodable form XObject (object 8) drawing
+    /// <paramref name="token"/>, invoked inside an optional-content span whose
+    /// group (object 7) is OFF by default. With <paramref name="drawnVisiblyToo"/>
+    /// the page also draws it outside the span. <paramref name="formExtra"/> goes
+    /// into the form's dictionary. "VISIBLE" is page text at y 700.
+    /// </summary>
+    internal static byte[] FormInHiddenLayer(string token, bool drawnVisiblyToo = false, string formExtra = "")
+    {
+        var form = Encoding.ASCII.GetBytes($"BT /F1 12 Tf 72 500 Td ({token}) Tj ET");
+        return Build(
+            "BT /F1 12 Tf 72 700 Td (VISIBLE) Tj ET\n/OC /MC0 BDC q /Fx0 Do Q EMC\n"
+                + (drawnVisiblyToo ? "q /Fx0 Do Q\n" : ""),
+            extraObjects: new List<Obj>
+            {
+                new("<< /Type /OCG /Name (Draft) >>"),
+                new("<< /Type /XObject /Subtype /Form /BBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> " +
+                    $"{formExtra} /Length {form.Length} >>", form),
+            },
+            catalogExtra: "/OCProperties << /OCGs [7 0 R] /D << /OFF [7 0 R] >> >>",
+            resourcesExtra: "/Properties << /MC0 7 0 R >> /XObject << /Fx0 8 0 R >>");
+    }
+
+    /// <summary>
     /// #1608 — a page drawing a REPLACEMENT image while the same-size original
     /// stays in the file, referenced by nothing. The shape of an editor that
     /// swaps an image rather than removing it.

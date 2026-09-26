@@ -80,7 +80,8 @@ internal static class RedactionFeatureStripper
     /// is skipped and the row is simply absent, exactly as if the feature were
     /// not there. The exceptions are the form flatten, whose promise is that no
     /// interactive object survives (#1857), and a form XObject the hidden-layer
-    /// pass cannot read (#1866): each is added to <paramref name="refusals"/>.
+    /// pass cannot read (#1866) or cannot prove unused (#1868): each is added
+    /// to <paramref name="refusals"/>.
     /// </remarks>
     internal static IReadOnlyList<RedactedFeatureRemoval> Apply(
         PdfDocument document, RedactionOptions options, ICollection<CarrierResult> refusals)
@@ -148,9 +149,10 @@ internal static class RedactionFeatureStripper
         // either answer on its own.
         if (options.RemoveHiddenLayerContent && options.IncludeHiddenLayers)
         {
-            var (spans, groups) = RemoveHiddenOptionalContent(document, refusals);
+            var (spans, groups, forms) = RemoveHiddenOptionalContent(document, refusals);
             Row("hidden optional-content span(s)", spans,
                 "content in layers that are OFF in the default configuration");
+            Row("form XObject(s) drawn only in hidden optional content", forms);
             Row("hidden optional-content group(s)", groups);
             if (spans + groups > 0)
                 invalidate |= PdfDocumentDerivedStateScope.OptionalContent;
@@ -620,13 +622,17 @@ internal static class RedactionFeatureStripper
     /// <see cref="ContentOperator.EnclosingSpans"/> (#1848). Nothing inside a
     /// hidden span is evaluated, so a nested group is neither counted nor
     /// recorded.</para>
+    /// <para>Every form whose <c>Do</c> is dropped goes into
+    /// <paramref name="droppedForms"/>, with the <c>/XObject</c> its name
+    /// resolved in, for <see cref="PruneFormsOnlyHiddenContentDrew"/> (#1868).</para>
     /// </remarks>
     private static (List<ContentOperator> Kept, int Spans) FilterHiddenSpans(
         PdfDocument document,
         IReadOnlyList<ContentOperator> operators,
         PdfDictionary? properties,
         PdfDictionary? xobjects,
-        HashSet<PdfDictionary> hiddenGroups)
+        HashSet<PdfDictionary> hiddenGroups,
+        Dictionary<int, PdfDictionary> droppedForms)
     {
         var kept = new List<ContentOperator>(operators.Count);
         var hidden = new HashSet<ContentOperator>();
@@ -634,7 +640,11 @@ internal static class RedactionFeatureStripper
 
         foreach (var op in operators)
         {
-            if (op.EnclosingSpans.Any(hidden.Contains)) continue;
+            if (op.EnclosingSpans.Any(hidden.Contains))
+            {
+                RecordDroppedForm(document, xobjects, op, droppedForms);
+                continue;
+            }
 
             if (op.Name == "BDC" && IsHiddenOcSpan(document, properties, op, hiddenGroups))
             {
@@ -645,6 +655,7 @@ internal static class RedactionFeatureStripper
 
             if (op.Name == "Do" && IsHiddenXObject(document, xobjects, op, hiddenGroups))
             {
+                RecordDroppedForm(document, xobjects, op, droppedForms);
                 count++;
                 continue;
             }
@@ -654,12 +665,21 @@ internal static class RedactionFeatureStripper
         return (kept, count);
     }
 
+    private static void RecordDroppedForm(
+        PdfDocument document, PdfDictionary? xobjects, ContentOperator op, Dictionary<int, PdfDictionary> droppedForms)
+    {
+        if (op.Name == "Do" && op.Operands.Count > 0 && op.Operands[0] is PdfName name
+            && xobjects?.GetOptional(name.Value) is PdfReference target
+            && Resolve(document, target) is PdfStream form && form.GetNameOrNull("Subtype") == "Form")
+            droppedForms.TryAdd(target.ObjectNum, xobjects);
+    }
+
     /// <summary>
     /// Recurse into the VISIBLE form XObjects of <paramref name="xobjects"/>
     /// and filter their hidden spans in place. A form whose own <c>/OC</c> is
     /// hidden is skipped — the <c>Do</c> that draws it is already dropped, and
     /// it may be drawn from elsewhere too. A form that cannot be decoded or
-    /// parsed is kept and added to <paramref name="refusals"/> once (#1866).
+    /// parsed is kept and its row put in <paramref name="unreadable"/> (#1866).
     /// </summary>
     /// <remarks>
     /// ⚠️ Rewrites the form's stream, but through the #1093 source-preserving
@@ -671,7 +691,8 @@ internal static class RedactionFeatureStripper
         PdfDocument document,
         PdfDictionary? xobjects,
         HashSet<PdfDictionary> hiddenGroups,
-        ICollection<CarrierResult> refusals,
+        Dictionary<int, CarrierResult> unreadable,
+        Dictionary<int, PdfDictionary> droppedForms,
         int depth)
     {
         if (xobjects == null || depth > 8) return 0;
@@ -689,32 +710,34 @@ internal static class RedactionFeatureStripper
                 as PdfDictionary;
             var properties = Resolve(document, resources?.GetOptional("Properties") ?? PdfNull.Instance)
                 as PdfDictionary;
-            var nested = Resolve(document, resources?.GetOptional("XObject") ?? PdfNull.Instance)
-                as PdfDictionary;
+            // §7.8.3: a form with no /Resources draws from its caller's.
+            var nested = resources == null ? xobjects
+                : Resolve(document, resources.GetOptional("XObject") ?? PdfNull.Instance) as PdfDictionary;
 
-            removed += RemoveHiddenSpansInForms(document, nested, hiddenGroups, refusals, depth + 1);
+            if (resources != null)
+                removed += RemoveHiddenSpansInForms(document, nested, hiddenGroups, unreadable, droppedForms, depth + 1);
 
-            var unreadable = form.IsFiltered && !form.TryEnsureDecoded()
+            var why = form.IsFiltered && !form.TryEnsureDecoded()
                 ? $"its /Filter {string.Join(" ", form.Filters.Select(f => "/" + f))} could not be decoded"
                 : null;
             ContentStream? parsed = null;
             // #1093: source spans, so the operators we KEEP are copied verbatim
             // instead of round-tripping through this class's escaping and number
             // formatting, as the page path does.
-            if (unreadable == null)
+            if (why == null)
                 try { parsed = new ContentStreamParser(form.DecodedData, null) { TrackSourceSpans = true }.Parse(); }
-                catch (Exception ex) when (ex is not OutOfMemoryException) { unreadable = "its content could not be parsed"; }
+                catch (Exception ex) when (ex is not OutOfMemoryException) { why = "its content could not be parsed"; }
             if (parsed == null)
             {
                 // #1866: kept and reported once, never skipped in silence.
-                var row = new CarrierResult($"form XObject {form.ObjectNumber ?? 0} {form.GenerationNumber ?? 0} R",
-                    false, unreadable + ", so the hidden-layer pass could not examine it and left it in place");
-                if (!refusals.Contains(row)) refusals.Add(row);
+                unreadable.TryAdd(form.ObjectNumber ?? 0, new CarrierResult(
+                    $"form XObject {form.ObjectNumber ?? 0} {form.GenerationNumber ?? 0} R",
+                    false, why + ", so the hidden-layer pass could not examine it and left it in place"));
                 continue;
             }
 
             var (kept, count) =
-                FilterHiddenSpans(document, parsed.Operators, properties, nested, hiddenGroups);
+                FilterHiddenSpans(document, parsed.Operators, properties, nested, hiddenGroups, droppedForms);
             if (count == 0) continue;
 
             try
@@ -735,8 +758,8 @@ internal static class RedactionFeatureStripper
     /// <summary>
     /// Drop page content inside <c>/OC</c> marked-content spans whose group is
     /// OFF in the default configuration, XObject invocations whose <c>/OC</c>
-    /// is OFF, and annotations in an OFF layer; then remove the now-unused
-    /// groups from <c>/OCProperties</c>.
+    /// is OFF, and annotations in an OFF layer; then the forms only that
+    /// content drew, and the now-unused groups from <c>/OCProperties</c>.
     /// </summary>
     /// <remarks>
     /// No new parser: this consumes the walker's operators through
@@ -744,15 +767,17 @@ internal static class RedactionFeatureStripper
     /// <c>SetContentStream</c>, the same shape as
     /// <see cref="ObstructionStripper"/> (CLAUDE.md "One walk, many sinks").
     /// </remarks>
-    private static (int Spans, int Groups) RemoveHiddenOptionalContent(
+    private static (int Spans, int Groups, int Forms) RemoveHiddenOptionalContent(
         PdfDocument document, ICollection<CarrierResult> refusals)
     {
         // No /OCProperties means no optional content and nothing to do — and,
         // importantly, no cost on the overwhelming majority of documents.
-        if (document.Catalog.GetOptional("OCProperties") == null) return (0, 0);
+        if (document.Catalog.GetOptional("OCProperties") == null) return (0, 0, 0);
 
         var spans = 0;
         var hiddenGroups = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        var droppedForms = new Dictionary<int, PdfDictionary>();
+        var unreadable = new Dictionary<int, CarrierResult>();
 
         foreach (var page in SafePages(document))
         {
@@ -767,7 +792,7 @@ internal static class RedactionFeatureStripper
             if (content.Operators.Count == 0) continue;
 
             var (kept, pageSpans) =
-                FilterHiddenSpans(document, content.Operators, properties, xobjects, hiddenGroups);
+                FilterHiddenSpans(document, content.Operators, properties, xobjects, hiddenGroups, droppedForms);
 
             // A VISIBLE form XObject can hold hidden /OC spans of its own, and
             // its /Properties live in ITS resources (#1586). Without this, the
@@ -775,7 +800,7 @@ internal static class RedactionFeatureStripper
             // we would have removed the page-level spans and left the ones one
             // level down, which is the kind of partial guarantee this project
             // treats as worse than none.
-            spans += RemoveHiddenSpansInForms(document, xobjects, hiddenGroups, refusals, 0);
+            spans += RemoveHiddenSpansInForms(document, xobjects, hiddenGroups, unreadable, droppedForms, 0);
 
             if (pageSpans == 0) continue;
             spans += pageSpans;
@@ -814,7 +839,140 @@ internal static class RedactionFeatureStripper
         }
         spans += annotationsRemoved;
 
-        return (spans, RemoveHiddenGroupDefinitions(document, hiddenGroups));
+        var freed = PruneFormsOnlyHiddenContentDrew(document, droppedForms, refusals);
+        foreach (var (form, row) in unreadable)
+            if (!freed.Contains(form)) refusals.Add(row);
+
+        return (spans, RemoveHiddenGroupDefinitions(document, hiddenGroups), freed.Count);
+    }
+
+    /// <summary>
+    /// #1868: free the forms whose every <c>Do</c> was in removed hidden
+    /// content, and the forms only they drew; returns the object numbers
+    /// freed. A form some other content stream still draws is kept, and its
+    /// text is the text walk's. A form that cannot be proved undrawn is kept
+    /// and added to <paramref name="refusals"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Decided for the whole document before anything is removed.</b>
+    /// Pages, forms and appearance streams can share one <c>/Resources</c>, so
+    /// a page-local decision (the flattener's) would break another stream's
+    /// visible <c>Do</c>. The content streams are reached by walking the object
+    /// graph: §7.8.2's pages, forms (appearance streams among them), tiling
+    /// patterns and Type 3 glyphs.</para>
+    /// <para><b>Cannot prove, so kept and reported:</b> a form named by the
+    /// <c>/XObject</c> of a stream that could not be read; a form filed under a
+    /// name that a stream with no <c>/Resources</c> invokes (§7.8.3: its names
+    /// resolve in its caller's); and a form something other than an
+    /// <c>/XObject</c> entry still reaches once those entries are gone.</para>
+    /// <para>A form nothing draws still counts as a drawer: see issue #1873.</para>
+    /// </remarks>
+    private static HashSet<int> PruneFormsOnlyHiddenContentDrew(
+        PdfDocument document, Dictionary<int, PdfDictionary> droppedForms, ICollection<CarrierResult> refusals)
+    {
+        if (droppedForms.Count == 0) return new HashSet<int>();
+
+        var reachable = ReachableDictionaries(document);
+        var xobjectDicts = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        foreach (var dict in reachable)
+            if (Resolve(document, dict.GetOptional("XObject") ?? PdfNull.Instance) is PdfDictionary x and not PdfStream)
+                xobjectDicts.Add(x);
+
+        PdfStream? FormAt(int number)
+        {
+            try { return document.GetObject(number) is PdfStream s && s.GetNameOrNull("Subtype") == "Form" ? s : null; }
+            catch (Exception ex) when (ex is not OutOfMemoryException) { return null; }
+        }
+        // Empty when the /Resources has no /XObject; null when there is none (§7.8.3: a caller's apply).
+        PdfDictionary? XObjects(PdfObject? resources) =>
+            Resolve(document, resources ?? PdfNull.Instance) is PdfDictionary r
+                ? Resolve(document, r.GetOptional("XObject") ?? PdfNull.Instance) as PdfDictionary ?? new PdfDictionary()
+                : null;
+        static byte[]? Decoded(PdfStream s) => !s.IsFiltered || s.TryEnsureDecoded() ? s.DecodedData : null;
+        // The objects a content stream's Do operators can name, and whether that
+        // is proved: a stream that cannot be read may name any entry, and one
+        // with no /Resources any entry of any /XObject under a name it invokes.
+        (List<int> Forms, bool Proved) Draws(Func<byte[]?> read, PdfDictionary? xobjects)
+        {
+            List<string>? names;
+            try
+            {
+                var bytes = read();
+                names = bytes == null ? null
+                    : bytes.AsSpan().IndexOf("Do"u8) < 0 ? new List<string>()
+                    : new ContentStreamParser(bytes) { ComputeOperatorMetadata = false }.Parse().Operators
+                        .Where(op => op.Name == "Do").Select(op => op.GetName(0)).OfType<string>().ToList();
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException) { names = null; }
+            var entries = xobjects == null ? xobjectDicts.SelectMany(d => d) : xobjects;
+            return (entries.Where(e => names == null || names.Contains(e.Key.Value))
+                    .Select(e => e.Value).OfType<PdfReference>().Select(r => r.ObjectNum).ToList(),
+                names != null && xobjects != null);
+        }
+
+        // The dropped forms and, transitively, the forms they draw.
+        var candidates = new Dictionary<int, PdfStream>();
+        var pending = new Stack<(int Form, PdfDictionary Caller)>(droppedForms.Select(d => (d.Key, d.Value)));
+        while (pending.TryPop(out var next))
+        {
+            if (candidates.ContainsKey(next.Form) || FormAt(next.Form) is not { } form) continue;
+            candidates[next.Form] = form;
+            var xobjects = XObjects(form.GetOptional("Resources")) ?? next.Caller;
+            foreach (var drawn in Draws(() => Decoded(form), xobjects).Forms) pending.Push((drawn, xobjects));
+        }
+
+        // Every other content stream draws. A candidate one of them draws is
+        // kept, and draws in turn.
+        var streams = new Queue<(Func<byte[]?> Read, PdfDictionary? XObjects)>();
+        foreach (var page in SafePages(document))
+            streams.Enqueue((page.GetContentStreamBytes, XObjects(page.Resources)));
+        var roots = new HashSet<PdfStream>(ReferenceEqualityComparer.Instance);
+        void Root(PdfObject value)
+        {
+            if (Resolve(document, value) is PdfStream s && roots.Add(s)
+                && (s.ObjectNumber is not { } n || !candidates.ContainsKey(n)))
+                streams.Enqueue((() => Decoded(s), XObjects(s.GetOptional("Resources"))));
+        }
+        foreach (var dict in reachable)
+        {
+            if (dict.GetNameOrNull("Subtype") == "Form" || dict.GetOptional("PatternType") is PdfInteger { Value: 1 })
+                Root(dict);
+            foreach (var key in new[] { "CharProcs", "AP" })
+                if (Resolve(document, dict.GetOptional(key) ?? PdfNull.Instance) is PdfDictionary procs)
+                    foreach (var (_, value) in procs)
+                        if (Resolve(document, value) is PdfDictionary states and not PdfStream)
+                            foreach (var (_, state) in states) Root(state);
+                        else Root(value);
+        }
+
+        var kept = new HashSet<int>();
+        var unprovable = new HashSet<int>();
+        while (streams.TryDequeue(out var stream))
+        {
+            var (forms, proved) = Draws(stream.Read, stream.XObjects);
+            foreach (var number in forms)
+            {
+                if (!candidates.TryGetValue(number, out var form)) continue;
+                if (proved) unprovable.Remove(number);
+                else if (!kept.Contains(number)) unprovable.Add(number);
+                if (kept.Add(number))
+                    streams.Enqueue((() => Decoded(form), XObjects(form.GetOptional("Resources")) ?? stream.XObjects));
+            }
+        }
+
+        var undrawn = candidates.Keys.Where(n => !kept.Contains(n)).ToHashSet();
+        foreach (var dict in xobjectDicts)
+            foreach (var key in dict.Keys.Select(k => k.Value).ToList())
+                if (dict.GetOptional(key) is PdfReference r && undrawn.Contains(r.ObjectNum))
+                    dict.Remove(key);
+        var stillReached = FormXObjectFlattener.FreeUnreachable(document, undrawn);
+
+        foreach (var number in unprovable.Concat(stillReached))
+            refusals.Add(new CarrierResult($"form XObject {number} {candidates[number].GenerationNumber ?? 0} R", false,
+                "it was drawn in hidden optional content that was removed and could not be proved unused " +
+                "elsewhere, so it was left in place"));
+        undrawn.ExceptWith(stillReached);
+        return undrawn;
     }
 
     /// <summary>

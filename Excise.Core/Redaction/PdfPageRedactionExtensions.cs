@@ -337,8 +337,11 @@ public static class PdfPageRedactionExtensions
         if (options.DrawBox && (options.FixedMarker || !options.CloseWidth))
             foreach (var area in list)
                 PdfDocumentRedactionExtensions.AppendBlackRectangle(page, area, options.BoxColor);
-        carriers.AddRange(PdfDocumentRedactionExtensions.UndecodableFormResults(
-            page.UndecodableForms.Select(form => (form, page.PageNumber))));   // #1863
+        // #1863, from the walk before the profile pass: not a form that pass freed (#1868).
+        var reachable = page.UndecodableForms.Count == 0 ? null : page.Document.ComputeReachableObjects();
+        carriers.AddRange(PdfDocumentRedactionExtensions.UndecodableFormResults(page.UndecodableForms
+            .Where(form => form.ObjectNumber is not { } n || reachable!.Contains(n))
+            .Select(form => (form, page.PageNumber))));
         return AreaReport(page.Document, options, metadataRow, removals, carriers, imageCounts);
     }
 

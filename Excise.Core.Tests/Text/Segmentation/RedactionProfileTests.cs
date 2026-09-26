@@ -824,42 +824,178 @@ public class RedactionProfileTests
     }
 
     /// <summary>
-    /// #1866: a form excise cannot decode, drawn only inside a hidden layer.
-    /// The page-level pass drops the span and its <c>Do</c>, so the text walk
-    /// that reports undecodable forms (#1863) never reaches it; the form stays
-    /// in the page's resources. The hidden-layer pass skipped it in silence.
+    /// #1866: a form excise cannot decode, under a hidden layer. Drawn only
+    /// there, it goes with the layer (#1868): removing it needs no decode.
+    /// Drawn visibly too, it stays, and the hidden-layer pass, which cannot
+    /// look inside it for hidden spans of its own, says so.
     /// </summary>
     [Theory]
-    [InlineData("RedactText")]
-    [InlineData("RedactArea")]
-    public void AnUndecodableFormInAHiddenLayer_IsKeptAndReported(string entry)
+    [InlineData("RedactText", false)]
+    [InlineData("RedactArea", false)]
+    [InlineData("RedactText", true)]
+    [InlineData("RedactArea", true)]
+    public void AnUndecodableFormInAHiddenLayer_IsRemovedWithIt_OrKeptAndReported(string entry, bool drawnVisiblyToo)
     {
         const string token = "HIDDENUNDECODABLETRAP";
-        var form = System.Text.Encoding.ASCII.GetBytes($"BT /F1 12 Tf 72 500 Td ({token}) Tj ET");
-        var input = RecoveryFixtureBuilder.Build(
-            "BT /F1 12 Tf 72 700 Td (VISIBLE) Tj ET\n/OC /MC0 BDC q /Fx0 Do Q EMC\n",
-            extraObjects: new List<RecoveryFixtureBuilder.Obj>
-            {
-                new("<< /Type /OCG /Name (Draft) >>"),
-                new("<< /Type /XObject /Subtype /Form /BBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> " +
-                    $"/Filter /Nonexistent /Length {form.Length} >>", form),
-            },
-            catalogExtra: "/OCProperties << /OCGs [7 0 R] /D << /OFF [7 0 R] >> >>",
-            resourcesExtra: "/Properties << /MC0 7 0 R >> /XObject << /Fx0 8 0 R >>");
-        using var doc = PdfDocument.Open(input);
+        using var doc = PdfDocument.Open(
+            RecoveryFixtureBuilder.FormInHiddenLayer(token, drawnVisiblyToo, "/Filter /Nonexistent"));
 
         var report = entry == "RedactText"
             ? doc.RedactText("VISIBLE", RedactionOptions.Default)
             : doc.GetPage(1).RedactAreaWithReport(new PdfRectangle(60, 690, 200, 720), RedactionOptions.Default);
 
         report.Removals.Should().Contain(r => r.Feature.Contains("hidden optional-content span"));
+        var saved = doc.SaveToBytes();
+        if (!drawnVisiblyToo)
+        {
+            report.Carriers.Should().NotContain(c => c.Carrier.StartsWith("form XObject 8 0 R"));
+            SavedPdfLeakScanner.FindTerm(saved, token).Should().BeEmpty("nothing draws the form any more");
+            return;
+        }
+
         report.Carriers.Should().ContainSingle(c => c.Carrier == "form XObject 8 0 R")
             .Which.Should().Match<CarrierResult>(c => !c.Scrubbed
                 && c.RefusedReason!.Contains("/Filter /Nonexistent could not be decoded")
                 && c.RefusedReason.Contains("hidden-layer pass"));
         report.IsCleanSuccess.Should().BeFalse("a form the hidden-layer pass could not read was left in place");
-        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), token).Should().NotBeEmpty(
+        SavedPdfLeakScanner.FindTerm(saved, token).Should().NotBeEmpty(
             "the form is kept and reported, never stripped or skipped in silence");
+    }
+
+    /// <summary>
+    /// #1868: a decodable form drawn only inside an OFF layer. The hidden-layer
+    /// pass drops the span and its <c>Do</c>; the form was left in the page's
+    /// <c>/XObject</c>, where no text walk reaches it, and the run reported clean.
+    /// </summary>
+    [Theory]
+    [InlineData("VISIBLE", false)]
+    [InlineData(HiddenFormToken, false)]
+    [InlineData("area", false)]
+    [InlineData("VISIBLE", true)]
+    [InlineData(HiddenFormToken, true)]
+    [InlineData("area", true)]
+    public void AFormDrawnOnlyInAHiddenLayer_LeavesTheFileWithIt(string entry, bool maximum)
+    {
+        var options = maximum ? RedactionOptions.Maximum : RedactionOptions.Default;
+        using var doc = PdfDocument.Open(RecoveryFixtureBuilder.FormInHiddenLayer(HiddenFormToken));
+
+        var report = entry == "area"
+            ? doc.GetPage(1).RedactAreaWithReport(new PdfRectangle(60, 690, 200, 720), options)
+            : doc.RedactText(entry, options);
+
+        report.Removals.Should().Contain(r => r.Feature.Contains("hidden optional-content span"));
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), HiddenFormToken).Should().BeEmpty(
+            "the only Do of the form was in the removed span, so the form goes with it");
+        report.Carriers.Should().NotContain(c => c.Carrier.StartsWith("form XObject 8 0 R"));
+        report.IsCleanSuccess.Should().BeTrue();
+        // The area path's flattener inlines and frees the form before this pass runs.
+        if (entry != "area")
+            report.Removals.Should().ContainSingle(r => r.Feature == "form XObject(s) drawn only in hidden optional content")
+                .Which.Count.Should().Be(1, "every removal is reported");
+    }
+
+    /// <summary>
+    /// #1868, the other side: a form drawn in the OFF layer AND visibly is
+    /// still drawn, so it stays, and its text is the normal text walk's.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AFormAlsoDrawnVisibly_IsKept_AndItsTextIsTheTextWalks(bool maximum)
+    {
+        var options = maximum ? RedactionOptions.Maximum : RedactionOptions.Default;
+        var input = RecoveryFixtureBuilder.FormInHiddenLayer(HiddenFormToken, drawnVisiblyToo: true);
+
+        using (var doc = PdfDocument.Open(input))
+        {
+            var report = doc.RedactText("VISIBLE", options);
+            SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), HiddenFormToken).Should().NotBeEmpty(
+                "the form is still drawn outside the layer: pruning it would delete visible content");
+            report.IsCleanSuccess.Should().BeTrue();
+        }
+
+        using (var doc = PdfDocument.Open(input))
+        {
+            var report = doc.RedactText(HiddenFormToken, options);
+            report.MatchesLocated.Should().BeGreaterThan(0, "the visible draw is page text");
+            SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), HiddenFormToken).Should().BeEmpty();
+            report.IsCleanSuccess.Should().BeTrue();
+        }
+    }
+
+    private const string HiddenFormToken = "HIDDENONLYFORMTRAP";
+
+    /// <summary>
+    /// #1868: whether a form is still drawn is decided across every content
+    /// stream in the file, and what cannot be decided is reported. Each shape
+    /// has the form (object 8, drawing the token) dropped from the page by the
+    /// hidden-layer pass.
+    /// </summary>
+    [Theory]
+    [InlineData("an appearance stream draws it", "kept")]
+    [InlineData("a form only it draws, also filed on the page", "removed")]
+    [InlineData("its own /OC is off", "removed")]
+    [InlineData("a form excise cannot decode may draw it", "reported")]
+    public void WhetherAFormLeftUndrawnIsRemoved_IsDecidedOverTheWholeFile(string shape, string outcome)
+    {
+        var form = $"BT /F1 12 Tf 72 500 Td ({HiddenFormToken}) Tj ET";
+        var hidden = "/OC /MC0 BDC q /Fx0 Do Q EMC\n";
+        var extras = new List<RecoveryFixtureBuilder.Obj> { new("<< /Type /OCG /Name (Draft) >>") };
+        RecoveryFixtureBuilder.Obj Form(string content, string extra = "") =>
+            new($"<< /Type /XObject /Subtype /Form /BBox [0 0 612 792] {extra} /Length {content.Length} >>",
+                System.Text.Encoding.ASCII.GetBytes(content));
+        string xobjects = "/Fx0 8 0 R", pageExtra = "";
+        switch (shape)
+        {
+            case "an appearance stream draws it":
+                extras.Add(Form(form, "/Resources << /Font << /F1 5 0 R >> >>"));
+                // No /Subtype /Form: an appearance stream is one whether or not it says so.
+                extras.Add(new("<< /BBox [0 0 100 100] /Resources << /XObject << /Fx0 8 0 R >> >> /Length 7 >>",
+                    System.Text.Encoding.ASCII.GetBytes("/Fx0 Do")));
+                extras.Add(new("<< /Type /Annot /Subtype /Square /Rect [0 0 100 100] /AP << /N 9 0 R >> /P 3 0 R >>"));
+                pageExtra = "/Annots [10 0 R]";
+                break;
+            case "a form only it draws, also filed on the page":
+                extras.Add(Form("q /Fy0 Do Q", "/Resources << /XObject << /Fy0 9 0 R >> >>"));
+                extras.Add(Form(form, "/Resources << /Font << /F1 5 0 R >> >>"));
+                xobjects += " /Fy0 9 0 R";
+                break;
+            case "its own /OC is off":
+                extras.Add(Form(form, "/OC 7 0 R /Resources << /Font << /F1 5 0 R >> >>"));
+                hidden = "q /Fx0 Do Q\n";
+                break;
+            default:
+                extras.Add(Form(form, "/Resources << /Font << /F1 5 0 R >> >>"));
+                extras.Add(Form("/Fx0 Do", "/Filter /Nonexistent /Resources << /XObject << /Fx0 8 0 R >> >>"));
+                hidden += "q /Fz0 Do Q\n";
+                xobjects += " /Fz0 9 0 R";
+                break;
+        }
+        using var doc = PdfDocument.Open(RecoveryFixtureBuilder.Build(
+            "BT /F1 12 Tf 72 700 Td (VISIBLE) Tj ET\n" + hidden, extras, pageExtra,
+            catalogExtra: "/OCProperties << /OCGs [7 0 R] /D << /OFF [7 0 R] >> >>",
+            resourcesExtra: $"/Properties << /MC0 7 0 R >> /XObject << {xobjects} >>"));
+
+        var report = doc.RedactText("VISIBLE", RedactionOptions.Default);
+
+        var found = SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), HiddenFormToken);
+        var row = report.Carriers.Where(c => c.Carrier == "form XObject 8 0 R");
+        switch (outcome)
+        {
+            case "removed":
+                found.Should().BeEmpty($"{shape}: nothing visible draws the form any more");
+                report.IsCleanSuccess.Should().BeTrue();
+                break;
+            case "kept":
+                found.Should().NotBeEmpty($"{shape}: the form is still drawn, so removing it would delete visible content");
+                row.Should().BeEmpty("a drawn form is not a refusal");
+                break;
+            default:
+                found.Should().NotBeEmpty($"{shape}: kept, because it cannot be proved unused");
+                row.Should().ContainSingle().Which.RefusedReason.Should().Contain("could not be proved unused");
+                report.IsCleanSuccess.Should().BeFalse();
+                break;
+        }
     }
 
     /// <summary>
