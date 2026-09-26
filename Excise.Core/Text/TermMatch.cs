@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Excise.Core.Text;
@@ -42,10 +43,53 @@ internal static class TermMatch
     }
 
     /// <summary>
-    /// <paramref name="value"/> with every occurrence of <paramref name="term"/> cut out,
-    /// or null when it contains none.
+    /// Does <paramref name="value"/> hold one of <paramref name="terms"/>? Matched raw and,
+    /// failing that, in the <see cref="MatchingNormalization"/> fold the page matcher uses,
+    /// where a soft hyphen or a ligature inside the term does not hide it.
     /// </summary>
-    internal static string? Cut(string value, string term, bool caseSensitive, bool wholeWord)
+    internal static bool Holds(string? value, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord)
+    {
+        if (string.IsNullOrEmpty(value)) return false;
+        string? folded = null;
+        foreach (var term in terms)
+        {
+            if (string.IsNullOrEmpty(term)) continue;
+            if (IndexOf(value, term, caseSensitive, wholeWord, 0) >= 0) return true;
+            folded ??= MatchingNormalization.Fold(value);
+            var foldedTerm = MatchingNormalization.Fold(term);
+            if ((!ReferenceEquals(folded, value) || !ReferenceEquals(foldedTerm, term))
+                && foldedTerm.Length > 0 && IndexOf(folded, foldedTerm, caseSensitive, wholeWord, 0) >= 0)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// <paramref name="value"/> with every term cut out, or null when it holds none. The one
+    /// cut every text carrier uses (#1860): a cut can re-form a term (<c>KESKESTRELTREL</c>
+    /// less <c>KESTREL</c> is <c>KESTREL</c>, and cutting one term can join another), so the
+    /// cut repeats until nothing is left to cut. Empty when a term is still there only in the
+    /// fold, which no cut of the raw text reaches: the caller then drops the whole value.
+    /// </summary>
+    internal static string? Mask(string value, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord)
+    {
+        if (!Holds(value, terms, caseSensitive, wholeWord)) return null;
+        var masked = value;
+        for (var cut = true; cut;)
+        {
+            // Each productive pass shortens the value, so this ends.
+            cut = false;
+            foreach (var term in terms)
+            {
+                if (Cut(masked, term, caseSensitive, wholeWord) is not { } shorter) continue;
+                masked = shorter;
+                cut = true;
+            }
+        }
+        return Holds(masked, terms, caseSensitive, wholeWord) ? string.Empty : masked;
+    }
+
+    private static string? Cut(string value, string term, bool caseSensitive, bool wholeWord)
     {
         if (string.IsNullOrEmpty(term)) return null;
         var at = IndexOf(value, term, caseSensitive, wholeWord, 0);

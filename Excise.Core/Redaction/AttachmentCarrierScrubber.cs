@@ -73,7 +73,7 @@ internal static class AttachmentCarrierScrubber
             // under, and a reader shows it. When it holds the term the file
             // goes, as it does when /F or /UF holds it (#1151).
             if (file.NameTreeKey is { } treeKey && file.FileSpec is { } keyedSpec
-                && terms.Any(t => TermMatch.Cut(treeKey, t, caseSensitive, wholeWord) != null))
+                && TermMatch.Holds(treeKey, terms, caseSensitive, wholeWord))
             {
                 writes.Add(() => RemoveFromEmbeddedFilesTree(document, keyedSpec, terms, caseSensitive, wholeWord));
                 results.Add((file, Result(AttachmentDisposition.Removed,
@@ -94,11 +94,7 @@ internal static class AttachmentCarrierScrubber
                 case FileKind.Text:
                 {
                     var (encoding, preamble, text) = DecodeText(bytes);
-                    var redacted = text;
-                    foreach (var term in terms)
-                        redacted = TermMatch.Cut(redacted, term, caseSensitive, wholeWord) ?? redacted;
-
-                    if (redacted == text)
+                    if (TermMatch.Mask(text, terms, caseSensitive, wholeWord) is not { } redacted)
                     {
                         results.Add((file, Result(AttachmentDisposition.KeptTermNotFound, null)));
                         break;
@@ -109,7 +105,7 @@ internal static class AttachmentCarrierScrubber
                     preamble.CopyTo(newBytes, 0);
                     body.CopyTo(newBytes, preamble.Length);
 
-                    var stillThere = terms.Any(t => ContainsTerm(newBytes, t, caseSensitive, wholeWord));
+                    var stillThere = ContainsTerm(newBytes, terms, caseSensitive, wholeWord);
                     var payload = file.Payload!;
                     writes.Add(() => ReplacePayload(document, payload, newBytes));
                     size = newBytes.Length;
@@ -268,16 +264,9 @@ internal static class AttachmentCarrierScrubber
         }
     }
 
-    private static bool ContainsTerm(byte[] bytes, string term, bool caseSensitive, bool wholeWord)
-    {
-        foreach (var encoding in new Encoding[] { Encoding.Latin1, Encoding.UTF8, Encoding.Unicode, Encoding.BigEndianUnicode })
-        {
-            var text = encoding.GetString(bytes);
-            if (TermMatch.Cut(text, term, caseSensitive, wholeWord) != null)
-                return true;
-        }
-        return false;
-    }
+    private static bool ContainsTerm(byte[] bytes, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord) =>
+        new Encoding[] { Encoding.Latin1, Encoding.UTF8, Encoding.Unicode, Encoding.BigEndianUnicode }
+            .Any(encoding => TermMatch.Holds(encoding.GetString(bytes), terms, caseSensitive, wholeWord));
 
     private static void ReplacePayload(PdfDocument document, PdfStream payload, byte[] bytes)
     {
@@ -321,10 +310,7 @@ internal static class AttachmentCarrierScrubber
                 for (var i = 0; i < limits.Count; i++)
                 {
                     if (document.Resolve(limits[i]) is not PdfString limit) continue;
-                    var cut = limit.Value;
-                    foreach (var term in terms)
-                        cut = TermMatch.Cut(cut, term, caseSensitive, wholeWord) ?? cut;
-                    if (cut != limit.Value)
+                    if (TermMatch.Mask(limit.Value, terms, caseSensitive, wholeWord) is { } cut)
                         limits[i] = new PdfString(cut);
                 }
             }

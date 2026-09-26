@@ -3,6 +3,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.Core.Text;
 
 namespace Excise.Core.Operations;
 
@@ -353,12 +354,7 @@ internal static class XfaXmlCarrier
         });
     }
 
-    private static string Excise(string value, IReadOnlyList<string> terms, bool caseSensitive)
-    {
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        var result = value;
-        foreach (var term in terms)
-            result = result.Replace(term, string.Empty, comparison);
-        return result;
-    }
+    // Substring, not whole-word: the packet checks above read it that way too.
+    private static string Excise(string value, IReadOnlyList<string> terms, bool caseSensitive) =>
+        TermMatch.Mask(value, terms, caseSensitive, wholeWord: false) ?? value;
 }
