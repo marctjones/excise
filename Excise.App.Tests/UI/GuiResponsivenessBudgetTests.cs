@@ -65,7 +65,6 @@ public class GuiResponsivenessBudgetTests
             Measure(() =>
                 {
                     vm.IsTextSelectionMode = true;
-                    vm.CurrentTextSelectionArea = new Rect(10, 20, 120, 24);
                     vm.CurrentTextSelectionPageArea = PdfPageRect.ViewerDips(1, 10, 20, 120, 24, 120);
                     vm.SelectedText = "Page 1";
                 })
