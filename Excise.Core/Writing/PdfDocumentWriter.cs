@@ -1,7 +1,7 @@
-using System.IO.Compression;
 using System.Text;
 using Excise.Core.Authoring;
 using Excise.Core.Document;
+using Excise.Core.Filters;
 using Excise.Core.Primitives;
 using Excise.Core.Security;
 
@@ -540,7 +540,7 @@ public class PdfDocumentWriter
         var plain = new byte[indexBytes.Length + bodyBytes.Length];
         Buffer.BlockCopy(indexBytes, 0, plain, 0, indexBytes.Length);
         Buffer.BlockCopy(bodyBytes, 0, plain, indexBytes.Length, bodyBytes.Length);
-        var compressed = FlateCompress(plain);
+        var compressed = BasicStreamFilters.EncodeFlate(plain);
 
         var dict = new PdfDictionary
         {
@@ -699,7 +699,7 @@ public class PdfDocumentWriter
 
         var columns = w1 + w2 + w3;
         var rows = raw.ToArray();
-        var xrefData = FlateCompress(OptimizeForSize ? PngUpPredict(rows, columns) : rows);
+        var xrefData = BasicStreamFilters.EncodeFlate(OptimizeForSize ? PngUpPredict(rows, columns) : rows);
         var trailer = BuildTrailerDictionary(size);
         trailer["Type"] = new PdfName("XRef");
         trailer["W"] = new PdfArray(new PdfInteger(w1), new PdfInteger(w2), new PdfInteger(w3));
@@ -759,14 +759,6 @@ public class PdfDocumentWriter
     {
         for (var shift = (width - 1) * 8; shift >= 0; shift -= 8)
             stream.WriteByte((byte)((value >> shift) & 0xFF));
-    }
-
-    private static byte[] FlateCompress(byte[] data)
-    {
-        using var output = new MemoryStream();
-        using (var z = new ZLibStream(output, CompressionLevel.Optimal, leaveOpen: true))
-            z.Write(data, 0, data.Length);
-        return output.ToArray();
     }
 
     private void WriteTrailer(BinaryWriter writer, long xrefOffset)

@@ -151,9 +151,6 @@ internal sealed class Jbig2MqArithmeticDecoder : IJbig2ArithmeticDecoder
         return decoded != 0;
     }
 
-    internal (int QeIndex, int Mps) GetContextStateForTest(int context)
-        => (_qeIndexByContext[context], _mpsByContext[context]);
-
     private int MpsExchange(int context, int qeIndex, byte mps)
     {
         var entry = QeTable[qeIndex];

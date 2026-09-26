@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace Excise.Core.Primitives;
 
 /// <summary>
@@ -33,64 +31,6 @@ public sealed class PdfName : PdfObject, IEquatable<PdfName>
     /// Gets the name with the leading solidus (/).
     /// </summary>
     public override string ToString() => "/" + Value;
-
-    /// <summary>
-    /// Encode the name for writing to PDF (handles special characters).
-    /// </summary>
-    public string ToEncodedString()
-    {
-        var sb = new StringBuilder("/");
-        foreach (char c in Value)
-        {
-            // Characters that must be encoded: null, tab, newline, form feed, carriage return, space,
-            // (, ), <, >, [, ], {, }, /, %, #
-            if (c < 33 || c > 126 || c == '#' || c == '/' || c == '%' ||
-                c == '(' || c == ')' || c == '<' || c == '>' ||
-                c == '[' || c == ']' || c == '{' || c == '}')
-            {
-                sb.Append('#');
-                sb.Append(((int)c).ToString("X2"));
-            }
-            else
-            {
-                sb.Append(c);
-            }
-        }
-        return sb.ToString();
-    }
-
-    /// <summary>
-    /// Decode a name string (handles #XX escape sequences).
-    /// </summary>
-    /// <param name="encoded">The encoded name (without leading /).</param>
-    public static string Decode(string encoded)
-    {
-        if (!encoded.Contains('#'))
-            return encoded;
-
-        var sb = new StringBuilder();
-        for (int i = 0; i < encoded.Length; i++)
-        {
-            if (encoded[i] == '#' && i + 2 < encoded.Length)
-            {
-                string hex = encoded.Substring(i + 1, 2);
-                if (int.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out int code))
-                {
-                    sb.Append((char)code);
-                    i += 2;
-                }
-                else
-                {
-                    sb.Append(encoded[i]);
-                }
-            }
-            else
-            {
-                sb.Append(encoded[i]);
-            }
-        }
-        return sb.ToString();
-    }
 
     /// <summary>
     /// Implicit conversion from string.

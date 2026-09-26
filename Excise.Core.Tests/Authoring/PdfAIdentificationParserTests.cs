@@ -234,7 +234,7 @@ public class PdfAIdentificationParserTests
         using var doc = PdfDocument.Open(MinimalPdf());
         var identity = new PdfAIdentity(part, conformance, rev);
 
-        PdfAIdentityXmp.Write(doc, identity);
+        PdfAIdentityXmp.Write(doc, identity, null);
 
         PdfAIdentityXmp.TryRead(doc).Should().Be(identity);
         doc.TargetsPdfA.Should().BeTrue("a written identification is a claim the document makes");

@@ -198,7 +198,7 @@ public class PageCollectionTests
         // Arrange
         using var source = PdfDocument.CreateNew();
         var sourcePage = source.Pages.AddBlank(321, 654);
-        var sourcePageRef = source.Pages.PagesDictionary.Get<PdfArray>("Kids").Get<PdfReference>(0);
+        var sourcePageRef = PagesRoot(source).Get<PdfArray>("Kids").Get<PdfReference>(0);
 
         // Move source-owned references away from the object numbers used by a
         // brand-new target document so a dangling reference cannot pass by chance.
@@ -513,7 +513,7 @@ public class PageCollectionTests
 
         // Assert
         pages.Select(p => p.Width).Should().Equal(100, 200);
-        doc.Pages.PagesDictionary.GetInt("Count").Should().Be(2);
+        PagesRoot(doc).GetInt("Count").Should().Be(2);
     }
 
     [Fact]
@@ -531,6 +531,8 @@ public class PageCollectionTests
         doc.Pages.AddBlank();
         doc.Pages.Count.Should().Be(2);
     }
+
+    private static PdfDictionary PagesRoot(PdfDocument doc) => (PdfDictionary)doc.Resolve(doc.Catalog["Pages"]);
 
     // Cache the synthetic fixture path so it is built once per test process,
     // not once per call (this method is called from every test in the file).

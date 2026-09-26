@@ -35,7 +35,7 @@ public class Jbig2ArithmeticRegionTests
             false, false, false, false, // IAEX: 0 false flags
             false, false, false, true); // IAEX: 1 true flag
 
-        var decoded = Jbig2SymbolDictionaryDecoder.DecodeArithmeticForTest(
+        var decoded = Jbig2SymbolDictionaryDecoder.DecodeArithmetic(
             segment,
             decoder,
             Array.Empty<Jbig2Bitmap>());
@@ -83,7 +83,7 @@ public class Jbig2ArithmeticRegionTests
             false, false, false, true,  // IAEX: one false flag for imported symbol
             false, false, false, true); // IAEX: one true flag for new symbol
 
-        var decoded = Jbig2SymbolDictionaryDecoder.DecodeArithmeticForTest(
+        var decoded = Jbig2SymbolDictionaryDecoder.DecodeArithmetic(
             segment,
             decoder,
             new[] { importedSymbol });
@@ -123,7 +123,7 @@ public class Jbig2ArithmeticRegionTests
             false, false, false, false, // IAFS first S: 0
             true, false, false, false); // IADS strip terminator: OOB
 
-        var bitmap = Jbig2TextRegionDecoder.DecodeArithmeticForTest(
+        var bitmap = Jbig2TextRegionDecoder.DecodeArithmetic(
             segment,
             decoder,
             new[] { symbol });
@@ -168,7 +168,7 @@ public class Jbig2ArithmeticRegionTests
             false,                     // refined bitmap pixel
             true, false, false, false); // IADS strip terminator: OOB
 
-        var bitmap = Jbig2TextRegionDecoder.DecodeArithmeticForTest(
+        var bitmap = Jbig2TextRegionDecoder.DecodeArithmetic(
             segment,
             decoder,
             new[] { symbol });

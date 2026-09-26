@@ -146,9 +146,6 @@ public static class TextSelectionEngine
     /// PDF producer's content-stream order. Kept separate so corpus fixtures
     /// can pin the verdict independently of the final joined string.
     /// </summary>
-    internal static PageTextOrderStrategy DeterminePageTextOrder(IReadOnlyList<Letter> letters)
-        => DeterminePageTextOrder(letters, out _);
-
     internal static PageTextOrderStrategy DeterminePageTextOrder(
         IReadOnlyList<Letter> letters, out List<double> boundaries)
     {

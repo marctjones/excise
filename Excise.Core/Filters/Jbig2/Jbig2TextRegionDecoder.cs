@@ -58,12 +58,6 @@ internal static class Jbig2TextRegionDecoder
             : DecodeArithmetic(segment, payload, symbols);
     }
 
-    internal static Jbig2Bitmap DecodeArithmeticForTest(
-        Jbig2TextRegionSegment segment,
-        IJbig2ArithmeticDecoder decoder,
-        IReadOnlyList<Jbig2Bitmap> symbols)
-        => DecodeArithmetic(segment, decoder, symbols);
-
     internal static Jbig2Bitmap DecodeArithmeticWithContextLayout(
         Jbig2TextRegionSegment segment,
         IJbig2ArithmeticDecoder decoder,
@@ -167,7 +161,7 @@ internal static class Jbig2TextRegionDecoder
         return DecodeArithmetic(segment, decoder, symbols);
     }
 
-    private static Jbig2Bitmap DecodeArithmetic(
+    internal static Jbig2Bitmap DecodeArithmetic(
         Jbig2TextRegionSegment segment,
         IJbig2ArithmeticDecoder decoder,
         IReadOnlyList<Jbig2Bitmap> symbols)

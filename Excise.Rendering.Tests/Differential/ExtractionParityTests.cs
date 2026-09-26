@@ -116,7 +116,7 @@ public sealed class ExtractionParityTests
                 return glyphBox.Top > cropBox.Bottom && glyphBox.Bottom < cropBox.Top;
             }).ToList();
 
-            TextSelectionEngine.DeterminePageTextOrder(visible).Should().Be(
+            TextSelectionEngine.DeterminePageTextOrder(visible, out _).Should().Be(
                 TextSelectionEngine.PageTextOrderStrategy.RawStream,
                 $"#947 pins the conservative whole-page verdict for {relativePath} page {pageNumber}");
             examined++;
