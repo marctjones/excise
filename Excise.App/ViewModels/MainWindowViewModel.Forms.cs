@@ -469,6 +469,17 @@ public partial class MainWindowViewModel
 
     private Func<int, IReadOnlyList<PdfField>>? _formFieldsForPage;
 
+    /// <summary>
+    /// Bound to PdfViewerControl.FormFieldEditGate, which asks it BEFORE a field
+    /// stores an edit (#1874): /P bit 6 or 9 gates filling interactive form fields
+    /// (#642). Asked after the store, a refusal left the value in the field for the
+    /// next save to write.
+    /// </summary>
+    public Func<bool> FormFieldEditGate =>
+        _formFieldEditGate ??= () => EnsureDocumentPermission(DocumentAction.FillForms, "Filling form fields");
+
+    private Func<bool>? _formFieldEditGate;
+
     private IReadOnlyList<PdfField> GetFormFieldsForPage(int pageNumber)
     {
         if (_pdfCoreDocument == null || pageNumber < 1 || pageNumber > TotalPages)
@@ -485,7 +496,8 @@ public partial class MainWindowViewModel
 
     /// <summary>
     /// Called by MainWindow when PdfViewerControl raises FormFieldEdited.
-    /// The viewer has already mutated the field value via PdfField.SetValue,
+    /// <see cref="FormFieldEditGate"/> admitted the edit and the viewer has
+    /// already mutated the field value via PdfField.SetValue,
     /// so what remains is to mark the document dirty so the Save command
     /// activates and to record the edit for Undo (#1660). The form-fill overlay
     /// reflects the new value already; the underlying bitmap is left as-is (the
@@ -498,12 +510,6 @@ public partial class MainWindowViewModel
     public void OnFormFieldEdited(PdfField field, string? newValue, string? oldValue)
     {
         if (_pdfCoreDocument == null) return;
-
-        // #642: /P bit 6 or 9 gates filling interactive form fields.
-        if (!EnsureDocumentPermission(DocumentAction.FillForms, "Filling form fields"))
-        {
-            return;
-        }
 
         ApplyFormFieldValue(field, newValue);
         FileState.FormFieldEditsCount++;

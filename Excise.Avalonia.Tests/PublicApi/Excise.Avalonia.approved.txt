@@ -110,6 +110,7 @@ namespace Excise.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<int> CurrentPageProperty;
         public static readonly Avalonia.StyledProperty<Excise.Core.Document.PdfDocument?> DocumentProperty;
         public static readonly Avalonia.StyledProperty<string?> ErrorMessageProperty;
+        public static readonly Avalonia.StyledProperty<System.Func<bool>?> FormFieldEditGateProperty;
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>?> FormFieldsProperty;
         public static readonly Avalonia.StyledProperty<bool> HasErrorProperty;
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Avalonia.Controls.HiddenTextHighlight>?> HiddenTextHighlightsProperty;
@@ -138,6 +139,7 @@ namespace Excise.Avalonia.Controls
         public int CurrentPage { get; set; }
         public Excise.Core.Document.PdfDocument? Document { get; set; }
         public string? ErrorMessage { get; }
+        public System.Func<bool>? FormFieldEditGate { get; set; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>? FormFields { get; set; }
         public bool HasError { get; }
         public System.Collections.Generic.IEnumerable<Excise.Avalonia.Controls.HiddenTextHighlight>? HiddenTextHighlights { get; set; }

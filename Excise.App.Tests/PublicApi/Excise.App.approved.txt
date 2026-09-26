@@ -621,6 +621,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? FindNextCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? FindPreviousCommand { get; }
         public Excise.Core.Document.PdfFieldType FormAuthoringFieldType { get; set; }
+        public System.Func<bool> FormFieldEditGate { get; }
         public System.Func<int, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>> FormFieldsForPage { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> GoToNextPendingTypewriterEditCommand { get; }
         public ReactiveUI.ReactiveCommand<int, System.Reactive.Unit> GoToPageCommand { get; }
