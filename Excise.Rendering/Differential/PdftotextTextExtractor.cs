@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
@@ -33,30 +32,9 @@ namespace Excise.Rendering.Differential;
 /// </summary>
 internal static class PdftotextTextExtractor
 {
-    private static readonly Lazy<bool> Available = new(() =>
-    {
-        try
-        {
-            var psi = new ProcessStartInfo("pdftotext")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            psi.ArgumentList.Add("-v");
-            using var p = Process.Start(psi);
-            if (p == null) return false;
-            if (!p.WaitForExit(10_000)) { try { p.Kill(entireProcessTree: true); } catch { } return false; }
-            // pdftotext -v prints its banner to stderr and exits non-zero on
-            // some builds; the banner is the signal, not the exit code.
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    });
+    // pdftotext -v prints its banner to stderr and exits non-zero on some builds; launching is the
+    // signal, not the exit code.
+    private static readonly Lazy<bool> Available = new(() => ReferenceProcess.IsLaunchable("pdftotext", 10_000, "-v"));
 
     public static bool IsAvailable => Available.Value;
 
@@ -98,49 +76,22 @@ internal static class PdftotextTextExtractor
 
         var outPath = Path.Combine(Path.GetTempPath(),
             $"excise-pdftotext-{Guid.NewGuid():N}.txt");
-        try
+        var args = new List<string>();
+        if (!string.IsNullOrEmpty(password))
         {
-            var psi = new ProcessStartInfo("pdftotext")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            if (!string.IsNullOrEmpty(password))
-            {
-                psi.ArgumentList.Add("-upw");
-                psi.ArgumentList.Add(password);
-            }
-            if (firstPage > 0)
-            {
-                psi.ArgumentList.Add("-f");
-                psi.ArgumentList.Add(firstPage.ToString(CultureInfo.InvariantCulture));
-                psi.ArgumentList.Add("-l");
-                psi.ArgumentList.Add(lastPage.ToString(CultureInfo.InvariantCulture));
-            }
-            psi.ArgumentList.Add(pdfPath);
-            psi.ArgumentList.Add(outPath);
-
-            using var p = Process.Start(psi);
-            if (p == null) return null;
-            if (!p.WaitForExit(timeoutMs))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-                return null;
-            }
-            if (p.ExitCode != 0) return null;
-            if (!File.Exists(outPath)) return null;
-
-            return File.ReadAllText(outPath);
+            args.Add("-upw");
+            args.Add(password);
         }
-        catch
+        if (firstPage > 0)
         {
-            return null;
+            args.AddRange(new[]
+            {
+                "-f", firstPage.ToString(CultureInfo.InvariantCulture),
+                "-l", lastPage.ToString(CultureInfo.InvariantCulture),
+            });
         }
-        finally
-        {
-            try { File.Delete(outPath); } catch { }
-        }
+        args.Add(pdfPath);
+        args.Add(outPath);
+        return ReferenceProcess.RunToTextFile("pdftotext", args, outPath, timeoutMs);
     }
 }

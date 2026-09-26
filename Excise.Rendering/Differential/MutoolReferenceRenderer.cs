@@ -21,32 +21,9 @@ namespace Excise.Rendering.Differential;
 /// </summary>
 internal static class MutoolReferenceRenderer
 {
-    private static readonly Lazy<bool> _available = new(() =>
-    {
-        // mutool is one of those CLIs that exits non-zero when invoked
-        // without a real command — even `mutool --version` returns 1.
-        // So instead of a version probe, just see if it's launchable.
-        // ProcessStartInfo.Start throws Win32Exception when the file
-        // can't be found, which is the only failure we care about here.
-        try
-        {
-            var psi = new ProcessStartInfo("mutool", "draw")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            using var p = Process.Start(psi);
-            if (p == null) return false;
-            p.WaitForExit(2000);
-            return true; // launched successfully — any exit code means it's installed
-        }
-        catch
-        {
-            return false;
-        }
-    });
+    // mutool exits non-zero when invoked without a real command (even --version returns 1), so the
+    // probe is "does it launch", not "does it succeed".
+    private static readonly Lazy<bool> _available = new(() => ReferenceProcess.IsLaunchable("mutool", 2000, "draw"));
 
     /// <summary>True when <c>mutool</c> is on PATH and responds to --version.</summary>
     public static bool IsAvailable => _available.Value;
@@ -55,7 +32,7 @@ internal static class MutoolReferenceRenderer
     /// The static flags TryRenderPage invokes with (#1385) -- everything
     /// about this call the oracle render cache's key does NOT already cover
     /// via (oracle name, path, page, dpi, password). Keep this literally in
-    /// sync with the ArgumentList.Add calls below: a flag added there and not
+    /// sync with the argument list below: a flag added there and not
     /// here is a stale cache waiting to happen, exactly what #1380 hit.
     /// </summary>
     public const string InvocationSignature = "draw -F png";
@@ -90,61 +67,24 @@ internal static class MutoolReferenceRenderer
 
         try
         {
-            var psi = new ProcessStartInfo("mutool")
+            var args = new List<string>
             {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
+                "draw", "-o", outPath, "-F", "png", "-r", dpi.ToString(System.Globalization.CultureInfo.InvariantCulture),
             };
-            psi.ArgumentList.Add("draw");
-            psi.ArgumentList.Add("-o");
-            psi.ArgumentList.Add(outPath);
-            psi.ArgumentList.Add("-F");
-            psi.ArgumentList.Add("png");
-            psi.ArgumentList.Add("-r");
-            psi.ArgumentList.Add(dpi.ToString(System.Globalization.CultureInfo.InvariantCulture));
             if (userPassword != null)
             {
-                psi.ArgumentList.Add("-p");
-                psi.ArgumentList.Add(userPassword);
+                args.Add("-p");
+                args.Add(userPassword);
             }
-            psi.ArgumentList.Add(pdfPath);
-            psi.ArgumentList.Add(pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            args.Add(pdfPath);
+            args.Add(pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
-            using var p = Process.Start(psi);
-            if (p == null)
-                return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
-            if (!ReferenceProcessResources.WaitForExitAndCapture(p, timeoutMs, out var resources))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-                return new ReferenceRenderResult(null, "TIMEOUT", $"mutool exceeded {timeoutMs}ms", sw.ElapsedMilliseconds);
-            }
-            if (p.ExitCode != 0)
-            {
-                var stderr = p.StandardError.ReadToEnd();
-                return new ReferenceRenderResult(null, "EXIT_CODE",
-                    $"mutool exited {p.ExitCode}: {Trunc(stderr.Trim(), 200)}", sw.ElapsedMilliseconds);
-            }
-            if (!File.Exists(outPath))
-                return new ReferenceRenderResult(null, "MISSING_OUTPUT", "mutool did not write an output PNG", sw.ElapsedMilliseconds);
-
-            var bitmap = SKBitmap.Decode(outPath);
-            return bitmap == null
-                ? new ReferenceRenderResult(null, "DECODE_ERROR", "mutool output PNG could not be decoded", sw.ElapsedMilliseconds)
-                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds,
-                    resources.PeakWorkingSetBytes, resources.CpuMs);
-        }
-        catch (Exception ex)
-        {
-            return new ReferenceRenderResult(null, "ERROR", ex.Message, sw.ElapsedMilliseconds);
+            return ReferenceProcess.RenderPng(sw, "mutool", "mutool", args, timeoutMs,
+                () => File.Exists(outPath) ? outPath : null);
         }
         finally
         {
             try { File.Delete(outPath); } catch { }
         }
     }
-
-    private static string Trunc(string value, int length)
-        => value.Length <= length ? value : value.Substring(0, length) + "…";
 }

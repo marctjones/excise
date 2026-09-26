@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
@@ -135,27 +134,7 @@ internal enum QpdfPasswordStatus
 /// </summary>
 internal static class QpdfReferenceTool
 {
-    private static readonly Lazy<bool> _available = new(() =>
-    {
-        try
-        {
-            var psi = new ProcessStartInfo("qpdf", "--version")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            using var p = Process.Start(psi);
-            if (p == null) return false;
-            p.WaitForExit(5000);
-            return p.ExitCode == 0;
-        }
-        catch
-        {
-            return false;
-        }
-    });
+    private static readonly Lazy<bool> _available = new(() => ReferenceProcess.ExitsZero("qpdf", 5000, "--version"));
 
     /// <summary>True when the <c>qpdf</c> CLI is launchable on PATH.</summary>
     public static bool IsAvailable => _available.Value;
@@ -572,16 +551,13 @@ internal static class QpdfReferenceTool
 
     /// <summary>
     /// Runs qpdf and returns stdout as raw bytes. Deliberately NOT sharing
-    /// <see cref="Run"/>: that method's <c>OutputDataReceived</c> pump splits
-    /// stdout into strings at line boundaries and re-joins them with
-    /// <see cref="StringBuilder.AppendLine"/>, which corrupts binary output
-    /// two ways — every byte is put through a text decoding, and a decoded
-    /// stream's own CR/LF/CRLF bytes are rewritten to the platform newline.
+    /// <see cref="ReferenceProcess.Run"/>, which decodes stdout to a string:
+    /// that puts every byte of a stream through a text decoding.
     ///
-    /// stdout is drained on a pump task while stderr keeps the line-based
-    /// pump, then both are joined before the bytes are read: the same
-    /// already-buffered-output race <see cref="Run"/> documents, which
-    /// <c>WaitForExit(int)</c> alone does not close.
+    /// stdout is drained on a pump task while stderr uses the line-based
+    /// event pump, then both are joined before the bytes are read:
+    /// <c>WaitForExit(int)</c> alone does not wait for already-buffered
+    /// output to be delivered (a well-known .NET Process race).
     /// </summary>
     private static BinaryProcessResult? RunBinary(string[] args, int timeoutMs)
     {
@@ -589,16 +565,7 @@ internal static class QpdfReferenceTool
 
         try
         {
-            var psi = new ProcessStartInfo("qpdf")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            foreach (var a in args) psi.ArgumentList.Add(a);
-
-            using var p = Process.Start(psi);
+            using var p = ReferenceProcess.Start("qpdf", args);
             if (p == null) return null;
 
             var buffer = new System.IO.MemoryStream();
@@ -644,49 +611,14 @@ internal static class QpdfReferenceTool
 
         try
         {
-            var psi = new ProcessStartInfo("qpdf")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            foreach (var a in args) psi.ArgumentList.Add(a);
-
-            using var p = Process.Start(psi);
-            if (p == null) return null;
-
-            var stdout = new StringBuilder();
-            var stderr = new StringBuilder();
-            p.OutputDataReceived += (_, e) => { if (e.Data != null) stdout.AppendLine(e.Data); };
-            p.ErrorDataReceived += (_, e) => { if (e.Data != null) stderr.AppendLine(e.Data); };
-            p.BeginOutputReadLine();
-            p.BeginErrorReadLine();
-
-            if (!p.WaitForExit(timeoutMs))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-                return null;
-            }
-
-            // WaitForExit(int) returning true only means the process itself
-            // exited — it does NOT guarantee the async OutputDataReceived/
-            // ErrorDataReceived callbacks have finished delivering already-
-            // buffered lines (a well-known .NET Process race). Without this,
-            // stdout/stderr below can be read before qpdf's final lines have
-            // been appended, silently truncating (sometimes to empty)
-            // output that was actually produced. The parameterless overload
-            // blocks until the redirected-stream pump threads complete.
-            p.WaitForExit();
-
+            var run = ReferenceProcess.Run("qpdf", args, timeoutMs);
             // qpdf writes --show-encryption's actual info to stdout and
             // warnings ("Incorrect password supplied") to stderr — combine
             // so callers see both without having to know which stream
             // qpdf chose for a given message.
-            var combined = stdout.ToString();
-            if (stderr.Length > 0) combined += stderr.ToString();
-
-            return new ProcessResult(p.ExitCode, combined);
+            return run is { Started: true, TimedOut: false }
+                ? new ProcessResult(run.ExitCode, run.Stdout + run.Stderr)
+                : null;
         }
         catch
         {

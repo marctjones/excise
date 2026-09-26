@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -59,21 +58,10 @@ internal static class XRayBadRedactionDetector
         candidates.Add("python3");
         candidates.Add("python");
 
-        foreach (var candidate in candidates)
-        {
-            try
-            {
-                // Probe by IMPORTING, not by "does a binary exist". A python
-                // without the module is not an oracle, and reporting it as one
-                // makes every later call fail confusingly.
-                using var p = Start(candidate, "-c \"import xray\"");
-                if (p == null) continue;
-                if (!p.WaitForExit(15_000)) { TryKill(p); continue; }
-                if (p.ExitCode == 0) return candidate;
-            }
-            catch { /* try the next candidate */ }
-        }
-        return null;
+        // Probe by IMPORTING, not by "does a binary exist". A python
+        // without the module is not an oracle, and reporting it as one
+        // makes every later call fail confusingly.
+        return candidates.FirstOrDefault(c => ReferenceProcess.ExitsZero(c, 15_000, "-c", "import xray"));
     }
 
     /// <summary>
@@ -161,18 +149,9 @@ internal static class XRayBadRedactionDetector
         string stdout;
         try
         {
-            using var p = Start(python, $"-c \"{script}\" \"{pdfPath}\"");
-            if (p == null) return null;
-            // #1083: drain BOTH pipes concurrently and bound the wait. Reading
-            // stdout to end BEFORE WaitForExit (the previous shape) hangs if the
-            // child never closes stdout, and blocks stderr from draining so a
-            // chatty child can pipe-deadlock. Same fix as PdfOcrService.
-            var outTask = p.StandardOutput.ReadToEndAsync();
-            var errTask = p.StandardError.ReadToEndAsync();
-            if (!p.WaitForExit(timeoutMs)) { TryKill(p); return null; }
-            stdout = outTask.GetAwaiter().GetResult();
-            errTask.GetAwaiter().GetResult();
-            if (p.ExitCode != 0) return null;
+            var run = ReferenceProcess.Run(python, new[] { "-c", script, pdfPath }, timeoutMs);
+            if (run.ExitCode != 0) return null;
+            stdout = run.Stdout;
         }
         catch { return null; }
 
@@ -203,22 +182,5 @@ internal static class XRayBadRedactionDetector
             return found;
         }
         catch (JsonException) { return null; }
-    }
-
-    private static Process? Start(string exe, string args)
-    {
-        var psi = new ProcessStartInfo(exe, args)
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-        return Process.Start(psi);
-    }
-
-    private static void TryKill(Process p)
-    {
-        try { p.Kill(entireProcessTree: true); } catch { /* already gone */ }
     }
 }

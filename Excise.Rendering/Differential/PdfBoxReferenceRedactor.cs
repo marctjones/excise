@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -50,42 +49,19 @@ internal static class PdfBoxReferenceRedactor
 
         try
         {
-            var psi = new ProcessStartInfo(java)
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            psi.ArgumentList.Add("--class-path");
-            psi.ArgumentList.Add(jar);
-            psi.ArgumentList.Add(driver);
-            psi.ArgumentList.Add(inputPath);
-            psi.ArgumentList.Add(outputPath);
-            psi.ArgumentList.Add(term);
-
-            using var proc = Process.Start(psi);
-            if (proc == null) return new ReferenceRedactionResult(0, "could not start java");
-
-            var outT = proc.StandardOutput.ReadToEndAsync();
-            var errT = proc.StandardError.ReadToEndAsync();
-            if (!proc.WaitForExit(timeoutMs))
-            {
-                try { proc.Kill(entireProcessTree: true); } catch { /* best effort */ }
+            var run = ReferenceProcess.Run(java,
+                new[] { "--class-path", jar, driver, inputPath, outputPath, term }, timeoutMs);
+            if (!run.Started) return new ReferenceRedactionResult(0, "could not start java");
+            if (run.TimedOut)
                 return new ReferenceRedactionResult(0, $"pdfbox driver timed out after {timeoutMs}ms");
-            }
-
-            var stdout = outT.GetAwaiter().GetResult();
-            var stderr = errT.GetAwaiter().GetResult();
-
-            if (proc.ExitCode != 0)
-                return new ReferenceRedactionResult(0, $"java exited {proc.ExitCode}: {stderr.Trim()}");
+            if (run.ExitCode != 0)
+                return new ReferenceRedactionResult(0, $"java exited {run.ExitCode}: {run.Stderr.Trim()}");
 
             // The driver prints the hit count as the last integer on stdout
             // (PDFBox logging noise may precede it on stderr, not stdout).
-            var m = Regex.Matches(stdout, @"\b(\d+)\b").Cast<Match>().LastOrDefault();
+            var m = Regex.Matches(run.Stdout, @"\b(\d+)\b").Cast<Match>().LastOrDefault();
             if (m == null)
-                return new ReferenceRedactionResult(0, $"pdfbox driver produced no hit count. stdout: {stdout.Trim()}");
+                return new ReferenceRedactionResult(0, $"pdfbox driver produced no hit count. stdout: {run.Stdout.Trim()}");
             if (!File.Exists(outputPath))
                 return new ReferenceRedactionResult(0, "pdfbox driver wrote no output file");
 
@@ -110,16 +86,9 @@ internal static class PdfBoxReferenceRedactor
             {
                 // #1009: /usr/bin/java is a macOS stub that "works" but is not a
                 // JRE. Confirm a real version banner before trusting it.
-                var psi = new ProcessStartInfo(c, "-version")
-                {
-                    RedirectStandardError = true, RedirectStandardOutput = true,
-                    UseShellExecute = false, CreateNoWindow = true,
-                };
-                using var p = Process.Start(psi);
-                if (p == null) continue;
-                var banner = p.StandardError.ReadToEnd() + p.StandardOutput.ReadToEnd();
-                p.WaitForExit(10_000);
-                if (p.ExitCode == 0 && Regex.IsMatch(banner, "openjdk|java version", RegexOptions.IgnoreCase))
+                var run = ReferenceProcess.Run(c, new[] { "-version" }, 10_000);
+                if (run.ExitCode == 0
+                    && Regex.IsMatch(run.Stderr + run.Stdout, "openjdk|java version", RegexOptions.IgnoreCase))
                     return c;
             }
             catch { /* try next */ }

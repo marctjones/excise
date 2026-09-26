@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -48,36 +47,24 @@ internal static class MutoolGlyphPositions
         if (!MutoolReferenceRenderer.IsAvailable) return null;
 
         var outPath = Path.Combine(Path.GetTempPath(), $"excise-stext-{Guid.NewGuid():N}.xml");
-        try
+        var args = new List<string> { "draw" };
+        if (!string.IsNullOrEmpty(password))
         {
-            var psi = new ProcessStartInfo("mutool")
-            {
-                RedirectStandardOutput = true, RedirectStandardError = true,
-                UseShellExecute = false, CreateNoWindow = true,
-            };
-            psi.ArgumentList.Add("draw");
-            if (!string.IsNullOrEmpty(password)) { psi.ArgumentList.Add("-p"); psi.ArgumentList.Add(password); }
-            psi.ArgumentList.Add("-o"); psi.ArgumentList.Add(outPath);
-            psi.ArgumentList.Add("-F"); psi.ArgumentList.Add("stext");
-            psi.ArgumentList.Add(pdfPath);
-            psi.ArgumentList.Add(pageNumber.ToString(CultureInfo.InvariantCulture));
-
-            using var p = Process.Start(psi);
-            if (p == null) return null;
-            if (!p.WaitForExit(timeoutMs)) { try { p.Kill(entireProcessTree: true); } catch { } return null; }
-            if (p.ExitCode != 0 || !File.Exists(outPath)) return null;
-
-            var glyphs = new List<Glyph>();
-            foreach (Match m in CharRe.Matches(File.ReadAllText(outPath)))
-            {
-                if (double.TryParse(m.Groups["x"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var x) &&
-                    double.TryParse(m.Groups["y"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var y))
-                    glyphs.Add(new Glyph(m.Groups["c"].Value, x, y));
-            }
-            return glyphs;
+            args.Add("-p");
+            args.Add(password);
         }
-        catch { return null; }
-        finally { try { if (File.Exists(outPath)) File.Delete(outPath); } catch { } }
+        args.AddRange(new[] { "-o", outPath, "-F", "stext", pdfPath, pageNumber.ToString(CultureInfo.InvariantCulture) });
+        var xml = ReferenceProcess.RunToTextFile("mutool", args, outPath, timeoutMs);
+        if (xml == null) return null;
+
+        var glyphs = new List<Glyph>();
+        foreach (Match m in CharRe.Matches(xml))
+        {
+            if (double.TryParse(m.Groups["x"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var x) &&
+                double.TryParse(m.Groups["y"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var y))
+                glyphs.Add(new Glyph(m.Groups["c"].Value, x, y));
+        }
+        return glyphs;
     }
 
     /// <summary>

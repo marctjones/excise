@@ -23,33 +23,13 @@ namespace Excise.Rendering.Differential;
 /// </summary>
 internal static class PdftocairoReferenceRenderer
 {
-    private static readonly Lazy<bool> _available = new(() =>
-    {
-        try
-        {
-            var psi = new ProcessStartInfo("pdftocairo", "-v")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            using var p = Process.Start(psi);
-            if (p == null) return false;
-            p.WaitForExit(2000);
-            return true; // any exit code means it's installed
-        }
-        catch
-        {
-            return false;
-        }
-    });
+    private static readonly Lazy<bool> _available = new(() => ReferenceProcess.IsLaunchable("pdftocairo", 2000, "-v"));
 
     public static bool IsAvailable => _available.Value;
 
     /// <summary>
     /// The static flags TryRenderPage invokes with (#1385). Keep literally in
-    /// sync with the ArgumentList.Add calls below -- see MutoolReferenceRenderer
+    /// sync with the argument list below -- see MutoolReferenceRenderer
     /// for why: #1380 added -cropbox here and the oracle render cache did not
     /// notice, silently reusing every pre-#1380 render.
     /// </summary>
@@ -87,78 +67,43 @@ internal static class PdftocairoReferenceRenderer
 
         try
         {
-            var psi = new ProcessStartInfo("pdftocairo")
+            var args = new List<string>
             {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
+                "-png", "-singlefile",
+                // #1380 — render the CropBox, not the MediaBox.
+                //
+                // pdftocairo defaults to the MediaBox; excise, mutool, PDFium and PDFBox all
+                // display the CropBox, which is what §7.7.3.3 requires ("the region to which
+                // the contents of the page shall be clipped when displayed or printed").
+                // Without this flag every page whose CropBox differs from its MediaBox is
+                // rasterised at a different size over a different region, and the harness
+                // scores the mismatch as excise disagreeing with the reference.
+                //
+                // Measured at the scan's own 150 dpi, excise-vs-pdftocairo diffFraction:
+                //   bug1802506 0.1328 -> 0.0041   issue2884_reduced 0.1988 -> 0.0246
+                //   bug1922766 0.1625 -> 0.0367   copy_paste_ligatures 0.2482 -> 0.0474
+                //   issue4402  0.3106 -> 0.0799   issue16316 0.4784 -> 0.1420
+                //   issue2177  0.5912 -> 0.1653
+                // Page dimensions match excise exactly once it is passed.
+                "-cropbox",
+                "-r", dpi.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "-f", pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "-l", pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
             };
-            psi.ArgumentList.Add("-png");
-            psi.ArgumentList.Add("-singlefile");
-            // #1380 — render the CropBox, not the MediaBox.
-            //
-            // pdftocairo defaults to the MediaBox; excise, mutool, PDFium and PDFBox all
-            // display the CropBox, which is what §7.7.3.3 requires ("the region to which
-            // the contents of the page shall be clipped when displayed or printed").
-            // Without this flag every page whose CropBox differs from its MediaBox is
-            // rasterised at a different size over a different region, and the harness
-            // scores the mismatch as excise disagreeing with the reference.
-            //
-            // Measured at the scan's own 150 dpi, excise-vs-pdftocairo diffFraction:
-            //   bug1802506 0.1328 -> 0.0041   issue2884_reduced 0.1988 -> 0.0246
-            //   bug1922766 0.1625 -> 0.0367   copy_paste_ligatures 0.2482 -> 0.0474
-            //   issue4402  0.3106 -> 0.0799   issue16316 0.4784 -> 0.1420
-            //   issue2177  0.5912 -> 0.1653
-            // Page dimensions match excise exactly once it is passed.
-            psi.ArgumentList.Add("-cropbox");
-            psi.ArgumentList.Add("-r");
-            psi.ArgumentList.Add(dpi.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            psi.ArgumentList.Add("-f");
-            psi.ArgumentList.Add(pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            psi.ArgumentList.Add("-l");
-            psi.ArgumentList.Add(pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
             if (userPassword != null)
             {
-                psi.ArgumentList.Add("-upw");
-                psi.ArgumentList.Add(userPassword);
+                args.Add("-upw");
+                args.Add(userPassword);
             }
-            psi.ArgumentList.Add(pdfPath);
-            psi.ArgumentList.Add(outPrefix);
+            args.Add(pdfPath);
+            args.Add(outPrefix);
 
-            using var p = Process.Start(psi);
-            if (p == null)
-                return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
-            if (!ReferenceProcessResources.WaitForExitAndCapture(p, timeoutMs, out var resources))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { }
-                return new ReferenceRenderResult(null, "TIMEOUT", $"pdftocairo exceeded {timeoutMs}ms", sw.ElapsedMilliseconds);
-            }
-            if (p.ExitCode != 0)
-            {
-                var stderr = p.StandardError.ReadToEnd();
-                return new ReferenceRenderResult(null, "EXIT_CODE",
-                    $"pdftocairo exited {p.ExitCode}: {Trunc(stderr.Trim(), 200)}", sw.ElapsedMilliseconds);
-            }
-            if (!File.Exists(outPath))
-                return new ReferenceRenderResult(null, "MISSING_OUTPUT", "pdftocairo did not write an output PNG", sw.ElapsedMilliseconds);
-
-            var bitmap = SKBitmap.Decode(outPath);
-            return bitmap == null
-                ? new ReferenceRenderResult(null, "DECODE_ERROR", "pdftocairo output PNG could not be decoded", sw.ElapsedMilliseconds)
-                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds,
-                    resources.PeakWorkingSetBytes, resources.CpuMs);
-        }
-        catch (Exception ex)
-        {
-            return new ReferenceRenderResult(null, "ERROR", ex.Message, sw.ElapsedMilliseconds);
+            return ReferenceProcess.RenderPng(sw, "pdftocairo", "pdftocairo", args, timeoutMs,
+                () => File.Exists(outPath) ? outPath : null);
         }
         finally
         {
             try { File.Delete(outPath); } catch { }
         }
     }
-
-    private static string Trunc(string value, int length)
-        => value.Length <= length ? value : value.Substring(0, length) + "…";
 }
