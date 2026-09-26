@@ -102,6 +102,61 @@ public class WordWrapRedactionTests
         }
     }
 
+    public static TheoryData<string, string, string, RedactionProfile> TypographicWrappedNames()
+    {
+        // (typed term, first line, second line). \222 is a right single quote
+        // and \226 an en dash in WinAnsiEncoding: the page prints what a
+        // typesetter prints, the user types the keyboard's apostrophe and hyphen.
+        var cases = new[]
+        {
+            ("Siobhan O'Rourke Brannigan", $"{Lead} Siobhan O\\222Rourke", $"Brannigan {Tail}"),
+            ("Siobhan O'Rourke Brannigan", $"{Lead} Siobhan", $"O\\222Rourke Brannigan {Tail}"),
+            ("Annemarie-Castellano Whitby Ferreira", $"{Lead} Annemarie\\226Castellano Whitby", $"Ferreira {Tail}"),
+            // A doubled space inside the name and two trailing spaces before the wrap.
+            ("Annemarie-Castellano Whitby Ferreira", $"{Lead} Annemarie\\226Castellano  Whitby  ", $"Ferreira {Tail}"),
+        };
+        var data = new TheoryData<string, string, string, RedactionProfile>();
+        foreach (var (term, line1, line2) in cases)
+            foreach (var profile in new[] { RedactionProfile.Standard, RedactionProfile.Maximum })
+                data.Add(term, line1, line2, profile);
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(TypographicWrappedNames))]
+    public void AWrappedNameWithACurlyQuoteOrEnDash_IsRemovedFromBothLines(
+        string term, string line1, string line2, RedactionProfile profile)
+    {
+        // #1791 with #1871: the wrap stands in for a space AND the page's
+        // typographic quote, dash and doubled space fold to what was typed.
+        RequireOracles();
+        var (report, saved, output) = Redact(BuildPdf(Shape.Tj, (72, 700, line1), (72, 686, line2)), term, profile);
+        try
+        {
+            report.VerifiedRemovals.Should().Be(1, report.ToString());
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+
+            SavedPdfLeakScanner.FindTerm(saved, term).Should().BeEmpty();
+            // The printed name's letters, split where the page has a quote,
+            // a dash or a space: what a reader of the bytes would find.
+            var fragments = Regex.Split(term, "[^A-Za-z]+").Where(f => f.Length >= 3).ToList();
+            fragments.Should().HaveCountGreaterThan(2);
+            foreach (var fragment in fragments)
+                SavedPdfLeakScanner.FindTerm(saved, fragment).Should().BeEmpty($"'{fragment}' must leave the file");
+            foreach (var (tool, text) in Readings(output))
+            {
+                foreach (var fragment in fragments)
+                    text.Should().NotContain(fragment, $"{tool} must not read '{fragment}'");
+                text.Should().Contain("signed by", $"{tool} must still read the first line's text");
+                text.Should().Contain("on behalf of the company", $"{tool} must still read the second line's text");
+            }
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
     [Fact]
     public void ANameWrappedOverThreeLines_IsRemovedFromEveryLine()
     {
@@ -261,11 +316,12 @@ public class WordWrapRedactionTests
         Assert.SkipUnless(PdftotextTextExtractor.IsAvailable, "pdftotext not installed [requires: tool:pdftotext]");
     }
 
-    private static (RedactionReport Report, byte[] Saved, string Output) Redact(byte[] pdf, string term)
+    private static (RedactionReport Report, byte[] Saved, string Output) Redact(
+        byte[] pdf, string term, RedactionProfile profile = RedactionProfile.Standard)
     {
         var output = Path.Combine(Path.GetTempPath(), $"excise-1791-{Guid.NewGuid():N}.pdf");
         using var doc = PdfDocument.Open(pdf);
-        var report = doc.RedactText(term, RedactionOptions.Default);
+        var report = doc.RedactText(term, RedactionOptions.ForProfile(profile));
         doc.Save(output);
         return (report, File.ReadAllBytes(output), output);
     }
@@ -341,7 +397,7 @@ public class WordWrapRedactionTests
             $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792]{rotate} "
                 + "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
             $"<< /Length {body.Length} >>\nstream\n{body}endstream",
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
         };
 
         var pdf = new StringBuilder("%PDF-1.7\n");
