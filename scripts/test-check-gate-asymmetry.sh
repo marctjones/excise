@@ -249,6 +249,59 @@ case "$out" in
 esac
 git checkout -q develop
 
+# 5c. #1844: the base a MANUAL run (t0, t1, t2, full) judges over. A batch pushed in reviewable
+#     steps passed the hook once per step, so the run must judge only what the hook has not:
+#     origin/develop..HEAD, the range the NEXT push is judged over. It used to be the last tier
+#     pass, which judged the whole cycle, so a batch that mixes a perf path with an expectation
+#     edit could never pass (a failing tier records no pass, so the base never advanced).
+#     runner_gate_asymmetry_base is sourced in a subshell and run from the synthetic repo, called
+#     the way t1 calls it. It reads no tier: the argument only lets the stale records planted
+#     below reach it, should a tier-keyed base ever come back.
+git init -q --bare "$WORK/origin.git"
+git remote add origin "$WORK/origin.git"
+base_now() ( RUNNER_ROOT="$REPO"; . "$ROOT/scripts/lib-runner.sh"; runner_gate_asymmetry_base t1 )
+# The hook's own range for a step, then the push it gates: git moves origin/develop only once
+# the push (so the hook) succeeded.
+push_step() {
+    scripts/check-gate-asymmetry.sh "$(git rev-parse origin/develop)" "$1" >/dev/null 2>&1 \
+        || fail "#1844 setup: the push step to $1 must pass on its own range"
+    git push -q origin "$1:refs/heads/develop"
+}
+git push -q origin "$BASE_SHA:refs/heads/develop"
+push_step "$PERF_SHA"      # a perf path alone
+push_step "$REWRITE_SHA"   # an expectation rewrite alone
+# A valid tier-pass record (the sentinel, an ancestor sha, the manifest's fingerprint) is planted
+# for every tier at the base commit: the old base rule read it, and no tier may read it now.
+mkdir -p tests logs/runner-state/tier-pass
+echo "manifest" > tests/gates.tsv
+for tier in t0 t1 t2 full; do
+    printf 'tier=%s\nsha=%s\nmanifest=%s\n--CKPT-OK--\n' "$tier" "$BASE_SHA" \
+        "$(shasum -a 256 tests/gates.tsv | cut -c1-16)" > "logs/runner-state/tier-pass/$tier.rec"
+done
+[ "$(base_now)" = "$REWRITE_SHA" ] \
+    || fail "#1844: after the steps were pushed the base must be origin/develop ($REWRITE_SHA), got $(base_now)"
+scripts/check-gate-asymmetry.sh "$BASE_SHA" >/dev/null 2>&1 && rc=0 || rc=$?
+[ "$rc" -eq 1 ] || fail "#1844 anchor: the whole cycle mixes both, so a base that reaches back to a stale record fails, got $rc"
+out="$(scripts/check-gate-asymmetry.sh "$(base_now)" 2>&1)" \
+    || fail "#1844: two individually passing push ranges are a passing batch; got: $out"
+ok
+# ONE range that touches a perf path and rewrites an expectation still FAILS: with only the base
+# commit pushed, the two commits are one prospective push.
+git update-ref refs/remotes/origin/develop "$BASE_SHA"
+[ "$(base_now)" = "$BASE_SHA" ] || fail "#1844: with origin/develop at the base the range is everything since it, got $(base_now)"
+out="$(scripts/check-gate-asymmetry.sh "$(base_now)" 2>&1)" && rc=0 || rc=$?
+[ "$rc" -eq 1 ] || fail "#1844: one unpushed range holding a perf change AND a rewritten expectation must fail, got $rc: $out"
+case "$out" in
+    *"Excise.Rendering/Renderer.cs"*"Demo.Tests/TileTests.cs"*) ok ;;
+    *) fail "#1844: the failure must name the perf file and the rewritten test: $out" ;;
+esac
+# An explicit GATE_ASYMMETRY_BASE (the hook's push range, or a hand-set override) still wins.
+[ "$(GATE_ASYMMETRY_BASE="$PERF_SHA" base_now)" = "$PERF_SHA" ] \
+    || fail "#1844: an explicit GATE_ASYMMETRY_BASE must be used as given"
+ok
+rm -rf logs tests "$WORK/origin.git"
+git remote remove origin
+
 # ─────────────────────────────── the hook ───────────────────────────────────
 
 # Runs the hook with one push line per argument, and answers with the recorded

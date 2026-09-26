@@ -234,7 +234,7 @@ fi
 runner_ledger_init "$LOG_DIR/ledger.jsonl"
 runner_export_oracle_env
 runner_export_release_env
-GATE_ASYMMETRY_BASE="$(runner_gate_asymmetry_base "$TIER")"
+GATE_ASYMMETRY_BASE="$(runner_gate_asymmetry_base)"
 export GATE_ASYMMETRY_BASE
 
 # run_step <name> <kind> <target> <filter> <class> <knownIssue> <prereq> <policy> <ckpt>
@@ -367,7 +367,4 @@ rc=$?
 # Checkpoint any row report-gates.sh just classified KNOWN so a later --resume
 # skips an accepted failure instead of re-running it (#1371).
 runner_checkpoint_known_failures "$LOG_DIR"
-if [ "$rc" = 0 ]; then
-    runner_tier_base_record_chain "$TIER"
-fi
 exit $rc
