@@ -216,7 +216,7 @@ public static class PdfDocumentSanitizer
 
     /// <summary>
     /// The per-carrier scrub decision, in one place (#1188). Each carrier walker
-    /// asks this what to write instead of calling <c>Excise</c> directly, so
+    /// asks this what to write instead of cutting the term itself, so
     /// <see cref="CarrierScrubMode"/> cannot be honoured in one carrier and
     /// forgotten in another.
     /// </summary>
@@ -256,14 +256,9 @@ public static class PdfDocumentSanitizer
         /// <summary>Does <paramref name="value"/> hold a term? Records the hit.</summary>
         internal bool Hits(string? value)
         {
-            if (string.IsNullOrEmpty(value)) return false;
-            foreach (var term in _terms)
-            {
-                if (TermMatch.IndexOf(value, term, _caseSensitive, _wholeWord, 0) < 0) continue;
-                TermFound = true;
-                return true;
-            }
-            return false;
+            if (!TermMatch.Holds(value, _terms, _caseSensitive, _wholeWord)) return false;
+            TermFound = true;
+            return true;
         }
 
         /// <summary>
@@ -276,23 +271,13 @@ public static class PdfDocumentSanitizer
         internal bool TryApply(string? value, out string replacement, bool trim = true)
         {
             replacement = value ?? string.Empty;
-            if (string.IsNullOrEmpty(value)) return false;
+            if (!Hits(value) || Mode == CarrierScrubMode.ReportOnly) return false;
 
-            // Strip keeps its exact pre-#1188 shape, including Excise's trim:
-            // computing the replacement first is what decides "changed".
-            if (Mode == CarrierScrubMode.Strip)
-            {
-                Hits(value);
-                var scrubbed = ExciseCore(value, _terms, _caseSensitive, _wholeWord, trim);
-                if (scrubbed == value) return false;
-                replacement = scrubbed;
-                return true;
-            }
-
-            if (!Hits(value)) return false;
-            if (Mode == CarrierScrubMode.ReportOnly) return false;
-
-            replacement = string.Empty;   // RemoveWhole
+            // Strip cuts the term out (TermMatch.Mask); RemoveWhole drops the value.
+            replacement = Mode == CarrierScrubMode.Strip
+                ? TermMatch.Mask(value!, _terms, _caseSensitive, _wholeWord)!
+                : string.Empty;
+            if (trim) replacement = replacement.Trim();
             return true;
         }
     }
@@ -834,8 +819,7 @@ public static class PdfDocumentSanitizer
     {
         if (renames.TryGetValue(key, out var done)) return done;
         if (!scrub.TryApply(key, out var masked)) return null;
-        // A cut can re-form the term ("KESKESTRELTREL" less "KESTREL"); a key must not.
-        var stem = masked.Length == 0 || scrub.Hits(masked) ? "[redacted]" : masked;
+        var stem = masked.Length == 0 ? "[redacted]" : masked;
         var unique = stem;
         for (var n = 2; !taken.Add(unique); n++) unique = $"{stem} {n}";
         return renames[key] = unique;
@@ -1104,35 +1088,5 @@ public static class PdfDocumentSanitizer
         foreach (var key in aa.Keys)
             changed |= ScrubUriAction(document, aa.GetOptional(key.Value), scrub);
         return changed;
-    }
-
-    /// <summary>
-    /// Cut every occurrence of <paramref name="terms"/> out of
-    /// <paramref name="value"/>, honouring the #1052 whole-word rule.
-    /// </summary>
-    /// <remarks>
-    /// ⚠️ The carrier path MUST use the same match rule as page content. #896's
-    /// lesson is exactly this: a safe option that existed only in the GUI meant
-    /// every other caller silently got the unsafe one. If page content matches
-    /// whole-word-only and metadata still matched by substring, redacting "Lee"
-    /// whole-word would leave the page intact and gut "Sleeman" in /Info.
-    /// </remarks>
-    private static string ExciseCore(
-        string value, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord, bool trim)
-    {
-        var result = value;
-        foreach (var term in terms)
-        {
-            if (string.IsNullOrEmpty(term)) continue;
-            var from = 0;
-            while (from <= result.Length - term.Length)
-            {
-                var at = TermMatch.IndexOf(result, term, caseSensitive, wholeWord, from);
-                if (at < 0) break;
-                result = result.Remove(at, term.Length);
-                from = at;
-            }
-        }
-        return trim ? result.Trim() : result;
     }
 }

@@ -101,7 +101,7 @@ internal static class InteractiveRedactionScrubber
         if (raw == null) return false;
         if (document.Resolve(raw) is not PdfString str) return false;
 
-        var redacted = TermMatch.Cut(str.Value, term, caseSensitive, wholeWord);
+        var redacted = TermMatch.Mask(str.Value, [term], caseSensitive, wholeWord);
         if (redacted == null) return false;
 
         // The old value may be its own indirect object still holding the term.
@@ -135,7 +135,7 @@ internal static class InteractiveRedactionScrubber
             switch (document.Resolve(options[i]))
             {
                 case PdfString entry:
-                    if (TermMatch.Cut(entry.Value, term, caseSensitive, wholeWord) is { } cut)
+                    if (TermMatch.Mask(entry.Value, [term], caseSensitive, wholeWord) is { } cut)
                     {
                         options[i] = new PdfString(cut);
                         changed = true;
@@ -146,7 +146,7 @@ internal static class InteractiveRedactionScrubber
                     for (var j = 0; j < pair.Count; j++)
                     {
                         if (document.Resolve(pair[j]) is PdfString s2 &&
-                            TermMatch.Cut(s2.Value, term, caseSensitive, wholeWord) is { } cut2)
+                            TermMatch.Mask(s2.Value, [term], caseSensitive, wholeWord) is { } cut2)
                         {
                             pair[j] = new PdfString(cut2);
                             changed = true;
