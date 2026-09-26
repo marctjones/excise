@@ -144,7 +144,7 @@ public class MidTierCoverageTests
     public void PdfPage_SetRotation_NormalizesAngle()
     {
         var pdf = MakePdfWithPageRotation();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var page = doc.Pages[0];
 
         // Set rotation to 450 degrees (normalize to 90)
@@ -169,7 +169,7 @@ public class MidTierCoverageTests
     public void PdfPage_SetRotation_RejectsInvalidAngle()
     {
         var pdf = MakePdfWithPageRotation();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var page = doc.Pages[0];
 
         Action act = () => page.Rotation = 45;
@@ -184,7 +184,7 @@ public class MidTierCoverageTests
     public void PdfPage_GetRotation_InheritedFromParent()
     {
         var pdf = MakePdfWithPageRotation(pageRotate: null, parentRotate: 90);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var page = doc.Pages[0];
 
         // Page should inherit the rotation from parent
@@ -198,7 +198,7 @@ public class MidTierCoverageTests
     public void PdfPage_GetContentStreamBytes_WithNoContents()
     {
         var pdf = MakePdfWithPageRotation();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var page = doc.Pages[0];
 
         // Remove the Contents key entirely
@@ -215,7 +215,7 @@ public class MidTierCoverageTests
     public void PdfPage_CropBox_FallsBackToMediaBox()
     {
         var pdf = MakePdfWithPageRotation();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var page = doc.Pages[0];
 
         var cropBox = page.CropBox;
@@ -236,7 +236,7 @@ public class MidTierCoverageTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [100 100 150 150] /M (D:20250228143022) >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -257,7 +257,7 @@ public class MidTierCoverageTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [100 100 150 150] /M (D:20250228143022Z) >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -276,7 +276,7 @@ public class MidTierCoverageTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Link /Rect [100 100 200 120] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -295,7 +295,7 @@ public class MidTierCoverageTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Link /Rect [100 100 200 120] /A << /S /Launch /F (app.exe) >> >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -314,7 +314,7 @@ public class MidTierCoverageTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Highlight /Rect [100 100 200 120] /C [0 0 0 0] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -337,7 +337,7 @@ public class MidTierCoverageTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Highlight /Rect [100 100 200 120] /QuadPoints [100 100 150 100 150 150 100 150 175] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var parsed = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -397,7 +397,7 @@ public class MidTierCoverageTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var parsed = PdfOutlineParser.Parse(doc);
         parsed.Should().BeEmpty();
@@ -456,7 +456,7 @@ public class MidTierCoverageTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var parsed = PdfOutlineParser.Parse(doc);
         parsed.Should().HaveCount(1);

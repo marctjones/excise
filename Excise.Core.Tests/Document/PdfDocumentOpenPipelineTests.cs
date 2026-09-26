@@ -13,7 +13,7 @@ public class PdfDocumentOpenPipelineTests
     {
         var stream = new MemoryStream(Encoding.ASCII.GetBytes("%PDF-1.7\nbroken"));
 
-        var open = () => PdfDocument.Open(stream, ownsStream: true);
+        var open = () => PdfDocument.Open(stream, new PdfOpenOptions { OwnsStream = true });
 
         open.Should().Throw<PdfParseException>();
         stream.CanRead.Should().BeFalse(
@@ -25,7 +25,7 @@ public class PdfDocumentOpenPipelineTests
     {
         using var stream = new MemoryStream(Encoding.ASCII.GetBytes("%PDF-1.7\nbroken"));
 
-        var open = () => PdfDocument.Open(stream, ownsStream: false);
+        var open = () => PdfDocument.Open(stream);
 
         open.Should().Throw<PdfParseException>();
         stream.CanRead.Should().BeTrue();
@@ -38,7 +38,7 @@ public class PdfDocumentOpenPipelineTests
     {
         var stream = new MemoryStream(BuildPdfWithNonDictionaryRoot());
 
-        var open = () => PdfDocument.Open(stream, ownsStream: true);
+        var open = () => PdfDocument.Open(stream, new PdfOpenOptions { OwnsStream = true });
 
         open.Should().Throw<PdfParseException>()
             .WithMessage("*Could not load document catalog*");

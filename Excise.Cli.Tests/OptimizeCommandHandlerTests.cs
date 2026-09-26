@@ -108,7 +108,7 @@ public sealed class OptimizeCommandHandlerTests : IDisposable
             new OptimizeCommandRequest(input, kept, PdfOptimizationPreset.Lossless, Password: "pw"),
             TestContext.Current.CancellationToken);
         keptResult.Diagnostics.Should().Contain(d => d.Contains("re-encrypted"));
-        using (var reopened = PdfDocument.Open(kept, "pw"))
+        using (var reopened = PdfDocument.Open(kept, new PdfOpenOptions { UserPassword = "pw" }))
             reopened.IsEncrypted.Should().BeTrue();
 
         var dropped = Path.Combine(_directory, "dropped.pdf");

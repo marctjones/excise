@@ -152,7 +152,7 @@ public class ConservationGateTests
     private static string[] ExtractPages(string pdfPath, string? password = null)
     {
         int pageCount;
-        using (var doc = PdfDocument.Open(File.ReadAllBytes(pdfPath), password, allowEncrypted: false))
+        using (var doc = PdfDocument.Open(File.ReadAllBytes(pdfPath), new PdfOpenOptions { UserPassword = password }))
             pageCount = doc.PageCount;
 
         if (password == null)

@@ -80,7 +80,7 @@ public class PdfAnnotationParserTests
     public void Parse_NoAnnots_ReturnsEmpty()
     {
         var pdf = MakePdfWithAnnots("[]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -92,7 +92,7 @@ public class PdfAnnotationParserTests
     public void Parse_NullAnnotsObject_ReturnsEmpty()
     {
         var pdf = MakePdfWithAnnots("null");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -104,7 +104,7 @@ public class PdfAnnotationParserTests
     public void Parse_AnnotsNotArray_ReturnsEmpty()
     {
         var pdf = MakePdfWithAnnots("<< /Name (NotAnArray) >>");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -117,7 +117,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Contents (No rect) >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -130,7 +130,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -143,7 +143,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect null >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -165,7 +165,7 @@ public class PdfAnnotationParserTests
             /F 68
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -215,7 +215,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = $@"[<< /Type /Annot /Subtype /{subtypeName} /Rect [0 0 100 20] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -266,7 +266,7 @@ public class PdfAnnotationParserTests
         var annotsDef = $@"[<< /Type /Annot /Subtype /{subtypeName} /Rect [0 0 100 20] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
 
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var result = PdfAnnotationParser.Parse(doc, doc.GetPage(1).Dictionary, null);
         result.Should().HaveCount(1, "guard: excise's own parser must find exactly one annotation");
 
@@ -334,7 +334,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /FutureType /Rect [0 0 10 10] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -350,7 +350,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /C [0.5] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -368,7 +368,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /C [1.0 0.5 0.0] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -385,7 +385,7 @@ public class PdfAnnotationParserTests
         // CMYK [0 0 0 0] = full white in CMYK
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /C [0 0 0 0] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -404,7 +404,7 @@ public class PdfAnnotationParserTests
         // screen preview, not pure DeviceRGB black.
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /C [0 0 0 1] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -421,7 +421,7 @@ public class PdfAnnotationParserTests
         // Invalid array length (2 elements)
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /C [0.5 0.5] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -434,7 +434,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /C (NotArray) >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -454,7 +454,7 @@ public class PdfAnnotationParserTests
             /QuadPoints [100 720 300 720 100 700 300 700]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -478,7 +478,7 @@ public class PdfAnnotationParserTests
             /QuadPoints [100 720 300 720 100 700 300 700 400 600 500 600 400 580 500 580]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -497,7 +497,7 @@ public class PdfAnnotationParserTests
             /QuadPoints [1 2 3 4 5 6 7]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -516,7 +516,7 @@ public class PdfAnnotationParserTests
             /QuadPoints [1 2 3 4]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -534,7 +534,7 @@ public class PdfAnnotationParserTests
             /QuadPoints (NotArray)
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -554,7 +554,7 @@ public class PdfAnnotationParserTests
             /QuadPoints [10 90 90 90 10 10 90 10]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -578,7 +578,7 @@ public class PdfAnnotationParserTests
             /M (D:20250101120000Z)
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -600,7 +600,7 @@ public class PdfAnnotationParserTests
             /M (20250315)
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -622,7 +622,7 @@ public class PdfAnnotationParserTests
             /M (D:20250101120000+05'00')
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -642,7 +642,7 @@ public class PdfAnnotationParserTests
             /M (D:20250101120000-08'30')
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -656,7 +656,7 @@ public class PdfAnnotationParserTests
     public void Parse_Date_ReadsEveryFormAllowedBySection794(string raw, string expectedIso)
     {
         var pdf = MakePdfWithAnnots($"[<< /Type /Annot /Subtype /Text /Rect [0 0 100 100] /M ({raw}) /CreationDate ({raw}) >>]");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var result = PdfAnnotationParser.Parse(doc, doc.GetPage(1).Dictionary, null);
 
@@ -674,7 +674,7 @@ public class PdfAnnotationParserTests
             /M (InvalidDateString)
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -692,7 +692,7 @@ public class PdfAnnotationParserTests
             /CreationDate (D:20240101)
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -707,7 +707,7 @@ public class PdfAnnotationParserTests
     public void Parse_LinkAnnotationWithGoToAction_ResolvesPage()
     {
         var pdf = MakePdfWithMultiPageAnnot();
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var pageDict = doc.GetPage(1).Dictionary;
 
@@ -728,7 +728,7 @@ public class PdfAnnotationParserTests
             /A << /S /URI /URI (https://example.com) >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -743,7 +743,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Link /Rect [0 0 100 20] /Dest [99 0 R /Fit] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -763,7 +763,7 @@ public class PdfAnnotationParserTests
             << /Type /Annot /Subtype /Stamp /Rect [100 500 300 600] >>
         ]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -784,7 +784,7 @@ public class PdfAnnotationParserTests
             << /Type /Annot /Subtype /Stamp /Rect [100 500 300 600] >>
         ]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -845,7 +845,7 @@ public class PdfAnnotationParserTests
         sb.AppendLine("%%EOF");
 
         var pdf = Encoding.Latin1.GetBytes(sb.ToString());
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -862,7 +862,7 @@ public class PdfAnnotationParserTests
         // F = 1 + 2 + 4 + 8 + 16 + 32 + 64 + 128 + 256 + 512 = 1023
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /F 1023 >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -885,7 +885,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -904,7 +904,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = $@"[<< /Type /Annot /Subtype /{subtypeName} /Rect [0 0 100 20] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -917,7 +917,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 100 100] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -932,7 +932,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /Open true >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -945,7 +945,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /Open false >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -958,7 +958,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -971,7 +971,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /Name /Comment >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -986,7 +986,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1005,7 +1005,7 @@ public class PdfAnnotationParserTests
             /L [10 20 110 120]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1020,7 +1020,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Line /Rect [0 0 200 200] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1034,7 +1034,7 @@ public class PdfAnnotationParserTests
         // /L is set but subtype is Square — only Line populates LineEndpoints.
         var annotsDef = @"[<< /Type /Annot /Subtype /Square /Rect [0 0 200 200] /L [10 20 110 120] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1050,7 +1050,7 @@ public class PdfAnnotationParserTests
             /Vertices [10 20 110 30 60 200]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1069,7 +1069,7 @@ public class PdfAnnotationParserTests
             /Vertices [0 0 50 50 100 0]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1088,7 +1088,7 @@ public class PdfAnnotationParserTests
             ]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1106,7 +1106,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Ink /Rect [0 0 300 300] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1122,7 +1122,7 @@ public class PdfAnnotationParserTests
             /FS << /Type /Filespec /UF (data.csv) /F (data.csv) >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1140,7 +1140,7 @@ public class PdfAnnotationParserTests
             /FS << /Type /Filespec /F (legacy.txt) >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1153,7 +1153,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /FileAttachment /Rect [0 0 20 20] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1171,7 +1171,7 @@ public class PdfAnnotationParserTests
             /Border [0 0 2.5 [3 1]]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1190,7 +1190,7 @@ public class PdfAnnotationParserTests
             /BS << /Type /Border /W 4 /S /D /D [5 2] >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1205,7 +1205,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Square /Rect [0 0 100 100] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1223,7 +1223,7 @@ public class PdfAnnotationParserTests
             /AP << /N << >> >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1236,7 +1236,7 @@ public class PdfAnnotationParserTests
     {
         var annotsDef = @"[<< /Type /Annot /Subtype /Stamp /Rect [0 0 100 100] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1253,7 +1253,7 @@ public class PdfAnnotationParserTests
             /Vertices [0 0 50 50 100]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1269,7 +1269,7 @@ public class PdfAnnotationParserTests
             /L [10 20 110]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1288,7 +1288,7 @@ public class PdfAnnotationParserTests
             /FS << /Type /Filespec /UF (missing.txt) >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1307,7 +1307,7 @@ public class PdfAnnotationParserTests
             /FS << /Type /Filespec /UF (test.txt) /EF (invalid) >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1325,7 +1325,7 @@ public class PdfAnnotationParserTests
             /FS << /Type /Filespec /UF (test.txt) /EF << >> >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1343,7 +1343,7 @@ public class PdfAnnotationParserTests
             /FS << /Type /Filespec /UF (test.txt) /EF << /F (notstream) >> >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1361,7 +1361,7 @@ public class PdfAnnotationParserTests
             /FS (notdict)
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1382,7 +1382,7 @@ public class PdfAnnotationParserTests
             /BS << /W 3 /S /S /D [2 3] >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1403,7 +1403,7 @@ public class PdfAnnotationParserTests
             /BS << /S /D >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1422,7 +1422,7 @@ public class PdfAnnotationParserTests
             /BS << /W 2.75 >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1440,7 +1440,7 @@ public class PdfAnnotationParserTests
             /BS [1 2 3]
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1460,7 +1460,7 @@ public class PdfAnnotationParserTests
             /A << /S /GoToR /F (external.pdf) >>
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);
@@ -1479,7 +1479,7 @@ public class PdfAnnotationParserTests
             /A (notdict)
         >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
         var pageDict = doc.GetPage(1).Dictionary;
 
         var result = PdfAnnotationParser.Parse(doc, pageDict, null);

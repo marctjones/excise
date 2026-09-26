@@ -49,7 +49,7 @@ public class PdfDocumentWriterEncryptionTests
         using var doc = PdfDocument.Open(CreateSimplePdf("Plain ID Test"));
 
         var bytes = SaveEncrypted(doc, new PdfEncryptionOptions());
-        using var reopened = PdfDocument.Open(bytes, userPassword: null, allowEncrypted: true);
+        using var reopened = PdfDocument.Open(bytes, new PdfOpenOptions { AllowEncrypted = true });
 
         reopened.Trailer.TryGetArray("ID", out var idArray).Should().BeTrue();
         idArray.Count.Should().Be(2);
@@ -149,7 +149,7 @@ public class PdfDocumentWriterEncryptionTests
 
         var bytes = SaveEncrypted(doc, new PdfEncryptionOptions());
 
-        using var reopened = PdfDocument.Open(bytes, userPassword: null);
+        using var reopened = PdfDocument.Open(bytes);
         reopened.PageCount.Should().Be(1);
         reopened.GetPage(1).Text.Should().Contain("Round Trip Empty Password");
     }
@@ -166,11 +166,11 @@ public class PdfDocumentWriterEncryptionTests
         });
 
         // Wrong password must fail.
-        Action openWrong = () => PdfDocument.Open(bytes, userPassword: "wrong-password");
+        Action openWrong = () => PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = "wrong-password" });
         openWrong.Should().Throw<PdfEncryptionNotSupportedException>();
 
         // Correct user password must succeed and decrypt correctly.
-        using var reopened = PdfDocument.Open(bytes, userPassword: "correct-horse-battery-staple");
+        using var reopened = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = "correct-horse-battery-staple" });
         reopened.GetPage(1).Text.Should().Contain("Password Protected Text");
     }
 
@@ -185,7 +185,7 @@ public class PdfDocumentWriterEncryptionTests
 
         var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { UserPassword = password });
 
-        using var reopened = PdfDocument.Open(bytes, userPassword: password);
+        using var reopened = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = password });
         reopened.GetPage(1).Text.Should().Contain("Non ASCII Password Text");
     }
 
@@ -200,7 +200,7 @@ public class PdfDocumentWriterEncryptionTests
             OwnerPassword = "owner-pw-2",
         });
 
-        using var viaUser = PdfDocument.Open(bytes, userPassword: "user-pw-1");
+        using var viaUser = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = "user-pw-1" });
         viaUser.GetPage(1).Text.Should().Contain("Dual Password Text");
 
         // Note: excise's own decrypt handler does not yet implement Algorithm
@@ -221,7 +221,7 @@ public class PdfDocumentWriterEncryptionTests
 
         var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { UserPassword = "pw" });
 
-        using var reopened = PdfDocument.Open(bytes, userPassword: "pw");
+        using var reopened = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = "pw" });
         reopened.GetPage(1).Text.Should().Contain(secretBody, "stream content must decrypt correctly");
         reopened.Author.Should().Be(secretAuthor, "string content (Info /Author) must decrypt correctly");
         reopened.Title.Should().Be("Confidential Title");
@@ -239,8 +239,8 @@ public class PdfDocumentWriterEncryptionTests
         var first = SaveEncrypted(doc, options);
         var second = SaveEncrypted(doc, options);
 
-        using var reopenedFirst = PdfDocument.Open(first, userPassword: "pw");
-        using var reopenedSecond = PdfDocument.Open(second, userPassword: "pw");
+        using var reopenedFirst = PdfDocument.Open(first, new PdfOpenOptions { UserPassword = "pw" });
+        using var reopenedSecond = PdfDocument.Open(second, new PdfOpenOptions { UserPassword = "pw" });
         reopenedFirst.GetPage(1).Text.Should().Contain("Stable Save Test");
         reopenedSecond.GetPage(1).Text.Should().Contain("Stable Save Test");
     }
@@ -300,7 +300,7 @@ public class PdfDocumentWriterEncryptionTests
 
         var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
 
-        using var reopened = PdfDocument.Open(bytes, userPassword: null);
+        using var reopened = PdfDocument.Open(bytes);
         reopened.PageCount.Should().Be(1);
         reopened.GetPage(1).Text.Should().Contain("R4 Round Trip Empty Password");
     }
@@ -317,10 +317,10 @@ public class PdfDocumentWriterEncryptionTests
             OwnerPassword = "owner-secret",
         });
 
-        Action openWrong = () => PdfDocument.Open(bytes, userPassword: "wrong-password");
+        Action openWrong = () => PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = "wrong-password" });
         openWrong.Should().Throw<PdfEncryptionNotSupportedException>();
 
-        using var reopened = PdfDocument.Open(bytes, userPassword: "correct-horse-battery-staple");
+        using var reopened = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = "correct-horse-battery-staple" });
         reopened.GetPage(1).Text.Should().Contain("R4 Password Protected Text");
     }
 
@@ -339,7 +339,7 @@ public class PdfDocumentWriterEncryptionTests
             UserPassword = password,
         });
 
-        using var reopened = PdfDocument.Open(bytes, userPassword: password);
+        using var reopened = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = password });
         reopened.GetPage(1).Text.Should().Contain("R4 Non ASCII Password Text");
     }
 
@@ -371,7 +371,7 @@ public class PdfDocumentWriterEncryptionTests
                 $"[{algorithm}] a user-password-only file must reject the empty password — " +
                 "an empty owner password would be a silent full-authority bypass");
 
-            using var viaUser = PdfDocument.Open(bytes, userPassword: "the-only-password");
+            using var viaUser = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = "the-only-password" });
             viaUser.GetPage(1).Text.Should().Contain("User Only Secret");
         }
     }
@@ -388,7 +388,7 @@ public class PdfDocumentWriterEncryptionTests
             OwnerPassword = "owner-pw-2",
         });
 
-        using var viaUser = PdfDocument.Open(bytes, userPassword: "user-pw-1");
+        using var viaUser = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = "user-pw-1" });
         viaUser.GetPage(1).Text.Should().Contain("R4 Dual Password Text");
 
         // As with R6: excise's own decrypt handler doesn't implement owner-
@@ -408,7 +408,7 @@ public class PdfDocumentWriterEncryptionTests
 
         var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128, UserPassword = "pw" });
 
-        using var reopened = PdfDocument.Open(bytes, userPassword: "pw");
+        using var reopened = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = "pw" });
         reopened.GetPage(1).Text.Should().Contain(secretBody, "stream content must decrypt correctly");
         reopened.Author.Should().Be(secretAuthor, "string content (Info /Author) must decrypt correctly");
         reopened.Title.Should().Be("R4 Confidential Title");
@@ -423,8 +423,8 @@ public class PdfDocumentWriterEncryptionTests
         var first = SaveEncrypted(doc, options);
         var second = SaveEncrypted(doc, options);
 
-        using var reopenedFirst = PdfDocument.Open(first, userPassword: "pw");
-        using var reopenedSecond = PdfDocument.Open(second, userPassword: "pw");
+        using var reopenedFirst = PdfDocument.Open(first, new PdfOpenOptions { UserPassword = "pw" });
+        using var reopenedSecond = PdfDocument.Open(second, new PdfOpenOptions { UserPassword = "pw" });
         reopenedFirst.GetPage(1).Text.Should().Contain("R4 Stable Save Test");
         reopenedSecond.GetPage(1).Text.Should().Contain("R4 Stable Save Test");
     }
@@ -447,7 +447,7 @@ public class PdfDocumentWriterEncryptionTests
 
         var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
 
-        using var reopened = PdfDocument.Open(bytes, userPassword: null);
+        using var reopened = PdfDocument.Open(bytes);
         reopened.Author.Should().Be(sharedSecret);
         reopened.Title.Should().Be(sharedSecret);
 

@@ -32,7 +32,7 @@ public class PdfDocumentSaveLifecycleTests
 
             using (var reader = new FileStream(path, FileMode.Open, FileAccess.Read,
                        FileShare.ReadWrite | FileShare.Delete))
-            using (var document = PdfDocument.Open(reader, ownsStream: false))
+            using (var document = PdfDocument.Open(reader))
             {
                 document.Pages.AddBlank(100, 100);
                 document.Save(path);
@@ -76,7 +76,7 @@ public class PdfDocumentSaveLifecycleTests
         {
             var path = SeedFile(Path.Combine(dir, "doc.pdf"));
             using var reader = OpenLikeTheGui(path);
-            using var document = PdfDocument.Open(reader, ownsStream: false);
+            using var document = PdfDocument.Open(reader);
 
             var sibling = SeedFile(Path.Combine(dir, "sync-download.pdf"), pages: 3);
             File.Move(sibling, path, overwrite: true);
@@ -138,7 +138,7 @@ public class PdfDocumentSaveLifecycleTests
             var other = SeedFile(Path.Combine(dir, "other.pdf"));
             File.SetLastWriteTimeUtc(other, DateTime.UtcNow.AddMinutes(-5));
             using var reader = OpenLikeTheGui(path);
-            using var document = PdfDocument.Open(reader, ownsStream: false);
+            using var document = PdfDocument.Open(reader);
 
             document.Pages.AddBlank(100, 100);
             document.Save(path);
@@ -328,8 +328,8 @@ public class PdfDocumentSaveLifecycleTests
         document.GetReferenceTo(document.Catalog).Should().Be(catalogReference,
             "writer-only encryption state must not replace document objects");
 
-        using var firstReader = PdfDocument.Open(first, userPassword: "lifecycle-password");
-        using var secondReader = PdfDocument.Open(second, userPassword: "lifecycle-password");
+        using var firstReader = PdfDocument.Open(first, new PdfOpenOptions { UserPassword = "lifecycle-password" });
+        using var secondReader = PdfDocument.Open(second, new PdfOpenOptions { UserPassword = "lifecycle-password" });
         firstReader.PageCount.Should().Be(1);
         secondReader.PageCount.Should().Be(1);
 
@@ -341,7 +341,7 @@ public class PdfDocumentSaveLifecycleTests
 
     private static int GetEncryptionObjectNumber(byte[] bytes)
     {
-        using var document = PdfDocument.Open(bytes, "lifecycle-password");
+        using var document = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = "lifecycle-password" });
         return document.Trailer.GetReference("Encrypt").ObjectNum;
     }
 }

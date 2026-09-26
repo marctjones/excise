@@ -25,7 +25,7 @@ public sealed class PdfRasterRedactionConverter
     {
         if (!_ocr.IsAvailable()) throw new InvalidOperationException("Image-only redaction requires tesseract.");
         ArgumentException.ThrowIfNullOrEmpty(term);
-        using var source = PdfDocument.Open(File.ReadAllBytes(inputPath), password);
+        using var source = PdfDocument.Open(File.ReadAllBytes(inputPath), new PdfOpenOptions { UserPassword = password });
         var reEncryption = allowDecrypt ? null : source.GetReEncryptionOptions(password);
         using var output = PdfDocument.CreateNew(source.Version);
         var renderer = new SkiaRenderer(); int total = 0;

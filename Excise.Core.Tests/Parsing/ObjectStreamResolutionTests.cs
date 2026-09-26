@@ -331,7 +331,7 @@ public class ObjectStreamResolutionTests
         // /Encrypt dict at the caller's risk. With RC4 working, the
         // empty-password case won't hit this fallback path; this test
         // just keeps the API contract pinned.
-        using var doc = PdfDocument.Open(EncryptedFixture(EncryptedRC4Pdf), allowEncrypted: true);
+        using var doc = PdfDocument.Open(EncryptedFixture(EncryptedRC4Pdf), new PdfOpenOptions { AllowEncrypted = true });
         doc.IsEncrypted.Should().BeTrue();
         doc.Trailer.GetOptional("Encrypt").Should().NotBeNull(
             "/Encrypt dict must be reachable so callers inspecting encryption parameters can read /V, /R, /U, /O");
@@ -340,7 +340,7 @@ public class ObjectStreamResolutionTests
     [Fact]
     public void OpensEncryptedPdf_WithSuppliedAsciiUserPassword()
     {
-        using var doc = PdfDocument.Open(EncryptedFixture(PasswordEncryptedAes128), userPassword: "password");
+        using var doc = PdfDocument.Open(EncryptedFixture(PasswordEncryptedAes128), new PdfOpenOptions { UserPassword = "password" });
 
         doc.IsEncrypted.Should().BeTrue();
         doc.IsDecrypting.Should().BeTrue();
@@ -350,7 +350,7 @@ public class ObjectStreamResolutionTests
     [Fact]
     public void OpensEncryptedPdf_WithSuppliedAes256UserPassword()
     {
-        using var doc = PdfDocument.Open(EncryptedFixture(PasswordEncryptedAes256), userPassword: "user-secret");
+        using var doc = PdfDocument.Open(EncryptedFixture(PasswordEncryptedAes256), new PdfOpenOptions { UserPassword = "user-secret" });
 
         doc.IsEncrypted.Should().BeTrue();
         doc.IsDecrypting.Should().BeTrue();
@@ -360,7 +360,7 @@ public class ObjectStreamResolutionTests
     [Fact]
     public void OpensEncryptedPdf_WithPdfDocEncodingPassword()
     {
-        using var doc = PdfDocument.Open(EncryptedFixture(PasswordEncryptedPdfDocEncoding), userPassword: "garçon");
+        using var doc = PdfDocument.Open(EncryptedFixture(PasswordEncryptedPdfDocEncoding), new PdfOpenOptions { UserPassword = "garçon" });
 
         doc.IsEncrypted.Should().BeTrue();
         doc.IsDecrypting.Should().BeTrue();

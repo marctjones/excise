@@ -414,7 +414,7 @@ public class SignatureApplicationServiceTests : IDisposable
         }
 
         using var certificate = TestSigningCertificates.CreateSelfSigned("Encrypted Source");
-        using var encrypted = PdfDocument.Open(encryptedPath, "user-pw");
+        using var encrypted = PdfDocument.Open(encryptedPath, new PdfOpenOptions { UserPassword = "user-pw" });
 
         var act = () => _signer.SignDocument(encrypted, certificate);
 

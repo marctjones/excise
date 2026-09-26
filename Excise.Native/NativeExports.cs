@@ -124,7 +124,7 @@ public static unsafe class NativeExports
         PdfDocument doc;
         try
         {
-            doc = PdfDocument.Open(bytes, password);
+            doc = PdfDocument.Open(bytes, new PdfOpenOptions { UserPassword = password });
         }
         catch (Exception ex) when (ex is not NativeException)
         {

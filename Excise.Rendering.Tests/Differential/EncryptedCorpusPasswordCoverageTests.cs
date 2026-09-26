@@ -250,7 +250,7 @@ public class EncryptedCorpusPasswordCoverageTests
     {
         try
         {
-            using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(path), password);
+            using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(path), new Excise.Core.Document.PdfOpenOptions { UserPassword = password });
             return doc.PageCount >= 0;
         }
         catch

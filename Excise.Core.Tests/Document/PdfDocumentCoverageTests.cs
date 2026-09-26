@@ -320,7 +320,7 @@ public class PdfDocumentCoverageTests
     {
         var pdfData = CreatePdfWithInvalidEncryptDict();
 
-        var act = () => PdfDocument.Open(new MemoryStream(pdfData), ownsStream: false, allowEncrypted: false);
+        var act = () => PdfDocument.Open(new MemoryStream(pdfData));
 
         act.Should().Throw<PdfParseException>()
             .WithMessage("*is not a dictionary*");
@@ -335,7 +335,7 @@ public class PdfDocumentCoverageTests
     {
         var pdfData = CreatePdfWithMissingIdArray();
 
-        var act = () => PdfDocument.Open(new MemoryStream(pdfData), ownsStream: false, allowEncrypted: false);
+        var act = () => PdfDocument.Open(new MemoryStream(pdfData));
 
         act.Should().Throw<PdfParseException>()
             .WithMessage("*ID array*");
@@ -351,11 +351,11 @@ public class PdfDocumentCoverageTests
         var pdfData = CreatePdfWithUnsupportedEncryption();
 
         // With allowEncrypted=false, should throw
-        var act1 = () => PdfDocument.Open(new MemoryStream(pdfData), ownsStream: false, allowEncrypted: false);
+        var act1 = () => PdfDocument.Open(new MemoryStream(pdfData));
         act1.Should().Throw<PdfEncryptionNotSupportedException>();
 
         // With allowEncrypted=true, should open (handler will be null but document opens)
-        using var doc = PdfDocument.Open(new MemoryStream(pdfData), ownsStream: false, allowEncrypted: true);
+        using var doc = PdfDocument.Open(new MemoryStream(pdfData), new PdfOpenOptions { AllowEncrypted = true });
         doc.Should().NotBeNull();
         doc.IsEncrypted.Should().BeTrue();
         doc.PageCount.Should().Be(1);
@@ -760,7 +760,7 @@ public class PdfDocumentCoverageTests
         var stream = new MemoryStream(pdfData);
 
         // With ownsStream=false, exception should throw but stream stays open
-        var act = () => PdfDocument.Open(stream, ownsStream: false, allowEncrypted: false);
+        var act = () => PdfDocument.Open(stream);
 
         act.Should().Throw<PdfEncryptionNotSupportedException>();
 
@@ -1478,7 +1478,7 @@ public class PdfDocumentCoverageTests
     {
         var pdfData = CreatePdfWithUnsupportedEncryption();
 
-        using var doc = PdfDocument.Open(new MemoryStream(pdfData), allowEncrypted: true);
+        using var doc = PdfDocument.Open(new MemoryStream(pdfData), new PdfOpenOptions { AllowEncrypted = true });
 
         doc.IsEncrypted.Should().BeTrue();
     }
@@ -1614,7 +1614,7 @@ public class PdfDocumentCoverageTests
         var pdfData = CreatePdfWithCustomTrailer();
         var stream = new MemoryStream(pdfData);
 
-        var doc = PdfDocument.Open(stream, ownsStream: true);
+        var doc = PdfDocument.Open(stream, new PdfOpenOptions { OwnsStream = true });
         doc.Dispose();
 
         // Stream should be disposed when ownsStream=true

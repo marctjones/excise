@@ -32,7 +32,7 @@ public sealed class EncryptedRedactionRegressionTests
     {
         var path = ExistingFixturePath(relativePath);
 
-        using var doc = PdfDocument.Open(path, password);
+        using var doc = PdfDocument.Open(path, new PdfOpenOptions { UserPassword = password });
         doc.IsEncrypted.Should().BeTrue();
         string.Concat(doc.GetPage(1).Letters.Select(l => l.Value)).Should().Contain(secret);
 
@@ -47,7 +47,7 @@ public sealed class EncryptedRedactionRegressionTests
         withoutPassword.Should().Throw<PdfEncryptionNotSupportedException>(
             "the redacted output must still require the source's password (#643)");
 
-        using var reopened = PdfDocument.Open(saved, password);
+        using var reopened = PdfDocument.Open(saved, new PdfOpenOptions { UserPassword = password });
         reopened.IsEncrypted.Should().BeTrue(
             "redacting a password-protected PDF must yield a password-protected PDF (#643)");
         reopened.Permissions.RawValue.Should().Be(doc.Permissions.RawValue,
@@ -80,7 +80,7 @@ public sealed class EncryptedRedactionRegressionTests
         var missingPassword = () => PdfDocument.Open(path);
         missingPassword.Should().Throw<PdfEncryptionNotSupportedException>();
 
-        var wrongPassword = () => PdfDocument.Open(path, password + "-wrong");
+        var wrongPassword = () => PdfDocument.Open(path, new PdfOpenOptions { UserPassword = password + "-wrong" });
         wrongPassword.Should().Throw<PdfEncryptionNotSupportedException>();
     }
 

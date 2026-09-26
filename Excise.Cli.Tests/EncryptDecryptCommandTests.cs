@@ -115,7 +115,7 @@ public class EncryptDecryptCommandTests : IDisposable
             "content-stream plaintext must not survive encryption in the saved bytes");
         Encoding.Latin1.GetString(saved).Should().Contain("/Encrypt");
 
-        using var reopened = PdfDocument.Open(saved, "user-pw");
+        using var reopened = PdfDocument.Open(saved, new PdfOpenOptions { UserPassword = "user-pw" });
         reopened.IsEncrypted.Should().BeTrue();
         reopened.GetPage(1).Text.Should().Contain("CLI ENCRYPT MARKER");
     }
@@ -133,7 +133,7 @@ public class EncryptDecryptCommandTests : IDisposable
         Encoding.Latin1.GetString(saved).Should().Contain("/Encrypt");
         Encoding.Latin1.GetString(saved).Should().NotContain("MARKER");
 
-        using var reopened = PdfDocument.Open(saved, "user-pw");
+        using var reopened = PdfDocument.Open(saved, new PdfOpenOptions { UserPassword = "user-pw" });
         reopened.GetPage(1).Text.Should().Contain("INPLACE ENCRYPT MARKER");
     }
 
@@ -249,10 +249,10 @@ public class EncryptDecryptCommandTests : IDisposable
         EncryptionCommandTestDriver.RunEncrypt(plain, v2, "new-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
 
         var v2Bytes = File.ReadAllBytes(v2);
-        var openWithOld = () => PdfDocument.Open(v2Bytes, "old-pw");
+        var openWithOld = () => PdfDocument.Open(v2Bytes, new PdfOpenOptions { UserPassword = "old-pw" });
         openWithOld.Should().Throw<Exception>("the old password must no longer open the re-encrypted file");
 
-        using var withNew = PdfDocument.Open(v2Bytes, "new-pw");
+        using var withNew = PdfDocument.Open(v2Bytes, new PdfOpenOptions { UserPassword = "new-pw" });
         withNew.GetPage(1).Text.Should().Contain("SEKRIT");
     }
 }

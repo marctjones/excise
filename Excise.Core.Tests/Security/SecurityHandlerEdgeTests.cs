@@ -149,7 +149,7 @@ public class SecurityHandlerEdgeTests
         var open = () => PdfDocument.Open(pdf);
         open.Should().Throw<PdfEncryptionNotSupportedException>().WithMessage("*/Encrypt*");
 
-        using var inspected = PdfDocument.Open(pdf, allowEncrypted: true);
+        using var inspected = PdfDocument.Open(pdf, new PdfOpenOptions { AllowEncrypted = true });
         inspected.IsEncrypted.Should().BeTrue();
         inspected.IsDecrypting.Should().BeFalse("the caller asked for ciphertext and must be able to tell");
         inspected.GetPage(1).Text.Should().NotContain("RC4SECRET");

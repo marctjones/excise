@@ -303,78 +303,27 @@ public partial class PdfDocument : IDisposable
         Version = openResult.Version;
     }
 
-    /// <summary>
-    /// Open a PDF document from a file.
-    /// </summary>
-    public static PdfDocument Open(string path, bool allowEncrypted = false)
-    {
-        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        return OpenCore(stream, ownsStream: true, allowEncrypted: allowEncrypted, userPassword: null);
-    }
+    /// <summary>Open a PDF document from a file.</summary>
+    public static PdfDocument Open(string path, PdfOpenOptions? options = null)
+        => OpenCore(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read), ownsStream: true, options);
 
-    /// <summary>
-    /// Open a password-protected PDF document from a file.
-    /// </summary>
-    /// <param name="path">Path to the PDF file.</param>
-    /// <param name="userPassword">User password. <c>null</c> is treated as the empty password.</param>
-    /// <param name="allowEncrypted">When true, unsupported encrypted PDFs are opened for inspection with ciphertext streams.</param>
-    public static PdfDocument Open(string path, string? userPassword, bool allowEncrypted = false)
-    {
-        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        return OpenCore(stream, ownsStream: true, allowEncrypted: allowEncrypted, userPassword: userPassword);
-    }
+    /// <summary>Open a PDF document from a stream; <see cref="PdfOpenOptions.OwnsStream"/> defaults to false.</summary>
+    public static PdfDocument Open(Stream stream, PdfOpenOptions? options = null)
+        => OpenCore(stream, options?.OwnsStream ?? false, options);
 
-    /// <summary>
-    /// Open a PDF document from a stream.
-    /// </summary>
-    /// <param name="stream">Stream to read.</param>
-    /// <param name="ownsStream">Whether the document should dispose the stream on close.</param>
-    /// <param name="allowEncrypted">When false (default), an encrypted PDF that no
-    /// security handler can decrypt (unsupported handler, wrong password, missing or
-    /// unreadable /Encrypt) throws <see cref="Excise.Core.Parsing.PdfEncryptionNotSupportedException"/>:
-    /// its streams would read as ciphertext, and extraction and redaction would find
-    /// nothing and report success. When true it opens for inspection with ciphertext
-    /// streams and <see cref="IsDecrypting"/> false.</param>
-    public static PdfDocument Open(Stream stream, bool ownsStream = false, bool allowEncrypted = false)
-        => OpenCore(stream, ownsStream, allowEncrypted, userPassword: null);
+    /// <summary>Open a PDF document from a byte array.</summary>
+    public static PdfDocument Open(byte[] data, PdfOpenOptions? options = null)
+        => OpenCore(new MemoryStream(data, writable: false), ownsStream: true, options);
 
-    /// <summary>
-    /// Open a password-protected PDF document from a stream.
-    /// </summary>
-    /// <param name="stream">Stream to read.</param>
-    /// <param name="userPassword">User password. <c>null</c> is treated as the empty password.</param>
-    /// <param name="ownsStream">Whether the document should dispose the stream on close.</param>
-    /// <param name="allowEncrypted">When true, unsupported encrypted PDFs are opened for inspection with ciphertext streams.</param>
-    public static PdfDocument Open(Stream stream, string? userPassword, bool ownsStream = false, bool allowEncrypted = false)
-        => OpenCore(stream, ownsStream, allowEncrypted, userPassword);
-
-    private static PdfDocument OpenCore(Stream stream, bool ownsStream, bool allowEncrypted, string? userPassword)
+    private static PdfDocument OpenCore(Stream stream, bool ownsStream, PdfOpenOptions? options)
     {
         // Taken before parsing so it describes the bytes the document reads
         // (#1683); see OnDiskFileState.FromSource.
         var source = Writing.OnDiskFileState.FromSource(stream);
-        var document = PdfDocumentOpenPipeline.Open(stream, ownsStream, allowEncrypted, userPassword);
+        var document = PdfDocumentOpenPipeline.Open(
+            stream, ownsStream, options?.AllowEncrypted ?? false, options?.UserPassword);
         document.SourceFileState = source;
         return document;
-    }
-
-    /// <summary>
-    /// Open a PDF document from a byte array.
-    /// </summary>
-    public static PdfDocument Open(byte[] data, bool allowEncrypted = false)
-    {
-        return OpenCore(new MemoryStream(data, writable: false), ownsStream: true, allowEncrypted: allowEncrypted, userPassword: null);
-    }
-
-    /// <summary>
-    /// Open a password-protected PDF document from a byte array.
-    /// </summary>
-    /// <param name="data">PDF bytes.</param>
-    /// <param name="userPassword">User password. <c>null</c> is treated as the empty password.</param>
-    /// <param name="allowEncrypted">When true, unsupported encrypted PDFs are opened for inspection with ciphertext streams.</param>
-    public static PdfDocument Open(byte[] data, string? userPassword, bool allowEncrypted = false)
-    {
-        return OpenCore(new MemoryStream(data, writable: false), ownsStream: true, allowEncrypted: allowEncrypted, userPassword: userPassword);
     }
 
     /// <summary>

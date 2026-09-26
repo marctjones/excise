@@ -151,7 +151,7 @@ public class PdfDocumentSplitterTests
     public void SplitEveryNPages_GroupsPagesIntoFixedSizeChunks_LastChunkSmaller()
     {
         var bytes = BuildDocument(5, []);
-        using var source = PdfDocument.Open(new MemoryStream(bytes), false);
+        using var source = PdfDocument.Open(new MemoryStream(bytes));
 
         using var fragments = new DisposableList(PdfDocumentSplitter.SplitEveryNPages(source, 2));
 
@@ -165,7 +165,7 @@ public class PdfDocumentSplitterTests
     public void SplitAtPageBoundaries_UsesExplicitStartIndices()
     {
         var bytes = BuildDocument(6, []);
-        using var source = PdfDocument.Open(new MemoryStream(bytes), false);
+        using var source = PdfDocument.Open(new MemoryStream(bytes));
 
         using var fragments = new DisposableList(PdfDocumentSplitter.SplitAtPageBoundaries(source, [0, 4]));
 
@@ -178,7 +178,7 @@ public class PdfDocumentSplitterTests
     public void SplitAtPageBoundaries_ImpliesLeadingZeroBoundaryIfMissing()
     {
         var bytes = BuildDocument(6, []);
-        using var source = PdfDocument.Open(new MemoryStream(bytes), false);
+        using var source = PdfDocument.Open(new MemoryStream(bytes));
 
         using var fragments = new DisposableList(PdfDocumentSplitter.SplitAtPageBoundaries(source, [3]));
 
@@ -191,7 +191,7 @@ public class PdfDocumentSplitterTests
     public void SplitToSinglePages_BurstsOneDocumentPerPage()
     {
         var bytes = BuildDocument(4, []);
-        using var source = PdfDocument.Open(new MemoryStream(bytes), false);
+        using var source = PdfDocument.Open(new MemoryStream(bytes));
 
         using var fragments = new DisposableList(PdfDocumentSplitter.SplitToSinglePages(source));
 
@@ -204,7 +204,7 @@ public class PdfDocumentSplitterTests
     {
         // Bookmarks at pages 1 and 4 of a 6-page document -> fragments [1-3], [4-6].
         var bytes = BuildDocument(6, [1, 4]);
-        using var source = PdfDocument.Open(new MemoryStream(bytes), false);
+        using var source = PdfDocument.Open(new MemoryStream(bytes));
 
         using var fragments = new DisposableList(PdfDocumentSplitter.SplitAtBookmarks(source));
 
@@ -217,7 +217,7 @@ public class PdfDocumentSplitterTests
     public void SplitAtBookmarks_NoOutline_FallsBackToOneFragmentWithWholeDocument()
     {
         var bytes = BuildDocument(3, []);
-        using var source = PdfDocument.Open(new MemoryStream(bytes), false);
+        using var source = PdfDocument.Open(new MemoryStream(bytes));
 
         using var fragments = new DisposableList(PdfDocumentSplitter.SplitAtBookmarks(source));
 
@@ -229,7 +229,7 @@ public class PdfDocumentSplitterTests
     public void SplitEveryNPages_LinkBetweenPagesInSameFragment_StillResolves()
     {
         var bytes = BuildDocumentWithRealLink(4);
-        using var source = PdfDocument.Open(new MemoryStream(bytes), false);
+        using var source = PdfDocument.Open(new MemoryStream(bytes));
 
         // Pages 1-2 land in the same 2-page fragment as the link's source and target.
         using var fragments = new DisposableList(PdfDocumentSplitter.SplitEveryNPages(source, 2));
@@ -242,7 +242,7 @@ public class PdfDocumentSplitterTests
     public void SplitEveryNPages_RejectsNonPositiveChunkSize()
     {
         var bytes = BuildDocument(2, []);
-        using var source = PdfDocument.Open(new MemoryStream(bytes), false);
+        using var source = PdfDocument.Open(new MemoryStream(bytes));
 
         var act = () => PdfDocumentSplitter.SplitEveryNPages(source, 0);
         act.Should().Throw<ArgumentOutOfRangeException>();

@@ -466,7 +466,7 @@ public class PdfViewerControlTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var doc = PdfCoreDocument.Open(new System.IO.MemoryStream(pdf), false);
+            var doc = PdfCoreDocument.Open(new System.IO.MemoryStream(pdf));
             control.Document = doc;
         });
 
@@ -516,7 +516,7 @@ public class PdfViewerControlTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var doc = PdfCoreDocument.Open(new System.IO.MemoryStream(pdf), false);
+            var doc = PdfCoreDocument.Open(new System.IO.MemoryStream(pdf));
             control.Document = doc;
         });
 
@@ -554,7 +554,7 @@ public class PdfViewerControlTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var doc = PdfCoreDocument.Open(new System.IO.MemoryStream(pdf), false);
+            var doc = PdfCoreDocument.Open(new System.IO.MemoryStream(pdf));
             control.Document = doc;
         });
 
@@ -593,7 +593,7 @@ public class PdfViewerControlTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var doc = PdfCoreDocument.Open(new System.IO.MemoryStream(pdf), false);
+            var doc = PdfCoreDocument.Open(new System.IO.MemoryStream(pdf));
             control.Document = doc;
         });
 

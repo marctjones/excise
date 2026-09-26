@@ -18,7 +18,7 @@ internal static class InfoCommandHandler
 
         using var document = request.Password is null
             ? PdfDocument.Open(file.FullName)
-            : PdfDocument.Open(file.FullName, request.Password);
+            : PdfDocument.Open(file.FullName, new PdfOpenOptions { UserPassword = request.Password });
         cancellationToken.ThrowIfCancellationRequested();
 
         var pageDetailCount = Math.Min(document.PageCount, request.PageDetailLimit);

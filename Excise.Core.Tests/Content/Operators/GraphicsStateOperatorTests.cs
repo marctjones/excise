@@ -424,7 +424,7 @@ public class GraphicsStateOperatorTests
         // Build a PDF with /Resources << /ExtGState << /GS1 << /LW 5.0 >> >> >>
         // and verify the gs operator is parsed and text still produces bounds.
         var pdf = MakePdfWithExtGState("/GS1 gs BT /F1 12 Tf 100 100 Td (text) Tj ET");
-        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
 
         var page = doc.GetPage(1);
         var stream = page.GetContentStream();

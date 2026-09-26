@@ -19,7 +19,7 @@ internal static class ValidationHandler
 
         using var document = string.IsNullOrEmpty(request.Password)
             ? PdfDocument.Open(file.FullName)
-            : PdfDocument.Open(file.FullName, request.Password);
+            : PdfDocument.Open(file.FullName, new PdfOpenOptions { UserPassword = request.Password });
         cancellationToken.ThrowIfCancellationRequested();
 
         var reports = new List<ValidationReport>

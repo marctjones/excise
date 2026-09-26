@@ -270,7 +270,7 @@ public sealed class PdfDocumentOptimizerTests : IDisposable
         }
 
         var output = Path.Combine(_dir, "encrypted-small.pdf");
-        using (var source = PdfDocument.Open(encryptedPath, password))
+        using (var source = PdfDocument.Open(encryptedPath, new PdfOpenOptions { UserPassword = password }))
         {
             PdfDocumentOptimizer.SaveOptimizedCopy(
                 source.SaveToBytes(), output, Lossless, source.GetReEncryptionOptions(password),

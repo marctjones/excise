@@ -842,8 +842,8 @@ public class PdfParseException : Exception
 /// handler for it: a missing or unreadable <c>/Encrypt</c> dictionary, an
 /// unsupported security handler or revision, or a wrong or missing user
 /// password. Its streams would read as ciphertext, and extraction and
-/// redaction would find nothing yet report success. Callers can pass
-/// <c>allowEncrypted: true</c> to <c>PdfDocument.Open</c> to inspect such a
+/// redaction would find nothing yet report success. Callers can set
+/// <see cref="Excise.Core.Document.PdfOpenOptions.AllowEncrypted"/> to inspect such a
 /// file anyway, accepting the ciphertext.
 /// </summary>
 public class PdfEncryptionNotSupportedException : Exception

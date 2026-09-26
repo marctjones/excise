@@ -1001,7 +1001,7 @@ public class PdfDocumentTests
         var pdfData = CreateMinimalPdf();
         var stream = new MemoryStream(pdfData);
 
-        using (var doc = PdfDocument.Open(stream, ownsStream: false))
+        using (var doc = PdfDocument.Open(stream))
         {
             doc.GetObject(doc.Trailer.GetReference("Root")).Should().BeSameAs(doc.Catalog);
         }
@@ -1222,7 +1222,7 @@ public class PdfDocumentTests
         var pdfData = CreateMinimalPdf();
         var stream = new MemoryStream(pdfData);
 
-        var doc = PdfDocument.Open(stream, ownsStream: true);
+        var doc = PdfDocument.Open(stream, new PdfOpenOptions { OwnsStream = true });
         doc.Dispose();
 
         stream.CanRead.Should().BeFalse();
@@ -1234,7 +1234,7 @@ public class PdfDocumentTests
         var pdfData = CreateMinimalPdf();
         var stream = new MemoryStream(pdfData);
 
-        var doc = PdfDocument.Open(stream, ownsStream: false);
+        var doc = PdfDocument.Open(stream);
         doc.Dispose();
 
         stream.CanRead.Should().BeTrue();
@@ -1373,7 +1373,7 @@ public class PdfDocumentTests
         var pdfData = CreateMinimalPdf();
         var stream = new MemoryStream(pdfData);
 
-        using var doc = PdfDocument.Open(stream, ownsStream: true);
+        using var doc = PdfDocument.Open(stream, new PdfOpenOptions { OwnsStream = true });
         var canReadBefore = stream.CanRead;
 
         doc.Dispose();

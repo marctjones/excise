@@ -260,7 +260,7 @@ public class PdfPermissionsTests
         var path = Path.Combine(FindRepoRoot(), relativePath);
         Assert.SkipWhen(!File.Exists(path), $"Encrypted PDF fixture not available: {relativePath}");
 
-        using var doc = PdfDocument.Open(path, password);
+        using var doc = PdfDocument.Open(path, new PdfOpenOptions { UserPassword = password });
         doc.IsEncrypted.Should().BeTrue();
         doc.Permissions.RawValue.Should().Be(expectedRaw);
         doc.EffectivePermissions.Should().Be(doc.Permissions);
