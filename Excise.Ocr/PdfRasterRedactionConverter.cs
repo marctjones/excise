@@ -12,9 +12,7 @@ namespace Excise.Ocr;
 public sealed class PdfRasterRedactionConverter
 {
     private readonly PdfOcrService _ocr;
-    private readonly int _dpi;
-    public PdfRasterRedactionConverter(PdfOcrService ocr, int dpi = 300)
-    { _ocr = ocr ?? throw new ArgumentNullException(nameof(ocr)); _dpi = dpi; }
+    public PdfRasterRedactionConverter(PdfOcrService ocr) => _ocr = ocr ?? throw new ArgumentNullException(nameof(ocr));
 
     /// <summary>
     /// Render every source page into a new image-only document, paint every OCR
@@ -35,11 +33,11 @@ public sealed class PdfRasterRedactionConverter
         for (var p = 1; p <= source.PageCount; p++)
         {
             var page = source.GetPage(p);
-            using var bitmap = renderer.RenderPage(page, new RenderOptions { Dpi = _dpi });
+            using var bitmap = renderer.RenderPage(page, new RenderOptions { Dpi = _ocr.Dpi });
             var matches = FindMatches(_ocr.RecognizeBitmap(bitmap, page).Words, term, caseSensitive);
             foreach (var match in matches)
                 foreach (var word in match)
-                    Paint(bitmap, PdfCoordinateMapper.ToViewerDips(page, PdfPageRect.FromContentPoints(p, word.BoundingBox), _dpi));
+                    Paint(bitmap, PdfCoordinateMapper.ToViewerDips(page, PdfPageRect.FromContentPoints(p, word.BoundingBox), _ocr.Dpi));
             PdfRasterPageAuthoring.AddRgbRasterPage(
                 output, ToRgb(bitmap), bitmap.Width, bitmap.Height, page.VisualWidth, page.VisualHeight);
             total += matches.Count;

@@ -166,6 +166,44 @@ public class PdfSearchableConverterTests
     }
 
     // ------------------------------------------------------------------
+    // Rotated pages (#1848): the invisible word runs along the DISPLAYED
+    // line, not the content-space x axis. Oracle: mutool's glyph origins,
+    // which it reports in the displayed frame (y down), not excise's reading.
+    // ------------------------------------------------------------------
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(90)]
+    [InlineData(180)]
+    [InlineData(270)]
+    public void WriteInvisibleWords_RunsAlongTheDisplayedLine(int rotation)
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        var path = Path.Combine(Path.GetTempPath(), $"excise-1848-rotate-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var doc = PdfDocument.CreateNew())
+            {
+                var page = doc.Pages.AddBlank(600, 800);
+                page.Rotation = rotation;
+                // A word tesseract saw 120 pt wide and 30 pt tall at (100, 200) on the displayed page.
+                var box = PdfCoordinateMapper.ToContentPoints(page, PdfPageRect.VisualPoints(1, 100, 200, 120, 30)).ToPdfRectangle();
+                PdfSearchableConverter.WriteInvisibleWords(page, [new OcrWord("SECRET", box, 1f)]).WordsWritten.Should().Be(1);
+                doc.Save(path);
+            }
+
+            var glyphs = MutoolGlyphPositions.ExtractPage(path, 1);
+            glyphs.Should().NotBeNull();
+            string.Concat(glyphs!.Select(g => g.Char)).Should().Be("SECRET");
+            glyphs.Should().AllSatisfy(g => g.Y.Should().BeApproximately(230, 1, "every glyph sits on the box's displayed baseline"));
+            glyphs.Select(g => g.X).Should().BeInAscendingOrder("the word reads left to right on the displayed page");
+            glyphs[0].X.Should().BeApproximately(100, 1);
+            (glyphs[^1].X - glyphs[0].X).Should().BeInRange(90, 120, "the word spans the box's displayed width, not its height");
+        }
+        finally { TryDelete(path); }
+    }
+
+    // ------------------------------------------------------------------
     // The critical end-to-end test: a real scan, made searchable, then
     // redacted by the word the OCR layer introduced. Verified with
     // independent tools (mutool, ghostscript), not excise's own extractor —

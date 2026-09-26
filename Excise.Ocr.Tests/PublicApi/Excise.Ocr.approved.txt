@@ -40,7 +40,7 @@ namespace Excise.Ocr
     }
     public sealed class PdfRasterRedactionConverter
     {
-        public PdfRasterRedactionConverter(Excise.Ocr.PdfOcrService ocr, int dpi = 300) { }
+        public PdfRasterRedactionConverter(Excise.Ocr.PdfOcrService ocr) { }
         public int RedactToImageOnly(string inputPath, string outputPath, string term, bool caseSensitive = false, string? password = null, bool allowDecrypt = false, System.Action<int, int>? progress = null) { }
     }
     public sealed class PdfSearchableConverter

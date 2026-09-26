@@ -29,7 +29,7 @@ namespace Excise.Ocr;
 /// </remarks>
 public sealed class PdfOcrService
 {
-    private readonly int _dpi;
+    internal int Dpi { get; }
     private readonly string _language;
     private readonly string _tesseractPath;
     private readonly string? _tessdataPrefix;
@@ -46,7 +46,7 @@ public sealed class PdfOcrService
     public PdfOcrService(string language = "eng", int dpi = 300, string tesseractPath = "tesseract", string? tessdataPrefix = null, bool useNativeFastPath = false)
     {
         _language = language;
-        _dpi = dpi;
+        Dpi = dpi;
         _tesseractPath = tesseractPath;
         _tessdataPrefix = tessdataPrefix;
         _useNativeFastPath = useNativeFastPath;
@@ -92,7 +92,7 @@ public sealed class PdfOcrService
     public OcrResult RecognizePage(PdfPage page)
     {
         ArgumentNullException.ThrowIfNull(page);
-        using var bitmap = new SkiaRenderer().RenderPage(page, new RenderOptions { Dpi = _dpi });
+        using var bitmap = new SkiaRenderer().RenderPage(page, new RenderOptions { Dpi = Dpi });
         return RecognizeBitmap(bitmap, page);
     }
 
@@ -242,13 +242,13 @@ public sealed class PdfOcrService
         // Key on the tessdata prefix too: the native backend must honour the
         // caller's tessdataPrefix exactly like the subprocess path, so two
         // services with different model dirs get different engines.
-        var key = (_language, _dpi, _tessdataPrefix ?? "");
+        var key = (_language, Dpi, _tessdataPrefix ?? "");
         lock (_nativeEngineLock)
         {
             if (_nativeEngines.TryGetValue(key, out var existing)) return existing;
             try
             {
-                var engine = Native.NativeOcrEngine.Create(_language, _dpi, _tessdataPrefix);
+                var engine = Native.NativeOcrEngine.Create(_language, Dpi, _tessdataPrefix);
                 _nativeEngines[key] = engine;
                 return engine;
             }
@@ -341,7 +341,7 @@ public sealed class PdfOcrService
             int height = Parse(parts[9]);
             double conf = Parse(parts[10]) / 100.0;
 
-            var pixels = PdfPageRect.ViewerDips(page.PageNumber, left, top, width, height, _dpi);
+            var pixels = PdfPageRect.ViewerDips(page.PageNumber, left, top, width, height, Dpi);
             words.Add(new OcrWord(text, PdfCoordinateMapper.ToContentPoints(page, pixels).ToPdfRectangle(), (float)conf));
             textBuilder.Append(text).Append(' ');
         }
