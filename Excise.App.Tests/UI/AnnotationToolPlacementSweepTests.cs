@@ -89,7 +89,7 @@ public class AnnotationToolPlacementSweepTests
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
             viewer.RenderScalingOverride = 2.0;
             await vm.LoadDocumentAsync(source);
-            await Settle(window, viewer);
+            await Settle(window, viewer, 1);
             vm.CurrentPageIndex = TargetPage - 1;
             if (zoom > 0) vm.ZoomLevel = zoom;
             await Settle(window, viewer);
@@ -258,6 +258,11 @@ public class AnnotationToolPlacementSweepTests
 
             await Settle(window, viewer);
 
+            // What changed on screen is read BEFORE the save: a save reloads the
+            // document, and the viewer shows a blank page until it re-renders (#1826).
+            using var after = AnnotationPlacementAccuracyTests.Capture(window, viewer);
+            var changed = AnnotationPlacementAccuracyTests.ChangedBounds(before, after);
+
             // ---- Input side: the saved geometry. ----
             var added = Placed(vm.PdfCoreDocument!.GetPage(TargetPage));
             added.Count.Should().Be(beforeAnnots + 1,
@@ -268,8 +273,6 @@ public class AnnotationToolPlacementSweepTests
                 assertGeometry(Placed(reopened.GetPage(TargetPage)).Last());
 
             // ---- Output side: what changed on screen is where the user pointed. ----
-            using var after = AnnotationPlacementAccuracyTests.Capture(window, viewer);
-            var changed = AnnotationPlacementAccuracyTests.ChangedBounds(before, after);
             var sctx = $"{state}: gesture at {Fmt(expectedScreen)} viewer DIPs, pixels changed at {Fmt(changed)}";
             changed.Width.Should().BeGreaterThan(0, sctx);
             if (buttonName == "PaletteStickyNoteButton")
@@ -319,7 +322,7 @@ public class AnnotationToolPlacementSweepTests
     // Off the page, so hover chrome is not in the before/after diff.
     private static void ParkPointer(Window window) => window.MouseMove(new Point(2, 2));
 
-    private static async Task Settle(Window window, PdfViewerControl viewer)
+    private static async Task Settle(Window window, PdfViewerControl viewer, int page = TargetPage)
     {
         await AnnotationPlacementAccuracyTests.WaitForIdleLayout(window);
         if (viewer.ViewMode == PdfViewMode.SinglePage)
@@ -327,6 +330,8 @@ public class AnnotationToolPlacementSweepTests
             await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer);
             await AnnotationPlacementAccuracyTests.WaitForFinalSinglePageRender(window, viewer);
         }
+        else
+            await AnnotationPlacementAccuracyTests.WaitForContinuousPageRendered(window, viewer, page);
         await AnnotationPlacementAccuracyTests.WaitForIdleLayout(window);
     }
 

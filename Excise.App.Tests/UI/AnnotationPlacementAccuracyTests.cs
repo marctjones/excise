@@ -263,6 +263,29 @@ public class AnnotationPlacementAccuracyTests
         window.UpdateLayout();
     }
 
+    /// <summary>
+    /// Waits until the continuous view has published <paramref name="pageNumber"/>'s
+    /// composite and has no cell render in flight. Every invalidation (an
+    /// annotation added, a document reloaded) clears the composites first, and a
+    /// composite is published only once every cell of its band is cached, so a
+    /// non-null composite with nothing in flight is a finished page.
+    /// </summary>
+    internal static async Task WaitForContinuousPageRendered(Window window, PdfViewerControl viewer, int pageNumber)
+    {
+        var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+        while (items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault(s => s.PageNumber == pageNumber)?.Bitmap == null
+               || viewer.ContinuousInFlightCount > 0)
+        {
+            if (DateTime.UtcNow > deadline)
+                throw new TimeoutException($"continuous page {pageNumber} never finished rendering: {viewer.ContinuousDiagnostics()}");
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(25);
+        }
+        window.UpdateLayout();
+    }
+
     private static string Fmt(PdfRectangle r) => $"[{r.Left:F1},{r.Bottom:F1} → {r.Right:F1},{r.Top:F1}]";
     private static string Fmt(Rect r) => $"[{r.Left:F0},{r.Top:F0} → {r.Right:F0},{r.Bottom:F0}]";
 }
