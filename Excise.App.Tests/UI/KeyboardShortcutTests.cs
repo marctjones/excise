@@ -51,66 +51,11 @@ public class KeyboardShortcutTests : IDisposable
 
     #region File Operations
 
-    /// <summary>
-    /// Ctrl+O: Open file dialog (cannot test dialog itself, but can verify command executes without error).
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task CtrlO_OpensFileDialog()
-    {
-        // Arrange
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        _windows.Show(window);
-
-        // Act
-        await window.PressKeyAsync(Key.O, RawInputModifiers.Control);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert: Command should be wired and not throw. No dialog will open in headless mode,
-        // but the command should execute successfully (or be skipped due to no file dialog in headless).
-        // The main thing is it doesn't crash.
-        vm.OpenFileCommand.Should().NotBeNull("OpenFileCommand must be wired");
-    }
-
-    /// <summary>
-    /// Ctrl+S: Save file (only works when document is loaded).
-    /// </summary>
-    // Previously quarantined on headless CI (#363): this test uniquely drives a
-    // save -> success-toast, and the toast's auto-dismiss used a wall-clock
-    // System.Timers.Timer whose Elapsed callback (on a ThreadPool thread, 5s
-    // later — often after the test had finished) marshaled a Dispatcher.InvokeAsync
-    // continuation into the headless dispatcher, deadlocking it under
-    // --blame-hang-timeout. Root-caused and fixed in MainWindow.OnToastRequested:
-    // the auto-dismiss now uses a single reusable UI-thread DispatcherTimer that
-    // cannot leak work past the dispatcher's lifetime, so this test is no longer
-    // flaky and runs on CI again.
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task CtrlS_SavesFile()
-    {
-        // Arrange
-        var pdfPath = CreateTestPdf("save_test.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        _windows.Show(window);
-
-        // Bound the load. This test uniquely triggers a save -> success toast,
-        // whose auto-dismiss dispatcher activity can starve the load's
-        // render/index continuations under headless CI load and hang the whole
-        // test host. We only need the document loaded enough to route Ctrl+S;
-        // Task.Delay uses the thread-pool timer (not the dispatcher) so it can't
-        // be starved. (#363)
-        await Task.WhenAny(vm.LoadDocumentAsync(pdfPath), Task.Delay(TimeSpan.FromSeconds(10)));
-        await Task.Delay(100);
-
-        // Act
-        await window.PressKeyAsync(Key.S, RawInputModifiers.Control);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert: SaveFileCommand should execute
-        vm.SaveFileCommand.Should().NotBeNull("SaveFileCommand must be wired");
-    }
-
+    // Ctrl+O and Ctrl+S real-effect coverage lives in
+    // KeyboardShortcutEffectTests.CtrlO_ExecutesOpenFileCommand /
+    // CtrlS_ExecutesSaveFileCommand (#1777): the versions formerly here asserted
+    // only Command.Should().NotBeNull(), which passes even when the key isn't
+    // wired to the command at all.
 
     #endregion
 
@@ -142,30 +87,9 @@ public class KeyboardShortcutTests : IDisposable
         vm.IsSearchVisible.Should().NotBe(initialState, "Ctrl+F should toggle search bar");
     }
 
-    /// <summary>
-    /// F3: Find next match.
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task F3_FindsNextMatch()
-    {
-        // Arrange
-        var pdfPath = CreateTestPdf("find_next.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        _windows.Show(window);
-
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
-
-        // Act
-        await window.PressKeyAsync(Key.F3);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert: FindNextCommand should be wired
-        vm.FindNextCommand.Should().NotBeNull("FindNextCommand must be wired");
-    }
-
+    // F3 real-effect coverage lives in
+    // KeyboardShortcutEffectTests.F3_AdvancesCurrentSearchMatchIndex (#1777): the
+    // version formerly here asserted only FindNextCommand.Should().NotBeNull().
 
     /// <summary>
     /// Escape: Close search bar (when visible).
@@ -398,32 +322,9 @@ public class KeyboardShortcutTests : IDisposable
 
     #region Page Operations
 
-    /// <summary>
-    /// Ctrl+L: Rotate page left 90 degrees.
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task CtrlL_RotatesPageLeft()
-    {
-        // Arrange
-        var pdfPath = CreateTestPdf("rotate_left.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        _windows.Show(window);
-
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
-
-        // Act
-        await window.PressKeyAsync(Key.L, RawInputModifiers.Control);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert
-        vm.RotatePageLeftCommand.Should().NotBeNull("RotatePageLeftCommand must be wired");
-    }
-
-
-
+    // Ctrl+L real-effect coverage lives in
+    // KeyboardShortcutEffectTests.CtrlL_RotatesCurrentPageLeft (#1777): the
+    // version formerly here asserted only RotatePageLeftCommand.Should().NotBeNull().
 
     #endregion
 
@@ -659,33 +560,10 @@ public class KeyboardShortcutTests : IDisposable
         vm.IsTextSelectionMode.Should().NotBe(initialState, "T should toggle text selection mode");
     }
 
-    /// <summary>
-    /// Enter: Apply redaction (when in redaction mode).
-    /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task Enter_AppliesRedaction()
-    {
-        // Arrange
-        var pdfPath = CreateTestPdf("apply_redaction.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = MainWindowViewModelTestFactory.Create();
-        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        _windows.Show(window);
-
-        await vm.LoadDocumentAsync(pdfPath);
-        await Task.Delay(100);
-
-        // Enable redaction mode
-        vm.ToggleRedactionModeCommand?.Execute().Subscribe();
-        await Task.Delay(50);
-
-        // Act
-        await window.PressKeyAsync(Key.Return);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
-
-        // Assert: ApplyRedactionCommand should be wired
-        vm.ApplyRedactionCommand.Should().NotBeNull("ApplyRedactionCommand must be wired");
-    }
+    // Enter (apply redaction) real-effect coverage lives in
+    // KeyboardShortcutEffectTests.Enter_AppliesRedaction_MarksPendingArea
+    // (#1777): the version formerly here asserted only
+    // ApplyRedactionCommand.Should().NotBeNull().
 
     #endregion
 
