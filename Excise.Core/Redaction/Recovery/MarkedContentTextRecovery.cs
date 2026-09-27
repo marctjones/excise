@@ -47,9 +47,10 @@ internal static class MarkedContentTextRecovery
 {
     /// <summary>One inline carrier value and where its span painted.</summary>
     /// <param name="Enclosed">
-    /// Union of the bounding boxes the span drew, or null when the span
-    /// enclosed nothing with geometry — an empty span still carries the text,
-    /// so it is reported with no location rather than dropped.
+    /// Union of the bounding boxes the span drew, a form's or image's <c>Do</c>
+    /// included (#1849), or null when the span enclosed nothing with geometry
+    /// — an empty span still carries the text, so it is reported with no
+    /// location rather than dropped.
     /// </param>
     public readonly record struct MarkedContentText(
         int PageNumber, string Carrier, string Text, PdfRectangle? Enclosed, bool NamedPropertyList);
@@ -121,9 +122,10 @@ internal static class MarkedContentTextRecovery
         // included, so an /ActualText on an outer span still gets the box of
         // the glyphs a nested span painted.
         var drawn = new Dictionary<ContentOperator, PdfRectangle>();
+        var xobjects = page.Resources?.ResolveDictionary(document, "XObject");
         foreach (var op in ops)
         {
-            if (op.BoundingBox is not { } box) continue;
+            if ((op.BoundingBox ?? DoBounds(document, xobjects, op)) is not { } box) continue;
             var b = box.Normalize();
             foreach (var span in op.EnclosingSpans)
                 drawn[span] = drawn.TryGetValue(span, out var e)
@@ -134,6 +136,27 @@ internal static class MarkedContentTextRecovery
         }
 
         Collect(document, page, pageNumber, ops, page.Resources?.ResolveDictionary(document, "Properties"), drawn, found);
+    }
+
+    /// <summary>
+    /// #1849: the parser gives a <c>Do</c> no box, so a span around one had no
+    /// location. A form paints within its <c>/BBox</c> through <c>/Matrix</c> and
+    /// the CTM (§8.10.1), an image fills the unit square under the CTM (§8.9.5).
+    /// </summary>
+    private static PdfRectangle? DoBounds(PdfDocument document, PdfDictionary? xobjects, ContentOperator op)
+    {
+        if (op.Name != "Do" || op.GraphicsTransform is not { } ctm || op.Operands.Count < 1
+            || op.Operands[0] is not PdfName name
+            || document.Resolve(xobjects?.GetOptional(name.Value) ?? PdfNull.Instance) is not PdfStream xobject)
+            return null;
+        if (xobject.GetNameOrNull("Subtype") == "Image") return ctm.UnitSquareBounds();
+        if (xobject.GetNameOrNull("Subtype") != "Form"
+            || xobject.ResolveArray(document, "BBox") is not { Count: 4 } b
+            || !b[0].TryGetNumber(out var x0) || !b[1].TryGetNumber(out var y0)
+            || !b[2].TryGetNumber(out var x1) || !b[3].TryGetNumber(out var y1))
+            return null;
+        return ContentTransform.FromArray(xobject.ResolveArray(document, "Matrix")).Multiply(ctm)
+            .TransformBounds(new PdfRectangle(x0, y0, x1, y1));
     }
 
     private static void Collect(
