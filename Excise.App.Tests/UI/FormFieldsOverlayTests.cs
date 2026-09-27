@@ -87,6 +87,65 @@ public class FormFieldsOverlayTests
         return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
+    private static string WriteTempCheckboxStyledFormPdf()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"excise-form-checkstyled-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, BuildCheckboxStyledFormPdf());
+        return path;
+    }
+
+    // #1897: a plain /FT /Tx field the form designer drew as a small square
+    // (a "type an x to check" box, e.g. the IRS W-9's classification-letter
+    // box, 28.8x11pt) alongside an ordinary wide text field, both with no
+    // /Ff bits at all — the field TYPE is Text either way, only the box
+    // shape tells them apart.
+    private static byte[] BuildCheckboxStyledFormPdf()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.7");
+        long o1 = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R 6 0 R] >> >>");
+        sb.AppendLine("endobj");
+        long o2 = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+        long o3 = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Annots [5 0 R 6 0 R] >>");
+        sb.AppendLine("endobj");
+        long o4 = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine("<< /Length 0 >>");
+        sb.AppendLine("stream");
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+        long o5 = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine("<< /Type /Annot /Subtype /Widget /FT /Tx /T (Check) /V (x) /MaxLen 1 /Rect [72 700 100.8 711] /P 3 0 R >>");
+        sb.AppendLine("endobj");
+        long o6 = sb.Length;
+        sb.AppendLine("6 0 obj");
+        sb.AppendLine("<< /Type /Annot /Subtype /Widget /FT /Tx /T (Wide) /V (Alice) /Rect [72 650 400 670] /P 3 0 R >>");
+        sb.AppendLine("endobj");
+        long xref = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 7");
+        sb.AppendLine("0000000000 65535 f ");
+        sb.AppendLine($"{o1:D10} 00000 n ");
+        sb.AppendLine($"{o2:D10} 00000 n ");
+        sb.AppendLine($"{o3:D10} 00000 n ");
+        sb.AppendLine($"{o4:D10} 00000 n ");
+        sb.AppendLine($"{o5:D10} 00000 n ");
+        sb.AppendLine($"{o6:D10} 00000 n ");
+        sb.AppendLine("trailer << /Size 7 /Root 1 0 R >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xref.ToString());
+        sb.AppendLine("%%EOF");
+        return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
     private static string WriteTempMultilineFormPdf()
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-form-multiline-{Guid.NewGuid():N}.pdf");
@@ -389,6 +448,48 @@ public class FormFieldsOverlayTests
 
             vm.PdfCoreDocument!.GetAcroForm()!.FindField("Choice")!.Value.Should().Be("Choice1");
             vm.FileState.HasUnsavedChanges.Should().BeTrue();
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+        }
+    }
+
+    [FixedAvaloniaFact]
+    public async Task CheckboxStyledTextField_CentersContent_WideFieldStaysLeftAligned()
+    {
+        var path = WriteTempCheckboxStyledFormPdf();
+        try
+        {
+            var vm = MainWindowViewModelTestFactory.Create();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await Task.Delay(100);
+
+            await vm.LoadDocumentAsync(path);
+
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+            var formLayer = FindNamedDescendant<Canvas>(viewer!, "FormFieldsLayer");
+            for (int i = 0; i < 30 && formLayer!.Children.OfType<TextBox>().Count() < 2; i++)
+            {
+                await Task.Delay(50);
+                window.UpdateLayout();
+            }
+
+            var textBoxes = formLayer!.Children.OfType<TextBox>().ToList();
+            textBoxes.Should().HaveCount(2);
+
+            var checkboxStyled = textBoxes.Single(t => t.Text == "x");
+            checkboxStyled.HorizontalContentAlignment.Should().Be(
+                global::Avalonia.Layout.HorizontalAlignment.Center,
+                "a checkbox-sized text field should center its typed mark like a checkmark");
+            checkboxStyled.TextAlignment.Should().Be(global::Avalonia.Media.TextAlignment.Center);
+
+            var wideField = textBoxes.Single(t => t.Text == "Alice");
+            wideField.HorizontalContentAlignment.Should().Be(
+                global::Avalonia.Layout.HorizontalAlignment.Left,
+                "an ordinary wide text field must keep its existing left alignment");
+            wideField.TextAlignment.Should().Be(global::Avalonia.Media.TextAlignment.Left);
         }
         finally
         {
