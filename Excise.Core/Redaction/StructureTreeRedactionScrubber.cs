@@ -102,7 +102,7 @@ internal static class StructureTreeRedactionScrubber
         PdfObject? node,
         PdfReference? pageRef,
         HashSet<int> affectedMcids,
-        IReadOnlyCollection<string> removedText,
+        IReadOnlyList<string> removedText,
         HashSet<PdfDictionary> visited,
         ref bool changed)
     {
@@ -131,7 +131,7 @@ internal static class StructureTreeRedactionScrubber
         PdfDictionary elem,
         PdfReference? pageRef,
         HashSet<int> affectedMcids,
-        IReadOnlyCollection<string> removedText)
+        IReadOnlyList<string> removedText)
     {
         var carriers = StructureElementTextCarriers.Where(elem.ContainsKey).ToList();
         if (carriers.Count == 0) return false;
@@ -158,12 +158,9 @@ internal static class StructureTreeRedactionScrubber
             if (value == null) continue;
 
             // Pass 2 — content-matching: does the carrier still spell out
-            // something we just removed from the glyphs?
-            var restatesRemovedText = removedText.Any(t =>
-                t.Length >= MinMatchLength &&
-                value.Contains(t, StringComparison.Ordinal));
-
-            if (structural || restatesRemovedText)
+            // something we just removed from the glyphs, in the fold the page
+            // matcher reads it in (#1880)?
+            if (structural || TermMatch.Holds(value, removedText, caseSensitive: true, wholeWord: false))
             {
                 elem.Remove(carrier);
                 changed = true;
@@ -178,31 +175,24 @@ internal static class StructureTreeRedactionScrubber
     /// Every span enclosing an operator in the area is implicated: nested spans
     /// all describe the content we are about to delete.
     /// </summary>
+    /// <remarks>
+    /// The <c>/MCID</c> sits in the span's property list, inline or reached by
+    /// name through the page's <c>/Properties</c> (§14.6.2, #1849).
+    /// </remarks>
     private static HashSet<int> CollectAffectedMcids(PdfPage page, PdfRectangle area)
     {
+        var doc = page.Document;
+        var properties = MarkedContentCarrierScrubber.PagePropertyLists(page);
         var affected = new HashSet<int>();
         foreach (var op in page.GetContentStream().Operators)
         {
             if (op.BoundingBox is not { } box || !box.IntersectsWith(area)) continue;
             foreach (var span in op.EnclosingSpans)
-                if (ExtractMcid(span) is { } id) affected.Add(id);
+                if (MarkedContentCarrierScrubber.PropertyList(span, doc, properties)?.GetOptional("MCID") is { } mcid
+                    && doc.Resolve(mcid) is PdfInteger id)
+                    affected.Add((int)id.Value);
         }
         return affected;
-    }
-
-    private static int? ExtractMcid(ContentOperator op)
-    {
-        // BDC operands: /Tag <</MCID n>>  — the property list may also be a
-        // named resource, which carries no inline MCID for us to read.
-        foreach (var operand in op.Operands)
-        {
-            if (operand is PdfDictionary props &&
-                props.GetOptional("MCID") is PdfInteger mcid)
-            {
-                return (int)mcid.Value;
-            }
-        }
-        return null;
     }
 
     private static IEnumerable<int> CollectMcids(PdfDocument doc, PdfObject? k)
@@ -236,21 +226,22 @@ internal static class StructureTreeRedactionScrubber
     }
 
     /// <summary>
-    /// The words whose glyphs the redaction is about to delete. Read from the
-    /// page's own letters, so it reflects what will actually be removed rather
-    /// than what the caller intended.
+    /// The words whose glyphs the redaction is about to delete, at least
+    /// <see cref="MinMatchLength"/> long. Read from the page's own letters, so
+    /// it reflects what will actually be removed rather than what the caller
+    /// intended.
     /// </summary>
-    internal static IReadOnlyCollection<string> CollectRemovedText(PdfPage page, PdfRectangle area)
+    internal static IReadOnlyList<string> CollectRemovedText(PdfPage page, PdfRectangle area)
     {
         var removed = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var word in page.GetWords())
         {
             if (!word.BoundingBox.IntersectsWith(area)) continue;
-            if (string.IsNullOrWhiteSpace(word.Text)) continue;
+            if (string.IsNullOrWhiteSpace(word.Text) || word.Text.Length < MinMatchLength) continue;
             removed.Add(word.Text);
         }
 
-        return removed;
+        return removed.ToList();
     }
 }

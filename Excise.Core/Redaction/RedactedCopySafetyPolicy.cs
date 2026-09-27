@@ -368,10 +368,12 @@ public static class RedactedCopySafetyPolicy
 
         try
         {
-            var documentText = NormalizeForSearch(ExtractDocumentText(document));
+            // #1880: matched as the page matcher matches, so a typographic
+            // spelling it would have removed does not verify clean.
+            var documentText = ExtractDocumentText(document);
             checkedTermCount = checkedTerms.Length;
             remainingTermCount = checkedTerms.Count(term =>
-                documentText.Contains(term, StringComparison.OrdinalIgnoreCase));
+                TermMatch.Holds(documentText, [term], caseSensitive: false, wholeWord: false));
 
             if (remainingTermCount > 0)
             {
