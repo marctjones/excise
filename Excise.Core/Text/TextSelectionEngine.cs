@@ -866,12 +866,12 @@ public static class TextSelectionEngine
         sb.Append(letters[0].Value);
         for (int i = 1; i < letters.Count; i++)
         {
-            var prev = letters[i - 1].GlyphRectangle;
-            var cur = letters[i].GlyphRectangle;
+            var prev = Frame(letters[i - 1]);
+            var cur = Frame(letters[i]);
             var prevCy = (prev.Bottom + prev.Top) * 0.5;
             var curCy = (cur.Bottom + cur.Top) * 0.5;
             var lineHeight = Math.Min(prev.Top - prev.Bottom, cur.Top - cur.Bottom);
-            if (Math.Abs(prevCy - curCy) > 0.5 * lineHeight)
+            if (WritingModeChanges(letters[i - 1], letters[i]) || Math.Abs(prevCy - curCy) > 0.5 * lineHeight)
                 sb.Append('\n');
             else if (spaceBefore[i])
                 sb.Append(' ');
@@ -911,7 +911,8 @@ public static class TextSelectionEngine
             advances.Clear();
             widths.Clear();
             widths.Add(GlyphWidth(letters[i]));
-            while (end < letters.Count && SameLine(letters[end - 1], letters[end]))
+            while (end < letters.Count && !WritingModeChanges(letters[end - 1], letters[end])
+                   && SameLine(Frame(letters[end - 1]), Frame(letters[end])))
             {
                 advances.Add(Advance(letters[end - 1], letters[end]));
                 widths.Add(GlyphWidth(letters[end]));
@@ -922,7 +923,7 @@ public static class TextSelectionEngine
             double medianAdvance = Median(advances);
             double fontSize = letters[i].FontSize > 0
                 ? letters[i].FontSize
-                : Math.Abs(letters[i].GlyphRectangle.Top - letters[i].GlyphRectangle.Bottom);
+                : Math.Abs(Frame(letters[i]).Top - Frame(letters[i]).Bottom);
 
             // When the font reports usable glyph widths, keep the original
             // width-based gap rule (unchanged for normal documents). Only
@@ -962,15 +963,15 @@ public static class TextSelectionEngine
                     while (rtlRunEnd < end && ContainsStrongRtl(letters[rtlRunEnd].Value)) rtlRunEnd++;
                     double rtlRunNearEdge = double.PositiveInfinity;
                     for (int m = k; m < rtlRunEnd; m++)
-                        rtlRunNearEdge = Math.Min(rtlRunNearEdge, letters[m].GlyphRectangle.Left);
+                        rtlRunNearEdge = Math.Min(rtlRunNearEdge, Frame(letters[m]).Left);
 
-                    var seamGap = rtlRunNearEdge - letters[k - 1].GlyphRectangle.Right;
+                    var seamGap = rtlRunNearEdge - Frame(letters[k - 1]).Right;
                     result[k] = fontSize > 0 && seamGap > 0.25 * fontSize;
                     continue;
                 }
 
-                var pr = letters[k - 1].GlyphRectangle;
-                var cr = letters[k].GlyphRectangle;
+                var pr = Frame(letters[k - 1]);
+                var cr = Frame(letters[k]);
                 if (degenerateWidths && medianAdvance > 0)
                 {
                     result[k] = Advance(letters[k - 1], letters[k]) > medianAdvance * WordGapAdvanceFactor;
@@ -994,15 +995,33 @@ public static class TextSelectionEngine
     }
 
     private static double Advance(Letter a, Letter b) =>
-        Math.Abs(b.GlyphRectangle.Left - a.GlyphRectangle.Left);
+        Math.Abs(Frame(b).Left - Frame(a).Left);
 
     private static double GlyphWidth(Letter l) =>
-        Math.Abs(l.GlyphRectangle.Right - l.GlyphRectangle.Left);
+        Math.Abs(Frame(l).Right - Frame(l).Left);
 
-    private static bool SameLine(Letter a, Letter b)
+    /// <summary>
+    /// #1902: a glyph's rectangle in the frame of the line it is written along.
+    /// The join helpers read X as "along the line, in reading order" and Y as
+    /// "across lines, later lines lower". Horizontal writing is user space
+    /// unchanged. A vertical-writing glyph (§9.7.4.3) advances DOWN a column
+    /// and columns follow right-to-left, so its along-axis is −y and its
+    /// across-axis is x: a column joins as one line and a new column breaks.
+    /// </summary>
+    private static PdfRectangle Frame(Letter l)
     {
-        var ar = a.GlyphRectangle;
-        var br = b.GlyphRectangle;
+        var r = l.GlyphRectangle;
+        return l.IsVerticalWriting ? new PdfRectangle(-r.Top, r.Left, -r.Bottom, r.Right) : r;
+    }
+
+    /// <summary>Glyphs in different writing modes never share a line: their
+    /// frames measure different page axes and can coincide by accident.</summary>
+    private static bool WritingModeChanges(Letter a, Letter b) => a.IsVerticalWriting != b.IsVerticalWriting;
+
+    private static bool SameLine(Letter a, Letter b) => SameLine(a.GlyphRectangle, b.GlyphRectangle);
+
+    private static bool SameLine(PdfRectangle ar, PdfRectangle br)
+    {
         var aCy = (ar.Bottom + ar.Top) * 0.5;
         var bCy = (br.Bottom + br.Top) * 0.5;
         var lineHeight = Math.Min(ar.Top - ar.Bottom, br.Top - br.Bottom);
@@ -1190,15 +1209,15 @@ public static class TextSelectionEngine
         var spaceBefore = ComputeWordSpaces(letters);
         for (int i = 0; i < letters.Count; i++)
         {
-            var cur = letters[i].GlyphRectangle;
+            var cur = Frame(letters[i]);
             var curCy = (cur.Bottom + cur.Top) * 0.5;
             var curH = cur.Top - cur.Bottom;
             if (i > 0)
             {
-                var prev = letters[i - 1].GlyphRectangle;
+                var prev = Frame(letters[i - 1]);
                 var prevCy = (prev.Bottom + prev.Top) * 0.5;
                 var lineHeight = Math.Min(prev.Top - prev.Bottom, cur.Top - cur.Bottom);
-                if (Math.Abs(prevCy - curCy) > 0.5 * lineHeight)
+                if (WritingModeChanges(letters[i - 1], letters[i]) || Math.Abs(prevCy - curCy) > 0.5 * lineHeight)
                     Flush();
                 else if (spaceBefore[i])
                     sb.Append(' ');

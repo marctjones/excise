@@ -129,6 +129,23 @@ public class TextSelectionEngineTests
         text.Should().Be("hello world\nnext");
     }
 
+    [Theory] // #1902: a horizontal line and a vertical column never share a line
+    [InlineData(WhitespaceMode.LineFaithful)]
+    [InlineData(WhitespaceMode.Smart)]
+    public void JoinText_HorizontalThenVerticalColumn_BreaksAtTheWritingModeChange(WhitespaceMode mode)
+    {
+        // The header's Y-centre (400) equals the column's X-centre (400), so the
+        // two axes coincide: only the writing-mode change separates them.
+        var letters = new[]
+        {
+            L("A", 100, 394, 8, 12), L("B", 108, 394, 8, 12),
+            new Letter("日", new PdfRectangle(388, 276, 412, 300), 24, "F", 400, 300, 24, 0x65E5) { IsVerticalWriting = true },
+            new Letter("本", new PdfRectangle(388, 252, 412, 276), 24, "F", 400, 276, 24, 0x672C) { IsVerticalWriting = true },
+        };
+
+        TextSelectionEngine.JoinText(letters, mode).Should().Be("AB\n日本");
+    }
+
     /// <summary>
     /// #1834: an area reads like a drag across it (logical order for a line
     /// painted right to left), and takes its letters by the removal strategy:

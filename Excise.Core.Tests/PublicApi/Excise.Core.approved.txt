@@ -1937,6 +1937,7 @@ namespace Excise.Core.Text
         public bool IsCidFont { get; set; }
         public bool IsInHiddenOptionalContent { get; set; }
         public bool IsInvisible { get; }
+        public bool IsVerticalWriting { get; }
         public int? MarkedContentId { get; set; }
         public int OperandByteOffset { get; set; }
         public double StartX { get; }

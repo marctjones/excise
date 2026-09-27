@@ -169,6 +169,59 @@ public class VerticalWritingMetricsTests
             "/WMode 1 in the embedded CMap stream means vertical writing");
     }
 
+    // ---------- joined text: a column is one line (#1902) ----------
+
+    // Two Identity-V columns read right-to-left, "日本語" then "漢字、", one em
+    // apart vertically and 100pt apart horizontally. Poppler's pdftotext reads
+    // the same bytes as one line per column (Excise.Rendering.Tests
+    // VerticalWritingTextOracleTests); mutool emits one line per glyph.
+    private const string TwoColumnOps =
+        "1 0 0 1 300 700 Tm <65E5672C8A9E> Tj 1 0 0 1 200 700 Tm <6F225B573001> Tj";
+
+    [Theory]
+    [InlineData(WhitespaceMode.LineFaithful)]
+    [InlineData(WhitespaceMode.Smart)]
+    public void IdentityV_TwoColumns_JoinOneLinePerColumn(WhitespaceMode mode)
+    {
+        var letters = Extract(BuildType0Pdf("/Identity-V", TwoColumnOps, fontExtras: "/ToUnicode/Identity-H"));
+
+        letters.Should().OnlyContain(l => l.IsVerticalWriting, "Identity-V is WMode 1 (§9.7.4.3)");
+        TextSelectionEngine.JoinText(letters, mode).Should().Be("日本語\n漢字、",
+            "glyphs stacked down one column are one line; the break belongs at the column change");
+    }
+
+    [Fact]
+    public void IdentityV_TwoColumns_PageTextIsOneLinePerColumn()
+    {
+        var pdf = BuildType0Pdf("/Identity-V", TwoColumnOps, fontExtras: "/ToUnicode/Identity-H");
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
+
+        doc.GetPage(1).Text.Should().Be("日本語\n漢字、");
+    }
+
+    [Fact] // §9.4.3: a TJ gap down a column is a word gap along the column
+    public void IdentityV_TjGapDownTheColumn_IsAWordSpace()
+    {
+        var letters = Extract(BuildType0Pdf("/Identity-V", "[<00410042> 500 <0043>] TJ",
+            fontExtras: "/ToUnicode/Identity-H"));
+
+        TextSelectionEngine.JoinText(letters).Should().Be("AB C");
+    }
+
+    [Fact] // control: the same stacked geometry in HORIZONTAL writing stays three lines
+    public void IdentityH_ThreeStackedOneGlyphLines_KeepTheirLineBreaks()
+    {
+        // One glyph per line, one em apart, same X: geometrically identical to
+        // a three-glyph vertical column. Only the font's writing mode tells
+        // them apart, so a geometric guess would fuse these into "ABC".
+        var letters = Extract(BuildType0Pdf("/Identity-H", "<0041> Tj 0 -24 Td <0042> Tj 0 -24 Td <0043> Tj",
+            fontExtras: "/ToUnicode/Identity-H"));
+
+        letters.Should().OnlyContain(l => !l.IsVerticalWriting);
+        TextSelectionEngine.JoinText(letters, WhitespaceMode.LineFaithful).Should().Be("A\nB\nC");
+        TextSelectionEngine.JoinText(letters, WhitespaceMode.Smart).Should().Be("A\nB\nC");
+    }
+
     // ---------- redaction round-trip (the security point of the slice) ----------
 
     [Fact]

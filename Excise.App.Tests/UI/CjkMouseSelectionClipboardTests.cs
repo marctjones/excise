@@ -39,15 +39,11 @@ namespace Excise.App.Tests.UI;
 /// already had for whole-page order — bail to producer order, which a real
 /// vertical-writing producer already emits column-by-column.
 ///
-/// Known remaining gap (left open, not fixed here — filed as #1902):
-/// <c>JoinText</c>'s line-break rule considers two
-/// glyphs "different lines" whenever their Y differs by more than half the
-/// line height, which is true for EVERY pair of glyphs stacked down a
-/// vertical column. The character SEQUENCE this issue cares about is correct
-/// after the fix above; the literal joined string still carries one <c>\n</c>
-/// per glyph within a column instead of one per column. The vertical test
-/// asserts the sequence (newlines stripped) rather than pinning that shape as
-/// if it were the intended target.
+/// #1902: <c>JoinText</c> then broke a line between every pair of glyphs
+/// stacked down a column, because its line rule read the horizontal-writing
+/// axis. It now joins a vertical-writing glyph along its column, so a column
+/// copies as one line and the break falls at the column change, as Poppler's
+/// pdftotext reads the same bytes.
 /// </summary>
 [Collection("AvaloniaTests")]
 public class CjkMouseSelectionClipboardTests : IDisposable
@@ -162,16 +158,13 @@ public class CjkMouseSelectionClipboardTests : IDisposable
 
         await DragAsync(window, page, ordered[0], ordered[^1]);
 
-        // #1902 (filed from this test, left open): JoinText's line-break rule
-        // is Y-band based (horizontal-writing axis), so it still emits one
-        // '\n' per glyph within a vertical column instead of one per column.
-        // The SEQUENCE this issue (#1204) is about is asserted exact above
-        // and again here (stripped of that known line-break shape).
-        vm.SelectedText.Replace("\n", "").Should().Be(expectedSequence,
-            "the copied character sequence for a vertical two-column drag must be column-major logical order");
+        // #1902: one line per column, the break at the column change.
+        var expectedText = columnA + "\n" + columnB;
+        vm.SelectedText.Should().Be(expectedText,
+            "a vertical two-column drag must copy each column as one line, in column-major order");
 
         await CopyAsync(vm);
-        vm.ClipboardHistory[0].Text.Replace("\n", "").Should().Be(expectedSequence);
+        vm.ClipboardHistory[0].Text.Should().Be(expectedText);
 
         File.Delete(path);
     }
