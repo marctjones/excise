@@ -55,7 +55,7 @@ public class WidthGapLeakMeasurementTests
     }
 
     [Fact]
-    public void ExciseRedaction_LeavesAGapThatMatchesTheRemovedWidth()
+    public void PreserveLayoutRedaction_LeavesAGapThatMatchesTheRemovedWidth()
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
@@ -68,9 +68,11 @@ public class WidthGapLeakMeasurementTests
 
             // Redact the middle word with excise's real engine, box suppressed so
             // the black rectangle does not perturb the surviving glyph positions.
+            // Under the layout-preserving policy, the default until #1715.
             using (var doc = PdfDocument.Open(pdf))
             {
-                var report = doc.RedactText(Term, RedactionOptions.Default with { DrawBox = false });
+                var report = doc.RedactText(Term,
+                    RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.CollapsePreserveLayout });
                 report.VerifiedRemovals.Should().BeGreaterThan(0, "the term must actually be removed");
                 using var fs = File.Create(afterPath);
                 doc.Save(fs);

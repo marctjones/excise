@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using AwesomeAssertions;
 using Excise.Cli.Commands;
+using Excise.Rendering.Differential;
 using Excise.TestSupport;
 using Xunit;
 
@@ -300,7 +301,7 @@ public class UnredactCommandTests
         File.WriteAllLines(dict, new[] { answer, "Zzzzzz", "Qqqqqqqqqq" });
         try
         {
-            RunRedact(pdf!, redacted, answer);
+            RunRedact(pdf!, redacted, answer, "--preserve-layout");
             var (exit, output) = Run(redacted, "--mode", "residue", "--dictionary", dict);
             exit.Should().Be(4, "a width-preserving redaction leaves residue");
             output.Should().Contain(answer, "the true answer must be among the width-fit candidates");
@@ -320,7 +321,7 @@ public class UnredactCommandTests
         File.WriteAllLines(dict, new[] { answer, "Zzzzzz", "Qqqqqqqqqq" });
         try
         {
-            RunRedact(pdf!, redacted, answer);
+            RunRedact(pdf!, redacted, answer, "--preserve-layout");
             var outcome = UnredactCommandHandler.Execute(
                 new UnredactCommandInput(
                     redacted,
@@ -408,7 +409,7 @@ public class UnredactCommandTests
                 "trailer\n<< /Size 6 /Root 1 0 R >>\n%%EOF"));
             File.WriteAllText(dict, "SECRETWORD\nHELLOWORLD\nBANANARAMA\nTESTINGXYZ\n");
 
-            RunRedact(src, dst, "SECRETWORD");
+            RunRedact(src, dst, "SECRETWORD", "--preserve-layout");
 
             var (exit, output) = Run(dst, "--mode", "residue", "--dictionary", dict);
             exit.Should().Be(4, "residue-only recovery -> exit 4");
@@ -420,10 +421,12 @@ public class UnredactCommandTests
     }
 
     [Fact]
-    public void WidthClosingRedaction_DefeatsResidueRecovery_WhereDefaultDoesNot()
+    public void WidthClosingRedaction_DefeatsResidueRecovery_WherePreserveLayoutDoesNot()
     {
-        // #1145 — the defence for the leak #1116 measured and #1127 exploits.
+        // #1145 — the defence for the leak #1116 measured and #1127 exploits;
+        // #1715 — and the default is now that defence.
         var src = Path.Combine(Path.GetTempPath(), $"wc-src-{Guid.NewGuid():N}.pdf");
+        var layout = Path.Combine(Path.GetTempPath(), $"wc-layout-{Guid.NewGuid():N}.pdf");
         var def = Path.Combine(Path.GetTempPath(), $"wc-def-{Guid.NewGuid():N}.pdf");
         var wc = Path.Combine(Path.GetTempPath(), $"wc-wc-{Guid.NewGuid():N}.pdf");
         var dict = Path.Combine(Path.GetTempPath(), $"wc-dict-{Guid.NewGuid():N}.txt");
@@ -439,20 +442,29 @@ public class UnredactCommandTests
                 "trailer\n<< /Size 6 /Root 1 0 R >>\n%%EOF"));
             File.WriteAllText(dict, "SECRETWORD\nHELLOWORLD\nBANANARAMA\n");
 
-            RunRedact(src, def, "SECRETWORD");                     // default: width-preserving
-            RunRedact(src, wc, "SECRETWORD", "--close-width");     // #1145: width-closing
+            RunRedact(src, layout, "SECRETWORD", "--preserve-layout");  // width-preserving
+            RunRedact(src, wc, "SECRETWORD", "--close-width");          // #1145: width-closing
+            RunRedact(src, def, "SECRETWORD");                          // #1715: default, FixedMarker
 
-            // Default output leaks the width -> recoverable (exit 4).
-            var (defExit, defOut) = Run(def, "--mode", "residue", "--dictionary", dict);
-            defExit.Should().Be(4, "the default redaction leaves the width; residue recovers it");
-            defOut.Should().Contain("RECOVERED \"SECRETWORD\"");
+            // Layout-preserving output leaks the width -> recoverable (exit 4).
+            var (layoutExit, layoutOut) = Run(layout, "--mode", "residue", "--dictionary", dict);
+            layoutExit.Should().Be(4, "a width-preserving redaction leaves the width; residue recovers it");
+            layoutOut.Should().Contain("RECOVERED \"SECRETWORD\"");
 
             // Width-closed output leaks nothing -> clean (exit 0).
             var (wcExit, wcOut) = Run(wc, "--mode", "residue", "--dictionary", dict);
             wcExit.Should().Be(0, "width-closing destroys the residue channel; nothing to recover");
             wcOut.Should().Contain("No recoverable text");
+
+            // The default keeps one marker's room (2 em), which the residue
+            // channel still finds as a gap — but it is the same for every word,
+            // so no candidate fits it and nothing is recovered.
+            var (_, defOut) = Run(def, "--mode", "residue", "--dictionary", dict);
+            defOut.Should().Contain("0 candidates, 0 bits").And.NotContain("SECRETWORD",
+                "the default closes the width too (#1715); its marker is one fixed size");
+            (MutoolTextExtractor.ExtractPage(def, 1) ?? "").Should().NotContain("SECRETWORD");
         }
-        finally { File.Delete(src); File.Delete(def); File.Delete(wc); File.Delete(dict); }
+        finally { File.Delete(src); File.Delete(layout); File.Delete(def); File.Delete(wc); File.Delete(dict); }
     }
 
     private static void RunRedact(string src, string dst, string term, params string[] extra)

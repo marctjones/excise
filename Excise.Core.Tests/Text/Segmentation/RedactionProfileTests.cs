@@ -72,6 +72,9 @@ public class RedactionProfileTests
         o.RemoveFieldNames.Should().BeFalse();
         o.FlattenInteractiveContent.Should().BeFalse();
 
+        // #1715/#1725: the width closes, and a fixed-size box still marks it.
+        o.Width.Should().Be(WidthPolicy.FixedMarker);
+
         RedactionOptions.ForProfile(RedactionProfile.Standard).Should().Be(o);
     }
 

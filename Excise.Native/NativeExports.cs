@@ -54,14 +54,13 @@ public static unsafe class NativeExports
         return doc.GetPage(page);
     }
 
-    /// <summary>Same defaults as `excise redact`: Standard profile, box drawn, layout-preserving width.</summary>
+    /// <summary>Same defaults as `excise redact`: Standard profile, box drawn, the default width policy.</summary>
     private static RedactionOptions DefaultOptions()
     {
         var profile = RedactionOptions.ForProfile(RedactionProfile.Standard);
         return profile with
         {
             DrawBox = true,
-            Width = WidthPolicy.CollapsePreserveLayout,
             CarrierPolicy = profile.CarrierPolicy,
         };
     }

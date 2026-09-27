@@ -25,12 +25,12 @@ namespace Excise.Rendering.Tests.Differential;
 /// <para><b>What this file pins.</b> Two secrets of very different length, in
 /// the same fixture between the same neighbouring words:</para>
 /// <list type="bullet">
-///   <item><see cref="WidthPolicy.CollapsePreserveLayout"/> (the pre-#1755
-///   default) — the boxes have DIFFERENT rendered widths. The channel is open.
+///   <item><see cref="WidthPolicy.CollapsePreserveLayout"/> (the default until
+///   #1715) — the boxes have DIFFERENT rendered widths. The channel is open.
 ///   Pinned as a fact, not fixed silently.</item>
 ///   <item><see cref="WidthPolicy.OvershootPreserveLayout"/> — the boxes have
 ///   the SAME rendered width. The rendered channel is closed.</item>
-///   <item><see cref="WidthPolicy.FixedMarker"/> (#1755, opt-in) — the boxes
+///   <item><see cref="WidthPolicy.FixedMarker"/> (#1755, the default) — the boxes
 ///   have the SAME rendered width AND the content stream keeps only the
 ///   marker's width, never the removed run's. The only policy that answers
 ///   #1715 and #1725 together.</item>
@@ -92,12 +92,12 @@ public class RedactionWidthPolicyTests : IDisposable
 
         widthA.Should().BeGreaterThan(0, "the covering box is drawn");
         Math.Abs(widthA - widthB).Should().BeGreaterThanOrEqualTo(3,
-            "under the default policy the box is a RULER for the removed string. " +
+            "under the layout-preserving policy the box is a RULER for the removed string. " +
             "Measured here: ALFRED and ALBERT are the same letter count and differ " +
             "by 0.055 em of advance, and that difference survives all the way to " +
             "the rendered pixels an attacker can measure — enough to discard one " +
             "of two otherwise identical candidates. This is the #1189 side " +
-            "channel, pinned as a FACT: the default is not silently changed.");
+            "channel, pinned as a FACT: the policy is not silently changed.");
     }
 
     [Fact]

@@ -167,7 +167,9 @@ public class CidRedactionEndToEndTests
         page.Letters.First(l => l.Value == "D").StartX.Should().BeApproximately(122.0, 1e-9,
             "hand-computed §9.4.4: 72 + 10 glyphs × (w0·Tfs + Tc)·Th");
 
-        doc.RedactText("SECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
+        // Layout preservation is this test's subject, so it asks for it (#1715 made FixedMarker the default).
+        doc.RedactText("SECRET", RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.CollapsePreserveLayout })
+            .VerifiedRemovals.Should().Be(1);
 
         // CARRIER-AGNOSTIC: the secret must be nowhere in the SAVED BYTES,
         // in any carrier — ASCII, UTF-16BE, or UTF-8.
