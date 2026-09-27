@@ -277,7 +277,7 @@ internal static class FormXObjectFlattener
             output.Add(ContentOperator.Transform(
                 formMatrix.A, formMatrix.B, formMatrix.C, formMatrix.D, formMatrix.E, formMatrix.F));
         EmitBBoxClip(form, ctx.Doc, output);
-        AddBalancedMarkedContent(inlined, output);
+        AddBalanced(inlined, output);
         output.Add(ContentOperator.RestoreState());
     }
 
@@ -287,22 +287,33 @@ internal static class FormXObjectFlattener
     /// the page opened around its <c>Do</c>, and a span the form leaves open ends
     /// with the form. Inlined verbatim, a stray <c>EMC</c> closed the page's span
     /// early, and its <c>/ActualText</c> no longer enclosed the glyphs a redaction
-    /// removed after it (#1849).
+    /// removed after it (#1849). The <c>q</c>/<c>Q</c> the <c>Do</c> implies brackets
+    /// the form the same way (§8.10.1): a stray <c>Q</c> popped our wrapper, and the
+    /// glyphs after it lost the form <c>/Matrix</c>; an unclosed <c>q</c> kept it
+    /// open, and the page glyphs after the form took it on. Either way the glyph
+    /// pass located text away from where it is drawn and left it in place (#1895).
     /// </summary>
-    private static void AddBalancedMarkedContent(List<ContentOperator> ops, List<ContentOperator> output)
+    private static void AddBalanced(List<ContentOperator> ops, List<ContentOperator> output)
     {
-        var open = 0;
+        int spans = 0, states = 0;
         foreach (var op in ops)
         {
-            if (op.Name is "BMC" or "BDC") open++;
+            if (op.Name is "BMC" or "BDC") spans++;
+            else if (op.Name == "q") states++;
             else if (op.Name == "EMC")
             {
-                if (open == 0) continue;
-                open--;
+                if (spans == 0) continue;
+                spans--;
+            }
+            else if (op.Name == "Q")
+            {
+                if (states == 0) continue;
+                states--;
             }
             output.Add(op);
         }
-        for (; open > 0; open--) output.Add(new ContentOperator("EMC"));
+        for (; spans > 0; spans--) output.Add(new ContentOperator("EMC"));
+        for (; states > 0; states--) output.Add(ContentOperator.RestoreState());
     }
 
     /// <summary>Emit <c>x y w h re W n</c> clipping to the form's /BBox, if present.</summary>
