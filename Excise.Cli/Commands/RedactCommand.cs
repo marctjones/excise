@@ -35,6 +35,15 @@ internal static class RedactCommand
                 "text that follows it.",
             DefaultValueFactory = _ => false,
         };
+        var quantizeGapOption = new Option<bool>("--quantize-gap")
+        {
+            Description = "Keep a gap where the removed text was, rounded UP to a whole em of its size, " +
+                "so the layout states only a bucket, not the exact width (#1754); the rest of the line " +
+                "moves right by at most one em. Draws no covering box. A line with no room to grow has " +
+                "its gap closed fully instead, and says so. Weaker than --close-width: a bucket still " +
+                "narrows the candidates.",
+            DefaultValueFactory = _ => false,
+        };
         var passwordOption = new Option<string?>("--password")
         {
             Description = "User password for encrypted PDFs. The output is re-encrypted with this " +
@@ -153,6 +162,7 @@ internal static class RedactCommand
             caseSensitiveOption,
             closeWidthOption,
             fixedMarkerOption,
+            quantizeGapOption,
             passwordOption,
             allowDecryptOption,
             strictOption,
@@ -181,6 +191,7 @@ internal static class RedactCommand
             var closeWidth = parseResult.GetValue(closeWidthOption);
             var overshootBox = parseResult.GetValue(overshootBoxOption);
             var fixedMarker = parseResult.GetValue(fixedMarkerOption);
+            var quantizeGap = parseResult.GetValue(quantizeGapOption);
             var strict = parseResult.GetValue(strictOption);
             var allowLowConfidence = parseResult.GetValue(allowLowConfidenceOption);
 
@@ -207,14 +218,14 @@ internal static class RedactCommand
                 return 1;
             }
 
-            // #1755: --close-width, --overshoot-box and --fixed-marker are
-            // three different, mutually exclusive answers to the same
-            // width-policy question.
-            if (fixedMarker && (closeWidth || overshootBox))
+            // #1755/#1754: --close-width, --overshoot-box, --fixed-marker and
+            // --quantize-gap are different, mutually exclusive answers to the
+            // same width-policy question.
+            if ((fixedMarker ? 1 : 0) + (quantizeGap ? 1 : 0) + (closeWidth || overshootBox ? 1 : 0) > 1)
             {
                 Console.Error.WriteLine(
-                    "--fixed-marker, --close-width and --overshoot-box are mutually exclusive " +
-                    "width policies.");
+                    "--fixed-marker, --quantize-gap, --close-width and --overshoot-box are mutually " +
+                    "exclusive width policies.");
                 return 1;
             }
 
@@ -235,7 +246,7 @@ internal static class RedactCommand
             var keepAttachments = parseResult.GetValue(keepAttachmentsOption);
             if (flattenOcr &&
                 (ocrImageText || noBox || boxColorSpec != null || closeWidth || overshootBox ||
-                 fixedMarker || strict || allowLowConfidence || keepAttachments))
+                 fixedMarker || quantizeGap || strict || allowLowConfidence || keepAttachments))
             {
                 Console.Error.WriteLine(
                     "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, or attachment options.");
@@ -288,7 +299,8 @@ internal static class RedactCommand
                     overshootBox,
                     fixedMarker,
                     keepAttachments,
-                    profile),
+                    profile,
+                    quantizeGap),
                     progress);
 
                 foreach (var diagnostic in result.Diagnostics)

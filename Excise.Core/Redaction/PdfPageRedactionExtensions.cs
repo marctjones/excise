@@ -279,7 +279,7 @@ public static class PdfPageRedactionExtensions
         var letters = page.Letters;
         if (letters.Count > 0)
         {
-            var remover = NewGlyphRemover(width, markerIsArea);
+            var remover = NewGlyphRemover(page, width, markerIsArea);
             working = remover.ProcessOperations(working, letters, area, strategy);
             RecordWidthNotes(page, remover);
         }
@@ -492,7 +492,7 @@ public static class PdfPageRedactionExtensions
         var letters = page.Letters;
         if (letters.Count > 0)
         {
-            var remover = NewGlyphRemover(width, markerIsArea);
+            var remover = NewGlyphRemover(page, width, markerIsArea);
             working = remover.ProcessOperations(working, letters, list, strategy);
             RecordWidthNotes(page, remover);
         }
@@ -520,9 +520,10 @@ public static class PdfPageRedactionExtensions
     /// FixedMarker is the area itself, so the line keeps room up to its right
     /// edge; RedactText's is the fixed-size marker the remover defaults to.
     /// </summary>
-    private static GlyphRemover NewGlyphRemover(WidthPolicy width, bool markerIsArea) => new()
+    private static GlyphRemover NewGlyphRemover(PdfPage page, WidthPolicy width, bool markerIsArea) => new()
     {
         Width = width,
+        PageBox = page.CropBox,
         MarkerRight = markerIsArea ? static (area, _) => area.Normalize().Right : null,
     };
 

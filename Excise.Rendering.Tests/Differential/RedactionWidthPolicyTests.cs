@@ -313,6 +313,90 @@ public class RedactionWidthPolicyTests : IDisposable
     }
 
     /// <summary>
+    /// #1754 — QuantizeGap keeps the removed run's gap rounded UP to a whole em
+    /// (36 pt here): ALBERT is 140.04 pt wide, so its gap becomes 144 and the
+    /// text after it moves right by the 3.96 pt difference — and nothing else
+    /// on the page moves. Positions from mutool.
+    /// </summary>
+    [Fact]
+    public void QuantizeGap_TheTextAfterMovesRightByTheRoundingDifference_AndNothingElseMoves()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var (before, after) = RedactPositions(
+            $"BT /F1 36 Tf 20 40 Td (Name: {SecretB} Ref.) Tj ET", SecretB, WidthPolicy.QuantizeGap);
+
+        var at = string.Concat(before.Select(g => g.Char)).IndexOf(SecretB, StringComparison.Ordinal);
+        var removedWidth = before[at + SecretB.Length].X - before[at].X;
+        var bucket = Math.Ceiling(removedWidth / 36) * 36;
+        bucket.Should().BeGreaterThan(removedWidth + 1, "the fixture is chosen so the rounding is visible");
+
+        var kept = before.Take(at).Concat(before.Skip(at + SecretB.Length)).ToList();
+        after.Select(g => g.Char).Should().Equal(kept.Select(g => g.Char));
+        for (var i = 0; i < kept.Count; i++)
+            after[i].X.Should().BeApproximately(i < at ? kept[i].X : kept[i].X + bucket - removedWidth, 0.1,
+                $"glyph '{kept[i].Char}'");
+    }
+
+    [Fact]
+    public void QuantizeGap_TwoSecretsInOneBucket_LeaveTheSameLayoutAndTheSameNumber()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // ALFRED (142.02 pt) and ALBERT (140.04 pt) both round to 144: the
+        // layout, and the one TJ number the file keeps, state only the bucket.
+        var (_, a) = RedactPositions($"BT /F1 36 Tf 20 40 Td (Name: {SecretA} Ref.) Tj ET", SecretA, WidthPolicy.QuantizeGap);
+        var (_, b) = RedactPositions($"BT /F1 36 Tf 20 40 Td (Name: {SecretB} Ref.) Tj ET", SecretB, WidthPolicy.QuantizeGap);
+        b.Last(g => g.Char == "R").X.Should().BeApproximately(a.Last(g => g.Char == "R").X, 0.05);
+
+        var numberA = FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.QuantizeGap));
+        numberA.Should().Be(-4000, "144 pt at 36 pt is exactly 4 em");
+        FirstNegativeTjAdjustment(Redact(SecretB, WidthPolicy.QuantizeGap)).Should().Be(numberA);
+        FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.CollapsePreserveLayout)).Should().NotBe(numberA);
+    }
+
+    [Fact]
+    public void QuantizeGap_NoRoomOnTheLine_ClosesTheGapFullyAndReportsIt()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // The line ends 1 pt short of the page edge, so the 3.96 pt the bucket
+        // needs is not there. Closing fully is the fallback that states nothing.
+        const string content = "BT /F1 36 Tf 20 40 Td (Name: ALBERT Ref.) Tj ET";
+        var original = FixtureWith(content, pageWidth: 353);
+        using var doc = PdfDocument.Open(original);
+        doc.GetPage(1).Letters.Max(l => l.GlyphRectangle.Right).Should().BeInRange(351, 352.5);
+        doc.RedactText(SecretB, RedactionOptions.Default with { Width = WidthPolicy.QuantizeGap });
+        var saved = doc.SaveToBytes();
+
+        doc.RedactionLedger.WidthNotes.Should().ContainSingle().Which.Should().Contain("no room");
+        var before = MutoolGlyphPositions.ExtractPage(WriteTemp(original), 1)!;
+        var afterPath = WriteTemp(saved);
+        var after = MutoolGlyphPositions.ExtractPage(afterPath, 1)!;
+        var removedWidth = before.Last(g => g.Char == " ").X - before.First(g => g.Char == "A").X;
+        after.Last(g => g.Char == "R").X.Should().BeApproximately(before.Last(g => g.Char == "R").X - removedWidth, 0.1,
+            "with no room for the bucket the gap closes fully");
+        (MutoolTextExtractor.ExtractPage(afterPath, 1) ?? "").Should().NotContain(SecretB);
+    }
+
+    /// <summary>Mutool glyph positions (one line, left to right) before and after redacting under <paramref name="width"/>.</summary>
+    private (List<MutoolGlyphPositions.Glyph> Before, List<MutoolGlyphPositions.Glyph> After) RedactPositions(
+        string content, string secret, WidthPolicy width)
+    {
+        var original = FixtureWith(content, pageWidth: 800);
+        byte[] redacted;
+        using (var doc = PdfDocument.Open(original))
+        {
+            doc.RedactText(secret, RedactionOptions.Default with { Width = width });
+            redacted = doc.SaveToBytes();
+        }
+        var afterPath = WriteTemp(redacted);
+        (MutoolTextExtractor.ExtractPage(afterPath, 1) ?? "").Should().NotContain(secret);
+        return (MutoolGlyphPositions.ExtractPage(WriteTemp(original), 1)!.OrderBy(g => g.X).ToList(),
+                MutoolGlyphPositions.ExtractPage(afterPath, 1)!.OrderBy(g => g.X).ToList());
+    }
+
+    /// <summary>
     /// Redact <paramref name="secret"/> from <paramref name="content"/> under
     /// FixedMarker. The marker's right edge is read from the drawn rectangle;
     /// where the reflowed "R" of "Ref." landed, and the kept space before it,

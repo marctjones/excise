@@ -101,7 +101,11 @@ internal class GlyphRemover
     /// </summary>
     internal Func<PdfRectangle, IReadOnlyList<Letter>, double>? MarkerRight { get; set; }
 
-    private bool ClosesWidth => Width is WidthPolicy.CloseGap or WidthPolicy.FixedMarker;
+    /// <summary>The page box: how far a line that keeps a wider gap may grow (#1754).</summary>
+    internal PdfRectangle? PageBox { get; set; }
+
+    private bool ClosesWidth =>
+        Width is WidthPolicy.CloseGap or WidthPolicy.FixedMarker or WidthPolicy.QuantizeGap;
 
     private readonly LetterFinder _letterFinder;
     private readonly TextSegmenter _textSegmenter;
@@ -154,9 +158,16 @@ internal class GlyphRemover
         WidthClosureLedger? ledger = null;
         if (ClosesWidth && removals.Count > 0)
         {
+            var markerRight = MarkerRight ?? FixedMarkerRight;
+            Func<PdfRectangle, IReadOnlyList<Letter>, double, double, double>? keep = Width switch
+            {
+                WidthPolicy.FixedMarker => (area, removed, startX, _) => markerRight(area, removed) - startX,
+                WidthPolicy.QuantizeGap => (_, removed, _, width) => QuantizedGap(removed, width),
+                _ => null,
+            };
             ledger = WidthClosureLedger.Build(
                 operations, letters, removals.Values.ToList(), redactionAreas, strategy,
-                Width == WidthPolicy.FixedMarker ? MarkerRight ?? FixedMarkerRight : null);
+                keep, Width.ToString(), PageBox);
             WidthNotes.AddRange(ledger.Notes);
         }
 
@@ -188,6 +199,20 @@ internal class GlyphRemover
     /// line. Reported by the caller, never dropped.
     /// </summary>
     internal List<string> WidthNotes { get; } = new();
+
+    /// <summary>
+    /// #1754 — the removed advance rounded UP to a whole em of the removed text's
+    /// rendered size (its glyph cell height), so the gap states a bucket, never
+    /// the width. Deterministic: the same removed width gives the same bucket
+    /// every time, so repeated redactions cannot average a jitter away.
+    /// </summary>
+    private static double QuantizedGap(IReadOnlyList<Letter> removed, double width)
+    {
+        var heights = removed.Select(l => l.GlyphRectangle.Normalize().Height).Where(h => h > 0).OrderBy(h => h).ToList();
+        if (heights.Count == 0 || !(width > 0)) return 0;
+        var em = heights[heights.Count / 2];
+        return Math.Ceiling(width / em - 1e-9) * em;
+    }
 
     private static double FixedMarkerRight(PdfRectangle area, IReadOnlyList<Letter> removed) =>
         PdfDocumentRedactionExtensions.FixedMarkerBoxFor(

@@ -113,6 +113,7 @@ internal static class RedactCommandHandler
             Width = request.CloseWidth ? WidthPolicy.CloseGap
                 : request.OvershootBox ? WidthPolicy.OvershootPreserveLayout   // #1189
                 : request.FixedMarker ? WidthPolicy.FixedMarker
+                : request.QuantizeGap ? WidthPolicy.QuantizeGap   // #1754
                 : WidthPolicy.CollapsePreserveLayout,
             BoxColor = request.BoxColor,
             // #1188/#1169: per-carrier mode. An explicit --carrier-policy wins;
@@ -245,20 +246,21 @@ internal static class RedactCommandHandler
                 "--no-box and --box-color are mutually exclusive: --no-box draws no box to colour.");
         }
 
-        // #1755: --close-width, --overshoot-box and --fixed-marker are three
-        // different, mutually exclusive answers to the same width-policy
-        // question; picking more than one is not "pick the last one wins".
-        var widthFlagCount =
-            (request.CloseWidth ? 1 : 0) + (request.OvershootBox ? 1 : 0) + (request.FixedMarker ? 1 : 0);
+        // #1755/#1754: --close-width, --overshoot-box, --fixed-marker and
+        // --quantize-gap are different, mutually exclusive answers to the same
+        // width-policy question; picking more than one is not "pick the last
+        // one wins".
+        var widthFlagCount = (request.CloseWidth ? 1 : 0) + (request.OvershootBox ? 1 : 0) +
+                             (request.FixedMarker ? 1 : 0) + (request.QuantizeGap ? 1 : 0);
         if (widthFlagCount > 1)
         {
             throw new ArgumentException(
-                "--close-width, --overshoot-box and --fixed-marker are mutually exclusive width policies.");
+                "--close-width, --overshoot-box, --fixed-marker and --quantize-gap are mutually exclusive width policies.");
         }
 
         if (request.FlattenOcr &&
             (request.OcrImageText || !request.DrawBox || request.BoxColor != null ||
-             request.CloseWidth || request.OvershootBox || request.FixedMarker ||
+             request.CloseWidth || request.OvershootBox || request.FixedMarker || request.QuantizeGap ||
              request.Strict || request.AllowLowConfidence || request.KeepAttachments))
         {
             throw new ArgumentException(
@@ -306,7 +308,8 @@ internal readonly record struct RedactCommandRequest(
     // #1586 — the output profile. Standard is the default on every path; the
     // CLI must not be the one front end that quietly ships less.
     Excise.Core.Text.Segmentation.RedactionProfile Profile
-        = Excise.Core.Text.Segmentation.RedactionProfile.Standard);
+        = Excise.Core.Text.Segmentation.RedactionProfile.Standard,
+    bool QuantizeGap = false);   // #1754: opt IN to WidthPolicy.QuantizeGap
 
 internal sealed record RedactCommandResult(
     string InputPath,

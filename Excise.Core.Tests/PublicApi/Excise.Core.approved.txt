@@ -2251,6 +2251,7 @@ namespace Excise.Core.Text.Segmentation
         CloseGap = 1,
         OvershootPreserveLayout = 2,
         FixedMarker = 3,
+        QuantizeGap = 4,
     }
     public sealed class WordWrapTermCandidate : System.IEquatable<Excise.Core.Text.Segmentation.WordWrapTermCandidate>
     {

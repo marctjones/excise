@@ -968,6 +968,65 @@ public class RedactCommandTests : IDisposable
         AppendedFillBoxColors(outputPath).Should().NotBeEmpty("overshoot still draws a box");
     }
 
+    [Theory]
+    [InlineData("--close-width")]
+    [InlineData("--fixed-marker")]
+    [InlineData("--overshoot-box")]
+    public async Task RunAsync_Redact_QuantizeGap_RejectsAnotherWidthPolicy(string other)
+    {
+        // #1754: one width policy per run, never "the last flag wins".
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
+
+        var prevErr = Console.Error;
+        Console.SetError(new StringWriter());
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--quantize-gap", other
+            });
+        }
+        finally
+        {
+            Console.SetError(prevErr);
+        }
+
+        exitCode.Should().Be(1);
+        File.Exists(outputPath).Should().BeFalse("the run was rejected before writing");
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_QuantizeGap_EndToEnd_RemovesTheTextAndDrawsNoBox()
+    {
+        // #1754 through the real CLI path: the flag reaches WidthPolicy.QuantizeGap,
+        // which keeps a rounded gap and, like --close-width, draws no box.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET WORLD"));
+
+        var prevOut = Console.Out;
+        Console.SetOut(new StringWriter());
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--quantize-gap"
+            });
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
+
+        exitCode.Should().Be(0);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "SECRET").Should().BeEmpty();
+        AppendedFillBoxColors(outputPath).Should().BeEmpty("a box at the removed extent would state the exact width");
+    }
+
     [Fact]
     public async Task RunAsync_Redact_WholeWordFlag_EndToEnd_SparesTheLongerWord()
     {

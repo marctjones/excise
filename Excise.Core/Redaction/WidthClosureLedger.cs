@@ -71,6 +71,9 @@ internal sealed class WidthClosureLedger
         public required double Em { get; init; }
         public required double Lo { get; init; }
         public required double Hi { get; init; }
+        /// <summary>How far right the line may grow: a space short of the next
+        /// glyph on its baseline, or the page's edge (#1754).</summary>
+        public required double Limit { get; init; }
         public required List<Letter> Letters { get; init; }
         public List<Run> Runs { get; } = new();
     }
@@ -84,43 +87,74 @@ internal sealed class WidthClosureLedger
 
     private WidthClosureLedger() { }
 
-    /// <param name="markerRight">FixedMarker only: where the marker drawn for
-    /// an area ends, given the area and the glyphs removed in it.</param>
+    /// <param name="keep">The gap a policy keeps for one redaction area, given
+    /// the area, the glyphs removed in it, where they start and their total
+    /// advance (page space); null closes every gap. Kept once per area.</param>
+    /// <param name="policy">The policy's name, for the rows it reports.</param>
+    /// <param name="page">The page box, the farthest a growing line may reach.</param>
     internal static WidthClosureLedger Build(
         IReadOnlyList<ContentOperator> operations,
         IReadOnlyList<Letter> letters,
         IReadOnlyList<Removal> removals,
         IReadOnlyList<PdfRectangle> areas,
         GlyphRemovalStrategy strategy,
-        Func<PdfRectangle, IReadOnlyList<Letter>, double>? markerRight)
+        Func<PdfRectangle, IReadOnlyList<Letter>, double, double, double>? keep,
+        string policy,
+        PdfRectangle? page)
     {
         var ledger = new WidthClosureLedger();
         foreach (var removal in removals)
-            ledger.AddRuns(removal, letters, areas, strategy);
-        if (markerRight != null)
-            ledger.ReserveMarkers(areas, markerRight);
+            ledger.AddRuns(removal, letters, areas, strategy, page);
+        if (keep != null)
+        {
+            ledger.Keep(areas, keep);
+            ledger.FitKeptGaps(policy);
+        }
         ledger.NoteForeignGlyphs(operations);
         return ledger;
     }
 
     /// <summary>
-    /// #1725: keep room for each area's marker at its leftmost removed run, so
-    /// the text that follows starts where the marker ends instead of under it.
+    /// Keep each area's gap at its leftmost removed run, so the text that
+    /// follows starts where the kept gap ends: a FixedMarker's width (#1725),
+    /// or a QuantizeGap bucket (#1754).
     /// </summary>
-    private void ReserveMarkers(
-        IReadOnlyList<PdfRectangle> areas, Func<PdfRectangle, IReadOnlyList<Letter>, double> markerRight)
+    private void Keep(
+        IReadOnlyList<PdfRectangle> areas, Func<PdfRectangle, IReadOnlyList<Letter>, double, double, double> keep)
     {
         foreach (var group in _runsByOp.Values.SelectMany(r => r).Where(r => r.Area >= 0).GroupBy(r => r.Area))
         {
             var runs = group.OrderBy(r => r.StartX).ToList();
             var removed = runs.SelectMany(r => r.Letters).ToList();
-            runs[0].Reserve = Math.Max(0, markerRight(areas[group.Key], removed) - runs[0].StartX);
+            runs[0].Reserve = Math.Max(0, keep(areas[group.Key], removed, runs[0].StartX, runs.Sum(r => r.Width)));
+        }
+    }
+
+    /// <summary>
+    /// #1754: a kept gap wider than what it replaced pushes the rest of the
+    /// line right. Where the line has no room for that before the next glyph on
+    /// its baseline or the page's edge, its gaps close fully instead — the
+    /// secure fallback, since a closed gap states nothing — and the line is
+    /// reported.
+    /// </summary>
+    private void FitKeptGaps(string policy)
+    {
+        foreach (var line in _lines)
+        {
+            if (line.Runs.Count == 0) continue;
+            var closed = line.Runs.Sum(r => r.Closure);
+            if (closed >= 0 || line.Hi - closed <= line.Limit + Eps) continue;
+            var kept = line.Runs.Sum(r => r.Reserve);
+            foreach (var run in line.Runs) run.Reserve = 0;
+            _notes.Add($"line at y={line.Y:F1}: no room on the line for the {kept:F1} pt gap {policy} keeps; " +
+                       "the gap was closed fully instead" +
+                       (policy == nameof(WidthPolicy.FixedMarker) ? ", so the marker covers the text that follows it" : ""));
         }
     }
 
     private void AddRuns(
         Removal removal, IReadOnlyList<Letter> letters,
-        IReadOnlyList<PdfRectangle> areas, GlyphRemovalStrategy strategy)
+        IReadOnlyList<PdfRectangle> areas, GlyphRemovalStrategy strategy, PdfRectangle? page)
     {
         if (UnitOf(removal.Op) is not double unit)
         {
@@ -166,12 +200,12 @@ internal sealed class WidthClosureLedger
                 Area = IndexOf(areas, a => strategy.Selects(first.GlyphRectangle, a)),
             };
             runs.Add(run);
-            LineAt(first, runLetters, letters).Runs.Add(run);
+            LineAt(first, runLetters, letters, page).Runs.Add(run);
         }
     }
 
     /// <summary>The line holding <paramref name="first"/>, built from the page's letters once.</summary>
-    private Line LineAt(Letter first, List<Letter> runLetters, IReadOnlyList<Letter> letters)
+    private Line LineAt(Letter first, List<Letter> runLetters, IReadOnlyList<Letter> letters, PdfRectangle? page)
     {
         foreach (var line in _lines)
             if (Math.Abs(first.StartY - line.Y) <= SameLineEms * line.Em &&
@@ -205,6 +239,9 @@ internal sealed class WidthClosureLedger
             Em = em,
             Lo = row[lo].StartX,
             Hi = reach,
+            Limit = hi + 1 < row.Count
+                ? row[hi + 1].StartX - 0.25 * em
+                : page?.Normalize().Right ?? double.PositiveInfinity,
             Letters = row.GetRange(lo, hi - lo + 1),
         };
         _lines.Add(result);

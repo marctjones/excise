@@ -70,6 +70,26 @@ public enum WidthPolicy
     /// (<c>WidthClosureLedger</c>).</para>
     /// </remarks>
     FixedMarker,
+
+    /// <summary>
+    /// Keep a gap where the removed run was, but ROUNDED UP to a whole em of its
+    /// rendered size, so the layout states a bucket instead of the exact width
+    /// (#1754); the rest of the line moves by the rounding difference, which is
+    /// at most one em. Deterministic, not random: jitter is averaged away when
+    /// the same term is redacted several times.
+    /// </summary>
+    /// <remarks>
+    /// <para>A line with no room to grow before the next glyph on its baseline
+    /// or the page edge has its gap closed fully instead, and that line is
+    /// reported (<c>WIDTH NOT CLOSED</c>) — the secure fallback.</para>
+    /// <para>Draws no covering box, like <see cref="CloseGap"/>: a box drawn to
+    /// the removed run's extent would state the exact width this policy
+    /// rounds away.</para>
+    /// <para>⚠️ A bucket is still a measurement: rounding to one em leaves
+    /// roughly 15× more dictionary candidates than an exact width (#1754), not
+    /// none. <see cref="CloseGap"/> and <see cref="FixedMarker"/> state nothing.</para>
+    /// </remarks>
+    QuantizeGap,
 }
 
 /// <summary>
@@ -400,7 +420,9 @@ public sealed record RedactionOptions
     // #1755: FixedMarker closes the gap the same way CloseGap does (that is
     // what destroys the content-stream width residue); the two differ only in
     // what gets drawn at the mark.
-    internal bool CloseWidth => Width is WidthPolicy.CloseGap or WidthPolicy.FixedMarker;
+    // #1754: QuantizeGap closes the exact width the same way and keeps a
+    // rounded gap in its place; like CloseGap it draws no box.
+    internal bool CloseWidth => Width is WidthPolicy.CloseGap or WidthPolicy.FixedMarker or WidthPolicy.QuantizeGap;
 
     internal bool FixedMarker => Width == WidthPolicy.FixedMarker;
 }
