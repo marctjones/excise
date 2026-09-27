@@ -267,6 +267,7 @@ public class RedactionWidthPolicyTests : IDisposable
         var a = MarkerAndNeighbour($"BT /F1 36 Tf 20 40 Td (Name: {SecretA} Ref.) Tj ET", SecretA);
         var b = MarkerAndNeighbour($"BT /F1 36 Tf 20 40 Td (Name: {SecretB} Ref.) Tj ET", SecretB);
 
+        a.GapAfterMarker.Should().BeGreaterThanOrEqualTo(-0.05, "the marker covers nothing that follows it");
         b.GapAfterMarker.Should().BeApproximately(a.GapAfterMarker, 0.05,
             "where the text after the marker sits must not depend on what was removed");
     }

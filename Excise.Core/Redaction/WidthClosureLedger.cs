@@ -380,13 +380,18 @@ internal sealed class WidthClosureLedger
         return null;
     }
 
-    /// <summary>True when every glyph-drawing show the Tw at <paramref name="tw"/> governs is on <paramref name="line"/>.</summary>
+    /// <summary>
+    /// True when every glyph-drawing show the Tw at <paramref name="tw"/> may
+    /// govern is on <paramref name="line"/>. Only another Tw or a <c>"</c> ends
+    /// its reach: text inside a <c>q</c> inherits it, and past a <c>Q</c> it may
+    /// be restored, so those shows count too (erring toward refusing).
+    /// </summary>
     private bool GovernsOnly(int tw, Line line)
     {
         for (var i = tw + 1; i < _operations.Count; i++)
         {
             var op = _operations[i];
-            if (op.Name is "Tw" or "\"" or "q" or "Q") return true;
+            if (op.Name is "Tw" or "\"") return true;
             if (op.Category == OperatorCategory.TextShowing && op.BoundingBox is not null && !OnLine(op, line))
                 return false;
         }

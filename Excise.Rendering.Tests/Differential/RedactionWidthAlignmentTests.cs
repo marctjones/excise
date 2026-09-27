@@ -119,6 +119,28 @@ public class RedactionWidthAlignmentTests : IDisposable
     }
 
     [Fact]
+    public void JustifiedLineWhoseWordSpacingAlsoReachesTextInsideQ_IsReportedAndThatTextStays()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // q saves the Tw line 2 set and the text inside it still uses it, so
+        // rewriting that Tw would widen the spaces of a line far below.
+        var lines = Lines(Paragraph, (_, _) => 50, justifyTo: 490).Split('\n').ToList();
+        lines.Insert(2, "q BT /F1 12 Tf 50 300 Td (far below with spaces here) Tj ET Q");
+        var original = Fixture(string.Join("\n", lines));
+        using var doc = PdfDocument.Open(original);
+        doc.RedactText(Term, RedactionOptions.Default with { Width = WidthPolicy.CloseGap, DrawBox = false });
+        var afterPath = WriteTemp(doc.SaveToBytes());
+
+        doc.RedactionLedger.WidthNotes.Should().ContainSingle().Which.Should().Contain("not re-justified");
+        var farY = 792 - 300;
+        Glyphs(afterPath).Where(g => Math.Abs(g.Y - farY) < 3).Select(g => g.X)
+            .Should().Equal(Glyphs(WriteTemp(original)).Where(g => Math.Abs(g.Y - farY) < 3).Select(g => g.X),
+                (a, b) => Math.Abs(a - b) < 0.05, "text outside the redacted line must not move");
+        (MutoolTextExtractor.ExtractPage(afterPath, 1) ?? "").Should().NotContain(Term);
+    }
+
+    [Fact]
     public void JustifiedWithOneSharedWordSpacing_IsReportedNotRejustified()
     {
         // Courier: every line below has the same length and spacing, so one Tw
