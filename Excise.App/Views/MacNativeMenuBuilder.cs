@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Excise.App.ViewModels;
@@ -221,7 +223,8 @@ internal static class MacNativeMenuBuilder
                     _typewriterNextEditItem,
                     _typewriterDiscardItem,
                     TrackDocumentItem(CommandItem("Select All Text", _viewModel.SelectAllTextCommand, PdfCommandIds.SelectAll)),
-                    TrackTextSelectionItem(CommandItem("Copy Selected Text", _viewModel.CopyTextCommand, PdfCommandIds.CopyText))));
+                    TrackTextSelectionItem(CommandItem("Copy Selected Text", _viewModel.CopyTextCommand, PdfCommandIds.CopyText)),
+                    CutItem()));
 
             Add(menu,
                 Submenu("Annotate",
@@ -609,7 +612,6 @@ internal static class MacNativeMenuBuilder
         private static readonly Dictionary<string, string> MacShortcuts = new()
         {
             [PdfCommandIds.Redo] = "Cmd+Shift+Z",
-            [PdfCommandIds.SelectTextMode] = "Cmd+T",
         };
 
         private static KeyGesture? GestureFor(string? commandId)
@@ -620,6 +622,16 @@ internal static class MacNativeMenuBuilder
             if (shortcut is [.., '+', >= '0' and <= '9'])
                 shortcut = shortcut.Insert(shortcut.Length - 1, "D");
             return shortcut is null ? null : KeyGesture.Parse(shortcut);
+        }
+
+        // #1173: Cut belongs to the focused text box only; page body text has nothing to cut, so it is a no-op there.
+        private static NativeMenuItem CutItem()
+        {
+            var item = new NativeMenuItem("Cut") { Gesture = KeyGesture.Parse("Cmd+X") };
+            item.Click += (_, _) => MainWindow.CutFocusedText(
+                (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Windows
+                    .FirstOrDefault(w => w.IsActive)?.FocusManager?.GetFocusedElement());
+            return item;
         }
 
         private static NativeMenuItem CommandItem(string header, ICommand? command, string? commandId = null) =>

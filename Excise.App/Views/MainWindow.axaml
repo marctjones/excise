@@ -226,6 +226,8 @@
                 <MenuItem Header="_Copy Selected Text" Command="{Binding CopyTextCommand}" InputGesture="Ctrl+C"
                           IsEnabled="{Binding IsTextSelectionMode}"
                           access:CommandAccessibility.CommandId="edit.copyText"/>
+                <MenuItem Header="Cu_t" InputGesture="Ctrl+X" Click="OnCutMenuClick"
+                          AutomationProperties.Name="Cut"/>
             </MenuItem>
 
             <!-- ANNOTATE MENU -->

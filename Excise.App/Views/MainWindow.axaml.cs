@@ -231,6 +231,15 @@ internal partial class MainWindow : Window
     /// to <see cref="MainWindowViewModel.ConfirmDiscardUnsavedChangesAsync"/>
     /// and is tested there.
     /// </remarks>
+    // #1173: Edit > Cut acts on the focused text box; page body text has nothing to cut.
+    private void OnCutMenuClick(object? sender, RoutedEventArgs e) => CutFocusedText(FocusManager?.GetFocusedElement());
+
+    internal static void CutFocusedText(IInputElement? focused)
+    {
+        if (focused is TextBox { IsReadOnly: false } box)
+            box.Cut();
+    }
+
     private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
     {
         if (!_closeApproved && HostedViewModels().Any(vm => vm.HasUnsavedDocumentChanges))
