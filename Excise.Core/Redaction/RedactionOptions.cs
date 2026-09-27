@@ -12,7 +12,9 @@ public enum WidthPolicy
 {
     /// <summary>
     /// Keep each glyph's advance so surrounding layout does not reflow, but
-    /// collapse the removed glyph to zero ink (#1045). The default.
+    /// collapse the removed glyph to zero ink (#1045). The default until
+    /// #1715: the kept advance and the box drawn to it both state the removed
+    /// run's width.
     /// </summary>
     CollapsePreserveLayout,
 
@@ -51,8 +53,7 @@ public enum WidthPolicy
     /// channel; 0% once the gap is closed) and #1725 (no box at all is drawn
     /// today when the gap is closed, so a width-closed redaction is
     /// indistinguishable from an editing mistake) at the same time, rather
-    /// than trading one for the other. ⚠️ NOT the default yet — see the
-    /// remark on <see cref="RedactionOptions.Width"/> for the measured reason.
+    /// than trading one for the other. The default.
     /// </summary>
     /// <remarks>
     /// <para><b>What "content-independent" means here.</b> Every redacted run
@@ -96,7 +97,9 @@ public enum WidthPolicy
 /// One place to see and set how redaction behaves (#1187). Every field here is
 /// enforced by the <b>engine</b> (Excise.Core). The defaults reproduced the
 /// pre-#1187 behaviour exactly until 2026-09-17, when
-/// <see cref="KeepAttachments"/> made attachment removal the default (#1572).
+/// <see cref="KeepAttachments"/> made attachment removal the default (#1572),
+/// and <see cref="Width"/> has been <see cref="WidthPolicy.FixedMarker"/> since
+/// 2026-09-27 (#1715).
 ///
 /// <para><b>Knobs NOT in this record, and why.</b> This type deliberately holds
 /// only what Core can honour; a field Core would silently ignore is the
@@ -154,13 +157,15 @@ public sealed record RedactionOptions
     public GlyphRemovalStrategy Strategy { get; init; } = GlyphRemovalStrategy.AnyOverlap;
 
     /// <summary>How the removed glyphs' width residue is handled.
-    /// Default <see cref="WidthPolicy.CollapsePreserveLayout"/>. Enforced by: Core.</summary>
+    /// Default <see cref="WidthPolicy.FixedMarker"/>. Enforced by: Core.</summary>
     /// <remarks>
-    /// <see cref="WidthPolicy.FixedMarker"/> (#1755) is an explicit opt-in (CLI
-    /// <c>--fixed-marker</c>), not the default. Whether it should become the
-    /// default is an open product decision (#1725), not an engineering limit.
+    /// The owner's decision on #1715 and #1725: the old default,
+    /// <see cref="WidthPolicy.CollapsePreserveLayout"/>, left 91% of names
+    /// recoverable at rank 5 from the width residue; FixedMarker closes that
+    /// channel and still draws a visible mark. Layout preservation is now the
+    /// explicit choice (CLI <c>--preserve-layout</c>).
     /// </remarks>
-    public WidthPolicy Width { get; init; } = WidthPolicy.CollapsePreserveLayout;
+    public WidthPolicy Width { get; init; } = WidthPolicy.FixedMarker;
 
     /// <summary>Draw the covering box over each redacted run or area (visual
     /// confirmation only — removal is what secures). Default true. Enforced by: Core.</summary>

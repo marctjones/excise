@@ -426,19 +426,44 @@ internal static class InteractiveRedactionScrubber
         return holder.Remove("AP");   // couldn't rewrite -> drop
     }
 
+    /// <summary>
+    /// #1753 — remove every non-widget annotation whose <c>/Rect</c> is sized
+    /// to one of <paramref name="words"/> (<see cref="WordDecorationRemover.IsSizedTo"/>):
+    /// an Underline or StrikeOut whose Rect is the stroke alone misses the
+    /// glyph centreline the area scrub tests, and at the word's width it states
+    /// the removed word's width once the gap closes. Returns how many went.
+    /// </summary>
+    public static int RemoveWordSizedAnnotations(PdfPage page, IReadOnlyList<PdfRectangle> words)
+    {
+        var pruneCandidates = new HashSet<int>();
+        var removed = RemoveAnnotations(page, rect => words.Any(word => WordDecorationRemover.IsSizedTo(rect, word)),
+            pruneCandidates);
+        if (pruneCandidates.Count > 0)
+            PruneUnreachableCandidates(page.Document, pruneCandidates);
+        if (removed > 0)
+            page.InvalidateTextExtractionCache();
+        return removed;
+    }
+
     private static bool RemoveIntersectingAnnotations(
         PdfPage page,
         PdfRectangle area,
         HashSet<int> pruneCandidates)
+        => RemoveAnnotations(page, rect => rect.IntersectsWith(area), pruneCandidates) > 0;
+
+    private static int RemoveAnnotations(
+        PdfPage page,
+        Func<PdfRectangle, bool> matches,
+        HashSet<int> pruneCandidates)
     {
         var annotsObj = page.Dictionary.GetOptional("Annots");
         if (annotsObj == null)
-            return false;
+            return 0;
 
         if (page.Document.Resolve(annotsObj) is not PdfArray annots)
-            return false;
+            return 0;
 
-        var changed = false;
+        var removed = 0;
         for (var i = annots.Count - 1; i >= 0; i--)
         {
             var annotObj = annots[i];
@@ -446,7 +471,7 @@ internal static class InteractiveRedactionScrubber
                 continue;
 
             if (!TryGetRect(page.Document, annot.GetOptional("Rect"), out var rect) ||
-                !rect.IntersectsWith(area))
+                !matches(rect))
             {
                 continue;
             }
@@ -462,10 +487,10 @@ internal static class InteractiveRedactionScrubber
 
             CaptureObjectGraph(page.Document, annotObj, pruneCandidates);
             annots.RemoveAt(i);
-            changed = true;
+            removed++;
         }
 
-        return changed;
+        return removed;
     }
 
     private static bool TryGetRect(PdfDocument document, PdfObject? rectObj, out PdfRectangle rect)

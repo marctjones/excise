@@ -23,16 +23,24 @@ internal static class RedactCommand
         {
             Description = "Close the width gap so the removed text's width can't be recovered (moves " +
                 "surviving text), and draw NO covering box (#1725: the box would itself be a residue " +
-                "oracle). #1715 measured this at 0% recall@5 vs 91% under the default.",
+                "oracle). #1715 measured this at 0% recall@5 vs 91% under --preserve-layout.",
             DefaultValueFactory = _ => false,
         };
         var fixedMarkerOption = new Option<bool>("--fixed-marker")
         {
-            Description = "Close the width gap like --close-width AND draw a covering box of ONE " +
+            Description = "The default. Close the width gap like --close-width AND draw a covering box of ONE " +
                 "CONTENT-INDEPENDENT SIZE, so the redaction stays visibly marked (#1725) without the " +
                 "box's width leaking the removed run's length (#1715: 0% recall@5, same as --close-width, " +
                 "with a mark). The line keeps exactly the marker's width, so the box covers none of the " +
                 "text that follows it.",
+            DefaultValueFactory = _ => false,
+        };
+        var preserveLayoutOption = new Option<bool>("--preserve-layout")
+        {
+            Description = "Keep the removed text's advance so nothing on the line moves, and draw the " +
+                "covering box to the removed text's exact extent (the default before #1715). Both the " +
+                "kept gap and the box state how wide the removed text was: #1715 recovered 91% of " +
+                "names at rank 5 from that width.",
             DefaultValueFactory = _ => false,
         };
         var quantizeGapOption = new Option<bool>("--quantize-gap")
@@ -162,6 +170,7 @@ internal static class RedactCommand
             caseSensitiveOption,
             closeWidthOption,
             fixedMarkerOption,
+            preserveLayoutOption,
             quantizeGapOption,
             passwordOption,
             allowDecryptOption,
@@ -192,6 +201,7 @@ internal static class RedactCommand
             var overshootBox = parseResult.GetValue(overshootBoxOption);
             var fixedMarker = parseResult.GetValue(fixedMarkerOption);
             var quantizeGap = parseResult.GetValue(quantizeGapOption);
+            var preserveLayout = parseResult.GetValue(preserveLayoutOption);
             var strict = parseResult.GetValue(strictOption);
             var allowLowConfidence = parseResult.GetValue(allowLowConfidenceOption);
 
@@ -218,14 +228,15 @@ internal static class RedactCommand
                 return 1;
             }
 
-            // #1755/#1754: --close-width, --overshoot-box, --fixed-marker and
-            // --quantize-gap are different, mutually exclusive answers to the
-            // same width-policy question.
-            if ((fixedMarker ? 1 : 0) + (quantizeGap ? 1 : 0) + (closeWidth || overshootBox ? 1 : 0) > 1)
+            // #1755/#1754/#1715: --close-width, --overshoot-box, --fixed-marker,
+            // --quantize-gap and --preserve-layout are different, mutually
+            // exclusive answers to the same width-policy question.
+            if ((fixedMarker ? 1 : 0) + (quantizeGap ? 1 : 0) + (preserveLayout ? 1 : 0) +
+                (closeWidth || overshootBox ? 1 : 0) > 1)
             {
                 Console.Error.WriteLine(
-                    "--fixed-marker, --quantize-gap, --close-width and --overshoot-box are mutually " +
-                    "exclusive width policies.");
+                    "--fixed-marker, --quantize-gap, --preserve-layout, --close-width and --overshoot-box " +
+                    "are mutually exclusive width policies.");
                 return 1;
             }
 
@@ -246,7 +257,7 @@ internal static class RedactCommand
             var keepAttachments = parseResult.GetValue(keepAttachmentsOption);
             if (flattenOcr &&
                 (ocrImageText || noBox || boxColorSpec != null || closeWidth || overshootBox ||
-                 fixedMarker || quantizeGap || strict || allowLowConfidence || keepAttachments))
+                 fixedMarker || quantizeGap || preserveLayout || strict || allowLowConfidence || keepAttachments))
             {
                 Console.Error.WriteLine(
                     "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, or attachment options.");
@@ -300,7 +311,8 @@ internal static class RedactCommand
                     fixedMarker,
                     keepAttachments,
                     profile,
-                    quantizeGap),
+                    quantizeGap,
+                    preserveLayout),
                     progress);
 
                 foreach (var diagnostic in result.Diagnostics)

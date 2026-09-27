@@ -7,6 +7,7 @@ using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Excise.Ocr;
+using Excise.Rendering.Differential;
 using Excise.TestSupport;
 using Xunit;
 
@@ -972,6 +973,7 @@ public class RedactCommandTests : IDisposable
     [InlineData("--close-width")]
     [InlineData("--fixed-marker")]
     [InlineData("--overshoot-box")]
+    [InlineData("--preserve-layout")]
     public async Task RunAsync_Redact_QuantizeGap_RejectsAnotherWidthPolicy(string other)
     {
         // #1754: one width policy per run, never "the last flag wins".
@@ -996,6 +998,51 @@ public class RedactCommandTests : IDisposable
 
         exitCode.Should().Be(1);
         File.Exists(outputPath).Should().BeFalse("the run was rejected before writing");
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_NoWidthFlag_ClosesTheGapAndDrawsTheMarker_PreserveLayoutDoesNot()
+    {
+        // #1715/#1725: no width flag means FixedMarker — the text after the
+        // redaction moves left and a box is still drawn. --preserve-layout is
+        // the old default, and leaves the text where it was. Measured on
+        // mutool's pixels, not excise's own geometry.
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        var inputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRETSECRET WORLD"));
+        var defaultPath = TempPath(".pdf");
+        var layoutPath = TempPath(".pdf");
+
+        var prevOut = Console.Out;
+        Console.SetOut(new StringWriter());
+        try
+        {
+            (await Program.RunAsync(new[] { "redact", inputPath, defaultPath, "SECRETSECRET" })).Should().Be(0);
+            (await Program.RunAsync(new[] { "redact", inputPath, layoutPath, "SECRETSECRET", "--preserve-layout" }))
+                .Should().Be(0);
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
+
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(defaultPath), "SECRET").Should().BeEmpty();
+        AppendedFillBoxColors(defaultPath).Should().NotBeEmpty("FixedMarker still draws a visible mark (#1725)");
+        var defaultRight = RightmostInkColumn(defaultPath);
+        var layoutRight = RightmostInkColumn(layoutPath);
+        // 72 dpi: SECRETSECRET is ~80 pt at 12 pt Helvetica, the marker 2 em (24 pt).
+        (layoutRight - defaultRight).Should().BeGreaterThan(30,
+            "the default closes the removed run's width, so WORLD ends further left than under --preserve-layout");
+    }
+
+    private static int RightmostInkColumn(string pdfPath)
+    {
+        using var bmp = MutoolReferenceRenderer.RenderPage(pdfPath, 1, 72)!;
+        for (var x = bmp.Width - 1; x >= 0; x--)
+            for (var y = 0; y < bmp.Height; y++)
+                if (bmp.GetPixel(x, y) is var p && (p.Red < 128 || p.Green < 128 || p.Blue < 128))
+                    return x;
+        return -1;
     }
 
     [Fact]

@@ -38,7 +38,9 @@ public class OperandTjSplitTests
         using var doc = PdfDocument.Open(Pdf("BT /F1 14 Tf 20 50 Td (Name: Louise Anne Farrar here) Tj ET\n"));
         var hereBefore = doc.GetPage(1).Letters.First(l => l.Value == "h").StartX;
 
-        doc.RedactText("Farrar", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
+        // Layout preservation is this test's subject, so it asks for it (#1715 made FixedMarker the default).
+        doc.RedactText("Farrar", RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.CollapsePreserveLayout })
+            .VerifiedRemovals.Should().Be(1);
         var saved = doc.SaveToBytes();
 
         // Term gone from the saved bytes (any carrier).

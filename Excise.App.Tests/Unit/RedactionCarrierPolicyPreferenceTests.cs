@@ -51,7 +51,7 @@ public class RedactionCarrierPolicyPreferenceTests
         defaults.Should().Be(new RedactionPreferences());
         defaults.WholeWord.Should().BeFalse("#1000 kept substring as the default");
         defaults.KeepAttachments.Should().BeFalse("#1572: a redacted copy carries no attachments");
-        defaults.Width.Should().Be(WidthPolicy.CollapsePreserveLayout);
+        defaults.Width.Should().Be(WidthPolicy.FixedMarker, "#1715: the width closes, and #1725: a box still marks it");
         defaults.Profile.Should().Be(RedactionProfile.Standard);
         defaults.LinkUriPolicy.Should().Be(CarrierScrubMode.Strip);
         defaults.MetadataPolicy.Should().Be(CarrierScrubMode.Strip);
@@ -213,18 +213,13 @@ public class RedactionCarrierPolicyPreferenceTests
     }
 
     [Fact]
-    public void WidthPolicy_DefaultsToCollapse_AndRoundTripsThroughPreferences()
+    public void WidthPolicy_DefaultsToFixedMarker_AndRoundTripsThroughPreferences()
     {
-        // #1189. The default keeps today's behaviour: an exact-width box that
-        // does not reflow the page — and that IS the ruler #1140 recorded, so
-        // changing the default is a product decision, not a side effect.
-        //
-        // #1755 added WidthPolicy.FixedMarker as an available OPTION (it
-        // closes the #1715 width channel and always draws a visible mark,
-        // #1725) but NOT as the default: that is an open product decision
-        // (#1725). #1754 added QuantizeGap the same way.
+        // #1189. CollapsePreserveLayout's exact-width box is the ruler #1140
+        // recorded; the owner made FixedMarker (#1755) the default on #1715 and
+        // #1725: it closes the width channel and always draws a visible mark.
         var main = MainWindowViewModelTestFactory.Create();
-        main.RedactionPreferences.Width.Should().Be(WidthPolicy.CollapsePreserveLayout);
+        main.RedactionPreferences.Width.Should().Be(WidthPolicy.FixedMarker);
 
         var prefs = new PreferencesViewModel();
         prefs.WidthPolicyOptions.Should().BeEquivalentTo(new[]
@@ -292,7 +287,7 @@ public class RedactionCarrierPolicyPreferenceTests
         var loaded = WindowSettings.Load().Redaction;
 
         loaded.Profile.Should().Be(RedactionProfile.Standard);
-        loaded.Width.Should().Be(WidthPolicy.CollapsePreserveLayout);
+        loaded.Width.Should().Be(WidthPolicy.FixedMarker);
         loaded.MetadataPolicy.Should().Be(CarrierScrubMode.Strip, "absent");
         loaded.WholeWord.Should().BeFalse();
         loaded.LinkUriPolicy.Should().Be(CarrierScrubMode.RemoveWhole, "the valid field survives its neighbours");
