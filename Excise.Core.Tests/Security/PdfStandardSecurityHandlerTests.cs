@@ -355,69 +355,12 @@ public class PdfStandardSecurityHandlerTests
         ex!.Message.Should().Contain("/U").And.Contain("32 bytes");
     }
 
-    /// <summary>
-    /// Test DecryptStream with RC4 cipher (V=2 R=3).
-    /// </summary>
-    [Fact]
-    public void DecryptStream_WithRc4_DecryptsData()
-    {
-        // Arrange - Create handler with known fileKey
-        var handler = CreateHandlerWithKnownKey(usesAes: false, keyLength: 16);
-        int objNum = 1;
-        int gen = 0;
-        byte[] ciphertext = System.Text.Encoding.ASCII.GetBytes("CiphertextData");
-
-        // Act
-        byte[] plaintext = handler.DecryptStream(objNum, gen, ciphertext);
-
-        // Assert
-        plaintext.Should().NotBeEmpty();
-        plaintext.Should().HaveCount(ciphertext.Length);
-    }
-
-    /// <summary>
-    /// Test DecryptString with RC4 cipher (V=2 R=3).
-    /// </summary>
-    [Fact]
-    public void DecryptString_WithRc4_DecryptsData()
-    {
-        // Arrange
-        var handler = CreateHandlerWithKnownKey(usesAes: false, keyLength: 16);
-        int objNum = 5;
-        int gen = 0;
-        byte[] ciphertext = System.Text.Encoding.ASCII.GetBytes("EncryptedString");
-
-        // Act
-        byte[] plaintext = handler.DecryptString(objNum, gen, ciphertext);
-
-        // Assert
-        plaintext.Should().NotBeEmpty();
-    }
-
-    /// <summary>
-    /// Test DecryptStream with AES cipher (V=4 R=4 with CFM=AESV2).
-    /// AES strings include a 16-byte IV prefix.
-    /// </summary>
-    [Fact]
-    public void DecryptStream_WithAes_DecryptsData()
-    {
-        // Arrange
-        var handler = CreateHandlerWithKnownKey(usesAes: true, keyLength: 16);
-        int objNum = 1;
-        int gen = 0;
-        // Create AES ciphertext: 16-byte IV + encrypted data
-        byte[] iv = new byte[16];
-        byte[] data = new byte[16]; // must be block-aligned (multiple of 16) for AES-CBC
-        var ciphertext = new byte[iv.Length + data.Length];
-        Array.Copy(iv, ciphertext, iv.Length);
-        Array.Copy(data, 0, ciphertext, iv.Length, data.Length);
-
-        // Act
-        byte[] plaintext = handler.DecryptStream(objNum, gen, ciphertext);
-
-        // Assert - Should not throw even with invalid IV/data
-        plaintext.Should().NotBeNull();
-    }
+    // The three Decrypt*_..._DecryptsData tests formerly here (RC4 stream, RC4
+    // string, AES stream) asserted only NotBeEmpty()/NotBeNull() on the output,
+    // which a passthrough would also satisfy (#1783). Real coverage: RFC 2268
+    // vector and encrypt/decrypt symmetry in Security/Rc4Tests.cs, and genuine
+    // end-to-end decryption through an actually-encrypted PDF in
+    // Security/SecurityHandlerEdgeTests.cs.
 
     /// <summary>
     /// Test DecryptStream with empty data.

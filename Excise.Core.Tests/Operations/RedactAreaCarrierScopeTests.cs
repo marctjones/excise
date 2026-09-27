@@ -80,9 +80,11 @@ public class RedactAreaCarrierScopeTests
                  .Append(after[key] ? "LEAKS" : "clean").Append("  ")
                  .Append(key).Append('\n');
 
-        // The strip must CHANGE something, or the default is decorative.
-        var fixedByStrip = before.Keys.Count(k => before[k] && !after[k]);
-        fixedByStrip.Should().BeGreaterThan(0, lines.ToString());
+        // The strip must fix EXACTLY these carriers — not merely "at least one",
+        // which stayed green while a regression stopped stripping /Subject,
+        // /Keywords, /Author and XMP but kept stripping /Title alone (#1783).
+        before.Keys.Where(k => before[k] && !after[k]).Should().BeEquivalentTo(
+            DocumentLevelCarriersFixedByStrip, lines.ToString());
 
         // And it must not change page content — that is the glyph pass's job.
         after["page 1 content (outside box)"].Should()
@@ -186,6 +188,13 @@ public class RedactAreaCarrierScopeTests
     ///
     /// So: a metadata value that shares ordinary words with the redacted text
     /// must come out either intact or absent, never mangled.
+    ///
+    /// The bait ("Younger profile timeline") lives in the outline /Title
+    /// (#1783) — NOT in /Info, which the Standard profile strips wholesale
+    /// regardless of whether the rejected substring-scrubbing design exists,
+    /// so a bait there could never observe that design being reintroduced.
+    /// Bookmarks are a carrier the Standard profile keeps (RemoveBookmarks
+    /// defaults to false), so an intact survival is the only passing outcome.
     /// </summary>
     [Fact]
     public void TheStripDoesNotMangleUnrelatedValues()
@@ -193,6 +202,13 @@ public class RedactAreaCarrierScopeTests
         var path = WriteFixture();
         try
         {
+            // Positive control: the bait must actually be in the document before
+            // redaction, or every "not mangled" assertion below passes for the
+            // wrong reason — the string simply never being there.
+            var before = SavedPdfLeakScanner.AllCarriersText(File.ReadAllBytes(path));
+            before.Should().Contain("Younger profile timeline",
+                "the bait must be present before redaction for the corruption checks below to mean anything");
+
             using var doc = PdfDocument.Open(path);
             doc.GetPage(1).RedactArea(Box, RedactionOptions.Default with { DrawBox = false });
             var combined = CombinedEncodings(SaveToBytes(doc));
@@ -202,6 +218,9 @@ public class RedactAreaCarrierScopeTests
                     $"'{fragment}' is what term-derived substring scrubbing leaves behind when " +
                     "a metadata value shares an ordinary word with the redacted text. Seeing it " +
                     "means the wholesale strip was replaced by the design #897 rejected");
+
+            combined.Should().Contain("Younger profile timeline",
+                "the bait lives in a carrier (bookmarks) the Standard profile keeps, so it must survive intact");
         }
         finally { File.Delete(path); }
     }
@@ -248,6 +267,22 @@ public class RedactAreaCarrierScopeTests
         "SECRETNAME keyword",
         "SECRETNAME author",
         "SECRETNAME in XMP title",
+    };
+
+    /// <summary>
+    /// The exact set of <see cref="CarrierLeakReport"/> keys the document-level
+    /// strip must flip from leaking to clean — used by
+    /// <see cref="Measure_WhichCarriersSurviveAnAreaRedaction"/> so a regression
+    /// that stops fixing some of these while still fixing others is caught,
+    /// where a bare "count > 0" threshold (#1783) was not.
+    /// </summary>
+    private static readonly string[] DocumentLevelCarriersFixedByStrip =
+    {
+        "/Info /Title",
+        "/Info /Subject",
+        "/Info /Keywords",
+        "/Info /Author",
+        "XMP dc:title",
     };
 
     /// <summary>
@@ -353,14 +388,18 @@ public class RedactAreaCarrierScopeTests
             "/Contents (SECRETNAME annot outside) >>\nendobj\n",
             $"9 0 obj\n<< /Length {page2.Length} >>\nstream\n{page2}\nendstream\nendobj\n",
             "10 0 obj\n<< /Type /Outlines /First 11 0 R /Last 11 0 R /Count 1 >>\nendobj\n",
-            "11 0 obj\n<< /Title (SECRETNAME in bookmark) /Parent 10 0 R >>\nendobj\n",
+            // #1783: the bait for the substring-corruption check lives HERE, not
+            // in /Info /Creator — /Info is wholesale-stripped by the Standard
+            // profile regardless of the substring-scrubbing design under test, so
+            // a bait there can never observe that design being reintroduced.
+            // Bookmarks are a carrier the Standard profile keeps.
+            "11 0 obj\n<< /Title (SECRETNAME in bookmark Younger profile timeline) /Parent 10 0 R >>\nendobj\n",
             $"12 0 obj\n<< /Type /Metadata /Subtype /XML /Length {xmp.Length} >>\nstream\n{xmp}\nendstream\nendobj\n",
             // a different page entirely
             "13 0 obj\n<< /Type /Annot /Subtype /Text /Rect [100 695 120 715] " +
             "/Contents (SECRETNAME annot page two) >>\nendobj\n",
             "14 0 obj\n<< /Title (SECRETNAME in Info title) /Subject (SECRETNAME subject) " +
-            "/Keywords (SECRETNAME keyword) /Author (SECRETNAME author) " +
-            "/Creator (Younger profile timeline) >>\nendobj\n",
+            "/Keywords (SECRETNAME keyword) /Author (SECRETNAME author) >>\nendobj\n",
         };
 
         var sb = new StringBuilder();
