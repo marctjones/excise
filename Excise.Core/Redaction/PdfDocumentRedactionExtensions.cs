@@ -291,7 +291,8 @@ public static class PdfDocumentRedactionExtensions
                         // every RedactText call — including the documented case
                         // where a term below the sanitizer's 3-character floor
                         // deliberately leaves carriers alone.
-                        imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, options.Strategy, scrubDocumentCarriers: false, width: options.Width, removeAttachments: false);
+                        imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, options.Strategy, scrubDocumentCarriers: false, width: options.Width, removeAttachments: false,
+                            removeWordDecorations: options.CloseWidth);   // #1753
                     }
 
                     // A box whose width equals the removed run is itself a
@@ -484,6 +485,12 @@ public static class PdfDocumentRedactionExtensions
 
         // #1572: a kept attachment the term-based carrier scrub removed after
         // all (its name or description held the term) is reported as removed.
+        // #1753: an underline, box or highlight sized to a removed word went with it.
+        if (imageCounts.DecorationsRemoved > 0)
+            profileRemovals.Add(new RedactedFeatureRemoval(
+                "underline, box or highlight sized to a redacted word", imageCounts.DecorationsRemoved,
+                "at the old width beside the closed gap it would state the removed word's width"));
+
         var attachmentResults = keptAttachments != null
             ? AttachmentCarrierScrubber.Reconcile(document, keptAttachments)
             : removedAttachments.ToList();

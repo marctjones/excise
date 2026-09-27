@@ -25,16 +25,20 @@ namespace Excise.Core.Text.Segmentation;
 /// behind (CLAUDE.md rule 6: a carrier the engine refuses to touch is
 /// reported, never silently skipped).
 /// </param>
+/// <param name="DecorationsRemoved">#1753: underlines, boxes and highlights
+/// (drawn or annotated) removed because they were sized to a redacted word.</param>
 internal readonly record struct ImageRedactionCounts(
     int RegionEdited,
     int RemovedWhole,
     IReadOnlyList<Excise.Core.Primitives.PdfStream>? TouchedImages = null,
-    IReadOnlyList<string>? UnscrubbedSharedMarkedContentCarriers = null)
+    IReadOnlyList<string>? UnscrubbedSharedMarkedContentCarriers = null,
+    int DecorationsRemoved = 0)
 {
     public static ImageRedactionCounts operator +(ImageRedactionCounts a, ImageRedactionCounts b)
         => new(a.RegionEdited + b.RegionEdited, a.RemovedWhole + b.RemovedWhole,
             Concat(a.TouchedImages, b.TouchedImages),
-            ConcatNames(a.UnscrubbedSharedMarkedContentCarriers, b.UnscrubbedSharedMarkedContentCarriers));
+            ConcatNames(a.UnscrubbedSharedMarkedContentCarriers, b.UnscrubbedSharedMarkedContentCarriers),
+            a.DecorationsRemoved + b.DecorationsRemoved);
 
     private static IReadOnlyList<Excise.Core.Primitives.PdfStream>? Concat(
         IReadOnlyList<Excise.Core.Primitives.PdfStream>? a,
@@ -191,7 +195,8 @@ public static class PdfPageRedactionExtensions
         bool scrubDocumentCarriers,
         WidthPolicy width,
         bool removeAttachments,
-        bool markerIsArea = false)
+        bool markerIsArea = false,
+        bool removeWordDecorations = false)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
@@ -284,6 +289,9 @@ public static class PdfPageRedactionExtensions
             RecordWidthNotes(page, remover);
         }
 
+        // Pass 1.5 (#1753): imageArea is the matched word's full extent.
+        var decorations = removeWordDecorations ? RemoveWordDecorations(page, ref working, new[] { imageArea }) : 0;
+
         // Pass 2: image XObject redaction (#279, region-level #1195). Uses
         // imageArea (the full glyph bbox), NOT the possibly-thin glyph-match
         // area, so region blackout covers the term's visible extent.
@@ -293,7 +301,7 @@ public static class PdfPageRedactionExtensions
         ImageRedactor.PruneUnusedImageXObjects(page, working);
 
         page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
-        return new ImageRedactionCounts(imgRegionEdited, imgRemoved, touchedImages, unscrubbedSharedCarriers);
+        return new ImageRedactionCounts(imgRegionEdited, imgRemoved, touchedImages, unscrubbedSharedCarriers, decorations);
     }
 
     /// <summary>
@@ -436,7 +444,8 @@ public static class PdfPageRedactionExtensions
         bool scrubDocumentCarriers,
         WidthPolicy width,
         bool removeAttachments,
-        bool markerIsArea = false)
+        bool markerIsArea = false,
+        bool removeWordDecorations = false)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
@@ -447,7 +456,7 @@ public static class PdfPageRedactionExtensions
         {
             return page.RedactAreaInternal(
                 list[0], imageList.Count > 0 ? imageList[0] : list[0],
-                strategy, scrubDocumentCarriers, width, removeAttachments, markerIsArea);
+                strategy, scrubDocumentCarriers, width, removeAttachments, markerIsArea, removeWordDecorations);
         }
 
         // #1572/#1547/#1574 — see RedactAreaInternal.
@@ -497,6 +506,8 @@ public static class PdfPageRedactionExtensions
             RecordWidthNotes(page, remover);
         }
 
+        var decorations = removeWordDecorations ? RemoveWordDecorations(page, ref working, imageList) : 0;
+
         // Image pass uses imageList (full glyph bboxes), not the glyph-match
         // areas — see RedactAreaInternal (#1195).
         var imageCounts = default(ImageRedactionCounts);
@@ -508,7 +519,8 @@ public static class PdfPageRedactionExtensions
             imageCounts += new ImageRedactionCounts(regionEdited, removed, touchedImages);
         }
         imageCounts += new ImageRedactionCounts(0, 0, null,
-            unscrubbedSharedCarriers.Count > 0 ? unscrubbedSharedCarriers.Distinct().ToList() : null);
+            unscrubbedSharedCarriers.Count > 0 ? unscrubbedSharedCarriers.Distinct().ToList() : null,
+            decorations);
 
         ImageRedactor.PruneUnusedImageXObjects(page, working);
         page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
@@ -526,6 +538,19 @@ public static class PdfPageRedactionExtensions
         PageBox = page.CropBox,
         MarkerRight = markerIsArea ? static (area, _) => area.Normalize().Right : null,
     };
+
+    /// <summary>
+    /// #1753: the drawn and annotated decorations sized to one of
+    /// <paramref name="words"/>, removed; returns how many. Only
+    /// <c>RedactText</c> asks, and only when the width closes: a dragged area is
+    /// not a word, and a layout-preserving box already states the width.
+    /// </summary>
+    private static int RemoveWordDecorations(
+        PdfPage page, ref IReadOnlyList<ContentOperator> working, IReadOnlyList<PdfRectangle> words)
+    {
+        working = WordDecorationRemover.Remove(working, words, out var drawn);
+        return drawn + InteractiveRedactionScrubber.RemoveWordSizedAnnotations(page, words);
+    }
 
     /// <summary>#1751: what the width policy could not do, on the ledger the safety report reads.</summary>
     private static void RecordWidthNotes(PdfPage page, GlyphRemover remover)

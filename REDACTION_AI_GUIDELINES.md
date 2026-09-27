@@ -55,6 +55,7 @@ Removal applies to **every** way content can land in the redaction area, not jus
 | Named image XObjects (`Do` → `/Image`) | Drop the `Do` | `ImageRedactor` |
 | **Inline images (`BI…ID…EI`)** | Drop the whole operator incl. embedded bytes (#354) | `ImageRedactor` |
 | **Form XObjects (`Do` → `/Form`)** | Flatten-then-redact (#355) | `FormXObjectFlattener` |
+| **Underline, box or highlight sized to a redacted word**, drawn or annotated | Removed with the word when the width closes, the default (#1753) | `WordDecorationRemover` |
 | **Embedded files, every route** | Removed by default on every entry point; kept only on request, then redacted or reported (#1572) | `AttachmentCarrierScrubber` |
 | **XFA form (`/AcroForm /XFA`)** | Removed whole on any redaction (#1547, #1574) | `PdfXfaLayout.RemoveXfaFormForRedaction` |
 | **JavaScript, `/Launch`, `/SubmitForm`, `/ImportData`, `/GoToR`, `/GoToE`** | Removed whole by the output profile, found by walking the reachable graph (#1586, #1581) | `RedactionFeatureStripper` |
