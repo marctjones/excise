@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1444,
-  "indexedContentSha256": "bc30238e4a6d31270082792a525012726fa5931ed494527942ddcecdda6d0630",
+  "indexedFileCount": 1445,
+  "indexedContentSha256": "e33bd13b6ffb445da25dd273fd4c77298edd115c6710f0680caec4cf959327a9",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7249,6 +7249,14 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/ModernButtonStateStyleTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dictionaries",
+            "resource"
+          ]
+        },
+        {
           "path": "tests/format-compatibility-suite.json",
           "kind": "test",
           "matchedTerms": [
@@ -7265,7 +7273,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 42
+      "candidateReferenceCount": 43
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -64778,7 +64786,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 214
+      "candidateReferenceCount": 213
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -68189,7 +68197,8 @@
             "class",
             "structure",
             "metadata",
-            "structuretree"
+            "structuretree",
+            "tagged"
           ]
         },
         {
@@ -68670,7 +68679,8 @@
             "data",
             "dictionaries",
             "metadata",
-            "structuretree"
+            "structuretree",
+            "tagged"
           ]
         },
         {
@@ -69486,7 +69496,8 @@
             "dictionaries",
             "signatures",
             "metadata",
-            "structuretree"
+            "structuretree",
+            "tagged"
           ]
         },
         {
@@ -69814,7 +69825,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 215
+      "candidateReferenceCount": 216
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -73665,7 +73676,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 152
+      "candidateReferenceCount": 153
     },
     {
       "id": "pdfe.product.redaction.review-panel",

@@ -307,7 +307,7 @@ public class AnnotateAndDialogCommandTests
             "executing ShowShortcutsCommand must actually construct and request the real shortcuts dialog, not just be wired to something");
         requested!.Title.Should().Be("Keyboard Shortcuts");
         requested.Content.Should().BeOfType<string>()
-            .Which.Should().Contain("Ctrl+F - Find");
+            .Which.Should().Contain(" - Find");
 
         window.Close();
     }

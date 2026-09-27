@@ -6,6 +6,7 @@ namespace Excise.App.Models;
 internal sealed class SearchMatch
 {
     public int PageIndex { get; init; }
+    public int PageNumber => PageIndex + 1;
     public string MatchedText { get; init; } = string.Empty;
     public double X { get; init; }
     public double Y { get; init; }
