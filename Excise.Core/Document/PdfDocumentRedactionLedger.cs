@@ -46,6 +46,22 @@ internal sealed class PdfDocumentRedactionLedger
     {
         if (count > UncheckableAlternateText) UncheckableAlternateText = count;
     }
+
+    private readonly List<string> _widthNotes = new();
+
+    /// <summary>
+    /// Lines where a width-closing policy could not do what it promised
+    /// (#1751) — the gap would reopen, or a line kept its old alignment. A user
+    /// who asked for the width to be closed must not be handed a page that
+    /// looks closed and is not, and the GUI drops the engine's report, so they
+    /// are recorded here like the #1586 refusal above.
+    /// </summary>
+    internal IReadOnlyList<string> WidthNotes => _widthNotes;
+
+    internal void RecordWidthNote(string note)
+    {
+        if (!_widthNotes.Contains(note)) _widthNotes.Add(note);
+    }
 }
 
 public partial class PdfDocument

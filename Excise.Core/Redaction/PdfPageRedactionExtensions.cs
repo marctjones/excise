@@ -280,6 +280,7 @@ public static class PdfPageRedactionExtensions
         {
             var remover = new GlyphRemover { CloseWidth = closeWidth };
             working = remover.ProcessOperations(working, letters, area, strategy);
+            RecordWidthNotes(page, remover);
         }
 
         // Pass 2: image XObject redaction (#279, region-level #1195). Uses
@@ -490,6 +491,7 @@ public static class PdfPageRedactionExtensions
         {
             var remover = new GlyphRemover { CloseWidth = closeWidth };
             working = remover.ProcessOperations(working, letters, list, strategy);
+            RecordWidthNotes(page, remover);
         }
 
         // Image pass uses imageList (full glyph bboxes), not the glyph-match
@@ -508,6 +510,13 @@ public static class PdfPageRedactionExtensions
         ImageRedactor.PruneUnusedImageXObjects(page, working);
         page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
         return imageCounts;
+    }
+
+    /// <summary>#1751: what the width policy could not do, on the ledger the safety report reads.</summary>
+    private static void RecordWidthNotes(PdfPage page, GlyphRemover remover)
+    {
+        foreach (var note in remover.WidthNotes)
+            page.Document.RedactionLedger.RecordWidthNote($"page {page.PageNumber}, {note}");
     }
 
     /// <summary>

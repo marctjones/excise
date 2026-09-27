@@ -75,7 +75,7 @@ public enum WidthPolicy
     /// rewrite that actually removes the term's glyphs is unconditional and
     /// already ran — but real enough to block making this the default until
     /// the shift itself accounts for the marker's width, not just the removed
-    /// run's (a change to <c>OperationReconstructor.ComputeCloseWidthShifts</c>
+    /// run's (a change to <c>WidthClosureLedger</c>
     /// and the text-space/user-space conversion around it — <c>Tz</c>/<c>Tc</c>/
     /// <c>Tw</c> all matter there, rule 7). Placing the marker by
     /// run-boundary/alignment-aware machinery instead of the naive left anchor
@@ -156,7 +156,7 @@ public sealed record RedactionOptions
     /// the removed run's left edge and sized independently of the actual gap,
     /// so on a 36pt fixture it covers 3 of 4 characters of the following word.
     /// Making #1755's shift arithmetic honour the marker's own width (not just
-    /// the removed run's, the way <c>OperationReconstructor.ComputeCloseWidthShifts</c>
+    /// the removed run's, the way <c>WidthClosureLedger</c>
     /// does for <see cref="WidthPolicy.CloseGap"/> today) is required before
     /// this can be the default; it is unstarted. Until then, FixedMarker is
     /// available as an explicit opt-in (CLI <c>--fixed-marker</c>) with that

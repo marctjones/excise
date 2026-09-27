@@ -131,6 +131,21 @@ internal class GlyphRemover
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
     {
         var blocks = IdentifyTextBlocks(operations);
+
+        // Every text-showing operator with glyphs to remove, found before any
+        // is rewritten: a width-closing policy needs the whole page's removals
+        // to know how far each line's remaining runs move (#1751).
+        var removals = new Dictionary<int, WidthClosureLedger.Removal>();
+        foreach (var block in blocks)
+            FindRemovals(operations, block, letters, redactionAreas, strategy, removals);
+
+        WidthClosureLedger? ledger = null;
+        if (CloseWidth && removals.Count > 0)
+        {
+            ledger = WidthClosureLedger.Build(operations, letters, removals.Values.ToList());
+            WidthNotes.AddRange(ledger.Notes);
+        }
+
         var result = new List<ContentOperator>(operations.Count);
 
         int i = 0;
@@ -147,12 +162,18 @@ internal class GlyphRemover
                 continue;
             }
 
-            ProcessBlock(operations, block, letters, redactionAreas, strategy, result);
+            ProcessBlock(operations, block, removals, ledger, redactionAreas, strategy, result);
             i = block.EtIndex + 1;
         }
 
         return result;
     }
+
+    /// <summary>
+    /// What the width policy could not do on this page (#1751), one row per
+    /// line. Reported by the caller, never dropped.
+    /// </summary>
+    internal List<string> WidthNotes { get; } = new();
 
     private static BlockInfo? FindBlockStartingAt(List<BlockInfo> blocks, int index)
     {
@@ -161,23 +182,19 @@ internal class GlyphRemover
         return null;
     }
 
-    private void ProcessBlock(
+    /// <summary>
+    /// Classify each text-showing operator in the block: its letters intersect
+    /// a redaction area (→ a <see cref="WidthClosureLedger.Removal"/>) or they
+    /// don't (→ kept as-is).
+    /// </summary>
+    private void FindRemovals(
         IReadOnlyList<ContentOperator> operations,
         BlockInfo block,
         IReadOnlyList<Letter> letters,
         IReadOnlyList<PdfRectangle> redactionAreas,
         GlyphRemovalStrategy strategy,
-        List<ContentOperator> output)
+        Dictionary<int, WidthClosureLedger.Removal> removals)
     {
-        // Classify each text-showing operator in the block: either its
-        // letters intersect the redaction area (→ reconstruct) or they
-        // don't (→ keep as-is). State operators (Tf/Tc/Tm/etc.) always
-        // pass through; the reconstructed block, if one gets emitted, is
-        // parameterized by the text state the parser stamped on the op.
-        var intersectingTextOpIndices = new HashSet<int>();
-        var blankedOperators = new Dictionary<int, ContentOperator>();
-        var reconstructionJobs = new List<ReconstructionJob>();
-
         for (int idx = block.BtIndex; idx <= block.EtIndex; idx++)
         {
             var op = operations[idx];
@@ -195,6 +212,31 @@ internal class GlyphRemover
                 .ToList();
             if (matchesToRemove.Count == 0) continue;
 
+            removals[idx] = new WidthClosureLedger.Removal(idx, op, text, matches, matchesToRemove);
+        }
+    }
+
+    private void ProcessBlock(
+        IReadOnlyList<ContentOperator> operations,
+        BlockInfo block,
+        Dictionary<int, WidthClosureLedger.Removal> removals,
+        WidthClosureLedger? ledger,
+        IReadOnlyList<PdfRectangle> redactionAreas,
+        GlyphRemovalStrategy strategy,
+        List<ContentOperator> output)
+    {
+        // State operators (Tf/Tc/Tm/etc.) always pass through; the
+        // reconstructed block, if one gets emitted, is parameterized by the
+        // text state the parser stamped on the op.
+        var intersectingTextOpIndices = new HashSet<int>();
+        var blankedOperators = new Dictionary<int, ContentOperator>();
+        var reconstructionJobs = new List<ReconstructionJob>();
+
+        for (int idx = block.BtIndex; idx <= block.EtIndex; idx++)
+        {
+            if (!removals.TryGetValue(idx, out var removal)) continue;
+            var op = removal.Op;
+
             // #1091: operand-level TJ-split — the PRIMARY removal path. It
             // byte-splices the matched glyphs out of the operator's own operand
             // and replaces each removed run with ONE advance adjustment (#1045),
@@ -207,7 +249,7 @@ internal class GlyphRemover
             // which REPAIRS it (§9.4 forbids an unterminated BT); the split keeps
             // operators in place and would leave the input's invalidity intact.
             var splitOp = block.ImplicitEnd
-                ? null : OperandGlyphSplitter.TrySplit(op, matchesToRemove, CloseWidth);
+                ? null : OperandGlyphSplitter.TrySplit(op, removal.ToRemove, CloseWidth);
             if (splitOp != null)
             {
                 blankedOperators[idx] = splitOp;
@@ -216,10 +258,11 @@ internal class GlyphRemover
 
             // #1044 SPIKE (now secondary to the split): blank the matched codes
             // in place. Refused (null) for anything where a decoded index is not
-            // a byte offset; see GlyphBlanker.
-            if (BlankInPlace)
+            // a byte offset; see GlyphBlanker. Blanking keeps the advance, so it
+            // never runs under a width-closing ledger.
+            if (BlankInPlace && ledger == null)
             {
-                var blankedOp = GlyphBlanker.TryBlank(op, matchesToRemove);
+                var blankedOp = GlyphBlanker.TryBlank(op, removal.ToRemove);
                 if (blankedOp != null)
                 {
                     blankedOperators[idx] = blankedOp;
@@ -236,17 +279,17 @@ internal class GlyphRemover
             // matched letters' transformed glyph heights are the ground truth
             // for what size this run actually renders at; 0 means none, and the
             // reconstructor falls back to the stamped size.
-            var effectiveSize = MedianGlyphHeight(matches);
+            var effectiveSize = MedianGlyphHeight(removal.Matches);
             reconstructionJobs.Add(new ReconstructionJob
             {
                 Source = op,
-                Text = text,
-                Matches = matches,
+                Text = removal.Text,
+                Matches = removal.Matches,
                 EffectiveFontSize = effectiveSize > 0.01 ? effectiveSize : 0,
             });
         }
 
-        if (reconstructionJobs.Count == 0)
+        if (reconstructionJobs.Count == 0 && ledger == null)
         {
             // No RESTRUCTURING needed. Copy the block through, substituting any
             // operator whose codes were blanked in place (#1044).
@@ -257,15 +300,24 @@ internal class GlyphRemover
 
         // Build the reconstructed BT…ET block(s) that will go AFTER the
         // (possibly trimmed) original block.
-        var reconstructed = BuildReconstructedOps(reconstructionJobs, redactionAreas, strategy);
+        var reconstructed = BuildReconstructedOps(reconstructionJobs, redactionAreas, strategy, ledger);
 
         // Keep the original block minus intersecting text. Even when every text
         // op was removed, its Tf/Tc/Tw/Tz state operators must survive: text
         // state persists across BT/ET and later blocks may inherit it (#942).
         // Empty BT/ET plus positioning operators draw nothing and retain no
         // secret bytes, while preserving those downstream semantics.
+        //
+        // #1751: under a width-closing ledger, `chain` is the page-space shift
+        // the current pen chain already carries. It restarts at every operator
+        // that sets the pen from the line matrix; a text-showing operator whose
+        // target shift differs from it gets a numeric-only TJ in front.
+        double chain = 0;
         for (int idx = block.BtIndex; idx <= block.EtIndex; idx++)
         {
+            var op = operations[idx];
+            if (op.Name is "BT" or "Td" or "TD" or "Tm" or "T*") chain = 0;
+
             if (intersectingTextOpIndices.Contains(idx))
             {
                 // #758: a removed text-op's pen advance (and, for '/",
@@ -274,13 +326,20 @@ internal class GlyphRemover
                 // on the accumulated §9.4.4 pen position collapses back
                 // to the last explicit positioning operator. Emits ONLY
                 // geometry/state operators — never text.
-                EmitRemovedOperatorCompensation(operations, block, idx, output);
+                chain = EmitRemovedOperatorCompensation(operations, block, idx, output, ledger, chain);
                 continue;
             }
-            output.Add(blankedOperators.TryGetValue(idx, out var blanked)
-                ? blanked
-                : operations[idx]);
+
+            var emitted = blankedOperators.TryGetValue(idx, out var blanked) ? blanked : op;
+            if (ledger != null && op.Category == OperatorCategory.TextShowing)
+            {
+                chain = EmitShifted(idx, op, emitted, ledger, chain, output);
+                continue;
+            }
+            output.Add(emitted);
         }
+
+        if (reconstructionJobs.Count == 0) return;
 
         // #1039: the source block ran to end-of-content with no ET. Close it
         // before appending the reconstruction — text objects cannot nest
@@ -290,6 +349,50 @@ internal class GlyphRemover
             output.Add(ContentOperator.EndText());
 
         output.AddRange(reconstructed);
+    }
+
+    /// <summary>
+    /// #1751 — emit a kept (or split) text-showing operator so its glyphs land
+    /// at the ledger's target: when the pen chain it inherits carries a
+    /// different shift, a numeric-only TJ goes first. <c>'</c> and <c>"</c>
+    /// reset the pen themselves (their implicit T* would discard a TJ placed
+    /// before them), so they are written out as their §9.4.3 equivalents with
+    /// the TJ after the T*. Returns the shift the chain carries past the operator.
+    /// </summary>
+    private static double EmitShifted(
+        int index, ContentOperator source, ContentOperator emitted,
+        WidthClosureLedger ledger, double chain, List<ContentOperator> output)
+    {
+        var quote = source.Name is "'" or "\"";
+        if (quote) chain = 0;
+
+        var target = ledger.TargetOf(source);
+        var shift = target is double t && !double.IsNaN(t) ? t - chain : 0;
+        if (Math.Abs(shift) < 1e-3)
+        {
+            output.Add(emitted);
+            return chain + ledger.InternalShift(index);
+        }
+
+        var move = WidthClosureLedger.ShiftOperator(source, shift);
+        if (quote)
+        {
+            var ops = source.Operands;
+            if (source.Name == "\"")
+            {
+                output.Add(new ContentOperator("Tw", new[] { ops[0] }));
+                output.Add(new ContentOperator("Tc", new[] { ops[1] }));
+            }
+            output.Add(new ContentOperator("T*"));
+            output.Add(move);
+            output.Add(new ContentOperator("Tj", new[] { ops[^1] }));
+        }
+        else
+        {
+            output.Add(move);
+            output.Add(emitted);
+        }
+        return chain + shift + ledger.InternalShift(index);
     }
 
     /// <summary>
@@ -303,11 +406,19 @@ internal class GlyphRemover
     /// exactly, moves only the text matrix (not the line matrix), and draws
     /// nothing. The removed text itself is NEVER re-emitted in any form.
     /// </summary>
-    private static void EmitRemovedOperatorCompensation(
+    /// <remarks>
+    /// #1751: under a width-closing ledger the replayed advance leaves out the
+    /// removed runs' own advance, as the operand split does. Replaying all of
+    /// it kept every later run of the block where it was, so the gap the
+    /// reconstructed runs had just closed reopened in front of them.
+    /// </remarks>
+    private static double EmitRemovedOperatorCompensation(
         IReadOnlyList<ContentOperator> operations,
         BlockInfo block,
         int removedIndex,
-        List<ContentOperator> output)
+        List<ContentOperator> output,
+        WidthClosureLedger? ledger,
+        double chain)
     {
         var removed = operations[removedIndex];
 
@@ -323,19 +434,30 @@ internal class GlyphRemover
         // showing text — a line-matrix move every subsequent operator in the
         // block builds on.
         if (removed.Name == "'" || removed.Name == "\"")
+        {
             output.Add(new ContentOperator("T*"));
+            chain = 0;
+        }
 
         // Pen-advance compensation. Null means the parser couldn't express
         // the advance (metadata pass off, synthetic op, degenerate state) —
         // in that case fall back to today's behavior rather than guessing.
-        if (removed.TextAdvanceThousandths is not double advance) return;
-        if (Math.Abs(advance) < 1e-6) return;
-        if (!PenPositionMattersAfter(operations, block, removedIndex)) return;
+        if (removed.TextAdvanceThousandths is not double advance) return chain;
+        var number = -advance;
+        if (ledger != null && WidthClosureLedger.UnitOf(removed) is double unit)
+        {
+            var shift = ledger.TargetOf(removed) is double t && !double.IsNaN(t) ? t - chain : 0;
+            number += ledger.ClosedThousandths(removedIndex, removed) - shift / unit;
+            chain += shift + ledger.InternalShift(removedIndex);
+        }
+        if (Math.Abs(number) < 1e-6) return chain;
+        if (!PenPositionMattersAfter(operations, block, removedIndex)) return chain;
 
         output.Add(new ContentOperator("TJ", new PdfObject[]
         {
-            new PdfArray(new PdfObject[] { new PdfReal(-advance) }),
+            new PdfArray(new PdfObject[] { new PdfReal(number) }),
         }));
+        return chain;
     }
 
     /// <summary>
@@ -360,7 +482,8 @@ internal class GlyphRemover
     private List<ContentOperator> BuildReconstructedOps(
         List<ReconstructionJob> jobs,
         IReadOnlyList<PdfRectangle> redactionAreas,
-        GlyphRemovalStrategy strategy)
+        GlyphRemovalStrategy strategy,
+        WidthClosureLedger? ledger)
     {
         var result = new List<ContentOperator>();
         foreach (var job in jobs)
@@ -372,7 +495,7 @@ internal class GlyphRemover
             if (segments.Count == 0) continue; // entire op fully redacted
 
             var reconstructed = _reconstructor.ReconstructWithPositioning(
-                segments, ReconstructionContext(job.Source.TextState),
+                segments, ReconstructionContext(job.Source.TextState, ledger),
                 job.Source.GraphicsTransform, job.Source.TextTransform, job.EffectiveFontSize);
             if (reconstructed.Count == 0) continue;
             result.AddRange(reconstructed);
@@ -385,9 +508,10 @@ internal class GlyphRemover
     /// synthetic operator carries none, so no text-state operator is emitted and
     /// the rebuilt run draws under the ambient state.
     /// </summary>
-    private OperationReconstructor.Context ReconstructionContext(ContentStreamWalker.TextStateSnapshot? s) =>
+    private static OperationReconstructor.Context ReconstructionContext(
+        ContentStreamWalker.TextStateSnapshot? s, WidthClosureLedger? ledger) =>
         s is null
-            ? new() { FontName = "", FontSize = 0, CloseWidth = CloseWidth }
+            ? new() { FontName = "", FontSize = 0, Shift = ledger == null ? null : ledger.ShiftAt }
             : new()
             {
                 FontName = s.FontName,
@@ -399,7 +523,7 @@ internal class GlyphRemover
                 TextRenderingMode = s.TextRenderMode,
                 TextRise = s.TextRise,
                 TextLeading = s.TextLeading,
-                CloseWidth = CloseWidth,   // #1145, opt-in on the remover instance
+                Shift = ledger == null ? null : ledger.ShiftAt,   // #1751
             };
 
     private static PdfRectangle ComputeBoundsFromMatches(List<LetterMatch> matches)

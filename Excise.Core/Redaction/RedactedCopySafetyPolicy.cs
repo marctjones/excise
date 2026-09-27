@@ -225,6 +225,10 @@ public static class RedactedCopySafetyPolicy
                 "profile to drop them.");
         }
 
+        // #1751: a width-closing policy that could not close a line says so.
+        foreach (var note in document.RedactionLedger.WidthNotes)
+            warnings.Add($"WIDTH NOT CLOSED: {note}.");
+
         if (options.RunCarrierAudit)
         {
             // Runs after any surgical scrub so it reports what survived, not
