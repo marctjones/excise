@@ -353,15 +353,19 @@ internal class GlyphRemover
         // Empty BT/ET plus positioning operators draw nothing and retain no
         // secret bytes, while preserving those downstream semantics.
         //
-        // #1751: under a width-closing ledger, `chain` is the page-space shift
-        // the current pen chain already carries. It restarts at every operator
-        // that sets the pen from the line matrix; a text-showing operator whose
-        // target shift differs from it gets a numeric-only TJ in front.
-        double chain = 0;
+        // #1751: under a width-closing ledger the pen tracks the page-space
+        // shift the line matrix and the current pen chain carry, and where the
+        // next show can be moved from (see Pen).
+        var pen = new Pen();
         for (int idx = block.BtIndex; idx <= block.EtIndex; idx++)
         {
             var op = operations[idx];
-            if (op.Name is "BT" or "Td" or "TD" or "Tm" or "T*") chain = 0;
+            if (ledger != null && op.Name is "BT" or "Td" or "TD" or "Tm" or "T*")
+            {
+                output.Add(op);
+                pen.Positioned(output.Count - 1, op);
+                continue;
+            }
 
             if (intersectingTextOpIndices.Contains(idx))
             {
@@ -371,14 +375,14 @@ internal class GlyphRemover
                 // on the accumulated §9.4.4 pen position collapses back
                 // to the last explicit positioning operator. Emits ONLY
                 // geometry/state operators — never text.
-                chain = EmitRemovedOperatorCompensation(operations, block, idx, output, ledger, chain);
+                EmitRemovedOperatorCompensation(operations, block, idx, output, ledger, pen);
                 continue;
             }
 
             var emitted = blankedOperators.TryGetValue(idx, out var blanked) ? blanked : op;
             if (ledger != null && op.Category == OperatorCategory.TextShowing)
             {
-                chain = EmitShifted(idx, op, emitted, ledger, chain, output);
+                EmitShifted(idx, op, emitted, ledger, pen, output);
                 continue;
             }
             output.Add(emitted);
@@ -397,47 +401,145 @@ internal class GlyphRemover
     }
 
     /// <summary>
-    /// #1751 — emit a kept (or split) text-showing operator so its glyphs land
-    /// at the ledger's target: when the pen chain it inherits carries a
-    /// different shift, a numeric-only TJ goes first. <c>'</c> and <c>"</c>
-    /// reset the pen themselves (their implicit T* would discard a TJ placed
-    /// before them), so they are written out as their §9.4.3 equivalents with
-    /// the TJ after the T*. Returns the shift the chain carries past the operator.
+    /// #1751 — where a block's pen stands under a width-closing ledger: the
+    /// page-space shift the line matrix carries (<see cref="LineShift"/>), the
+    /// shift the pen chain carries (<see cref="Chain"/>), and the positioning
+    /// operator in the output that the next show starts from, if no show has
+    /// run since it.
     /// </summary>
-    private static double EmitShifted(
-        int index, ContentOperator source, ContentOperator emitted,
-        WidthClosureLedger ledger, double chain, List<ContentOperator> output)
+    /// <remarks>
+    /// A shift is realised by REWRITING that positioning operator into an
+    /// absolute <c>Tm</c> at the shifted place, never by a correction after
+    /// it: a <c>[W] TJ</c> behind an untouched <c>Td</c> would leave the file
+    /// stating the removed width twice over, once in each operand. An
+    /// absolute <c>Tm</c> states only where the text now is. A relative
+    /// <c>Td</c> later in the block inherits the line shift, so the first show
+    /// after it is rewritten back to its original place the same way.
+    /// </remarks>
+    private sealed class Pen
     {
-        var quote = source.Name is "'" or "\"";
-        if (quote) chain = 0;
+        public double LineShift;
+        public double Chain;
+        // Positioning operators (and the BT) in the output since the last show,
+        // with their original operators.
+        private readonly List<(int At, ContentOperator Op)> _pending = new();
 
-        var target = ledger.TargetOf(source);
-        var shift = target is double t && !double.IsNaN(t) ? t - chain : 0;
-        if (Math.Abs(shift) < 1e-3)
+        /// <summary>BT (identity) or a positioning operator at output[<paramref name="at"/>].</summary>
+        public void Positioned(int at, ContentOperator op)
         {
-            output.Add(emitted);
-            return chain + ledger.InternalShift(index);
+            if (op.Name is "BT" or "Tm") LineShift = 0;
+            if (op.Name == "BT") _pending.Clear();
+            Chain = LineShift;
+            _pending.Add((at, op));
         }
 
-        var move = WidthClosureLedger.ShiftOperator(source, shift);
-        if (quote)
+        public void Shown() => _pending.Clear();
+
+        /// <summary>
+        /// Replace the positioning operators since the last show with one
+        /// absolute Tm, so the show whose original text matrix is
+        /// <paramref name="source"/>'s starts shifted by <paramref name="target"/>.
+        /// None of them survives to state the place the text was moved from; a
+        /// TD keeps its leading as a TL. False when there is nothing to rewrite
+        /// or the shift cannot be expressed in the Tm's space.
+        /// </summary>
+        public bool MoveTo(ContentOperator source, double target, List<ContentOperator> output)
         {
-            var ops = source.Operands;
-            if (source.Name == "\"")
+            if (_pending.Count == 0 || source.TextTransform is not { } tm || source.GraphicsTransform is not { } ctm)
+                return false;
+            var dx = 0.0;
+            if (Math.Abs(target) > 1e-9)
             {
-                output.Add(new ContentOperator("Tw", new[] { ops[0] }));
-                output.Add(new ContentOperator("Tc", new[] { ops[1] }));
+                if (!(ctm.A > 0) || Math.Abs(ctm.B) > 1e-6 * ctm.A) return false;
+                dx = target / ctm.A;
             }
-            output.Add(new ContentOperator("T*"));
-            output.Add(move);
-            output.Add(new ContentOperator("Tj", new[] { ops[^1] }));
+
+            var tmOp = ContentOperator.TextMatrix(tm.A, tm.B, tm.C, tm.D, tm.E + dx, tm.F);
+            for (var i = _pending.Count - 1; i >= 0; i--)
+            {
+                var (at, op) = _pending[i];
+                var leading = op.Name == "TD" && op.Operands.Count == 2 && op.Operands[1].TryGetNumber(out var ty)
+                    ? new ContentOperator("TL", new PdfObject[] { new PdfReal(-ty) })
+                    : null;
+                var replacement = new List<ContentOperator>();
+                if (op.Name == "BT") replacement.Add(op);
+                if (leading != null) replacement.Add(leading);
+                if (i == 0) replacement.Add(tmOp);
+                output.RemoveAt(at);
+                output.InsertRange(at, replacement);
+            }
+            _pending.Clear();
+            LineShift = Chain = target;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// #1751 — emit a kept (or split) text-showing operator so its glyphs land
+    /// at the ledger's target. <c>'</c> and <c>"</c> position themselves
+    /// (their implicit T* restarts from the line matrix), so a shifted one is
+    /// written out as its §9.4.3 equivalent with an absolute Tm in place of
+    /// the T*.
+    /// </summary>
+    private void EmitShifted(
+        int index, ContentOperator source, ContentOperator emitted,
+        WidthClosureLedger ledger, Pen pen, List<ContentOperator> output)
+    {
+        if (source.Name is "'" or "\"")
+        {
+            pen.Chain = pen.LineShift;   // its implicit T*
+            if (TargetShift(source, ledger, pen) is not double target)
+                output.Add(emitted);
+            else
+            {
+                if (source.Name == "\"")
+                {
+                    output.Add(new ContentOperator("Tw", new[] { source.Operands[0] }));
+                    output.Add(new ContentOperator("Tc", new[] { source.Operands[1] }));
+                }
+                output.Add(new ContentOperator("T*"));
+                pen.Positioned(output.Count - 1, output[^1]);
+                Move(source, target, pen, output);
+                output.Add(new ContentOperator("Tj", new[] { source.Operands[^1] }));
+            }
         }
         else
         {
-            output.Add(move);
+            if (TargetShift(source, ledger, pen) is double target)
+                Move(source, target, pen, output);
             output.Add(emitted);
         }
-        return chain + shift + ledger.InternalShift(index);
+        pen.Shown();
+        pen.Chain += ledger.InternalShift(index);
+    }
+
+    /// <summary>
+    /// The page-space shift <paramref name="source"/> must start at, when the
+    /// pen does not already carry it. Text the ledger cannot place goes back
+    /// to where it was.
+    /// </summary>
+    private static double? TargetShift(ContentOperator source, WidthClosureLedger ledger, Pen pen)
+    {
+        if (ledger.TargetOf(source) is not double target) return null;
+        if (double.IsNaN(target)) target = 0;
+        return Math.Abs(target - pen.Chain) < 1e-3 ? null : target;
+    }
+
+    /// <summary>
+    /// Bring the pen to <paramref name="target"/> by rewriting the positioning
+    /// operator the show starts from. Where there is none, a numeric-only TJ
+    /// does it — which states the shift in the file, so that line is reported.
+    /// </summary>
+    private void Move(ContentOperator source, double target, Pen pen, List<ContentOperator> output)
+    {
+        if (pen.MoveTo(source, target, output)) return;
+        if (WidthClosureLedger.UnitOf(source) is null) return;
+
+        output.Add(WidthClosureLedger.ShiftOperator(source, target - pen.Chain));
+        WidthNotes.Add($"line at y={source.TextTransform!.Value.Multiply(source.GraphicsTransform!.Value).F:F1}: " +
+                       "a run with no positioning operator of its own was moved by a TJ number, " +
+                       "which states the shift in the file");
+        pen.Chain = target;
     }
 
     /// <summary>
@@ -457,13 +559,13 @@ internal class GlyphRemover
     /// it kept every later run of the block where it was, so the gap the
     /// reconstructed runs had just closed reopened in front of them.
     /// </remarks>
-    private static double EmitRemovedOperatorCompensation(
+    private void EmitRemovedOperatorCompensation(
         IReadOnlyList<ContentOperator> operations,
         BlockInfo block,
         int removedIndex,
         List<ContentOperator> output,
         WidthClosureLedger? ledger,
-        double chain)
+        Pen pen)
     {
         var removed = operations[removedIndex];
 
@@ -481,28 +583,33 @@ internal class GlyphRemover
         if (removed.Name == "'" || removed.Name == "\"")
         {
             output.Add(new ContentOperator("T*"));
-            chain = 0;
+            pen.Positioned(output.Count - 1, output[^1]);
         }
+
+        // #1751: the pen goes where the ledger puts this operator's start, and
+        // the replayed advance leaves out the removed runs' own advance, as
+        // the operand split does.
+        if (ledger != null && TargetShift(removed, ledger, pen) is double target)
+            Move(removed, target, pen, output);
+        pen.Shown();
 
         // Pen-advance compensation. Null means the parser couldn't express
         // the advance (metadata pass off, synthetic op, degenerate state) —
         // in that case fall back to today's behavior rather than guessing.
-        if (removed.TextAdvanceThousandths is not double advance) return chain;
+        if (removed.TextAdvanceThousandths is not double advance) return;
         var number = -advance;
         if (ledger != null && WidthClosureLedger.UnitOf(removed) is double unit)
         {
-            var shift = ledger.TargetOf(removed) is double t && !double.IsNaN(t) ? t - chain : 0;
-            number += ledger.ClosedThousandths(removedIndex, removed) - shift / unit;
-            chain += shift + ledger.InternalShift(removedIndex);
+            number -= ledger.InternalShift(removedIndex) / unit;
+            pen.Chain += ledger.InternalShift(removedIndex);
         }
-        if (Math.Abs(number) < 1e-6) return chain;
-        if (!PenPositionMattersAfter(operations, block, removedIndex)) return chain;
+        if (Math.Abs(number) < 1e-6) return;
+        if (!PenPositionMattersAfter(operations, block, removedIndex)) return;
 
         output.Add(new ContentOperator("TJ", new PdfObject[]
         {
             new PdfArray(new PdfObject[] { new PdfReal(number) }),
         }));
-        return chain;
     }
 
     /// <summary>

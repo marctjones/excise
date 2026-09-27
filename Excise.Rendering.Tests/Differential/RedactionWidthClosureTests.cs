@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
 using Xunit;
@@ -215,6 +216,19 @@ public class RedactionWidthClosureTests : IDisposable
 
         var text = MutoolTextExtractor.ExtractPage(afterPath, 1) ?? "";
         text.Should().NotContain(Term);
+
+        // And the FILE does not state it either: no positioning or advance
+        // operand is the removed width (in points or in TJ units at 20 pt), the
+        // follower's original place, or its original offset from the line start.
+        var follower = before[at + Term.Length].X;
+        var stated = new[]
+        {
+            (Value: removedWidth, Tolerance: 0.3), (Value: removedWidth / 20 * 1000, Tolerance: 2.0),
+            (Value: follower, Tolerance: 0.3), (Value: follower - before[0].X, Tolerance: 0.3),
+        };
+        PositionAndAdvanceNumbers(File.ReadAllBytes(afterPath))
+            .Where(n => stated.Any(f => Math.Abs(Math.Abs(n) - f.Value) < f.Tolerance))
+            .Should().BeEmpty("a closed gap must not be restated by the operands that place the text after it");
     }
 
     private (List<MutoolGlyphPositions.Glyph> Before, List<MutoolGlyphPositions.Glyph> After, string AfterPath)
@@ -248,6 +262,20 @@ public class RedactionWidthClosureTests : IDisposable
         var at = chars.IndexOf(Term, StringComparison.Ordinal);
         at.Should().BeGreaterThanOrEqualTo(0, "the original shows the term");
         return at;
+    }
+
+    /// <summary>Every numeric operand of a Td, TD or Tm, and every number inside a TJ array, on page 1.</summary>
+    private static List<double> PositionAndAdvanceNumbers(byte[] pdf)
+    {
+        using var doc = PdfDocument.Open(pdf);
+        var numbers = TjNumbers(pdf);
+        foreach (var op in doc.GetPage(1).GetContentStream().Operators)
+        {
+            if (op.Name is not ("Td" or "TD" or "Tm")) continue;
+            foreach (var operand in op.Operands)
+                if (operand.TryGetNumber(out var n)) numbers.Add(n);
+        }
+        return numbers;
     }
 
     /// <summary>Every number inside a TJ array of page 1's content stream.</summary>

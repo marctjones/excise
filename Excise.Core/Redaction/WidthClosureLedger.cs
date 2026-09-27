@@ -274,16 +274,6 @@ internal sealed class WidthClosureLedger
     }
 
     /// <summary>
-    /// Page-space pen advance the removed runs of operator <paramref name="index"/>
-    /// no longer contribute, in that operator's TJ units — what its
-    /// compensation must NOT replay. Zero when it removed nothing.
-    /// </summary>
-    internal double ClosedThousandths(int index, ContentOperator op) =>
-        _runsByOp.TryGetValue(index, out var runs) && UnitOf(op) is double unit
-            ? runs.Sum(r => r.Closure) / unit
-            : 0;
-
-    /// <summary>
     /// The operand split's adjustment for each removed run of operator
     /// <paramref name="index"/>: the reserve, in that operator's TJ units, at the
     /// run that holds it, and nothing (the gap closes) everywhere else —
