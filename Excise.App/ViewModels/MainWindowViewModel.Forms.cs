@@ -72,6 +72,7 @@ internal partial class MainWindowViewModel
 
             this.RaisePropertyChanged(nameof(InteractionMode));
             this.RaisePropertyChanged(nameof(CurrentModeText));
+            this.RaisePropertyChanged(nameof(ArmedAnnotationTool));
         }
     }
 
@@ -112,6 +113,7 @@ internal partial class MainWindowViewModel
 
             this.RaisePropertyChanged(nameof(InteractionMode));
             this.RaisePropertyChanged(nameof(CurrentModeText));
+            this.RaisePropertyChanged(nameof(ArmedAnnotationTool));
         }
     }
 
@@ -130,6 +132,7 @@ internal partial class MainWindowViewModel
             this.RaiseAndSetIfChanged(ref _pathAnnotationKind, value);
             this.RaisePropertyChanged(nameof(PathCaptureKind));
             this.RaisePropertyChanged(nameof(CurrentModeText));
+            this.RaisePropertyChanged(nameof(ArmedAnnotationTool));
         }
     }
 
@@ -210,6 +213,7 @@ internal partial class MainWindowViewModel
 
             this.RaisePropertyChanged(nameof(InteractionMode));
             this.RaisePropertyChanged(nameof(CurrentModeText));
+            this.RaisePropertyChanged(nameof(ArmedAnnotationTool));
         }
     }
 
@@ -227,6 +231,7 @@ internal partial class MainWindowViewModel
         {
             this.RaiseAndSetIfChanged(ref _shapeAnnotationKind, value);
             this.RaisePropertyChanged(nameof(CurrentModeText));
+            this.RaisePropertyChanged(nameof(ArmedAnnotationTool));
         }
     }
 
@@ -310,6 +315,7 @@ internal partial class MainWindowViewModel
 
             this.RaiseAndSetIfChanged(ref _isMarkupAnnotationMode, value);
             this.RaisePropertyChanged(nameof(CurrentModeText));
+            this.RaisePropertyChanged(nameof(ArmedAnnotationTool));
         }
     }
 
@@ -327,6 +333,7 @@ internal partial class MainWindowViewModel
         {
             this.RaiseAndSetIfChanged(ref _markupAnnotationKind, value);
             this.RaisePropertyChanged(nameof(CurrentModeText));
+            this.RaisePropertyChanged(nameof(ArmedAnnotationTool));
         }
     }
 

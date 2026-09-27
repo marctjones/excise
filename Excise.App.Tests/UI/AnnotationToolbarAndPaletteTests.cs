@@ -112,6 +112,49 @@ public class AnnotationToolbarAndPaletteTests
     }
 
     [FixedAvaloniaFact]
+    public async Task ArmedTool_ShowsActiveOnBothSurfaces_AndOnlyOnThatTool()
+    {
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
+        var window = new MainWindow(new InMemorySettingsStore()) { DataContext = vm, Width = 1200, Height = 900 };
+        window.Show();
+        try
+        {
+            vm.ToggleAnnotationToolbarCommand.Execute().Subscribe();
+            vm.ToggleAnnotationPaletteCommand.Execute().Subscribe();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            var buttons = new[]
+            {
+                window.FindControl<Button>("AnnotationToolbarSquareButton")!,
+                window.AnnotationPalette!.FindControl<Button>("PaletteSquareButton")!,
+                window.FindControl<Button>("AnnotationToolbarArrowButton")!,
+                window.AnnotationPalette!.FindControl<Button>("PaletteArrowButton")!,
+            };
+            buttons.Should().OnlyContain(b => !b.Classes.Contains("active"), "no tool is armed yet");
+
+            vm.ToggleSquareModeCommand.Execute().Subscribe();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            buttons[0].Classes.Should().Contain("active");
+            buttons[1].Classes.Should().Contain("active");
+            buttons[2].Classes.Should().NotContain("active");
+            buttons[3].Classes.Should().NotContain("active");
+
+            vm.ToggleArrowModeCommand.Execute().Subscribe();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            buttons[0].Classes.Should().NotContain("active", "arming another tool disarms Square");
+            buttons[2].Classes.Should().Contain("active");
+            buttons[3].Classes.Should().Contain("active");
+
+            vm.ToggleArrowModeCommand.Execute().Subscribe();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            buttons.Should().OnlyContain(b => !b.Classes.Contains("active"), "toggling the armed tool off disarms it");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [FixedAvaloniaFact]
     public async Task BothSurfaces_CanBeOnTogetherOrEitherAlone()
     {
         var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);

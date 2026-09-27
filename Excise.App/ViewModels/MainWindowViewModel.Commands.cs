@@ -34,6 +34,18 @@ internal partial class MainWindowViewModel
         }
     }
 
+    /// <summary>
+    /// Key of the armed annotation tool ("Markup.Highlight", "Path.Line", "Shape.Square",
+    /// "StickyNote"), or null. The toolbar row and the palette bind each tool button's
+    /// <c>active</c> class to it (#1797).
+    /// </summary>
+    public string? ArmedAnnotationTool =>
+        IsStickyNoteToolActive ? "StickyNote"
+        : IsPathAnnotationMode ? $"Path.{PathAnnotationKind}"
+        : IsShapeAnnotationMode ? $"Shape.{ShapeAnnotationKind}"
+        : IsMarkupAnnotationMode ? $"Markup.{MarkupAnnotationKind}"
+        : null;
+
     public ReactiveCommand<Unit, Unit> ToggleFreehandModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleLineModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleArrowModeCommand { get; private set; } = null!;
