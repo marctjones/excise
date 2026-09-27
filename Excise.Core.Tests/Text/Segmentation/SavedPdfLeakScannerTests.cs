@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Linq;
 using System.IO.Compression;
 using System.Text;
 using AwesomeAssertions;
@@ -588,5 +590,70 @@ public class SavedPdfLeakScannerTests
         SavedPdfLeakScanner.FindTerm(saved, Hidden).Should().Contain(
             h => h.StartsWith("stream #0") && h.Contains(ByteSearchFallback));
         SavedPdfLeakScanner.StreamBodies(saved).Should().ContainSingle().Which.Should().StartWith(") BT ");
+    }
+
+    // ── #1858: /ID is the identifier key only as a name token ────────────────
+
+    [Theory]
+    [InlineData("1 0 obj\n<< /Title (see /ID [(SECRETX)] here) >>\nendobj")]
+    [InlineData("1 0 obj\n<< /Title (see /ID [<SECRETX>] here) >>\nendobj")]
+    [InlineData("% /ID [(SECRETX)]\n1 0 obj\n<< >>\nendobj")]
+    [InlineData("3 0 obj\n<< /Length 20 >>\nstream\nBT (/ID [(SECRETX)]) Tj\nendstream\nendobj")]
+    public void ATermAfterIdInsideAStringCommentOrBody_IsFound(string body)
+    {
+        var saved = Encoding.Latin1.GetBytes($"%PDF-1.7\n{body}\n%%EOF\n");
+
+        Encoding.Latin1.GetString(saved).Should().Contain("SECRETX", "sanity: the term is in the bytes");
+        SavedPdfLeakScanner.FindTerm(saved, "SECRETX").Should().NotBeEmpty(
+            "text that only looks like /ID [ is content, not the file identifier");
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().Contain("SECRETX");
+    }
+
+    [Fact]
+    public void ARealIdNameNextToAnIdInsideAString_MasksOnlyTheRealOne()
+    {
+        var saved = Encoding.Latin1.GetBytes(
+            "%PDF-1.7\n1 0 obj\n<< /Title (/ID [(SECRETX)]) >>\nendobj\n" +
+            "trailer\n<< /ID [<ABCDEF01><ABCDEF01>] >>\n%%EOF\n");
+
+        SavedPdfLeakScanner.FindTerm(saved, "SECRETX").Should().NotBeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, "ABCDEF01").Should().BeEmpty("the real /ID is still masked");
+    }
+
+    [Fact]
+    public void AStreamWithNoEndstream_IsStillInflatedAndScanned()
+    {
+        var deflated = Deflate(Encoding.Latin1.GetBytes($"BT /F1 12 Tf (Louise {Hidden}) Tj ET\n"));
+        var head = Encoding.Latin1.GetBytes("%PDF-1.7\n2 0 obj\n<< /Filter /FlateDecode >>\nstream\n");
+        var saved = head.Concat(deflated).ToArray(); // half-written: no endstream
+
+        SavedPdfLeakScanner.FindTerm(saved, Hidden).Should().Contain(h => h.StartsWith("inflated stream #0:"),
+            "a truncated file's last stream runs to the end of the file");
+        SavedPdfLeakScanner.StreamBodies(saved).Should().ContainSingle();
+    }
+
+    [Fact]
+    public void ATruncatedFlateBody_KeepsWhatInflated()
+    {
+        var deflated = Deflate(Encoding.Latin1.GetBytes($"BT (Louise {Hidden}) Tj ET\n" + new string('x', 4000)));
+        var cut = deflated[..(deflated.Length - 6)];
+        var saved = Encoding.Latin1.GetBytes("%PDF-1.7\n2 0 obj\n<< >>\nstream\n").Concat(cut).ToArray();
+
+        SavedPdfLeakScanner.FindTerm(saved, Hidden).Should().Contain(h => h.StartsWith("inflated stream #0:"));
+    }
+
+    [Fact]
+    public void AStringOverOneMegabyte_IsReadWhole_AndDoesNotSwitchToTheFallback()
+    {
+        // SECRET is escaped past the first megabyte, so only the decoded string
+        // holds it; the stream after the string must still be read by the walk.
+        var saved = Encoding.Latin1.GetBytes(
+            "%PDF-1.7\n1 0 obj\n<< /Title (" + new string('a', (1 << 20) + 500) + @"\123ECRET) >>" + "\nendobj\n") 
+            .Concat(StreamAfter("", compressed: true)).ToArray();
+
+        var hits = SavedPdfLeakScanner.FindTerm(saved, "SECRET");
+        hits.Should().Contain(h => h.Contains("decoded text string"));
+        SavedPdfLeakScanner.FindTerm(saved, Hidden).Should().NotContain(h => h.Contains(ByteSearchFallback))
+            .And.Contain(h => h.StartsWith("inflated stream #0:"));
     }
 }

@@ -176,9 +176,6 @@ internal static class SavedPdfLeakScanner
         }
     }
 
-    /// <summary>A string longer than this is binary data a stray delimiter opened, not text.</summary>
-    private const int MaxStringBytes = 1 << 20;
-
     /// <summary>The value of every literal and hex string (§7.3.4) in <paramref name="data"/>[<paramref name="from"/>..<paramref name="to"/>).</summary>
     private static IEnumerable<byte[]> StringObjects(byte[] data, int from, int to) =>
         Walk(data, from, to).Where(s => s.String != null).Select(s => s.String!);
@@ -204,7 +201,7 @@ internal static class SavedPdfLeakScanner
     /// an <c>endstream</c> no keyword opened, the bodies after the last one it
     /// found come from the byte search instead.</para>
     /// </summary>
-    private static IEnumerable<Syntax> Walk(byte[] data, int from, int to)
+    private static IEnumerable<Syntax> Walk(byte[] data, int from, int to, List<(int Start, int End)>? idRanges = null)
     {
         var i = from;
         var found = from; // every body before this was found
@@ -239,9 +236,12 @@ internal static class SavedPdfLeakScanner
             }
             else if (c == '/')
             {
-                // A name, so "/stream" is not the keyword.
-                i++;
+                // A name, so "/stream" is not the keyword, and "/ID" is the
+                // identifier key only here, never inside a string (#1858).
+                var name = ++i;
                 while (i < to && IsRegularCharacter(data[i])) i++;
+                if (idRanges != null && data.AsSpan(name, i - name).SequenceEqual("ID"u8))
+                    i = FileIdentifier(data, i, to, idRanges);
             }
             else if (IsRegularCharacter(c))
             {
@@ -252,7 +252,13 @@ internal static class SavedPdfLeakScanner
                 {
                     var body = BodyStart(data, start + "stream".Length, to);
                     var end = data.AsSpan(body, to - body).IndexOf("endstream"u8);
-                    if (end < 0) { i = to; continue; }
+                    if (end < 0)
+                    {
+                        // A truncated file: the body runs to its end.
+                        i = to;
+                        if (!lost) yield return new Syntax(null, body, to);
+                        continue;
+                    }
                     i = found = body + end + "endstream".Length;
                     if (!lost) yield return new Syntax(null, body, body + end);
                 }
@@ -303,7 +309,7 @@ internal static class SavedPdfLeakScanner
     {
         var value = new List<byte>();
         var depth = 1;
-        while (i < to && value.Count < MaxStringBytes)
+        while (i < to)
         {
             var c = data[i++];
             if (c == '\\' && i < to)
@@ -362,7 +368,7 @@ internal static class SavedPdfLeakScanner
         var start = i;
         var value = new List<byte>();
         var high = -1;
-        while (i < to && data[i] != '>' && value.Count < MaxStringBytes)
+        while (i < to && data[i] != '>')
         {
             var c = data[i++];
             if (IsWhitespace(c)) continue;
@@ -454,74 +460,56 @@ internal static class SavedPdfLeakScanner
     /// serialization metadata: no page text, no carrier, nothing a redaction
     /// could leak into. But a 3-character ASCII needle has a ~1-in-a-few-dozen
     /// chance of appearing in 32 random hex digits, so scanning it makes every
-    /// short-term absence assertion intermittently red. Observed at least four
-    /// times on <c>FullwidthFormsRedactionTests</c> alone — <c>/ID</c>
-    /// <c>479CCFE4C1FA...DABC6B61...</c> matched needle <c>ABC</c>, and
-    /// <c>F37F6B37EA4F42180EF0F2141237C322</c> matched <c>123</c>, both times
-    /// with a provably clean redacted page (#1295, #771, #800).</para>
-    ///
-    /// <para><b>Why it is here and not in each test.</b> The exclusion used to
-    /// live in a hand-rolled per-test searchable view; #1049's migration to
-    /// this shared scanner dropped it and reintroduced the flake. One shared
-    /// policy is the fix — see <c>SavedPdfLeakScannerTests</c>, which pins both
-    /// directions on a forced <c>/ID</c>.</para>
+    /// short-term absence assertion intermittently red (#1295, #771, #800).</para>
     ///
     /// <para><b>Scope is deliberately narrow.</b> Only strings <i>inside an
-    /// <c>/ID [ … ]</c> array</i> are blanked — not hex strings generally, since
-    /// a <c>&lt;…&gt;</c> in a content stream is a real text carrier and
-    /// blanking those would make the scanner blind to exactly the leaks it
-    /// exists to catch. Bytes are overwritten IN PLACE with NUL at the same
-    /// length, so every file offset, the raw/UTF-16BE/UTF-8 views, and all
-    /// stream boundaries stay valid.</para>
+    /// <c>/ID [ … ]</c> array</i> are blanked, and only where <c>/ID</c> is a
+    /// name token in the <see cref="Walk"/>: the same characters inside a
+    /// string, comment or stream body are content, and blanking them made the
+    /// scanner blind to exactly the text it exists to find (#1858). Bytes are
+    /// overwritten IN PLACE with NUL at the same length, so every file offset
+    /// and all stream boundaries stay valid.</para>
     /// </summary>
     internal static byte[] MaskFileIdentifier(byte[] saved)
     {
-        byte[]? masked = null;
-        var i = 0;
+        var ranges = new List<(int Start, int End)>();
+        foreach (var _ in Walk(saved, 0, saved.Length, ranges)) { }
+        if (ranges.Count == 0) return saved;
 
-        while (true)
+        var masked = (byte[])saved.Clone();
+        foreach (var (start, end) in ranges)
+            masked.AsSpan(start, end - start).Clear();
+        return masked;
+    }
+
+    /// <summary>
+    /// After an <c>/ID</c> name at <paramref name="i"/>: when an array follows,
+    /// records the content range of each string in it and returns the index
+    /// after the array. Anything else named /ID is not the file identifier.
+    /// </summary>
+    private static int FileIdentifier(byte[] data, int i, int to, List<(int Start, int End)> ranges)
+    {
+        var p = SkipWhitespace(data, i);
+        if (p >= to || data[p] != (byte)'[') return i;
+        p++;
+        while (p < to && data[p] != (byte)']')
         {
-            var at = IndexOf(saved, "/ID", i);
-            if (at < 0) break;
-            i = at + 3;
-
-            // "/IDS" is a different name; the identifier key ends here.
-            if (i < saved.Length && IsRegularCharacter(saved[i])) continue;
-
-            var p = SkipWhitespace(saved, i);
-            // The file identifier is always an ARRAY of one or two strings.
-            // Anything else that happens to be named /ID is not it.
-            if (p >= saved.Length || saved[p] != (byte)'[') continue;
-            p++;
-
-            masked ??= (byte[])saved.Clone();
-
-            while (p < saved.Length && saved[p] != (byte)']')
+            if (data[p] == (byte)'<')
             {
-                if (saved[p] == (byte)'<')
-                {
-                    p++;
-                    while (p < saved.Length && saved[p] != (byte)'>') masked[p++] = 0;
-                }
-                else if (saved[p] == (byte)'(')
-                {
-                    // §7.3.4.2 literal-string form, legal though rarely emitted.
-                    p++;
-                    for (var depth = 1; p < saved.Length && depth > 0; p++)
-                    {
-                        if (saved[p] == (byte)'\\') { masked[p] = 0; p++; if (p < saved.Length) masked[p] = 0; continue; }
-                        if (saved[p] == (byte)'(') depth++;
-                        else if (saved[p] == (byte)')' && --depth == 0) break;
-                        masked[p] = 0;
-                    }
-                }
-                p++;
+                var start = ++p;
+                while (p < to && data[p] != (byte)'>') p++;
+                ranges.Add((start, p));
             }
-
-            i = p;
+            else if (data[p] == (byte)'(')
+            {
+                var (_, next, closed) = LiteralString(data, p + 1, to);
+                ranges.Add((p + 1, closed ? next - 1 : next));
+                p = next;
+                continue;
+            }
+            p++;
         }
-
-        return masked ?? saved;
+        return p;
     }
 
     private static int SkipWhitespace(byte[] b, int from)
@@ -551,18 +539,18 @@ internal static class SavedPdfLeakScanner
 
         foreach (var zlib in new[] { true, false })
         {
+            using var output = new MemoryStream();
             try
             {
                 using var input = new MemoryStream(raw);
                 using Stream decoder = zlib
                     ? new ZLibStream(input, CompressionMode.Decompress)
                     : new DeflateStream(input, CompressionMode.Decompress);
-                using var output = new MemoryStream();
                 decoder.CopyTo(output);
-                if (output.Length > 0) return output.ToArray();
             }
-            catch (InvalidDataException) { /* not this encoding — try the other */ }
+            catch (InvalidDataException) { /* not this encoding, or truncated: keep what inflated */ }
             catch (NotSupportedException) { }
+            if (output.Length > 0) return output.ToArray();
         }
 
         return null;
@@ -575,12 +563,4 @@ internal static class SavedPdfLeakScanner
     /// </summary>
     private static bool ContainsBytes(byte[] haystack, byte[] needle)
         => needle.Length > 0 && haystack.AsSpan().IndexOf(needle) >= 0;
-
-    private static int IndexOf(byte[] haystack, string needle, int from)
-    {
-        from = Math.Max(0, from);
-        if (from >= haystack.Length) return -1;
-        var at = haystack.AsSpan(from).IndexOf(Encoding.ASCII.GetBytes(needle));
-        return at < 0 ? -1 : from + at;
-    }
 }
