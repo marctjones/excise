@@ -144,6 +144,26 @@ public class RedactionCollateralHarness
     /// </summary>
     private const int ThrewSentinel = -1;
 
+    /// <summary>
+    /// Baseline entry <c>{fixture}|(open)</c> = <see cref="CannotOpenSentinel"/>
+    /// means "excise cannot open this document" (#1787). Ratcheted both ways like
+    /// <see cref="ThrewSentinel"/>: a newly unopenable document is a parser
+    /// regression, not a skip, and a listed one that opens again fails until its
+    /// entry is deleted. The parentheses keep it apart from every sampled term,
+    /// which is letters only.
+    /// </summary>
+    private const string CannotOpenTerm = "(open)";
+    private const int CannotOpenSentinel = -2;
+
+    /// <summary>
+    /// <c>REDACTION_COLLATERAL_UPDATE=1</c> rewrites the baseline and reports
+    /// every row SKIPPED, never passed (#1787): a run in this mode has no verdict,
+    /// and the per-class pass floor in check-redaction-suite-floor.sh turns a
+    /// tier run made in it red.
+    /// </summary>
+    private static bool UpdateMode =>
+        Environment.GetEnvironmentVariable("REDACTION_COLLATERAL_UPDATE") == "1";
+
     public static TheoryData<string> Fixtures()
     {
         var data = new TheoryData<string>();
@@ -164,24 +184,43 @@ public class RedactionCollateralHarness
 
         // #1046: the sampled corpora are renderer REGRESSION suites — a good
         // fraction of them are malformed on purpose. A document excise cannot
-        // open has no redaction behaviour to measure, so it is skipped rather
-        // than failed; "excise cannot open this at all" is a parser question,
-        // not a collateral one, and conflating them would make this gate red
-        // for reasons it has no opinion about.
-        string before;
+        // open has no redaction behaviour to measure, so a BASELINED one is
+        // skipped; "excise cannot open this at all" is a parser question, not a
+        // collateral one. An unbaselined one fails (#1787): skipping it too let
+        // a newly broken parser path read as one more silent skip.
+        var baseline = LoadBaseline();
+        var openKey = $"{fixtureName}|{CannotOpenTerm}";
+        var wasUnopenable = baseline.TryGetValue(openKey, out var openValue) && openValue == CannotOpenSentinel;
+        string? before;
         try
         {
             before = ExtractAll(path!);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            Assert.Skip($"excise cannot open {fixtureName}: {ex.GetType().Name}");
+            if (UpdateMode)
+                WriteBaseline(fixtureName, new SortedDictionary<string, int> { [CannotOpenTerm] = CannotOpenSentinel });
+            else if (!wasUnopenable)
+                Assert.Fail(
+                    $"excise cannot open {fixtureName} ({ex.GetType().Name}: {ex.Message}) and it is not " +
+                    "baselined as unopenable. A document that stops opening is a parser regression (#1787).");
+            Assert.Skip($"excise cannot open {fixtureName}: {ex.GetType().Name} (baselined)");
             return;
         }
 
-        Assert.SkipWhen(before.Length < 200, "fixture has too little text to sample terms from");
+        if (wasUnopenable)
+        {
+            if (!UpdateMode)
+                Assert.Fail($"{fixtureName} is baselined as unopenable but now opens. Delete '{openKey}' from {BaselinePath}.");
+            WriteBaseline(fixtureName, new SortedDictionary<string, int>());
+        }
 
-        var baseline = LoadBaseline();
+        // #1886: mutool failing on the ORIGINAL is the oracle's problem, and used
+        // to be reported as "too little text": of the 874 such skips measured
+        // 2026-09-27, 39 were mutool exiting non-zero or timing out.
+        Assert.SkipWhen(before == null, $"mutool could not extract text from {fixtureName} (the oracle failed, not excise)");
+        Assert.SkipWhen(before!.Length < 200, "fixture has too little text to sample terms from");
+
         var failures = new List<string>();
         var countMismatches = 0;
         var measured = new SortedDictionary<string, int>();
@@ -220,6 +259,11 @@ public class RedactionCollateralHarness
                 }
 
                 var after = ExtractAll(output);
+                if (after == null)
+                {
+                    failures.Add($"'{term}': mutool read the original but cannot read excise's redacted output");
+                    continue;
+                }
 
                 // Half one: the term must actually be gone. Already covered
                 // elsewhere, asserted here so a "0 collateral" result cannot be
@@ -283,10 +327,12 @@ public class RedactionCollateralHarness
             finally { try { File.Delete(output); } catch { /* best effort */ } }
         }
 
-        if (Environment.GetEnvironmentVariable("REDACTION_COLLATERAL_UPDATE") == "1")
+        if (UpdateMode)
         {
             WriteBaseline(fixtureName, measured);
-            return;
+            Assert.Skip(
+                $"REDACTION_COLLATERAL_UPDATE=1 rewrote the baseline for {fixtureName}; no verdict." +
+                (failures.Count == 0 ? "" : $" Not judged:\n{string.Join("\n", failures)}"));
         }
 
         if (CountDisagreesWithOracle.Contains(fixtureName) && countMismatches == 0)
@@ -462,11 +508,15 @@ public class RedactionCollateralHarness
     private static string? Resolve(string rel) =>
         TestRepoLayout.FindDirectory(rel) ?? TestRepoLayout.FindFile(rel);
 
-    private static string ExtractAll(string pdfPath)
+    /// <summary>
+    /// All pages' text as mutool reads them, or null when mutool fails. Throws
+    /// when excise cannot open the document.
+    /// </summary>
+    internal static string? ExtractAll(string pdfPath)
     {
         using var doc = PdfDocument.Open(File.ReadAllBytes(pdfPath));
         var pages = MutoolTextExtractor.ExtractAllPages(pdfPath, doc.PageCount);
-        return pages == null ? "" : string.Join("\n", pages);
+        return pages == null ? null : string.Join("\n", pages);
     }
 
     private static int Alnum(string s) => s.Count(char.IsLetterOrDigit);
@@ -489,10 +539,12 @@ public class RedactionCollateralHarness
 
     private static void WriteBaseline(string fixtureName, SortedDictionary<string, int> measured)
     {
-        var dir = Resolve(Path.GetDirectoryName(BaselinePath)!);
-        if (dir == null) return;
+        var dir = Resolve(Path.GetDirectoryName(BaselinePath)!)
+                  ?? throw new InvalidOperationException($"{BaselinePath} not found; the baseline was not written");
         var file = Path.Combine(dir, Path.GetFileName(BaselinePath));
         var all = LoadBaseline();
+        foreach (var stale in all.Keys.Where(k => k.StartsWith(fixtureName + "|", StringComparison.Ordinal)).ToList())
+            all.Remove(stale);
         foreach (var kv in measured) all[$"{fixtureName}|{kv.Key}"] = kv.Value;
         var sb = new StringBuilder("{\n");
         var keys = all.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList();

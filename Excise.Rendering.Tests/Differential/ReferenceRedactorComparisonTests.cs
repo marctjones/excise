@@ -54,15 +54,11 @@ public class ReferenceRedactorComparisonTests
         var path = EnumerateFixtures().FirstOrDefault(f => Path.GetFileName(f) == fixtureName);
         Assert.SkipWhen(path == null, "fixture not found");
 
-        string before;
-        try { before = ExtractAll(path!); }
-        catch (Exception ex) when (ex is not OutOfMemoryException)
-        {
-            Assert.Skip($"excise cannot open {fixtureName}: {ex.GetType().Name}");
-            return;
-        }
-
-        Assert.SkipWhen(before.Length < 200, "too little text to sample terms from");
+        // A curated set that opens today: failing to open one is a parser
+        // regression, so it throws and fails rather than skipping (#1787).
+        var before = RedactionCollateralHarness.ExtractAll(path!);
+        Assert.SkipWhen(before == null, $"mutool could not extract text from {fixtureName} (the oracle failed, not excise)");
+        Assert.SkipWhen(before!.Length < 200, "too little text to sample terms from");
 
         var failures = new List<string>();
         var sampled = 0;
@@ -109,8 +105,14 @@ public class ReferenceRedactorComparisonTests
 
                 compared++;
 
-                var refAfter = ExtractAll(refOut);
-                var exAfter = ExtractAll(exOut);
+                var refAfter = RedactionCollateralHarness.ExtractAll(refOut);
+                var exAfter = RedactionCollateralHarness.ExtractAll(exOut);
+                if (refAfter == null || exAfter == null)
+                {
+                    failures.Add($"'{term}': mutool read the original but cannot read the " +
+                                 (exAfter == null ? "excise" : "reference") + " output");
+                    continue;
+                }
 
                 var refLeft = CountOccurrences(refAfter, term);
                 var exLeft = CountOccurrences(exAfter, term);
@@ -175,13 +177,6 @@ public class ReferenceRedactorComparisonTests
     private static void TryDelete(string p)
     {
         try { File.Delete(p); } catch { /* best effort */ }
-    }
-
-    private static string ExtractAll(string pdfPath)
-    {
-        using var doc = PdfDocument.Open(File.ReadAllBytes(pdfPath));
-        var pages = MutoolTextExtractor.ExtractAllPages(pdfPath, doc.PageCount);
-        return pages == null ? "" : string.Join("\n", pages);
     }
 
     /// <summary>
