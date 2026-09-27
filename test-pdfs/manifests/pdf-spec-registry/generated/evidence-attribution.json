@@ -80352,6 +80352,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/PdfPenStateTests.cs::PdfPenStateTests.Opacity_IsOneExtGStatePerValuePerPage_AndSurvivesSave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/PdfPenStateTests.cs::PdfPenStateTests.BrushOpacity_AppliesToFillsAndText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81581,24 +81595,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.OcgCount_MatchesQpdf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.OcgCount_SurvivesAnOpenSaveRoundTrip",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.StructElementCount_MatchesQpdf",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112726,8 +112722,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8041,
-    "testMethodsWithCapabilityCandidate": 5216,
+    "testMethods": 8081,
+    "testMethodsWithCapabilityCandidate": 5246,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

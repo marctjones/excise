@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "bdeda39397e29f473e77d8991c066ff1172547a8",
+  "sourceRevision": "ea295bec813dbdcbeadfa67fc890cd85e2cd3aaf",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8192,
+    "retainedSymbols": 8216,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -276,7 +276,7 @@
     {
       "source": "core",
       "target": "core-document",
-      "references": 211,
+      "references": 212,
       "typeDependencyCount": 41,
       "classification": "declared",
       "evidence": [
@@ -477,7 +477,7 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1485,
+      "references": 1493,
       "typeDependencyCount": 225,
       "classification": "declared",
       "evidence": [
@@ -781,7 +781,7 @@
     {
       "source": "core-text",
       "target": "core-content",
-      "references": 37,
+      "references": 38,
       "typeDependencyCount": 5,
       "classification": "declared",
       "evidence": [
@@ -795,14 +795,14 @@
     {
       "source": "core-text",
       "target": "core-document",
-      "references": 147,
+      "references": 153,
       "typeDependencyCount": 18,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.TextSelectionEngine",
           "target": "Excise.Core.Document.PdfRectangle",
-          "references": 52
+          "references": 58
         }
       ]
     },

@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1459,
-  "indexedContentSha256": "c19a6471474f4fa9a247a9ba31d7ffa05a7d7da095714ff0f58995e77be16bb3",
+  "indexedFileCount": 1465,
+  "indexedContentSha256": "c3ffb86d1e8bf817b7b02a58a1d6a70af08a3fa451a489fdd97781770863e6a3",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -3701,6 +3701,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Text/Letter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "geometry",
+            "tree"
+          ]
+        },
+        {
           "path": "Excise.Core/Validation/PdfUaValidator.cs",
           "kind": "source",
           "matchedTerms": [
@@ -4084,19 +4092,9 @@
             "catalog",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PdfStructTreeTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "catalog",
-            "tree",
-            "catalog",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 194
+      "candidateReferenceCount": 195
     },
     {
       "id": "pdf.17.document.navigation",
@@ -7750,8 +7748,12 @@
           "path": "Excise.Core/Graphics/PdfGraphics.cs",
           "kind": "source",
           "matchedTerms": [
+            "clipping",
+            "construction",
             "line",
+            "painting",
             "path",
+            "style",
             "pdfgraphics"
           ]
         },
@@ -7760,7 +7762,8 @@
           "kind": "source",
           "matchedTerms": [
             "line",
-            "path"
+            "path",
+            "style"
           ]
         },
         {
@@ -8096,7 +8099,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 675
+      "candidateReferenceCount": 680
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8442,7 +8445,9 @@
           "kind": "source",
           "matchedTerms": [
             "color",
+            "colour",
             "output",
+            "values",
             "pdfgraphics"
           ]
         },
@@ -8908,7 +8913,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 328
+      "candidateReferenceCount": 329
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9882,7 +9887,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 254
+      "candidateReferenceCount": 255
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -10724,7 +10729,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 196
+      "candidateReferenceCount": 197
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -10854,6 +10859,7 @@
           "kind": "source",
           "matchedTerms": [
             "color",
+            "colour",
             "scan"
           ]
         },
@@ -11346,6 +11352,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Graphics/PdfGraphicsOperatorOrderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -11449,17 +11463,9 @@
             "color",
             "scan"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "scan"
-          ]
         }
       ],
-      "candidateReferenceCount": 185
+      "candidateReferenceCount": 187
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -12976,8 +12982,17 @@
           "kind": "source",
           "matchedTerms": [
             "content-stream",
+            "iso",
             "operators",
             "contentstream"
+          ]
+        },
+        {
+          "path": "Excise.Core/Graphics/PdfPen.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "iso",
+            "operators"
           ]
         },
         {
@@ -13402,6 +13417,25 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Graphics/PdfGraphicsOperatorOrderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "iso",
+            "operators",
+            "contentstream"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Graphics/PdfPenStateTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "iso",
+            "operators",
+            "contentstream"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -13542,37 +13576,9 @@
             "iso",
             "operators"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/GlyphBlankingSpikeTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "iso",
-            "operators",
-            "contentoperator",
-            "contentstream"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/HiddenTextDetectorTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "iso",
-            "operators",
-            "contentstream"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/NamedMarkedContentCarrierTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "content-stream",
-            "operators",
-            "contentstream"
-          ]
         }
       ],
-      "candidateReferenceCount": 134
+      "candidateReferenceCount": 137
     },
     {
       "id": "pdf.17.content.text-state",
@@ -13861,6 +13867,14 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/StickyNotePopupViewModel.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "character",
+            "positioning"
+          ]
+        },
+        {
           "path": "Excise.App/Views/AnnotationPaletteWindow.axaml.cs",
           "kind": "source",
           "matchedTerms": [
@@ -14123,7 +14137,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 42
+      "candidateReferenceCount": 43
     },
     {
       "id": "pdf.17.content.marked",
@@ -22541,6 +22555,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Graphics/PdfGraphics.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "color",
+            "colour"
+          ]
+        },
+        {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
           "matchedTerms": [
@@ -22895,6 +22917,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Graphics/PdfGraphicsOperatorOrderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Parsing/MalformedDictionaryRecoveryTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -23093,28 +23123,9 @@
             "colour",
             "pdf20"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "spaces",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/OverprintDifferentialTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 124
+      "candidateReferenceCount": 126
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -59199,7 +59210,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 223
+      "candidateReferenceCount": 224
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -59302,6 +59313,14 @@
         },
         {
           "path": "Excise.Core/Filters/PdfPredictor.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "output",
+            "parameters"
+          ]
+        },
+        {
+          "path": "Excise.Core/Graphics/PdfGraphics.cs",
           "kind": "source",
           "matchedTerms": [
             "output",
@@ -59930,17 +59949,9 @@
             "output",
             "preview"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/DialogMessageLayoutTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "preview"
-          ]
         }
       ],
-      "candidateReferenceCount": 102
+      "candidateReferenceCount": 103
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -60648,6 +60659,7 @@
           "matchedTerms": [
             "annotation",
             "flags",
+            "geometry",
             "acroform",
             "action",
             "annotation",
@@ -66491,6 +66503,15 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/StickyNotePopupViewModel.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "media",
+            "screen",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.App/Views/MainWindow.axaml.cs",
           "kind": "source",
           "matchedTerms": [
@@ -66897,19 +66918,9 @@
             "media",
             "media"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/CheckboxAppearanceStateTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "screen",
-            "media"
-          ]
         }
       ],
-      "candidateReferenceCount": 141
+      "candidateReferenceCount": 142
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -69243,7 +69254,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 221
+      "candidateReferenceCount": 222
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -70016,7 +70027,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 217
+      "candidateReferenceCount": 218
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -70805,7 +70816,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 741
+      "candidateReferenceCount": 744
     },
     {
       "id": "pdf.20.extension.developer",
@@ -78707,7 +78718,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 166
+      "candidateReferenceCount": 167
     },
     {
       "id": "pdfe.product.platform.printing",
