@@ -167,7 +167,9 @@ internal class GlyphRemover
             };
             ledger = WidthClosureLedger.Build(
                 operations, letters, removals.Values.ToList(), redactionAreas, strategy,
-                keep, Width.ToString(), PageBox);
+                keep, Width, PageBox,
+                op => _letterFinder.FindOperationLetters(
+                    op.TextContent ?? op.RawTextOperand ?? "", letters, op.BoundingBox).Select(m => m.Letter));
             WidthNotes.AddRange(ledger.Notes);
         }
 
@@ -182,7 +184,7 @@ internal class GlyphRemover
                 // Not the start of a BT — copy through and advance. Operators
                 // inside a BT we've already processed are skipped via the
                 // jump at the end of the block branch.
-                result.Add(operations[i]);
+                result.Add(RewriteWordSpacing(ledger, i, operations[i]));
                 i++;
                 continue;
             }
@@ -217,6 +219,12 @@ internal class GlyphRemover
     private static double FixedMarkerRight(PdfRectangle area, IReadOnlyList<Letter> removed) =>
         PdfDocumentRedactionExtensions.FixedMarkerBoxFor(
             ComputeBoundsFromLetters(removed), removed).Normalize().Right;
+
+    /// <summary>#1752: a Tw operator the ledger rewrote to re-justify its line.</summary>
+    private static ContentOperator RewriteWordSpacing(WidthClosureLedger? ledger, int index, ContentOperator op) =>
+        ledger?.RewrittenWordSpacing(index) is double value
+            ? new ContentOperator("Tw", new PdfObject[] { new PdfReal(value) })
+            : op;
 
     private static BlockInfo? FindBlockStartingAt(List<BlockInfo> blocks, int index)
     {
@@ -327,6 +335,7 @@ internal class GlyphRemover
             var effectiveSize = MedianGlyphHeight(removal.Matches);
             reconstructionJobs.Add(new ReconstructionJob
             {
+                Index = idx,
                 Source = op,
                 Text = removal.Text,
                 Matches = removal.Matches,
@@ -379,7 +388,7 @@ internal class GlyphRemover
                 continue;
             }
 
-            var emitted = blankedOperators.TryGetValue(idx, out var blanked) ? blanked : op;
+            var emitted = blankedOperators.TryGetValue(idx, out var blanked) ? blanked : RewriteWordSpacing(ledger, idx, op);
             if (ledger != null && op.Category == OperatorCategory.TextShowing)
             {
                 EmitShifted(idx, op, emitted, ledger, pen, output);
@@ -647,7 +656,7 @@ internal class GlyphRemover
             if (segments.Count == 0) continue; // entire op fully redacted
 
             var reconstructed = _reconstructor.ReconstructWithPositioning(
-                segments, ReconstructionContext(job.Source.TextState, ledger),
+                segments, ReconstructionContext(job.Source.TextState, ledger, job.Index),
                 job.Source.GraphicsTransform, job.Source.TextTransform, job.EffectiveFontSize);
             if (reconstructed.Count == 0) continue;
             result.AddRange(reconstructed);
@@ -661,7 +670,7 @@ internal class GlyphRemover
     /// the rebuilt run draws under the ambient state.
     /// </summary>
     private static OperationReconstructor.Context ReconstructionContext(
-        ContentStreamWalker.TextStateSnapshot? s, WidthClosureLedger? ledger) =>
+        ContentStreamWalker.TextStateSnapshot? s, WidthClosureLedger? ledger, int index) =>
         s is null
             ? new() { FontName = "", FontSize = 0, Shift = ledger == null ? null : ledger.ShiftAt }
             : new()
@@ -670,7 +679,9 @@ internal class GlyphRemover
                 FontExtGState = s.FontExtGState,
                 FontSize = s.FontSize,
                 CharacterSpacing = s.CharSpacing,
-                WordSpacing = s.WordSpacing,
+                // #1752: a re-justified line's rebuilt runs use its new spacing,
+                // never restate the old one.
+                WordSpacing = ledger?.WordSpacingFor(index) ?? s.WordSpacing,
                 HorizontalScaling = s.HorizontalScaling,
                 TextRenderingMode = s.TextRenderMode,
                 TextRise = s.TextRise,
@@ -762,6 +773,7 @@ internal class GlyphRemover
     /// <summary>A text-op classified as needing reconstruction.</summary>
     private sealed class ReconstructionJob
     {
+        public required int Index { get; init; }
         public required ContentOperator Source { get; init; }
         public required string Text { get; init; }
         public required List<LetterMatch> Matches { get; init; }

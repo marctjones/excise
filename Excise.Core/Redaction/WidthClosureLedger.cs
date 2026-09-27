@@ -30,6 +30,15 @@ namespace Excise.Core.Text.Segmentation;
 /// keeps exactly the marker's width (#1725), so the marker covers nothing that
 /// follows it and the gap is the same for every removed string. A term split
 /// across two runs is still one area and still one marker.</para>
+/// <para>#1752: closing the gap moves the text after it, not where the line is
+/// anchored, so a line whose EDGES encode its length still states the removed
+/// width. A line is classified against the lines above and below it:
+/// centred → the whole line moves right by half the closed width; right-aligned
+/// → by all of it; justified → the closed width is spread over its word spaces
+/// by rewriting the line's own <c>Tw</c> operator (a Tw bump restored after the
+/// line would state the difference). Left-aligned and unknown lines keep their
+/// start. A justified line whose word spacing is not set by an operator of its
+/// own is reported, not guessed at.</para>
 /// <para>What the ledger cannot move it REPORTS (<see cref="Notes"/>), never
 /// skips silently: a run of rotated or skewed text, and glyphs on the line that
 /// no operator of this content stream draws.</para>
@@ -43,6 +52,12 @@ internal sealed class WidthClosureLedger
     private const double SameLineEms = 0.5;
 
     private const double Eps = 0.01;
+
+    /// <summary>Edges within this many ems of each other are aligned.</summary>
+    private const double AlignEms = 0.15;
+
+    /// <summary>Lines within this many ems above or below are the references alignment is read from.</summary>
+    private const double ReferenceEms = 2.6;
 
     /// <summary>A text-showing operator with glyphs to remove, in stream order.</summary>
     internal sealed record Removal(int Index, ContentOperator Op, string Text, List<LetterMatch> Matches, List<LetterMatch> ToRemove);
@@ -64,6 +79,8 @@ internal sealed class WidthClosureLedger
         public double Closure => Width - Reserve;
     }
 
+    private enum Alignment { Left, Centred, Right, Justified }
+
     /// <summary>One line: the glyphs on a baseline between two column-sized gaps.</summary>
     private sealed class Line
     {
@@ -71,14 +88,43 @@ internal sealed class WidthClosureLedger
         public required double Em { get; init; }
         public required double Lo { get; init; }
         public required double Hi { get; init; }
-        /// <summary>How far right the line may grow: a space short of the next
-        /// glyph on its baseline, or the page's edge (#1754).</summary>
+        /// <summary>How far the line may grow: a space short of the nearest
+        /// glyph on its baseline either side, or the page's edge (#1754).</summary>
+        public required double LeftLimit { get; init; }
         public required double Limit { get; init; }
         public required List<Letter> Letters { get; init; }
         public List<Run> Runs { get; } = new();
+
+        /// <summary>Page-space shift of the whole line (#1752: centred, right-aligned).</summary>
+        public double Base;
+        /// <summary>Page-space advance added to each word space in <see cref="Spaces"/> (#1752: justified).</summary>
+        public double Stretch;
+        public HashSet<Letter> Spaces { get; } = new(ReferenceEqualityComparer.Instance);
+        /// <summary>Operator index → how many of <see cref="Spaces"/> it shows.</summary>
+        public Dictionary<int, int> SpacesByOp { get; } = new();
+        /// <summary>Tw operator index → its rewritten operand; show operator index → the Tw now in effect.</summary>
+        public Dictionary<int, double> TwRewrites { get; } = new();
+        public Dictionary<int, double> WordSpacing { get; } = new();
+
+        public double Closed => Runs.Sum(r => r.Closure);
+
+        /// <summary>Ink extents: the first and last non-space glyph.</summary>
+        public (double Left, double Right) Ink =>
+            Letters.Where(l => !string.IsNullOrWhiteSpace(l.Value)) is var ink && ink.Any()
+                ? (ink.Min(l => l.StartX), ink.Max(RightOf))
+                : (Lo, Hi);
+
+        public double ShiftAt(double x) =>
+            Base - Runs.Where(r => r.StartX < x - Eps).Sum(r => r.Closure)
+                 + (Stretch == 0 ? 0 : Stretch * Spaces.Count(sp => sp.StartX < x - Eps));
     }
 
     private readonly Dictionary<int, List<Run>> _runsByOp = new();
+    private IReadOnlyList<ContentOperator> _operations = Array.Empty<ContentOperator>();
+    private IReadOnlyList<Letter> _letters = Array.Empty<Letter>();
+    private Func<ContentOperator, IEnumerable<Letter>> _lettersOf = _ => Array.Empty<Letter>();
+    private PdfRectangle? _page;
+    private WidthPolicy _policy;
     private readonly List<Line> _lines = new();
     private readonly HashSet<string> _notes = new(StringComparer.Ordinal);
 
@@ -90,8 +136,10 @@ internal sealed class WidthClosureLedger
     /// <param name="keep">The gap a policy keeps for one redaction area, given
     /// the area, the glyphs removed in it, where they start and their total
     /// advance (page space); null closes every gap. Kept once per area.</param>
-    /// <param name="policy">The policy's name, for the rows it reports.</param>
+    /// <param name="policy">The width policy, for the rows it reports and for
+    /// FixedMarker, whose lines are not re-anchored (see <see cref="Align"/>).</param>
     /// <param name="page">The page box, the farthest a growing line may reach.</param>
+    /// <param name="lettersOf">The page glyphs a text-showing operator draws.</param>
     internal static WidthClosureLedger Build(
         IReadOnlyList<ContentOperator> operations,
         IReadOnlyList<Letter> letters,
@@ -99,17 +147,25 @@ internal sealed class WidthClosureLedger
         IReadOnlyList<PdfRectangle> areas,
         GlyphRemovalStrategy strategy,
         Func<PdfRectangle, IReadOnlyList<Letter>, double, double, double>? keep,
-        string policy,
-        PdfRectangle? page)
+        WidthPolicy policy,
+        PdfRectangle? page,
+        Func<ContentOperator, IEnumerable<Letter>> lettersOf)
     {
-        var ledger = new WidthClosureLedger();
+        var ledger = new WidthClosureLedger
+        {
+            _policy = policy,
+            _operations = operations,
+            _letters = letters,
+            _lettersOf = lettersOf,
+            _page = page?.Normalize(),
+        };
         foreach (var removal in removals)
             ledger.AddRuns(removal, letters, areas, strategy, page);
         if (keep != null)
-        {
             ledger.Keep(areas, keep);
-            ledger.FitKeptGaps(policy);
-        }
+        foreach (var line in ledger._lines)
+            ledger.Align(line);
+        ledger.FitKeptGaps();
         ledger.NoteForeignGlyphs(operations);
         return ledger;
     }
@@ -131,25 +187,218 @@ internal sealed class WidthClosureLedger
     }
 
     /// <summary>
-    /// #1754: a kept gap wider than what it replaced pushes the rest of the
-    /// line right. Where the line has no room for that before the next glyph on
-    /// its baseline or the page's edge, its gaps close fully instead — the
-    /// secure fallback, since a closed gap states nothing — and the line is
-    /// reported.
+    /// #1754: a kept gap wider than what it replaced grows the line. Where the
+    /// line has no room for that before the nearest glyph on its baseline or
+    /// the page's edge — or, justified, its word spaces would shrink to nothing
+    /// — its gaps close fully instead (the secure fallback: a closed gap states
+    /// nothing) and the line is reported.
     /// </summary>
-    private void FitKeptGaps(string policy)
+    private void FitKeptGaps()
     {
         foreach (var line in _lines)
         {
-            if (line.Runs.Count == 0) continue;
-            var closed = line.Runs.Sum(r => r.Closure);
-            if (closed >= 0 || line.Hi - closed <= line.Limit + Eps) continue;
+            if (line.Runs.Count == 0 || line.Closed >= 0) continue;
+            var fits = line.Lo + line.ShiftAt(line.Lo) >= line.LeftLimit - Eps &&
+                       line.Hi + line.ShiftAt(line.Hi + 1) <= line.Limit + Eps &&
+                       line.Spaces.All(sp => sp.Width + line.Stretch >= 0.1 * line.Em);
+            if (fits) continue;
             var kept = line.Runs.Sum(r => r.Reserve);
             foreach (var run in line.Runs) run.Reserve = 0;
-            _notes.Add($"line at y={line.Y:F1}: no room on the line for the {kept:F1} pt gap {policy} keeps; " +
+            Align(line);
+            _notes.Add($"line at y={line.Y:F1}: no room on the line for the {kept:F1} pt gap {_policy} keeps; " +
                        "the gap was closed fully instead" +
-                       (policy == nameof(WidthPolicy.FixedMarker) ? ", so the marker covers the text that follows it" : ""));
+                       (_policy == WidthPolicy.FixedMarker ? ", so the marker covers the text that follows it" : ""));
         }
+    }
+
+    /// <summary>
+    /// #1752: re-anchor the line the way it was aligned, so its edges do not
+    /// state the closed width.
+    /// </summary>
+    private void Align(Line line)
+    {
+        line.Base = 0;
+        line.Stretch = 0;
+        line.Spaces.Clear();
+        line.SpacesByOp.Clear();
+        line.TwRewrites.Clear();
+        line.WordSpacing.Clear();
+        var closed = line.Closed;
+        if (line.Runs.Count == 0 || Math.Abs(closed) < Eps) return;
+
+        var alignment = Classify(line);
+        if (_policy == WidthPolicy.FixedMarker)
+        {
+            // The marker is drawn where the removed text began, so moving the
+            // text before it would move the text out from beside the marker;
+            // the marker is what shows the redaction. Its line keeps its start,
+            // and an aligned line's far edge still moves by the difference.
+            if (alignment != Alignment.Left)
+                _notes.Add($"line at y={line.Y:F1}: {alignment.ToString().ToLowerInvariant()} line kept in " +
+                           $"place beside its marker; its edge moved by {closed:F1} pt, the removed width " +
+                           "less the marker's");
+            return;
+        }
+
+        switch (alignment)
+        {
+            case Alignment.Centred:
+                line.Base = closed / 2;
+                break;
+            case Alignment.Right:
+                line.Base = closed;
+                break;
+            case Alignment.Justified when !Rejustify(line, closed):
+                _notes.Add($"line at y={line.Y:F1}: justified, but its word spacing is not set by an " +
+                           "operator of its own, so it was not re-justified and ends " +
+                           $"{closed:F1} pt short of its right margin");
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Read a line's alignment from the lines around it. Only edges the
+    /// references agree on count; a lone line is centred only when it is short
+    /// and centred on the page.
+    /// </summary>
+    private Alignment Classify(Line line)
+    {
+        var (left, right) = line.Ink;
+        var tol = AlignEms * line.Em;
+        bool Near(double a, double b) => Math.Abs(a - b) <= tol;
+        var refs = References(line);
+        if (refs.Count == 0)
+            return _page is { } p && right - left < 0.6 * p.Width && Near((left + right) / 2, (p.Left + p.Right) / 2)
+                ? Alignment.Centred
+                : Alignment.Left;
+
+        bool Most(Func<(double L, double R), bool> agree)
+        {
+            var n = refs.Count(agree);
+            return n > 0 && 2 * n >= refs.Count;
+        }
+        var leftAligned = refs.Any(r => Near(r.L, left));
+        var rightAligned = Most(r => Near(r.R, right));
+        var centred = Most(r => Near((r.L + r.R) / 2, (left + right) / 2));
+        var refsShareLeft = refs.Count >= 2 && refs.All(r => Near(r.L, refs[0].L));
+
+        if (rightAligned && (leftAligned || refsShareLeft)) return Alignment.Justified;
+        if (rightAligned) return Alignment.Right;
+        if (centred && !leftAligned) return Alignment.Centred;
+        return Alignment.Left;
+    }
+
+    /// <summary>
+    /// Ink extents of the lines of the same size just above and below
+    /// <paramref name="line"/> that overlap it by at least half the shorter.
+    /// </summary>
+    private List<(double L, double R)> References(Line line)
+    {
+        var (left, right) = line.Ink;
+        var result = new List<(double L, double R)>();
+        var near = _letters
+            .Where(l => Math.Abs(l.StartY - line.Y) > SameLineEms * line.Em &&
+                        Math.Abs(l.StartY - line.Y) <= ReferenceEms * line.Em &&
+                        !string.IsNullOrWhiteSpace(l.Value))
+            .OrderBy(l => l.StartY)
+            .ToList();
+        var i = 0;
+        while (i < near.Count)
+        {
+            var y = near[i].StartY;
+            var row = new List<Letter>();
+            while (i < near.Count && near[i].StartY - y <= 0.25 * line.Em) row.Add(near[i++]);
+            if (Math.Abs(Median(row.Select(l => l.GlyphRectangle.Normalize().Height)) - line.Em) > 0.2 * line.Em)
+                continue;
+            row.Sort((a, b) => a.StartX.CompareTo(b.StartX));
+            foreach (var (lo, hi) in Spans(row, line.Em, OperatorOf(y, line.Em)))
+            {
+                var l = row[lo].StartX;
+                var r = row.GetRange(lo, hi - lo + 1).Max(RightOf);
+                var overlap = Math.Min(r, right) - Math.Max(l, left);
+                if (overlap >= 0.5 * Math.Min(r - l, right - left)) result.Add((l, r));
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// #1752: spread the closed width over the line's word spaces by rewriting
+    /// the Tw operator that sets their spacing — only when every such operator
+    /// governs this line alone, so no other text moves and no operand restates
+    /// the old spacing. False when the line cannot be re-justified that way.
+    /// </summary>
+    private bool Rejustify(Line line, double closed)
+    {
+        var removed = new HashSet<Letter>(line.Runs.SelectMany(r => r.Letters), ReferenceEqualityComparer.Instance);
+        var (left, right) = line.Ink;
+        // Tw widens only the single-byte code 32 (§9.3.3).
+        var spaces = line.Letters
+            .Where(l => l.Value == " " && l.CharacterCode == 32 && l.CodeByteLength == 1 &&
+                        !removed.Contains(l) && l.StartX > left && l.StartX < right)
+            .ToHashSet<Letter>(ReferenceEqualityComparer.Instance);
+        if (spaces.Count == 0) return false;
+        var stretch = closed / spaces.Count;
+
+        var counts = new Dictionary<int, int>();
+        var rewrites = new Dictionary<int, double>();
+        var wordSpacing = new Dictionary<int, double>();
+        for (var i = 0; i < _operations.Count; i++)
+        {
+            var op = _operations[i];
+            if (op.Category != OperatorCategory.TextShowing || !OnLine(op, line)) continue;
+            var shown = _lettersOf(op).Distinct<Letter>(ReferenceEqualityComparer.Instance).Count(spaces.Contains);
+            if (shown == 0) continue;
+            if (GoverningWordSpacing(i) is not int tw || !GovernsOnly(tw, line)) return false;
+            var m = op.TextTransform!.Value.Multiply(op.GraphicsTransform!.Value);
+            var value = op.TextState!.WordSpacing + stretch / (op.TextState.HorizontalScaling / 100.0 * m.A);
+            if (rewrites.TryGetValue(tw, out var other) && Math.Abs(other - value) > 1e-6) return false;
+            rewrites[tw] = value;
+            wordSpacing[i] = value;
+            counts[i] = shown;
+        }
+        if (counts.Values.Sum() != spaces.Count) return false;
+
+        line.Stretch = stretch;
+        line.Spaces.UnionWith(spaces);
+        foreach (var (k, v) in counts) line.SpacesByOp[k] = v;
+        foreach (var (k, v) in rewrites) line.TwRewrites[k] = v;
+        foreach (var (k, v) in wordSpacing) line.WordSpacing[k] = v;
+        return true;
+    }
+
+    /// <summary>The Tw operator whose value is in effect at operator <paramref name="index"/>, if one is.</summary>
+    private int? GoverningWordSpacing(int index)
+    {
+        for (var i = index - 1; i >= 0; i--)
+        {
+            var name = _operations[i].Name;
+            if (name == "Tw") return i;
+            // " sets its own; Q may restore one set before a q.
+            if (name is "\"" or "Q") return null;
+        }
+        return null;
+    }
+
+    /// <summary>True when every glyph-drawing show the Tw at <paramref name="tw"/> governs is on <paramref name="line"/>.</summary>
+    private bool GovernsOnly(int tw, Line line)
+    {
+        for (var i = tw + 1; i < _operations.Count; i++)
+        {
+            var op = _operations[i];
+            if (op.Name is "Tw" or "\"" or "q" or "Q") return true;
+            if (op.Category == OperatorCategory.TextShowing && op.BoundingBox is not null && !OnLine(op, line))
+                return false;
+        }
+        return true;
+    }
+
+    private static bool OnLine(ContentOperator op, Line line)
+    {
+        if (op.BoundingBox is not { } box || UnitOf(op) is null) return false;
+        var m = op.TextTransform!.Value.Multiply(op.GraphicsTransform!.Value);
+        var x = box.Normalize().Left;
+        return Math.Abs(m.F - line.Y) <= SameLineEms * line.Em && x >= line.Lo - Eps && x <= line.Hi + Eps;
     }
 
     private void AddRuns(
@@ -219,32 +468,66 @@ internal sealed class WidthClosureLedger
                          .OrderBy(l => l.StartX)
                          .ToList();
 
-        // Walk out from the removed glyph in both directions until a gap wider
-        // than a column gutter.
         var at = row.FindIndex(l => ReferenceEquals(l, first));
         if (at < 0) { row.Add(first); row.Sort((a, b) => a.StartX.CompareTo(b.StartX)); at = row.IndexOf(first); }
-        var lo = at;
-        while (lo > 0 && row[lo].StartX - RightOf(row[lo - 1]) <= ColumnGapEms * em) lo--;
-        var hi = at;
-        var reach = RightOf(row[hi]);
-        while (hi + 1 < row.Count && row[hi + 1].StartX - reach <= ColumnGapEms * em)
-        {
-            hi++;
-            reach = Math.Max(reach, RightOf(row[hi]));
-        }
+        var (lo, hi) = Spans(row, em, OperatorOf(y, em)).First(span => span.Lo <= at && at <= span.Hi);
 
         var result = new Line
         {
             Y = y,
             Em = em,
             Lo = row[lo].StartX,
-            Hi = reach,
+            Hi = row.GetRange(lo, hi - lo + 1).Max(RightOf),
+            LeftLimit = lo > 0
+                ? RightOf(row[lo - 1]) + 0.25 * em
+                : page?.Normalize().Left ?? double.NegativeInfinity,
             Limit = hi + 1 < row.Count
                 ? row[hi + 1].StartX - 0.25 * em
                 : page?.Normalize().Right ?? double.PositiveInfinity,
             Letters = row.GetRange(lo, hi - lo + 1),
         };
         _lines.Add(result);
+        return result;
+    }
+
+    /// <summary>
+    /// A row of glyphs (sorted by x) cut wherever the gap between them is wider
+    /// than a column gutter — except between glyphs one operator draws in
+    /// turn: word spacing (Tw) or character spacing (Tc) widens those, and a
+    /// justified line is still one line. Each span as an inclusive index range.
+    /// </summary>
+    private static IEnumerable<(int Lo, int Hi)> Spans(List<Letter> row, double em, Dictionary<Letter, int> operatorOf)
+    {
+        var lo = 0;
+        var reach = double.NegativeInfinity;
+        for (var i = 0; i < row.Count; i++)
+        {
+            var sameOperator = i > 0 &&
+                               operatorOf.TryGetValue(row[i - 1], out var a) &&
+                               operatorOf.TryGetValue(row[i], out var b) && a == b;
+            if (i > lo && !sameOperator && row[i].StartX - reach > ColumnGapEms * em)
+            {
+                yield return (lo, i - 1);
+                lo = i;
+                reach = double.NegativeInfinity;
+            }
+            reach = Math.Max(reach, RightOf(row[i]));
+        }
+        if (row.Count > 0) yield return (lo, row.Count - 1);
+    }
+
+    /// <summary>Which text-showing operator (by index) draws each glyph of the row at <paramref name="y"/>.</summary>
+    private Dictionary<Letter, int> OperatorOf(double y, double em)
+    {
+        var result = new Dictionary<Letter, int>(ReferenceEqualityComparer.Instance);
+        for (var i = 0; i < _operations.Count; i++)
+        {
+            var op = _operations[i];
+            if (op.Category != OperatorCategory.TextShowing || op.BoundingBox is null || UnitOf(op) is null) continue;
+            var m = op.TextTransform!.Value.Multiply(op.GraphicsTransform!.Value);
+            if (Math.Abs(m.F - y) > SameLineEms * em) continue;
+            foreach (var letter in _lettersOf(op)) result.TryAdd(letter, i);
+        }
         return result;
     }
 
@@ -288,14 +571,35 @@ internal sealed class WidthClosureLedger
                 : null;
     }
 
-    /// <summary>Page-space shift the pen chain of operator <paramref name="index"/> carries past its end.</summary>
+    /// <summary>
+    /// Page-space shift the pen chain of operator <paramref name="index"/>
+    /// carries past its end: its closed runs, and its widened word spaces.
+    /// </summary>
     internal double InternalShift(int index) =>
-        _runsByOp.TryGetValue(index, out var runs) ? -runs.Sum(r => r.Closure) : 0;
+        (_runsByOp.TryGetValue(index, out var runs) ? -runs.Sum(r => r.Closure) : 0)
+        + _lines.Sum(line => line.SpacesByOp.TryGetValue(index, out var n) ? n * line.Stretch : 0);
+
+    /// <summary>#1752: the rewritten operand of the Tw operator at <paramref name="index"/>, if it re-justifies a line.</summary>
+    internal double? RewrittenWordSpacing(int index)
+    {
+        foreach (var line in _lines)
+            if (line.TwRewrites.TryGetValue(index, out var value)) return value;
+        return null;
+    }
+
+    /// <summary>#1752: the word spacing now in effect for the show at <paramref name="index"/>, if its line was re-justified.</summary>
+    internal double? WordSpacingFor(int index)
+    {
+        foreach (var line in _lines)
+            if (line.WordSpacing.TryGetValue(index, out var value)) return value;
+        return null;
+    }
 
     /// <summary>
     /// Target page-space shift of the text at <paramref name="x"/> on the line
-    /// through <paramref name="y"/>: minus every closure on that line to its left.
-    /// Zero off every affected line.
+    /// through <paramref name="y"/>: the line's own shift, minus every closure
+    /// to its left, plus every widened word space to its left. Zero off every
+    /// affected line.
     /// </summary>
     internal double ShiftAt(double x, double y)
     {
@@ -304,7 +608,7 @@ internal sealed class WidthClosureLedger
             if (line.Runs.Count == 0) continue;
             if (Math.Abs(y - line.Y) > SameLineEms * line.Em) continue;
             if (x < line.Lo - Eps || x > line.Hi + Eps) continue;
-            return -line.Runs.Where(r => r.StartX < x - Eps).Sum(r => r.Closure);
+            return line.ShiftAt(x);
         }
         return 0;
     }
