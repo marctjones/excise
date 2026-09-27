@@ -738,20 +738,23 @@ public static class PdfDocumentRedactionExtensions
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, bool wholeWord, int pageNumber,
         List<HyphenatedTermCandidate> hyphenated, List<WordWrapTermCandidate> wordWrapped)
     {
-        var text = BuildSearchText(letters, joinEveryLineChange: true);
+        var lines = new PageLines(letters);
+        var text = BuildSearchText(lines, lines.StreamOrder, joinEveryLineChange: true);
         foreach (var (_, from, to) in Locate(letters, text, searchText, caseSensitive, wholeWord, accept: _ => true))
         {
-            for (var v = text.CharToLetter[from] + 1; v <= text.CharToLetter[to]; v++)
+            // #1884: a break is judged between the glyphs either side of it. A
+            // blank glyph left at the end of the line does not bridge it, for
+            // the matcher or here.
+            Letter? last = null;
+            for (var v = text.CharToLetter[from]; v <= text.CharToLetter[to]; v++)
             {
-                // A blank glyph between the two lines bridges the break for the
-                // matcher as it bridges any gap.
-                var last = text.View[v - 1];
                 var next = text.View[v];
-                if (string.IsNullOrWhiteSpace(last.Value) || string.IsNullOrWhiteSpace(next.Value)
-                    || SameLine(last, next))
-                    continue;
-                var hyphen = IsHyphen(last.Value);
-                if (!hyphen && IsLineWrap(last, next)) continue;
+                if (string.IsNullOrWhiteSpace(next.Value)) continue;
+                var previous = last;
+                last = next;
+                if (previous == null || lines.SameLine(previous, next)) continue;
+                var hyphen = IsHyphen(previous.Value);
+                if (!hyphen && lines.IsWrap(previous, next)) continue;
 
                 var at = text.CharToLetter.IndexOf(v, from);
                 if (at < 0 || at > to) break;
@@ -762,33 +765,24 @@ public static class PdfDocumentRedactionExtensions
                 break;
             }
         }
+
+        // #1883: a line with a wide gap inside it may end before the gap (a
+        // column of one line beside the block). Not a wrap excise can confirm,
+        // and not one to call clean.
+        foreach (var (block, wrap) in lines.GapWraps)
+        {
+            var gapText = BuildSearchText(lines, block, joinEveryLineChange: true);
+            foreach (var (_, from, to) in Locate(letters, gapText, searchText, caseSensitive, wholeWord, accept: _ => true))
+            {
+                var at = gapText.CharToLetter.IndexOf(wrap, from);
+                if (at <= from || at > to) continue;
+                wordWrapped.Add(new WordWrapTermCandidate(pageNumber, gapText.Text[from..at].TrimEnd(), gapText.Text[at..(to + 1)]));
+            }
+        }
     }
 
     private static bool IsHyphen(string value) =>
         value == "-" || value == "‐" || value == "­";
-
-    /// <summary>
-    /// #1791: whether <paramref name="next"/> starts the line after the one
-    /// <paramref name="last"/> ends, in the same block — the one line change a
-    /// phrase is matched across.
-    /// </summary>
-    /// <remarks>
-    /// The next line of a block starts back at its left edge, one line pitch
-    /// down: its first glyph lies wholly left of the previous line's last glyph,
-    /// and no more than 2.5 sizes lower (double spacing). A continuation that
-    /// jumps up (the next column), to the right (another column or cell) or
-    /// straight down (a glyph stacked under the last: vertical or rotated text)
-    /// is not a wrap. The size is the larger of the font size and the glyph
-    /// height, because a unit font scaled by <c>Tm</c> reports a size of 1.
-    /// </remarks>
-    private static bool IsLineWrap(Letter last, Letter next)
-    {
-        var a = last.GlyphRectangle.Normalize();
-        var b = next.GlyphRectangle.Normalize();
-        var size = Math.Max(Math.Max(last.FontSize, next.FontSize), Math.Max(a.Height, b.Height));
-        var drop = (a.Bottom + a.Top) / 2 - (b.Bottom + b.Top) / 2;
-        return drop > 0.5 * size && drop <= 2.5 * size && b.Right <= a.Left;
-    }
 
     /// <summary>
     /// Find every occurrence of <paramref name="searchText"/> in the
@@ -802,6 +796,9 @@ public static class PdfDocumentRedactionExtensions
     /// typographic variation doesn't block a match. Matches are
     /// non-overlapping — greedy left-to-right. A match may wrap onto the next
     /// line of its block (#1791); <see cref="LinesOf"/> splits it for removal.
+    /// A block whose lines the stream does not draw one after the other (two
+    /// columns drawn row by row) is searched line after line as well (#1883);
+    /// only a match across such a wrap is taken from that search.
     /// </remarks>
     internal static List<List<Letter>> FindTextMatches(
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive,
@@ -809,19 +806,36 @@ public static class PdfDocumentRedactionExtensions
     {
         if (string.IsNullOrEmpty(searchText) || letters.Count == 0)
             return new List<List<Letter>>();
-        var text = BuildSearchText(letters, joinEveryLineChange: false);
-        return Locate(letters, text, searchText, caseSensitive, wholeWord, IsSpatiallyCoherent)
+        var lines = new PageLines(letters);
+        var matches = Locate(letters, BuildSearchText(lines, lines.StreamOrder, joinEveryLineChange: false),
+                searchText, caseSensitive, wholeWord, slice => IsSpatiallyCoherent(lines, slice))
             .Select(m => m.Letters).ToList();
+        if (lines.OffStreamBlocks.Count == 0) return matches;
+
+        var taken = new HashSet<Letter>(matches.SelectMany(m => m), ReferenceEqualityComparer.Instance);
+        foreach (var block in lines.OffStreamBlocks)
+        {
+            var blockText = BuildSearchText(lines, block, joinEveryLineChange: false);
+            foreach (var (slice, _, _) in Locate(letters, blockText, searchText, caseSensitive, wholeWord,
+                         m => IsSpatiallyCoherent(lines, m) && lines.CrossesOffStreamWrap(m)))
+            {
+                if (slice.Exists(taken.Contains)) continue;
+                matches.Add(slice);
+                taken.UnionWith(slice);
+            }
+        }
+        return matches;
     }
 
     /// <summary>A page's letters as one searchable string (<see cref="BuildSearchText"/>).</summary>
-    /// <param name="View">The letters with overprinted copies collapsed (#1047).</param>
+    /// <param name="View">The letters searched, in order, with overprinted copies collapsed (#1047).</param>
     /// <param name="SpanStart">Per view letter, the first original letter it stands for.</param>
     /// <param name="SpanEnd">Per view letter, the last original letter it stands for.</param>
     /// <param name="Text">The string searched.</param>
     /// <param name="CharToLetter">Per character of <paramref name="Text"/>, its view letter.</param>
+    /// <param name="Lines">The page's line model.</param>
     private sealed record SearchText(
-        List<Letter> View, List<int> SpanStart, List<int> SpanEnd, string Text, List<int> CharToLetter);
+        List<Letter> View, List<int> SpanStart, List<int> SpanEnd, string Text, List<int> CharToLetter, PageLines Lines);
 
     /// <summary>
     /// The page's letters as the one string both the matcher and the wrap net
@@ -842,7 +856,7 @@ public static class PdfDocumentRedactionExtensions
     /// shows 7.</para>
     ///
     /// <para>#1791: a space is also inferred at a line WRAP
-    /// (<see cref="IsLineWrap"/>), which stands in for the space a producer does
+    /// (<see cref="PageLines.IsWrap"/>), which stands in for the space a producer does
     /// not draw at the end of a line, so a phrase of any length matches across
     /// it. A line-end hyphen joins nothing there: it stays, as it reads. Any
     /// other line change joins nothing either: text continuing anywhere but the
@@ -855,25 +869,20 @@ public static class PdfDocumentRedactionExtensions
     /// letter), so a match's removed slice is unchanged; a needle without that
     /// space simply cannot span the gap.</para>
     /// </remarks>
-    private static SearchText BuildSearchText(IReadOnlyList<Letter> letters, bool joinEveryLineChange)
+    /// <param name="lines">The page's line model.</param>
+    /// <param name="order">The view letters to read, in order: the stream, or one block line after line (#1883).</param>
+    /// <param name="joinEveryLineChange">Join every line change (the net) rather than only a wrap.</param>
+    private static SearchText BuildSearchText(PageLines lines, IReadOnlyList<int> order, bool joinEveryLineChange)
     {
-        var (view, spanStart, spanEnd) = CollapseOverprintedGlyphs(letters);
-
-        // #1177: median left-to-right advance over SAME-LINE adjacent glyphs, so a
-        // word gap is judged RELATIVE to the document's own spacing (JoinText's
-        // WordGapAdvanceFactor rule). An absolute font-size fraction misfires on
-        // uniformly loose spacing (a per-glyph-Tm fixture at 7pt pitch reads every
-        // narrow glyph's trailing gap as a space); the relative rule does not.
-        var advances = new List<double>();
-        for (var k = 1; k < view.Count; k++)
+        var view = new List<Letter>(order.Count);
+        var spanStart = new List<int>(order.Count);
+        var spanEnd = new List<int>(order.Count);
+        foreach (var v in order)
         {
-            if (string.IsNullOrWhiteSpace(view[k - 1].Value) || string.IsNullOrWhiteSpace(view[k].Value))
-                continue;
-            if (!SameLine(view[k - 1], view[k])) continue;
-            var adv = view[k].GlyphRectangle.Normalize().Left - view[k - 1].GlyphRectangle.Normalize().Left;
-            if (adv > 0) advances.Add(adv);
+            view.Add(lines.View[v]);
+            spanStart.Add(lines.SpanStart[v]);
+            spanEnd.Add(lines.SpanEnd[v]);
         }
-        var medianAdvance = MedianAdvance(advances);
 
         var sb = new StringBuilder(view.Count);
         var characterToLetter = new List<int>(view.Count);
@@ -885,7 +894,9 @@ public static class PdfDocumentRedactionExtensions
                 var current = view[letterIndex];
                 var lineChange = !string.IsNullOrWhiteSpace(previous.Value)
                     && !string.IsNullOrWhiteSpace(current.Value)
-                    && (joinEveryLineChange ? !SameLine(previous, current) : IsLineWrap(previous, current));
+                    && (joinEveryLineChange
+                        ? !lines.SameLineAt(order[letterIndex - 1], order[letterIndex])
+                        : lines.IsWrap(previous, current));
                 if (lineChange && IsHyphen(previous.Value))
                 {
                     if (joinEveryLineChange)
@@ -894,7 +905,7 @@ public static class PdfDocumentRedactionExtensions
                         characterToLetter.RemoveRange(characterToLetter.Count - previous.Value.Length, previous.Value.Length);
                     }
                 }
-                else if (lineChange || IsInferredWordGap(previous, current, medianAdvance))
+                else if (lineChange || lines.IsInferredWordGapAt(order[letterIndex - 1], order[letterIndex]))
                 {
                     sb.Append(' ');
                     characterToLetter.Add(letterIndex - 1);
@@ -906,7 +917,7 @@ public static class PdfDocumentRedactionExtensions
                 characterToLetter.Add(letterIndex);
         }
 
-        return new SearchText(view, spanStart, spanEnd, sb.ToString(), characterToLetter);
+        return new SearchText(view, spanStart, spanEnd, sb.ToString(), characterToLetter, lines);
     }
 
     /// <summary>
@@ -920,7 +931,7 @@ public static class PdfDocumentRedactionExtensions
     {
         var matches = new List<(List<Letter> Letters, int From, int To)>();
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        var (view, spanStart, spanEnd, fullText, characterToLetter) = text;
+        var (view, spanStart, spanEnd, fullText, characterToLetter, lines) = text;
 
         // Trim only the caller's needle. Trimming each candidate source window
         // lets matching start on an unrelated whitespace glyph, whose geometry
@@ -951,7 +962,7 @@ public static class PdfDocumentRedactionExtensions
                 bool BoundedBy(int neighbour, int inside) =>
                     neighbour < 0 || neighbour >= fullText.Length
                     || !TermMatch.IsWordChar(fullText[neighbour])
-                    || !SameLine(view[characterToLetter[neighbour]], view[characterToLetter[inside]]);
+                    || !lines.SameLine(view[characterToLetter[neighbour]], view[characterToLetter[inside]]);
                 if (wholeWord && !(BoundedBy(i - 1, i) && BoundedBy(endIndex + 1, endIndex)))
                 {
                     i++;
@@ -967,11 +978,13 @@ public static class PdfDocumentRedactionExtensions
                     // covers, so all overprinted copies are removed. Removing
                     // only the representative would leave the other stamps
                     // drawn and extractable — a redaction that looks done.
-                    var from = spanStart[firstLetter];
-                    var to = spanEnd[lastLetter];
-                    var slice = new List<Letter>(to - from + 1);
-                    for (var letterIndex = from; letterIndex <= to; letterIndex++)
-                        slice.Add(letters[letterIndex]);
+                    // Letter by letter, never a range of the stream: a block
+                    // read line after line (#1883) is not contiguous in it, and
+                    // the range would sweep in the other column (#942).
+                    var slice = new List<Letter>();
+                    for (var position = firstLetter; position <= lastLetter; position++)
+                        for (var letterIndex = spanStart[position]; letterIndex <= spanEnd[position]; letterIndex++)
+                            slice.Add(letters[letterIndex]);
                     if (accept(slice))
                     {
                         matches.Add((slice, i, endIndex));
@@ -1205,58 +1218,475 @@ public static class PdfDocumentRedactionExtensions
             && Math.Abs(a.StartY - b.StartY) <= tolY;
     }
 
-    /// <summary>Do the two glyphs sit on one line: vertical centres within half a font size.</summary>
-    private static bool SameLine(Letter a, Letter b)
-    {
-        var ra = a.GlyphRectangle.Normalize();
-        var rb = b.GlyphRectangle.Normalize();
-        return !(Math.Abs((ra.Bottom + ra.Top) / 2 - (rb.Bottom + rb.Top) / 2)
-            > 0.5 * Math.Max(a.FontSize, b.FontSize));
-    }
-
     /// <summary>
-    /// #1177: a horizontal word gap between two SAME-LINE glyphs — the boundary
-    /// JoinText inserts a space at (§ ~0.25em, matching poppler). Neither glyph is
-    /// already whitespace (a real space glyph separates on its own). A line change
-    /// is NOT a word gap: a wrap is <see cref="IsLineWrap"/>'s (#1791).
+    /// The page's line model, which the matcher and the wrap net share: the
+    /// letters with overprinted copies collapsed (#1047), the way each glyph's
+    /// line runs (#1882), and the line each line wraps onto (#1791, #1883).
     /// </summary>
-    private static bool IsInferredWordGap(Letter prev, Letter cur, double medianAdvance)
+    /// <remarks>
+    /// <para>#1882: every predicate is read in the glyph's own writing
+    /// direction, so text rotated by its matrix (landscape content drawn on a
+    /// portrait page with <c>0 1 -1 0 612 0 cm</c>) has lines, word gaps and
+    /// wraps exactly as upright text does. A glyph's direction is its shown
+    /// string's: the line from the string's first glyph origin to its last,
+    /// along which every §9.4.4 advance lies whatever the CTM and text matrix.
+    /// It is snapped to a quarter turn and the glyph's box is read in a frame
+    /// turned back by that much, which for an axis-aligned box is exact. A
+    /// string of one glyph takes the direction the pen travelled to the next
+    /// glyph when that is one advance; one that gives no direction (or a
+    /// synthetic form letter, or a run the bidi pass reversed) takes an
+    /// adjacent string's, else it is upright. An upright glyph's box is its <see cref="Letter.GlyphRectangle"/>
+    /// unchanged, so an ordinary page reads exactly as it did.</para>
+    ///
+    /// <para>#1883: wraps are found by geometry, not by stream order. A page
+    /// that draws two columns row by row puts the other column's line between
+    /// two lines of a block, and a stream-order rule joined a line to the other
+    /// column's next line while never joining it to its own.</para>
+    /// </remarks>
+    private sealed class PageLines
     {
-        if (string.IsNullOrWhiteSpace(prev.Value) || string.IsNullOrWhiteSpace(cur.Value))
+        /// <summary>The letters with overprinted copies collapsed, in stream order.</summary>
+        public List<Letter> View { get; }
+
+        /// <summary>Per view letter, the first original letter it stands for.</summary>
+        public List<int> SpanStart { get; }
+
+        /// <summary>Per view letter, the last original letter it stands for.</summary>
+        public List<int> SpanEnd { get; }
+
+        /// <summary>Every view letter, in stream order.</summary>
+        public List<int> StreamOrder { get; }
+
+        /// <summary>#1883: the view letters of each block, line after line, that
+        /// wraps between lines the stream does not draw one after the other.</summary>
+        public List<List<int>> OffStreamBlocks { get; } = new();
+
+        /// <summary>#1883: a line with a wide gap inside it, read as if it ended
+        /// before the gap and wrapped there: its view letters up to the gap, then
+        /// the lines it wraps onto; <c>Break</c> is where the wrap starts in them.
+        /// The text after the gap may be a column of one line beside the block, or
+        /// the rest of a justified line; which is not knowable, so a match across
+        /// this break is reported, never removed.</summary>
+        public List<(List<int> Letters, int Break)> GapWraps { get; } = new();
+
+        // Quarter turns counterclockwise, only for glyphs that are not upright.
+        private readonly Dictionary<Letter, int> _turns = new(ReferenceEqualityComparer.Instance);
+
+        // Per view letter, its quarter turns and its box in its line's frame.
+        private readonly int[] _turnsAt;
+        private readonly PdfRectangle[] _rectAt;
+
+        // Every copy of a wrapping line's last glyph, and of the first glyph of
+        // the line it wraps onto, keyed to that wrap.
+        private readonly Dictionary<Letter, int> _wrapFrom = new(ReferenceEqualityComparer.Instance);
+        private readonly Dictionary<Letter, int> _wrapTo = new(ReferenceEqualityComparer.Instance);
+        private readonly List<bool> _wrapOffStream = new();
+
+        // #1177: median left-to-right advance over SAME-LINE adjacent glyphs, so a
+        // word gap is judged RELATIVE to the document's own spacing (JoinText's
+        // WordGapAdvanceFactor rule). An absolute font-size fraction misfires on
+        // uniformly loose spacing (a per-glyph-Tm fixture at 7pt pitch reads every
+        // narrow glyph's trailing gap as a space); the relative rule does not.
+        private readonly double _medianAdvance;
+
+        public PageLines(IReadOnlyList<Letter> letters)
+        {
+            AssignTurns(letters);
+            (View, SpanStart, SpanEnd) = CollapseOverprintedGlyphs(letters);
+            StreamOrder = Enumerable.Range(0, View.Count).ToList();
+            _turnsAt = new int[View.Count];
+            _rectAt = new PdfRectangle[View.Count];
+            for (var v = 0; v < View.Count; v++)
+            {
+                _turnsAt[v] = Turns(View[v]);
+                _rectAt[v] = RectIn(View[v], _turnsAt[v]);
+            }
+
+            var advances = new List<double>();
+            for (var k = 1; k < View.Count; k++)
+            {
+                if (string.IsNullOrWhiteSpace(View[k - 1].Value) || string.IsNullOrWhiteSpace(View[k].Value))
+                    continue;
+                if (!SameLineAt(k - 1, k)) continue;
+                var adv = _rectAt[k].Left - _rectAt[k - 1].Left;
+                if (adv > 0) advances.Add(adv);
+            }
+            _medianAdvance = MedianAdvance(advances);
+
+            LinkWraps(letters);
+        }
+
+        private void AssignTurns(IReadOnlyList<Letter> letters)
+        {
+            var from = new List<int>();
+            var turns = new List<int>();
+            for (var start = 0; start < letters.Count;)
+            {
+                var end = start;
+                while (end + 1 < letters.Count && OneString(letters[end], letters[end + 1])) end++;
+                from.Add(start);
+                turns.Add(TurnsAlong(letters[start], letters[end]));
+                start = end + 1;
+            }
+            from.Add(letters.Count);
+
+            // A string of one glyph shown where the last one left the pen (one
+            // Tj per glyph) travels one advance: that is its direction. Not a
+            // right-to-left run, which the bidi pass has put in reading order.
+            for (var r = 0; r + 1 < turns.Count; r++)
+            {
+                var (a, b) = (letters[from[r + 1] - 1], letters[from[r + 1]]);
+                var travel = Math.Sqrt(Math.Pow(b.StartX - a.StartX, 2) + Math.Pow(b.StartY - a.StartY, 2));
+                if (turns[r] < 0 && a.OperandByteOffset == 0 && b.OperandByteOffset == 0
+                    && !TextSelectionEngine.ContainsStrongRtl(a.Value) && !TextSelectionEngine.ContainsStrongRtl(b.Value)
+                    && travel >= 0.8 * a.Width && travel <= 1.25 * a.Width)
+                    turns[r] = TurnsAlong(a, b);
+            }
+
+            // A string with no direction of its own takes a neighbouring
+            // string's when it continues that string's line: forward, then back.
+            for (var r = 1; r < turns.Count; r++)
+                if (turns[r] < 0 && turns[r - 1] >= 0 && Continues(letters[from[r] - 1], letters[from[r]], turns[r - 1]))
+                    turns[r] = turns[r - 1];
+            for (var r = turns.Count - 2; r >= 0; r--)
+                if (turns[r] < 0 && turns[r + 1] >= 0 && Continues(letters[from[r + 1] - 1], letters[from[r + 1]], turns[r + 1]))
+                    turns[r] = turns[r + 1];
+
+            for (var r = 0; r < turns.Count; r++)
+                if (turns[r] > 0)
+                    for (var i = from[r]; i < from[r + 1]; i++) _turns[letters[i]] = turns[r];
+        }
+
+        /// <summary>A line of the stream: view letters <see cref="Start"/> to
+        /// <see cref="End"/> (trailing blanks included), <see cref="First"/> and
+        /// <see cref="Last"/> its first and last glyph that is not blank, and its
+        /// extent along the line.</summary>
+        private readonly record struct Line(int Start, int End, int First, int Last, double Left, double Right);
+
+        /// <summary>
+        /// Link each line to the line it wraps onto (#1791, #1883).
+        /// </summary>
+        /// <remarks>
+        /// <para>A line is a stream run of glyphs next to each other on one line.
+        /// A run that jumps along its line is a line of its own only where it heads
+        /// a column: a line start aligned with it one line above or below. So a
+        /// column drawn row by row splits off its neighbour, and a wide justified
+        /// gap does not split a line.</para>
+        /// <para>A line wraps onto a line below that starts wholly left of where it
+        /// ends (<see cref="IsLineWrapAt"/>) and shares its extent: the nearest such,
+        /// and of those the best aligned with its start, the stream's next line
+        /// on a tie. A line in the other column never shares the extent, so it is
+        /// never the wrap. At most one line wraps onto each: the nearest, then the
+        /// one ending farther along its row, so the text after a superscript
+        /// footnote mark wraps, not the text before it.</para>
+        /// </remarks>
+        private void LinkWraps(IReadOnlyList<Letter> letters)
+        {
+            var runs = new List<Line>();
+            var jumped = new List<bool>();
+            int start = 0, first = -1, last = -1;
+            var jump = false;
+            for (var v = 0; v < View.Count; v++)
+            {
+                if (string.IsNullOrWhiteSpace(View[v].Value)) continue;
+                if (last < 0) first = v;
+                else if (!SameLineAt(last, v) || !Adjacent(View[last], View[v]))
+                {
+                    runs.Add(LineOf(start, v - 1, first, last));
+                    jumped.Add(jump);
+                    jump = SameLineAt(last, v);
+                    start = first = v;
+                }
+                last = v;
+            }
+            if (last < 0) return;
+            runs.Add(LineOf(start, View.Count - 1, first, last));
+            jumped.Add(jump);
+
+            var runHeads = new Heads(this, runs);
+            bool HeadsAColumn(int r)
+            {
+                var head = runs[r].First;
+                return runHeads.Near(head, above: true).Concat(runHeads.Near(head, above: false)).Any(q =>
+                {
+                    var other = runs[q].First;
+                    var size = Math.Max(SizeAt(head), SizeAt(other));
+                    return Math.Abs(CentreAt(other) - CentreAt(head)) > 0.5 * size
+                        && Math.Abs(runs[q].Left - runs[r].Left) <= size;
+                });
+            }
+            var lines = new List<Line>(runs.Count);
+            var gaps = new List<(int Line, int End)>();
+            for (var r = 0; r < runs.Count; r++)
+            {
+                if (jumped[r] && lines.Count > 0 && !HeadsAColumn(r))
+                {
+                    gaps.Add((lines.Count - 1, runs[r].Start - 1));
+                    lines[^1] = LineOf(lines[^1].Start, runs[r].End, lines[^1].First, runs[r].Last);
+                }
+                else
+                    lines.Add(runs[r]);
+            }
+
+            var heads = new Heads(this, lines);
+            var wrapsOnto = new Dictionary<int, (int From, double Drop)>();
+            for (var s = 0; s < lines.Count; s++)
+            {
+                var end = lines[s].Last;
+                var candidates = new List<(int To, double Drop, double Shift)>();
+                foreach (var t in heads.Near(end, above: false))
+                {
+                    var next = lines[t].First;
+                    if (t == s || !IsLineWrapAt(end, next)
+                        || lines[t].Right <= lines[s].Left || lines[t].Left >= lines[s].Right)
+                        continue;
+                    candidates.Add((t, CentreAt(end) - CentreAt(next), Math.Abs(lines[t].Left - lines[s].Left)));
+                }
+                if (candidates.Count == 0) continue;
+
+                var tolerance = 0.5 * SizeAt(end);
+                var nearest = candidates.Min(c => c.Drop);
+                var row = candidates.Where(c => c.Drop <= nearest + tolerance).OrderBy(c => c.Shift).ToList();
+                var streamNext = row.FindIndex(c => c.To == s + 1 && c.Shift <= row[0].Shift + tolerance);
+                var best = row[Math.Max(streamNext, 0)];
+                // Two lines above one: the nearer, and on one row the one that
+                // ends farther along it (text after a superscript, not before).
+                if (!wrapsOnto.TryGetValue(best.To, out var held)
+                    || best.Drop < held.Drop - tolerance
+                    || (best.Drop <= held.Drop + tolerance && lines[s].Right > lines[held.From].Right))
+                    wrapsOnto[best.To] = (s, best.Drop);
+            }
+
+            var successor = Enumerable.Repeat(-1, lines.Count).ToArray();
+            foreach (var (to, (from, _)) in wrapsOnto)
+            {
+                var id = _wrapOffStream.Count;
+                _wrapOffStream.Add(to != from + 1);
+                for (var i = SpanStart[lines[from].Last]; i <= SpanEnd[lines[from].Last]; i++) _wrapFrom[letters[i]] = id;
+                for (var i = SpanStart[lines[to].First]; i <= SpanEnd[lines[to].First]; i++) _wrapTo[letters[i]] = id;
+                successor[from] = to;
+            }
+
+            // Each block, line after line, from its first line (one nothing
+            // wraps onto). A wrap always goes down its line, so this ends.
+            List<int> Block(int from, int start, int end, out bool offStream)
+            {
+                var block = new List<int>();
+                offStream = false;
+                for (var l = from; l >= 0; l = successor[l])
+                {
+                    for (var v = l == from ? start : lines[l].Start; v <= (l == from ? end : lines[l].End); v++)
+                        block.Add(v);
+                    offStream |= successor[l] >= 0 && successor[l] != l + 1;
+                }
+                return block;
+            }
+            for (var s = 0; s < lines.Count; s++)
+            {
+                if (successor[s] < 0 || wrapsOnto.ContainsKey(s)) continue;
+                var block = Block(s, lines[s].Start, lines[s].End, out var offStream);
+                if (offStream) OffStreamBlocks.Add(block);
+            }
+            foreach (var (line, end) in gaps)
+            {
+                if (successor[line] < 0) continue;
+                var block = Block(line, lines[line].Start, end, out _);
+                GapWraps.Add((block, block.IndexOf(lines[successor[line]].First)));
+            }
+        }
+
+        private Line LineOf(int start, int end, int first, int last)
+        {
+            var right = double.MinValue;
+            for (var v = first; v <= last; v++)
+                if (!string.IsNullOrWhiteSpace(View[v].Value))
+                    right = Math.Max(right, _rectAt[v].Right);
+            return new Line(start, end, first, last, _rectAt[first].Left, right);
+        }
+
+        /// <summary>The first glyphs of a page's lines, by direction and height, to find
+        /// the lines within wrapping distance of a glyph.</summary>
+        private sealed class Heads
+        {
+            private readonly PageLines _page;
+            private readonly List<(double Centre, int Line)>[] _byTurns =
+                [new(), new(), new(), new()];
+            private readonly double _reach;
+
+            public Heads(PageLines page, List<Line> lines)
+            {
+                _page = page;
+                for (var l = 0; l < lines.Count; l++)
+                {
+                    var head = lines[l].First;
+                    _byTurns[page._turnsAt[head]].Add((page.CentreAt(head), l));
+                    _reach = Math.Max(_reach, 2.5 * page.SizeAt(head));
+                }
+                foreach (var list in _byTurns) list.Sort();
+            }
+
+            /// <summary>Lines whose first glyph lies above (or below) view letter
+            /// <paramref name="glyph"/>, within the farthest a line can wrap.</summary>
+            public IEnumerable<int> Near(int glyph, bool above)
+            {
+                var list = _byTurns[_page._turnsAt[glyph]];
+                var centre = _page.CentreAt(glyph);
+                var (lo, hi) = above ? (centre, centre + _reach) : (centre - _reach, centre);
+                var i = list.BinarySearch((lo, int.MinValue));
+                for (i = i < 0 ? ~i : i; i < list.Count && list[i].Centre <= hi; i++)
+                    yield return list[i].Line;
+            }
+        }
+
+        /// <summary>Whether <paramref name="next"/> is the first glyph of the line the
+        /// line ending in <paramref name="last"/> wraps onto.</summary>
+        public bool IsWrap(Letter last, Letter next) =>
+            _wrapFrom.TryGetValue(last, out var from) && _wrapTo.TryGetValue(next, out var to) && from == to;
+
+        /// <summary>Whether a match crosses a wrap between lines the stream does not draw one after the other.</summary>
+        public bool CrossesOffStreamWrap(IReadOnlyList<Letter> match)
+        {
+            Letter? last = null;
+            foreach (var letter in match)
+            {
+                if (string.IsNullOrWhiteSpace(letter.Value)) continue;
+                if (last != null && _wrapFrom.TryGetValue(last, out var from)
+                    && _wrapTo.TryGetValue(letter, out var to) && from == to && _wrapOffStream[from])
+                    return true;
+                last = letter;
+            }
             return false;
-        var fontSize = Math.Max(prev.FontSize, cur.FontSize);
-        if (fontSize <= 0) return false;
-        // Same line only — a line change is not a word gap.
-        if (!SameLine(prev, cur)) return false;
-        var a = prev.GlyphRectangle.Normalize();
-        var b = cur.GlyphRectangle.Normalize();
-        // Must be a real forward gap (overlapping/overprinted stamps are never a gap).
-        if (b.Left <= a.Right) return false;
-        // A font's glyph bounds do not tile perfectly: normal adjacent glyphs
-        // can have a sub-point gap (canvas.pdf's "e" → "s" is 0.1pt).  The
-        // left-to-left advance is naturally wider after a wide glyph, so it
-        // cannot by itself prove a word boundary.  Require meaningful blank
-        // space between the painted bounds before applying the relative
-        // advance rule (#1198).
-        // FontSize is not a dependable scale here: a text matrix can make it
-        // report 1 while the painted glyph is several points wide. Require a
-        // gap that is material relative to the preceding painted glyph too.
-        // This preserves a word split across text operators with a small
-        // positioning adjustment (freeculture.pdf's visible "th" + "at")
-        // without allowing a genuine word-sized gap to concatenate words.
-        var minimumBlank = Math.Max(0.25 * fontSize, 0.5 * Math.Abs(a.Width));
-        if (b.Left - a.Right <= minimumBlank) return false;
-        // Relative to the line's own advance. Keep this aligned with
-        // JoinText's WordGapAdvanceFactor (1.5): the source can split one
-        // visible word across text-showing operators and apply a modest
-        // positioning adjustment at that split (freeculture.pdf's "th" +
-        // "at"). A lower threshold invents a space there, so a term that
-        // mutool correctly reads as "that" becomes unmatchable (#1198).
-        // fall back to a font-size fraction only when no median is available.
-        var advance = b.Left - a.Left;
-        return medianAdvance > 0
-            ? advance > medianAdvance * 1.5
-            : b.Left - a.Right > 0.25 * fontSize;
+        }
+
+        private double CentreAt(int v) => (_rectAt[v].Bottom + _rectAt[v].Top) / 2;
+
+        /// <summary>The size a wrap is measured in: the larger of the font size and the glyph
+        /// height, because a unit font scaled by <c>Tm</c> reports a size of 1.</summary>
+        private double SizeAt(int v) => Math.Max(View[v].FontSize, _rectAt[v].Height);
+
+        /// <summary>Whether two stream-adjacent glyphs lie next to each other on one line turned by <paramref name="turns"/>.</summary>
+        private static bool Continues(Letter a, Letter b, int turns)
+        {
+            var ra = RectIn(a, turns);
+            var rb = RectIn(b, turns);
+            return Adjacent(a, b)
+                && Math.Abs((ra.Bottom + ra.Top) / 2 - (rb.Bottom + rb.Top) / 2) <= 0.5 * Math.Max(a.FontSize, b.FontSize);
+        }
+
+        /// <summary>Whether <paramref name="b"/> is the glyph after <paramref name="a"/> in one
+        /// shown string: the next code of the same string, or the first of a later
+        /// string of the same <c>TJ</c> array.</summary>
+        private static bool OneString(Letter a, Letter b) =>
+            a.OperandByteOffset >= 0 && b.OperandByteOffset >= 0
+            && (b.TjElementIndex == a.TjElementIndex
+                ? b.OperandByteOffset == a.OperandByteOffset + a.CodeByteLength
+                : a.TjElementIndex >= 0 && b.TjElementIndex > a.TjElementIndex && b.OperandByteOffset == 0);
+
+        /// <summary>Quarter turns from +x to the pen's travel between two origins; -1 when it did not move.</summary>
+        private static int TurnsAlong(Letter first, Letter last)
+        {
+            var dx = last.StartX - first.StartX;
+            var dy = last.StartY - first.StartY;
+            if (Math.Max(Math.Abs(dx), Math.Abs(dy)) < 1e-6) return -1;
+            return Math.Abs(dx) >= Math.Abs(dy) ? (dx > 0 ? 0 : 2) : (dy > 0 ? 1 : 3);
+        }
+
+        private int Turns(Letter letter) => _turns.Count > 0 && _turns.TryGetValue(letter, out var turns) ? turns : 0;
+
+        /// <summary>The glyph box in its line's frame: x along the writing direction, y up the glyph.</summary>
+        private static PdfRectangle RectIn(Letter letter, int turns)
+        {
+            var r = letter.GlyphRectangle.Normalize();
+            return turns switch
+            {
+                1 => new PdfRectangle(r.Bottom, -r.Right, r.Top, -r.Left),
+                2 => new PdfRectangle(-r.Right, -r.Top, -r.Left, -r.Bottom),
+                3 => new PdfRectangle(-r.Top, r.Left, -r.Bottom, r.Right),
+                _ => r,
+            };
+        }
+
+        /// <summary>Do the two glyphs sit on one line: one direction, centres within half a font size.</summary>
+        public bool SameLine(Letter a, Letter b)
+        {
+            var turns = Turns(a);
+            return turns == Turns(b) && OneLine(RectIn(a, turns), RectIn(b, turns), Math.Max(a.FontSize, b.FontSize));
+        }
+
+        /// <summary><see cref="SameLine"/> for two view letters.</summary>
+        public bool SameLineAt(int a, int b) =>
+            _turnsAt[a] == _turnsAt[b] && OneLine(_rectAt[a], _rectAt[b], Math.Max(View[a].FontSize, View[b].FontSize));
+
+        private static bool OneLine(PdfRectangle a, PdfRectangle b, double fontSize) =>
+            !(Math.Abs((a.Bottom + a.Top) / 2 - (b.Bottom + b.Top) / 2) > 0.5 * fontSize);
+
+        /// <summary>
+        /// #1791: whether view letter <paramref name="next"/> could start the line
+        /// after the one view letter <paramref name="last"/> ends, in the same block.
+        /// </summary>
+        /// <remarks>
+        /// The next line of a block starts back at its left edge, one line pitch
+        /// down: its first glyph lies wholly left of the previous line's last glyph,
+        /// and no more than 2.5 sizes lower (double spacing). A continuation that
+        /// jumps up (the next column), to the right (another column or cell) or
+        /// straight down (a glyph stacked under the last in upright text) is not a
+        /// wrap. Left and down are the line's own (#1882).
+        /// </remarks>
+        private bool IsLineWrapAt(int last, int next)
+        {
+            if (_turnsAt[last] != _turnsAt[next]) return false;
+            var size = Math.Max(SizeAt(last), SizeAt(next));
+            var drop = CentreAt(last) - CentreAt(next);
+            return drop > 0.5 * size && drop <= 2.5 * size && _rectAt[next].Right <= _rectAt[last].Left;
+        }
+
+        /// <summary>
+        /// #1177: a word gap between two SAME-LINE glyphs, along their line (#1882)
+        /// — the boundary JoinText inserts a space at (§ ~0.25em, matching poppler).
+        /// Neither glyph is already whitespace (a real space glyph separates on its
+        /// own). A line change is NOT a word gap: a wrap is <see cref="IsWrap"/>'s (#1791).
+        /// Both are view letters.
+        /// </summary>
+        public bool IsInferredWordGapAt(int previous, int current)
+        {
+            var (prev, cur) = (View[previous], View[current]);
+            var medianAdvance = _medianAdvance;
+            if (string.IsNullOrWhiteSpace(prev.Value) || string.IsNullOrWhiteSpace(cur.Value))
+                return false;
+            var fontSize = Math.Max(prev.FontSize, cur.FontSize);
+            if (fontSize <= 0) return false;
+            // Same line only — a line change is not a word gap.
+            if (!SameLineAt(previous, current)) return false;
+            var a = _rectAt[previous];
+            var b = _rectAt[current];
+            // Must be a real forward gap (overlapping/overprinted stamps are never a gap).
+            if (b.Left <= a.Right) return false;
+            // A font's glyph bounds do not tile perfectly: normal adjacent glyphs
+            // can have a sub-point gap (canvas.pdf's "e" → "s" is 0.1pt).  The
+            // left-to-left advance is naturally wider after a wide glyph, so it
+            // cannot by itself prove a word boundary.  Require meaningful blank
+            // space between the painted bounds before applying the relative
+            // advance rule (#1198).
+            // FontSize is not a dependable scale here: a text matrix can make it
+            // report 1 while the painted glyph is several points wide. Require a
+            // gap that is material relative to the preceding painted glyph too.
+            // This preserves a word split across text operators with a small
+            // positioning adjustment (freeculture.pdf's visible "th" + "at")
+            // without allowing a genuine word-sized gap to concatenate words.
+            var minimumBlank = Math.Max(0.25 * fontSize, 0.5 * Math.Abs(a.Width));
+            if (b.Left - a.Right <= minimumBlank) return false;
+            // Relative to the line's own advance. Keep this aligned with
+            // JoinText's WordGapAdvanceFactor (1.5): the source can split one
+            // visible word across text-showing operators and apply a modest
+            // positioning adjustment at that split (freeculture.pdf's "th" +
+            // "at"). A lower threshold invents a space there, so a term that
+            // mutool correctly reads as "that" becomes unmatchable (#1198).
+            // fall back to a font-size fraction only when no median is available.
+            var advance = b.Left - a.Left;
+            return medianAdvance > 0
+                ? advance > medianAdvance * 1.5
+                : b.Left - a.Right > 0.25 * fontSize;
+        }
     }
 
     private static double MedianAdvance(List<double> advances)
@@ -1271,19 +1701,28 @@ public static class PdfDocumentRedactionExtensions
     /// Reconstruction can reorder runs in the extracted sequence, and an
     /// iterative redaction pass must not combine "You" in one column with an
     /// unrelated "r" on another line into a synthetic "your" (#942).
-    /// Whitespace boundaries are allowed to jump, and so is a line wrap
-    /// (<see cref="IsLineWrap"/>, #1791): a phrase continues on the next line.
+    /// Consecutive glyphs must be adjacent, or a line wrap
+    /// (<see cref="PageLines.IsWrap"/>, #1791): a phrase continues on the next line.
+    /// Whitespace between them may also jump along the line (a justified gap),
+    /// but not onto another line: a space glyph left at the foot of a column
+    /// does not join the next column's head, exactly as when there is none (#1884).
     /// </summary>
-    private static bool IsSpatiallyCoherent(IReadOnlyList<Letter> letters)
+    private static bool IsSpatiallyCoherent(PageLines lines, IReadOnlyList<Letter> letters)
     {
-        for (var i = 1; i < letters.Count; i++)
+        Letter? last = null;
+        var blank = false;
+        foreach (var letter in letters)
         {
-            if (string.IsNullOrWhiteSpace(letters[i - 1].Value) ||
-                string.IsNullOrWhiteSpace(letters[i].Value))
+            if (string.IsNullOrWhiteSpace(letter.Value))
+            {
+                blank = last != null;
                 continue;
-
-            if (!Adjacent(letters[i - 1], letters[i]) && !IsLineWrap(letters[i - 1], letters[i]))
+            }
+            if (last != null && !Adjacent(last, letter) && !lines.IsWrap(last, letter)
+                && !(blank && lines.SameLine(last, letter)))
                 return false;
+            last = letter;
+            blank = false;
         }
 
         return true;

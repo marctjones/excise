@@ -54,7 +54,21 @@ public class WordWrapRedactionTests
         UnitFontTm,
         /// <summary>As <see cref="Tj"/> on a <c>/Rotate 90</c> page.</summary>
         Rotate90,
+        /// <summary>One <c>Tj</c> per word and one per space: a one-letter word is a string
+        /// of one glyph, whose own origins give no writing direction (#1882).</summary>
+        TjPerWord,
+        /// <summary>One <c>Tj</c> per glyph: no string has a direction of its own (#1882).</summary>
+        TjPerGlyph,
     }
+
+    /// <summary>#1882: the matrix that turns the fixture's upright coordinates
+    /// onto the portrait page, by degrees counterclockwise.</summary>
+    private static readonly Dictionary<int, double[]> Rotations = new()
+    {
+        [90] = [0, 1, -1, 0, 612, 0],
+        [180] = [-1, 0, 0, -1, 612, 792],
+        [270] = [0, -1, 1, 0, 0, 792],
+    };
 
     public static TheoryData<string, int, Shape> WrappedNames()
     {
@@ -120,6 +134,94 @@ public class WordWrapRedactionTests
             foreach (var profile in new[] { RedactionProfile.Standard, RedactionProfile.Maximum })
                 data.Add(term, line1, line2, profile);
         return data;
+    }
+
+    public static TheoryData<int, Shape, bool, string, int> RotatedWraps()
+    {
+        var data = new TheoryData<int, Shape, bool, string, int>();
+        foreach (var degrees in Rotations.Keys)
+            foreach (var shape in new[] { Shape.Tj, Shape.KernedTj, Shape.TrailingSpace, Shape.TjPerWord, Shape.TjPerGlyph })
+                foreach (var viaTm in new[] { false, true })
+                {
+                    data.Add(degrees, shape, viaTm, "Quentin Barnaby Holloway", 2);
+                    data.Add(degrees, shape, viaTm, "Quentin A Holloway", 2);
+                    data.Add(degrees, shape, viaTm, "Quentin A Holloway", 1);
+                }
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(RotatedWraps))]
+    public void ANameWrappedInTextRotatedByItsMatrix_IsRemovedFromBothLines(
+        int degrees, Shape shape, bool viaTm, string name, int wrapAfter)
+    {
+        // #1882: landscape content on a portrait page, turned by the CTM or by
+        // the text matrix itself. Every line is vertical or upside down in user
+        // space, and a y-only line model read each glyph as a line of its own:
+        // the wrapped name was neither matched nor reported.
+        RequireOracles();
+        var words = name.Split(' ');
+        var pdf = BuildPdf(shape, Rotations[degrees], viaTm,
+            (72, 500, $"{Lead} {string.Join(' ', words.Take(wrapAfter))}"),
+            (72, 486, $"{string.Join(' ', words.Skip(wrapAfter))} {Tail}"));
+        AssertReadersRead(pdf, name);
+
+        var (report, saved, output) = Redact(pdf, name);
+        try
+        {
+            report.MatchesLocated.Should().Be(1, $"the one wrapped occurrence is matched ({report})");
+            report.VerifiedRemovals.Should().Be(1, report.ToString());
+            report.WordWrapCandidates.Should().BeEmpty("a confirmed wrap is removed, not merely reported");
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+
+            AssertNameGone(saved, output, name, "signed by", "on behalf of the company");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void RotatedText_TwoSequentialRedactions_WithACurlyQuoteADollarAndParentheses()
+    {
+        // CLAUDE.md rule 9 at 90 degrees: the second redaction runs on the
+        // content stream the first rebuilt, and both terms carry characters
+        // that are escaped or folded (a right single quote the user types as
+        // an apostrophe, $, parentheses).
+        RequireOracles();
+        var pdf = BuildPdf(Shape.Tj, Rotations[90], viaTm: false,
+            (72, 500, "Paid $1,250 \\(net\\) to Siobhan O\\222Rourke"),
+            (72, 486, "Brannigan on behalf of the company."));
+        var output = Path.Combine(Path.GetTempPath(), $"excise-1882-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var doc = PdfDocument.Open(pdf))
+            {
+                var first = doc.RedactText("Siobhan O'Rourke Brannigan", RedactionOptions.Default);
+                first.VerifiedRemovals.Should().Be(1, first.ToString());
+                first.IsCleanSuccess.Should().BeTrue(first.ToString());
+                var second = doc.RedactText("$1,250 (net)", RedactionOptions.Default);
+                second.VerifiedRemovals.Should().Be(1, second.ToString());
+                second.IsCleanSuccess.Should().BeTrue(second.ToString());
+                doc.Save(output);
+            }
+
+            var saved = File.ReadAllBytes(output);
+            foreach (var fragment in new[] { "Siobhan", "Rourke", "Brannigan", "1,250" })
+                SavedPdfLeakScanner.FindTerm(saved, fragment).Should().BeEmpty($"'{fragment}' must leave the file");
+            foreach (var (tool, text) in Readings(output))
+            {
+                foreach (var fragment in new[] { "Siobhan", "Rourke", "Brannigan", "1,250", "(net)" })
+                    text.Should().NotContain(fragment, $"{tool} must not read '{fragment}'");
+                text.Should().Contain("Paid", $"{tool} must still read the text before the first term");
+                text.Should().Contain("on behalf of the company", $"{tool} must still read the second line");
+            }
+        }
+        finally
+        {
+            File.Delete(output);
+        }
     }
 
     [Theory]
@@ -204,8 +306,11 @@ public class WordWrapRedactionTests
         }
     }
 
-    [Fact]
-    public void ANameContinuedAtTheTopOfTheNextColumn_IsReported_AndLeftInPlace()
+    [Theory]
+    [InlineData(Shape.Tj)]
+    [InlineData(Shape.TrailingSpace)]
+    [InlineData(Shape.KernedTj)]
+    public void ANameContinuedAtTheTopOfTheNextColumn_IsReported_AndLeftInPlace(Shape shape)
     {
         RequireOracles();
         const string name = "Quentin Barnaby Holloway";
@@ -213,7 +318,9 @@ public class WordWrapRedactionTests
         // first line, above it and to the right, begins "Holloway". A reader
         // may well read that as the name, but the geometry is not a line wrap
         // excise can confirm, so it must be REPORTED and nothing removed.
-        var (report, saved, output) = Redact(BuildPdf(Shape.Tj,
+        // #1884: whether or not the producer left a space glyph at the foot of
+        // the first column, which used to let the match jump anywhere.
+        var (report, saved, output) = Redact(BuildPdf(shape,
             (72, 700, "First column text"),
             (72, 686, "ends with Quentin Barnaby"),
             (320, 700, "Holloway opens the second"),
@@ -227,6 +334,236 @@ public class WordWrapRedactionTests
             report.IsCleanSuccess.Should().BeFalse("a readable occurrence is still on the page");
 
             AssertAllPresent(saved, output, "Quentin", "Barnaby", "Holloway", "First column text", "second");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    [Theory]
+    [InlineData(Shape.Tj)]
+    [InlineData(Shape.TrailingSpace)]
+    [InlineData(Shape.KernedTj)]
+    [InlineData(Shape.UnitFontTm)]
+    public void ANameWrappedInAColumnDrawnRowByRow_IsRemoved_AndTheOtherColumnIsKept(Shape shape)
+    {
+        // #1883: the page draws its two columns row by row, so the right
+        // column's first line sits in the stream between the two lines the
+        // name wraps across. Poppler reads the column as a block; MuPDF reads
+        // stream order and never forms the name, so a check by MuPDF alone
+        // called the page clean while "Redacted 0" left it readable.
+        RequireOracles();
+        const string name = "Quentin Barnaby Holloway";
+        var pdf = BuildPdf(shape,
+            (72, 700, "Signed by Quentin Barnaby"),
+            (320, 700, "Right column first line"),
+            (72, 686, "Holloway on behalf"),
+            (320, 686, "Right column second line"));
+        AssertPopplerReads(pdf, name);
+
+        var (report, saved, output) = Redact(pdf, name);
+        try
+        {
+            report.MatchesLocated.Should().Be(1, report.ToString());
+            report.VerifiedRemovals.Should().Be(1, report.ToString());
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+
+            AssertNameGone(saved, output, name, "Signed by", "on behalf");
+            // The match is removed line by line, never as one stream range: the
+            // right column's first line lies between its halves (#942).
+            AssertAllPresent(saved, output, "Right column first line", "Right column second line",
+                "Right", "column", "first", "second", "Signed", "behalf");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void ANameWrappedOverThreeRowsOfAColumnDrawnRowByRow_IsRemovedFromEveryLine()
+    {
+        RequireOracles();
+        const string name = "Octavia Lucinda Pemberton Vasquez Thornbury";
+        var pdf = BuildPdf(Shape.Tj,
+            (72, 700, "Signed by Octavia Lucinda"),
+            (320, 700, "Right column first line"),
+            (72, 686, "Pemberton Vasquez"),
+            (320, 686, "Right column second line"),
+            (72, 672, "Thornbury on behalf"),
+            (320, 672, "Right column third line"));
+        AssertPopplerReads(pdf, name);
+
+        var (report, saved, output) = Redact(pdf, name);
+        try
+        {
+            report.VerifiedRemovals.Should().Be(1, report.ToString());
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+            AssertNameGone(saved, output, name, "Signed by", "on behalf");
+            AssertAllPresent(saved, output, "Right column first line", "Right column second line",
+                "Right column third line");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void ANameWrappedInTheRightColumnOfARowByRowPage_IsRemoved_AndTheLeftColumnIsKept()
+    {
+        RequireOracles();
+        const string name = "Quentin Barnaby Holloway";
+        var pdf = BuildPdf(Shape.Tj,
+            (72, 700, "Left column first line"),
+            (320, 700, "Witnessed by Quentin Barnaby"),
+            (72, 686, "Left column second line"),
+            (320, 686, "Holloway in person"));
+        AssertPopplerReads(pdf, name);
+
+        var (report, saved, output) = Redact(pdf, name);
+        try
+        {
+            report.VerifiedRemovals.Should().Be(1, report.ToString());
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+            AssertNameGone(saved, output, name, "Witnessed by", "in person");
+            AssertAllPresent(saved, output, "Left column first line", "Left column second line");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void AWideGapInsideALine_DoesNotSplitIt_AndAWrapAfterItIsRemoved()
+    {
+        // #1883: a line drawn in two pieces with a gap of four ems between
+        // them (a justified or tabbed line). The second piece heads no column,
+        // so it is still the end of the line that wraps onto the next: were it
+        // a line of its own, the first piece would take the wrap and the name
+        // would be left in place.
+        RequireOracles();
+        const string name = "Quentin Barnaby Holloway";
+        var (report, saved, output) = Redact(BuildPdf(Shape.Tj,
+            (72, 700, "This agreement was"),
+            (220, 700, "signed by Quentin Barnaby"),
+            (72, 686, $"Holloway {Tail}")), name);
+        try
+        {
+            report.VerifiedRemovals.Should().Be(1, report.ToString());
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+            AssertNameGone(saved, output, name, "This agreement was", "signed by", "on behalf of the company");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void ANameWrappedBesideAOneLineColumn_IsReported_AndLeftInPlace()
+    {
+        // #1883: the right column has one line, drawn between the two lines
+        // the name wraps across. With no line of its own above or below, it
+        // cannot be told from the rest of a justified line, so the geometry
+        // does not confirm the wrap: the name is reported, never called clean.
+        RequireOracles();
+        const string name = "Quentin Barnaby Holloway";
+        var pdf = BuildPdf(Shape.Tj,
+            (72, 700, "Signed by Quentin Barnaby"),
+            (320, 700, "Right column only line"),
+            (72, 686, "Holloway on behalf"));
+        AssertPopplerReads(pdf, name);
+
+        var (report, saved, output) = Redact(pdf, name);
+        try
+        {
+            report.MatchesLocated.Should().Be(0, "an unconfirmed wrap is not joined");
+            report.WordWrapCandidates.Should().ContainSingle(report.ToString());
+            report.WordWrapCandidates[0].BeforeBreak.Should().Be("Quentin Barnaby");
+            report.WordWrapCandidates[0].AfterBreak.Should().Be("Holloway");
+            report.IsCleanSuccess.Should().BeFalse("a readable occurrence is still on the page");
+            AssertAllPresent(saved, output, "Quentin", "Barnaby", "Holloway", "Right column only line");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void AWrapAfterASuperscriptFootnoteMark_IsRemoved()
+    {
+        // #1883, measured on scotus-trump-v-us.pdf page 64: a raised footnote
+        // mark splits its line in the stream, and both the text before it and
+        // the text after it lie above the next line's start. The text after
+        // it ends the line; the text before it must not take the wrap.
+        RequireOracles();
+        const string name = "the President";
+        var pdf = BuildPdf(Shape.Tj,
+            (72, 700, "(2020)."),
+            (111, 707, "3"),
+            (120, 700, "An important difference is that the"),
+            (72, 686, "President is entitled to appeal."));
+        AssertReadersRead(pdf, name);
+
+        var (report, saved, output) = Redact(pdf, name);
+        try
+        {
+            report.VerifiedRemovals.Should().Be(1, report.ToString());
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+            AssertNameGone(saved, output, name, "(2020).", "An important difference is that", "is entitled to appeal");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void TheEndOfOneColumnsLineAndTheNextLineOfTheOtherColumn_AreNotJoined()
+    {
+        // #1883: on the same row-by-row page, the right column's first line
+        // and the left column's second line are consecutive in the stream,
+        // one line pitch apart, the second starting left of where the first
+        // ends. Joined by stream order, "line Holloway" matched and was removed.
+        RequireOracles();
+        var (report, saved, output) = Redact(BuildPdf(Shape.Tj,
+            (72, 700, "Signed by Quentin Barnaby"),
+            (320, 700, "Right column first line"),
+            (72, 686, "Holloway on behalf"),
+            (320, 686, "Right column second line")), "line Holloway");
+        try
+        {
+            report.MatchesLocated.Should().Be(0, "the right column's line does not wrap onto the left column's");
+            AssertAllPresent(saved, output, "Right column first line", "Holloway on behalf");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void ALineInTheRightColumnAndTheNextLineInTheLeft_AreNotJoined_AndAreReported()
+    {
+        // #1883: a table row whose last cell is in the right column, then the
+        // next row's first cell at the left margin. One line pitch down and
+        // wholly left of where the first ends, like a wrap, but the two lines
+        // share no extent: no block holds both. Stream order joined them.
+        RequireOracles();
+        const string name = "Quentin Barnaby Holloway";
+        var (report, saved, output) = Redact(BuildPdf(Shape.Tj,
+            (320, 700, "Name Quentin Barnaby"),
+            (72, 686, "Holloway Street office")), name);
+        try
+        {
+            report.MatchesLocated.Should().Be(0, "a line in another column is not the next line of this one");
+            report.WordWrapCandidates.Should().ContainSingle("consecutive in the stream, so the net reports them");
+            report.IsCleanSuccess.Should().BeFalse(report.ToString());
+            AssertAllPresent(saved, output, "Quentin", "Barnaby", "Holloway", "office");
         }
         finally
         {
@@ -257,15 +594,17 @@ public class WordWrapRedactionTests
         }
     }
 
-    [Fact]
-    public void AContinuationBelowAndToTheRight_IsNotJoined()
+    [Theory]
+    [InlineData(Shape.Tj)]
+    [InlineData(Shape.TrailingSpace)]
+    public void AContinuationBelowAndToTheRight_IsNotJoined(Shape shape)
     {
         RequireOracles();
         const string name = "Quentin Barnaby Holloway";
         // Drawn one after the other, one line pitch apart, but the second
         // starts in another column to the RIGHT of where the first ends: a
         // table row, not a wrap. Joining it would redact across columns.
-        var (report, saved, output) = Redact(BuildPdf(Shape.Tj,
+        var (report, saved, output) = Redact(BuildPdf(shape,
             (72, 700, "Name Quentin Barnaby"),
             (320, 686, "Holloway Street office")), name);
         try
@@ -333,14 +672,15 @@ public class WordWrapRedactionTests
     /// </summary>
     private static void AssertNameGone(byte[] saved, string output, string name, params string[] kept)
     {
-        foreach (var word in name.Split(' '))
+        // A one-letter word is a byte any file holds; the readers judge it as a word.
+        foreach (var word in name.Split(' ').Where(w => w.Length >= 3))
             SavedPdfLeakScanner.FindTerm(saved, word).Should().BeEmpty($"'{word}' of the name must leave the file");
 
         foreach (var (tool, text) in Readings(output))
         {
             text.Should().NotContain(name, $"{tool} must not read the name across the break");
             foreach (var word in name.Split(' '))
-                text.Should().NotContain(word, $"{tool} must not read '{word}'");
+                text.Should().NotMatchRegex($@"\b{Regex.Escape(word)}\b", $"{tool} must not read '{word}'");
             foreach (var neighbour in kept)
                 text.Should().Contain(neighbour, $"{tool} must still read the neighbouring text '{neighbour}'");
         }
@@ -370,23 +710,79 @@ public class WordWrapRedactionTests
         }
     }
 
-    private static byte[] BuildPdf(Shape shape, params (double X, double Y, string Text)[] lines)
+    /// <summary>
+    /// A readable occurrence is the fixture's whole premise: MuPDF and Poppler
+    /// both read <paramref name="name"/> across the break in the input.
+    /// </summary>
+    private static void AssertReadersRead(byte[] pdf, string name)
+    {
+        var input = Path.Combine(Path.GetTempPath(), $"excise-wrap-in-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(input, pdf);
+        try
+        {
+            foreach (var (tool, text) in Readings(input))
+                text.Should().Contain(name, $"{tool} must read the name in the fixture");
+        }
+        finally
+        {
+            File.Delete(input);
+        }
+    }
+
+    /// <summary>#1883: Poppler, which reads a column as a block, reads
+    /// <paramref name="name"/> in the fixture. MuPDF reads stream order and may not.</summary>
+    private static void AssertPopplerReads(byte[] pdf, string name)
+    {
+        var input = Path.Combine(Path.GetTempPath(), $"excise-wrap-in-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(input, pdf);
+        try
+        {
+            var text = PdftotextTextExtractor.ExtractPage(input, 1);
+            text.Should().NotBeNull();
+            Regex.Replace(text!, @"\s+", " ").Should().Contain(name, "pdftotext must read the name in the fixture");
+        }
+        finally
+        {
+            File.Delete(input);
+        }
+    }
+
+    private static byte[] BuildPdf(Shape shape, params (double X, double Y, string Text)[] lines) =>
+        BuildPdf(shape, matrix: null, viaTm: shape == Shape.UnitFontTm, lines);
+
+    /// <summary>
+    /// One page, one text object per line. <paramref name="matrix"/> turns the
+    /// whole page: by <c>cm</c>, or with <paramref name="viaTm"/> folded into
+    /// each line's text matrix over a unit font.
+    /// </summary>
+    private static byte[] BuildPdf(
+        Shape shape, double[]? matrix, bool viaTm, params (double X, double Y, string Text)[] lines)
     {
         string Num(double v) => v.ToString(CultureInfo.InvariantCulture);
+        var m = matrix ?? [1, 0, 0, 1, 0, 0];
         var content = new StringBuilder();
+        if (matrix != null && !viaTm)
+            content.Append($"q {string.Join(' ', m.Select(Num))} cm\n");
         for (var i = 0; i < lines.Length; i++)
         {
             var (x, y, text) = lines[i];
             if (shape == Shape.TrailingSpace && i < lines.Length - 1)
                 text += " ";
-            var show = shape == Shape.KernedTj
-                ? "[" + string.Join(" -400 ", text.Split(' ').Select(w => $"({w})")) + "] TJ"
-                : $"({text}) Tj";
-            var position = shape == Shape.UnitFontTm
-                ? $"/F1 1 Tf 12 0 0 12 {Num(x)} {Num(y)} Tm"
+            var show = shape switch
+            {
+                Shape.KernedTj => "[" + string.Join(" -400 ", text.Split(' ').Select(w => $"({w})")) + "] TJ",
+                Shape.TjPerWord => string.Join(" ( ) Tj ", text.Split(' ').Select(w => $"({w}) Tj")),
+                Shape.TjPerGlyph => string.Join(" ", text.Select(c => $"({c}) Tj")),
+                _ => $"({text}) Tj",
+            };
+            var position = viaTm
+                ? $"/F1 1 Tf {Num(12 * m[0])} {Num(12 * m[1])} {Num(12 * m[2])} {Num(12 * m[3])} "
+                    + $"{Num(m[0] * x + m[2] * y + m[4])} {Num(m[1] * x + m[3] * y + m[5])} Tm"
                 : $"/F1 12 Tf {Num(x)} {Num(y)} Td";
             content.Append($"BT {position} {show} ET\n");
         }
+        if (matrix != null && !viaTm)
+            content.Append("Q\n");
 
         var rotate = shape == Shape.Rotate90 ? " /Rotate 90" : "";
         var body = content.ToString();
