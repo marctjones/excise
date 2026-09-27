@@ -183,6 +183,29 @@ public class RedactionWidthAlignmentTests : IDisposable
     }
 
     [Fact]
+    public void JustifiedLineWithAnInvisibleSpaceOfItsOwn_StretchesOnlyTheSpacesItShows()
+    {
+        // scotus-trump-v-us p.40 once more: an /Artifact space under 3 Tr sits
+        // between the footnote mark and the line's first word, with a Tw of its
+        // own. Stretching it widened nothing visible and moved the word after it.
+        var lines = Lines(Paragraph, (_, _) => 50, justifyTo: 490).Split('\n');
+        const string lead = "Pack", rest = "my box with SECRET liquor jugs today";
+        var y = Fmt(Top - Leading);
+        var restX = 50 + NaturalWidth(lead + " ");
+        var tw = (490 - 50 - NaturalWidth(lead + " " + rest)) / rest.Count(c => c == ' ');
+        lines[1] = $"BT /F1 12 Tf 50 {y} Td ({lead}) Tj ET\n" +
+                   $"BT /F1 12 Tf 0 Tw 3 Tr {Fmt(50 + NaturalWidth(lead))} {y} Td ( ) Tj 0 Tr ET\n" +
+                   $"BT /F1 12 Tf {Fmt(tw)} Tw {Fmt(restX)} {y} Td ({rest}) Tj ET";
+
+        var (before, after, _) = Redact(string.Join("\n", lines));
+
+        OnLine(after, 1).First(g => g.Char == "m").X.Should().BeApproximately(
+            OnLine(before, 1).First(g => g.Char == "m").X, 0.3, "no visible space stands before it");
+        LastOf(after).Should().BeApproximately(LastOf(before), 0.3, "the line still ends at the column edge");
+        OtherLinesStayed(before, after);
+    }
+
+    [Fact]
     public void JustifiedWithOneSharedWordSpacing_IsReportedNotRejustified()
     {
         // Courier: every line below has the same length and spacing, so one Tw

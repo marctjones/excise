@@ -338,9 +338,11 @@ internal sealed class WidthClosureLedger
         // inside the last glyph's box (Tc < 0), and widening it moves nothing.
         var lastStart = line.Letters.Where(l => !string.IsNullOrWhiteSpace(l.Value) && !removed.Contains(l))
                                     .Select(l => l.StartX).DefaultIfEmpty(left).Max();
-        // Tw widens only the single-byte code 32 (§9.3.3).
+        // Tw widens only the single-byte code 32 (§9.3.3). An invisible space
+        // (Tr 3 or 7) would take a share of the stretch and show none of it.
         var candidates = line.Letters
             .Where(l => l.Value == " " && l.CharacterCode == 32 && l.CodeByteLength == 1 &&
+                        l.TextRenderMode is not (3 or 7) &&
                         !removed.Contains(l) && l.StartX > left && l.StartX < lastStart - Eps)
             .ToHashSet<Letter>(ReferenceEqualityComparer.Instance);
 
