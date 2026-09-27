@@ -15,6 +15,7 @@ using AwesomeAssertions;
 using Excise.App.Tests.Utilities;
 using Excise.Core.Document;
 using Excise.Core.Graphics;
+using Excise.Core.Primitives;
 using Excise.Core.Text;
 using Excise.Avalonia.Controls;
 using Excise.Rendering.Differential;
@@ -135,6 +136,86 @@ public class RedactionMouseDragBroadeningTests
                 "only the targeted word may be removed on a rotated page");
             SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outPath), "ROTSECRET").Should().BeEmpty(
                 "on a /Rotate 90 page the redaction must remove the glyphs from the saved bytes");
+        }
+        finally { window.Close(); }
+    }
+
+    /// <summary>
+    /// #1161: a single box spanning two side-by-side text blocks (columns) must
+    /// remove BOTH runs of glyphs under it, not stop at whichever run the
+    /// drag started over. Verified the same way as the other drags here.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task DragAcrossColumnBoundary_RemovesBothColumnsUnderTheBox()
+    {
+        var (dir, src) = NewPdf("columns");
+        CreateLabeledPdf(src, rotation: 0,
+            ("KEEPABOVE", 100, 650), ("LEFTCOL", 100, 500), ("RIGHTCOL", 300, 500), ("KEEPBELOW", 100, 350));
+
+        var (window, vm, viewer, overlay, page) = await OpenInRedactionMode(src);
+        try
+        {
+            var spanningColumns = RectSpanning(page, "LEFTCOL", "RIGHTCOL");
+            await DoDrag(window, spanningColumns, page, overlay);
+            vm.RedactionWorkflow.PendingRedactions.Should().ContainSingle(
+                "one drag across the column gap makes one pending redaction");
+
+            var outPath = Path.Combine(dir, "out.pdf");
+            await ApplyAndSave(vm, outPath);
+
+            var text = SavedText(outPath);
+            text.Should().NotContain("LEFTCOL").And.NotContain("RIGHTCOL",
+                "a box that crosses the gap between two columns must remove glyphs from BOTH runs under it");
+            text.Should().Contain("KEEPABOVE").And.Contain("KEEPBELOW",
+                "content outside the box's vertical range must survive");
+            var saved = File.ReadAllBytes(outPath);
+            SavedPdfLeakScanner.FindTerm(saved, "LEFTCOL").Should().BeEmpty(
+                "the left column's glyphs must be removed, not merely hidden");
+            SavedPdfLeakScanner.FindTerm(saved, "RIGHTCOL").Should().BeEmpty(
+                "the right column's glyphs must be removed, not merely hidden");
+        }
+        finally { window.Close(); }
+    }
+
+    /// <summary>
+    /// #1161: a box drawn against a page whose /CropBox is smaller than its
+    /// /MediaBox must map through the CROP box's origin, not the media box's.
+    /// The target sits close to the crop box's right edge -- the seam where an
+    /// offset error in <see cref="PdfPage.VisualToContent"/> shows up as a
+    /// missed (or wrongly shifted) redaction rather than a merely-imprecise one.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task DragNearCropBoxEdge_RemovesTargetPositionedAtTheVisibleBoundary()
+    {
+        const double cropLeft = 50, cropBottom = 50, cropRight = 550, cropTop = 750;
+        var (dir, src) = NewPdf("cropedge");
+
+        var font = PdfFont.Helvetica(18);
+        var targetWidth = font.MeasureWidth("EDGESECRET");
+        var targetX = cropRight - 4 - targetWidth; // right edge lands just inside the crop's right edge
+
+        CreateLabeledPdfWithCropBox(src, new PdfRectangle(cropLeft, cropBottom, cropRight, cropTop),
+            ("KEEPCENTER", 200, 400), ("EDGESECRET", targetX, 400));
+
+        var (window, vm, viewer, overlay, page) = await OpenInRedactionMode(src);
+        try
+        {
+            page.CropBox.Should().Be(new PdfRectangle(cropLeft, cropBottom, cropRight, cropTop),
+                "the fixture must actually load a CropBox smaller than the MediaBox, or this proves nothing");
+
+            await DoDrag(window, ContentRectOf(page, "EDGESECRET"), page, overlay);
+            vm.RedactionWorkflow.PendingRedactions.Should().ContainSingle(
+                "one drag near the crop edge makes one pending redaction");
+
+            var outPath = Path.Combine(dir, "out.pdf");
+            await ApplyAndSave(vm, outPath);
+
+            var text = SavedText(outPath);
+            text.Should().NotContain("EDGESECRET",
+                "a box near the crop box's edge must still map through the crop box's own origin to the right glyphs");
+            text.Should().Contain("KEEPCENTER", "content away from the crop edge must survive");
+            SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outPath), "EDGESECRET").Should().BeEmpty(
+                "the near-edge redaction must remove the glyphs from the saved bytes, not just miss them visually");
         }
         finally { window.Close(); }
     }
@@ -381,6 +462,16 @@ public class RedactionMouseDragBroadeningTests
         return new PdfRectangle(left, bottom, right, top);
     }
 
+    /// <summary>The union of two words' content-space boxes -- a single drag rectangle spanning both (#1161).</summary>
+    private static PdfRectangle RectSpanning(PdfPage page, string wordA, string wordB)
+    {
+        var a = ContentRectOf(page, wordA);
+        var b = ContentRectOf(page, wordB);
+        return new PdfRectangle(
+            Math.Min(a.Left, b.Left), Math.Min(a.Bottom, b.Bottom),
+            Math.Max(a.Right, b.Right), Math.Max(a.Top, b.Top));
+    }
+
     private static (Point Start, Point End) ToWindowDragPoints(
         PdfRectangle contentRect, PdfPage page, Canvas overlay, Window window)
     {
@@ -404,6 +495,26 @@ public class RedactionMouseDragBroadeningTests
         }
         if (rotation != 0)
             page.Rotation = rotation;
+        doc.Save(path);
+    }
+
+    /// <summary>Like <see cref="CreateLabeledPdf"/>, but with an explicit /CropBox smaller than the /MediaBox (#1161).</summary>
+    private static void CreateLabeledPdfWithCropBox(string path, PdfRectangle cropBox, params (string Word, double X, double Y)[] items)
+    {
+        using var doc = PdfDocument.CreateNew();
+        var page = doc.Pages.AddBlank();
+        using (var graphics = page.GetGraphics())
+        {
+            var font = PdfFont.Helvetica(18);
+            foreach (var (word, x, y) in items)
+                graphics.DrawString(word, font, PdfBrush.Black, x, y);
+            graphics.Flush();
+        }
+        page.Dictionary["CropBox"] = new PdfArray(new PdfObject[]
+        {
+            new PdfInteger((long)cropBox.Left), new PdfInteger((long)cropBox.Bottom),
+            new PdfInteger((long)cropBox.Right), new PdfInteger((long)cropBox.Top),
+        });
         doc.Save(path);
     }
 
