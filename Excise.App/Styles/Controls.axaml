@@ -20,13 +20,18 @@
         </Setter>
     </Style>
 
-    <Style Selector="Button.modern-button:pointerover">
+    <!-- State styles target PART_ContentPresenter: FluentAvalonia's Button theme sets
+         Background/BorderBrush/Foreground on it directly in its :pointerover/:pressed
+         triggers, which outrank the TemplateBinding from the Button (#1801). -->
+    <Style Selector="Button.modern-button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
-    <Style Selector="Button.modern-button:pressed">
+    <Style Selector="Button.modern-button:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource PressedBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <Style Selector="Button.modern-button:disabled">
@@ -42,9 +47,10 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
-    <Style Selector="Button.modern-button.toggle.active:pointerover">
+    <Style Selector="Button.modern-button.toggle.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="#BBDEFB"/>
         <Setter Property="BorderBrush" Value="#0078D4"/>
+        <Setter Property="Foreground" Value="#0078D4"/>
     </Style>
 
     <!-- Primary Button (Apply Redaction) -->
@@ -55,14 +61,16 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
-    <Style Selector="Button.modern-button.primary:pointerover">
+    <Style Selector="Button.modern-button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="#F44336"/>
         <Setter Property="BorderBrush" Value="#F44336"/>
+        <Setter Property="Foreground" Value="White"/>
     </Style>
 
-    <Style Selector="Button.modern-button.primary:pressed">
+    <Style Selector="Button.modern-button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="#C62828"/>
         <Setter Property="BorderBrush" Value="#C62828"/>
+        <Setter Property="Foreground" Value="White"/>
     </Style>
 
     <Style Selector="Button.modern-button.primary:disabled">
