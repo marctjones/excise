@@ -395,14 +395,56 @@ public class FormXObjectRedactionTests
             "the form's span encloses none of the removed glyphs");
     }
 
-    private static byte[] MarkedContentPage(string pageContent, string formContent) => Build(
+    /// <summary>
+    /// #1895: a form's stray <c>Q</c> cannot pop below the <c>q</c> its <c>Do</c>
+    /// implies (§8.10.1; mutool ignores it and draws the text at x=370). Inlined
+    /// verbatim it popped the flattener's wrapper, the text after it lost the form
+    /// <c>/Matrix</c>, was located at x=70 and survived a redaction of x=370.
+    /// </summary>
+    [Fact]
+    public void RedactArea_FormWithAStrayQ_KeepsItsMatrixForTheGlyphsAfterIt()
+    {
+        var pdf = MarkedContentPage(
+            "/Fm0 Do",
+            "Q BT /F1 12 Tf 70 700 Td (SHIFTEDSECRET) Tj ET",
+            "/Matrix [1 0 0 1 300 0]");
+
+        using var doc = PdfDocument.Open(pdf);
+        doc.GetPage(1).RedactArea(new PdfRectangle(360, 695, 560, 716), RedactionOptions.Default with { DrawBox = false });
+
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "SHIFTEDSECRET").Should().BeEmpty(
+            "the form text is painted inside the area whatever Q the form holds");
+    }
+
+    /// <summary>
+    /// #1895: the state a form leaves behind ends with the form, so the page text
+    /// after the <c>Do</c> is drawn where it was (mutool: x=100, baseline 700), not
+    /// under the form's <c>cm</c> (a stray <c>Q</c>) or its <c>/Matrix</c> (an
+    /// unclosed <c>q</c>).
+    /// </summary>
+    [Theory]
+    [InlineData("Q 1 0 0 1 0 -400 cm 0 0 1 1 re f", "")]
+    [InlineData("q 0 0 1 1 re f", "/Matrix [1 0 0 1 0 -50]")]
+    public void RedactArea_FormWithUnbalancedQ_LeavesThePageStateForLaterGlyphs(string formContent, string formMatrix)
+    {
+        var pdf = MarkedContentPage(
+            "/Fm0 Do BT /F1 12 Tf 100 700 Td (PAGESECRET) Tj ET", formContent, formMatrix);
+
+        using var doc = PdfDocument.Open(pdf);
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716), RedactionOptions.Default with { DrawBox = false });
+
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "PAGESECRET").Should().BeEmpty(
+            "the page text after the form is painted inside the area");
+    }
+
+    private static byte[] MarkedContentPage(string pageContent, string formContent, string formMatrix = "") => Build(
         Obj("<< /Type /Catalog /Pages 2 0 R >>"),
         Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
         Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
             "/Resources << /Font << /F1 5 0 R >> /XObject << /Fm0 6 0 R >> >> >>"),
         Stream("", pageContent),
         Obj(HelveticaFont),
-        Stream("/Type /XObject /Subtype /Form /BBox [0 0 612 792]", formContent));
+        Stream($"/Type /XObject /Subtype /Form /BBox [0 0 612 792] {formMatrix}", formContent));
 
     // ---- builders ----
 
