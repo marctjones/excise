@@ -37,8 +37,8 @@ namespace Excise.Core.Text.Segmentation;
 /// → by all of it; justified → the closed width is spread over its word spaces
 /// by rewriting the line's own <c>Tw</c> operator (a Tw bump restored after the
 /// line would state the difference). Left-aligned and unknown lines keep their
-/// start. A justified line whose word spacing is not set by an operator of its
-/// own is reported, not guessed at.</para>
+/// start. A justified line none of whose word spaces is set by an operator of
+/// its own is reported, not guessed at.</para>
 /// <para>What the ledger cannot move it REPORTS (<see cref="Notes"/>), never
 /// skips silently: a run of rotated or skewed text, and glyphs on the line that
 /// no operator of this content stream draws.</para>
@@ -249,7 +249,7 @@ internal sealed class WidthClosureLedger
                 line.Base = closed;
                 break;
             case Alignment.Justified when !Rejustify(line, closed):
-                _notes.Add($"line at y={line.Y:F1}: justified, but its word spacing is not set by an " +
+                _notes.Add($"line at y={line.Y:F1}: justified, but none of its word spaces is set by an " +
                            "operator of its own, so it was not re-justified and ends " +
                            $"{closed:F1} pt short of its right margin");
                 break;
@@ -324,32 +324,45 @@ internal sealed class WidthClosureLedger
 
     /// <summary>
     /// #1752: spread the closed width over the line's word spaces by rewriting
-    /// the Tw operator that sets their spacing — only when every such operator
-    /// governs this line alone, so no other text moves and no operand restates
-    /// the old spacing. False when the line cannot be re-justified that way.
+    /// the Tw operators that set their spacing. Only a space whose Tw governs
+    /// this line alone takes part, so no other text moves and no operand
+    /// restates the old spacing; a space under a Tw shared with other text, or
+    /// shown by <c>"</c> (whose operand is its own Tw), keeps its width. False
+    /// when no space of the line can be re-justified that way.
     /// </summary>
     private bool Rejustify(Line line, double closed)
     {
         var removed = new HashSet<Letter>(line.Runs.SelectMany(r => r.Letters), ReferenceEqualityComparer.Instance);
-        var (left, right) = line.Ink;
+        var left = line.Ink.Left;
+        // A word space has a glyph starting after it: a trailing space can start
+        // inside the last glyph's box (Tc < 0), and widening it moves nothing.
+        var lastStart = line.Letters.Where(l => !string.IsNullOrWhiteSpace(l.Value) && !removed.Contains(l))
+                                    .Select(l => l.StartX).DefaultIfEmpty(left).Max();
         // Tw widens only the single-byte code 32 (§9.3.3).
-        var spaces = line.Letters
+        var candidates = line.Letters
             .Where(l => l.Value == " " && l.CharacterCode == 32 && l.CodeByteLength == 1 &&
-                        !removed.Contains(l) && l.StartX > left && l.StartX < right)
+                        !removed.Contains(l) && l.StartX > left && l.StartX < lastStart - Eps)
             .ToHashSet<Letter>(ReferenceEqualityComparer.Instance);
-        if (spaces.Count == 0) return false;
+
+        var shows = new List<(int Index, ContentOperator Op, int Tw, int Shown)>();
+        var spaces = new HashSet<Letter>(ReferenceEqualityComparer.Instance);
+        for (var i = 0; i < _operations.Count && candidates.Count > 0; i++)
+        {
+            var op = _operations[i];
+            if (op.Category != OperatorCategory.TextShowing || op.Name == "\"" || !OnLine(op, line)) continue;
+            var shown = _lettersOf(op).Distinct<Letter>(ReferenceEqualityComparer.Instance).Where(candidates.Contains).ToList();
+            if (shown.Count == 0 || GoverningWordSpacing(i) is not int tw || !GovernsOnly(tw, line)) continue;
+            shows.Add((i, op, tw, shown.Count));
+            spaces.UnionWith(shown);
+        }
+        if (spaces.Count == 0 || shows.Sum(s => s.Shown) != spaces.Count) return false;
         var stretch = closed / spaces.Count;
 
         var counts = new Dictionary<int, int>();
         var rewrites = new Dictionary<int, double>();
         var wordSpacing = new Dictionary<int, double>();
-        for (var i = 0; i < _operations.Count; i++)
+        foreach (var (i, op, tw, shown) in shows)
         {
-            var op = _operations[i];
-            if (op.Category != OperatorCategory.TextShowing || !OnLine(op, line)) continue;
-            var shown = _lettersOf(op).Distinct<Letter>(ReferenceEqualityComparer.Instance).Count(spaces.Contains);
-            if (shown == 0) continue;
-            if (GoverningWordSpacing(i) is not int tw || !GovernsOnly(tw, line)) return false;
             var m = op.TextTransform!.Value.Multiply(op.GraphicsTransform!.Value);
             var value = op.TextState!.WordSpacing + stretch / (op.TextState.HorizontalScaling / 100.0 * m.A);
             if (rewrites.TryGetValue(tw, out var other) && Math.Abs(other - value) > 1e-6) return false;
@@ -357,7 +370,6 @@ internal sealed class WidthClosureLedger
             wordSpacing[i] = value;
             counts[i] = shown;
         }
-        if (counts.Values.Sum() != spaces.Count) return false;
 
         line.Stretch = stretch;
         line.Spaces.UnionWith(spaces);

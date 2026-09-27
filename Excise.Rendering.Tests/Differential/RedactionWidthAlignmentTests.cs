@@ -141,6 +141,48 @@ public class RedactionWidthAlignmentTests : IDisposable
     }
 
     [Fact]
+    public void JustifiedLineWhoseLeadInSharesTheLineAbovesWordSpacing_IsRejustifiedOverItsOwnRun()
+    {
+        // scotus-trump-v-us p.40's shape: the line's lead-in run shows its space
+        // under the Tw that justifies the line above; the rest of the line has a
+        // Tw of its own. Only that Tw is rewritten and only its spaces widen, so
+        // the line still spans the column and the line above does not move.
+        var lines = Lines(Paragraph, (_, _) => 50, justifyTo: 490).Split('\n');
+        const string lead = "Pack ", rest = "my box with SECRET liquor jugs today";
+        var sharedTw = WordSpacingOf(string.Join("\n", lines), line: 0);
+        var ownTw = (490 - 50 - NaturalWidth(lead + rest) - sharedTw) / rest.Count(c => c == ' ');
+        lines[1] = $"BT /F1 12 Tf 50 {Fmt(Top - Leading)} Td ({lead}) Tj {Fmt(ownTw)} Tw ({rest}) Tj ET";
+        var content = string.Join("\n", lines);
+
+        var (before, after, _, saved) = RedactWithFile(content);
+
+        FirstOf(after).Should().BeApproximately(FirstOf(before), 0.3);
+        LastOf(after).Should().BeApproximately(LastOf(before), 0.3, "the line still ends at the column edge");
+        OtherLinesStayed(before, after);
+        TwOperands(saved).Should().NotContain(v => Math.Abs(v - ownTw) < 1e-3)
+            .And.Contain(v => Math.Abs(v - sharedTw) < 1e-3, "the shared Tw still justifies the line above");
+    }
+
+    [Fact]
+    public void JustifiedLineEndingInASpace_StillEndsAtTheColumnEdge()
+    {
+        // scotus-trump-v-us p.40 again: a negative Tc starts the trailing space
+        // inside the last glyph's box. Widening it moves nothing on the line, so
+        // counting it as a word space left the line one share short.
+        var lines = Lines(Paragraph, (_, _) => 50, justifyTo: 490).Split('\n');
+        const string text = "Pack my box with SECRET liquor jugs today";
+        const double tc = -0.05;
+        var tw = (490 - 50 - NaturalWidth(text) - tc * text.Length) / text.Count(c => c == ' ');
+        lines[1] = $"BT /F1 12 Tf {Fmt(tc)} Tc {Fmt(tw)} Tw 50 {Fmt(Top - Leading)} Td ({text} ) Tj 0 Tc ET";
+
+        var (before, after, _) = Redact(string.Join("\n", lines));
+
+        FirstOf(after).Should().BeApproximately(FirstOf(before), 0.3);
+        LastOf(after).Should().BeApproximately(LastOf(before), 0.3, "the line still ends at the column edge");
+        OtherLinesStayed(before, after);
+    }
+
+    [Fact]
     public void JustifiedWithOneSharedWordSpacing_IsReportedNotRejustified()
     {
         // Courier: every line below has the same length and spacing, so one Tw
