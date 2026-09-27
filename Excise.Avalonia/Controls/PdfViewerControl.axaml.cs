@@ -1011,8 +1011,32 @@ public partial class PdfViewerControl : UserControl
         return input;
     }
 
+    // #1897: a text field authored as a small box (a form designer's way of
+    // drawing a checkbox the user fills with an "x") reads oddly when its
+    // content sticks to the left edge. Thresholds are in PDF points (the
+    // field's own /Rect, not the viewer's zoomed dip size, so the box shape
+    // that decides this doesn't change as the user zooms) and were picked
+    // from a real one: the IRS W-9's classification-letter box is 28.8x11pt.
+    // A generous margin above that keeps ordinary short fields (SSN/EIN
+    // comb cells run 24pt tall) out: 40pt wide, 20pt tall.
+    private const double CheckboxStyledFieldMaxWidthPt = 40;
+    private const double CheckboxStyledFieldMaxHeightPt = 20;
+
+    // #1898: a genuinely multi-line field (e.g. the W-9's "Requester's name
+    // and address", 186x38pt) was getting FontSize = h*0.6 — sized as if the
+    // whole box were one line, so a 38pt-tall box got a ~23pt font — with no
+    // TextWrapping, so it still scrolled instead of wrapping. A multi-line
+    // field uses its own /DA point size (falling back to a plain 10pt, the
+    // same floor single-line fields already use) and wraps; box-height
+    // scaling stays for single-line fields, unaffected by this fix.
+    private const double DefaultMultilineFontSizePt = 10;
+
     private TextBox CreateTextFieldInput(Excise.Core.Document.PdfField field, double w, double h)
     {
+        bool looksLikeCheckbox = field.Rect is { } rect
+            && rect.Width <= CheckboxStyledFieldMaxWidthPt
+            && rect.Height <= CheckboxStyledFieldMaxHeightPt;
+
         var box = new TextBox
         {
             Text = field.Value ?? string.Empty,
@@ -1022,10 +1046,17 @@ public partial class PdfViewerControl : UserControl
             BorderBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0xCC, 0xAA, 0x00)),
             BorderThickness = new Thickness(1),
             Padding = new Thickness(2),
-            FontSize = Math.Max(10, h * 0.6),
+            FontSize = field.IsMultiline
+                ? field.DefaultAppearanceFontSize ?? DefaultMultilineFontSizePt
+                : Math.Max(10, h * 0.6),
+            TextWrapping = field.IsMultiline ? TextWrapping.Wrap : TextWrapping.NoWrap,
             VerticalContentAlignment = field.IsMultiline
                 ? global::Avalonia.Layout.VerticalAlignment.Top
                 : global::Avalonia.Layout.VerticalAlignment.Center,
+            HorizontalContentAlignment = looksLikeCheckbox
+                ? global::Avalonia.Layout.HorizontalAlignment.Center
+                : global::Avalonia.Layout.HorizontalAlignment.Left,
+            TextAlignment = looksLikeCheckbox ? TextAlignment.Center : TextAlignment.Left,
         };
 
         // Commit on Enter (single-line), Ctrl+Enter (multiline), or focus loss.

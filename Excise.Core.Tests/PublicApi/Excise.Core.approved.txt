@@ -603,6 +603,7 @@ namespace Excise.Core.Document
     public sealed class PdfField
     {
         public System.Collections.Generic.IReadOnlyList<string> ButtonExportValues { get; }
+        public double? DefaultAppearanceFontSize { get; }
         public string? DefaultValue { get; }
         public Excise.Core.Document.PdfFieldType FieldType { get; }
         public int Flags { get; }

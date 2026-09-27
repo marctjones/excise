@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using Excise.Core.Graphics;
 using Excise.Core.Primitives;
@@ -348,28 +347,11 @@ internal static class AcroFormFlattener
     }
 
     /// <summary>
-    /// Parse "(/Helv 10 Tf 0 g)" appearance string for a font size. Returns
-    /// 10 when /DA is missing or unparseable. Doesn't try to honor the font
-    /// or color — those would require resolving the AcroForm's /DR resources.
+    /// The field's /DA font size, or 10pt when it's missing or unparseable.
+    /// Doesn't try to honor the font or color — those would require
+    /// resolving the AcroForm's /DR resources.
     /// </summary>
-    private static double ParseFontSize(PdfField field)
-    {
-        var da = field.RawDictionary.GetStringOrNull("DA");
-        if (da == null) return 10.0;
-
-        // Look for "<num> Tf" pattern.
-        var tokens = da.Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-        for (int i = 1; i < tokens.Length; i++)
-        {
-            if (tokens[i] == "Tf" &&
-                double.TryParse(tokens[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture, out var size) &&
-                size > 0)
-            {
-                return size;
-            }
-        }
-        return 10.0;
-    }
+    private static double ParseFontSize(PdfField field) => field.DefaultAppearanceFontSize ?? 10.0;
 
     private static void RemoveWidgetAnnotations(PdfDocument document, PdfPage page, IEnumerable<PdfField> fields)
     {
