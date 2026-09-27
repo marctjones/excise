@@ -1,0 +1,22 @@
+# #1751 width-closing ratchet, read by RedactionWidthClosureRatchetTests: one term per real
+# document, redacted with WidthPolicy.CloseGap, its page measured with mutool -F stext against
+# the original. Terms are words unique on the page, mid-line, as scripts/bench-width-policy.py
+# picks them. outcome, best first:
+#   closed       the text before and after the term each moved as one, and the gap closed
+#   rejustified  the line kept both edges; the text after the term moved a share per word space
+#   reported     a WIDTH NOT CLOSED row names the line, whatever its geometry
+#   silent       not closed and not reported: only with the open issue that tracks it
+# A row may only improve. Raise a pin when the test says it improved; never lower one.
+doc	page	term	outcome	issue
+test-pdfs/smoke/state-ds82-passport-renewal.pdf	1	consult	closed
+test-pdfs/pdfjs/issue14627.pdf	1	message	closed
+test-pdfs/pdfjs/issue19182.pdf	1	Secretary	closed
+test-pdfs/smoke/scotus-trump-v-anderson.pdf	1	becoming	rejustified
+test-pdfs/smoke/scotus-trump-v-us.pdf	1	arguing	rejustified
+test-pdfs/smoke/scotus-trump-v-us.pdf	40	arguing	rejustified
+test-pdfs/smoke/irs-pub509-2026.pdf	1	looking	reported
+test-pdfs/smoke/irs-w4.pdf	1	higher	reported
+test-pdfs/smoke/cdc-vis-covid-19.pdf	1	severity	closed
+test-pdfs/smoke/irs-1040.pdf	1	financial	silent	#1751
+test-pdfs/smoke/irs-w9.pdf	1	mortgage	closed
+test-pdfs/smoke/state-ds11-passport.pdf	1	citizenship	closed
