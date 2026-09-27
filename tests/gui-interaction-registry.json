@@ -4,18 +4,18 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "32e68e2e1c132acc9fc3b4fc8c79e5beb8bfef38",
+  "sourceRevision": "508ba1275f9b0c17bab0ade4557ea1141743d40f",
   "summary": {
-    "interactions": 213,
-    "menuItems": 127,
+    "interactions": 214,
+    "menuItems": 128,
     "buttons": 77,
     "mouseGestures": 9,
-    "keyboardShortcuts": 29,
+    "keyboardShortcuts": 30,
     "declaredCommandIds": 129,
     "commandIdsReachableFromTheGui": 115,
     "commandIdsWithNoGuiPath": 5,
     "cliOnlyCommandIds": 9,
-    "controlsWithNoCommandId": 0,
+    "controlsWithNoCommandId": 1,
     "duplicateShortcuts": 0,
     "parameterisedCommandIds": 12
   },
@@ -1264,6 +1264,15 @@
     },
     {
       "kind": "menu",
+      "path": "Edit > Cut",
+      "label": "Cut",
+      "command": null,
+      "commandParameter": null,
+      "shortcut": "Ctrl+X",
+      "commandId": null
+    },
+    {
+      "kind": "menu",
       "path": "Edit > Discard Pending Type-over Edits",
       "label": "Discard Pending Type-over Edits",
       "command": "DiscardPendingTypewriterEditsCommand",
@@ -2045,6 +2054,11 @@
       "commandId": "app.closeDocument"
     },
     {
+      "shortcut": "Ctrl+X",
+      "path": "Edit > Cut",
+      "commandId": null
+    },
+    {
       "shortcut": "Ctrl+Y",
       "path": "Edit > <bound:RedoMenuHeader>",
       "commandId": "edit.redo"
@@ -2156,5 +2170,12 @@
     "text.extract",
     "text.letters"
   ],
-  "controlsWithNoCommandId": []
+  "controlsWithNoCommandId": [
+    {
+      "kind": "menu",
+      "path": "Edit > Cut",
+      "label": "Cut",
+      "command": null
+    }
+  ]
 }
