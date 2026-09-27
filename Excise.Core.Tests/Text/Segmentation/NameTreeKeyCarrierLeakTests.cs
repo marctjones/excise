@@ -183,6 +183,44 @@ public class NameTreeKeyCarrierLeakTests
         ((PdfString)link.GetOptional("Dest")!).Value.Should().Be("chapter", "a key that held no term keeps its name");
     }
 
+    /// <summary>
+    /// #1862: a reference that names NO destination was renamed only when a key it
+    /// named was, so it kept the term under Standard and a bare <c>ScrubTerms</c>.
+    /// It is masked like a key, and made unique so it cannot start resolving to
+    /// the destination the cut leaves it spelling.
+    /// </summary>
+    [Theory]
+    [InlineData(RedactionProfile.Standard, Entry.RedactText)]
+    [InlineData(RedactionProfile.Maximum, Entry.RedactText)]
+    [InlineData(RedactionProfile.Standard, Entry.ScrubTerms)]
+    public void ReferenceThatNamesNoDestination_IsMasked(RedactionProfile profile, Entry entry)
+    {
+        var pdf = CarrierTrapFixtures.WithCatalog(
+            "/Names << /Dests << /Names [(chapter) [3 0 R /XYZ 0 200 0]] >> >> /Outlines 6 0 R",
+            page: "/Annots [8 0 R]",
+            extra: new[]
+            {
+                "<< /Type /Outlines /First 7 0 R /Last 7 0 R /Count 1 >>",
+                $"<< /Title (Chapter) /Parent 6 0 R /Dest ({Latin} chapter) >>",
+                $"<< /Type /Annot /Subtype /Link /Rect [72 600 372 620] /A << /S /GoTo /D /{Latin}#20chapter >> >>",
+            });
+        SavedPdfLeakScanner.FindTerm(pdf, Latin).Should().NotBeEmpty("input-side control");
+        using var document = PdfDocument.Open(pdf);
+
+        if (entry == Entry.RedactText)
+            document.RedactText(Latin, RedactionOptions.ForProfile(profile));
+        else
+            PdfDocumentSanitizer.ScrubTerms(document, new[] { Latin }).Should().BeTrue();
+
+        var saved = document.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(saved, Latin).Should().BeEmpty("a dangling reference still spells the term");
+        if (profile == RedactionProfile.Maximum) return;
+        using var reopened = PdfDocument.Open(saved);
+        NamedReferences(reopened).Should().BeEquivalentTo(new[] { "chapter 2", "chapter 2" },
+            "the masked name must not resolve to the existing destination");
+        reopened.GetNamedDestinations().Should().ContainSingle().Which.Key.Should().Be("chapter");
+    }
+
     [Fact]
     public void LegacyDestsKey_IsRenamed_AndANameReferenceFollowsIt()
     {

@@ -785,9 +785,7 @@ public static class PdfDocumentSanitizer
             changed = true;
         }
 
-        if (destRenames.Count > 0)
-            RenameDestinationReferences(document, destRenames);
-        return changed;
+        return RenameDestinationReferences(document, scrub, destTaken, destRenames) | changed;
     }
 
     private static HashSet<string> KeyTexts(PdfDocument document, PdfDictionary? root) =>
@@ -826,21 +824,31 @@ public static class PdfDocumentSanitizer
         return renames[key] = unique;
     }
 
-    private static void RenameDestinationReferences(PdfDocument document, Dictionary<string, string> renames)
+    /// <summary>
+    /// A reference takes its destination's new name. One that names no destination
+    /// is masked as a key would be (#1862): it resolves to nothing, and it still
+    /// carries the term.
+    /// </summary>
+    private static bool RenameDestinationReferences(
+        PdfDocument document, CarrierScrub scrub, HashSet<string> taken, Dictionary<string, string> renames)
     {
+        var changed = false;
         foreach (var dict in Excise.Core.Text.Segmentation.RedactionFeatureStripper.ReachableDictionaries(document))
             foreach (var slot in dict.GetNameOrNull("S") == "GoTo" ? GoToSlots : DestinationSlots)
             {
                 switch (document.Resolve(dict.GetOptional(slot) ?? PdfNull.Instance))
                 {
-                    case PdfString name when renames.TryGetValue(name.Value, out var renamed):
+                    case PdfString name when MaskKey(scrub, name.Value, taken, renames) is { } renamed:
                         dict.Set(slot, new PdfString(renamed));
+                        changed = true;
                         break;
-                    case PdfName name when renames.TryGetValue(name.Value, out var renamed):
+                    case PdfName name when MaskKey(scrub, name.Value, taken, renames) is { } renamed:
                         dict.Set(slot, new PdfName(renamed));
+                        changed = true;
                         break;
                 }
             }
+        return changed;
     }
 
     private static readonly string[] DestinationSlots = { "Dest", "OpenAction" };
