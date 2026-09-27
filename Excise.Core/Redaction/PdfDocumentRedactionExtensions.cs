@@ -291,7 +291,7 @@ public static class PdfDocumentRedactionExtensions
                         // every RedactText call — including the documented case
                         // where a term below the sanitizer's 3-character floor
                         // deliberately leaves carriers alone.
-                        imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, options.Strategy, scrubDocumentCarriers: false, closeWidth: options.CloseWidth, removeAttachments: false);
+                        imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, options.Strategy, scrubDocumentCarriers: false, width: options.Width, removeAttachments: false);
                     }
 
                     // A box whose width equals the removed run is itself a

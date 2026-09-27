@@ -29,16 +29,23 @@ namespace Excise.Core.Text.Segmentation;
 /// but the PER-CHARACTER advances are gone, so the width side-channel a
 /// de-redactor reconstructs a word from never leaks. Not per-glyph.</para>
 ///
+/// <para>Under a width-closing policy the caller chooses each run's adjustment
+/// instead: none (the gap closes), or a content-independent reserve such as a
+/// FixedMarker's width (#1725) — never the removed run's own advance.</para>
+///
 /// <para>Returns null (the honest fallback) when it cannot safely split — a
 /// match with no byte offset (a synthetic letter), an operator that is not a
 /// text show, or an operand shape it does not model.</para>
 /// </summary>
 internal static class OperandGlyphSplitter
 {
+    /// <param name="runAdjustment">The TJ number that replaces one contiguous
+    /// removed run, given the run's first letter and its total advance in TJ
+    /// units; null emits none. Null keeps the #1045 default: the run's advance.</param>
     public static ContentOperator? TrySplit(
         ContentOperator op,
         IReadOnlyList<LetterMatch> toRemove,
-        bool closeWidth = false)
+        Func<Letter, double, double?>? runAdjustment = null)
     {
         if (toRemove.Count == 0) return null;
 
@@ -68,15 +75,15 @@ internal static class OperandGlyphSplitter
 
         // Removals grouped by the element they land in. For a Tj the letters
         // carry TjElementIndex -1; map that onto the single element 0.
-        var removalsByElement = new Dictionary<int, List<(int Start, int Len, double Disp)>>();
+        var removalsByElement = new Dictionary<int, List<(int Start, int Len, double Disp, Letter Letter)>>();
         foreach (var m in toRemove)
         {
             var el = op.Name == "Tj" ? 0 : m.Letter.TjElementIndex;
             if (el < 0 || el >= sourceElements.Count) return null;   // offset we can't place
             if (sourceElements[el] is not PdfString) return null;    // a number element can't hold glyphs
             if (!removalsByElement.TryGetValue(el, out var list))
-                removalsByElement[el] = list = new List<(int, int, double)>();
-            list.Add((m.Letter.OperandByteOffset, m.Letter.CodeByteLength, m.Letter.DisplacementThousandths));
+                removalsByElement[el] = list = new List<(int, int, double, Letter)>();
+            list.Add((m.Letter.OperandByteOffset, m.Letter.CodeByteLength, m.Letter.DisplacementThousandths, m.Letter));
         }
 
         var outElements = new List<PdfObject>(sourceElements.Count + removalsByElement.Count);
@@ -111,6 +118,7 @@ internal static class OperandGlyphSplitter
                 // and sum its advance — #1045: one adjustment, not per glyph.
                 double runDisp = 0;
                 var runEnd = start;
+                var runFirst = sorted[i].Letter;
                 while (i < sorted.Count && sorted[i].Start == runEnd)
                 {
                     runDisp += sorted[i].Disp;
@@ -119,12 +127,12 @@ internal static class OperandGlyphSplitter
                 }
 
                 // Default policy preserves layout by replaying the removed run's
-                // advance.  Width-closing deliberately omits that compensation:
-                // the following bytes then begin immediately after the preceding
-                // kept run, so neither the glyph gap nor a TJ operand encodes the
-                // removed run's measured width (#1145).
-                if (!closeWidth)
-                    newParts.Add(new PdfInteger(-(int)Math.Round(runDisp)));
+                // advance. Width-closing replaces it with the caller's choice,
+                // so neither the glyph gap nor a TJ operand encodes the removed
+                // run's measured width (#1145).
+                var adjustment = runAdjustment == null ? -runDisp : runAdjustment(runFirst, runDisp);
+                if (adjustment is double a)
+                    newParts.Add(new PdfInteger((int)Math.Round(a)));
                 cursor = runEnd;
                 elementRemoved = true;
             }

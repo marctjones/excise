@@ -106,14 +106,10 @@ internal static class RedactCommandHandler
             CaseSensitive = request.CaseSensitive,
             WholeWord = request.WholeWord,   // #1052
             DrawBox = request.DrawBox,
-            // #1755: FixedMarker exists and is fully implemented, but is NOT
-            // the default yet — measured to visually overlap the reflowed
-            // neighbour in the common case, not just when slack is short (see
-            // the remark on RedactionOptions.Width). --fixed-marker is an
-            // explicit opt-in with that limit stated; --close-width and
-            // --overshoot-box are the existing explicit opt-ins to their own
-            // narrower trade-offs. The implicit default stays
-            // CollapsePreserveLayout.
+            // #1755: --close-width, --overshoot-box and --fixed-marker are
+            // explicit opt-ins to their own trade-offs. The implicit default
+            // stays CollapsePreserveLayout; making FixedMarker the default is an
+            // open product decision (#1725).
             Width = request.CloseWidth ? WidthPolicy.CloseGap
                 : request.OvershootBox ? WidthPolicy.OvershootPreserveLayout   // #1189
                 : request.FixedMarker ? WidthPolicy.FixedMarker
@@ -304,10 +300,7 @@ internal readonly record struct RedactCommandRequest(
     bool OvershootBox = false,   // #1189
     // #1755: opt IN to WidthPolicy.FixedMarker -- closes the gap like
     // --close-width AND draws a content-independent covering box, unlike
-    // --close-width (no box at all). NOT the default: measured to visually
-    // overlap the reflowed neighbour in the common case (see the remark on
-    // RedactionOptions.Width) until the shift arithmetic accounts for the
-    // marker's own width.
+    // --close-width (no box at all). Not the default (#1725).
     bool FixedMarker = false,
     bool KeepAttachments = false,   // #1572 — opt out of removing every attachment
     // #1586 — the output profile. Standard is the default on every path; the

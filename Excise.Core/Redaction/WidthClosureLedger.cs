@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Excise.Core.Content;
+using Excise.Core.Document;
 using Excise.Core.Primitives;
 
 namespace Excise.Core.Text.Segmentation;
@@ -24,6 +25,11 @@ namespace Excise.Core.Text.Segmentation;
 /// than <see cref="ColumnGapEms"/>: a wider gap is a column gutter or a tab
 /// stop, and moving the text beyond it would itself measure the removed width
 /// against every other line of that column.</para>
+/// <para>A policy that keeps a gap of its own keeps it ONCE per redaction area,
+/// at the area's leftmost removed run: <see cref="WidthPolicy.FixedMarker"/>
+/// keeps exactly the marker's width (#1725), so the marker covers nothing that
+/// follows it and the gap is the same for every removed string. A term split
+/// across two runs is still one area and still one marker.</para>
 /// <para>What the ledger cannot move it REPORTS (<see cref="Notes"/>), never
 /// skips silently: a run of rotated or skewed text, and glyphs on the line that
 /// no operator of this content stream draws.</para>
@@ -45,10 +51,17 @@ internal sealed class WidthClosureLedger
     private sealed class Run
     {
         public required Letter First { get; init; }
+        public required List<Letter> Letters { get; init; }
         public required double StartX { get; init; }
         /// <summary>Page-space pen advance of the removed glyphs.</summary>
         public required double Width { get; init; }
-        public double Closure => Width;
+        /// <summary>Page-space length of one TJ unit in the run's operator.</summary>
+        public required double Unit { get; init; }
+        /// <summary>Index of the redaction area that removed the run's first glyph.</summary>
+        public required int Area { get; init; }
+        /// <summary>Page-space gap the policy keeps in place of the run.</summary>
+        public double Reserve { get; set; }
+        public double Closure => Width - Reserve;
     }
 
     /// <summary>One line: the glyphs on a baseline between two column-sized gaps.</summary>
@@ -71,19 +84,43 @@ internal sealed class WidthClosureLedger
 
     private WidthClosureLedger() { }
 
+    /// <param name="markerRight">FixedMarker only: where the marker drawn for
+    /// an area ends, given the area and the glyphs removed in it.</param>
     internal static WidthClosureLedger Build(
         IReadOnlyList<ContentOperator> operations,
         IReadOnlyList<Letter> letters,
-        IReadOnlyList<Removal> removals)
+        IReadOnlyList<Removal> removals,
+        IReadOnlyList<PdfRectangle> areas,
+        GlyphRemovalStrategy strategy,
+        Func<PdfRectangle, IReadOnlyList<Letter>, double>? markerRight)
     {
         var ledger = new WidthClosureLedger();
         foreach (var removal in removals)
-            ledger.AddRuns(removal, letters);
+            ledger.AddRuns(removal, letters, areas, strategy);
+        if (markerRight != null)
+            ledger.ReserveMarkers(areas, markerRight);
         ledger.NoteForeignGlyphs(operations);
         return ledger;
     }
 
-    private void AddRuns(Removal removal, IReadOnlyList<Letter> letters)
+    /// <summary>
+    /// #1725: keep room for each area's marker at its leftmost removed run, so
+    /// the text that follows starts where the marker ends instead of under it.
+    /// </summary>
+    private void ReserveMarkers(
+        IReadOnlyList<PdfRectangle> areas, Func<PdfRectangle, IReadOnlyList<Letter>, double> markerRight)
+    {
+        foreach (var group in _runsByOp.Values.SelectMany(r => r).Where(r => r.Area >= 0).GroupBy(r => r.Area))
+        {
+            var runs = group.OrderBy(r => r.StartX).ToList();
+            var removed = runs.SelectMany(r => r.Letters).ToList();
+            runs[0].Reserve = Math.Max(0, markerRight(areas[group.Key], removed) - runs[0].StartX);
+        }
+    }
+
+    private void AddRuns(
+        Removal removal, IReadOnlyList<Letter> letters,
+        IReadOnlyList<PdfRectangle> areas, GlyphRemovalStrategy strategy)
     {
         if (UnitOf(removal.Op) is not double unit)
         {
@@ -119,7 +156,15 @@ internal sealed class WidthClosureLedger
                 i++;
             }
 
-            var run = new Run { First = first, StartX = first.StartX, Width = thousandths * unit };
+            var run = new Run
+            {
+                First = first,
+                Letters = runLetters,
+                StartX = first.StartX,
+                Width = thousandths * unit,
+                Unit = unit,
+                Area = IndexOf(areas, a => strategy.Selects(first.GlyphRectangle, a)),
+            };
             runs.Add(run);
             LineAt(first, runLetters, letters).Runs.Add(run);
         }
@@ -201,6 +246,21 @@ internal sealed class WidthClosureLedger
             ? runs.Sum(r => r.Closure) / unit
             : 0;
 
+    /// <summary>
+    /// The operand split's adjustment for each removed run of operator
+    /// <paramref name="index"/>: the reserve, in that operator's TJ units, at the
+    /// run that holds it, and nothing (the gap closes) everywhere else —
+    /// including a run whose operator the ledger could not place.
+    /// </summary>
+    internal Func<Letter, double, double?> RunAdjustment(int index)
+    {
+        var runs = _runsByOp.TryGetValue(index, out var r) ? r : null;
+        return (first, _) =>
+            runs?.FirstOrDefault(run => ReferenceEquals(run.First, first)) is { Reserve: > 0 } reserved
+                ? -reserved.Reserve / reserved.Unit
+                : null;
+    }
+
     /// <summary>Page-space shift the pen chain of operator <paramref name="index"/> carries past its end.</summary>
     internal double InternalShift(int index) =>
         _runsByOp.TryGetValue(index, out var runs) ? -runs.Sum(r => r.Closure) : 0;
@@ -261,6 +321,13 @@ internal sealed class WidthClosureLedger
         if (!(m.A > 0) || Math.Abs(m.B) > 1e-6 * m.A || Math.Abs(m.C) > 1e-6 * Math.Abs(m.D)) return null;
         var unit = state.FontSize * (state.HorizontalScaling / 100.0) * m.A / 1000.0;
         return unit > 1e-9 && double.IsFinite(unit) ? unit : null;
+    }
+
+    private static int IndexOf(IReadOnlyList<PdfRectangle> areas, Func<PdfRectangle, bool> match)
+    {
+        for (var i = 0; i < areas.Count; i++)
+            if (match(areas[i])) return i;
+        return -1;
     }
 
     private static double RightOf(Letter l) => Math.Max(l.StartX + l.Width, l.GlyphRectangle.Normalize().Right);

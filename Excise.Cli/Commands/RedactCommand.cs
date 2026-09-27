@@ -31,10 +31,8 @@ internal static class RedactCommand
             Description = "Close the width gap like --close-width AND draw a covering box of ONE " +
                 "CONTENT-INDEPENDENT SIZE, so the redaction stays visibly marked (#1725) without the " +
                 "box's width leaking the removed run's length (#1715: 0% recall@5, same as --close-width, " +
-                "with a mark). NOT the default: measured to visually overlap the reflowed neighbouring " +
-                "text in the common case, not just when a line has little slack -- the shift that closes " +
-                "the gap does not yet account for the marker's own width. Review the output before " +
-                "relying on it for anything but the width-channel measurement itself.",
+                "with a mark). The line keeps exactly the marker's width, so the box covers none of the " +
+                "text that follows it.",
             DefaultValueFactory = _ => false,
         };
         var passwordOption = new Option<string?>("--password")

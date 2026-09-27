@@ -84,12 +84,24 @@ internal class GlyphRemover
     private static readonly AsyncLocal<bool> _blankInPlace = new();
 
     /// <summary>
-    /// #1145 — WIDTH-CLOSING mode, per-instance and off by default. When set,
-    /// reconstructed runs collapse the oversized gap a removed run leaves, so
-    /// the advance-width residue channel (#1116) is destroyed. Opt-in: the
-    /// width-preserving default is unchanged unless a caller sets this.
+    /// #1145 — the width policy, per-instance. The layout-preserving default
+    /// replays each removed run's advance; <see cref="WidthPolicy.CloseGap"/> and
+    /// <see cref="WidthPolicy.FixedMarker"/> take it out and close the line up
+    /// through a <see cref="WidthClosureLedger"/>, destroying the advance-width
+    /// residue channel (#1116).
     /// </summary>
-    public bool CloseWidth { get; set; }
+    public WidthPolicy Width { get; set; } = WidthPolicy.CollapsePreserveLayout;
+
+    /// <summary>
+    /// #1725 — under <see cref="WidthPolicy.FixedMarker"/>, the page-space x at
+    /// which the marker drawn for one redaction area ends, given that area and
+    /// the glyphs removed in it. The line keeps exactly that much room so the
+    /// marker covers nothing that follows. Null: the RedactText marker,
+    /// <see cref="PdfDocumentRedactionExtensions.FixedMarkerBoxFor"/>.
+    /// </summary>
+    internal Func<PdfRectangle, IReadOnlyList<Letter>, double>? MarkerRight { get; set; }
+
+    private bool ClosesWidth => Width is WidthPolicy.CloseGap or WidthPolicy.FixedMarker;
 
     private readonly LetterFinder _letterFinder;
     private readonly TextSegmenter _textSegmenter;
@@ -140,9 +152,11 @@ internal class GlyphRemover
             FindRemovals(operations, block, letters, redactionAreas, strategy, removals);
 
         WidthClosureLedger? ledger = null;
-        if (CloseWidth && removals.Count > 0)
+        if (ClosesWidth && removals.Count > 0)
         {
-            ledger = WidthClosureLedger.Build(operations, letters, removals.Values.ToList());
+            ledger = WidthClosureLedger.Build(
+                operations, letters, removals.Values.ToList(), redactionAreas, strategy,
+                Width == WidthPolicy.FixedMarker ? MarkerRight ?? FixedMarkerRight : null);
             WidthNotes.AddRange(ledger.Notes);
         }
 
@@ -174,6 +188,10 @@ internal class GlyphRemover
     /// line. Reported by the caller, never dropped.
     /// </summary>
     internal List<string> WidthNotes { get; } = new();
+
+    private static double FixedMarkerRight(PdfRectangle area, IReadOnlyList<Letter> removed) =>
+        PdfDocumentRedactionExtensions.FixedMarkerBoxFor(
+            ComputeBoundsFromLetters(removed), removed).Normalize().Right;
 
     private static BlockInfo? FindBlockStartingAt(List<BlockInfo> blocks, int index)
     {
@@ -249,7 +267,9 @@ internal class GlyphRemover
             // which REPAIRS it (§9.4 forbids an unterminated BT); the split keeps
             // operators in place and would leave the input's invalidity intact.
             var splitOp = block.ImplicitEnd
-                ? null : OperandGlyphSplitter.TrySplit(op, removal.ToRemove, CloseWidth);
+                ? null
+                : OperandGlyphSplitter.TrySplit(op, removal.ToRemove,
+                    ledger?.RunAdjustment(idx));
             if (splitOp != null)
             {
                 blankedOperators[idx] = splitOp;
@@ -526,14 +546,17 @@ internal class GlyphRemover
                 Shift = ledger == null ? null : ledger.ShiftAt,   // #1751
             };
 
-    private static PdfRectangle ComputeBoundsFromMatches(List<LetterMatch> matches)
+    private static PdfRectangle ComputeBoundsFromMatches(List<LetterMatch> matches) =>
+        ComputeBoundsFromLetters(matches.Select(m => m.Letter).ToList());
+
+    private static PdfRectangle ComputeBoundsFromLetters(IReadOnlyList<Letter> glyphs)
     {
-        if (matches.Count == 0) return new PdfRectangle(0, 0, 0, 0);
+        if (glyphs.Count == 0) return new PdfRectangle(0, 0, 0, 0);
         double left = double.MaxValue, bottom = double.MaxValue;
         double right = double.MinValue, top = double.MinValue;
-        foreach (var m in matches)
+        foreach (var g in glyphs)
         {
-            var r = m.Letter.GlyphRectangle;
+            var r = g.GlyphRectangle;
             if (r.Left < left) left = r.Left;
             if (r.Bottom < bottom) bottom = r.Bottom;
             if (r.Right > right) right = r.Right;
