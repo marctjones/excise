@@ -114,8 +114,6 @@ public class RedactionRemoteCollateralTests
                 File.AppendAllText(reportPath,
                     $"{fixtureName}\t{term}\t{inOccurrence.Count}\t{boundary.Count}\t{remote.Count}\t{pages}\t{sample}{Environment.NewLine}");
             }
-            if (Environment.GetEnvironmentVariable("REDACTION_REMOTE_REPORT") == "1")
-                return;
 
             remote.Count.Should().BeLessThanOrEqualTo(ceiling,
                 $"{fixtureName}: redacting '{term}' destroyed {remote.Count} characters that touch NO " +

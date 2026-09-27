@@ -93,6 +93,32 @@ write_trx "$TMP/red.trx" Excise.Core.Tests 100 Failed Excise.Core.Tests.Redactio
 check "a FAILED redaction result fails the gate" 1 \
     "$GATE" --label selftest --select --trx "$TMP/red.trx" --floor Excise.Core.Tests=90:0
 
+echo "== per-class floor (#1886)"
+# THE PLANT: one corpus-gated class goes all-skip while its assembly, carried by
+# its other classes, still clears the assembly floor.
+write_trx "$TMP/harness-skip.trx" Excise.Rendering.Tests 100 NotExecuted \
+    Excise.Rendering.Tests.Differential.RedactionCollateralHarness Row
+write_trx "$TMP/harness-pass.trx" Excise.Rendering.Tests 100 Passed \
+    Excise.Rendering.Tests.Differential.RedactionCollateralHarness Row
+write_trx "$TMP/other-pass.trx" Excise.Rendering.Tests 300 Passed \
+    Excise.Rendering.Tests.Differential.RedactionOtherTests Case
+check "an all-skip class under a green assembly floor trips its class floor" 1 \
+    "$GATE" --label selftest --trx "$TMP/harness-skip.trx" --trx "$TMP/other-pass.trx" \
+    --floor Excise.Rendering.Tests=300:240 --class-floor RedactionCollateralHarness=90:9
+saw "and it names the class" "class RedactionCollateralHarness PASSED 0 test(s)" \
+    "$GATE" --label selftest --trx "$TMP/harness-skip.trx" --trx "$TMP/other-pass.trx" \
+    --floor Excise.Rendering.Tests=300:240 --class-floor RedactionCollateralHarness=90:9
+check "restored, the same class floor passes" 0 \
+    "$GATE" --label selftest --trx "$TMP/harness-pass.trx" --trx "$TMP/other-pass.trx" \
+    --floor Excise.Rendering.Tests=300:240 --class-floor RedactionCollateralHarness=90:9
+check "a class floor on a class with no result at all fails" 1 \
+    "$GATE" --label selftest --trx "$TMP/other-pass.trx" --class-floor RedactionCollateralHarness=90:9
+write_trx "$TMP/redactor.trx" Excise.Rendering.Tests 14 Passed \
+    Excise.Rendering.Tests.Differential.ReferenceRedactorComparisonTests Row
+check "a class floor counts a class --select does not pick" 0 \
+    "$GATE" --label selftest --select --trx "$TMP/redactor.trx" \
+    --class-floor ReferenceRedactorComparisonTests=12:11
+
 echo "== evidence freshness"
 check "a trx outside --run-dir is refused" 1 \
     "$GATE" --label selftest --run-dir "$RUN" --trx "$TMP/truncated.trx"

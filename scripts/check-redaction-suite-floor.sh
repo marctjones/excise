@@ -26,6 +26,16 @@
 # Count ELEMENTS, never distinct names: MemberData theory rows share a display
 # name, so a set of names reads 1888 where the run reported 1898.
 #
+# PER-CLASS FLOORS (#1886)
+#
+# An assembly floor cannot see one corpus-gated class going all-skip:
+# RedactionCollateralHarness passes ~101 of ~1008 rows (the rest have too little
+# text, legitimately), and all 101 turning into skips moves Rendering's passed
+# count by less than its slack. --class-floor NAME=RESULTS:PASSED holds a class
+# (matched on the className's last segment) to its own two numbers. It counts
+# every result of that class, selected or not: ReferenceRedactorComparisonTests
+# compares redactORs, so --select's 'redaction' rule does not pick it up.
+#
 # THE UNION MODE, AND WHY IT IS NOT A SHORTCUT
 #
 # The solution-wide `FullyQualifiedName~Redaction` pass costs ~435 s and
@@ -67,7 +77,8 @@
 # Usage:
 #   scripts/check-redaction-suite-floor.sh --label L [--trx P]... [--trx-dir D]...
 #       [--select] [--run-dir D] [--sln F] [--discover]
-#       [--floor ASM=RESULTS:PASSED]... [--total-floor RESULTS:PASSED]
+#       [--floor ASM=RESULTS:PASSED]... [--class-floor CLASS=RESULTS:PASSED]...
+#       [--total-floor RESULTS:PASSED]
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -82,6 +93,7 @@ SLN=""
 TOTAL_FLOOR=""
 TRX_FILES=()
 FLOORS=()
+CLASS_FLOORS=()
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -108,6 +120,7 @@ while [ "$#" -gt 0 ]; do
         --run-dir)     RUN_DIR="${2:-}"; shift 2 ;;
         --sln)         SLN="${2:-}"; shift 2 ;;
         --floor)       FLOORS+=("${2:-}"); shift 2 ;;
+        --class-floor) CLASS_FLOORS+=("${2:-}"); shift 2 ;;
         --total-floor) TOTAL_FLOOR="${2:-}"; shift 2 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
@@ -146,11 +159,12 @@ fi
 
 python3 - "$LABEL" "$SELECT" "$RUN_DIR" "$SLN" "$DISCOVERED" "$TOTAL_FLOOR" \
          "$(printf '%s\n' ${FLOORS[@]+"${FLOORS[@]}"} | tr '\n' ' ')" \
+         "$(printf '%s\n' ${CLASS_FLOORS[@]+"${CLASS_FLOORS[@]}"} | tr '\n' ' ')" \
          "${TRX_FILES[@]}" <<'PY'
 import os, sys, collections, xml.etree.ElementTree as ET
 
-label, select, run_dir, sln, discovered, total_floor, floors_blob = sys.argv[1:8]
-trx_files = sys.argv[8:]
+label, select, run_dir, sln, discovered, total_floor, floors_blob, class_blob = sys.argv[1:9]
+trx_files = sys.argv[9:]
 select = select == "1"
 N = "{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}"
 fail = []
@@ -169,8 +183,13 @@ floors = {}
 for item in floors_blob.split():
     asm, _, spec = item.partition("=")
     floors[asm] = parse_floor(spec, "--floor")
+class_floors = {}
+for item in class_blob.split():
+    cls, _, spec = item.partition("=")
+    class_floors[cls] = parse_floor(spec, "--class-floor")
 
 by_asm = collections.defaultdict(collections.Counter)
+by_class = collections.defaultdict(collections.Counter)
 present_asm = set()
 classes_seen = set()
 failed_tests = []
@@ -206,9 +225,13 @@ for path in trx_files:
             unknown += 1
             continue
         present_asm.add(asm)
+        outcome = res.get("outcome") or "?"
+        short = cls.rsplit(".", 1)[-1]
+        if short in class_floors:
+            by_class[short]["results"] += 1
+            by_class[short][outcome] += 1
         if select and "redaction" not in (cls + "." + meth).lower():
             continue
-        outcome = res.get("outcome") or "?"
         by_asm[asm]["results"] += 1
         by_asm[asm][outcome] += 1
         classes_seen.add(cls)
@@ -233,6 +256,16 @@ for asm in sorted(set(by_asm) | set(floors)):
                     "result count intact and verifies nothing)" % (asm, c["Passed"], fp))
 print("  %-28s results=%-5d passed=%-5d skipped=%-5d failed=%-3d"
       % ("TOTAL", total["results"], total["Passed"], total["NotExecuted"], total["Failed"]))
+for cls in sorted(class_floors):
+    c = by_class[cls]
+    fr, fp = class_floors[cls]
+    print("  class %-22s results=%-5d passed=%-5d skipped=%-5d failed=%-3d (floor %d:%d)"
+          % (cls, c["results"], c["Passed"], c["NotExecuted"], c["Failed"], fr, fp))
+    if c["results"] < fr:
+        fail.append("class %s reported %d result(s); the floor is %d" % (cls, c["results"], fr))
+    if c["Passed"] < fp:
+        fail.append("class %s PASSED %d test(s); the floor is %d (a class that skips every "
+                    "row measures nothing, however green its assembly)" % (cls, c["Passed"], fp))
 
 if total_floor:
     fr, fp = parse_floor(total_floor, "--total-floor")
