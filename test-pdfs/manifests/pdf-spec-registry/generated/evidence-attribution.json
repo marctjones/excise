@@ -43660,6 +43660,48 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.NoEncoding_ResolvesToStandardQuoteright",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.NoEncoding_ResolvesToStandardQuoteleft",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.WinAnsiEncoding_AsBareName_ResolvesToQuotesingle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.WinAnsiEncoding_AsBareName_ResolvesToGrave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.WinAnsiEncoding_ViaBaseEncodingDictionary_AlsoResolvesToQuotesingle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.QuotesingleAndQuoteright_AreActuallyDifferentWidths",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Type3FontMatrixWidthTests.cs::Type3FontMatrixWidthTests.Type3GlyphWidth_IsScaledThroughFontMatrix_NotReadAsThousandths",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -44721,13 +44763,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.Code39_KeepsOldValue_WhileByNamePathReturnsAfmValue",
+          "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.Code39_MatchesQuoterightAfmValue_NotReRoutedThroughWinAnsi",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.TryGetWidthByGlyphName_ResolvesLatinAndCourier",
@@ -44767,60 +44807,6 @@
         },
         {
           "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_CffFont_ExposesCffFlag",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.SymbolAndGlyphNameAccessors_ResolveOnNonSymbolFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_SymbolCmapFont_ExposesSymbolSubtableAndResolvesF000Codes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.FromFile_CffFont_ProducesType0EmbeddedFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_DictionaryUsesCIDFontType0AndFontFile3",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_FontFile3HasType1CSubtype",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_FontFile3EmbedsSubsettedBareCff",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -45129,6 +45115,48 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.NoEncoding_ResolvesToStandardQuoteright",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.NoEncoding_ResolvesToStandardQuoteleft",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.WinAnsiEncoding_AsBareName_ResolvesToQuotesingle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.WinAnsiEncoding_AsBareName_ResolvesToGrave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.WinAnsiEncoding_ViaBaseEncodingDictionary_AlsoResolvesToQuotesingle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.QuotesingleAndQuoteright_AreActuallyDifferentWidths",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Type3FontMatrixWidthTests.cs::Type3FontMatrixWidthTests.Type3GlyphWidth_IsScaledThroughFontMatrix_NotReadAsThousandths",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46190,13 +46218,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.Code39_KeepsOldValue_WhileByNamePathReturnsAfmValue",
+          "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.Code39_MatchesQuoterightAfmValue_NotReRoutedThroughWinAnsi",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.TryGetWidthByGlyphName_ResolvesLatinAndCourier",
@@ -46236,60 +46262,6 @@
         },
         {
           "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_CffFont_ExposesCffFlag",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.SymbolAndGlyphNameAccessors_ResolveOnNonSymbolFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_SymbolCmapFont_ExposesSymbolSubtableAndResolvesF000Codes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.FromFile_CffFont_ProducesType0EmbeddedFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_DictionaryUsesCIDFontType0AndFontFile3",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_FontFile3HasType1CSubtype",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_FontFile3EmbedsSubsettedBareCff",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -46580,6 +46552,48 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.NoEncoding_ResolvesToStandardQuoteright",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.NoEncoding_ResolvesToStandardQuoteleft",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.WinAnsiEncoding_AsBareName_ResolvesToQuotesingle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.WinAnsiEncoding_AsBareName_ResolvesToGrave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.WinAnsiEncoding_ViaBaseEncodingDictionary_AlsoResolvesToQuotesingle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StandardFontEncodingWidthTests.cs::StandardFontEncodingWidthTests.QuotesingleAndQuoteright_AreActuallyDifferentWidths",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/Type3FontMatrixWidthTests.cs::Type3FontMatrixWidthTests.Type3GlyphWidth_IsScaledThroughFontMatrix_NotReadAsThousandths",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -47641,13 +47655,11 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.Code39_KeepsOldValue_WhileByNamePathReturnsAfmValue",
+          "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.Code39_MatchesQuoterightAfmValue_NotReRoutedThroughWinAnsi",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.TryGetWidthByGlyphName_ResolvesLatinAndCourier",
@@ -47687,60 +47699,6 @@
         },
         {
           "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_CffFont_ExposesCffFlag",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.SymbolAndGlyphNameAccessors_ResolveOnNonSymbolFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_SymbolCmapFont_ExposesSymbolSubtableAndResolvesF000Codes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.FromFile_CffFont_ProducesType0EmbeddedFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_DictionaryUsesCIDFontType0AndFontFile3",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_FontFile3HasType1CSubtype",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/CffOpenTypeEmbeddingTests.cs::CffOpenTypeEmbeddingTests.CffFont_FontFile3EmbedsSubsettedBareCff",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94527,6 +94485,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.Recovery_LocatesASpanAroundAFormOrImageDo",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94808,13 +94773,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95869,6 +95827,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.Recovery_LocatesASpanAroundAFormOrImageDo",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96150,13 +96115,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97225,6 +97183,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.Recovery_LocatesASpanAroundAFormOrImageDo",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97506,13 +97471,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98607,6 +98565,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.Recovery_LocatesASpanAroundAFormOrImageDo",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/Recovery/ChannelWiringGateTests.cs::ChannelWiringGateTests.EveryDeclaredChannel_IsEitherRunOrDeclaredSkipped",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98888,13 +98853,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100266,6 +100224,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_TrueFromXfaTemplate_WhenAcroFormFlagAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_AcroFormFlagAlone_StillWorks_WhenNoXfaTemplate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100358,22 +100330,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -101730,6 +101686,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_TrueFromXfaTemplate_WhenAcroFormFlagAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_AcroFormFlagAlone_StillWorks_WhenNoXfaTemplate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -101822,22 +101792,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103215,6 +103169,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_TrueFromXfaTemplate_WhenAcroFormFlagAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_AcroFormFlagAlone_StillWorks_WhenNoXfaTemplate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103307,22 +103275,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104640,6 +104592,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_TrueFromXfaTemplate_WhenAcroFormFlagAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_AcroFormFlagAlone_StillWorks_WhenNoXfaTemplate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104732,22 +104698,6 @@
         },
         {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.RealIrsW9_RedactTextRemovesTheXfaForm_AndKeepsTheAcroFormFields",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112776,8 +112726,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7965,
-    "testMethodsWithCapabilityCandidate": 5146,
+    "testMethods": 8015,
+    "testMethodsWithCapabilityCandidate": 5192,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
