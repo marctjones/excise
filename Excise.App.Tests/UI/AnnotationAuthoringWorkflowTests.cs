@@ -46,14 +46,12 @@ public class AnnotationAuthoringWorkflowTests : IDisposable
     }
 
     [Fact]
-    public async Task AddHighlightAnnotationFromSelectionAsync_CreatesPersistableHighlightAndRefreshesViewerDocument()
+    public async Task AddHighlightAnnotationFromSelectionAsync_CreatesPersistableHighlight()
     {
         var filePath = CreateBlankPdf("highlight-source.pdf");
         var outputPath = Path.Combine(_tempDir, "highlight-output.pdf");
         var documentService = CreateLoadedDocumentService(filePath);
         var vm = CreateViewModel(documentService, filePath);
-        using var viewerDocument = PdfDocument.Open(filePath);
-        vm.PdfCoreDocument = viewerDocument;
         vm.CurrentTextSelectionPageArea = PdfPageRect.ViewerDips(
             1,
             x: 120,
@@ -67,8 +65,6 @@ public class AnnotationAuthoringWorkflowTests : IDisposable
 
         vm.FileState.AnnotationEditsCount.Should().Be(1);
         vm.FileState.HasUnsavedChanges.Should().BeTrue();
-        viewerDocument.GetPage(1).GetAnnotations()
-            .Should().Contain(a => a.Subtype == PdfAnnotationSubtype.Highlight && a.Contents == "Selected clause");
 
         documentService.SaveDocument(outputPath);
         using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));

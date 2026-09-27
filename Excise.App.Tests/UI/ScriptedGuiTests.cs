@@ -371,6 +371,105 @@ public class ScriptedGuiTests
     }
 
     /// <summary>
+    /// Regression for #1501 item 2: applying pending redactions in memory
+    /// through the scripting harness used to clear
+    /// <c>FileState.PendingRedactionsCount</c> without recording that the
+    /// document itself was changed, so <c>HasUnsavedChanges</c> went back to
+    /// false with the loaded document already differing from the file on
+    /// disk.
+    /// </summary>
+    [Fact]
+    public async Task ApplyRedactionsCommand_KeepsDocumentDirtyUntilSave()
+    {
+        var viewModel = MainWindowViewModelTestFactory.Create();
+        var sourcePdf = CreateTestPdf();
+        var outputPdf = Path.Combine(_testDataDir, $"applied-dirty-{Guid.NewGuid():N}.pdf");
+
+        await viewModel.LoadDocumentHeadlessAsync(sourcePdf);
+        await viewModel.RedactTextCommand("SECRET");
+        viewModel.FileState.HasUnsavedChanges.Should().BeTrue("a pending redaction is itself unsaved");
+
+        await viewModel.ApplyRedactionsCommand();
+
+        viewModel.FileState.HasUnsavedChanges.Should().BeTrue(
+            "applying in memory with no save yet must still count as unsaved changes");
+
+        await viewModel.SaveDocumentCommand(outputPdf);
+
+        viewModel.FileState.HasUnsavedChanges.Should().BeFalse(
+            "SaveDocumentCommand must clear the dirty state that ApplyRedactionsCommand set");
+    }
+
+    /// <summary>
+    /// Regression for #1501 item 3: with two or more queued text
+    /// redactions, the file-based loop deleted only the PREVIOUS
+    /// intermediate on each non-final pass, so the last intermediate
+    /// (excise_script_redact_&lt;N-2&gt;_*.pdf) always survived — a
+    /// partially-redacted copy of the document left in the temp directory.
+    /// </summary>
+    [Fact]
+    public async Task SaveDocumentCommand_MultipleTextRedactions_LeavesNoIntermediateTempFiles()
+    {
+        var viewModel = MainWindowViewModelTestFactory.Create();
+        var sourcePdf = CreateTestPdf();
+        var outputPdf = Path.Combine(_testDataDir, $"cleanup-{Guid.NewGuid():N}.pdf");
+        var tempDir = Path.GetTempPath();
+        var before = Directory.GetFiles(tempDir, "excise_script_redact_*");
+
+        await viewModel.LoadDocumentHeadlessAsync(sourcePdf);
+        await viewModel.RedactTextCommand("SECRET");
+        await viewModel.RedactTextCommand("CONFIDENTIAL");
+        await viewModel.ApplyRedactionsCommand();
+        await viewModel.SaveDocumentCommand(outputPdf);
+
+        var after = Directory.GetFiles(tempDir, "excise_script_redact_*");
+        after.Should().BeEquivalentTo(before,
+            "every intermediate the multi-term redaction loop creates, including the last one, must be deleted");
+    }
+
+    /// <summary>
+    /// Regression for #1501 item 4: a <see cref="System.Threading.CancellationTokenSource"/>
+    /// passed to <c>Task.Run</c> only cancels the task if it fires BEFORE
+    /// the delegate starts running on the pool thread. Once the (fake, slow)
+    /// load is actually running, the old implementation had no way to bound
+    /// the wait and simply awaited however long the delegate took.
+    /// </summary>
+    [Fact]
+    public async Task LoadDocumentCommand_TimeoutBoundsAnAlreadyRunningLoad()
+    {
+        var viewModel = MainWindowViewModelTestFactory.Create();
+        var testPdf = CreateTestPdf();
+        viewModel.LoadDocumentTimeoutSeconds = 1;
+        viewModel.LoadDocumentOverrideForTests = _ => Task.Delay(TimeSpan.FromSeconds(10));
+
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        Func<Task> act = () => viewModel.LoadDocumentHeadlessAsync(testPdf);
+
+        await act.Should().ThrowAsync<TimeoutException>();
+        stopwatch.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(5),
+            "the wait must be bounded by LoadDocumentTimeoutSeconds, not by how long the (fake) load actually takes");
+    }
+
+    /// <summary>
+    /// Regression for #1878: the scripted load never pointed
+    /// <c>PdfCoreDocument</c> at the document service's document, so the view
+    /// model kept the PREVIOUS document — which the service had just
+    /// disposed — until something else happened to resync it.
+    /// </summary>
+    [Fact]
+    public async Task LoadDocumentCommand_SetsPdfCoreDocumentToTheServicesDocument()
+    {
+        var viewModel = MainWindowViewModelTestFactory.Create();
+        var testPdf = CreateTestPdf();
+
+        await viewModel.LoadDocumentHeadlessAsync(testPdf);
+
+        viewModel.PdfCoreDocument.Should().NotBeNull();
+        viewModel.PdfCoreDocument.Should().BeSameAs(viewModel.SaveDocumentForTests,
+            "the scripted load must point PdfCoreDocument at the document service's own document");
+    }
+
+    /// <summary>
     /// Create a single-page PDF containing the sentinel strings "SECRET"
     /// and "CONFIDENTIAL" that the scripting tests redact.
     /// </summary>

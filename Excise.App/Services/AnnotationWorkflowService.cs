@@ -29,20 +29,11 @@ internal sealed class AnnotationWorkflowService
     public PdfAnnotation AddImageStamp(
         int pageNumber, PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight,
         string? contents = null,
-        PdfDocument? viewerDocument = null,
         byte[]? alphaPixels = null)
     {
         var saveDocument = GetLoadedDocument();
         var annotation = saveDocument.AddImageStampAnnotation(
             pageNumber, rect, rgbPixels, pixelWidth, pixelHeight, contents, alphaPixels: alphaPixels);
-        if (viewerDocument is not null &&
-            !ReferenceEquals(saveDocument, viewerDocument) &&
-            pageNumber >= 1 &&
-            pageNumber <= viewerDocument.PageCount)
-        {
-            viewerDocument.AddImageStampAnnotation(
-                pageNumber, rect, rgbPixels, pixelWidth, pixelHeight, contents, alphaPixels: alphaPixels);
-        }
         _logger.LogInformation(
             "Added {W}x{H} image stamp to page {PageNumber}", pixelWidth, pixelHeight, pageNumber);
         return annotation;
@@ -50,24 +41,13 @@ internal sealed class AnnotationWorkflowService
 
     /// <summary>
     /// Apply one rectangle-based annotation transaction to the authoritative
-    /// save document and, when separate, the viewer document. Keeping both
-    /// writes behind one operation prevents newly wired subtypes from becoming
-    /// file-only features that appear only after save and reopen. See #1286.
+    /// save document. See #1286.
     /// </summary>
-    internal AnnotationRectResult AddRect(
-        AnnotationRectRequest request,
-        PdfDocument? viewerDocument = null)
+    internal AnnotationRectResult AddRect(AnnotationRectRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var saveDocument = GetLoadedDocument();
         var annotation = AddRectToDocument(saveDocument, request);
-        if (viewerDocument is not null &&
-            !ReferenceEquals(saveDocument, viewerDocument) &&
-            request.PageNumber >= 1 &&
-            request.PageNumber <= viewerDocument.PageCount)
-        {
-            AddRectToDocument(viewerDocument, request);
-        }
 
         var (successMessage, historyDescription) = RectMessages(request);
         _logger.LogInformation(
@@ -221,13 +201,11 @@ internal sealed class AnnotationWorkflowService
 
     /// <summary>
     /// Validate and apply one path-capture transaction to the authoritative
-    /// save document and, when it is a separate instance, the viewer document.
-    /// The viewer remains a PDF-agnostic capture surface; this workflow owns the
-    /// one dispatch from gesture kind to PDF annotation type. See #1286.
+    /// save document. The viewer remains a PDF-agnostic capture surface; this
+    /// workflow owns the one dispatch from gesture kind to PDF annotation
+    /// type. See #1286.
     /// </summary>
-    internal AnnotationPathResult AddPath(
-        AnnotationPathRequest request,
-        PdfDocument? viewerDocument = null)
+    internal AnnotationPathResult AddPath(AnnotationPathRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -250,13 +228,6 @@ internal sealed class AnnotationWorkflowService
 
         var saveDocument = GetLoadedDocument();
         var annotation = AddPathToDocument(saveDocument, normalizedRequest);
-        if (viewerDocument is not null &&
-            !ReferenceEquals(saveDocument, viewerDocument) &&
-            normalizedRequest.PageNumber >= 1 &&
-            normalizedRequest.PageNumber <= viewerDocument.PageCount)
-        {
-            AddPathToDocument(viewerDocument, normalizedRequest);
-        }
 
         var (successMessage, historyDescription) = PathMessages(normalizedRequest.Kind);
         _logger.LogInformation(
