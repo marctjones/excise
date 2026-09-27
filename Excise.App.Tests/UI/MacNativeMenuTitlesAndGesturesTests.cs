@@ -34,7 +34,7 @@ public class MacNativeMenuTitlesAndGesturesTests
         "Edit/Find...|F+Meta",
         "Edit/Find Next|F3+None",
         "Edit/Find Previous|F3+Shift",
-        "Edit/Select Text Mode|T+Meta",
+        "Edit/Select Text Mode|T+None",
         "Edit/Typewriter Mode|",
         "Edit/Typewriter Text Color|",
         "Edit/Typewriter Text Color/Black|",
@@ -50,6 +50,7 @@ public class MacNativeMenuTitlesAndGesturesTests
         "Edit/Discard Pending Type-over Edits|",
         "Edit/Select All Text|A+Meta",
         "Edit/Copy Selected Text|C+Meta",
+        "Edit/Cut|X+Meta",
         "Annotate|",
         "Annotate/Highlight Tool|",
         "Annotate/Add Highlight From Selection|",
@@ -126,6 +127,25 @@ public class MacNativeMenuTitlesAndGesturesTests
         var rows = Rows(menu, "").Where(r => !IsRecentFile(r) && (Expected.Contains(r) || !r.StartsWith("Window/", StringComparison.Ordinal)));
 
         rows.Should().Equal(Expected.Where(r => !IsRecentFile(r)));
+    }
+
+    [FixedAvaloniaFact]
+    public void Cut_RemovesTheSelectionOfTheFocusedTextBox_AndIgnoresEverythingElse()
+    {
+        // TextBox.Cut needs a TopLevel for the clipboard.
+        var box = new TextBox { Text = "abcdef", SelectionStart = 1, SelectionEnd = 3 };
+        var readOnly = new TextBox { Text = "abcdef", SelectionStart = 1, SelectionEnd = 3, IsReadOnly = true };
+        var window = new Window { Content = new StackPanel { Children = { box, readOnly } } };
+        window.Show();
+
+        MainWindow.CutFocusedText(box);
+        box.Text.Should().Be("adef");
+
+        MainWindow.CutFocusedText(readOnly);
+        readOnly.Text.Should().Be("abcdef");
+
+        MainWindow.CutFocusedText(new Button());
+        MainWindow.CutFocusedText(null);
     }
 
     private static bool IsRecentFile(string row) => row.StartsWith("File/Open Recent/", StringComparison.Ordinal);
