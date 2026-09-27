@@ -163,13 +163,19 @@ internal partial class MainWindowViewModel
         Add(FileState.TypewriterEditsCount, "typewriter edit", "typewriter edits");
         Add(FileState.AnnotationEditsCount, "annotation edit", "annotation edits");
 
+        // AppliedRedactionsCount (#1501 item 2) can make FileState.HasUnsavedChanges
+        // true with every counter above still at zero, so this fallback is
+        // reachable, not just defensive.
         var summary = parts.Count == 0
-            ? "unsaved changes"
+            ? "changes"
             : string.Join(", ", parts);
 
         var name = string.IsNullOrWhiteSpace(DocumentName) ? "This document" : DocumentName;
 
-        var message = $"{name} has {summary} that have not been saved.";
+        // "that have/has not been saved" needs subject-verb agreement with
+        // {summary}, which can be one count, several counts, or the
+        // zero-count fallback — sidestep it instead of computing a verb.
+        var message = $"{name} has {summary} not yet saved.";
 
         if (FileState.IsOriginalFile)
         {
