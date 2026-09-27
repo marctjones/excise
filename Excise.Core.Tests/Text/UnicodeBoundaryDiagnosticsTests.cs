@@ -39,6 +39,7 @@ public class UnicodeBoundaryDiagnosticsTests
             PageLabelPrefixCount: 0,
             NameTreeKeyCount: 0,
             SignatureCount: 0,
+            OptionalContentStringCount: 0,
             TermsBelowScrubFloor: new[] { "a" + Rlo + "b" });
 
         var described = string.Join("\n", audit.Describe());

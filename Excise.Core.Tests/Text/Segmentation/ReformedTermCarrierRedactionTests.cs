@@ -75,6 +75,8 @@ public class ReformedTermCarrierRedactionTests
             "/PageLabels /P"),
         [RedactionCarriers.NameTreeKeys] = (v => CarrierTrapFixtures.WithCatalog($"/Names << /Dests << /Names [({v}) [3 0 R /Fit]] >> >>"),
             "/Names and /Dests keys"),
+        [RedactionCarriers.OptionalContent] = (v => CarrierTrapFixtures.WithCatalog("/OCProperties << /OCGs [6 0 R] >>",
+            extra: $"<< /Type /OCG /Name ({v}) >>"), null),
     };
 
     public static TheoryData<RedactionCarriers, RedactionProfile, int, Entry> Matrix()

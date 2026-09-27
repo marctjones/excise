@@ -239,7 +239,7 @@ internal static class CarrierTrapFixtures
             }), expectVisible: true);
         // #1853: a viewer shows the prefix in its page-number box.
         Add("page-label-prefix", "PAGELABELTRAP", "page label /P", Oracle.QpdfDump,
-            (t, v) => Doc(V(t, v), catalog: $"/PageLabels << /Nums [0 << /S /D /P (Annex {t}-) >>] >>"));
+            (t, v) => Doc(V(t, v), catalog: $"/PageLabels << /Nums [0 << /S /D /P (Annex {t}-) >>] >>"), expectVisible: true);
         // #1852: a producer that names a destination after its heading; a bookmark goes there by name.
         Add("named-destination-key", "DESTKEYTRAP", "name-tree key /Dests", Oracle.QpdfDump,
             (t, v) => Doc(V(t, v), catalog: $"/Names << /Dests 6 0 R >> /Outlines 7 0 R", extra: new[]

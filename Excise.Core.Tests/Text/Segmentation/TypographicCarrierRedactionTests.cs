@@ -84,6 +84,8 @@ public class TypographicCarrierRedactionTests
         [RedactionCarriers.NameTreeKeys] = (v => CarrierTrapFixtures.WithCatalog($"/Names << /Dests << /Names [{Pdf(v)} [3 0 R /Fit]] >> >>"),
             "/Names and /Dests keys"),
         [RedactionCarriers.EmbeddedFiles] = (v => TextAttachment(v), null),
+        [RedactionCarriers.OptionalContent] = (v => CarrierTrapFixtures.WithCatalog("/OCProperties << /OCGs [6 0 R] >>",
+            extra: $"<< /Type /OCG /Name {Pdf(v)} >>"), null),
     };
 
     private static byte[] TextAttachment(string text) =>

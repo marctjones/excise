@@ -75,8 +75,15 @@ public enum RedactionCarriers
     /// </summary>
     Signatures = 1 << 13,
 
+    /// <summary>
+    /// Text strings in the optional-content tree: a layer's <c>/Name</c>, shown in a
+    /// viewer's layers panel, and a configuration's <c>/Name</c>, <c>/Creator</c> and
+    /// <c>/Order</c> labels (#1862).
+    /// </summary>
+    OptionalContent = 1 << 14,
+
     /// <summary>Every carrier — the default and the safe choice.</summary>
     All = Info | Xmp | Xfa | Outlines | Annotations | FormFields
         | StructTree | JavaScript | EmbeddedFiles | ActionUris | MarkedContent | PageLabels | NameTreeKeys
-        | Signatures,
+        | Signatures | OptionalContent,
 }

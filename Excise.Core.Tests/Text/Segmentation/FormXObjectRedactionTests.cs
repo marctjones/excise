@@ -350,6 +350,60 @@ public class FormXObjectRedactionTests
         gs.GetName(0).Should().NotBe("GS0", "the colliding ExtGState name must be rewritten");
     }
 
+    /// <summary>
+    /// #1849: a marked-content sequence cannot cross a content-stream boundary
+    /// (§14.6.1), so a form's stray <c>EMC</c> does not close the page span around
+    /// its <c>Do</c>. Inlined verbatim it did, the span's <c>/ActualText</c> stopped
+    /// enclosing the glyphs painted after the form, and the area redaction that
+    /// removed those glyphs kept the carrier.
+    /// </summary>
+    [Fact]
+    public void RedactArea_FormWithAStrayEmc_StillScrubsThePageSpanAroundLaterGlyphs()
+    {
+        var pdf = MarkedContentPage(
+            "/Span << /ActualText (MERIDIAN) >> BDC /Fm0 Do BT /F1 12 Tf 100 700 Td (Public line) Tj ET EMC",
+            "0 0 1 1 re f EMC");
+        SavedPdfLeakScanner.FindTerm(pdf, "MERIDIAN").Should().NotBeEmpty("input-side control");
+
+        using var doc = PdfDocument.Open(pdf);
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716), RedactionOptions.Default with { DrawBox = false });
+        var saved = doc.SaveToBytes();
+
+        SavedPdfLeakScanner.FindTerm(saved, "Public line").Should().BeEmpty("the glyphs in the area are removed");
+        SavedPdfLeakScanner.FindTerm(saved, "MERIDIAN").Should().BeEmpty(
+            "the page span encloses the removed glyphs whatever EMC the form holds, so its /ActualText goes with them");
+    }
+
+    /// <summary>
+    /// The mirror of the stray <c>EMC</c>: a span the form leaves open ends with
+    /// the form, so it does not swallow the page glyphs after the <c>Do</c> and its
+    /// <c>/ActualText</c> is not scrubbed for their removal.
+    /// </summary>
+    [Fact]
+    public void RedactArea_FormWithAnUnclosedSpan_DoesNotExtendItOverLaterPageGlyphs()
+    {
+        var pdf = MarkedContentPage(
+            "/Fm0 Do BT /F1 12 Tf 100 700 Td (Public line) Tj ET",
+            "/Span << /ActualText (FORMLABEL) >> BDC 0 0 1 1 re f");
+
+        using var doc = PdfDocument.Open(pdf);
+        doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716), RedactionOptions.Default with { DrawBox = false });
+        var saved = doc.SaveToBytes();
+
+        SavedPdfLeakScanner.FindTerm(saved, "Public line").Should().BeEmpty("the glyphs in the area are removed");
+        SavedPdfLeakScanner.FindTerm(saved, "FORMLABEL").Should().NotBeEmpty(
+            "the form's span encloses none of the removed glyphs");
+    }
+
+    private static byte[] MarkedContentPage(string pageContent, string formContent) => Build(
+        Obj("<< /Type /Catalog /Pages 2 0 R >>"),
+        Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+        Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> /XObject << /Fm0 6 0 R >> >> >>"),
+        Stream("", pageContent),
+        Obj(HelveticaFont),
+        Stream("/Type /XObject /Subtype /Form /BBox [0 0 612 792]", formContent));
+
     // ---- builders ----
 
     internal const string HelveticaFont =

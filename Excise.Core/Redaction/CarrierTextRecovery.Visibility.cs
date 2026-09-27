@@ -20,8 +20,9 @@ public static partial class CarrierTextRecovery
     /// reporting it as one buried the real findings. "Visible" is: each page's
     /// drawn text (without hidden optional content and without text a dark box
     /// covers), the normal appearance of every annotation and widget that is
-    /// not flagged hidden, FreeText contents, the /Info and XMP titles, and the
-    /// outline titles. Comparison ignores case and all whitespace.
+    /// not flagged hidden, FreeText contents, the /Info and XMP titles, the
+    /// outline titles, the page-label prefixes and the layer names. Comparison
+    /// ignores case and all whitespace.
     /// A carrier a widget owns (<see cref="CarrierText.VisibleScope"/>) is
     /// compared against that widget's own appearance instead: a redacted field
     /// whose value is also printed elsewhere is still hidden.
@@ -166,6 +167,17 @@ public static partial class CarrierTextRecovery
                 parts.Add(item.Title);
                 foreach (var child in item.Children) stack.Push(child);
             }
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { }
+
+        // The page-number box shows the page-label prefixes, the layers panel the
+        // layer names and /Order labels (#1862).
+        try
+        {
+            foreach (var (_, value) in PdfNumberTree.Enumerate(doc, doc.Catalog?.GetOptional("PageLabels")))
+                if (doc.Resolve(value) is PdfDictionary label) parts.Add(ReadText(doc, label, "P") ?? "");
+            parts.AddRange(Excise.Core.Operations.PdfDocumentSanitizer.OptionalContentStrings(doc)
+                .Where(s => s.Key is "Name" or "Order").Select(s => s.Text));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException) { }
 

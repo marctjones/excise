@@ -277,8 +277,32 @@ internal static class FormXObjectFlattener
             output.Add(ContentOperator.Transform(
                 formMatrix.A, formMatrix.B, formMatrix.C, formMatrix.D, formMatrix.E, formMatrix.F));
         EmitBBoxClip(form, ctx.Doc, output);
-        output.AddRange(inlined);
+        AddBalancedMarkedContent(inlined, output);
         output.Add(ContentOperator.RestoreState());
+    }
+
+    /// <summary>
+    /// Each marked-content sequence "shall be entirely contained within a single
+    /// content stream" (§14.6.1), so a form's stray <c>EMC</c> cannot close a span
+    /// the page opened around its <c>Do</c>, and a span the form leaves open ends
+    /// with the form. Inlined verbatim, a stray <c>EMC</c> closed the page's span
+    /// early, and its <c>/ActualText</c> no longer enclosed the glyphs a redaction
+    /// removed after it (#1849).
+    /// </summary>
+    private static void AddBalancedMarkedContent(List<ContentOperator> ops, List<ContentOperator> output)
+    {
+        var open = 0;
+        foreach (var op in ops)
+        {
+            if (op.Name is "BMC" or "BDC") open++;
+            else if (op.Name == "EMC")
+            {
+                if (open == 0) continue;
+                open--;
+            }
+            output.Add(op);
+        }
+        for (; open > 0; open--) output.Add(new ContentOperator("EMC"));
     }
 
     /// <summary>Emit <c>x y w h re W n</c> clipping to the form's /BBox, if present.</summary>
