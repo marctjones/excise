@@ -8,6 +8,7 @@ using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -159,6 +160,46 @@ public class RedactionWidthClosureTests : IDisposable
             "the second redaction closed on top of the first, instead of reopening it");
         var text = MutoolTextExtractor.ExtractPage(afterPath, 1) ?? "";
         text.Should().NotContain(Term).And.NotContain("OTHER").And.Contain("Zoo").And.Contain("tail");
+    }
+
+    [Theory]
+    [InlineData(WidthPolicy.CloseGap, 0.0)]
+    [InlineData(WidthPolicy.CloseGap, 0.3)]
+    [InlineData(WidthPolicy.FixedMarker, 0.0)]
+    [InlineData(WidthPolicy.FixedMarker, 0.3)]
+    public void TextDrawnTwice_BothCopiesCloseAlike_AndTheLineClosesOnce(WidthPolicy width, double offset)
+    {
+        // issue1350 draws its form labels twice at one position; fake bold draws
+        // a line twice a fraction of a point apart. Each copy is its own removed
+        // run. The ledger kept FixedMarker's gap in the first copy only, so the
+        // copies landed a marker's width apart, and it summed both closures, so
+        // " Zoo" (placed by its own BT) moved left by twice the removed width.
+        var copy = "(Name: SECRET here) Tj ET\n";
+        var content = $"BT /F1 20 Tf 40 100 Td {copy}BT /F1 20 Tf {(40 + offset).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)} 100 Td {copy}" +
+                      "BT /F1 20 Tf 231.16 100 Td ( Zoo) Tj ET";
+        var original = Fixture(content);
+        var beforePath = WriteTemp(original);
+        byte[] redacted;
+        using (var doc = PdfDocument.Open(original))
+        {
+            doc.RedactText(Term, RedactionOptions.Default with { Width = width, DrawBox = false });
+            redacted = doc.SaveToBytes();
+        }
+        var afterPath = WriteTemp(redacted);
+        var before = Glyphs(beforePath);
+        var after = Glyphs(afterPath);
+
+        SavedPdfLeakScanner.FindTerm(redacted, Term).Should().BeEmpty();
+        (MutoolTextExtractor.ExtractPage(afterPath, 1) ?? "").Should()
+            .NotContain(Term).And.Contain("Name").And.Contain("here").And.Contain("Zoo");
+
+        var hs = after.Where(g => g.Char == "h").Select(g => g.X).ToList();
+        (hs.Max() - hs.Min()).Should().BeLessThanOrEqualTo(offset + 0.05,
+            "both copies keep the same gap, so they still coincide");
+        var closedAt = XOf(before, "h") - hs.Min();
+        closedAt.Should().BeGreaterThan(0, "the gap closed");
+        (XOf(before, "Z") - XOf(after, "Z")).Should().BeApproximately(closedAt, offset + 0.3,
+            "the run after the doubled text moves with it: one removed span closes once");
     }
 
     [Fact]
