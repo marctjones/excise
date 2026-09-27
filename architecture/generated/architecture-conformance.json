@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "5881debb19e04720ef76de077d19d6cf77b32d6b",
+  "sourceRevision": "281c6cc3bb2c6eda2e785ac67492b5aba948153b",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8186,
+    "retainedSymbols": 8192,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -627,8 +627,8 @@
     {
       "source": "core-redaction",
       "target": "core-content",
-      "references": 435,
-      "typeDependencyCount": 63,
+      "references": 441,
+      "typeDependencyCount": 64,
       "classification": "declared",
       "evidence": [
         {
@@ -641,8 +641,8 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1306,
-      "typeDependencyCount": 153,
+      "references": 1322,
+      "typeDependencyCount": 154,
       "classification": "declared",
       "evidence": [
         {
@@ -697,14 +697,14 @@
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 248,
+      "references": 249,
       "typeDependencyCount": 36,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
+          "source": "Excise.Core.Text.Segmentation.WidthClosureLedger",
           "target": "Excise.Core.Text.Letter",
-          "references": 34
+          "references": 35
         }
       ]
     },
@@ -987,13 +987,13 @@
     {
       "source": "native-abi",
       "target": "core-redaction",
-      "references": 18,
-      "typeDependencyCount": 8,
+      "references": 15,
+      "typeDependencyCount": 7,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Native.NativeExports",
-          "target": "Excise.Core.Text.Segmentation.RedactionOptions",
+          "target": "Excise.Core.Text.Segmentation.RedactionReport",
           "references": 5
         }
       ]
