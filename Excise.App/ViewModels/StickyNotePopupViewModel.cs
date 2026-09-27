@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using Excise.Core.Document;
 using ReactiveUI;
 using System;
@@ -72,7 +73,51 @@ internal sealed class StickyNotePopupViewModel : ReactiveObject
     public string Text
     {
         get => _text;
-        set => this.RaiseAndSetIfChanged(ref _text, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _text, value);
+            UpdateTextDirection();
+        }
+    }
+
+    private FlowDirection _flowDirection;
+
+    /// <summary>
+    /// Base paragraph direction for <see cref="Text"/>, bound to the card's
+    /// edit-in-place TextBox. Avalonia's TextBox defaults to LeftToRight
+    /// regardless of content, so typing Arabic/Hebrew into a note showed and
+    /// edited it in the wrong direction (#1916). Recomputed from <see
+    /// cref="Text"/> by UAX #9's P2/P3 first-strong rule — see <see
+    /// cref="UpdateTextDirection"/>. The TextBox's own <c>TextAlignment</c> is
+    /// left at its default (<c>Start</c>), which already resolves to Left
+    /// under LeftToRight and Right under RightToLeft — binding this alone
+    /// covers alignment too, with no second property to keep in sync.
+    /// </summary>
+    public FlowDirection FlowDirection
+    {
+        get => _flowDirection;
+        private set => this.RaiseAndSetIfChanged(ref _flowDirection, value);
+    }
+
+    /// <summary>
+    /// UAX #9 P2/P3: the base direction is the first character that is
+    /// unambiguously strong-RTL or strong-LTR, skipping neutrals (whitespace,
+    /// digits, punctuation) — not "contains any RTL character", which would
+    /// flip an otherwise-English note over one stray Hebrew word. Reuses
+    /// <see cref="Excise.Core.Text.BidiReorderer.IsStrongRtlChar"/> (internal,
+    /// reachable here via InternalsVisibleTo) rather than a second definition
+    /// of which scripts are RTL.
+    /// </summary>
+    private void UpdateTextDirection()
+    {
+        bool rtl = false;
+        foreach (var ch in _text)
+        {
+            if (Excise.Core.Text.BidiReorderer.IsStrongRtlChar(ch)) { rtl = true; break; }
+            if (char.IsLetter(ch)) break;
+        }
+
+        FlowDirection = rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
     }
 
     /// <summary>
@@ -94,6 +139,7 @@ internal sealed class StickyNotePopupViewModel : ReactiveObject
         Rect = rect;
         DisplayRect = displayRect;
         _text = initialText;
+        UpdateTextDirection();
         CommitCommand = ReactiveCommand.CreateFromTask(() => onCommit(Text));
     }
 }

@@ -32,6 +32,7 @@
             BoxShadow="2 3 10 0 #40000000">
         <TextBox x:Name="NoteTextBox"
                  Text="{Binding Text, Mode=TwoWay}"
+                 FlowDirection="{Binding FlowDirection}"
                  AcceptsReturn="True"
                  TextWrapping="Wrap"
                  Background="Transparent"
