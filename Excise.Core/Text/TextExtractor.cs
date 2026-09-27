@@ -627,6 +627,7 @@ public class TextExtractor
             // extractable text that never appeared on the page.
             TextRenderMode = glyph.TextRenderMode,
             IsCidFont = glyph.IsCidFont,
+            IsVerticalWriting = glyph.IsVerticalWriting,
             // #776: the innermost enclosing /MCID span, for the a11y bridge.
             MarkedContentId = _currentMcid,
             // #1091/#1092: where this glyph's code lives, for the operand rewrite.

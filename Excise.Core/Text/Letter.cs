@@ -72,6 +72,14 @@ public class Letter
     public bool IsCidFont { get; set; }
 
     /// <summary>
+    /// Whether the font was in vertical writing mode (§9.7.4.3, WMode 1) when
+    /// this glyph was shown: the glyph advances DOWN a column rather than along
+    /// a horizontal line. Geometry alone cannot tell a vertical column from a
+    /// stack of one-glyph horizontal lines; the font can (#1902).
+    /// </summary>
+    public bool IsVerticalWriting { get; internal set; }
+
+    /// <summary>
     /// The marked-content ID (/MCID) of the innermost marked-content sequence
     /// this glyph was drawn inside, or null if it was not inside any MCID-tagged
     /// span. Set during extraction from the enclosing <c>BDC ... EMC</c> nesting
