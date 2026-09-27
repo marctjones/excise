@@ -141,6 +141,181 @@ public class RedactionMouseDragBroadeningTests
     }
 
     /// <summary>
+    /// #1161: the issue's rotation family is 90/180/270, not just 90 -- 180 does
+    /// not swap width/height the way 90/270 do, so it exercises a different arm
+    /// of the rotation math in <see cref="PdfCoordinateMapper"/>.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task DragOnRotatedPage180_RemovesTargetUnderTheBox()
+    {
+        var (dir, src) = NewPdf("rotate180");
+        CreateLabeledPdf(src, rotation: 180,
+            ("KEEPROT180A", 100, 640), ("ROT180SECRET", 100, 460), ("KEEPROT180B", 100, 280));
+
+        var (window, vm, viewer, overlay, page) = await OpenInRedactionMode(src);
+        try
+        {
+            page.Rotation.Should().Be(180, "the fixture page must load rotated so the viewer renders it rotated");
+
+            await DoDrag(window, ContentRectOf(page, "ROT180SECRET"), page, overlay);
+            vm.RedactionWorkflow.PendingRedactions.Should().ContainSingle(
+                "one drag on a /Rotate 180 page makes one pending redaction");
+
+            var outPath = Path.Combine(dir, "out.pdf");
+            await ApplyAndSave(vm, outPath);
+
+            var text = SavedText(outPath);
+            text.Should().NotContain("ROT180SECRET",
+                "on a /Rotate 180 page the on-screen box must map through the rotation to the right glyphs");
+            text.Should().Contain("KEEPROT180A").And.Contain("KEEPROT180B",
+                "only the targeted word may be removed on a rotated page");
+            SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outPath), "ROT180SECRET").Should().BeEmpty(
+                "on a /Rotate 180 page the redaction must remove the glyphs from the saved bytes");
+        }
+        finally { window.Close(); }
+    }
+
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task DragOnRotatedPage270_RemovesTargetUnderTheBox()
+    {
+        var (dir, src) = NewPdf("rotate270");
+        CreateLabeledPdf(src, rotation: 270,
+            ("KEEPROT270A", 100, 640), ("ROT270SECRET", 100, 460), ("KEEPROT270B", 100, 280));
+
+        var (window, vm, viewer, overlay, page) = await OpenInRedactionMode(src);
+        try
+        {
+            page.Rotation.Should().Be(270, "the fixture page must load rotated so the viewer renders it rotated");
+
+            await DoDrag(window, ContentRectOf(page, "ROT270SECRET"), page, overlay);
+            vm.RedactionWorkflow.PendingRedactions.Should().ContainSingle(
+                "one drag on a /Rotate 270 page makes one pending redaction");
+
+            var outPath = Path.Combine(dir, "out.pdf");
+            await ApplyAndSave(vm, outPath);
+
+            var text = SavedText(outPath);
+            text.Should().NotContain("ROT270SECRET",
+                "on a /Rotate 270 page the on-screen box must map through the rotation to the right glyphs");
+            text.Should().Contain("KEEPROT270A").And.Contain("KEEPROT270B",
+                "only the targeted word may be removed on a rotated page");
+            SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outPath), "ROT270SECRET").Should().BeEmpty(
+                "on a /Rotate 270 page the redaction must remove the glyphs from the saved bytes");
+        }
+        finally { window.Close(); }
+    }
+
+    /// <summary>
+    /// #1161: "zoomed / scrolled viewport" -- the zoom half is covered by
+    /// <see cref="DragAtNonDefaultZoom_RemovesTargetUnderTheBox"/>; this covers the
+    /// other half, a drag while the single-page <c>ScrollViewer</c> is scrolled
+    /// away from its origin (not just zoomed). The overlay's pointer mapping goes
+    /// through the live visual transform (<c>TranslatePoint</c> in this harness,
+    /// <c>GetPosition</c> in production), so a stale cached offset would show up
+    /// here as a box that lands on the pre-scroll position instead.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task DragAfterScrollingAwayFromOrigin_RemovesTargetUnderTheBox()
+    {
+        var (dir, src) = NewPdf("scrolled");
+        CreateLabeledPdf(src, rotation: 0,
+            ("KEEPNEAR", 100, 700), ("SCROLLSECRET", 100, 100));
+
+        var (window, vm, viewer, overlay, page) = await OpenInRedactionMode(src);
+        try
+        {
+            // Zoom in enough that the page exceeds the viewport, then scroll all
+            // the way down so the target is only reachable away from (0,0).
+            vm.SetManualZoom(2.5);
+            await WaitForIdleLayout(window);
+
+            var scrollViewer = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
+            scrollViewer.Offset = new Vector(scrollViewer.Offset.X, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
+            await WaitForIdleLayout(window);
+            scrollViewer.Offset.Y.Should().BeGreaterThan(0,
+                "the fixture must actually force a scroll away from the origin, or this test proves nothing");
+
+            await DoDrag(window, ContentRectOf(page, "SCROLLSECRET"), page, overlay);
+            vm.RedactionWorkflow.PendingRedactions.Should().ContainSingle(
+                "one drag while scrolled away from the origin makes one pending redaction");
+
+            var outPath = Path.Combine(dir, "out.pdf");
+            await ApplyAndSave(vm, outPath);
+
+            var text = SavedText(outPath);
+            text.Should().NotContain("SCROLLSECRET",
+                "a box drawn while the viewport is scrolled away from the origin must still map to the glyphs under it");
+            text.Should().Contain("KEEPNEAR", "content outside the box must survive");
+            SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outPath), "SCROLLSECRET").Should().BeEmpty(
+                "the scrolled-viewport redaction must remove the glyphs from the saved bytes");
+        }
+        finally { window.Close(); }
+    }
+
+    /// <summary>
+    /// #1161: continuous scroll is the app's DEFAULT view mode (not single-page),
+    /// and entering redaction mode forces a switch back to single-page
+    /// (<c>MainWindowViewModel.IsRedactionMode</c>). This drives that transition
+    /// from a page the user scrolled to in the reading view -- not page 1 -- and
+    /// checks the drag lands on the SAME page's glyphs, not page 1's or a stale
+    /// pre-switch layout.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task DragAfterEnteringRedactionModeFromScrolledContinuousView_RemovesTargetOnThatPage()
+    {
+        var (dir, src) = NewPdf("continuous-switch");
+        CreateTwoPageLabeledPdf(src,
+            new[] { ("KEEPPAGE1", 100.0, 400.0) },
+            new[] { ("KEEPPAGE2", 100.0, 640.0), ("CONTINUOUSSECRET", 100.0, 460.0) });
+
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
+        var window = new MainWindow { DataContext = vm, Width = 2000, Height = 1600 };
+        window.Show();
+        try
+        {
+            await vm.LoadDocumentAsync(src);
+            await WaitForIdleLayout(window);
+            vm.IsContinuousView.Should().BeTrue("continuous scroll is the app's default view mode");
+
+            // Scroll to page 2 while still reading in continuous mode.
+            vm.CurrentPageIndex = 1;
+            await WaitForIdleLayout(window);
+            vm.CurrentPageIndex.Should().Be(1, "the scroll-driven page sync must not snap back to page 1");
+
+            vm.IsRedactionMode = true;
+            await WaitForIdleLayout(window);
+            vm.IsContinuousView.Should().BeFalse("entering redaction mode must switch out of the continuous view");
+            vm.CurrentPage.Should().Be(2,
+                "the single page redaction lands on must be the page the user was reading, not page 1");
+
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+            var page = vm.PdfCoreDocument!.GetPage(2);
+
+            await DoDrag(window, ContentRectOf(page, "CONTINUOUSSECRET"), page, overlay);
+            vm.RedactionWorkflow.PendingRedactions.Should().ContainSingle(
+                "one drag right after switching in from continuous mode makes one pending redaction");
+
+            var outPath = Path.Combine(dir, "out.pdf");
+            await ApplyAndSave(vm, outPath);
+
+            var saved = File.ReadAllBytes(outPath);
+            using (var reopened = PdfDocument.Open(saved))
+            {
+                var page1Text = string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value));
+                var page2Text = string.Concat(reopened.GetPage(2).Letters.Select(l => l.Value));
+                page1Text.Should().Contain("KEEPPAGE1", "content on the other page must survive");
+                page2Text.Should().NotContain("CONTINUOUSSECRET",
+                    "a drag made right after switching in from a scrolled continuous view must still map to the right page's glyphs");
+                page2Text.Should().Contain("KEEPPAGE2");
+            }
+            SavedPdfLeakScanner.FindTerm(saved, "CONTINUOUSSECRET").Should().BeEmpty(
+                "the redaction entered from continuous mode must remove the glyphs from the saved bytes");
+        }
+        finally { window.Close(); }
+    }
+
+    /// <summary>
     /// #1161: a single box spanning two side-by-side text blocks (columns) must
     /// remove BOTH runs of glyphs under it, not stop at whichever run the
     /// drag started over. Verified the same way as the other drags here.
@@ -495,6 +670,25 @@ public class RedactionMouseDragBroadeningTests
         }
         if (rotation != 0)
             page.Rotation = rotation;
+        doc.Save(path);
+    }
+
+    /// <summary>Like <see cref="CreateLabeledPdf"/>, but two pages, one set of words each (#1161).</summary>
+    private static void CreateTwoPageLabeledPdf(
+        string path,
+        (string Word, double X, double Y)[] page1Items,
+        (string Word, double X, double Y)[] page2Items)
+    {
+        using var doc = PdfDocument.CreateNew();
+        var font = PdfFont.Helvetica(18);
+        foreach (var items in new[] { page1Items, page2Items })
+        {
+            var page = doc.Pages.AddBlank();
+            using var graphics = page.GetGraphics();
+            foreach (var (word, x, y) in items)
+                graphics.DrawString(word, font, PdfBrush.Black, x, y);
+            graphics.Flush();
+        }
         doc.Save(path);
     }
 
