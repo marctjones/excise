@@ -134,6 +134,7 @@ public sealed class CarrierScrubPolicy : IEquatable<CarrierScrubPolicy>
         RedactionCarriers.PageLabels,
         RedactionCarriers.NameTreeKeys,
         RedactionCarriers.Signatures,
+        RedactionCarriers.OptionalContent,
     };
 
     private readonly CarrierScrubMode[] _modes;

@@ -199,6 +199,7 @@ public static class PdfDocumentSanitizer
         Stage(RedactionCarriers.PageLabels, s => ScrubPageLabels(document, s), PdfDocumentDerivedStateScope.PageLabels); // #1853
         Stage(RedactionCarriers.NameTreeKeys, s => ScrubNameTreeKeys(document, s), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1852
         Stage(RedactionCarriers.Signatures, s => ScrubSignatures(document, s)); // #1861
+        Stage(RedactionCarriers.OptionalContent, s => ScrubOptionalContent(document, s), PdfDocumentDerivedStateScope.OptionalContent); // #1862
 
         if (invalidation != PdfDocumentDerivedStateScope.None)
             document.InvalidateDerivedState(invalidation);
@@ -878,6 +879,77 @@ public static class PdfDocumentSanitizer
                 + "a name cannot be cut out of DER, and the maximum profile removes the signature";
         return changed;
     }
+
+    /// <summary>
+    /// #1862 — every string in the optional-content tree is a label a viewer can
+    /// show. RemoveWhole leaves an empty string: a layer's <c>/Name</c> is required
+    /// (Table 96).
+    /// </summary>
+    private static bool ScrubOptionalContent(PdfDocument document, CarrierScrub scrub)
+    {
+        var changed = false;
+        foreach (var (_, text, write) in OptionalContentStrings(document))
+        {
+            if (!scrub.TryApply(text, out var scrubbed)) continue;
+            write(scrubbed);
+            changed = true;
+        }
+        return changed;
+    }
+
+    /// <summary>
+    /// Every text string in the optional-content tree, with the key that holds it
+    /// (an array element reports its array's key) and a writer for its slot. The
+    /// walk starts at the catalog's <c>/OCProperties</c> and at every reachable
+    /// <c>/Type /OCG</c>, so a layer that only a <c>/Properties</c> or <c>/OC</c>
+    /// entry names is reached too. It does not enter a stream or the page tree.
+    /// </summary>
+    internal static List<(string Key, string Text, Action<string> Write)> OptionalContentStrings(PdfDocument document)
+    {
+        var found = new List<(string, string, Action<string>)>();
+        var visited = new HashSet<PdfObject>(ReferenceEqualityComparer.Instance);
+        var stack = new Stack<(PdfObject Node, string Key)>(
+            Excise.Core.Text.Segmentation.RedactionFeatureStripper.ReachableDictionaries(document)
+                .Where(d => d.GetNameOrNull("Type") == "OCG")
+                .Select(d => ((PdfObject)d, "OCG")));
+        if (document.Catalog.GetOptional("OCProperties") is { } properties) stack.Push((properties, "OCProperties"));
+
+        while (stack.Count > 0)
+        {
+            var (node, key) = stack.Pop();
+            switch (document.Resolve(node))
+            {
+                case PdfStream:
+                    break;
+                case PdfDictionary dict when dict.GetNameOrNull("Type") is not ("Page" or "Pages") && visited.Add(dict):
+                    foreach (var (name, value) in dict)
+                        if (document.Resolve(value) is PdfString text)
+                            found.Add((name.Value, text.Value, s => dict[name] = new PdfString(s)));
+                        else
+                            stack.Push((value, name.Value));
+                    break;
+                case PdfArray array when visited.Add(array):
+                    for (var i = 0; i < array.Count; i++)
+                    {
+                        var index = i;
+                        if (document.Resolve(array[i]) is PdfString text)
+                            found.Add((key, text.Value, s => array[index] = new PdfString(s)));
+                        else
+                            stack.Push((array[i], key));
+                    }
+                    break;
+            }
+        }
+        return found;
+    }
+
+    /// <summary>
+    /// The <see cref="OptionalContentStrings"/> a person wrote: a tool-written
+    /// <c>/Creator</c> and a <c>/Lang</c> tag are left out, as recovery leaves out
+    /// <c>/Info /Producer</c>. The scrub still cuts the term from them.
+    /// </summary>
+    internal static IEnumerable<(string Key, string Text, Action<string> Write)> OptionalContentLabels(PdfDocument document) =>
+        OptionalContentStrings(document).Where(s => s.Key is not ("Creator" or "Lang"));
 
     private static bool ScrubAnnotationContents(PdfDocument document, CarrierScrub scrub)
     {

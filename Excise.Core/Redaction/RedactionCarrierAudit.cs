@@ -41,13 +41,14 @@ internal sealed record RedactionCarrierAudit(
     int PageLabelPrefixCount,
     int NameTreeKeyCount,
     int SignatureCount,
+    int OptionalContentStringCount,
     IReadOnlyList<string> TermsBelowScrubFloor)
 {
     /// <summary>True when anything at all was left unexamined.</summary>
     public bool HasUnexaminedCarriers =>
         OutlineTitleCount > 0 || AnnotationsWithTextCount > 0 ||
         UnexaminedXfaPacketCount > 0 || PageLabelPrefixCount > 0 || NameTreeKeyCount > 0 ||
-        SignatureCount > 0 || TermsBelowScrubFloor.Count > 0;
+        SignatureCount > 0 || OptionalContentStringCount > 0 || TermsBelowScrubFloor.Count > 0;
 
     /// <summary>
     /// Shortest term <c>PdfDocumentSanitizer</c> will act on. Mirrored here
@@ -96,6 +97,7 @@ internal sealed record RedactionCarrierAudit(
             CountPageLabelPrefixes(document, termsToFind),
             CountNameTreeKeys(document, termsToFind),
             CountSignatures(document, termsToFind),
+            CountOptionalContentStrings(document, termsToFind),
             shortTerms);
     }
 
@@ -152,6 +154,13 @@ internal sealed record RedactionCarrierAudit(
             lines.Add(
                 $"{SignatureCount} signature dictionar(ies) or certificate(s) were not examined — they name the " +
                 "signer and carry no position; the maximum profile removes them.");
+        }
+
+        if (OptionalContentStringCount > 0)
+        {
+            lines.Add(
+                $"{OptionalContentStringCount} layer name(s) or label(s) were not examined — a viewer shows them " +
+                "in its layers panel, and they carry no position.");
         }
 
         foreach (var term in TermsBelowScrubFloor)
@@ -282,6 +291,25 @@ internal sealed record RedactionCarrierAudit(
                    + RedactionFeatureStripper.CertificateData(document, signatures).Count(
                        bytes => Matches(System.Text.Encoding.UTF8.GetString(bytes), terms)
                                 || Matches(System.Text.Encoding.BigEndianUnicode.GetString(bytes), terms));
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return 1;
+        }
+    }
+
+    /// <summary>
+    /// #1862: every layer name and label when there is no term, like outline
+    /// titles; against a term, each optional-content string that still holds it.
+    /// </summary>
+    private static int CountOptionalContentStrings(PdfDocument document, IReadOnlyList<string>? terms)
+    {
+        try
+        {
+            var strings = terms == null
+                ? PdfDocumentSanitizer.OptionalContentLabels(document)
+                : PdfDocumentSanitizer.OptionalContentStrings(document);
+            return strings.Count(s => !string.IsNullOrWhiteSpace(s.Text) && Matches(s.Text, terms));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {

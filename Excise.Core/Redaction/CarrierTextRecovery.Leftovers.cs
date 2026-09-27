@@ -195,6 +195,14 @@ public static partial class CarrierTextRecovery
             c.Presence("signature certificates", $"{bytes} bytes of certificate data (/Contents, /Cert, /DSS), not decoded; they name the signer", 0);
     }
 
+    // ── Layer names (§8.11.2) ─────────────────────────────────────────────
+
+    private static void ScanLayerNames(PdfDocument doc, Collector c)
+    {
+        foreach (var (key, text, _) in Excise.Core.Operations.PdfDocumentSanitizer.OptionalContentLabels(doc))
+            c.Text($"layer /{key}", text, 0);
+    }
+
     // ── Hidden optional content (§8.11) ───────────────────────────────────
 
     /// <summary>
