@@ -306,8 +306,11 @@ public class WordWrapRedactionTests
         }
     }
 
-    [Fact]
-    public void ANameContinuedAtTheTopOfTheNextColumn_IsReported_AndLeftInPlace()
+    [Theory]
+    [InlineData(Shape.Tj)]
+    [InlineData(Shape.TrailingSpace)]
+    [InlineData(Shape.KernedTj)]
+    public void ANameContinuedAtTheTopOfTheNextColumn_IsReported_AndLeftInPlace(Shape shape)
     {
         RequireOracles();
         const string name = "Quentin Barnaby Holloway";
@@ -315,7 +318,9 @@ public class WordWrapRedactionTests
         // first line, above it and to the right, begins "Holloway". A reader
         // may well read that as the name, but the geometry is not a line wrap
         // excise can confirm, so it must be REPORTED and nothing removed.
-        var (report, saved, output) = Redact(BuildPdf(Shape.Tj,
+        // #1884: whether or not the producer left a space glyph at the foot of
+        // the first column, which used to let the match jump anywhere.
+        var (report, saved, output) = Redact(BuildPdf(shape,
             (72, 700, "First column text"),
             (72, 686, "ends with Quentin Barnaby"),
             (320, 700, "Holloway opens the second"),
@@ -359,15 +364,17 @@ public class WordWrapRedactionTests
         }
     }
 
-    [Fact]
-    public void AContinuationBelowAndToTheRight_IsNotJoined()
+    [Theory]
+    [InlineData(Shape.Tj)]
+    [InlineData(Shape.TrailingSpace)]
+    public void AContinuationBelowAndToTheRight_IsNotJoined(Shape shape)
     {
         RequireOracles();
         const string name = "Quentin Barnaby Holloway";
         // Drawn one after the other, one line pitch apart, but the second
         // starts in another column to the RIGHT of where the first ends: a
         // table row, not a wrap. Joining it would redact across columns.
-        var (report, saved, output) = Redact(BuildPdf(Shape.Tj,
+        var (report, saved, output) = Redact(BuildPdf(shape,
             (72, 700, "Name Quentin Barnaby"),
             (320, 686, "Holloway Street office")), name);
         try

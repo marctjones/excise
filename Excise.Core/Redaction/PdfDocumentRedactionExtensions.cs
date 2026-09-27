@@ -741,17 +741,19 @@ public static class PdfDocumentRedactionExtensions
         var text = BuildSearchText(letters, joinEveryLineChange: true);
         foreach (var (_, from, to) in Locate(letters, text, searchText, caseSensitive, wholeWord, accept: _ => true))
         {
-            for (var v = text.CharToLetter[from] + 1; v <= text.CharToLetter[to]; v++)
+            // #1884: a break is judged between the glyphs either side of it. A
+            // blank glyph left at the end of the line does not bridge it, for
+            // the matcher or here.
+            Letter? last = null;
+            for (var v = text.CharToLetter[from]; v <= text.CharToLetter[to]; v++)
             {
-                // A blank glyph between the two lines bridges the break for the
-                // matcher as it bridges any gap.
-                var last = text.View[v - 1];
                 var next = text.View[v];
-                if (string.IsNullOrWhiteSpace(last.Value) || string.IsNullOrWhiteSpace(next.Value)
-                    || text.Frame.SameLine(last, next))
-                    continue;
-                var hyphen = IsHyphen(last.Value);
-                if (!hyphen && text.Frame.IsLineWrap(last, next)) continue;
+                if (string.IsNullOrWhiteSpace(next.Value)) continue;
+                var previous = last;
+                last = next;
+                if (previous == null || text.Frame.SameLine(previous, next)) continue;
+                var hyphen = IsHyphen(previous.Value);
+                if (!hyphen && text.Frame.IsLineWrap(previous, next)) continue;
 
                 var at = text.CharToLetter.IndexOf(v, from);
                 if (at < 0 || at > to) break;
@@ -1387,19 +1389,28 @@ public static class PdfDocumentRedactionExtensions
     /// Reconstruction can reorder runs in the extracted sequence, and an
     /// iterative redaction pass must not combine "You" in one column with an
     /// unrelated "r" on another line into a synthetic "your" (#942).
-    /// Whitespace boundaries are allowed to jump, and so is a line wrap
+    /// Consecutive glyphs must be adjacent, or a line wrap
     /// (<see cref="LineFrame.IsLineWrap"/>, #1791): a phrase continues on the next line.
+    /// Whitespace between them may also jump along the line (a justified gap),
+    /// but not onto another line: a space glyph left at the foot of a column
+    /// does not join the next column's head, exactly as when there is none (#1884).
     /// </summary>
     private static bool IsSpatiallyCoherent(LineFrame frame, IReadOnlyList<Letter> letters)
     {
-        for (var i = 1; i < letters.Count; i++)
+        Letter? last = null;
+        var blank = false;
+        foreach (var letter in letters)
         {
-            if (string.IsNullOrWhiteSpace(letters[i - 1].Value) ||
-                string.IsNullOrWhiteSpace(letters[i].Value))
+            if (string.IsNullOrWhiteSpace(letter.Value))
+            {
+                blank = last != null;
                 continue;
-
-            if (!Adjacent(letters[i - 1], letters[i]) && !frame.IsLineWrap(letters[i - 1], letters[i]))
+            }
+            if (last != null && !Adjacent(last, letter) && !frame.IsLineWrap(last, letter)
+                && !(blank && frame.SameLine(last, letter)))
                 return false;
+            last = letter;
+            blank = false;
         }
 
         return true;
