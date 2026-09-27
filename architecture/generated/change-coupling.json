@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "1f912ba8c7fcc8757f2e9a4f5f8a2c7243f30f66",
+  "sourceRevision": "5881debb19e04720ef76de077d19d6cf77b32d6b",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 1,
-    "newestProductionCommit": "1f912ba8c7fcc8757f2e9a4f5f8a2c7243f30f66",
-    "oldestProductionCommit": "18c995312f5fc518e96df5faf403c9bcbc7f6289"
+    "newestProductionCommit": "c64b90b7da89d02be68096fae4299681647471f0",
+    "oldestProductionCommit": "7c3fb3e0afaaced6024f7e1bfc89edaafb9ff1a5"
   },
   "files": [
     {
@@ -207,10 +207,6 @@
       "commits": 5
     },
     {
-      "path": "Excise.Cli/Commands/UnredactCommandOutput.cs",
-      "commits": 5
-    },
-    {
       "path": "Excise.Core/Primitives/PdfStream.cs",
       "commits": 5
     },
@@ -244,6 +240,10 @@
     },
     {
       "path": "Excise.Cli/Commands/UnredactCommandHandler.cs",
+      "commits": 4
+    },
+    {
+      "path": "Excise.Cli/Commands/UnredactCommandOutput.cs",
       "commits": 4
     },
     {
@@ -848,6 +848,10 @@
     },
     {
       "path": "Excise.App/ViewModels/MainWindowViewModel.Thumbnails.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.App/ViewModels/MainWindowViewModel.UnsavedChanges.cs",
       "commits": 1
     },
     {
@@ -2096,13 +2100,13 @@
       "source": "Excise.Cli/Commands/UnredactCommandModels.cs",
       "target": "Excise.Cli/Commands/UnredactCommandOutput.cs",
       "cochanges": 3,
-      "jaccard": 0.6
+      "jaccard": 0.75
     },
     {
       "source": "Excise.Cli/Commands/UnredactCommandHandler.cs",
       "target": "Excise.Cli/Commands/UnredactCommandOutput.cs",
       "cochanges": 3,
-      "jaccard": 0.5
+      "jaccard": 0.6
     },
     {
       "source": "Excise.App/Services/AnnotationWorkflowService.cs",
@@ -3245,7 +3249,19 @@
       "jaccard": 0.5
     },
     {
+      "source": "Excise.Cli/Commands/UnredactCommand.cs",
+      "target": "Excise.Cli/Commands/UnredactCommandOutput.cs",
+      "cochanges": 2,
+      "jaccard": 0.5
+    },
+    {
       "source": "Excise.Cli/Commands/UnredactCommandHandler.cs",
+      "target": "Excise.Cli/Commands/UnredactRecoveryMapper.cs",
+      "cochanges": 2,
+      "jaccard": 0.5
+    },
+    {
+      "source": "Excise.Cli/Commands/UnredactCommandOutput.cs",
       "target": "Excise.Cli/Commands/UnredactRecoveryMapper.cs",
       "cochanges": 2,
       "jaccard": 0.5
@@ -3283,18 +3299,6 @@
     {
       "source": "Excise.App/Services/RedactionWorkflowService.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.Redaction.cs",
-      "cochanges": 2,
-      "jaccard": 0.4
-    },
-    {
-      "source": "Excise.Cli/Commands/UnredactCommand.cs",
-      "target": "Excise.Cli/Commands/UnredactCommandOutput.cs",
-      "cochanges": 2,
-      "jaccard": 0.4
-    },
-    {
-      "source": "Excise.Cli/Commands/UnredactCommandOutput.cs",
-      "target": "Excise.Cli/Commands/UnredactRecoveryMapper.cs",
       "cochanges": 2,
       "jaccard": 0.4
     },
