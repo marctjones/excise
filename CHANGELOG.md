@@ -6,6 +6,96 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.14.0] - 2026-09-27
+
+### Added
+
+- **`Excise.Core` authoring: dash pattern, line cap/join, miter limit and opacity (#1851).** `PdfPen` gains
+  `DashArray`/`DashPhase`, `LineCap`, `LineJoin`, `MiterLimit` and `Opacity`; `PdfBrush` gains `Opacity`. Opacity is
+  emitted as a page-resource `ExtGState` (`/CA`/`/ca`), deduplicated by value per page. All new state is optional and
+  defaulted, so existing callers see byte-identical output. Fixes a real ISO 32000-2 §8.2/§8.6.8 violation found while
+  adding this: `Stroke`/`Fill`/`FillAndStroke` used to emit colour and line-width operators *after* the path was
+  already under construction; they now buffer the path and write state first, matching `DrawLine`/`DrawRectangle`.
+  First consumer: napkin's true-scale technical drawing sheets.
+
+### Security (redaction)
+
+- **The default width-closing policy is now `FixedMarker`**, not the old collapse-and-hide default (#1715, #1725).
+  The old default left 91% of a redacted name recoverable at rank 5 just from the gap it left in the layout;
+  `FixedMarker` closes the gap and draws a covering box of one content-independent size, so a redaction still leaves
+  a visible mark. Explicit `--close-width`/`--fixed-marker`/`CollapsePreserveLayout` callers are unaffected — only
+  the default changed. Width-closing now also removes or resizes an underline, box or highlight annotation sized to
+  the redacted word, so a leftover decoration can no longer state the word's original width (#1753).
+- **A stray or unbalanced `Q` inside a form no longer misplaces the glyphs after it (#1895).** The form flattener
+  used to copy a form's content unchanged inside its own `q`/`Q` wrapper; a stray `Q` popped that wrapper early,
+  so later glyphs (and later redaction searches) used the wrong graphics-state matrix and a redacted term could
+  survive at its true, unsearched position. The flattener now drops a `Q` that would pop below its own entry depth
+  and closes every `q` a form leaves open.
+- **Marked content and structure-tree carriers are more complete:** a custom key in a BDC property list is now
+  scrubbed generically instead of only a fixed named list (#1892); an XObject with no `/Subtype` or a `/PS` subtype
+  is now treated as undrawn, the same as one nothing draws (#1893); an MCID reached through a named `/Properties`
+  list, not just an inline MCID, now resolves correctly (#1849); a form XObject's marked content is now balanced
+  when it is flattened (#1849); an optional-content-group name holding the term is now scrubbed under a new
+  `RedactionCarriers.OptionalContent` flag (#1862); a dangling `/Dest`/`GoTo` `/D` naming no destination no longer
+  keeps the term (#1862).
+- **Phrase matching handles more real layouts:** a phrase wrapping in text rotated by its own text matrix (90/180/270
+  degrees) is now matched and reported, not silently missed (#1882); a phrase split across a column break, drawn
+  in geometric reading order rather than stream order, is now matched (#1883); crossing whitespace onto the next
+  line on a wrap is now consistent whether or not the line happens to end in a space glyph (#1884).
+- **A custom Helvetica width-table transcription error is fixed** (code 39 was 221, the AFM value is 222), and
+  width lookup for codes 39/96 now resolves by the font's actual `/Encoding` instead of one fixed table, matching
+  the authoring side (#1847).
+- **The saved-file leak scanner masks `/ID` only when it is a real name token**, not wherever the byte sequence
+  `/ID [` appears in a string, comment or stream body — the old masking could blank a string's own content before
+  the leak search ran, hiding a real leak from the test oracle itself (#1858).
+- **The redaction gate hygiene issues from #1527's class are narrower:** two env-var-gated code paths that used to
+  report PASS while asserting nothing now report SKIPPED with a reason, and a per-class pass floor stops an
+  all-skip run from reading as green (#1787, #1886, partially).
+
+### Fixed
+
+- **Sticky notes no longer render upside down.** The resting card's text renderer drew every note's text upside
+  down and in reverse line order (and the drop shadow fell up-right instead of down-right) — a sign error in the
+  #1794 post-it-card code path that the FreeText annotation typesetter never had. Also: the sticky-note edit box
+  now sets its text direction (`FlowDirection`) from the note's own text via the UAX #9 first-strong-character
+  rule, so typing Arabic or Hebrew into a note edits and displays in the correct direction (#1916).
+- **Two W-9-shaped form-field editing bugs:** a small text field styled as a checkbox (type in an "x" to mean
+  checked) now centers the mark instead of left-aligning it (#1897); a tall/thick text field now wraps its text
+  at a real font size instead of scaling the font to the box's full height and scrolling (#1898, partial — the
+  underlying XFA-vs-AcroForm multiline-flag mismatch is plumbed defensively but not confirmed as the root cause
+  on every producer).
+- **Cut (⌘X/Ctrl+X) is a real menu item**, acting on the focused editable text (form field, search box); it is a
+  silent no-op on page body text, matching the #1162 spec decision (#1173).
+- **Vertical (Identity-V) CJK text copies as one line per column**, not one line per glyph — `JoinText`'s
+  line-break rule read the horizontal-writing axis for every script; it now reads the font's own writing-mode flag
+  (#1902, #1204).
+- **A scripted redaction now marks the document unsaved**, a scripted save no longer leaves temp files behind on
+  multi-term redactions, and a scripted load's timeout actually bounds an already-running load instead of only
+  giving up on waiting for it (#1501, partial). A scripted `LoadDocumentCommand` now sets the view model's document
+  reference at the source, removing several `#917` mirror-guard workarounds (#1878).
+- **The Unsaved Changes dialog's grammar no longer reads "1 page edit that have not been saved"** for singular
+  counts (#1806, partial).
+- Small polish: the Keyboard Shortcuts panel shows ⌘ notation on macOS instead of always showing `Ctrl+`.
+
+### Known issues
+
+- **Investigated and refuted:** #1629 (a second document lost during a cold-launch race) did not reproduce across
+  30 clean-sweep runs plus 22 further runs deliberately widening the race window, including real foreground
+  activation matching the original report's exact command. Closed as not reproducible; #1819's harness
+  (`scripts/run-cold-launch-double-open.sh`) is merged for future use.
+- **Open, deliberately paused pending an objective risk-severity standard (D16):** `--close-width`'s gap-relocation
+  rate on real documents (#1751), remaining alignment-aware width-closing gaps — TJ-spaced/shared-`Tw` justified
+  lines, ragged-right lines misclassified as justified (#1752), `WidthPolicy.QuantizeGap` (#1754), the new
+  `FixedMarker` default's own residual gap on justified/centred/right-aligned lines (#1904), and `unredact --mode
+  residue` treating the new default's fixed marker gap as a finding on every redaction (#1907).
+- **Open, confirmed, deferred:** a stray `Q` inside a form still corrupts `ContentStreamWalker`/`SkiaRenderer`'s
+  saved graphics state on an *unflattened* page — the redaction glyph pass itself is unaffected since it runs on
+  the now-balanced flattened stream, but rendering and `page.Letters` are not (#1901). Width-closing decorations
+  of moved text, or spanning the redacted term plus a neighbour, keep their old extent (#1906). The GUI's
+  mark-then-apply path redacts as an area, so a word-sized mark under the new default keeps the word's width and
+  its underline (#1905). After a 20,000-page PDF loads, the UI is unresponsive for 17-18 seconds and a subsequent
+  tab switch reads "Untitled" for 10 more (#1911).
+
 ## [3.13.0] - 2026-09-26
 
 ### Breaking changes (library consumers)
