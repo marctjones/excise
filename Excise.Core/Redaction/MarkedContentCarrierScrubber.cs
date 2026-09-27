@@ -197,13 +197,13 @@ internal static class MarkedContentCarrierScrubber
             removedText,
             page.Document,
             out unscrubbedSharedCarriers,
-            page.Document.Resolve(page.Resources?.GetOptional("Properties") ?? PdfNull.Instance) as PdfDictionary);
+            PagePropertyLists(page));
     }
 
     internal static bool Scrub(
         IReadOnlyList<ContentOperator> ops,
         HashSet<ContentOperator> affectedSpans,
-        IReadOnlyCollection<string> removedText,
+        IReadOnlyList<string> removedText,
         PdfDocument doc,
         out IReadOnlyList<string> unscrubbedSharedCarriers,
         PdfDictionary? properties = null)
@@ -242,10 +242,9 @@ internal static class MarkedContentCarrierScrubber
             }
 
             var enclosesRemovedGlyphs = affectedSpans.Contains(op);
+            // #1880: a removed word is matched in the fold the page matcher reads it in.
             removedAny |= Mask(doc, props, value =>
-                enclosesRemovedGlyphs || (value != null && removedText.Any(t =>
-                    t.Length >= StructureTreeRedactionScrubber.MinMatchLength &&
-                    value.Contains(t, System.StringComparison.Ordinal)))
+                enclosesRemovedGlyphs || TermMatch.Holds(value, removedText, caseSensitive: true, wholeWord: false)
                     ? "" : null);
         }
 
@@ -285,6 +284,20 @@ internal static class MarkedContentCarrierScrubber
         bdc.Operands.Count >= 2 ? bdc.Operands[1] as PdfName : null;
 
     /// <summary>
+    /// The property list a <c>BDC</c> or <c>DP</c> carries: inline, or by NAME
+    /// through <paramref name="properties"/> (#1599, #1849).
+    /// </summary>
+    internal static PdfDictionary? PropertyList(ContentOperator op, PdfDocument doc, PdfDictionary? properties) =>
+        op.Operands.OfType<PdfDictionary>().FirstOrDefault()
+        ?? (NamedPropertyList(op) is { } name
+            ? doc.Resolve(properties?.GetOptional(name.Value) ?? PdfNull.Instance) as PdfDictionary
+            : null);
+
+    /// <summary>The page's <c>/Resources /Properties</c>, where a named property list resolves.</summary>
+    internal static PdfDictionary? PagePropertyLists(PdfPage page) =>
+        page.Document.Resolve(page.Resources?.GetOptional("Properties") ?? PdfNull.Instance) as PdfDictionary;
+
+    /// <summary>
     /// True when every <c>BDC</c> in this content that names
     /// <paramref name="key"/> encloses removed glyphs (#1599).
     /// </summary>
@@ -309,21 +322,10 @@ internal static class MarkedContentCarrierScrubber
         return true;
     }
 
-    private static bool HasTextCarrier(ContentOperator bdc, PdfPage page)
-    {
-        var props = bdc.Operands.OfType<PdfDictionary>().FirstOrDefault();
-        if (props == null && NamedPropertyList(bdc) is { } name)
-        {
-            // #1599: a named span carries the same text carriers as an inline
-            // one, so enclosure tracking has to see it too — otherwise the span
-            // is never marked affected and the dictionary is never reachable.
-            var properties = page.Document.Resolve(
-                page.Resources?.GetOptional("Properties") ?? PdfNull.Instance) as PdfDictionary;
-            props = page.Document.Resolve(
-                properties?.GetOptional(name.Value) ?? PdfNull.Instance) as PdfDictionary;
-        }
-
-        return props != null &&
-               StructureTreeRedactionScrubber.TextCarriers.Any(props.ContainsKey);
-    }
+    // #1599: a named span carries the same text carriers as an inline one, so
+    // enclosure tracking has to see it too — otherwise the span is never marked
+    // affected and the dictionary is never reachable.
+    private static bool HasTextCarrier(ContentOperator bdc, PdfPage page) =>
+        PropertyList(bdc, page.Document, PagePropertyLists(page)) is { } props
+        && StructureTreeRedactionScrubber.TextCarriers.Any(props.ContainsKey);
 }

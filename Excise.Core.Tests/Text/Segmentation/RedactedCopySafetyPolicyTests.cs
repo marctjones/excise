@@ -65,6 +65,39 @@ public sealed class RedactedCopySafetyPolicyTests
         document.GetEmbeddedFiles().Should().ContainSingle();
     }
 
+    /// <summary>
+    /// #1880: the verification searched extracted text with its own whitespace-only
+    /// normalization, so a page still drawing <c>O’Brien</c> verified clean for the
+    /// term <c>O'Brien</c>, a spelling the page matcher would have removed.
+    /// </summary>
+    [Theory]
+    [InlineData(@"O\222Brien", "O'Brien")]
+    [InlineData(@"12\226345", "12-345")]
+    [InlineData("Smith   Jones", "Smith Jones")]
+    public void Evaluate_ATypographicSpellingLeftOnThePage_IsNotVerified(string drawn, string term)
+    {
+        var pdf = Excise.Core.Tests.Content.ContentStreamFixture.Build(
+            $"BT /F1 12 Tf 72 700 Td ({drawn}) Tj ET",
+            fontObject: "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n");
+        using var document = PdfDocument.Open(pdf);
+
+        var report = RedactedCopySafetyPolicy.Evaluate(
+            document,
+            RedactedCopySafetyRequest.ForTerms(new[] { term }, RedactionOptions.Default, new RedactedCopySafetyOptions
+            {
+                ScrubMetadata = false,
+                ScrubRequestedTerms = false,
+                RunCarrierAudit = false,
+                VerifyRequestedTerms = true,
+                RunHiddenTextAudit = false,
+                RunRasterRedactionAudit = false,
+                InspectKeptAttachments = false,
+            }));
+
+        report.ContentVerificationStatus.Should().Be(RedactedContentVerificationStatus.Warning);
+        report.RemainingTermCount.Should().Be(1);
+    }
+
     [Fact]
     public void Evaluate_AttachmentOnlyPolicy_DoesNotImplicitlyScrubMetadata()
     {
