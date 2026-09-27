@@ -52,8 +52,9 @@ public enum RedactionCarriers
     ActionUris = 1 << 9,
 
     /// <summary>
-    /// <c>/ActualText</c> / <c>/Alt</c> / <c>/E</c> in a marked-content property
-    /// list, inline or named through <c>/Properties</c>, in every content stream (#1854).
+    /// <c>/ActualText</c> / <c>/Alt</c> / <c>/E</c>, and any other string (#1892), in a
+    /// marked-content property list, inline or named through <c>/Properties</c>, in every
+    /// content stream (#1854).
     /// </summary>
     MarkedContent = 1 << 10,
 

@@ -10,7 +10,7 @@ namespace Excise.TestSupport;
 /// #1854: one-page PDFs whose marked-content property list holds a text
 /// carrier over glyphs that do NOT spell it, in every place a property list can
 /// sit: inline on the page (<c>/ActualText</c>, <c>/Alt</c>, <c>/E</c>, a
-/// <c>DP</c> point), by NAME through <c>/Properties</c> (alone, shared by two
+/// <c>DP</c> point, a custom key), by NAME through <c>/Properties</c> (alone, shared by two
 /// spans, holding an indirect string), around a form <c>Do</c>, and inside every
 /// other kind of content stream: a form XObject, an annotation appearance, a
 /// tiling pattern and a Type 3 glyph procedure.
@@ -38,6 +38,12 @@ internal static class MarkedContentCarrierFixtures
             ["inline /Alt"] = v => ContentStreamFixture.Build(Span(v, "Alt")),
             ["inline /E"] = v => ContentStreamFixture.Build(Span(v, "E")),
             ["DP point"] = v => ContentStreamFixture.Build($"/Span << /ActualText {v} >> DP {Text}"),
+            // #1892: a key no spec names still holds the text in the file.
+            ["inline custom key"] = v => ContentStreamFixture.Build(Span(v, "MyNote")),
+            ["custom key, nested"] = v => ContentStreamFixture.Build($"/Span << /MyNote [<< /Said {v} >>] >> BDC {Text} EMC"),
+            ["named custom key"] = v => ContentStreamFixture.Build($"/Span /P1 BDC {Text} EMC",
+                extraObjects: $"6 0 obj\n<< /MyNote {v} >>\nendobj\n",
+                extraResources: "/Properties << /P1 6 0 R >>"),
             ["named"] = v => ContentStreamFixture.Build($"/Span /P1 BDC {Text} EMC",
                 extraObjects: $"6 0 obj\n<< /ActualText {v} >>\nendobj\n",
                 extraResources: "/Properties << /P1 6 0 R >>"),

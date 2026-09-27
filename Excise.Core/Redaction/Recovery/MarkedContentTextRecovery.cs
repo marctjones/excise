@@ -54,8 +54,6 @@ internal static class MarkedContentTextRecovery
     public readonly record struct MarkedContentText(
         int PageNumber, string Carrier, string Text, PdfRectangle? Enclosed, bool NamedPropertyList);
 
-    private static readonly string[] Carriers = { "ActualText", "Alt", "E" };
-
     public static IReadOnlyList<MarkedContentText> Scan(PdfDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
@@ -246,14 +244,12 @@ internal static class MarkedContentTextRecovery
         PdfDocument document, PdfDictionary props, bool named, string? name, PdfRectangle? box,
         int pageNumber, List<(MarkedContentText Text, string? Name)> found)
     {
-        foreach (var carrier in Carriers)
+        // #1892: every text entry, a key no spec names included, as the scrub masks.
+        foreach (var (carrier, value, _) in MarkedContentCarrierScrubber.TextEntries(document, props))
         {
-            if (!props.ContainsKey(carrier)) continue;
-            // #1155: the value may be an indirect string; a plain read misses it.
-            var value = (document.Resolve(props.GetOptional(carrier) ?? PdfNull.Instance) as PdfString)?.Value;
             if (string.IsNullOrWhiteSpace(value)) continue;
             found.Add((new MarkedContentText(
-                pageNumber, $"marked-content /{carrier}", value!, box, named),
+                pageNumber, $"marked-content /{carrier}", value, box, named),
                 name));
         }
     }

@@ -99,6 +99,34 @@ public class MarkedContentTermCarrierTests
             "the painted glyphs never held the term and must survive");
     }
 
+    /// <summary>
+    /// #1892, the enclosure signal: a key no spec names, over the removed
+    /// glyphs, goes with them whatever it says. A <c>/Lang</c> tag and an
+    /// optional-content group's <c>/Name</c> (the OptionalContent carrier's,
+    /// here switched off) are not text of the span and stay.
+    /// </summary>
+    [Theory]
+    [InlineData(RedactionProfile.Standard)]
+    [InlineData(RedactionProfile.Maximum)]
+    public void ACustomKeyOverTheRemovedGlyphs_GoesWithThem(RedactionProfile profile)
+    {
+        using var document = PdfDocument.Open(Excise.Core.Tests.Content.ContentStreamFixture.Build(
+            $"/OC /L1 BDC /Span << /MyNote (Harrier note) /Lang (en-GB) >> BDC BT /F1 12 Tf 72 700 Td ({Term}) Tj ET EMC EMC",
+            extraObjects: "6 0 obj\n<< /Type /OCG /Name (Heron layer) >>\nendobj\n",
+            extraResources: "/Properties << /L1 6 0 R >>"));
+        var options = RedactionOptions.ForProfile(profile);
+
+        document.RedactText(Term, options with { Carriers = options.Carriers & ~RedactionCarriers.OptionalContent });
+        var saved = document.SaveToBytes();
+
+        SavedPdfLeakScanner.FindTerm(saved, Term).Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, "Harrier").Should().BeEmpty(
+            "the span's glyphs were removed, so what it says about them goes too");
+        SavedPdfLeakScanner.FindTerm(saved, "en-GB").Should().NotBeEmpty("a language tag is not text");
+        SavedPdfLeakScanner.FindTerm(saved, "Heron").Should().NotBeEmpty(
+            "a layer name is the OptionalContent carrier's, and the caller switched it off");
+    }
+
     [Fact]
     public void RedactText_ReportsTheCarrierScrubbed()
     {

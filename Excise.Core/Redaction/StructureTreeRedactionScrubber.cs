@@ -43,15 +43,6 @@ namespace Excise.Core.Text.Segmentation;
 internal static class StructureTreeRedactionScrubber
 {
     /// <summary>
-    /// Text carriers on a MARKED-CONTENT property list (§14.6.2), in scrub
-    /// order. Deliberately NOT the same list as
-    /// <see cref="StructureElementTextCarriers"/>: a property list has no
-    /// title, so adding <c>/T</c> here would scrub an unrelated key a producer
-    /// happens to have called <c>/T</c>.
-    /// </summary>
-    internal static readonly string[] TextCarriers = { "ActualText", "Alt", "E" };
-
-    /// <summary>
     /// Text carriers on a STRUCTURE ELEMENT (§14.7.2 Table 355), in scrub
     /// order. <c>/T</c> is the element's human-readable title — "Section
     /// Quillfeather" — and #1583 measured it surviving a redaction that
