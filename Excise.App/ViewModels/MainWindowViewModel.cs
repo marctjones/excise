@@ -1699,9 +1699,10 @@ internal partial class MainWindowViewModel : ViewModelBase
         if (current == null)
             return Task.CompletedTask;
 
-        // Normally a no-op (they are the same instance). The headless scripting
-        // load replaces the service's document without pointing this one at it;
-        // the service disposed the one this held.
+        // Normally a no-op (they are the same instance). Kept as a defensive
+        // resync for any future path that mutates the service's document
+        // without also pointing this property at it (the headless scripting
+        // load used to be exactly that gap; #1878 fixed it at the source).
         if (!ReferenceEquals(current, _pdfCoreDocument))
             PdfCoreDocument = current;
 
