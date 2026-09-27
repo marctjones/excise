@@ -378,6 +378,12 @@ public class FormFieldsOverlayTests
             var combo = formLayer.Children.OfType<ComboBox>().Single();
             combo.SelectedItem.Should().Be("Choice2");
 
+            // #1446: the shown label is escaped, the stored option and committed value stay raw.
+            var label = combo.ItemTemplate!.Build("a\u202Eb").Should().BeOfType<TextBlock>().Subject;
+            label.Text.Should().Be(Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay("a\u202Eb"))
+                .And.NotContain("\u202E");
+            combo.ItemsSource!.Cast<string>().Should().Contain("Choice1", "the option list itself is not rewritten");
+
             combo.SelectedItem = "Choice1";
             await Task.Delay(50);
 

@@ -503,7 +503,7 @@ internal partial class MainWindowViewModel : ViewModelBase
             if (!string.IsNullOrEmpty(_hoveredAnnotationInfo))
                 return _hoveredAnnotationInfo;
             if (RedactionWorkflow.PendingRedactions.Count > 0)
-                return $"{RedactionWorkflow.PendingRedactions.Count} areas marked";
+                return $"{RedactionWorkflow.PendingRedactions.Count} {(RedactionWorkflow.PendingRedactions.Count == 1 ? "area" : "areas")} marked";
             if (FileState.TypewriterEditsCount > 0)
                 return $"{FileState.TypewriterEditsCount} typewriter edit(s) pending";
             if (FileState.FormFieldEditsCount > 0)
@@ -2701,6 +2701,30 @@ internal partial class MainWindowViewModel : ViewModelBase
     internal Action<FluentAvalonia.UI.Controls.FAContentDialog> KeyboardShortcutsDialogRequested { get; set; } =
         dialog => _ = dialog.ShowAsync();
 
+    // Menu accelerators are Cmd on macOS; the tab shortcuts stay Ctrl there.
+    internal static string KeyboardShortcutsText(bool mac) => string.Format(
+        "File:\n" +
+                      "  {0}O - Open PDF\n" +
+                      "  {0}S - Save\n" +
+                      "  {0}Shift+S - Save As\n" +
+                      "  {0}W - Close Document\n\n" +
+                      "Edit:\n" +
+                      "  {0}F - Find\n" +
+                      "  F3 - Find Next\n" +
+                      "  Shift+F3 - Find Previous\n" +
+                      "  T - Toggle Text Selection Mode\n" +
+                      "  R - Toggle Redaction Mode\n\n" +
+                      "View:\n" +
+                      "  {0}+ - Zoom In\n" +
+                      "  {0}- - Zoom Out\n" +
+                      "  {0}0 - Actual Size\n\n" +
+                      "Navigation:\n" +
+                      "  PgUp/PgDn - Previous/Next Page\n\n" +
+                      "Tabs:\n" +
+                      "  Ctrl+Tab / Ctrl+Shift+Tab - Next/Previous Document Tab\n" +
+                      "  Ctrl+PgDn / Ctrl+PgUp - Next/Previous Document Tab",
+        mac ? "⌘" : "Ctrl+");
+
     private void ShowKeyboardShortcuts()
     {
         _logger.LogInformation("Keyboard shortcuts dialog requested");
@@ -2711,26 +2735,7 @@ internal partial class MainWindowViewModel : ViewModelBase
         var messageBox = new FluentAvalonia.UI.Controls.FAContentDialog
         {
             Title = "Keyboard Shortcuts",
-            Content = "File:\n" +
-                      "  Ctrl+O - Open PDF\n" +
-                      "  Ctrl+S - Save\n" +
-                      "  Ctrl+Shift+S - Save As\n" +
-                      "  Ctrl+W - Close Document\n\n" +
-                      "Edit:\n" +
-                      "  Ctrl+F - Find\n" +
-                      "  F3 - Find Next\n" +
-                      "  Shift+F3 - Find Previous\n" +
-                      "  T - Toggle Text Selection Mode\n" +
-                      "  R - Toggle Redaction Mode\n\n" +
-                      "View:\n" +
-                      "  Ctrl++ - Zoom In\n" +
-                      "  Ctrl+- - Zoom Out\n" +
-                      "  Ctrl+0 - Actual Size\n\n" +
-                      "Navigation:\n" +
-                      "  PgUp/PgDn - Previous/Next Page\n\n" +
-                      "Tabs:\n" +
-                      "  Ctrl+Tab / Ctrl+Shift+Tab - Next/Previous Document Tab\n" +
-                      "  Ctrl+PgDn / Ctrl+PgUp - Next/Previous Document Tab",
+            Content = KeyboardShortcutsText(OperatingSystem.IsMacOS()),
             CloseButtonText = "Close",
             DefaultButton = FluentAvalonia.UI.Controls.FAContentDialogButton.Close
         };
@@ -2893,7 +2898,7 @@ internal partial class MainWindowViewModel : ViewModelBase
     /// </remarks>
     internal SaveFileRequest BuildRedactedSaveRequest(string suggestedPath) => new()
     {
-        Title = $"Save Redacted PDF ({RedactionWorkflow.PendingCount} areas will be redacted)",
+        Title = $"Save Redacted PDF ({RedactionWorkflow.PendingCount} {(RedactionWorkflow.PendingCount == 1 ? "area" : "areas")} will be redacted)",
         DefaultExtension = "pdf",
         SuggestedFileName = System.IO.Path.GetFileName(suggestedPath),
         Filters = new[] { FilePickerFilters.PdfDocumentWithMimeType },

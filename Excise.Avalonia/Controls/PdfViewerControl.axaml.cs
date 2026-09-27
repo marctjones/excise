@@ -1068,11 +1068,16 @@ public partial class PdfViewerControl : UserControl
         }
     }
 
+    // #1446: an option is document-authored text. Show it escaped; SelectedItem stays the raw string.
+    private static readonly global::Avalonia.Controls.Templates.FuncDataTemplate<string> EscapedLabelTemplate =
+        new((option, _) => new TextBlock { Text = UnicodeTextSafety.EscapeForDisplay(option) });
+
     private Control CreateChoiceFieldInput(Excise.Core.Document.PdfField field, double w, double h)
     {
         var combo = new ComboBox
         {
             ItemsSource = field.Options,
+            ItemTemplate = EscapedLabelTemplate,
             SelectedItem = field.Value,
             IsEnabled = !field.IsReadOnly,
             Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0xFF, 0xFF)),
@@ -1102,6 +1107,7 @@ public partial class PdfViewerControl : UserControl
             var combo = new ComboBox
             {
                 ItemsSource = options,
+                ItemTemplate = EscapedLabelTemplate,
                 SelectedItem = options.Contains(field.Value ?? string.Empty) ? field.Value : null,
                 IsEnabled = !field.IsReadOnly,
                 Background = new SolidColorBrush(Color.FromArgb(0x20, 0x00, 0xAA, 0x44)),

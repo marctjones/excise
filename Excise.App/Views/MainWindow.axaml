@@ -1979,7 +1979,7 @@
                                                            TextTrimming="CharacterEllipsis"
                                                            Foreground="{DynamicResource TextPrimaryBrush}"/>
                                                 <TextBlock Grid.Column="1"
-                                                           Text="{Binding PageIndex, StringFormat='p.{0}'}"
+                                                           Text="{Binding PageNumber, StringFormat='p.{0}'}"
                                                            FontSize="11"
                                                            Margin="6,0,0,0"
                                                            Foreground="{DynamicResource BrandPrimaryBrush}"/>

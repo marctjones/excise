@@ -162,6 +162,19 @@ public class HostSeamTests
     /// method that needed a real <c>Window</c> to call.
     /// </summary>
     [Fact]
+    public void ShortcutsText_UsesCommandNotationOnMacAndCtrlElsewhere_TabShortcutsStayCtrl()
+    {
+        Excise.App.ViewModels.MainWindowViewModel.KeyboardShortcutsText(true).Should().Contain("⌘S - Save").And.Contain("Ctrl+Tab");
+        Excise.App.ViewModels.MainWindowViewModel.KeyboardShortcutsText(false).Should().Contain("Ctrl+S - Save").And.NotContain("⌘");
+    }
+
+    [Fact]
+    public void SearchMatch_ShowsAOneBasedPageNumber()
+    {
+        new Excise.App.Models.SearchMatch { PageIndex = 0 }.PageNumber.Should().Be(1);
+    }
+
+    [Fact]
     public void RedactedSaveRequest_StatesThePendingCountAndOpensBesideTheSource()
     {
         var picker = new RecordingFilePicker();
