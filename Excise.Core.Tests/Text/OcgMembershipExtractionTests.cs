@@ -178,6 +178,76 @@ public sealed class OcgMembershipExtractionTests
         }
     }
 
+    [Fact]
+    public void UnclosedHiddenSpanInFormXObject_DoesNotHideThePageTextAfterDo()
+    {
+        // #1894: the form opens a hidden /OC span and never closes it. §14.6 confines a
+        // marked-content sequence to one content stream, so the span ends with the form;
+        // the page text after the Do is visible. Carried onto the page, it flagged the
+        // visible secret hidden, and a visible-only redaction skipped it.
+        var pdf = BuildFormOcPdf(
+            pageContent: "/Fx Do\nBT /F1 12 Tf 100 700 Td (PAGESECRET) Tj ET",
+            formContent: "/OC /MC0 BDC\nBT /F1 12 Tf 100 600 Td (FORMJUNK) Tj ET");
+
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            var letters = doc.GetPage(1).Letters;
+            string.Concat(letters.Where(l => l.IsInHiddenOptionalContent).Select(l => l.Value))
+                .Should().Be("FORMJUNK");
+        }
+
+        using var redacted = PdfDocument.Open(pdf);
+        redacted.RedactText("PAGESECRET", RedactionOptions.Default with { IncludeHiddenLayers = false });
+        var saved = redacted.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(saved, "PAGESECRET").Should().BeEmpty(
+            "text the page paints visibly must be redacted when hidden layers are excluded");
+        if (MutoolTextOracle.IsAvailable)
+            MutoolTextOracle.ExtractAllPages(saved).Should().NotContain("PAGESECRET");
+    }
+
+    [Fact]
+    public void StrayEmcInFormXObject_LeavesThePageTextAfterDoVisible_AndKeepsItsMcid()
+    {
+        // #1894: the form's first operator is an EMC it has no BDC for. §14.6 (and Poppler)
+        // keep the page's hidden /OC span open, but MuPDF and Ghostscript close it and paint
+        // everything after it. A viewer paints the text, so it is not hidden, and a
+        // visible-only redaction must reach it. The tagged span around it keeps its /MCID.
+        var pdf = BuildFormOcPdf(
+            pageContent: "/P <</MCID 3>> BDC\n/OC /MC0 BDC\n/Fx Do\n" +
+                         "BT /F1 12 Tf 100 700 Td (HIDDENSECRET) Tj ET\nEMC\nEMC\n" +
+                         "BT /F1 12 Tf 100 650 Td (VISIBLE) Tj ET",
+            formContent: "EMC\nBT /F1 12 Tf 100 600 Td (FORMTEXT) Tj ET");
+
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            var letters = doc.GetPage(1).Letters;
+            letters.Where(l => l.IsInHiddenOptionalContent).Should().BeEmpty();
+            string.Concat(letters.Where(l => l.MarkedContentId == 3).Select(l => l.Value))
+                .Should().Be("FORMTEXTHIDDENSECRET");
+        }
+
+        using var redacted = PdfDocument.Open(pdf);
+        redacted.RedactText("HIDDENSECRET", RedactionOptions.Default with { IncludeHiddenLayers = false });
+        var saved = redacted.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(saved, "HIDDENSECRET").Should().BeEmpty(
+            "text a viewer paints must be redacted when hidden layers are excluded");
+        if (MutoolTextOracle.IsAvailable)
+            MutoolTextOracle.ExtractAllPages(saved).Should().NotContain("HIDDENSECRET");
+    }
+
+    // A page that invokes form XObject /Fx; both streams can reach the default-OFF OCG
+    // through /MC0.
+    private static byte[] BuildFormOcPdf(string pageContent, string formContent) => Build(
+        "<< /Type /Catalog /Pages 2 0 R /OCProperties << /OCGs [6 0 R] /D << /OFF [6 0 R] >> >> >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> /XObject << /Fx 7 0 R >> /Properties << /MC0 6 0 R >> >> >>",
+        Stream(pageContent),
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+        "<< /Type /OCG /Name (Alpha) >>",
+        Stream(formContent, "/Type /XObject /Subtype /Form /BBox [0 0 612 792] " +
+            "/Resources << /Font << /F1 5 0 R >> /Properties << /MC0 6 0 R >> >> "));
+
     // Builds a one-page PDF whose content shows VISIBLE text, then a marked-content
     // /OC span (referencing the property object) containing the secret.
     private static byte[] BuildOcPdf(
@@ -207,10 +277,10 @@ public sealed class OcgMembershipExtractionTests
         return Build(bodies.ToArray());
     }
 
-    private static string Stream(string content)
+    private static string Stream(string content, string entries = "")
     {
         var length = Encoding.Latin1.GetBytes(content).Length;
-        return $"<< /Length {length} >>\nstream\n{content}\nendstream";
+        return $"<< {entries}/Length {length} >>\nstream\n{content}\nendstream";
     }
 
     private static byte[] Build(params string[] bodies)
