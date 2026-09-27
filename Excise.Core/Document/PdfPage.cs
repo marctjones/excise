@@ -527,6 +527,50 @@ public partial class PdfPage
     }
 
     /// <summary>
+    /// Name of a page ExtGState that sets exactly the given stroking (<c>/CA</c>) and
+    /// non-stroking (<c>/ca</c>) alpha (<c>null</c> omits that key), reusing an equal
+    /// entry already on the page so a value is written once per page, not per draw.
+    /// </summary>
+    internal string AddOpacityState(double? strokeAlpha, double? fillAlpha)
+    {
+        var resources = EnsureResources();
+        var states = resources.ResolveDictionary(_document, "ExtGState");
+        if (states == null)
+        {
+            states = new PdfDictionary();
+            resources["ExtGState"] = states;
+        }
+
+        foreach (var kvp in states)
+        {
+            if (_document.Resolve(kvp.Value) is PdfDictionary existing
+                && existing.Keys.All(k => k.Value is "Type" or "CA" or "ca")
+                && HasAlpha(existing, "CA", strokeAlpha)
+                && HasAlpha(existing, "ca", fillAlpha))
+            {
+                return kvp.Key.Value;
+            }
+        }
+
+        var state = new PdfDictionary();
+        if (strokeAlpha is { } stroke)
+            state.SetNumber("CA", stroke);
+        if (fillAlpha is { } fill)
+            state.SetNumber("ca", fill);
+
+        int n = 1;
+        while (states.ContainsKey($"GS{n}"))
+            n++;
+        states[$"GS{n}"] = state;
+        return $"GS{n}";
+
+        static bool HasAlpha(PdfDictionary state, string key, double? alpha) =>
+            alpha is { } a
+                ? state.GetOptional(key) is { } value && value.TryGetNumber(out var n) && n == a
+                : !state.ContainsKey(key);
+    }
+
+    /// <summary>
     /// Ensures the page has a Resources dictionary, creating one if needed.
     /// </summary>
     private PdfDictionary EnsureResources()

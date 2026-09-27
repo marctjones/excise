@@ -49,6 +49,30 @@ public class PdfGraphics : IDisposable
 {
     private readonly PdfPage _page;
     private readonly StringBuilder _operators;
+
+    /// <summary>
+    /// Path-construction operators since the last painting operator. ISO 32000-2
+    /// §8.2 (Figure 9) admits only path-construction and clipping operators inside a
+    /// path object, so the path is held back until Stroke/Fill/FillAndStroke has
+    /// written the colour and line state it paints with (#1851).
+    /// </summary>
+    private readonly StringBuilder _pendingPath = new();
+
+    /// <summary>
+    /// The graphics-state parameters a pen or brush can change beyond colour and width.
+    /// They persist until set again, so each is written only when it differs from what
+    /// this context last set, and <see cref="Dispose"/> puts back the ISO 32000-2
+    /// initial values so a later context on the same page starts from them.
+    /// </summary>
+    private record struct PaintState(
+        IReadOnlyList<double>? Dash, double DashPhase, PdfLineCap Cap, PdfLineJoin Join,
+        double MiterLimit, double StrokeAlpha, double FillAlpha)
+    {
+        public static readonly PaintState Initial = new(null, 0, PdfLineCap.Butt, PdfLineJoin.Miter, 10, 1, 1);
+    }
+
+    private PaintState _state = PaintState.Initial;
+    private readonly Stack<PaintState> _savedStates = new();
     private bool _disposed;
 
     /// <summary>
@@ -85,6 +109,7 @@ public class PdfGraphics : IDisposable
     {
         ThrowIfDisposed();
         EmitLine("q");
+        _savedStates.Push(_state);
     }
 
     /// <summary>
@@ -94,6 +119,8 @@ public class PdfGraphics : IDisposable
     {
         ThrowIfDisposed();
         EmitLine("Q");
+        if (_savedStates.Count > 0)
+            _state = _savedStates.Pop();
     }
 
     #endregion
@@ -204,9 +231,10 @@ public class PdfGraphics : IDisposable
 
         if (stroke != null)
         {
-            EmitLine(stroke.GetStrokeColorOperator());
-            EmitLine(stroke.GetLineWidthOperator());
+            ApplyPen(stroke);
         }
+
+        ApplyOpacity(stroke?.Opacity, fill?.Opacity);
 
         // Draw rectangle path
         EmitLine($"{Fmt(x)} {Fmt(y)} {Fmt(width)} {Fmt(height)} re");
@@ -237,8 +265,8 @@ public class PdfGraphics : IDisposable
     {
         ThrowIfDisposed();
 
-        EmitLine(pen.GetStrokeColorOperator());
-        EmitLine(pen.GetLineWidthOperator());
+        ApplyPen(pen);
+        ApplyOpacity(pen.Opacity, null);
         EmitLine($"{Fmt(x1)} {Fmt(y1)} m");
         EmitLine($"{Fmt(x2)} {Fmt(y2)} l");
         EmitLine("S");
@@ -263,7 +291,7 @@ public class PdfGraphics : IDisposable
     public void MoveTo(double x, double y)
     {
         ThrowIfDisposed();
-        EmitLine($"{Fmt(x)} {Fmt(y)} m");
+        AppendPath($"{Fmt(x)} {Fmt(y)} m");
     }
 
     /// <summary>
@@ -272,7 +300,7 @@ public class PdfGraphics : IDisposable
     public void LineTo(double x, double y)
     {
         ThrowIfDisposed();
-        EmitLine($"{Fmt(x)} {Fmt(y)} l");
+        AppendPath($"{Fmt(x)} {Fmt(y)} l");
     }
 
     /// <summary>
@@ -287,7 +315,7 @@ public class PdfGraphics : IDisposable
     public void CurveTo(double x1, double y1, double x2, double y2, double x3, double y3)
     {
         ThrowIfDisposed();
-        EmitLine($"{Fmt(x1)} {Fmt(y1)} {Fmt(x2)} {Fmt(y2)} {Fmt(x3)} {Fmt(y3)} c");
+        AppendPath($"{Fmt(x1)} {Fmt(y1)} {Fmt(x2)} {Fmt(y2)} {Fmt(x3)} {Fmt(y3)} c");
     }
 
     /// <summary>
@@ -296,7 +324,7 @@ public class PdfGraphics : IDisposable
     public void ClosePath()
     {
         ThrowIfDisposed();
-        EmitLine("h");
+        AppendPath("h");
     }
 
     /// <summary>
@@ -305,9 +333,9 @@ public class PdfGraphics : IDisposable
     public void Stroke(PdfPen pen)
     {
         ThrowIfDisposed();
-        EmitLine(pen.GetStrokeColorOperator());
-        EmitLine(pen.GetLineWidthOperator());
-        EmitLine("S");
+        ApplyPen(pen);
+        ApplyOpacity(pen.Opacity, null);
+        EmitPath("S");
     }
 
     /// <summary>
@@ -317,7 +345,8 @@ public class PdfGraphics : IDisposable
     {
         ThrowIfDisposed();
         EmitLine(brush.GetFillColorOperator());
-        EmitLine("f");
+        ApplyOpacity(null, brush.Opacity);
+        EmitPath("f");
     }
 
     /// <summary>
@@ -327,9 +356,82 @@ public class PdfGraphics : IDisposable
     {
         ThrowIfDisposed();
         EmitLine(brush.GetFillColorOperator());
+        ApplyPen(pen);
+        ApplyOpacity(pen.Opacity, brush.Opacity);
+        EmitPath("B");
+    }
+
+    private void AppendPath(string line)
+    {
+        _pendingPath.Append(line);
+        _pendingPath.Append('\n');
+    }
+
+    /// <summary>
+    /// Write the pen's stroke colour and width, then whichever of its dash, cap, join
+    /// and miter limit differ from the current state.
+    /// </summary>
+    private void ApplyPen(PdfPen pen)
+    {
         EmitLine(pen.GetStrokeColorOperator());
         EmitLine(pen.GetLineWidthOperator());
-        EmitLine("B");
+        SetLineStyle(pen.DashArray, pen.DashPhase, pen.LineCap, pen.LineJoin, pen.MiterLimit);
+    }
+
+    private void SetLineStyle(IReadOnlyList<double>? dash, double phase, PdfLineCap cap, PdfLineJoin join, double miterLimit)
+    {
+        // §8.4.3.6: an empty dash array strokes solid and takes phase 0.
+        if (dash == null)
+            phase = 0;
+
+        bool sameDash = dash == null ? _state.Dash == null : _state.Dash != null && dash.SequenceEqual(_state.Dash);
+        if (!sameDash || phase != _state.DashPhase)
+        {
+            EmitLine($"[{string.Join(' ', (dash ?? []).Select(Fmt))}] {Fmt(phase)} d");
+            _state = _state with { Dash = dash, DashPhase = phase };
+        }
+        if (cap != _state.Cap)
+        {
+            EmitLine($"{(int)cap} J");
+            _state = _state with { Cap = cap };
+        }
+        if (join != _state.Join)
+        {
+            EmitLine($"{(int)join} j");
+            _state = _state with { Join = join };
+        }
+        if (miterLimit != _state.MiterLimit)
+        {
+            EmitLine($"{Fmt(miterLimit)} M");
+            _state = _state with { MiterLimit = miterLimit };
+        }
+    }
+
+    /// <summary>
+    /// Select an ExtGState setting the stroking (<c>/CA</c>) and non-stroking
+    /// (<c>/ca</c>) alpha that differ from the current state; <c>null</c> leaves one as is.
+    /// </summary>
+    private void ApplyOpacity(double? strokeAlpha, double? fillAlpha)
+    {
+        double? stroke = strokeAlpha is { } s && s != _state.StrokeAlpha ? s : null;
+        double? fill = fillAlpha is { } f && f != _state.FillAlpha ? f : null;
+        if (stroke == null && fill == null)
+            return;
+
+        EmitLine($"/{_page.AddOpacityState(stroke, fill)} gs");
+        _state = _state with
+        {
+            StrokeAlpha = stroke ?? _state.StrokeAlpha,
+            FillAlpha = fill ?? _state.FillAlpha
+        };
+    }
+
+    /// <summary>Write the pending path and the operator that paints (and ends) it.</summary>
+    private void EmitPath(string paintOperator)
+    {
+        _operators.Append(_pendingPath);
+        _pendingPath.Clear();
+        EmitLine(paintOperator);
     }
 
     #endregion
@@ -364,6 +466,7 @@ public class PdfGraphics : IDisposable
 
         // Set fill color
         EmitLine(brush.GetFillColorOperator());
+        ApplyOpacity(null, brush.Opacity);
 
         // Begin text block
         EmitLine("BT");
@@ -534,7 +637,8 @@ public class PdfGraphics : IDisposable
     #region Output
 
     /// <summary>
-    /// Gets the generated PDF operators as a string.
+    /// Gets the generated PDF operators as a string. A path under construction is
+    /// not included until a Stroke/Fill/FillAndStroke call paints it.
     /// </summary>
     public string GetOperators()
     {
@@ -585,6 +689,15 @@ public class PdfGraphics : IDisposable
     {
         if (!_disposed)
         {
+            // A path never painted is ended with the no-op painting operator `n`,
+            // so the stream holds no unterminated path object (§8.5.3.1).
+            if (_pendingPath.Length > 0)
+                EmitPath("n");
+
+            var initial = PaintState.Initial;
+            SetLineStyle(initial.Dash, initial.DashPhase, initial.Cap, initial.Join, initial.MiterLimit);
+            ApplyOpacity(initial.StrokeAlpha, initial.FillAlpha);
+
             // Flush any remaining operations
             if (_operators.Length > 0)
                 Flush();

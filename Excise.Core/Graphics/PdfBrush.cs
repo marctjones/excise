@@ -12,6 +12,21 @@ public class PdfBrush
     /// </summary>
     public PdfColor Color { get; }
 
+    private readonly double _opacity = 1;
+
+    /// <summary>
+    /// Fill opacity from 0 (transparent) to 1 (opaque, the default), clamped to that
+    /// range; applies to shapes and text painted with this brush. Written as the
+    /// <c>/ca</c> entry of a page ExtGState resource.
+    /// </summary>
+    public double Opacity
+    {
+        get => _opacity;
+        init => _opacity = double.IsNaN(value)
+            ? throw new ArgumentOutOfRangeException(nameof(Opacity), value, null)
+            : Math.Clamp(value, 0, 1);
+    }
+
     /// <summary>
     /// Creates a brush with the specified color.
     /// </summary>
