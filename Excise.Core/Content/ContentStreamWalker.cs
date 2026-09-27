@@ -2035,10 +2035,47 @@ internal sealed class ContentStreamWalker
 
             var baseFont = _currentFont.GetNameOrNull("BaseFont");
             if (baseFont != null)
+            {
+                // #1847: codes 39/96 are the one place StandardEncoding and
+                // WinAnsiEncoding name different glyphs -- quoteright/quoteleft
+                // vs quotesingle/grave. GetWidthOrFallback's fast path always
+                // answers with the Standard identity (ISO 32000-2 rule 7: no
+                // /Encoding means the font's built-in encoding, StandardEncoding
+                // for a non-symbolic standard-14 face); a font that actually
+                // declares WinAnsiEncoding gets the other glyph, resolved by
+                // name the way PdfFont's authoring side already does.
+                if ((charCode == 39 || charCode == 96) && FontDeclaresWinAnsiEncoding(_currentFont) &&
+                    Fonts.StandardFontMetrics.TryGetWidthByGlyphName(
+                        baseFont, charCode == 39 ? "quotesingle" : "grave", out var quoteWidth))
+                    return quoteWidth;
+
                 return Fonts.StandardFontMetrics.GetWidthOrFallback(baseFont, charCode);
+            }
         }
 
         return 600; // Default width
+    }
+
+    /// <summary>
+    /// True when a simple font's <c>/Encoding</c> names or bases on
+    /// <c>/WinAnsiEncoding</c> (ISO 32000-2 §9.6.6.2) -- the one signal #1847
+    /// needs to pick quotesingle/grave over the built-in StandardEncoding's
+    /// quoteright/quoteleft at codes 39/96. An absent, non-WinAnsi, or
+    /// unresolvable <c>/Encoding</c> answers false, leaving the built-in
+    /// default in place.
+    /// </summary>
+    private bool FontDeclaresWinAnsiEncoding(PdfDictionary font)
+    {
+        var encObj = _page != null
+            ? _page.Document.Resolve(font.GetOptional("Encoding") ?? PdfNull.Instance)
+            : font.GetOptional("Encoding");
+
+        return encObj switch
+        {
+            PdfName name => name.Value == "WinAnsiEncoding",
+            PdfDictionary dict => dict.GetNameOrNull("BaseEncoding") == "WinAnsiEncoding",
+            _ => false,
+        };
     }
 
     #endregion
