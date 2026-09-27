@@ -210,7 +210,8 @@ internal static class RedactionFeatureStripper
             rows.Count == 0 && cutItems == 0 && reachableCache != null ? reachableCache : ReachableDictionaries(document), dropped, refusals);
         Row("XObject(s) drawn only in hidden optional content", freed.Count(dropped.Contains));
         Row("XObject(s) no content stream draws", freed.Count(n => !dropped.Contains(n)),
-            "filed in a /Resources /XObject that no content stream left in the file invokes, so no reader shows it");
+            "filed in a /Resources /XObject that no content stream left in the file invokes, or invoked with no "
+            + "/Subtype a reader draws (neither /Form nor /Image), so no reader shows it");
         Row(CutItemsRow, cutItems + cutXObjects,
             "an /OBJR or /MCR that named a flattened form field or an XObject no content stream draws, "
             + "and would have kept it and its text in the file");
@@ -864,7 +865,9 @@ internal static class RedactionFeatureStripper
     /// Free every XObject filed in a <c>/Resources /XObject</c> that no content
     /// stream draws: those whose every <c>Do</c> was in removed hidden content
     /// (<paramref name="dropped"/>: #1868, #1872), those only they drew, and
-    /// those never drawn at all (#1873). Returns the object numbers freed. An
+    /// those never drawn at all (#1873), and those a <c>Do</c> invokes that are
+    /// of no kind a reader draws, <c>/Subtype</c> absent or <c>/PS</c> (#1893).
+    /// Returns the object numbers freed. An
     /// XObject some content stream draws is kept, and its text is the text
     /// walk's. A dropped one that cannot be proved undrawn is kept and added to
     /// <paramref name="refusals"/>.
@@ -979,6 +982,9 @@ internal static class RedactionFeatureStripper
             foreach (var number in named)
             {
                 if (!candidates.TryGetValue(number, out var xobject)) continue;
+                // #1893: a Do draws only a form or an image (§8.8); mutool and poppler refuse any other kind.
+                if (Resolve(document, xobject.GetOptional("Subtype") ?? PdfNull.Instance) is not PdfName { Value: "Form" or "Image" })
+                    continue;
                 if (proved) unprovable.Remove(number);
                 else if (!kept.Contains(number)) unprovable.Add(number);
                 if (kept.Add(number) && xobject.GetNameOrNull("Subtype") != "Image")

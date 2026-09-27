@@ -1184,6 +1184,41 @@ public class RedactionProfileTests
     }
 
     /// <summary>
+    /// #1893: a <c>Do</c> invokes it, but its <c>/Subtype</c> is absent or one no
+    /// reader draws (§8.8: <c>/Form</c> or <c>/Image</c>). mutool and pdftotext
+    /// both refuse to draw it, so it is undrawn and still held the term.
+    /// </summary>
+    [Theory]
+    [InlineData("", UndrawnFormToken, false)]
+    [InlineData("", UndrawnFormToken, true)]
+    [InlineData("", "VISIBLE", false)]
+    [InlineData("/Subtype /PS", UndrawnFormToken, false)]
+    [InlineData("/Subtype /PS", "VISIBLE", true)]
+    [InlineData("", "area", false)]
+    public void AnXObjectOfAKindNoReaderDraws_LeavesTheFile(string subtype, string entry, bool maximum)
+    {
+        var form = $"BT /F1 12 Tf 72 500 Td ({UndrawnFormToken}) Tj ET";
+        using var doc = PdfDocument.Open(RecoveryFixtureBuilder.Build("BT /F1 12 Tf 72 700 Td (VISIBLE) Tj ET\nq /Fx0 Do Q\n",
+            new List<RecoveryFixtureBuilder.Obj>
+            {
+                new($"<< /Type /XObject {subtype} /BBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> " +
+                    $"/Length {form.Length} >>", System.Text.Encoding.ASCII.GetBytes(form)),
+            },
+            resourcesExtra: "/XObject << /Fx0 7 0 R >>"));
+
+        var options = maximum ? RedactionOptions.Maximum : RedactionOptions.Default;
+        var report = entry == "area"
+            ? doc.GetPage(1).RedactAreaWithReport(new PdfRectangle(60, 690, 200, 720), options)
+            : doc.RedactText(entry, options);
+
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), UndrawnFormToken).Should().BeEmpty(
+            "no reader draws it, so no tool may read it");
+        report.IsCleanSuccess.Should().BeTrue();
+        report.Removals.Should().ContainSingle(r => r.Feature == "XObject(s) no content stream draws")
+            .Which.Count.Should().Be(1, "every removal is reported");
+    }
+
+    /// <summary>
     /// #1885: a structure-tree content item names the undrawn form and draws
     /// nothing. It kept the form, and its term, in the file with no row.
     /// </summary>
