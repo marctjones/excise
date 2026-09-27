@@ -1016,6 +1016,7 @@ namespace Excise.Core.Graphics
         public static readonly Excise.Core.Graphics.PdfBrush White;
         public PdfBrush(Excise.Core.Graphics.PdfColor color) { }
         public Excise.Core.Graphics.PdfColor Color { get; }
+        public double Opacity { get; init; }
     }
     public readonly struct PdfColor : System.IEquatable<Excise.Core.Graphics.PdfColor>
     {
@@ -1120,6 +1121,18 @@ namespace Excise.Core.Graphics
         public static Excise.Core.Graphics.PdfSize MeasureString(string text, Excise.Core.Graphics.PdfFont font) { }
         public static Excise.Core.Graphics.PdfSize MeasureText(string text, Excise.Core.Graphics.PdfFont font, double maxWidth, double lineSpacing = 1.2) { }
     }
+    public enum PdfLineCap
+    {
+        Butt = 0,
+        Round = 1,
+        Square = 2,
+    }
+    public enum PdfLineJoin
+    {
+        Miter = 0,
+        Round = 1,
+        Bevel = 2,
+    }
     public class PdfPen
     {
         public static readonly Excise.Core.Graphics.PdfPen Black;
@@ -1127,6 +1140,12 @@ namespace Excise.Core.Graphics
         public static readonly Excise.Core.Graphics.PdfPen White;
         public PdfPen(Excise.Core.Graphics.PdfColor color, double width = 1) { }
         public Excise.Core.Graphics.PdfColor Color { get; }
+        public System.Collections.Generic.IReadOnlyList<double>? DashArray { get; init; }
+        public double DashPhase { get; init; }
+        public Excise.Core.Graphics.PdfLineCap LineCap { get; init; }
+        public Excise.Core.Graphics.PdfLineJoin LineJoin { get; init; }
+        public double MiterLimit { get; init; }
+        public double Opacity { get; init; }
         public double Width { get; }
     }
     public readonly struct PdfSize : System.IEquatable<Excise.Core.Graphics.PdfSize>
