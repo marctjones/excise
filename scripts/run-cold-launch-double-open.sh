@@ -39,6 +39,7 @@ DELAYS="0 0.5 1 2 5 10"
 RUNS=5
 SETTLE=5
 LOAD_TIMEOUT=60
+OPEN_BG=(-g)
 OUT="$ROOT/logs/cold-launch-double-open_$(date +%Y%m%d_%H%M%S)"
 
 usage() {
@@ -51,6 +52,8 @@ Usage: scripts/run-cold-launch-double-open.sh [options]
   --delays "<list>"  Seconds between the two opens. Default: "0 0.5 1 2 5 10".
   --runs <n>         Runs per delay. Default: 5.
   --settle <s>       Seconds to wait after the second open. Default: 5.
+  --foreground       Plain `open` (no -g), exactly as #1629 was reported: the
+                     app activates and its window becomes key. Takes focus.
   --output <dir>     Evidence directory. Default: logs/cold-launch-double-open_<ts>.
 
 Exit status: 0 when every run keeps both documents with matching titles,
@@ -66,6 +69,7 @@ while [ "$#" -gt 0 ]; do
         --delays) DELAYS="$2"; shift 2 ;;
         --runs) RUNS="$2"; shift 2 ;;
         --settle) SETTLE="$2"; shift 2 ;;
+        --foreground) OPEN_BG=(); shift ;;
         --output) OUT="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
@@ -152,10 +156,10 @@ for delay in $DELAYS; do
         focus_samples=""
         focus_samples+="$(frontmost);"
 
-        open -g -n -a "$APP" --stdout "$dir/app.log" --stderr "$dir/app.err" "$DOC_A"
+        open ${OPEN_BG[@]+"${OPEN_BG[@]}"} -n -a "$APP" --stdout "$dir/app.log" --stderr "$dir/app.err" "$DOC_A"
         sleep "$delay"
         focus_samples+="$(frontmost);"
-        open -g -a "$APP" --stdout "$dir/second.log" --stderr "$dir/second.err" "$DOC_B"
+        open ${OPEN_BG[@]+"${OPEN_BG[@]}"} -a "$APP" --stdout "$dir/second.log" --stderr "$dir/second.err" "$DOC_B"
         sleep "$SETTLE"
         focus_samples+="$(frontmost);"
 
