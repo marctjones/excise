@@ -15,8 +15,8 @@ namespace Excise.Rendering.Tests.Differential;
 
 /// <summary>
 /// #1091: a term inside one Tj/TJ operand is cut out of that operand and
-/// nothing else is. The neighbours in the same operand keep their glyphs and
-/// their positions. Graded by tools that share no code with excise: the saved
+/// nothing else is. The neighbours in the same operand keep their glyphs and,
+/// relative to each other, their positions. Graded by tools that share no code with excise: the saved
 /// bytes decompressed by <see cref="SavedPdfLeakScanner"/>, and mutool's text
 /// and per-glyph positions.
 /// </summary>
@@ -36,16 +36,22 @@ public sealed class OperandSplitImprovementTests : IDisposable
         try { Directory.Delete(_dir, recursive: true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
     }
 
-    /// <summary>The term mid-string in a Tj, and mid-element in a kerned TJ.</summary>
-    public static TheoryData<string> Shows() => new()
+    /// <summary>
+    /// The term mid-string in a Tj, and mid-element in a kerned TJ, under
+    /// CollapsePreserveLayout (nothing moves) and under the default,
+    /// FixedMarker (#1715), which closes the gap down to the marker's width.
+    /// </summary>
+    public static TheoryData<string, WidthPolicy> Shows() => new()
     {
-        "(Louise Anne Farrar) Tj",
-        "[(Lou) -30 (ise Anne Farrar) 50 (.)] TJ",
+        { "(Louise Anne Farrar) Tj", WidthPolicy.CollapsePreserveLayout },
+        { "[(Lou) -30 (ise Anne Farrar) 50 (.)] TJ", WidthPolicy.CollapsePreserveLayout },
+        { "(Louise Anne Farrar) Tj", RedactionOptions.Default.Width },
+        { "[(Lou) -30 (ise Anne Farrar) 50 (.)] TJ", RedactionOptions.Default.Width },
     };
 
     [Theory]
     [MemberData(nameof(Shows))]
-    public void TermInsideOneOperand_IsRemoved_AndTheNeighboursKeepTheirGlyphsAndPositions(string show)
+    public void TermInsideOneOperand_IsRemoved_AndTheNeighboursKeepTheirGlyphsAndPositions(string show, WidthPolicy width)
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
         var input = RecoveryFixtureBuilder.Build($"BT /F1 24 Tf 72 700 Td {show} ET\n");
@@ -54,7 +60,7 @@ public sealed class OperandSplitImprovementTests : IDisposable
         File.WriteAllBytes(before, input);
         using (var doc = PdfDocument.Open(input))
         {
-            doc.RedactText("Anne", RedactionOptions.Default);
+            doc.RedactText("Anne", RedactionOptions.Default with { Width = width });
             doc.Save(after);
         }
 
@@ -62,18 +68,26 @@ public sealed class OperandSplitImprovementTests : IDisposable
         MutoolTextExtractor.ExtractPage(after, 1).Should()
             .Contain("Louise").And.Contain("Farrar").And.NotContain("Anne");
 
-        // Every glyph but the term's is where mutool put it before the
-        // redaction. Spaces are left out: mutool may synthesise one across the
-        // gap the term leaves.
+        // Every glyph but the term's is kept, on its baseline. Before the term
+        // it keeps its x; after it, it keeps its x when the layout is preserved,
+        // and otherwise moves with the rest of the operand by ONE shift, short
+        // of the term's advance by the gap the policy keeps. Spaces are left
+        // out: mutool may synthesise one across the gap the term leaves.
         var glyphsBefore = Letters(before);
         var glyphsAfter = Letters(after);
         var start = string.Concat(glyphsBefore.Select(g => g.Char)).IndexOf("Anne", StringComparison.Ordinal);
         start.Should().BeGreaterThan(0, "mutool reads the term on the input");
         var expected = glyphsBefore.Take(start).Concat(glyphsBefore.Skip(start + 4)).ToList();
         glyphsAfter.Select(g => g.Char).Should().Equal(expected.Select(g => g.Char));
+        var shift = width == WidthPolicy.CollapsePreserveLayout ? 0 : expected[start].X - glyphsAfter[start].X;
+        if (width != WidthPolicy.CollapsePreserveLayout)
+            shift.Should().BeGreaterThan(0).And.BeLessThan(glyphsBefore[start + 4].X - glyphsBefore[start].X,
+                "the gap closes, down to the marker's width");
         for (var i = 0; i < expected.Count; i++)
         {
-            glyphsAfter[i].X.Should().BeApproximately(expected[i].X, 0.05, $"'{expected[i].Char}' keeps its x");
+            var x = i < start ? expected[i].X : expected[i].X - shift;
+            glyphsAfter[i].X.Should().BeApproximately(x, 0.05,
+                $"'{expected[i].Char}' {(i < start ? "keeps its x" : "moves with the rest of the operand")}");
             glyphsAfter[i].Y.Should().BeApproximately(expected[i].Y, 0.05, $"'{expected[i].Char}' keeps its y");
         }
     }

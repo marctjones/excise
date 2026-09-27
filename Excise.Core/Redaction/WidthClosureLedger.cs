@@ -79,6 +79,40 @@ internal sealed class WidthClosureLedger
         public double Closure => Width - Reserve;
     }
 
+    /// <summary>
+    /// The spans <paramref name="runs"/> removed, left to right. A run drawn
+    /// over one already removed — the same text shown twice, as a repeated
+    /// block or a fake bold does — removed no more of the line: the span closes
+    /// ONCE, by the widest of its runs less the gap kept in it, which is also
+    /// what each copy's own pen chain closes. Summing the runs moved the text
+    /// after a doubled word by twice its width.
+    /// </summary>
+    private static IEnumerable<(double StartX, double Width, double Reserve)> Removed(IEnumerable<Run> runs)
+    {
+        (double StartX, double Width, double Reserve)? span = null;
+        var end = double.NegativeInfinity;
+        foreach (var run in runs.OrderBy(r => r.StartX))
+        {
+            if (span is { } s && Overlays(run, end))
+            {
+                span = (s.StartX, Math.Max(s.Width, run.Width), Math.Max(s.Reserve, run.Reserve));
+                end = Math.Max(end, run.StartX + run.Width);
+                continue;
+            }
+            if (span is { } done) yield return done;
+            span = (run.StartX, run.Width, run.Reserve);
+            end = run.StartX + run.Width;
+        }
+        if (span is { } last) yield return last;
+    }
+
+    /// <summary>
+    /// True when most of <paramref name="run"/> lies before <paramref name="end"/>:
+    /// it is drawn over that span, not after it. Abutting runs (a term split
+    /// across operators, one glyph per operator) overlap by rounding at most.
+    /// </summary>
+    private static bool Overlays(Run run, double end) => run.StartX < end - Math.Max(Eps, run.Width / 2);
+
     private enum Alignment { Left, Centred, Right, Justified }
 
     /// <summary>One line: the glyphs on a baseline between two column-sized gaps.</summary>
@@ -106,7 +140,7 @@ internal sealed class WidthClosureLedger
         public Dictionary<int, double> TwRewrites { get; } = new();
         public Dictionary<int, double> WordSpacing { get; } = new();
 
-        public double Closed => Runs.Sum(r => r.Closure);
+        public double Closed => Removed(Runs).Sum(span => span.Width - span.Reserve);
 
         /// <summary>Ink extents: the first and last non-space glyph.</summary>
         public (double Left, double Right) Ink =>
@@ -115,7 +149,7 @@ internal sealed class WidthClosureLedger
                 : (Lo, Hi);
 
         public double ShiftAt(double x) =>
-            Base - Runs.Where(r => r.StartX < x - Eps).Sum(r => r.Closure)
+            Base - Removed(Runs).Where(span => span.StartX < x - Eps).Sum(span => span.Width - span.Reserve)
                  + (Stretch == 0 ? 0 : Stretch * Spaces.Count(sp => sp.StartX < x - Eps));
     }
 
@@ -173,7 +207,8 @@ internal sealed class WidthClosureLedger
     /// <summary>
     /// Keep each area's gap at its leftmost removed run, so the text that
     /// follows starts where the kept gap ends: a FixedMarker's width (#1725),
-    /// or a QuantizeGap bucket (#1754).
+    /// or a QuantizeGap bucket (#1754). A copy drawn over that run keeps the
+    /// same gap in its own pen chain (see <see cref="Removed"/>).
     /// </summary>
     private void Keep(
         IReadOnlyList<PdfRectangle> areas, Func<PdfRectangle, IReadOnlyList<Letter>, double, double, double> keep)
@@ -182,7 +217,12 @@ internal sealed class WidthClosureLedger
         {
             var runs = group.OrderBy(r => r.StartX).ToList();
             var removed = runs.SelectMany(r => r.Letters).ToList();
-            runs[0].Reserve = Math.Max(0, keep(areas[group.Key], removed, runs[0].StartX, runs.Sum(r => r.Width)));
+            var width = _lines.Sum(line => Removed(line.Runs.Where(r => r.Area == group.Key)).Sum(span => span.Width));
+            var reserve = Math.Max(0, keep(areas[group.Key], removed, runs[0].StartX, width));
+            var end = runs[0].StartX + runs[0].Width;
+            foreach (var run in _lines.First(line => line.Runs.Contains(runs[0])).Runs)
+                if (ReferenceEquals(run, runs[0]) || (run.Area == group.Key && Overlays(run, end)))
+                    run.Reserve = reserve;
         }
     }
 
@@ -202,7 +242,7 @@ internal sealed class WidthClosureLedger
                        line.Hi + line.ShiftAt(line.Hi + 1) <= line.Limit + Eps &&
                        line.Spaces.All(sp => sp.Width + line.Stretch >= 0.1 * line.Em);
             if (fits) continue;
-            var kept = line.Runs.Sum(r => r.Reserve);
+            var kept = Removed(line.Runs).Sum(span => span.Reserve);
             foreach (var run in line.Runs) run.Reserve = 0;
             Align(line);
             _notes.Add($"line at y={line.Y:F1}: no room on the line for the {kept:F1} pt gap {_policy} keeps; " +
