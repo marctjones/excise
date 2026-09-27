@@ -590,6 +590,7 @@ public static class PdfDocumentRedactionExtensions
         ("/PageLabels /P", Excise.Core.Operations.RedactionCarriers.PageLabels),
         ("/Names and /Dests keys", Excise.Core.Operations.RedactionCarriers.NameTreeKeys),
         ("signature dictionaries and certificates", Excise.Core.Operations.RedactionCarriers.Signatures),
+        ("optional-content names and labels", Excise.Core.Operations.RedactionCarriers.OptionalContent),
     };
 
     /// <summary>
