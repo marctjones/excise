@@ -7,7 +7,7 @@ using Excise.Core.Primitives;
 namespace Excise.Core.Text.Segmentation;
 
 /// <summary>
-/// Scrubs text carriers (/ActualText, /Alt, /E) carried INLINE in the content
+/// Scrubs text carriers (/ActualText, /Alt, /E, any other string, #1892) carried INLINE in the content
 /// stream as a marked-content property list — <c>/Span &lt;&lt;/ActualText (SECRET)&gt;&gt; BDC …
 /// EMC</c> (§14.9.4) — when the span encloses redacted glyphs or its value
 /// restates a removed word.
@@ -143,23 +143,69 @@ internal static class MarkedContentCarrierScrubber
 
     /// <summary>
     /// Give each text carrier of <paramref name="props"/> what <paramref name="apply"/>
-    /// returns for its value (null when it is not a string): empty drops the
-    /// key, null leaves it.
+    /// returns for its value: empty drops it, null leaves it.
     /// </summary>
     private static bool Mask(PdfDocument document, PdfDictionary props, System.Func<string?, string?> apply)
     {
         var changed = false;
-        foreach (var carrier in StructureTreeRedactionScrubber.TextCarriers)
+        foreach (var (_, value, set) in TextEntries(document, props))
         {
-            if (!props.ContainsKey(carrier)) continue;
-            // /ActualText/Alt/E may be an indirect string (#1155).
-            var value = (document.Resolve(props.GetOptional(carrier)!) as PdfString)?.Value;
             if (apply(value) is not { } replacement) continue;
-            if (replacement.Length == 0) props.Remove(carrier);
-            else props[carrier] = new PdfString(replacement);
+            set(replacement);
             changed = true;
         }
         return changed;
+    }
+
+    /// <summary>
+    /// The text a property list carries, by walking its entries rather than
+    /// naming them (#1892): every string, under a key no spec names too, and
+    /// one nested in a direct array or dictionary, each with the top-level key
+    /// it sits under and a setter (empty drops it). A string may be indirect
+    /// (#1155); a container reached by reference is not the property list's.
+    /// Not <c>/Lang</c>, a language tag (§14.9.2), and nothing of an
+    /// optional-content group or membership dictionary (§8.11.3.2): its
+    /// <c>/Name</c> is the <see cref="Excise.Core.Operations.RedactionCarriers.OptionalContent"/>
+    /// carrier's (#1862), which a caller may have switched off.
+    /// </summary>
+    internal static List<(string Key, string Value, System.Action<string> Set)> TextEntries(
+        PdfDocument document, PdfDictionary props)
+    {
+        var found = new List<(string, string, System.Action<string>)>();
+        if (props.GetNameOrNull("Type") is "OCG" or "OCMD") return found;
+        foreach (var key in props.Keys.Select(k => k.Value).Where(k => k != "Lang").ToList())
+            Walk(key, props.GetOptional(key)!, Setter(props, key));
+        return found;
+
+        void Walk(string key, PdfObject value, System.Action<string> set)
+        {
+            switch (value)
+            {
+                case PdfArray array:
+                    for (var i = 0; i < array.Count; i++)
+                    {
+                        var at = i;
+                        Walk(key, array[i], r => { array[at] = new PdfString(r); Touch(key); });
+                    }
+                    break;
+                case PdfDictionary dict:
+                    foreach (var k in dict.Keys.Select(n => n.Value).ToList())
+                        Walk(key, dict.GetOptional(k)!, r => { Setter(dict, k)(r); Touch(key); });
+                    break;
+                default:
+                    if (document.Resolve(value) is PdfString s) found.Add((key, s.Value, set));
+                    break;
+            }
+        }
+
+        static System.Action<string> Setter(PdfDictionary dict, string key) => r =>
+        {
+            if (r.Length == 0) dict.Remove(key);
+            else dict[key] = new PdfString(r);
+        };
+
+        // A nested edit leaves the list itself pristine, and the object store may re-parse a pristine object.
+        void Touch(string key) => props[key] = props.GetOptional(key)!;
     }
 
     /// <summary>
@@ -327,5 +373,5 @@ internal static class MarkedContentCarrierScrubber
     // affected and the dictionary is never reachable.
     private static bool HasTextCarrier(ContentOperator bdc, PdfPage page) =>
         PropertyList(bdc, page.Document, PagePropertyLists(page)) is { } props
-        && StructureTreeRedactionScrubber.TextCarriers.Any(props.ContainsKey);
+        && TextEntries(page.Document, props).Count > 0;
 }

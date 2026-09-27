@@ -195,6 +195,29 @@ public class MarkedContentSpanConsumerTests
             new[] { "marked-content /ActualText", "marked-content /Alt" });
     }
 
+    /// <summary>
+    /// #1849 item 2: the parser gives a <c>Do</c> no box, so a span around a form
+    /// or an image was reported with no location. A form's is its <c>/BBox</c>
+    /// through <c>/Matrix</c> and the CTM; an image's the unit square under the CTM.
+    /// </summary>
+    [Fact]
+    public void Recovery_LocatesASpanAroundAFormOrImageDo()
+    {
+        using var doc = PdfDocument.Open(Excise.Core.Tests.Content.ContentStreamFixture.Build(
+            "/Span << /ActualText (FORMCARRIER) >> BDC q 1 0 0 1 100 50 cm /Fm0 Do Q EMC " +
+            "/Figure << /Alt (IMAGECARRIER) >> BDC q 40 0 0 20 300 400 cm /Im0 Do Q EMC",
+            extraObjects: "6 0 obj\n<< /Type /XObject /Subtype /Form /BBox [0 0 200 20] /Matrix [2 0 0 1 0 0] /Length 9 >>\n" +
+                "stream\n0 0 1 1 re\nendstream\nendobj\n" +
+                "7 0 obj\n<< /Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray " +
+                "/BitsPerComponent 8 /Length 1 >>\nstream\nA\nendstream\nendobj\n",
+            extraResources: "/XObject << /Fm0 6 0 R /Im0 7 0 R >>"));
+
+        var at = MarkedContentTextRecovery.Scan(doc).ToDictionary(h => h.Text, h => h.Enclosed);
+
+        at["FORMCARRIER"].Should().Be(new PdfRectangle(100, 50, 500, 70));
+        at["IMAGECARRIER"].Should().Be(new PdfRectangle(300, 400, 340, 420));
+    }
+
     // ---- helpers ----
 
     private static PdfRectangle BoxOf(IReadOnlyList<ContentOperator> ops, string target) =>
