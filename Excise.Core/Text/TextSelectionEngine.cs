@@ -441,10 +441,25 @@ public static class TextSelectionEngine
     /// When no gutter qualifies (single-column, or a full-width line spans the
     /// page) this is exactly <see cref="SortSimple"/> — so single-column copy is
     /// byte-identical and the change is provably scoped to genuine columns.
+    ///
+    /// #1204: the line/column geometry below assumes glyphs advance along +X
+    /// and stack along -Y — the horizontal-writing axes. A vertical (Identity-V)
+    /// run advances along Y instead, so grouping "by line" buckets one glyph per
+    /// row and interleaves columns row-by-row (row 1 of every column, then row 2
+    /// of every column, ...) instead of reading one column top-to-bottom before
+    /// the next. <see cref="DeterminePageTextOrder"/> already carries this exact
+    /// guard for whole-page order ("Vertical writing has the same axis mismatch
+    /// [as RTL], so both stay in logical producer order"); the interactive
+    /// selection default needs the same bail-out, not a second vertical layout
+    /// engine — for content emitted column-by-column (the common producer
+    /// order), producer order already reads correctly top-to-bottom per column.
     /// </summary>
     private static List<Letter> SortColumnAware(IEnumerable<Letter> letters)
     {
         var all = letters as IReadOnlyList<Letter> ?? letters.ToList();
+        if (HasPredominantlyVerticalRuns(all))
+            return all.ToList();
+
         var boundaries = DetectColumnBoundaries(all);
         if (boundaries.Count == 0)
             return SortSimple(all);
@@ -920,6 +935,39 @@ public static class TextSelectionEngine
                 // real space glyph, appended verbatim, does the separating (#833).
                 if (IsSpaceGlyph(letters[k - 1].Value) || IsSpaceGlyph(letters[k].Value))
                     continue;
+
+                // #1203: a Latin→RTL boundary is a bidi RUN SEAM, not a word
+                // gap between two adjacent painted glyphs. The caller already
+                // re-ordered this sequence from visual to LOGICAL order
+                // (ToLogicalOrder), so letters[k] — the RTL run's FIRST
+                // logical glyph — is the glyph that was MIRROR-painted at
+                // that run's visually-RIGHTMOST edge, not the one immediately
+                // after letters[k-1]. Comparing letters[k-1] to letters[k]
+                // directly measures the RTL run's whole width as "the gap"
+                // and fabricates a space the source never had. The real
+                // geometric neighbor is the RTL run's NEAR (leftmost) visual
+                // edge, so find that run's extent and gap against it instead
+                // — an abutting run still reads gap≈0 (no space), a real
+                // producer-positioned gap still reads real (space, matching
+                // plain LTR text's own gap rule below).
+                //
+                // An RTL→Latin seam (RTL-first mixed direction) is #785's
+                // open whole-line-UBA gap, not this issue's — left at the
+                // pre-existing no-space behavior rather than guessed at here.
+                if (ContainsStrongRtl(letters[k - 1].Value) != ContainsStrongRtl(letters[k].Value))
+                {
+                    if (!ContainsStrongRtl(letters[k].Value)) { result[k] = false; continue; }
+
+                    var rtlRunEnd = k;
+                    while (rtlRunEnd < end && ContainsStrongRtl(letters[rtlRunEnd].Value)) rtlRunEnd++;
+                    double rtlRunNearEdge = double.PositiveInfinity;
+                    for (int m = k; m < rtlRunEnd; m++)
+                        rtlRunNearEdge = Math.Min(rtlRunNearEdge, letters[m].GlyphRectangle.Left);
+
+                    var seamGap = rtlRunNearEdge - letters[k - 1].GlyphRectangle.Right;
+                    result[k] = fontSize > 0 && seamGap > 0.25 * fontSize;
+                    continue;
+                }
 
                 var pr = letters[k - 1].GlyphRectangle;
                 var cr = letters[k].GlyphRectangle;
