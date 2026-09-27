@@ -22,29 +22,45 @@ public class RealWorldSearchTests
     private static PdfSearchService NewService() =>
         new(NullLogger<PdfSearchService>.Instance);
 
+    // Expected counts are mutool's (`mutool draw -F txt`), not excise's.
+    // Every font in the fixture is Type0 Identity-H: the Latin runs are in
+    // Noto-Serif, the CJK runs in a separate Noto-Serif-CJK-JP, so each test
+    // below exercises a different composite font's CID decode.
+
     [Fact]
     public void CjkFixture_Search_FindsLatinWord()
+    {
+        var cjkFixture = RequireFixture();
+
+        var matches = NewService().Search(cjkFixture, "English");
+
+        matches.Should().HaveCount(2, "'English' opens the first text line and ends the last");
+        matches.Should().OnlyContain(m => m.PageIndex == 0);
+    }
+
+    [Theory]
+    [InlineData("狐狸", 2)]           // shared by the simplified and traditional lines
+    [InlineData("懒狗", 1)]           // simplified only
+    [InlineData("懶狗", 1)]           // traditional only
+    [InlineData("简体中文：快速", 1)] // fullwidth colon
+    [InlineData("茶色の狐", 1)]
+    [InlineData("갈색 여우", 1)]
+    public void CjkFixture_Search_FindsCjkTerm(string term, int expected)
+    {
+        var cjkFixture = RequireFixture();
+
+        var matches = NewService().Search(cjkFixture, term);
+
+        matches.Should().HaveCount(expected, $"mutool extracts '{term}' {expected} time(s)");
+        matches.Should().OnlyContain(m => m.PageIndex == 0);
+    }
+
+    private static string RequireFixture()
     {
         // Tracked, so present in every checkout: absence is a defect, but a declared one.
         var cjkFixture = TestRepoLayout.FindFile(CjkFixtureRelative);
         Assert.SkipWhen(cjkFixture == null,
             TestRepoLayout.AbsenceReason("CJK fixture", CjkFixtureRelative));
-
-        // Known gap: the multilingual fixture is browser-flipped Tm + Type0
-        // composite fonts, and our text extractor doesn't yet decode
-        // CIDFontType2 glyphs back into Unicode for those runs. Even Latin
-        // text *adjacent to* CJK runs in the same Type0 font pipeline
-        // currently extracts as empty. Tracked as a v2.1 follow-up
-        // (#313 fixed CJK rendering, but extraction lags).
-        //
-        // Test left in place so we'll know when extraction lands — at
-        // that point flip [Fact] back to [Fact] and let it
-        // protect the regression.
-        var matches = NewService().Search(cjkFixture!, "English");
-        Assert.SkipWhen(matches.Count == 0,
-            "Type0 text-extraction path doesn't yet decode CIDs in this " +
-            "fixture. Search service finds 0 matches; this is a known " +
-            "extraction gap, not a search-pipeline bug.");
-        matches.Should().NotBeEmpty("'English' appears in the fixture");
+        return cjkFixture!;
     }
 }
