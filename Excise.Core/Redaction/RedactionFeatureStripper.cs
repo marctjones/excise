@@ -79,7 +79,7 @@ internal static class RedactionFeatureStripper
     /// ⚠️ Never throws for a malformed document: a removal that cannot be made
     /// is skipped and the row is simply absent, exactly as if the feature were
     /// not there. The exceptions are the form flatten, whose promise is that no
-    /// interactive object survives (#1857), a form XObject the hidden-layer
+    /// interactive object survives (#1857, #1881), a form XObject the hidden-layer
     /// pass cannot read (#1866), and an XObject it cannot prove unused (#1868,
     /// #1872): each is added to <paramref name="refusals"/>.
     /// </remarks>
@@ -180,6 +180,7 @@ internal static class RedactionFeatureStripper
         }
 
         // Before the name strip (#1857): the flatten removes /AcroForm, names and all.
+        var cutItems = 0;
         if (options.FlattenInteractiveContent)
         {
             var (flattened, signatures, unpainted, formRemains) = FlattenInteractive(document);
@@ -195,6 +196,8 @@ internal static class RedactionFeatureStripper
             Row("signature dictionary(ies) removed", signatureDictionaries,
                 "each named its signer; its /Perms entry (DocMDP, UR3) and every other reference to it went too");
             Row("/DSS document security store", dss, "the certificates, OCSP responses and CRLs that name the signers");
+            // #1881: after RemoveSignatures, whose walk reaches a signature through its widget.
+            if (!formRemains) cutItems = CutFormObjects(document, Reachable(), refusals);
         }
 
         if (options.RemoveFieldNames)
@@ -203,11 +206,14 @@ internal static class RedactionFeatureStripper
         // #1868: last, because the passes above remove drawers too (an
         // annotation and its appearance, a widget the flatten did not paint).
         // With no row they removed nothing, so the walk they shared still holds.
-        var freed = PruneUndrawnXObjects(document,
-            rows.Count == 0 && reachableCache != null ? reachableCache : ReachableDictionaries(document), dropped, refusals);
+        var (freed, cutXObjects) = PruneUndrawnXObjects(document,
+            rows.Count == 0 && cutItems == 0 && reachableCache != null ? reachableCache : ReachableDictionaries(document), dropped, refusals);
         Row("XObject(s) drawn only in hidden optional content", freed.Count(dropped.Contains));
         Row("XObject(s) no content stream draws", freed.Count(n => !dropped.Contains(n)),
             "filed in a /Resources /XObject that no content stream left in the file invokes, so no reader shows it");
+        Row(CutItemsRow, cutItems + cutXObjects,
+            "an /OBJR or /MCR that named a flattened form field or an XObject no content stream draws, "
+            + "and would have kept it and its text in the file");
         foreach (var (form, row) in unreadableForms)
             if (!freed.Contains(form)) refusals.Add(row);
 
@@ -872,7 +878,8 @@ internal static class RedactionFeatureStripper
     /// patterns and Type 3 glyphs.</para>
     /// <para><b>Referenced other than by an <c>/XObject</c> entry</b> (an
     /// appearance, a soft mask's group), an XObject may be drawn without a
-    /// <c>Do</c>: it draws, and it is kept unless it was dropped.</para>
+    /// <c>Do</c>: it draws, and it is kept unless it was dropped. A
+    /// structure-tree content item only names it (#1885), and is cut with it.</para>
     /// <para><b>Cannot prove, so kept:</b> an XObject named by the
     /// <c>/XObject</c> of a stream that could not be read; one filed under a
     /// name that a stream with no <c>/Resources</c> invokes (§7.8.3: its names
@@ -880,7 +887,7 @@ internal static class RedactionFeatureStripper
     /// entries are gone, such as the <c>/SMask</c> of a kept image. A dropped
     /// one is reported.</para>
     /// </remarks>
-    private static HashSet<int> PruneUndrawnXObjects(PdfDocument document, List<PdfDictionary> reachable,
+    private static (HashSet<int> Freed, int CutItems) PruneUndrawnXObjects(PdfDocument document, List<PdfDictionary> reachable,
         HashSet<int> dropped, ICollection<CarrierResult> refusals)
     {
         var xobjectDicts = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
@@ -892,7 +899,7 @@ internal static class RedactionFeatureStripper
         foreach (var r in xobjectDicts.SelectMany(d => d.Values).OfType<PdfReference>())
             if (!candidates.ContainsKey(r.ObjectNum) && Resolve(document, r) is PdfStream s)
                 candidates[r.ObjectNum] = s;
-        if (candidates.Count == 0) return new HashSet<int>();
+        if (candidates.Count == 0) return (new HashSet<int>(), 0);
         // Referenced by an object that is neither an /XObject nor one of them.
         var elsewhere = new HashSet<int>();
         void Referenced(PdfObject value)
@@ -901,7 +908,8 @@ internal static class RedactionFeatureStripper
             else if (value is PdfArray array) foreach (var item in array) Referenced(item);
         }
         foreach (var dict in reachable)
-            if (!xobjectDicts.Contains(dict) && !(dict is PdfStream { ObjectNumber: { } n } && candidates.ContainsKey(n)))
+            if (!xobjectDicts.Contains(dict) && !IsContentItem(dict)
+                && !(dict is PdfStream { ObjectNumber: { } n } && candidates.ContainsKey(n)))
                 foreach (var (_, value) in dict) Referenced(value);
 
         // Empty when the /Resources has no /XObject; null when there is none (§7.8.3: a caller's apply).
@@ -984,6 +992,7 @@ internal static class RedactionFeatureStripper
             foreach (var key in dict.Keys.Select(k => k.Value).ToList())
                 if (dict.GetOptional(key) is PdfReference r && undrawn.Contains(r.ObjectNum))
                     dict.Remove(key);
+        var cut = undrawn.Count == 0 ? 0 : CutContentItems(document, reachable, r => undrawn.Contains(r.ObjectNum));
         var stillReached = FormXObjectFlattener.FreeUnreachable(document, undrawn);
 
         foreach (var number in unprovable.Concat(stillReached).Where(dropped.Contains))
@@ -993,7 +1002,7 @@ internal static class RedactionFeatureStripper
                 "it was drawn in hidden optional content that was removed and could not be proved unused " +
                 "elsewhere, so it was left in place"));
         undrawn.ExceptWith(stillReached);
-        return undrawn;
+        return (undrawn, cut);
     }
 
     /// <summary>
@@ -1242,6 +1251,51 @@ internal static class RedactionFeatureStripper
         return (flattened, signatures, unpainted,
             Resolve(document, document.Catalog.GetOptional("AcroForm") ?? PdfNull.Instance) is PdfDictionary);
     }
+
+    private const string CutItemsRow = "structure-tree reference(s) to a removed object";
+
+    /// <summary>
+    /// #1881: the flatten takes every widget off its page and <c>/AcroForm</c>
+    /// away, but a tagged document's structure tree still names a widget
+    /// (§14.7.5.3 <c>/OBJR</c>), and the writer ships what is reachable: its
+    /// <c>/V /DV /TU</c> with it. Every content item that names a widget or a
+    /// field is cut; a form object the graph still reaches after is refused.
+    /// </summary>
+    private static int CutFormObjects(
+        PdfDocument document, List<PdfDictionary> reachable, ICollection<CarrierResult> refusals)
+    {
+        static bool IsFormObject(PdfDictionary d) => d.GetNameOrNull("Subtype") == "Widget" || d.GetOptional("FT") != null;
+        if (!reachable.Any(IsFormObject)) return 0;
+        var cut = CutContentItems(document, reachable, r => Resolve(document, r) is PdfDictionary d && IsFormObject(d));
+        foreach (var field in ReachableDictionaries(document).Where(IsFormObject))
+            refusals.Add(new CarrierResult($"form field {field.ObjectNumber ?? 0} {field.GenerationNumber ?? 0} R", false,
+                "the flatten took it off its page and out of /AcroForm, but the object graph still reaches it, "
+                + "so its /V, /DV and /TU are still in the file"));
+        return cut;
+    }
+
+    /// <summary>
+    /// Remove every structure-tree content item (§14.7.5.2 <c>/MCR</c>,
+    /// §14.7.5.3 <c>/OBJR</c>) that names an object <paramref name="gone"/>
+    /// selects from the entry or array of <paramref name="reachable"/> that
+    /// holds it. Returns how many.
+    /// </summary>
+    private static int CutContentItems(PdfDocument document, List<PdfDictionary> reachable, Func<PdfReference, bool> gone)
+    {
+        bool Names(PdfObject value) =>
+            Resolve(document, value) is PdfDictionary item && IsContentItem(item) && item.Values.OfType<PdfReference>().Any(gone);
+        var cut = 0;
+        foreach (var dict in reachable)
+            foreach (var key in dict.Keys.Select(k => k.Value).ToList())
+                if (Names(dict.GetOptional(key)!)) { dict.Remove(key); cut++; }
+                else if (Resolve(document, dict.GetOptional(key)!) is PdfArray items)
+                    for (var i = items.Count - 1; i >= 0; i--)
+                        if (Names(items[i])) { items.RemoveAt(i); cut++; }
+        return cut;
+    }
+
+    /// <summary>A structure-tree content item: it names an object or a stream, and draws nothing.</summary>
+    private static bool IsContentItem(PdfDictionary dict) => dict.GetNameOrNull("Type") is "OBJR" or "MCR";
 
     /// <summary>
     /// #1861: with every signature field flattened away, a signature dictionary is
