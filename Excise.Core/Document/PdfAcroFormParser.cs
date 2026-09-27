@@ -1,4 +1,5 @@
 using Excise.Core.Primitives;
+using Excise.Core.Xfa;
 
 namespace Excise.Core.Document;
 
@@ -29,6 +30,11 @@ internal static class PdfAcroFormParser
         // some widgets, the only source of truth at all).
         var widgetToPage = PdfWidgetAnnotationIndex.BuildWidgetToPageMap(doc);
 
+        // #1898: a static-XFA form's own template may mark a field
+        // multi-line even when the AcroForm shadow field's /Ff bit 12 does
+        // not. Read once per form, not once per field.
+        var xfaMultilineNames = XfaMultilineFieldNames.Read(doc);
+
         // Parse the /Fields array (top-level fields)
         var fields = new List<PdfField>();
         var seen = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
@@ -37,7 +43,7 @@ internal static class PdfAcroFormParser
         {
             foreach (var fieldRef in fieldsArray)
             {
-                ParseFieldTree(doc, fieldRef, parentName: "", depth: 0, seen, fields, widgetToPage);
+                ParseFieldTree(doc, fieldRef, parentName: "", depth: 0, seen, fields, widgetToPage, xfaMultilineNames);
             }
         }
 
@@ -55,7 +61,8 @@ internal static class PdfAcroFormParser
         int depth,
         HashSet<PdfDictionary> seen,
         List<PdfField> outputFields,
-        Dictionary<PdfDictionary, int> widgetToPage)
+        Dictionary<PdfDictionary, int> widgetToPage,
+        IReadOnlySet<string> xfaMultilineNames)
     {
         // Resolve indirect reference
         if (fieldObj == null || doc.Resolve(fieldObj) is not PdfDictionary fieldDict
@@ -85,21 +92,21 @@ internal static class PdfAcroFormParser
 
                 if (allPureWidgets)
                 {
-                    var field = ExtractField(doc, fieldDict, fullName, partialName ?? "", widgetToPage);
+                    var field = ExtractField(doc, fieldDict, fullName, partialName ?? "", widgetToPage, xfaMultilineNames);
                     if (field != null)
                         outputFields.Add(field);
                 }
                 else
                 {
                     foreach (var kidRef in kidsArray)
-                        ParseFieldTree(doc, kidRef, fullName, depth + 1, seen, outputFields, widgetToPage);
+                        ParseFieldTree(doc, kidRef, fullName, depth + 1, seen, outputFields, widgetToPage, xfaMultilineNames);
                 }
             }
         }
         else
         {
             // Terminal field (leaf). Extract its properties and create a PdfField.
-            var field = ExtractField(doc, fieldDict, fullName, partialName ?? "", widgetToPage);
+            var field = ExtractField(doc, fieldDict, fullName, partialName ?? "", widgetToPage, xfaMultilineNames);
             if (field != null)
                 outputFields.Add(field);
         }
@@ -114,6 +121,7 @@ internal static class PdfAcroFormParser
         string fullName,
         string partialName,
         Dictionary<PdfDictionary, int> widgetToPage,
+        IReadOnlySet<string> xfaMultilineNames,
         bool consultP = true)
     {
         // Get field type (/FT: /Btn, /Tx, /Ch, /Sig). FT may be inherited from
@@ -139,7 +147,11 @@ internal static class PdfAcroFormParser
         int flags = ResolveInheritedInt(doc, fieldDict, "Ff", defaultValue: 0);
         bool isReadOnly = (flags & 0x1) != 0;     // Bit 0
         bool isRequired = (flags & 0x2) != 0;     // Bit 1
-        bool isMultiline = (flags & 0x1000) != 0; // Bit 12
+        // #1898: OR in the static-XFA template's own signal, matched by the
+        // field's bare name (the AcroForm /T segment strips no "[n]" suffix
+        // the template itself doesn't carry).
+        bool isMultiline = (flags & 0x1000) != 0 // Bit 12
+            || xfaMultilineNames.Contains(StripSomIndex(partialName));
 
         // Get rectangle and page number from Widget annotation.
         // A field can be a widget itself, or have widget kids.
@@ -287,6 +299,7 @@ internal static class PdfAcroFormParser
         IReadOnlySet<PdfDictionary> alreadyLinked)
     {
         List<PdfField>? result = null;
+        IReadOnlySet<string>? xfaMultilineNames = null;
 
         foreach (var widget in PdfWidgetAnnotationIndex.GetPageAnnotWidgets(doc, pageDict))
         {
@@ -304,14 +317,22 @@ internal static class PdfAcroFormParser
                 [widget] = pageNumber
             };
 
+            xfaMultilineNames ??= XfaMultilineFieldNames.Read(doc);
             var field = ExtractField(
                 doc, widget, fullName: partialName, partialName: partialName,
-                widgetToPage: widgetToPage, consultP: false);
+                widgetToPage: widgetToPage, xfaMultilineNames: xfaMultilineNames, consultP: false);
             if (field != null)
                 (result ??= new List<PdfField>()).Add(field);
         }
 
         return (IReadOnlyList<PdfField>?)result ?? Array.Empty<PdfField>();
+    }
+
+    /// <summary>The last SOM path segment, minus a literal trailing "[n]" index the template's own field name never carries.</summary>
+    private static string StripSomIndex(string name)
+    {
+        var bracket = name.LastIndexOf('[');
+        return bracket > 0 && name.EndsWith(']') ? name[..bracket] : name;
     }
 
     /// <summary>

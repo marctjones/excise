@@ -144,6 +144,52 @@ internal static class XfaTestForms
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
+    /// <summary>
+    /// A minimal STATIC XFA form (#1898): two /FT /Tx AcroForm widgets, "Notes"
+    /// and "Short", NEITHER carrying the /Ff bit-12 multiline flag. The
+    /// template's own &lt;textEdit&gt; marks "Notes" <c>multiLine="1"</c> and
+    /// leaves "Short" alone — proving <see cref="PdfField.IsMultiline"/> reads
+    /// the XFA signal instead of trusting only the (here, absent) AcroForm bit.
+    /// </summary>
+    public static byte[] BuildStaticMultilineFieldPdf()
+    {
+        var xdp =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<xdp:xdp xmlns:xdp=\"http://ns.adobe.com/xdp/\">"
+            + Template(
+                "<field name=\"Notes\" x=\"1in\" y=\"1in\" w=\"4in\" h=\"1in\"><ui><textEdit multiLine=\"1\"/></ui></field>"
+                + "<field name=\"Short\" x=\"1in\" y=\"2.5in\" w=\"2in\" h=\"0.3in\"><ui><textEdit/></ui></field>",
+                layout: "position")
+            + "</xdp:xdp>";
+
+        var bodies = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R /AcroForm 8 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Annots [5 0 R 6 0 R] >>",
+            RawStream("", ""),
+            "<< /Type /Annot /Subtype /Widget /FT /Tx /T (Notes) /Rect [72 600 372 672] /P 3 0 R >>",
+            "<< /Type /Annot /Subtype /Widget /FT /Tx /T (Short) /Rect [72 500 216 521.6] /P 3 0 R >>",
+            RawStream("", xdp),
+            "<< /Fields [5 0 R 6 0 R] /XFA 7 0 R >>",
+        };
+
+        var sb = new StringBuilder("%PDF-1.7\n");
+        var offsets = new List<int>();
+        for (var i = 0; i < bodies.Length; i++)
+        {
+            offsets.Add(Encoding.UTF8.GetByteCount(sb.ToString()));
+            sb.Append(i + 1).Append(" 0 obj\n").Append(bodies[i]).Append("\nendobj\n");
+        }
+        var xref = Encoding.UTF8.GetByteCount(sb.ToString());
+        sb.Append("xref\n0 ").Append(bodies.Length + 1).Append("\n0000000000 65535 f \n");
+        foreach (var offset in offsets)
+            sb.Append(offset.ToString("D10")).Append(" 00000 n \n");
+        sb.Append("trailer\n<< /Size ").Append(bodies.Length + 1)
+          .Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF\n");
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
     private static string RawStream(string dictionary, string data)
         => $"<< {dictionary} /Length {Encoding.UTF8.GetByteCount(data)} >>\nstream\n{data}\nendstream";
 

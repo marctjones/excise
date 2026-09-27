@@ -195,6 +195,59 @@ public class FormFieldsOverlayTests
         return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
+    private static string WriteTempMultilineWithDaFormPdf()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"excise-form-multiline-da-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, BuildMultilineWithDaFormPdf());
+        return path;
+    }
+
+    // #1898: a tall box (200pt — h*0.6 would give 120pt, absurd for a field
+    // with its own 14pt /DA) whose /Ff bit-12 IS set, so this isolates part
+    // (b) of the fix (FontSize/TextWrapping) from part (a) (the XFA signal,
+    // covered in Excise.Core.Tests.Document.PdfFieldXfaMultilineTests).
+    private static byte[] BuildMultilineWithDaFormPdf()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.7");
+        long o1 = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] >> >>");
+        sb.AppendLine("endobj");
+        long o2 = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+        long o3 = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Annots [5 0 R] >>");
+        sb.AppendLine("endobj");
+        long o4 = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine("<< /Length 0 >>");
+        sb.AppendLine("stream");
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+        long o5 = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine("<< /Type /Annot /Subtype /Widget /FT /Tx /T (Address) /V (123 Main St) /Ff 4096 /DA (/Helv 14 Tf 0 g) /Rect [72 500 300 700] /P 3 0 R >>");
+        sb.AppendLine("endobj");
+        long xref = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 6");
+        sb.AppendLine("0000000000 65535 f ");
+        sb.AppendLine($"{o1:D10} 00000 n ");
+        sb.AppendLine($"{o2:D10} 00000 n ");
+        sb.AppendLine($"{o3:D10} 00000 n ");
+        sb.AppendLine($"{o4:D10} 00000 n ");
+        sb.AppendLine($"{o5:D10} 00000 n ");
+        sb.AppendLine("trailer << /Size 6 /Root 1 0 R >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xref.ToString());
+        sb.AppendLine("%%EOF");
+        return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
     private static string WriteTempRadioFormPdf()
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-form-radio-{Guid.NewGuid():N}.pdf");
@@ -490,6 +543,40 @@ public class FormFieldsOverlayTests
                 global::Avalonia.Layout.HorizontalAlignment.Left,
                 "an ordinary wide text field must keep its existing left alignment");
             wideField.TextAlignment.Should().Be(global::Avalonia.Media.TextAlignment.Left);
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+        }
+    }
+
+    [FixedAvaloniaFact]
+    public async Task MultilineTextField_WrapsAndUsesDaFontSize_NotBoxHeight()
+    {
+        var path = WriteTempMultilineWithDaFormPdf();
+        try
+        {
+            var vm = MainWindowViewModelTestFactory.Create();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await Task.Delay(100);
+
+            await vm.LoadDocumentAsync(path);
+
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+            var formLayer = FindNamedDescendant<Canvas>(viewer!, "FormFieldsLayer");
+            for (int i = 0; i < 30 && formLayer!.Children.OfType<TextBox>().Count() < 1; i++)
+            {
+                await Task.Delay(50);
+                window.UpdateLayout();
+            }
+
+            var textBox = formLayer!.Children.OfType<TextBox>().Single();
+            textBox.AcceptsReturn.Should().BeTrue();
+            textBox.TextWrapping.Should().Be(global::Avalonia.Media.TextWrapping.Wrap,
+                "a multi-line field must wrap long text at its own width instead of scrolling");
+            textBox.FontSize.Should().Be(14,
+                "the field's own /DA point size must be used, not a fraction of the 200pt-tall box");
         }
         finally
         {
