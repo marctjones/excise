@@ -1297,7 +1297,10 @@ internal partial class RenderContext
 
         // A soft drop shadow, offset down-right, so the card reads as
         // sitting ON the page rather than painted flat onto it (#1794's
-        // "recognisably a Post-it" visual goal).
+        // "recognisably a Post-it" visual goal). This canvas is PDF space
+        // with Y UP (see RenderDefaultAppearance), so "down" is DECREASING
+        // y, not increasing it — #1916 had this backwards and the shadow
+        // fell up-right of the card instead.
         using (var shadow = new SKPaint
                {
                    IsAntialias = _options.AntiAlias,
@@ -1309,7 +1312,7 @@ internal partial class RenderContext
         {
             var offset = Math.Max(1f, Math.Min(rect.Width, rect.Height) * 0.03f);
             var shadowRect = new SKRect(
-                rect.Left + offset, rect.Top + offset, rect.Right + offset, rect.Bottom + offset);
+                rect.Left + offset, rect.Top - offset, rect.Right + offset, rect.Bottom - offset);
             _canvas.DrawRoundRect(
                 new SKRoundRect(shadowRect, rect.Width * 0.06f, rect.Height * 0.06f), shadow);
         }
@@ -1390,14 +1393,47 @@ internal partial class RenderContext
         try
         {
             _canvas.ClipRect(cardRect, SKClipOperation.Intersect, _options.AntiAlias);
-            var baselineY = textRect.Top + fontSize;
+
+            // #1916: this canvas is PDF space with Y UP, same as
+            // TypesetFreeTextContents and BaselineForTopAlignedLineBox — so
+            // textRect.Bottom (the numerically LARGER edge) is the visual TOP
+            // of the card, and each later line's baseline must DECREASE to
+            // move down the card. This used to start at textRect.Top (the
+            // visual BOTTOM) and increase, and draw with a raw
+            // SKCanvas.DrawText — which itself assumes Y DOWN — so the note
+            // rendered with its lines in reverse order and every glyph upside
+            // down.
+            var baselineY = BaselineForTopAlignedLineBox(textRect, typeface, fontSize, 0f);
             for (var i = 0; i < visibleLines; i++)
             {
                 var isLastVisible = truncated && i == visibleLines - 1;
                 var line = isLastVisible ? TruncateWithEllipsis(lines[i], font, paint, textRect.Width) : lines[i];
-                _canvas.DrawText(line, textRect.Left, baselineY, font, paint);
-                baselineY += lineHeight;
+                DrawUprightTextLine(line, textRect.Left, baselineY, font, paint);
+                baselineY -= lineHeight;
             }
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
+    }
+
+    /// <summary>
+    /// Draws one line of plain (non-typeset) text upright on a Y-UP canvas.
+    /// <see cref="SKCanvas.DrawText(string, float, float, SKFont, SKPaint)"/>
+    /// itself assumes Y DOWN (ascenders extend toward negative y from the
+    /// baseline), so on this Y-up canvas it must be wrapped in the same local
+    /// flip-about-the-baseline <see cref="DrawTypesetLine"/> uses for shaped
+    /// glyph runs (#1363, #1916).
+    /// </summary>
+    private void DrawUprightTextLine(string text, float x, float baseline, SKFont font, SKPaint paint)
+    {
+        _canvas.Save();
+        try
+        {
+            _canvas.Translate(x, baseline);
+            _canvas.Scale(1f, -1f);
+            _canvas.DrawText(text, 0, 0, font, paint);
         }
         finally
         {
