@@ -62,27 +62,34 @@ public enum WidthPolicy
     /// from the removed width and therefore still correlates with it, just more
     /// coarsely. Font size is not the secret; it is visible from the
     /// surrounding, unredacted text on the same line.</para>
-    /// <para><b>Known limit, measured rather than assumed.</b> The marker
-    /// replaces the removed run at a fixed size but the shift that closes the
-    /// gap still moves the following text all the way to the removed run's
-    /// OWN left edge (the <see cref="CloseGap"/> shift, reused unchanged) —
-    /// so the marker overlaps the reflowed neighbour whenever the marker is
-    /// wider than what was actually removed, which on real body text is the
-    /// COMMON case, not a rare one bounded by available slack. Confirmed with
-    /// <c>mutool -F stext</c> on the <c>RedactionWidthPolicyTests</c> fixture:
-    /// at 36pt the box covers 3 of the 4 characters of the following word.
-    /// Cosmetic only — the box is a drawn overlay, and the content-stream
-    /// rewrite that actually removes the term's glyphs is unconditional and
-    /// already ran — but real enough to block making this the default until
-    /// the shift itself accounts for the marker's width, not just the removed
-    /// run's (a change to <c>OperationReconstructor.ComputeCloseWidthShifts</c>
-    /// and the text-space/user-space conversion around it — <c>Tz</c>/<c>Tc</c>/
-    /// <c>Tw</c> all matter there, rule 7). Placing the marker by
-    /// run-boundary/alignment-aware machinery instead of the naive left anchor
-    /// is the FURTHER, separate #1751/#1752/#1753 work; this note is about the
-    /// simpler shift-arithmetic gap that has to close first.</para>
+    /// <para><b>The marker covers nothing that follows it</b> (#1725). The line
+    /// keeps exactly the marker's width where the removed run was — one TJ
+    /// number, the same for every removed string of that font size — and closes
+    /// the rest, so the reflowed neighbour starts where the marker ends. A term
+    /// split across runs is one area and keeps one marker's room
+    /// (<c>WidthClosureLedger</c>).</para>
     /// </remarks>
     FixedMarker,
+
+    /// <summary>
+    /// Keep a gap where the removed run was, but ROUNDED UP to a whole em of its
+    /// rendered size, so the layout states a bucket instead of the exact width
+    /// (#1754); the rest of the line moves by the rounding difference, which is
+    /// at most one em. Deterministic, not random: jitter is averaged away when
+    /// the same term is redacted several times.
+    /// </summary>
+    /// <remarks>
+    /// <para>A line with no room to grow before the next glyph on its baseline
+    /// or the page edge has its gap closed fully instead, and that line is
+    /// reported (<c>WIDTH NOT CLOSED</c>) — the secure fallback.</para>
+    /// <para>Draws no covering box, like <see cref="CloseGap"/>: a box drawn to
+    /// the removed run's extent would state the exact width this policy
+    /// rounds away.</para>
+    /// <para>⚠️ A bucket is still a measurement: rounding to one em leaves
+    /// roughly 15× more dictionary candidates than an exact width (#1754), not
+    /// none. <see cref="CloseGap"/> and <see cref="FixedMarker"/> state nothing.</para>
+    /// </remarks>
+    QuantizeGap,
 }
 
 /// <summary>
@@ -149,19 +156,9 @@ public sealed record RedactionOptions
     /// <summary>How the removed glyphs' width residue is handled.
     /// Default <see cref="WidthPolicy.CollapsePreserveLayout"/>. Enforced by: Core.</summary>
     /// <remarks>
-    /// ⚠️ <see cref="WidthPolicy.FixedMarker"/> (#1755) is NOT the default yet,
-    /// though it exists and is fully implemented: measured (stext, real
-    /// glyph positions) to visually overlap the reflowed neighbour in the
-    /// COMMON case, not merely when slack is short — the marker is anchored at
-    /// the removed run's left edge and sized independently of the actual gap,
-    /// so on a 36pt fixture it covers 3 of 4 characters of the following word.
-    /// Making #1755's shift arithmetic honour the marker's own width (not just
-    /// the removed run's, the way <c>OperationReconstructor.ComputeCloseWidthShifts</c>
-    /// does for <see cref="WidthPolicy.CloseGap"/> today) is required before
-    /// this can be the default; it is unstarted. Until then, FixedMarker is
-    /// available as an explicit opt-in (CLI <c>--fixed-marker</c>) with that
-    /// limit stated, not the default with the limit hidden in an unread
-    /// remark.
+    /// <see cref="WidthPolicy.FixedMarker"/> (#1755) is an explicit opt-in (CLI
+    /// <c>--fixed-marker</c>), not the default. Whether it should become the
+    /// default is an open product decision (#1725), not an engineering limit.
     /// </remarks>
     public WidthPolicy Width { get; init; } = WidthPolicy.CollapsePreserveLayout;
 
@@ -423,7 +420,9 @@ public sealed record RedactionOptions
     // #1755: FixedMarker closes the gap the same way CloseGap does (that is
     // what destroys the content-stream width residue); the two differ only in
     // what gets drawn at the mark.
-    internal bool CloseWidth => Width is WidthPolicy.CloseGap or WidthPolicy.FixedMarker;
+    // #1754: QuantizeGap closes the exact width the same way and keeps a
+    // rounded gap in its place; like CloseGap it draws no box.
+    internal bool CloseWidth => Width is WidthPolicy.CloseGap or WidthPolicy.FixedMarker or WidthPolicy.QuantizeGap;
 
     internal bool FixedMarker => Width == WidthPolicy.FixedMarker;
 }

@@ -41,8 +41,8 @@ internal sealed record RedactionPreferences
     /// the removed run, which makes it a ruler for the removed string's length
     /// (#1140). Overshoot rounds the box up; CloseGap removes the advance
     /// entirely, the only option that also closes the content-stream channel;
-    /// FixedMarker (#1755) does that and always draws a visible mark (#1725),
-    /// but is not the default: see the remark on <see cref="RedactionOptions.Width"/>.
+    /// FixedMarker (#1755) does that and always draws a visible mark (#1725);
+    /// it is not the default: see the remark on <see cref="RedactionOptions.Width"/>.
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter<WidthPolicy>))]
     public WidthPolicy Width { get; set; } = WidthPolicy.CollapsePreserveLayout;

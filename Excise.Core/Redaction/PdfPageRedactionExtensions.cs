@@ -189,8 +189,9 @@ public static class PdfPageRedactionExtensions
         PdfRectangle imageArea,
         GlyphRemovalStrategy strategy,
         bool scrubDocumentCarriers,
-        bool closeWidth,
-        bool removeAttachments)
+        WidthPolicy width,
+        bool removeAttachments,
+        bool markerIsArea = false)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
@@ -278,8 +279,9 @@ public static class PdfPageRedactionExtensions
         var letters = page.Letters;
         if (letters.Count > 0)
         {
-            var remover = new GlyphRemover { CloseWidth = closeWidth };
+            var remover = NewGlyphRemover(page, width, markerIsArea);
             working = remover.ProcessOperations(working, letters, area, strategy);
+            RecordWidthNotes(page, remover);
         }
 
         // Pass 2: image XObject redaction (#279, region-level #1195). Uses
@@ -328,8 +330,9 @@ public static class PdfPageRedactionExtensions
         var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
         var list = areas.Select(a => a.Normalize()).ToList();
         var imageCounts = page.RedactAreasInternal(list, list, options.Strategy,
-            options.ScrubDocumentCarriers, options.CloseWidth,
-            removeAttachments: !options.KeepAttachments);
+            options.ScrubDocumentCarriers, options.Width,
+            removeAttachments: !options.KeepAttachments,
+            markerIsArea: true);
         var carriers = new System.Collections.Generic.List<CarrierResult>();
         var removals = RedactionFeatureStripper.Apply(page.Document, options, carriers);
         // #1834: RedactText's box rule. A closed gap reflows the rest of the
@@ -431,8 +434,9 @@ public static class PdfPageRedactionExtensions
         System.Collections.Generic.IReadOnlyList<PdfRectangle> imageAreas,
         GlyphRemovalStrategy strategy,
         bool scrubDocumentCarriers,
-        bool closeWidth,
-        bool removeAttachments)
+        WidthPolicy width,
+        bool removeAttachments,
+        bool markerIsArea = false)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
@@ -443,7 +447,7 @@ public static class PdfPageRedactionExtensions
         {
             return page.RedactAreaInternal(
                 list[0], imageList.Count > 0 ? imageList[0] : list[0],
-                strategy, scrubDocumentCarriers, closeWidth, removeAttachments);
+                strategy, scrubDocumentCarriers, width, removeAttachments, markerIsArea);
         }
 
         // #1572/#1547/#1574 — see RedactAreaInternal.
@@ -488,8 +492,9 @@ public static class PdfPageRedactionExtensions
         var letters = page.Letters;
         if (letters.Count > 0)
         {
-            var remover = new GlyphRemover { CloseWidth = closeWidth };
+            var remover = NewGlyphRemover(page, width, markerIsArea);
             working = remover.ProcessOperations(working, letters, list, strategy);
+            RecordWidthNotes(page, remover);
         }
 
         // Image pass uses imageList (full glyph bboxes), not the glyph-match
@@ -508,6 +513,25 @@ public static class PdfPageRedactionExtensions
         ImageRedactor.PruneUnusedImageXObjects(page, working);
         page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
         return imageCounts;
+    }
+
+    /// <summary>
+    /// The glyph pass under <paramref name="width"/>. #1725: an area redaction's
+    /// FixedMarker is the area itself, so the line keeps room up to its right
+    /// edge; RedactText's is the fixed-size marker the remover defaults to.
+    /// </summary>
+    private static GlyphRemover NewGlyphRemover(PdfPage page, WidthPolicy width, bool markerIsArea) => new()
+    {
+        Width = width,
+        PageBox = page.CropBox,
+        MarkerRight = markerIsArea ? static (area, _) => area.Normalize().Right : null,
+    };
+
+    /// <summary>#1751: what the width policy could not do, on the ledger the safety report reads.</summary>
+    private static void RecordWidthNotes(PdfPage page, GlyphRemover remover)
+    {
+        foreach (var note in remover.WidthNotes)
+            page.Document.RedactionLedger.RecordWidthNote($"page {page.PageNumber}, {note}");
     }
 
     /// <summary>

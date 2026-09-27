@@ -30,10 +30,10 @@ namespace Excise.Rendering.Tests.Differential;
 ///   Pinned as a fact, not fixed silently.</item>
 ///   <item><see cref="WidthPolicy.OvershootPreserveLayout"/> — the boxes have
 ///   the SAME rendered width. The rendered channel is closed.</item>
-///   <item><see cref="WidthPolicy.FixedMarker"/> (#1755, now the default) —
-///   the boxes have the SAME rendered width AND the content-stream advance is
-///   also closed, like CloseGap. The only policy that answers #1715 and #1725
-///   together.</item>
+///   <item><see cref="WidthPolicy.FixedMarker"/> (#1755, opt-in) — the boxes
+///   have the SAME rendered width AND the content stream keeps only the
+///   marker's width, never the removed run's. The only policy that answers
+///   #1715 and #1725 together.</item>
 /// </list>
 ///
 /// <para>⚠️ <b>And the part a self-congratulating gate would omit.</b> Overshoot
@@ -64,12 +64,15 @@ public class RedactionWidthPolicyTests : IDisposable
     // "Name: <secret> Ref." on one line, with the SAME words either side of the
     // secret in both fixtures. That is what makes the widths comparable: the
     // space available to a widened box is identical, so only the secret differs.
-    private static byte[] Fixture(string secret) => Build(
+    private static byte[] Fixture(string secret) =>
+        FixtureWith($"BT /F1 36 Tf 20 40 Td (Name: {secret} Ref.) Tj ET");
+
+    private static byte[] FixtureWith(string content, int pageWidth = 500) => Build(
         "<< /Type /Catalog /Pages 2 0 R >>",
         "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 500 120] /Contents 4 0 R " +
+        $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {pageWidth} 120] /Contents 4 0 R " +
         "/Resources << /Font << /F1 5 0 R >> >> >>",
-        Stream($"BT /F1 36 Tf 20 40 Td (Name: {secret} Ref.) Tj ET"),
+        Stream(content),
         "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
 
     private byte[] Redact(string secret, WidthPolicy width)
@@ -189,17 +192,22 @@ public class RedactionWidthPolicyTests : IDisposable
     }
 
     [Fact]
-    public void FixedMarker_ClosesTheContentStreamAdvance_LikeCloseGap()
+    public void FixedMarker_KeepsOnlyTheMarkersWidthInTheContentStream()
     {
         // #1715/#1755: FixedMarker has to close the FILE-level channel too, not
         // just the rendered one — the same honesty check
-        // Overshoot_LeavesTheContentStreamAdvanceIntact exists for, but with
-        // the opposite (passing) expectation: no surviving TJ adjustment for
-        // either secret, because FixedMarker closes the gap exactly as
-        // CloseGap does.
-        FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.FixedMarker)).Should().BeNull(
-            "FixedMarker closes the gap like CloseGap -- no compensating advance survives");
-        FirstNegativeTjAdjustment(Redact(SecretB, WidthPolicy.FixedMarker)).Should().BeNull();
+        // Overshoot_LeavesTheContentStreamAdvanceIntact exists for. The one TJ
+        // number it leaves is the room kept for the marker (#1725): the SAME
+        // for both secrets, and neither secret's advance.
+        var a = FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.FixedMarker));
+        var b = FirstNegativeTjAdjustment(Redact(SecretB, WidthPolicy.FixedMarker));
+
+        a.Should().NotBeNull("FixedMarker keeps room for its marker");
+        b.Should().Be(a, "the room kept is a function of font size only");
+        var overshootA = FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.OvershootPreserveLayout));
+        var overshootB = FirstNegativeTjAdjustment(Redact(SecretB, WidthPolicy.OvershootPreserveLayout));
+        a.Should().NotBe(overshootA, "that would be ALFRED's own advance");
+        a.Should().NotBe(overshootB, "that would be ALBERT's own advance");
     }
 
     [Fact]
@@ -220,30 +228,190 @@ public class RedactionWidthPolicyTests : IDisposable
     }
 
     /// <summary>
-    /// #1755 — THE KNOWN LIMIT that blocks making FixedMarker the default,
-    /// measured rather than left as a docstring claim. FixedMarker reuses
-    /// CloseGap's shift unchanged, which moves the following text all the way
-    /// to the removed run's OWN left edge; the marker is then drawn from that
-    /// same left edge out to a FIXED width. Whenever the fixed width exceeds
-    /// what was actually removed — the common case for a short redacted word
-    /// in running text, not a rare one bounded by available slack — the box
-    /// visually overlaps the reflowed neighbour's leading glyphs.
+    /// #1725 — the marker covers nothing that follows it. FixedMarker used to
+    /// reuse CloseGap's shift, moving the following text to the removed run's
+    /// OWN left edge — exactly where the fixed-width marker is drawn from — so
+    /// at 36 pt the box covered 3 of the 4 characters of "Ref.". The line now
+    /// keeps the marker's width, and the neighbour starts where it ends.
     /// </summary>
-    /// <remarks>
-    /// If this assertion ever goes red because the neighbour's first glyph
-    /// moved clear of the box, the shift arithmetic was fixed to account for
-    /// the marker's own width (not just the removed run's) — update this test
-    /// to assert the opposite, and revisit whether FixedMarker can become the
-    /// default (RedactionOptions.Width's remark and the CLI's --fixed-marker
-    /// description both need to change alongside that).
-    /// </remarks>
-    [Fact]
-    public void FixedMarker_TheMarkerOverlapsTheReflowedNeighbour_KnownLimitBlockingDefault()
+    [Theory]
+    [InlineData(0, 0, 100)]
+    [InlineData(0, 0, 50)]
+    [InlineData(3, 9, 100)]
+    [InlineData(2, 6, 150)]
+    public void FixedMarker_TheReflowedNeighbourClearsTheMarker(double tc, double tw, double tz)
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
-        var pdf = Redact(SecretB, WidthPolicy.FixedMarker);
+        // Rule 7: the room is a TJ number, which Tz scales and Tc/Tw do not —
+        // pinned with each set, and with none. Between the marker and "R" there
+        // is exactly the kept space: (0.278 em × 36 + Tc + Tw) × Th.
+        var space = (0.278 * 36 + tc + tw) * tz / 100;
+        foreach (var secret in new[] { SecretA, SecretB })
+        {
+            var (boxRight, reflowedR, gapAfterMarker) = MarkerAndNeighbour(
+                $"BT /F1 36 Tf {tc} Tc {tw} Tw {tz} Tz 20 40 Td (Name: {secret} Ref.) Tj ET", secret);
+
+            reflowedR.Should().BeGreaterThanOrEqualTo(boxRight - 0.05,
+                $"the reflowed neighbour must start where the marker ends ({secret}, Tc {tc} Tw {tw} Tz {tz})");
+            gapAfterMarker.Should().BeApproximately(space, 0.1,
+                "the room kept is the marker's, not the removed run's: only the kept space follows it");
+        }
+    }
+
+    [Fact]
+    public void FixedMarker_TheGapAfterTheMarkerIsTheSameForBothSecrets()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var a = MarkerAndNeighbour($"BT /F1 36 Tf 20 40 Td (Name: {SecretA} Ref.) Tj ET", SecretA);
+        var b = MarkerAndNeighbour($"BT /F1 36 Tf 20 40 Td (Name: {SecretB} Ref.) Tj ET", SecretB);
+
+        a.GapAfterMarker.Should().BeGreaterThanOrEqualTo(-0.05, "the marker covers nothing that follows it");
+        b.GapAfterMarker.Should().BeApproximately(a.GapAfterMarker, 0.05,
+            "where the text after the marker sits must not depend on what was removed");
+    }
+
+    [Fact]
+    public void FixedMarker_TermSplitAcrossTwoRuns_KeepsRoomForOneMarker()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // One term, two operators: still one area and one marker, so one room.
+        // Keeping it per run would double the gap and state the run structure.
+        var split = MarkerAndNeighbour("BT /F1 36 Tf 20 40 Td (Name: ALB) Tj (ERT Ref.) Tj ET", SecretB);
+        var whole = MarkerAndNeighbour($"BT /F1 36 Tf 20 40 Td (Name: {SecretB} Ref.) Tj ET", SecretB);
+
+        split.ReflowedR.Should().BeGreaterThanOrEqualTo(split.BoxRight - 0.05);
+        split.GapAfterMarker.Should().BeApproximately(whole.GapAfterMarker, 0.05);
+    }
+
+    [Fact]
+    public void FixedMarker_AreaRedaction_TheNeighbourStartsAtTheAreaEdge()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // An area redaction's marker is the area itself (#1834).
+        byte[] pdf;
+        double areaRight;
+        using (var doc = PdfDocument.Open(Fixture(SecretB)))
+        {
+            var page = doc.GetPage(1);
+            var term = page.Letters.OrderBy(l => l.StartX).Skip("Name: ".Length).Take(SecretB.Length).ToList();
+            string.Concat(term.Select(l => l.Value)).Should().Be(SecretB);
+            var area = new PdfRectangle(term.Min(l => l.GlyphRectangle.Left) - 1, 35,
+                                        term.Max(l => l.GlyphRectangle.Right) + 4, 70);
+            areaRight = area.Right;
+            page.RedactArea(area, RedactionOptions.Default with { Width = WidthPolicy.FixedMarker });
+            pdf = doc.SaveToBytes();
+        }
+
         var path = WriteTemp(pdf);
+        var glyphs = MutoolGlyphPositions.ExtractPage(path, 1)!;
+        glyphs.Single(g => g.Char == "R").X.Should().BeGreaterThanOrEqualTo(areaRight - 0.05,
+            "the area's box covers nothing that follows it");
+        (MutoolTextExtractor.ExtractPage(path, 1) ?? "").Should().NotContain(SecretB).And.Contain("Ref");
+    }
+
+    /// <summary>
+    /// #1754 — QuantizeGap keeps the removed run's gap rounded UP to a whole em
+    /// (36 pt here): ALBERT is 140.04 pt wide, so its gap becomes 144 and the
+    /// text after it moves right by the 3.96 pt difference — and nothing else
+    /// on the page moves. Positions from mutool.
+    /// </summary>
+    [Fact]
+    public void QuantizeGap_TheTextAfterMovesRightByTheRoundingDifference_AndNothingElseMoves()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var (before, after) = RedactPositions(
+            $"BT /F1 36 Tf 20 40 Td (Name: {SecretB} Ref.) Tj ET", SecretB, WidthPolicy.QuantizeGap);
+
+        var at = string.Concat(before.Select(g => g.Char)).IndexOf(SecretB, StringComparison.Ordinal);
+        var removedWidth = before[at + SecretB.Length].X - before[at].X;
+        var bucket = Math.Ceiling(removedWidth / 36) * 36;
+        bucket.Should().BeGreaterThan(removedWidth + 1, "the fixture is chosen so the rounding is visible");
+
+        var kept = before.Take(at).Concat(before.Skip(at + SecretB.Length)).ToList();
+        after.Select(g => g.Char).Should().Equal(kept.Select(g => g.Char));
+        for (var i = 0; i < kept.Count; i++)
+            after[i].X.Should().BeApproximately(i < at ? kept[i].X : kept[i].X + bucket - removedWidth, 0.1,
+                $"glyph '{kept[i].Char}'");
+    }
+
+    [Fact]
+    public void QuantizeGap_TwoSecretsInOneBucket_LeaveTheSameLayoutAndTheSameNumber()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // ALFRED (142.02 pt) and ALBERT (140.04 pt) both round to 144: the
+        // layout, and the one TJ number the file keeps, state only the bucket.
+        var (_, a) = RedactPositions($"BT /F1 36 Tf 20 40 Td (Name: {SecretA} Ref.) Tj ET", SecretA, WidthPolicy.QuantizeGap);
+        var (_, b) = RedactPositions($"BT /F1 36 Tf 20 40 Td (Name: {SecretB} Ref.) Tj ET", SecretB, WidthPolicy.QuantizeGap);
+        b.Last(g => g.Char == "R").X.Should().BeApproximately(a.Last(g => g.Char == "R").X, 0.05);
+
+        var numberA = FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.QuantizeGap));
+        numberA.Should().Be(-4000, "144 pt at 36 pt is exactly 4 em");
+        FirstNegativeTjAdjustment(Redact(SecretB, WidthPolicy.QuantizeGap)).Should().Be(numberA);
+        FirstNegativeTjAdjustment(Redact(SecretA, WidthPolicy.CollapsePreserveLayout)).Should().NotBe(numberA);
+    }
+
+    [Fact]
+    public void QuantizeGap_NoRoomOnTheLine_ClosesTheGapFullyAndReportsIt()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // The line ends 1 pt short of the page edge, so the 3.96 pt the bucket
+        // needs is not there. Closing fully is the fallback that states nothing.
+        const string content = "BT /F1 36 Tf 20 40 Td (Name: ALBERT Ref.) Tj ET";
+        var original = FixtureWith(content, pageWidth: 353);
+        using var doc = PdfDocument.Open(original);
+        doc.GetPage(1).Letters.Max(l => l.GlyphRectangle.Right).Should().BeInRange(351, 352.5);
+        doc.RedactText(SecretB, RedactionOptions.Default with { Width = WidthPolicy.QuantizeGap });
+        var saved = doc.SaveToBytes();
+
+        doc.RedactionLedger.WidthNotes.Should().ContainSingle().Which.Should().Contain("no room");
+        var before = MutoolGlyphPositions.ExtractPage(WriteTemp(original), 1)!;
+        var afterPath = WriteTemp(saved);
+        var after = MutoolGlyphPositions.ExtractPage(afterPath, 1)!;
+        var removedWidth = before.Last(g => g.Char == " ").X - before.First(g => g.Char == "A").X;
+        after.Last(g => g.Char == "R").X.Should().BeApproximately(before.Last(g => g.Char == "R").X - removedWidth, 0.1,
+            "with no room for the bucket the gap closes fully");
+        (MutoolTextExtractor.ExtractPage(afterPath, 1) ?? "").Should().NotContain(SecretB);
+    }
+
+    /// <summary>Mutool glyph positions (one line, left to right) before and after redacting under <paramref name="width"/>.</summary>
+    private (List<MutoolGlyphPositions.Glyph> Before, List<MutoolGlyphPositions.Glyph> After) RedactPositions(
+        string content, string secret, WidthPolicy width)
+    {
+        var original = FixtureWith(content, pageWidth: 800);
+        byte[] redacted;
+        using (var doc = PdfDocument.Open(original))
+        {
+            doc.RedactText(secret, RedactionOptions.Default with { Width = width });
+            redacted = doc.SaveToBytes();
+        }
+        var afterPath = WriteTemp(redacted);
+        (MutoolTextExtractor.ExtractPage(afterPath, 1) ?? "").Should().NotContain(secret);
+        return (MutoolGlyphPositions.ExtractPage(WriteTemp(original), 1)!.OrderBy(g => g.X).ToList(),
+                MutoolGlyphPositions.ExtractPage(afterPath, 1)!.OrderBy(g => g.X).ToList());
+    }
+
+    /// <summary>
+    /// Redact <paramref name="secret"/> from <paramref name="content"/> under
+    /// FixedMarker. The marker's right edge is read from the drawn rectangle;
+    /// where the reflowed "R" of "Ref." landed, and the kept space before it,
+    /// from mutool — an independent glyph-position reader.
+    /// </summary>
+    private (double BoxRight, double ReflowedR, double GapAfterMarker) MarkerAndNeighbour(
+        string content, string secret)
+    {
+        byte[] pdf;
+        using (var doc = PdfDocument.Open(FixtureWith(content, pageWidth: 800)))
+        {
+            doc.RedactText(secret, RedactionOptions.Default with { Width = WidthPolicy.FixedMarker });
+            pdf = doc.SaveToBytes();
+        }
 
         double boxRight;
         using (var doc = PdfDocument.Open(pdf))
@@ -253,20 +421,12 @@ public class RedactionWidthPolicyTests : IDisposable
             boxRight = box!.Value.Right;
         }
 
-        // INDEPENDENT of excise's own geometry: mutool's own glyph-position
-        // reader (used by the redaction benchmark's residue tier) says where
-        // the reflowed "R" of "Ref." actually landed.
+        var path = WriteTemp(pdf);
+        (MutoolTextExtractor.ExtractPage(path, 1) ?? "").Should().NotContain(secret);
         var glyphs = MutoolGlyphPositions.ExtractPage(path, 1);
         glyphs.Should().NotBeNull();
-        var reflowedR = glyphs!.FirstOrDefault(g => g.Char == "R");
-        reflowedR.Char.Should().Be("R", "the reflowed neighbour's leading glyph must still be findable");
-
-        reflowedR.X.Should().BeLessThan(boxRight,
-            "KNOWN LIMIT (#1755): the marker's fixed width does not yet account for the " +
-            "removed run's own width, so the box the redaction draws overlaps the very " +
-            "neighbour the gap-closing shift just reflowed into place -- this is why " +
-            "FixedMarker is an opt-in (--fixed-marker), not the default, until the shift " +
-            "itself is widened to make room for the marker.");
+        var reflowedR = glyphs!.Last(g => g.Char == "R").X;
+        return (boxRight, reflowedR, reflowedR - boxRight);
     }
 
     /// <summary>The last <c>x y w h re</c> ... <c>f</c> filled rectangle in the

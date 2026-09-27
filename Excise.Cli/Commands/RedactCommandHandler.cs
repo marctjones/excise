@@ -106,17 +106,14 @@ internal static class RedactCommandHandler
             CaseSensitive = request.CaseSensitive,
             WholeWord = request.WholeWord,   // #1052
             DrawBox = request.DrawBox,
-            // #1755: FixedMarker exists and is fully implemented, but is NOT
-            // the default yet — measured to visually overlap the reflowed
-            // neighbour in the common case, not just when slack is short (see
-            // the remark on RedactionOptions.Width). --fixed-marker is an
-            // explicit opt-in with that limit stated; --close-width and
-            // --overshoot-box are the existing explicit opt-ins to their own
-            // narrower trade-offs. The implicit default stays
-            // CollapsePreserveLayout.
+            // #1755: --close-width, --overshoot-box and --fixed-marker are
+            // explicit opt-ins to their own trade-offs. The implicit default
+            // stays CollapsePreserveLayout; making FixedMarker the default is an
+            // open product decision (#1725).
             Width = request.CloseWidth ? WidthPolicy.CloseGap
                 : request.OvershootBox ? WidthPolicy.OvershootPreserveLayout   // #1189
                 : request.FixedMarker ? WidthPolicy.FixedMarker
+                : request.QuantizeGap ? WidthPolicy.QuantizeGap   // #1754
                 : WidthPolicy.CollapsePreserveLayout,
             BoxColor = request.BoxColor,
             // #1188/#1169: per-carrier mode. An explicit --carrier-policy wins;
@@ -249,20 +246,21 @@ internal static class RedactCommandHandler
                 "--no-box and --box-color are mutually exclusive: --no-box draws no box to colour.");
         }
 
-        // #1755: --close-width, --overshoot-box and --fixed-marker are three
-        // different, mutually exclusive answers to the same width-policy
-        // question; picking more than one is not "pick the last one wins".
-        var widthFlagCount =
-            (request.CloseWidth ? 1 : 0) + (request.OvershootBox ? 1 : 0) + (request.FixedMarker ? 1 : 0);
+        // #1755/#1754: --close-width, --overshoot-box, --fixed-marker and
+        // --quantize-gap are different, mutually exclusive answers to the same
+        // width-policy question; picking more than one is not "pick the last
+        // one wins".
+        var widthFlagCount = (request.CloseWidth ? 1 : 0) + (request.OvershootBox ? 1 : 0) +
+                             (request.FixedMarker ? 1 : 0) + (request.QuantizeGap ? 1 : 0);
         if (widthFlagCount > 1)
         {
             throw new ArgumentException(
-                "--close-width, --overshoot-box and --fixed-marker are mutually exclusive width policies.");
+                "--close-width, --overshoot-box, --fixed-marker and --quantize-gap are mutually exclusive width policies.");
         }
 
         if (request.FlattenOcr &&
             (request.OcrImageText || !request.DrawBox || request.BoxColor != null ||
-             request.CloseWidth || request.OvershootBox || request.FixedMarker ||
+             request.CloseWidth || request.OvershootBox || request.FixedMarker || request.QuantizeGap ||
              request.Strict || request.AllowLowConfidence || request.KeepAttachments))
         {
             throw new ArgumentException(
@@ -304,16 +302,14 @@ internal readonly record struct RedactCommandRequest(
     bool OvershootBox = false,   // #1189
     // #1755: opt IN to WidthPolicy.FixedMarker -- closes the gap like
     // --close-width AND draws a content-independent covering box, unlike
-    // --close-width (no box at all). NOT the default: measured to visually
-    // overlap the reflowed neighbour in the common case (see the remark on
-    // RedactionOptions.Width) until the shift arithmetic accounts for the
-    // marker's own width.
+    // --close-width (no box at all). Not the default (#1725).
     bool FixedMarker = false,
     bool KeepAttachments = false,   // #1572 — opt out of removing every attachment
     // #1586 — the output profile. Standard is the default on every path; the
     // CLI must not be the one front end that quietly ships less.
     Excise.Core.Text.Segmentation.RedactionProfile Profile
-        = Excise.Core.Text.Segmentation.RedactionProfile.Standard);
+        = Excise.Core.Text.Segmentation.RedactionProfile.Standard,
+    bool QuantizeGap = false);   // #1754: opt IN to WidthPolicy.QuantizeGap
 
 internal sealed record RedactCommandResult(
     string InputPath,

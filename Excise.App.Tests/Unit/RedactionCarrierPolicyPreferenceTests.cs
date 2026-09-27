@@ -221,10 +221,8 @@ public class RedactionCarrierPolicyPreferenceTests
         //
         // #1755 added WidthPolicy.FixedMarker as an available OPTION (it
         // closes the #1715 width channel and always draws a visible mark,
-        // #1725) but deliberately NOT as the default yet: measured (mutool
-        // -F stext, real glyph positions) to visually overlap the reflowed
-        // neighbouring text in the COMMON case, not merely when a line has
-        // little slack — see the remark on RedactionOptions.Width.
+        // #1725) but NOT as the default: that is an open product decision
+        // (#1725). #1754 added QuantizeGap the same way.
         var main = MainWindowViewModelTestFactory.Create();
         main.RedactionPreferences.Width.Should().Be(WidthPolicy.CollapsePreserveLayout);
 
@@ -235,6 +233,7 @@ public class RedactionCarrierPolicyPreferenceTests
             WidthPolicy.CloseGap,
             WidthPolicy.OvershootPreserveLayout,
             WidthPolicy.FixedMarker,
+            WidthPolicy.QuantizeGap,
         });
 
         prefs.LoadFromMainViewModel(main);
