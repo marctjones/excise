@@ -632,6 +632,60 @@ public class RedactionProfileTests
         reopened.GetPage(1).GetAnnotations().Should().BeEmpty();
     }
 
+    private const string CutItems = "structure-tree reference(s) to a removed object";
+
+    /// <summary>A tagged one-field form whose structure tree names the widget (§14.7.5.3), plus <paramref name="catalog"/>.</summary>
+    private static byte[] TaggedField(string catalog = "") => CarrierTrapFixtures.WithCatalog(
+        $"/AcroForm << /Fields [6 0 R] >> /StructTreeRoot 7 0 R /MarkInfo << /Marked true >> {catalog}",
+        "/Annots [6 0 R] /StructParents 0",
+        "<< /Type /Annot /Subtype /Widget /FT /Tx /T (name) /TU (TOOLTIPTRAP) /V (VALUETRAP) /DV (DEFAULTTRAP) " +
+        "/Rect [72 600 272 620] /P 3 0 R /StructParent 1 >>",
+        "<< /Type /StructTreeRoot /K 8 0 R >>",
+        "<< /Type /StructElem /S /Form /P 7 0 R /K << /Type /OBJR /Obj 6 0 R >> >>");
+
+    /// <summary>
+    /// #1881: the flatten took the widget off its page and <c>/AcroForm</c>
+    /// away, the structure tree's <c>/OBJR</c> still reached it, and the saved
+    /// file kept its <c>/TU</c> and <c>/DV</c> while the report said clean.
+    /// </summary>
+    [Theory]
+    [InlineData(EntryPoint.RedactText)]
+    [InlineData(EntryPoint.RedactArea)]
+    [InlineData(EntryPoint.SafetyPass)]
+    public void Maximum_CutsAFlattenedWidgetTheStructureTreeStillNames(EntryPoint entry)
+    {
+        var standard = RunProfile(TaggedField(), entry, RedactionOptions.Default);
+        SavedPdfLeakScanner.FindTerm(standard.Saved, "TOOLTIPTRAP").Should().NotBeEmpty("planted failure: Standard keeps the field");
+
+        var max = RunProfile(TaggedField(), entry, RedactionOptions.Maximum);
+
+        foreach (var token in new[] { "TOOLTIPTRAP", "DEFAULTTRAP" })
+            SavedPdfLeakScanner.FindTerm(max.Saved, token).Should().BeEmpty(
+                $"{token}: the /OBJR kept the flattened widget, and its field carriers, in the file");
+        max.Removals.Should().Contain(r => r.Feature == Flattened && r.Count == 1);
+        max.Removals.Should().ContainSingle(r => r.Feature == CutItems).Which.Count.Should().Be(1,
+            "CLAUDE.md rule 6: the cut is a structure-tree change the caller did not ask for");
+        max.Refusals.Should().NotContain(r => r.Contains("form field"), "nothing reaches the widget once the /OBJR is gone");
+    }
+
+    /// <summary>
+    /// #1881: a route the cut does not know (a <c>/Hide</c> action, which is
+    /// internal and kept) still reaches the widget, so Maximum says so.
+    /// </summary>
+    [Fact]
+    public void Maximum_RefusesAFlattenedWidgetAnotherRouteStillReaches()
+    {
+        using var doc = PdfDocument.Open(TaggedField("/OpenAction << /S /Hide /T 6 0 R >>"));
+
+        var report = doc.RedactText("NOMATCHXYZ", RedactionOptions.Maximum);
+
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "TOOLTIPTRAP").Should().NotBeEmpty(
+            "the refusal is only honest if the tooltip really is still there");
+        report.Carriers.Should().ContainSingle(c => c.Carrier == "form field 6 0 R")
+            .Which.RefusedReason.Should().Contain("/TU");
+        report.IsCleanSuccess.Should().BeFalse();
+    }
+
     // ── the report is the contract ──────────────────────────────────────────
 
     [Fact]
@@ -1127,6 +1181,38 @@ public class RedactionProfileTests
         report.IsCleanSuccess.Should().BeTrue();
         report.Removals.Should().ContainSingle(r => r.Feature == "XObject(s) no content stream draws")
             .Which.Count.Should().Be(1, "every removal is reported");
+    }
+
+    /// <summary>
+    /// #1885: a structure-tree content item names the undrawn form and draws
+    /// nothing. It kept the form, and its term, in the file with no row.
+    /// </summary>
+    [Theory]
+    [InlineData("<< /Type /OBJR /Obj 7 0 R /Pg 3 0 R >>", false)]
+    [InlineData("<< /Type /OBJR /Obj 7 0 R /Pg 3 0 R >>", true)]
+    [InlineData("[ << /Type /MCR /Pg 3 0 R /Stm 7 0 R /MCID 0 >> ]", false)]
+    public void AFormOnlyTheStructureTreeNames_LeavesTheFile(string kid, bool maximum)
+    {
+        var form = $"BT /F1 12 Tf 72 500 Td ({UndrawnFormToken}) Tj ET";
+        using var doc = PdfDocument.Open(RecoveryFixtureBuilder.Build("BT /F1 12 Tf 72 700 Td (VISIBLE) Tj ET\n",
+            new List<RecoveryFixtureBuilder.Obj>
+            {
+                new("<< /Type /XObject /Subtype /Form /BBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> " +
+                    $"/Length {form.Length} >>", System.Text.Encoding.ASCII.GetBytes(form)),
+                new("<< /Type /StructTreeRoot /K 9 0 R >>"),
+                new($"<< /Type /StructElem /S /Figure /P 8 0 R /K {kid} >>"),
+            },
+            catalogExtra: "/StructTreeRoot 8 0 R /MarkInfo << /Marked true >>",
+            resourcesExtra: "/XObject << /Fx0 7 0 R >>"));
+
+        var report = doc.RedactText(UndrawnFormToken, maximum ? RedactionOptions.Maximum : RedactionOptions.Default);
+
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), UndrawnFormToken).Should().BeEmpty(
+            "nothing draws the form; the structure tree only names it");
+        report.Removals.Should().ContainSingle(r => r.Feature == "XObject(s) no content stream draws")
+            .Which.Count.Should().Be(1);
+        report.Removals.Should().ContainSingle(r => r.Feature == CutItems).Which.Count.Should().Be(1);
+        report.IsCleanSuccess.Should().BeTrue();
     }
 
     /// <summary>
