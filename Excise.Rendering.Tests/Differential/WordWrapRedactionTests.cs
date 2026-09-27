@@ -54,7 +54,21 @@ public class WordWrapRedactionTests
         UnitFontTm,
         /// <summary>As <see cref="Tj"/> on a <c>/Rotate 90</c> page.</summary>
         Rotate90,
+        /// <summary>One <c>Tj</c> per word and one per space: a one-letter word is a string
+        /// of one glyph, whose own origins give no writing direction (#1882).</summary>
+        TjPerWord,
+        /// <summary>One <c>Tj</c> per glyph: no string has a direction of its own (#1882).</summary>
+        TjPerGlyph,
     }
+
+    /// <summary>#1882: the matrix that turns the fixture's upright coordinates
+    /// onto the portrait page, by degrees counterclockwise.</summary>
+    private static readonly Dictionary<int, double[]> Rotations = new()
+    {
+        [90] = [0, 1, -1, 0, 612, 0],
+        [180] = [-1, 0, 0, -1, 612, 792],
+        [270] = [0, -1, 1, 0, 0, 792],
+    };
 
     public static TheoryData<string, int, Shape> WrappedNames()
     {
@@ -120,6 +134,94 @@ public class WordWrapRedactionTests
             foreach (var profile in new[] { RedactionProfile.Standard, RedactionProfile.Maximum })
                 data.Add(term, line1, line2, profile);
         return data;
+    }
+
+    public static TheoryData<int, Shape, bool, string, int> RotatedWraps()
+    {
+        var data = new TheoryData<int, Shape, bool, string, int>();
+        foreach (var degrees in Rotations.Keys)
+            foreach (var shape in new[] { Shape.Tj, Shape.KernedTj, Shape.TrailingSpace, Shape.TjPerWord, Shape.TjPerGlyph })
+                foreach (var viaTm in new[] { false, true })
+                {
+                    data.Add(degrees, shape, viaTm, "Quentin Barnaby Holloway", 2);
+                    data.Add(degrees, shape, viaTm, "Quentin A Holloway", 2);
+                    data.Add(degrees, shape, viaTm, "Quentin A Holloway", 1);
+                }
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(RotatedWraps))]
+    public void ANameWrappedInTextRotatedByItsMatrix_IsRemovedFromBothLines(
+        int degrees, Shape shape, bool viaTm, string name, int wrapAfter)
+    {
+        // #1882: landscape content on a portrait page, turned by the CTM or by
+        // the text matrix itself. Every line is vertical or upside down in user
+        // space, and a y-only line model read each glyph as a line of its own:
+        // the wrapped name was neither matched nor reported.
+        RequireOracles();
+        var words = name.Split(' ');
+        var pdf = BuildPdf(shape, Rotations[degrees], viaTm,
+            (72, 500, $"{Lead} {string.Join(' ', words.Take(wrapAfter))}"),
+            (72, 486, $"{string.Join(' ', words.Skip(wrapAfter))} {Tail}"));
+        AssertReadersRead(pdf, name);
+
+        var (report, saved, output) = Redact(pdf, name);
+        try
+        {
+            report.MatchesLocated.Should().Be(1, $"the one wrapped occurrence is matched ({report})");
+            report.VerifiedRemovals.Should().Be(1, report.ToString());
+            report.WordWrapCandidates.Should().BeEmpty("a confirmed wrap is removed, not merely reported");
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+
+            AssertNameGone(saved, output, name, "signed by", "on behalf of the company");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void RotatedText_TwoSequentialRedactions_WithACurlyQuoteADollarAndParentheses()
+    {
+        // CLAUDE.md rule 9 at 90 degrees: the second redaction runs on the
+        // content stream the first rebuilt, and both terms carry characters
+        // that are escaped or folded (a right single quote the user types as
+        // an apostrophe, $, parentheses).
+        RequireOracles();
+        var pdf = BuildPdf(Shape.Tj, Rotations[90], viaTm: false,
+            (72, 500, "Paid $1,250 \\(net\\) to Siobhan O\\222Rourke"),
+            (72, 486, "Brannigan on behalf of the company."));
+        var output = Path.Combine(Path.GetTempPath(), $"excise-1882-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var doc = PdfDocument.Open(pdf))
+            {
+                var first = doc.RedactText("Siobhan O'Rourke Brannigan", RedactionOptions.Default);
+                first.VerifiedRemovals.Should().Be(1, first.ToString());
+                first.IsCleanSuccess.Should().BeTrue(first.ToString());
+                var second = doc.RedactText("$1,250 (net)", RedactionOptions.Default);
+                second.VerifiedRemovals.Should().Be(1, second.ToString());
+                second.IsCleanSuccess.Should().BeTrue(second.ToString());
+                doc.Save(output);
+            }
+
+            var saved = File.ReadAllBytes(output);
+            foreach (var fragment in new[] { "Siobhan", "Rourke", "Brannigan", "1,250" })
+                SavedPdfLeakScanner.FindTerm(saved, fragment).Should().BeEmpty($"'{fragment}' must leave the file");
+            foreach (var (tool, text) in Readings(output))
+            {
+                foreach (var fragment in new[] { "Siobhan", "Rourke", "Brannigan", "1,250", "(net)" })
+                    text.Should().NotContain(fragment, $"{tool} must not read '{fragment}'");
+                text.Should().Contain("Paid", $"{tool} must still read the text before the first term");
+                text.Should().Contain("on behalf of the company", $"{tool} must still read the second line");
+            }
+        }
+        finally
+        {
+            File.Delete(output);
+        }
     }
 
     [Theory]
@@ -333,14 +435,15 @@ public class WordWrapRedactionTests
     /// </summary>
     private static void AssertNameGone(byte[] saved, string output, string name, params string[] kept)
     {
-        foreach (var word in name.Split(' '))
+        // A one-letter word is a byte any file holds; the readers judge it as a word.
+        foreach (var word in name.Split(' ').Where(w => w.Length >= 3))
             SavedPdfLeakScanner.FindTerm(saved, word).Should().BeEmpty($"'{word}' of the name must leave the file");
 
         foreach (var (tool, text) in Readings(output))
         {
             text.Should().NotContain(name, $"{tool} must not read the name across the break");
             foreach (var word in name.Split(' '))
-                text.Should().NotContain(word, $"{tool} must not read '{word}'");
+                text.Should().NotMatchRegex($@"\b{Regex.Escape(word)}\b", $"{tool} must not read '{word}'");
             foreach (var neighbour in kept)
                 text.Should().Contain(neighbour, $"{tool} must still read the neighbouring text '{neighbour}'");
         }
@@ -370,23 +473,61 @@ public class WordWrapRedactionTests
         }
     }
 
-    private static byte[] BuildPdf(Shape shape, params (double X, double Y, string Text)[] lines)
+    /// <summary>
+    /// A readable occurrence is the fixture's whole premise: MuPDF and Poppler
+    /// both read <paramref name="name"/> across the break in the input.
+    /// </summary>
+    private static void AssertReadersRead(byte[] pdf, string name)
+    {
+        var input = Path.Combine(Path.GetTempPath(), $"excise-wrap-in-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(input, pdf);
+        try
+        {
+            foreach (var (tool, text) in Readings(input))
+                text.Should().Contain(name, $"{tool} must read the name in the fixture");
+        }
+        finally
+        {
+            File.Delete(input);
+        }
+    }
+
+    private static byte[] BuildPdf(Shape shape, params (double X, double Y, string Text)[] lines) =>
+        BuildPdf(shape, matrix: null, viaTm: shape == Shape.UnitFontTm, lines);
+
+    /// <summary>
+    /// One page, one text object per line. <paramref name="matrix"/> turns the
+    /// whole page: by <c>cm</c>, or with <paramref name="viaTm"/> folded into
+    /// each line's text matrix over a unit font.
+    /// </summary>
+    private static byte[] BuildPdf(
+        Shape shape, double[]? matrix, bool viaTm, params (double X, double Y, string Text)[] lines)
     {
         string Num(double v) => v.ToString(CultureInfo.InvariantCulture);
+        var m = matrix ?? [1, 0, 0, 1, 0, 0];
         var content = new StringBuilder();
+        if (matrix != null && !viaTm)
+            content.Append($"q {string.Join(' ', m.Select(Num))} cm\n");
         for (var i = 0; i < lines.Length; i++)
         {
             var (x, y, text) = lines[i];
             if (shape == Shape.TrailingSpace && i < lines.Length - 1)
                 text += " ";
-            var show = shape == Shape.KernedTj
-                ? "[" + string.Join(" -400 ", text.Split(' ').Select(w => $"({w})")) + "] TJ"
-                : $"({text}) Tj";
-            var position = shape == Shape.UnitFontTm
-                ? $"/F1 1 Tf 12 0 0 12 {Num(x)} {Num(y)} Tm"
+            var show = shape switch
+            {
+                Shape.KernedTj => "[" + string.Join(" -400 ", text.Split(' ').Select(w => $"({w})")) + "] TJ",
+                Shape.TjPerWord => string.Join(" ( ) Tj ", text.Split(' ').Select(w => $"({w}) Tj")),
+                Shape.TjPerGlyph => string.Join(" ", text.Select(c => $"({c}) Tj")),
+                _ => $"({text}) Tj",
+            };
+            var position = viaTm
+                ? $"/F1 1 Tf {Num(12 * m[0])} {Num(12 * m[1])} {Num(12 * m[2])} {Num(12 * m[3])} "
+                    + $"{Num(m[0] * x + m[2] * y + m[4])} {Num(m[1] * x + m[3] * y + m[5])} Tm"
                 : $"/F1 12 Tf {Num(x)} {Num(y)} Td";
             content.Append($"BT {position} {show} ET\n");
         }
+        if (matrix != null && !viaTm)
+            content.Append("Q\n");
 
         var rotate = shape == Shape.Rotate90 ? " /Rotate 90" : "";
         var body = content.ToString();
