@@ -168,6 +168,19 @@ public class DocumentStateManagerTests
     }
 
     [Fact]
+    public void HasUnsavedChanges_WhenAppliedRedactions_ReturnsTrue()
+    {
+        // #1501 item 2: redactions applied in memory with no save yet must
+        // still count as unsaved, even though PendingRedactionsCount is 0.
+        var manager = new DocumentStateManager();
+        manager.SetDocument("/test/document.pdf");
+
+        manager.AppliedRedactionsCount = 1;
+
+        manager.HasUnsavedChanges.Should().BeTrue();
+    }
+
+    [Fact]
     public void FileType_ReturnsCorrectDescription()
     {
         // Arrange
@@ -230,6 +243,7 @@ public class DocumentStateManagerTests
         manager.RemovedPagesCount = 1;
         manager.FormFieldEditsCount = 1;
         manager.TypewriterEditsCount = 1;
+        manager.AppliedRedactionsCount = 1;
 
         manager.MarkSaved();
 
@@ -237,6 +251,7 @@ public class DocumentStateManagerTests
         manager.RemovedPagesCount.Should().Be(0);
         manager.FormFieldEditsCount.Should().Be(0);
         manager.TypewriterEditsCount.Should().Be(0);
+        manager.AppliedRedactionsCount.Should().Be(0);
         manager.HasUnsavedChanges.Should().BeFalse();
     }
 

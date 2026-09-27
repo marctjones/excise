@@ -301,7 +301,7 @@ internal partial class MainWindowViewModel
                 ToWorkflowPathKind(kind),
                 pageNumber,
                 strokes);
-            var result = _annotationWorkflow.AddPath(request, _pdfCoreDocument);
+            var result = _annotationWorkflow.AddPath(request);
             if (!result.WasAdded)
             {
                 if (result.ValidationMessage is not null)
@@ -415,7 +415,6 @@ internal partial class MainWindowViewModel
                 rgb,
                 w,
                 h,
-                viewerDocument: _pdfCoreDocument,
                 alphaPixels: alpha);
             await MarkAnnotationChangedAsync("Image stamp added");
             RecordAnnotationAdd("Add image stamp", pageNumber, annotation,
@@ -663,7 +662,7 @@ internal partial class MainWindowViewModel
     {
         try
         {
-            var result = _annotationWorkflow.AddRect(request, _pdfCoreDocument);
+            var result = _annotationWorkflow.AddRect(request);
             await MarkAnnotationChangedAsync(result.SuccessMessage);
             RecordAnnotationAdd(
                 result.HistoryDescription,
@@ -767,7 +766,7 @@ internal partial class MainWindowViewModel
             var request = new AnnotationRectRequest(
                 AnnotationRectKind.TextNote, pageNumber, iconRect, DefaultStickyNoteText,
                 Open: true, PopupRect: cardRect);
-            var result = _annotationWorkflow.AddRect(request, _pdfCoreDocument);
+            var result = _annotationWorkflow.AddRect(request);
             await MarkAnnotationChangedAsync(result.SuccessMessage);
             RecordAnnotationAdd(
                 result.HistoryDescription,

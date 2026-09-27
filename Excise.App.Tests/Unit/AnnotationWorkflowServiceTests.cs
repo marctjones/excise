@@ -77,12 +77,11 @@ public sealed class AnnotationWorkflowServiceTests : IDisposable
     }
 
     [Fact]
-    public void AddPath_InkFiltersShortStrokesAndMirrorsTheViewerDocument()
+    public void AddPath_InkFiltersShortStrokes()
     {
         var sourcePath = CreateBlankPdf("ink-source.pdf");
         var documentService = CreateLoadedDocumentService(sourcePath);
         var workflow = CreateWorkflow(documentService);
-        using var viewerDocument = PdfDocument.Open(sourcePath);
         var request = new AnnotationPathRequest(
             AnnotationPathKind.Ink,
             1,
@@ -91,7 +90,7 @@ public sealed class AnnotationWorkflowServiceTests : IDisposable
                 [(20d, 20d), (40d, 40d), (60d, 20d)]
             ]);
 
-        var result = workflow.AddPath(request, viewerDocument);
+        var result = workflow.AddPath(request);
 
         result.WasAdded.Should().BeTrue();
         result.Request.Strokes.Should().ContainSingle(
@@ -99,29 +98,24 @@ public sealed class AnnotationWorkflowServiceTests : IDisposable
         result.Annotation!.Subtype.Should().Be(PdfAnnotationSubtype.Ink);
         documentService.GetCurrentDocument()!.GetPage(1).GetAnnotations()
             .Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Ink);
-        viewerDocument.GetPage(1).GetAnnotations()
-            .Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Ink,
-                "the separate viewer document must reflect the transaction immediately");
     }
 
     [Fact]
-    public void AddPath_PolygonWithTwoPointsReturnsValidationWithoutMutatingEitherDocument()
+    public void AddPath_PolygonWithTwoPointsReturnsValidationWithoutMutatingTheDocument()
     {
         var sourcePath = CreateBlankPdf("polygon-source.pdf");
         var documentService = CreateLoadedDocumentService(sourcePath);
         var workflow = CreateWorkflow(documentService);
-        using var viewerDocument = PdfDocument.Open(sourcePath);
         var request = new AnnotationPathRequest(
             AnnotationPathKind.Polygon,
             1,
             [[(20d, 20d), (40d, 40d)]]);
 
-        var result = workflow.AddPath(request, viewerDocument);
+        var result = workflow.AddPath(request);
 
         result.WasAdded.Should().BeFalse();
         result.ValidationMessage.Should().Be("A polygon needs at least three points.");
         documentService.GetCurrentDocument()!.GetPage(1).GetAnnotations().Should().BeEmpty();
-        viewerDocument.GetPage(1).GetAnnotations().Should().BeEmpty();
     }
 
     [Fact]
@@ -145,26 +139,23 @@ public sealed class AnnotationWorkflowServiceTests : IDisposable
     }
 
     [Fact]
-    public void AddRect_UnderlineMutatesBothDocumentsAndReturnsPublicationMetadata()
+    public void AddRect_UnderlineMutatesTheDocumentAndReturnsPublicationMetadata()
     {
         var sourcePath = CreateBlankPdf("underline-source.pdf");
         var documentService = CreateLoadedDocumentService(sourcePath);
         var workflow = CreateWorkflow(documentService);
-        using var viewerDocument = PdfDocument.Open(sourcePath);
         var request = new AnnotationRectRequest(
             AnnotationRectKind.Underline,
             1,
             new PdfRectangle(72, 600, 220, 620),
             "Important clause");
 
-        var result = workflow.AddRect(request, viewerDocument);
+        var result = workflow.AddRect(request);
 
         result.Annotation.Subtype.Should().Be(PdfAnnotationSubtype.Underline);
         result.SuccessMessage.Should().Be("Underline added");
         result.HistoryDescription.Should().Be("Add underline");
         documentService.GetCurrentDocument()!.GetPage(1).GetAnnotations()
-            .Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Underline);
-        viewerDocument.GetPage(1).GetAnnotations()
             .Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Underline);
     }
 

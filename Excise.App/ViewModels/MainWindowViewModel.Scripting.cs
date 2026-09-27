@@ -6,7 +6,6 @@ using ReactiveUI;
 using System;
 using System.Linq;
 using System.Reactive;
-using System.Threading;
 using System.Threading.Tasks;
 using Excise.Core.Security;
 
@@ -136,6 +135,22 @@ internal partial class MainWindowViewModel
     }
 
     /// <summary>
+    /// Test seam for #1501 item 4: <c>PdfDocumentService.LoadDocument</c> has
+    /// no cancellation-aware overload (production code outside the scripting
+    /// harness), so there is no way to make a real load hang predictably and
+    /// on demand. A test can substitute a delegate that blocks past the
+    /// configured timeout to prove the wait is actually bounded, without
+    /// touching document-service production code. Null (the only value
+    /// outside tests) runs the real load.
+    /// </summary>
+    internal Func<string, Task>? LoadDocumentOverrideForTests { get; set; }
+
+    private Task StartLoadDocument(string filePath) =>
+        LoadDocumentOverrideForTests is { } overrideLoad
+            ? overrideLoad(filePath)
+            : Task.Run(() => _documentService.LoadDocument(filePath));
+
+    /// <summary>
     /// Load a document (for Roslyn scripts).
     /// Usage: <c>await LoadDocumentCommand("/path/to/file.pdf")</c>
     /// Issue #93: Includes configurable timeout to prevent hangs on malformed PDFs.
@@ -166,17 +181,38 @@ internal partial class MainWindowViewModel
         // Issue #93: Use timeout to prevent hangs on malformed PDFs
         if (LoadDocumentTimeoutSeconds > 0)
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(LoadDocumentTimeoutSeconds));
+            // #1501 item 4: a CancellationToken passed to Task.Run only stops
+            // the task if it fires BEFORE the delegate starts running on the
+            // pool thread. LoadDocument does not observe a token once it is
+            // executing, so the old `Task.Run(..., cts.Token)` await simply
+            // waited out however long the load actually took - the timeout
+            // never bounded anything in practice. WaitAsync bounds the wait
+            // itself regardless of what the delegate is doing.
+            var loadTask = StartLoadDocument(filePath);
 
             try
             {
-                // Run LoadDocument on a background thread with timeout
-                await Task.Run(() => _documentService.LoadDocument(filePath), cts.Token);
+                await loadTask.WaitAsync(TimeSpan.FromSeconds(LoadDocumentTimeoutSeconds));
             }
-            catch (OperationCanceledException)
+            catch (TimeoutException)
             {
                 _logger.LogError("[SCRIPT] LoadDocumentCommand: Timeout after {Seconds}s loading '{FilePath}'",
                     LoadDocumentTimeoutSeconds, filePath);
+
+                // PdfDocumentService.LoadDocument takes no CancellationToken
+                // (production code outside the scripting harness), so the
+                // abandoned load cannot be torn down here - only observed.
+                // Log its eventual outcome instead of leaving it as an
+                // unobserved task exception or a silent, late mutation of
+                // the document service's current document.
+                _ = loadTask.ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                        _logger.LogWarning(t.Exception, "[SCRIPT] Abandoned load of '{FilePath}' failed after its timeout had already fired", filePath);
+                    else
+                        _logger.LogWarning("[SCRIPT] Abandoned load of '{FilePath}' finished after its timeout had already fired; the document service's current document may not be the one this script expects", filePath);
+                }, TaskScheduler.Default);
+
                 throw new TimeoutException($"Loading PDF timed out after {LoadDocumentTimeoutSeconds} seconds: {filePath}");
             }
         }
@@ -185,6 +221,14 @@ internal partial class MainWindowViewModel
             // No timeout - original behavior
             _documentService.LoadDocument(filePath);
         }
+
+        // #1878: every other path that replaces the service's document also
+        // points PdfCoreDocument at it (open, every save, close). This one
+        // didn't, so the view model kept the PREVIOUS document - which the
+        // service had just disposed - until something else happened to call
+        // ReloadPdfCoreDocumentFromCurrentDocumentAsync. One document, one
+        // instance: nothing left to mirror.
+        PdfCoreDocument = _documentService.GetCurrentDocument();
 
         this.RaisePropertyChanged(nameof(DocumentName));
         this.RaisePropertyChanged(nameof(StatusBarText));
@@ -301,6 +345,11 @@ internal partial class MainWindowViewModel
 
             RedactionWorkflow.MoveToApplied();
             FileState.PendingRedactionsCount = 0;
+            // #1501 item 2: the document was just changed in memory with no
+            // save to follow, so the dirty counters must say so — a plain
+            // PendingRedactionsCount = 0 makes HasUnsavedChanges false while
+            // the loaded document already differs from the file on disk.
+            FileState.AppliedRedactionsCount = RedactionWorkflow.AppliedCount;
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));
 
@@ -318,6 +367,8 @@ internal partial class MainWindowViewModel
 
         RedactionWorkflow.MoveToApplied();
         FileState.PendingRedactionsCount = 0;
+        // #1501 item 2: queued but not yet written to disk - still dirty.
+        FileState.AppliedRedactionsCount = RedactionWorkflow.AppliedCount;
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
 
@@ -376,40 +427,56 @@ internal partial class MainWindowViewModel
                 // Use sequential file-based redaction (like CLI)
                 var currentInput = _currentFilePath;
                 var tempDir = System.IO.Path.GetTempPath();
+                // #1501 item 3: every intermediate this loop creates is a
+                // partially-redacted copy of the document. The old cleanup
+                // only deleted the PREVIOUS intermediate on a non-final pass,
+                // so the last one (N >= 2 terms) always survived, and a pass
+                // that threw left every intermediate written so far behind
+                // too. Track them all and delete them in a finally.
+                var intermediatePaths = new List<string>();
 
-                for (int i = 0; i < _pendingTextRedactions.Count; i++)
+                try
                 {
-                    var text = _pendingTextRedactions[i];
-                    var isLast = (i == _pendingTextRedactions.Count - 1);
-                    var currentOutput = isLast ? filePath : System.IO.Path.Combine(tempDir, $"excise_script_redact_{i}_{Guid.NewGuid():N}.pdf");
-
-                    _logger.LogInformation("[SCRIPT] Redacting '{Text}' ({Current}/{Total})",
-                        text, i + 1, _pendingTextRedactions.Count);
-
-                    var result = _redactionService.RedactText(
-                        currentInput, currentOutput, text,
-                        RedactionPreferences.ToOptions() with { CaseSensitive = false });
-
-                    if (!result.Success)
+                    for (int i = 0; i < _pendingTextRedactions.Count; i++)
                     {
-                        _logger.LogError("[SCRIPT] Redaction failed for '{Text}': {Error}", text, result.ErrorMessage);
-                        throw new InvalidOperationException($"Redaction failed for '{text}': {result.ErrorMessage}");
+                        var text = _pendingTextRedactions[i];
+                        var isLast = (i == _pendingTextRedactions.Count - 1);
+                        var currentOutput = isLast ? filePath : System.IO.Path.Combine(tempDir, $"excise_script_redact_{i}_{Guid.NewGuid():N}.pdf");
+                        if (!isLast)
+                            intermediatePaths.Add(currentOutput);
+
+                        _logger.LogInformation("[SCRIPT] Redacting '{Text}' ({Current}/{Total})",
+                            text, i + 1, _pendingTextRedactions.Count);
+
+                        var result = _redactionService.RedactText(
+                            currentInput, currentOutput, text,
+                            RedactionPreferences.ToOptions() with { CaseSensitive = false });
+
+                        if (!result.Success)
+                        {
+                            _logger.LogError("[SCRIPT] Redaction failed for '{Text}': {Error}", text, result.ErrorMessage);
+                            throw new InvalidOperationException($"Redaction failed for '{text}': {result.ErrorMessage}");
+                        }
+
+                        // #1052: log WHICH RULE RAN, not just the count.
+                        _logger.LogInformation(
+                            "[SCRIPT] Redacted {Count} occurrences of '{Text}' (wholeWord={WholeWord})",
+                            result.RedactionCount, text, result.WholeWord);
+                        foreach (var warning in result.Warnings)
+                            _logger.LogWarning("[SCRIPT] Redaction warning for '{Text}': {Warning}", text, warning);
+
+                        currentInput = currentOutput;
                     }
-
-                    // #1052: log WHICH RULE RAN, not just the count.
-                    _logger.LogInformation(
-                        "[SCRIPT] Redacted {Count} occurrences of '{Text}' (wholeWord={WholeWord})",
-                        result.RedactionCount, text, result.WholeWord);
-                    foreach (var warning in result.Warnings)
-                        _logger.LogWarning("[SCRIPT] Redaction warning for '{Text}': {Warning}", text, warning);
-
-                    // Clean up intermediate files
-                    if (!isLast && currentInput != _currentFilePath && System.IO.File.Exists(currentInput))
+                }
+                finally
+                {
+                    foreach (var intermediatePath in intermediatePaths)
                     {
-                        try { System.IO.File.Delete(currentInput); } catch { }
+                        if (System.IO.File.Exists(intermediatePath))
+                        {
+                            try { System.IO.File.Delete(intermediatePath); } catch { }
+                        }
                     }
-
-                    currentInput = currentOutput;
                 }
 
                 using (var redactedDocument = Excise.Core.Document.PdfDocument.Open(System.IO.File.ReadAllBytes(filePath)))

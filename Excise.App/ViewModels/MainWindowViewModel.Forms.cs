@@ -549,16 +549,6 @@ internal partial class MainWindowViewModel
         {
             var name = NextUniqueFieldName(_pdfCoreDocument, FormAuthoringFieldType);
             AddFormFieldToDocument(_pdfCoreDocument, FormAuthoringFieldType, pageNumber, rect, name);
-            // #917: normally a no-op — the save document IS this document, and
-            // applying the field twice created it twice (caught by three form
-            // tests the moment the two were unified). The guard stays because
-            // the transition is not finished: some paths still hand the viewer
-            // a separate instance.
-            if (_documentService.GetCurrentDocument() is { } serviceDocument
-                && !ReferenceEquals(serviceDocument, _pdfCoreDocument))
-            {
-                AddFormFieldToDocument(serviceDocument, FormAuthoringFieldType, pageNumber, rect, name);
-            }
 
             FileState.FormFieldEditsCount++;
             this.RaisePropertyChanged(nameof(CurrentPageFormFields));
@@ -596,13 +586,6 @@ internal partial class MainWindowViewModel
 
         var namesBefore = FieldNames(_pdfCoreDocument);
         var count = PdfFormAutoDetector.Apply(_pdfCoreDocument, suggestions);
-        // #917: same guard, same reason — without it every auto-detected field
-        // is applied twice to the one document.
-        if (count > 0 && _documentService.GetCurrentDocument() is { } serviceDocument
-            && !ReferenceEquals(serviceDocument, _pdfCoreDocument))
-        {
-            PdfFormAutoDetector.Apply(serviceDocument, suggestions);
-        }
         if (count > 0)
         {
             FileState.FormFieldEditsCount += count;
@@ -626,20 +609,14 @@ internal partial class MainWindowViewModel
     private static string[] FieldNames(PdfDocument document) =>
         document.GetAcroForm()?.Fields.Select(f => f.FullName).ToArray() ?? Array.Empty<string>();
 
-    /// <summary>The documents a field edit must reach: the viewer's and, while they still differ (#917), the save copy.</summary>
-    private IEnumerable<PdfDocument> FieldEditTargets()
-    {
-        if (_pdfCoreDocument != null) yield return _pdfCoreDocument;
-        if (_documentService.GetCurrentDocument() is { } service && !ReferenceEquals(service, _pdfCoreDocument))
-            yield return service;
-    }
-
-    /// <summary>Undo of an authored field: remove it from every document that holds it, then rebuild the view.</summary>
+    /// <summary>Undo of an authored field: remove it from the document, then rebuild the view.</summary>
     private async Task RemoveAuthoredFieldsAsync(IReadOnlyList<string> names)
     {
-        foreach (var document in FieldEditTargets())
+        if (_pdfCoreDocument is { } document)
+        {
             foreach (var name in names)
                 document.RemoveField(name);
+        }
 
         FileState.FormFieldEditsCount = Math.Max(0, FileState.FormFieldEditsCount - names.Count);
         this.RaisePropertyChanged(nameof(CurrentPageFormFields));
@@ -651,7 +628,7 @@ internal partial class MainWindowViewModel
     /// <summary>Redo of an authored field: the same type, place and name.</summary>
     private async Task ReauthorFieldAsync(PdfFieldType type, int pageNumber, PdfRectangle rect, string name)
     {
-        foreach (var document in FieldEditTargets())
+        if (_pdfCoreDocument is { } document)
             AddFormFieldToDocument(document, type, pageNumber, rect, name);
 
         FileState.FormFieldEditsCount++;
@@ -664,9 +641,9 @@ internal partial class MainWindowViewModel
     /// <summary>Redo of Auto-Detect: apply the same suggestions again.</summary>
     private async Task ReapplyAutoDetectedAsync(IReadOnlyList<SuggestedField> suggestions)
     {
-        var applied = 0;
-        foreach (var document in FieldEditTargets())
-            applied = Math.Max(applied, PdfFormAutoDetector.Apply(document, suggestions));
+        var applied = _pdfCoreDocument is { } document
+            ? PdfFormAutoDetector.Apply(document, suggestions)
+            : 0;
 
         FileState.FormFieldEditsCount += applied;
         this.RaisePropertyChanged(nameof(CurrentPageFormFields));

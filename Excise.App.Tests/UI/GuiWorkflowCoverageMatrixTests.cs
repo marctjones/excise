@@ -257,7 +257,7 @@ public class GuiWorkflowCoverageMatrixTests
         new("Highlight selected text and add sticky notes, save, reopen",
             Modality.Mouse | Modality.Menu | Modality.Toolbar,
             [
-                Capability.Covered("highlight from a text selection", typeof(AnnotationAuthoringWorkflowTests), nameof(AnnotationAuthoringWorkflowTests.AddHighlightAnnotationFromSelectionAsync_CreatesPersistableHighlightAndRefreshesViewerDocument)),
+                Capability.Covered("highlight from a text selection", typeof(AnnotationAuthoringWorkflowTests), nameof(AnnotationAuthoringWorkflowTests.AddHighlightAnnotationFromSelectionAsync_CreatesPersistableHighlight)),
                 Capability.Covered("add a sticky note", typeof(AnnotationAuthoringWorkflowTests), nameof(AnnotationAuthoringWorkflowTests.AddStickyNoteAnnotationAsync_CreatesPersistableStickyNote)),
                 Capability.Covered("annotation commands are available for toolbar/menu", typeof(AnnotationAuthoringWorkflowTests), nameof(AnnotationAuthoringWorkflowTests.AnnotationCommands_AreAvailableForToolbarAndMenuCoverage)),
             ]),

@@ -18,6 +18,7 @@ internal class DocumentStateManager : ReactiveObject
     private int _formFieldEditsCount;
     private int _typewriterEditsCount;
     private int _annotationEditsCount;
+    private int _appliedRedactionsCount;
 
     /// <summary>
     /// Path to the currently open file
@@ -92,6 +93,21 @@ internal class DocumentStateManager : ReactiveObject
     }
 
     /// <summary>
+    /// Number of redactions moved from pending to applied without a save in
+    /// between (#1501 item 2). The GUI's own apply-redactions flow writes the
+    /// redacted copy to disk in the same step it applies, so it never leaves
+    /// this above zero; the scripting harness's <c>ApplyRedactionsCommand</c>
+    /// applies to the in-memory document only, so this is what keeps
+    /// <see cref="HasUnsavedChanges"/> true until <c>SaveDocumentCommand</c>
+    /// runs.
+    /// </summary>
+    public int AppliedRedactionsCount
+    {
+        get => _appliedRedactionsCount;
+        set => this.RaiseAndSetIfChanged(ref _appliedRedactionsCount, value);
+    }
+
+    /// <summary>
     /// True if current file is the same as original (not saved as different file)
     /// </summary>
     public bool IsOriginalFile
@@ -134,7 +150,8 @@ internal class DocumentStateManager : ReactiveObject
         || PageEditsCount > 0
         || FormFieldEditsCount > 0
         || TypewriterEditsCount > 0
-        || AnnotationEditsCount > 0;
+        || AnnotationEditsCount > 0
+        || AppliedRedactionsCount > 0;
 
     /// <summary>
     /// User-friendly description of file type
@@ -175,6 +192,7 @@ internal class DocumentStateManager : ReactiveObject
         FormFieldEditsCount = 0;
         TypewriterEditsCount = 0;
         AnnotationEditsCount = 0;
+        AppliedRedactionsCount = 0;
     }
 
     /// <summary>
@@ -211,6 +229,7 @@ internal class DocumentStateManager : ReactiveObject
         FormFieldEditsCount = 0;
         TypewriterEditsCount = 0;
         AnnotationEditsCount = 0;
+        AppliedRedactionsCount = 0;
     }
 
     /// <summary>
