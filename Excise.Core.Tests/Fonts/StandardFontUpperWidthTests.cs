@@ -126,8 +126,8 @@ public class StandardFontUpperWidthTests
     [Theory]
     [InlineData("Helvetica", 32, 278)]   // space
     [InlineData("Helvetica", 65, 667)]   // A
-    [InlineData("Helvetica", 39, 221)]   // code 39: the checked-in Standard value,
-                                         // NOT the AFM quoteright 222 (see below)
+    [InlineData("Helvetica", 39, 222)]   // code 39: the Standard quoteright value
+                                         // (#1847 fixed a transcription typo, 221 -> 222)
     [InlineData("Times-Roman", 87, 944)] // W
     [InlineData("Courier", 100, 600)]    // d
     public void Codes32To126_UnchangedFromExistingTables(string baseFont, int code, int expected)
@@ -136,16 +136,22 @@ public class StandardFontUpperWidthTests
     }
 
     [Fact]
-    public void Code39_KeepsOldValue_WhileByNamePathReturnsAfmValue()
+    public void Code39_MatchesQuoterightAfmValue_NotReRoutedThroughWinAnsi()
     {
-        // The load-bearing "don't re-route ≤126" assertion: WinAnsi code 39 is
-        // quotesingle (width 222 in Helvetica), but the 32-126 table encodes the
-        // Standard quoteright at code 39 (221). The fast path must keep 221 even
-        // though the AFM quoteright is 222 — a glyph-identity choice, not a bug.
-        Width("Helvetica", 39).Should().Be(221);
+        // The load-bearing "don't re-route <=126" assertion: WinAnsi code 39 is
+        // quotesingle (width 191 in Helvetica), but the 32-126 table encodes the
+        // Standard quoteright at code 39. TryGetWidth must keep the Standard
+        // identity regardless of the font's actual /Encoding -- callers that
+        // need the WinAnsi glyph resolve it themselves via
+        // TryGetWidthByGlyphName (#1847; ContentStreamWalker.GetCharWidth and
+        // PdfFont.GetCharWidth both do this for codes 39/96).
+        Width("Helvetica", 39).Should().Be(222);
         StandardFontMetrics.TryGetWidthByGlyphName("Helvetica", "quoteright", out var byName)
             .Should().BeTrue();
         byName.Should().Be(222);
+        StandardFontMetrics.TryGetWidthByGlyphName("Helvetica", "quotesingle", out var winAnsi)
+            .Should().BeTrue();
+        winAnsi.Should().Be(191);
     }
 
     // --- TryGetWidthByGlyphName: the /Differences seam ---

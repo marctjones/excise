@@ -38,10 +38,23 @@ namespace Excise.Core.Fonts;
 /// <para><b>The 32-126 fast path.</b> The code-indexed tables above cover codes
 /// 32-126, very nearly the range where StandardEncoding, WinAnsiEncoding and
 /// MacRomanEncoding agree, so a width is correct there without resolving the
-/// font's /Encoding. (Two codes, 39 and 96, actually diverge — WinAnsi's
-/// quotesingle/grave vs the Standard quoteright/quoteleft these tables encode —
-/// but that is a glyph-identity choice baked into the checked-in values, not a
-/// width error, and <see cref="TryGetWidth"/> keeps it byte-for-byte.)</para>
+/// font's /Encoding. Two codes, 39 and 96, actually diverge — WinAnsi's
+/// quotesingle/grave vs the Standard quoteright/quoteleft these tables encode.
+/// <see cref="TryGetWidth"/> keeps its own answer at those codes fixed to the
+/// Standard identity byte-for-byte (that is a glyph-identity choice, not a
+/// width error, and re-routing it through WinAnsi here would silently change
+/// two long-pinned values, #1106); a caller that knows the font's /Encoding
+/// is WinAnsiEncoding resolves 39/96 itself through
+/// <see cref="TryGetWidthByGlyphName"/> with "quotesingle"/"grave" instead —
+/// see <see cref="Excise.Core.Content.ContentStreamWalker"/> and
+/// <see cref="Excise.Core.Graphics.PdfFont"/> (#1847).</para>
+///
+/// <para><b>The Helvetica code-39 typo (#1847).</b> The checked-in Helvetica
+/// table held 221 at code 39 (quoteright); the Adobe Helvetica AFM's WX for
+/// quoteright is 222, and every other face's code-39/96 entries already
+/// matched their AFM quoteright/quoteleft value. Fixed to 222 — a plain
+/// transcription error, unrelated to the WinAnsi-vs-Standard identity
+/// question above.</para>
 ///
 /// <para><b>Above 126 (#1106).</b> The encodings genuinely diverge — code 0xE9
 /// is eacute in WinAnsi and something else in StandardEncoding — so a width
@@ -123,7 +136,7 @@ internal static class StandardFontMetrics
     /// <summary>Helvetica</summary>
     private static readonly short[] Helvetica =
     {
-         278,  278,  355,  556,  556,  889,  667,  221,  333,  333,  // 32-41
+         278,  278,  355,  556,  556,  889,  667,  222,  333,  333,  // 32-41
          389,  584,  278,  333,  278,  278,  556,  556,  556,  556,  // 42-51
          556,  556,  556,  556,  556,  556,  278,  278,  584,  584,  // 52-61
          584,  556, 1015,  667,  667,  722,  722,  667,  611,  778,  // 62-71
