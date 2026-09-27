@@ -403,7 +403,8 @@ internal sealed class ContentStreamWalker
     /// <para>This lives in the walker rather than in a sink because it is state
     /// machinery, and a second copy of state machinery is what #992 exists to
     /// remove. Nesting DEPTH and cycle detection stay with the caller: whether
-    /// to descend at all is a policy decision, not a parsing one.</para>
+    /// to descend at all is a policy decision, not a parsing one. So does
+    /// marked-content scoping, which only the sink tracks (TextExtractor, #1894).</para>
     /// </summary>
     /// <param name="content">The nested stream's decoded bytes.</param>
     /// <param name="resources">The nested stream's <c>/Resources</c>, if any.</param>

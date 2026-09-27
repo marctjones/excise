@@ -55,6 +55,21 @@ public class TextExtractor
     private readonly Stack<int?> _mcidStack = new();
     private int? _currentMcid;
 
+    // §14.6: "each sequence shall be entirely contained within a single content
+    // stream". The stack depth at which the stream being walked began: its EMC
+    // cannot close a span its invoker opened, and the spans it leaves open close
+    // with it (#1894). The spans below stay in force, since a Do inside a hidden
+    // span paints hidden.
+    private int _markedContentFloor;
+
+    // The same hidden flags with ONE stack across every Do, the way MuPDF and
+    // Ghostscript paint: there a form's stray EMC closes its invoker's hidden span
+    // and its unclosed hidden BDC hides the page text after it, while Poppler
+    // follows the floor above. A letter is hidden only when both readings agree,
+    // so a visible-only redaction never skips text some viewer paints (#1894).
+    private readonly Stack<bool> _unscopedHiddenStack = new();
+    private int _unscopedHiddenDepth;
+
     public TextExtractor(PdfPage page)
     {
         _page = page;
@@ -607,7 +622,7 @@ public class TextExtractor
             // O(1) counter kept in lock-step with _optionalContentHiddenStack;
             // equivalent to _optionalContentHiddenStack.Any(hidden => hidden)
             // without the per-letter enumeration (#600).
-            IsInHiddenOptionalContent = _hiddenOptionalContentDepth > 0,
+            IsInHiddenOptionalContent = _hiddenOptionalContentDepth > 0 && _unscopedHiddenDepth > 0,
             // §9.3.6, #1607. Mode 3 and 7 paint nothing, so this letter is
             // extractable text that never appeared on the page.
             TextRenderMode = glyph.TextRenderMode,
@@ -642,29 +657,40 @@ public class TextExtractor
                 break;
 
             case "BDC":
-                {
-                    var hidden = IsHiddenOptionalContentSpan(operands, walker);
-                    _optionalContentHiddenStack.Push(hidden);
-                    if (hidden)
-                        _hiddenOptionalContentDepth++;
-                    PushMcid(ResolveSpanMcid(operands, walker));
-                }
+                PushMarkedContentSpan(
+                    IsHiddenOptionalContentSpan(operands, walker), ResolveSpanMcid(operands, walker));
                 break;
 
             case "BMC":
-                _optionalContentHiddenStack.Push(false);
-                PushMcid(null); // tag-only span carries no /MCID
+                PushMarkedContentSpan(hidden: false, spanMcid: null); // tag-only span carries no /MCID
                 break;
 
             case "EMC":
-                if (_optionalContentHiddenStack.Count > 0)
-                {
-                    if (_optionalContentHiddenStack.Pop())
-                        _hiddenOptionalContentDepth--;
-                    PopMcid();
-                }
+                if (_unscopedHiddenStack.Count > 0 && _unscopedHiddenStack.Pop())
+                    _unscopedHiddenDepth--;
+                if (_optionalContentHiddenStack.Count > _markedContentFloor)
+                    PopMarkedContentSpan();
                 break;
         }
+    }
+
+    private void PushMarkedContentSpan(bool hidden, int? spanMcid)
+    {
+        _optionalContentHiddenStack.Push(hidden);
+        _unscopedHiddenStack.Push(hidden);
+        if (hidden)
+        {
+            _hiddenOptionalContentDepth++;
+            _unscopedHiddenDepth++;
+        }
+        PushMcid(spanMcid);
+    }
+
+    private void PopMarkedContentSpan()
+    {
+        if (_optionalContentHiddenStack.Pop())
+            _hiddenOptionalContentDepth--;
+        PopMcid();
     }
 
     private void ExecuteDo(string name, ContentStreamWalker walker)
@@ -703,6 +729,8 @@ public class TextExtractor
             return;
 
         _formXObjectDepth++;
+        var invokerFloor = _markedContentFloor;
+        _markedContentFloor = _optionalContentHiddenStack.Count;
         try
         {
             PdfDictionary? resources = null;
@@ -719,6 +747,9 @@ public class TextExtractor
         }
         finally
         {
+            while (_optionalContentHiddenStack.Count > _markedContentFloor)
+                PopMarkedContentSpan();
+            _markedContentFloor = invokerFloor;
             _formXObjectDepth--;
             _formXObjectStack.Remove(stream);
         }
